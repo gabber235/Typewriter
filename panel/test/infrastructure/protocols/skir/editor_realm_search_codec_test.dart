@@ -30,7 +30,8 @@ void main() {
     );
     const request = RealmPresentationSearchRequest(
       subscriptionId: "search:1",
-      actionId: RealmActionId(namespace: "minecraft", name: "effects"),
+      generation: CatalogGeneration("generation"),
+      capabilityId: CapabilityId("capability"),
       payload: StringValue("server"),
       resultType: StringType(),
       query: query,
@@ -45,8 +46,8 @@ void main() {
     );
 
     expect(decoded.subscriptionId, "search:1");
-    expect(decoded.realmActionId.namespace, "minecraft");
-    expect(decoded.realmActionId.name, "effects");
+    expect(decoded.generation.value, "generation");
+    expect(decoded.capabilityId.value, "capability");
     expect(decoded.query.normalizedQuery, "speed");
     expect(decoded.query.selectors, hasLength(2));
     expect(decoded.query.selectors.first.selectorId, "category");

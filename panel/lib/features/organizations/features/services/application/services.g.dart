@@ -33,7 +33,7 @@ final class ServicesProvider
   Services create() => Services();
 }
 
-String _$servicesHash() => r'475e11df2c9b392dc77fa179064ce2d4b6fd19d1';
+String _$servicesHash() => r'47bcd9872c7e5ce2115f22408b897ddc7311c174';
 
 abstract class _$Services extends $StreamNotifier<List<Service>> {
   Stream<List<Service>> build();
@@ -121,4 +121,60 @@ final class ServiceFamily extends $Family
 
   @override
   String toString() => r'serviceProvider';
+}
+
+@ProviderFor(OrganizationTopologyStream)
+final organizationTopologyStreamProvider =
+    OrganizationTopologyStreamProvider._();
+
+final class OrganizationTopologyStreamProvider
+    extends
+        $StreamNotifierProvider<
+          OrganizationTopologyStream,
+          OrganizationTopology
+        > {
+  OrganizationTopologyStreamProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'organizationTopologyStreamProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$organizationTopologyStreamHash();
+
+  @$internal
+  @override
+  OrganizationTopologyStream create() => OrganizationTopologyStream();
+}
+
+String _$organizationTopologyStreamHash() =>
+    r'77c4991c1eabadba5982768b4604fc8a97f6adf7';
+
+abstract class _$OrganizationTopologyStream
+    extends $StreamNotifier<OrganizationTopology> {
+  Stream<OrganizationTopology> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<OrganizationTopology>, OrganizationTopology>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<OrganizationTopology>,
+                OrganizationTopology
+              >,
+              AsyncValue<OrganizationTopology>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
 }

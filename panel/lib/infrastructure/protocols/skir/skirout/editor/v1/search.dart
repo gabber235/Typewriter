@@ -899,7 +899,8 @@ final class RealmSearchQuery_mutable implements RealmSearchQuery_orMutable {
 
 sealed class RealmPresentationSearchRequest_orMutable {
   _core.String get subscriptionId;
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable get realmActionId;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
   _lib_editor_v1_type_catalog.TypedValue get payload;
   _lib_editor_v1_type_catalog.TypeExpression get resultType;
   RealmSearchQuery_orMutable get query;
@@ -912,7 +913,9 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   @_core.override
   final _core.String subscriptionId;
   @_core.override
-  final _lib_editor_v1_type_catalog.RealmActionId realmActionId;
+  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
+  @_core.override
+  final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
   final _lib_editor_v1_type_catalog.TypedValue payload;
   @_core.override
@@ -923,13 +926,15 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
 
   factory RealmPresentationSearchRequest({
     required _core.String subscriptionId,
-    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_type_catalog.TypedValue payload,
     required _lib_editor_v1_type_catalog.TypeExpression resultType,
     required RealmSearchQuery_orMutable query,
   }) => RealmPresentationSearchRequest._(
     subscriptionId,
-    realmActionId.toFrozen(),
+    generation.toFrozen(),
+    capabilityId.toFrozen(),
     payload,
     resultType,
     query.toFrozen(),
@@ -937,7 +942,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
 
   RealmPresentationSearchRequest._(
     this.subscriptionId,
-    this.realmActionId,
+    this.generation,
+    this.capabilityId,
     this.payload,
     this.resultType,
     this.query,
@@ -946,7 +952,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmPresentationSearchRequest._(
     "",
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
     _lib_editor_v1_type_catalog.TypedValue.unknown,
     _lib_editor_v1_type_catalog.TypeExpression.unknown,
     RealmSearchQuery.defaultInstance,
@@ -956,7 +963,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   /// Fields are initialized to their default values.
   static RealmPresentationSearchRequest_mutable mutable() => RealmPresentationSearchRequest_mutable._(
     "",
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
     _lib_editor_v1_type_catalog.TypedValue.unknown,
     _lib_editor_v1_type_catalog.TypeExpression.unknown,
     RealmSearchQuery.defaultInstance,
@@ -970,7 +978,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   /// Returns a mutable shallow copy of this instance.
   RealmPresentationSearchRequest_mutable toMutable() => RealmPresentationSearchRequest_mutable._(
     this.subscriptionId,
-    this.realmActionId,
+    this.generation,
+    this.capabilityId,
     this.payload,
     this.resultType,
     this.query,
@@ -988,7 +997,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
 
   _core.List get _equality_proxy => [
     this.subscriptionId,
-    this.realmActionId,
+    this.generation,
+    this.capabilityId,
     this.payload,
     this.resultType,
     this.query,
@@ -1010,13 +1020,22 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
         (it, v) => it.subscriptionId = v,
       );
       _serializerBuilder.addField(
-        "realm_action_id",
-        "realmActionId",
-        1,
-        _lib_editor_v1_type_catalog.RealmActionId.serializer,
+        "generation",
+        "generation",
+        5,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
-        (it) => it.realmActionId,
-        (it, v) => it.realmActionId = v,
+        (it) => it.generation,
+        (it, v) => it.generation = v,
+      );
+      _serializerBuilder.addField(
+        "capability_id",
+        "capabilityId",
+        1,
+        _lib_editor_v1_type_catalog.CapabilityId.serializer,
+        "",
+        (it) => it.capabilityId,
+        (it, v) => it.capabilityId = v,
       );
       _serializerBuilder.addField(
         "payload",
@@ -1064,7 +1083,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
 /// Mutable version of [RealmPresentationSearchRequest].
 final class RealmPresentationSearchRequest_mutable implements RealmPresentationSearchRequest_orMutable {
   _core.String subscriptionId;
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
   _lib_editor_v1_type_catalog.TypedValue payload;
   _lib_editor_v1_type_catalog.TypeExpression resultType;
   RealmSearchQuery_orMutable query;
@@ -1072,20 +1092,32 @@ final class RealmPresentationSearchRequest_mutable implements RealmPresentationS
 
   RealmPresentationSearchRequest_mutable._(
     this.subscriptionId,
-    this.realmActionId,
+    this.generation,
+    this.capabilityId,
     this.payload,
     this.resultType,
     this.query,
   );
 
-  /// If the value of [realmActionId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
-  _lib_editor_v1_type_catalog.RealmActionId_mutable get mutableRealmActionId {
-    final value = this.realmActionId;
-    if (value is _lib_editor_v1_type_catalog.RealmActionId_mutable) {
+  /// If the value of [generation] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
+    final value = this.generation;
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.realmActionId = (value as _lib_editor_v1_type_catalog.RealmActionId).toMutable();
+      return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+    }
+  }
+
+  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
+  _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
+    final value = this.capabilityId;
+    if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
+      return value;
+    } else {
+      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -1104,7 +1136,8 @@ final class RealmPresentationSearchRequest_mutable implements RealmPresentationS
   @_core.override
   RealmPresentationSearchRequest toFrozen() => RealmPresentationSearchRequest(
     subscriptionId: this.subscriptionId,
-    realmActionId: this.realmActionId,
+    generation: this.generation,
+    capabilityId: this.capabilityId,
     payload: this.payload,
     resultType: this.resultType,
     query: this.query,
@@ -1762,6 +1795,225 @@ final class RealmPresentationSearchUpdate_unavailableWrapper extends _RealmPrese
   RealmPresentationSearchUpdate_kind get kind => RealmPresentationSearchUpdate_kind.unavailableWrapper;
 }
 
+// -----------------------------------------------------------------------------
+// struct CancelRealmPresentationSearchRequest
+// -----------------------------------------------------------------------------
+
+sealed class CancelRealmPresentationSearchRequest_orMutable {
+  _core.String get subscriptionId;
+
+  CancelRealmPresentationSearchRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class CancelRealmPresentationSearchRequest implements CancelRealmPresentationSearchRequest_orMutable {
+  @_core.override
+  final _core.String subscriptionId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CancelRealmPresentationSearchRequest({
+    required _core.String subscriptionId,
+  }) => CancelRealmPresentationSearchRequest._(
+    subscriptionId,
+  );
+
+  CancelRealmPresentationSearchRequest._(
+    this.subscriptionId,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CancelRealmPresentationSearchRequest._(
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CancelRealmPresentationSearchRequest_mutable mutable() => CancelRealmPresentationSearchRequest_mutable._(
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CancelRealmPresentationSearchRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CancelRealmPresentationSearchRequest_mutable toMutable() => CancelRealmPresentationSearchRequest_mutable._(
+    this.subscriptionId,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CancelRealmPresentationSearchRequest) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.subscriptionId,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CancelRealmPresentationSearchRequest` instances.
+  static _skir.StructSerializer<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchRequest_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "subscription_id",
+        "subscriptionId",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.subscriptionId,
+        (it, v) => it.subscriptionId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/search.skir:CancelRealmPresentationSearchRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CancelRealmPresentationSearchRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CancelRealmPresentationSearchRequest].
+final class CancelRealmPresentationSearchRequest_mutable implements CancelRealmPresentationSearchRequest_orMutable {
+  _core.String subscriptionId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CancelRealmPresentationSearchRequest_mutable._(
+    this.subscriptionId,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CancelRealmPresentationSearchRequest toFrozen() => CancelRealmPresentationSearchRequest(
+    subscriptionId: this.subscriptionId,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum CancelRealmPresentationSearchResult
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case CancelRealmPresentationSearchResult_unknown(): { ... }
+///     case CancelRealmPresentationSearchResult.canceled: { ... }
+///     case CancelRealmPresentationSearchResult.notFound: { ... }
+///     case CancelRealmPresentationSearchResult.unavailable: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class CancelRealmPresentationSearchResult {
+  /// Constant indicating an unknown `CancelRealmPresentationSearchResult`.
+  /// Default value for fields of type `CancelRealmPresentationSearchResult`.
+  static const CancelRealmPresentationSearchResult unknown = CancelRealmPresentationSearchResult_unknown._instance;
+
+  static const canceled = _CancelRealmPresentationSearchResult_consts.canceledConst;
+  static const notFound = _CancelRealmPresentationSearchResult_consts.notFoundConst;
+  static const unavailable = _CancelRealmPresentationSearchResult_consts.unavailableConst;
+
+  /// Returns the kind of variant held by this CancelRealmPresentationSearchResult.
+  CancelRealmPresentationSearchResult_kind get kind;
+
+  /// Serializer for `CancelRealmPresentationSearchResult` instances.
+  static _skir.EnumSerializer<CancelRealmPresentationSearchResult> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "canceled",
+        "canceled",
+        "",
+        canceled,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "not_found",
+        "notFound",
+        "",
+        notFound,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "unavailable",
+        "unavailable",
+        "",
+        unavailable,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/search.skir:CancelRealmPresentationSearchResult",
+    doc: "",
+    unknownInstance: CancelRealmPresentationSearchResult_unknown._instance,
+    enumInstance: CancelRealmPresentationSearchResult.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: CancelRealmPresentationSearchResult_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `CancelRealmPresentationSearchResult`.
+enum CancelRealmPresentationSearchResult_kind {
+  unknown(0),
+  canceledConst(1),
+  notFoundConst(2),
+  unavailableConst(3);
+
+  final _core.int _ordinal;
+
+  const CancelRealmPresentationSearchResult_kind(this._ordinal);
+}
+
+final class CancelRealmPresentationSearchResult_unknown implements CancelRealmPresentationSearchResult {
+  static const _instance = CancelRealmPresentationSearchResult_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const CancelRealmPresentationSearchResult_unknown._() : _u = null;
+  CancelRealmPresentationSearchResult_unknown._unrecognized(this._u);
+
+  @_core.override
+  CancelRealmPresentationSearchResult_kind get kind => CancelRealmPresentationSearchResult_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is CancelRealmPresentationSearchResult_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, CancelRealmPresentationSearchResult.serializer);
+}
+
+enum _CancelRealmPresentationSearchResult_consts implements CancelRealmPresentationSearchResult {
+  canceledConst(CancelRealmPresentationSearchResult_kind.canceledConst),
+  notFoundConst(CancelRealmPresentationSearchResult_kind.notFoundConst),
+  unavailableConst(CancelRealmPresentationSearchResult_kind.unavailableConst);
+
+  @_core.override
+  final CancelRealmPresentationSearchResult_kind kind;
+
+  const _CancelRealmPresentationSearchResult_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, CancelRealmPresentationSearchResult.serializer);
+}
+
 final _skir.Method<
   RealmPresentationSearchRequest,
   RealmPresentationSearchUpdate
@@ -1771,5 +2023,17 @@ final _skir.Method<
     910003,
     RealmPresentationSearchRequest.serializer,
     RealmPresentationSearchUpdate.serializer,
+    "",
+  );
+
+final _skir.Method<
+  CancelRealmPresentationSearchRequest,
+  CancelRealmPresentationSearchResult
+> cancelRealmPresentationSearchMethod =
+  _skir.Method(
+    "CancelRealmPresentationSearch",
+    919103,
+    CancelRealmPresentationSearchRequest.serializer,
+    CancelRealmPresentationSearchResult.serializer,
     "",
   );

@@ -1,0 +1,66 @@
+import {
+  DeclaredTypeId,
+  ResolvedTypeRef,
+} from "editor/v1/type_catalog.skir";
+import { Color } from "kernel/v1/color.skir";
+import { Icon } from "kernel/v1/icon.skir";
+
+struct ElementTypeId(811100001) {
+  value: DeclaredTypeId = 0;
+}
+
+struct ElementInstanceId(811100002) {
+  value: string = 0;
+}
+
+struct AvailabilityFact(811100003) {
+  key: string = 0;
+  expected: string = 1;
+}
+
+struct AvailabilityAll(811100004) {
+  expressions: [AvailabilityExpression] = 0;
+}
+
+struct AvailabilityAny(811100005) {
+  expressions: [AvailabilityExpression] = 0;
+}
+
+struct AvailabilityNot(811100006) {
+  expression: AvailabilityExpression = 0;
+}
+
+enum AvailabilityExpression(811100007) {
+  always: struct {} = 1;
+  fact: AvailabilityFact = 2;
+  all: AvailabilityAll = 3;
+  any: AvailabilityAny = 4;
+  not: AvailabilityNot = 5;
+}
+
+struct ElementDescriptor(811100008) {
+  element_type_id: ElementTypeId = 0;
+  type: ResolvedTypeRef = 1;
+  name: string = 2;
+  description: string = 3;
+  icon: Icon = 4;
+  color: Color = 5;
+  availability: AvailabilityExpression = 6;
+}
+
+struct ElementIneligibility(811100009) {
+  reasons: [string] = 0;
+}
+
+enum ElementEligibility(811100010) {
+  eligible: struct {} = 1;
+  ineligible: ElementIneligibility = 2;
+}
+
+struct ElementCatalogEntry(811100011) {
+  origin_artifact_id: string = 0;
+  source_part: string = 1;
+  descriptor: ElementDescriptor = 2;
+  eligibility: ElementEligibility = 3;
+  available: bool = 4;
+}

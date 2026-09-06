@@ -6,26 +6,28 @@ DEFINE FIELD OVERWRITE name ON service TYPE string
 
 DEFINE FIELD OVERWRITE revision ON service TYPE int
     DEFAULT 1
-    ASSERT $value >= 1;
-
-DEFINE FIELD OVERWRITE roles ON service TYPE array<object>
-    ASSERT fn::service::valid_roles($value);
-
-DEFINE FIELD OVERWRITE roles.* ON service TYPE object
-    ASSERT fn::service::valid_role($value);
-
-DEFINE FIELD OVERWRITE roles.*.type ON service
-    TYPE "engine" | "realm" | "custom";
-
-DEFINE FIELD OVERWRITE roles.*.version ON service TYPE string
     ASSERT {
-        IF string::len(string::trim($value)) < 1 {
-            THROW "role-version-blank-error"
+        IF $value <= 0 {
+            THROW "service-revision-invalid-error"
         };
         RETURN true;
     };
 
-DEFINE FIELD OVERWRITE roles.*.name ON service TYPE option<string>;
+DEFINE FIELD OVERWRITE role ON service TYPE object
+    ASSERT fn::service::valid_role($value);
+
+DEFINE FIELD OVERWRITE role.type ON service
+    TYPE "host" | "custom";
+
+DEFINE FIELD OVERWRITE role.version ON service TYPE string
+    ASSERT {
+        IF !string::is_semver($value) {
+            THROW "role-version-invalid-error"
+        };
+        RETURN true;
+    };
+
+DEFINE FIELD OVERWRITE role.name ON service TYPE option<string>;
 
 DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
     DEFAULT time::now()
@@ -38,7 +40,7 @@ DEFINE FIELD OVERWRITE state.last_seen ON service TYPE datetime;
 
 DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
     REFERENCE ON DELETE THEN {
-        UPDATE $this SET runs_in = NONE, organization = NONE;
+        UPDATE $this SET organization = NONE;
     }
     ASSERT {
         IF $value != NONE AND $this.registration != NONE {
@@ -64,10 +66,6 @@ DEFINE FIELD OVERWRITE registration.token ON service TYPE string
     };
 
 DEFINE FIELD OVERWRITE registration.expires_at ON service TYPE datetime;
-
-DEFINE FIELD OVERWRITE runs_in ON service TYPE option<record<service>>
-    REFERENCE ON DELETE UNSET
-    ASSERT fn::service::valid_runs_in($this, $value);
 
 DEFINE INDEX OVERWRITE service_by_organization ON service FIELDS organization;
 DEFINE INDEX OVERWRITE service_registration_token ON service FIELDS registration.token UNIQUE;

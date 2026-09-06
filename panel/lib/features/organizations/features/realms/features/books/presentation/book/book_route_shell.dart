@@ -44,7 +44,8 @@ class BookScaffold extends HookConsumerWidget {
     final interaction = ref.watch(realmInteractionProvider);
     final selectedRealm = ref.watch(selectedRealmProvider).value;
 
-    void retryConnection() => ref.invalidate(servicesProvider);
+    void retryConnection() =>
+        ref.invalidate(organizationTopologyStreamProvider);
 
     return SimpleScaffold(
       appBar: CustomAppBar(
@@ -86,6 +87,7 @@ class BookScaffold extends HookConsumerWidget {
                 children: [
                   Expanded(
                     child: InspectorScaffold(
+                      realmRuntime: ref.watch(activeRealmEditorRuntimeProvider),
                       margin: EdgeInsets.only(
                         top: context.spacing.space2,
                         right: context.spacing.space2,

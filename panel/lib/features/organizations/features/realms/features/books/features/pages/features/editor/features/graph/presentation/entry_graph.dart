@@ -2,26 +2,6 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-class _GroupIdentifier implements GraphDragData, GraphIdentifier {
-  const _GroupIdentifier(this.id);
-
-  @override
-  final String id;
-
-  @override
-  GraphIdentifier get graphId => this;
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || (other is _GroupIdentifier && other.id == id);
-
-  @override
-  String toString() => "_GroupIdentifier($id)";
-}
-
 const entryGraphCellSize = 50.0;
 
 class EntryGraph extends HookConsumerWidget {
@@ -37,25 +17,6 @@ class EntryGraph extends HookConsumerWidget {
   (GraphElement, List<GraphEdge>) _graphFromElement(PageElement element) {
     return switch (element) {
       PageElementEntry(:final entry) => _graphFromEntry(entry),
-      PageElementGroup(:final id, :final name, :final placement) => (
-        GraphElement(
-          id: _GroupIdentifier(id),
-          x: placement.x,
-          y: placement.y,
-          width: placement.width,
-          height: placement.height,
-          builder: (context) {
-            return SizedBox.expand(
-              child: GraphGroup(
-                title: name,
-                color: Theme.of(context).colorScheme.primary,
-                data: _GroupIdentifier(id),
-              ),
-            );
-          },
-        ),
-        <GraphEdge>[],
-      ),
       _ => (
         GraphElement(
           id: GraphIdentifier(element.id),
@@ -144,28 +105,53 @@ class EntryGraph extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final elements = ref.watch(pageElementsProvider(pageId));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null || realmId == null) {
+      return const SizedBox.shrink();
+    }
+    final provider = pageElementsProvider(organizationId, realmId, pageId);
+    final elements = ref.watch(provider);
 
     return elements(
       name: "elements",
       builder: (elements) {
         if (elements.isEmpty) {
-          return EmptyEntryPage();
+          return EmptyEntryPage(
+            pageId: pageId,
+            placementKind: EntryPlacementKind.graph,
+          );
         }
-        return Graph(
-          data: _graphFromElements(elements),
-          onElementsMoved: (changes) {
-            final changed = changes
-                .map((entry) => (entry.id.id, entry.x, entry.y))
-                .toList(growable: false);
-            ref.read(pageElementsProvider(pageId).notifier).moveAll(changed);
-          },
-          onElementsResized: (changes) {
-            final changed = changes
-                .map((entry) => (entry.id.id, entry.width, entry.height))
-                .toList(growable: false);
-            ref.read(pageElementsProvider(pageId).notifier).resizeAll(changed);
-          },
+        return Stack(
+          children: [
+            Graph(
+              data: _graphFromElements(elements),
+              onElementsMoved: (changes) {
+                final changed = changes
+                    .map((entry) => (entry.id.id, entry.x, entry.y))
+                    .toList(growable: false);
+                ref.read(provider.notifier).moveAll(changed);
+              },
+              onElementsResized: (changes) {
+                final changed = changes
+                    .map((entry) => (entry.id.id, entry.width, entry.height))
+                    .toList(growable: false);
+                ref.read(provider.notifier).resizeAll(changed);
+              },
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: PageDiagnosticsBanner(pageId: pageId),
+            ),
+            Positioned(
+              right: context.spacing.space2,
+              bottom: context.spacing.space2,
+              child: AddEntryButton(
+                pageId: pageId,
+                placementKind: EntryPlacementKind.graph,
+              ),
+            ),
+          ],
         );
       },
       loading: (_) => ShimmerBox.rectangle(

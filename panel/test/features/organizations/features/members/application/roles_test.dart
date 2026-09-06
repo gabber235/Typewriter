@@ -30,6 +30,12 @@ Future<void> _waitFor(bool Function() condition) async {
 
 class _Harness {
   _Harness() {
+    nats.registerHandler(
+      _publishSubject,
+      (_) => skir.WatchOrganizationRolesResponse.serializer.toBytes(
+        skir.WatchOrganizationRolesResponse.wrapList([]),
+      ),
+    );
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => _userId),
@@ -44,7 +50,7 @@ class _Harness {
     );
   }
 
-  final MockNatsClient nats = MockNatsClient();
+  final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
   late final ProviderSubscription<AsyncValue<List<OrganizationRole>>>
   subscription;
@@ -52,7 +58,7 @@ class _Harness {
 
   Future<void> start() => _waitFor(
     () =>
-        nats.publications.isNotEmpty &&
+        nats.requests.isNotEmpty &&
         nats.subscriptionSubjects.contains(_listenSubject),
   );
 
@@ -113,20 +119,19 @@ void main() {
     harness.dispose();
   });
 
-  test("publishes serialized request and subscribes to exact subject", () {
-    expect(harness.nats.publications, hasLength(1));
-    final publication = harness.nats.publications.single;
-    expect(publication.subject, _publishSubject);
-    expect(publication.replyTo, _listenSubject);
+  test("requests initial state and subscribes to exact subject", () {
+    expect(harness.nats.requests, hasLength(1));
+    final request = harness.nats.requests.single;
+    expect(request.subject, _publishSubject);
     expect(harness.nats.subscriptionSubjects, contains(_listenSubject));
     expect(
-      publication.data,
+      request.payload,
       skir.WatchOrganizationRolesRequest.serializer.toBytes(
         skir.WatchOrganizationRolesRequest(),
       ),
     );
     expect(
-      skir.WatchOrganizationRolesRequest.serializer.fromBytes(publication.data),
+      skir.WatchOrganizationRolesRequest.serializer.fromBytes(request.payload),
       isA<skir.WatchOrganizationRolesRequest>(),
     );
   });

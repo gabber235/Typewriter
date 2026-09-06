@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
+    as wire_capability;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
     as wire_presentation;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
@@ -47,7 +49,7 @@ void main() {
   test("maps all direct catalogue definition shapes and fields", () {
     final encodedCatalog = catalog.encodeWire().valueOrNull!;
     final encodedType = encodedCatalog.definitions.single;
-    expect(encodedType.typeId.kind, wire_type.TypeId_kind.realmWrapper);
+    expect(encodedType.typeId.kind, wire_type.TypeId_kind.qualifiedWrapper);
     expect(encodedType.revision, 1);
     expect(
       encodedType.kind.kind,
@@ -85,23 +87,19 @@ void main() {
       presentation,
     );
 
-    final action = RealmActionDefinition(
-      id: const RealmActionId(namespace: "example", name: "save"),
-      payloadType: reference,
-      resultType: reference,
-    );
-    final encodedAction = definitions.encodeRealmAction(action).valueOrNull!;
-    expect(encodedAction.realmActionId.namespace, "example");
-    expect(encodedAction.realmActionId.name, "save");
-    expect(
-      encodedAction.payloadType,
-      types.encodeReference(reference).valueOrNull,
+    final capability = wire_capability.CapabilityDefinition.createComputation(
+      capabilityId: wire_type.CapabilityId(value: "capability"),
+      requestType: types.encodeReference(reference).valueOrNull!,
+      resultType: types.encodeReference(reference).valueOrNull!,
     );
     expect(
-      encodedAction.resultType,
-      types.encodeReference(reference).valueOrNull,
+      definitions.decodeCapability(capability).valueOrNull,
+      CapabilityDefinition.computation(
+        id: const CapabilityId("capability"),
+        requestType: reference,
+        resultType: reference,
+      ),
     );
-    expect(definitions.decodeRealmAction(encodedAction).valueOrNull, action);
 
     final envelope = TypedValueEnvelope(
       rootType: reference,

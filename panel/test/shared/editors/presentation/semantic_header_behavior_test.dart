@@ -317,12 +317,9 @@ void main() {
             SingleActivator(LogicalKeyboardKey.f6),
           ],
         },
-        onRealmAction: (action) {
+        onRealmAction: (action, payload) {
           calls++;
-          return const MutationSuccess(
-            revision: 1,
-            value: StringValue("initial"),
-          );
+          return const RealmCommandResult.success([]);
         },
       ),
     );

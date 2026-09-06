@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -15,6 +17,7 @@ class EditorSurface extends StatefulWidget {
     this.registry,
     this.conversions = const [],
     this.realmSearchSourceBuilder,
+    this.executePanelInstruction,
     this.headerShortcuts = const {},
     this.historyNamespace = "local",
     this.readOnly = false,
@@ -26,6 +29,8 @@ class EditorSurface extends StatefulWidget {
   final TypeRegistry? registry;
   final List<ConversionDefinition> conversions;
   final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
+  final FutureOr<void> Function(PanelInstruction instruction)?
+  executePanelInstruction;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;
@@ -210,13 +215,35 @@ class _EditorSurfaceState extends State<EditorSurface> {
     final result = await widget.source.executeAction(action, context, aliases);
     if (!mounted) return;
     switch (result) {
+      case LocalEditorActionResult(:final mutation, :final structuralMutation):
+        _handleMutationResult(action, aliases, mutation, structuralMutation);
+      case RealmEditorActionResult(:final command):
+        await _handleCommandResult(command);
+    }
+  }
+
+  void _handleMutationResult(
+    EditorAction action,
+    Map<BindingId, BindingReference> aliases,
+    TypedMutationResult result,
+    EditorStructuralMutation? structuralMutation,
+  ) {
+    switch (result) {
       case MutationSuccess(:final value):
         final localPath = _localActionMutationPath(action, aliases);
         final localValue = localPath?.read(value).valueOrNull;
         if (localPath != null && localValue != null) {
-          _applyAt(widget.path.followedBy(localPath), localValue);
+          _applyAt(
+            widget.path.followedBy(localPath),
+            localValue,
+            structuralMutation?.prefixedBy(widget.path),
+          );
         } else {
-          _applyAt(widget.path, value);
+          _applyAt(
+            widget.path,
+            value,
+            structuralMutation?.prefixedBy(widget.path),
+          );
         }
       case MutationInvalid(:final diagnostics) ||
           MutationUnavailable(:final diagnostics):
@@ -238,8 +265,58 @@ class _EditorSurfaceState extends State<EditorSurface> {
     }
   }
 
-  void _applyAt(DataPath path, DataValue value) {
-    final result = widget.source.update(path, value);
+  Future<void> _handleCommandResult(RealmCommandResult result) async {
+    switch (result) {
+      case RealmCommandSuccess(:final instructions):
+        final executor = widget.executePanelInstruction;
+        if (executor == null && instructions.isNotEmpty) {
+          setState(
+            () => _mutationDiagnostics = [
+              const TypeDiagnostic(
+                code: TypeDiagnosticCode.invalidPresentation,
+                message: "Panel instruction executor is unavailable",
+              ),
+            ],
+          );
+          return;
+        }
+        for (final instruction in instructions) {
+          await executor!(instruction);
+        }
+      case RealmCommandInvalid(:final diagnostics) ||
+          RealmCommandUnavailable(:final diagnostics):
+        setState(() => _mutationDiagnostics = diagnostics);
+      case RealmCommandPermissionDenied(:final message):
+        setState(
+          () => _mutationDiagnostics = [
+            TypeDiagnostic(
+              code: TypeDiagnosticCode.invalidPresentation,
+              message: message,
+            ),
+          ],
+        );
+      case RealmCommandStaleGeneration():
+        setState(
+          () => _mutationDiagnostics = [
+            const TypeDiagnostic(
+              code: TypeDiagnosticCode.invalidPresentation,
+              message: "Realm catalog generation is stale",
+            ),
+          ],
+        );
+    }
+  }
+
+  void _applyAt(
+    DataPath path,
+    DataValue value, [
+    EditorStructuralMutation? structuralMutation,
+  ]) {
+    final result = widget.source.update(
+      path,
+      value,
+      structuralMutation: structuralMutation,
+    );
     setState(() {
       _mutationDiagnostics = switch (result) {
         InvalidEditorMutation(:final diagnostics) => diagnostics,

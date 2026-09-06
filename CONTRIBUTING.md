@@ -104,7 +104,7 @@ Valid commit types:
 Scopes are defined in [`commit-scopes.json`](commit-scopes.json). When adding a new accepted scope, update that file in the same pull request.
 
 - Top level product scopes like `backend`, `panel`, `engine`, `extensions`, `services`, `proto`, `documentation`, `module-plugin`, `marketplace`, `discord_bot`, `code_generator`
-- Path scopes for selected domains, for example `backend/tests`, `backend/access`, `services/realm`
+- Path scopes for selected domains, for example `backend/tests`, `backend/access`, `services/runtime/realm`
 - Operational scopes: `repo`, `ci`, `deps`
 
 Multiple scopes are supported with commas.
@@ -122,7 +122,7 @@ Examples:
 
 - `feat(panel): add route search`
 - `test(backend/tests): add permission integration test`
-- `fix(services/realm): handle empty title`
+- `fix(services/runtime/realm): handle empty title`
 - `docs: update setup steps`
 
 Local commit message checks are installed automatically by `bun install`. To reinstall them manually:

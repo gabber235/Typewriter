@@ -1949,65 +1949,65 @@ final class ReloadRealmAction_mutable implements ReloadRealmAction_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct RealmCallbackAction
+// struct CommandCapabilityAction
 // -----------------------------------------------------------------------------
 
-sealed class RealmCallbackAction_orMutable {
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable get realmActionId;
+sealed class CommandCapabilityAction_orMutable {
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
   _lib_editor_v1_expression.TypedExpression_orMutable get payload;
 
-  RealmCallbackAction toFrozen();
+  CommandCapabilityAction toFrozen();
 }
 
 /// Deeply immutable.
-final class RealmCallbackAction implements RealmCallbackAction_orMutable {
+final class CommandCapabilityAction implements CommandCapabilityAction_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.RealmActionId realmActionId;
+  final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
   final _lib_editor_v1_expression.TypedExpression payload;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory RealmCallbackAction({
-    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+  factory CommandCapabilityAction({
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_expression.TypedExpression_orMutable payload,
-  }) => RealmCallbackAction._(
-    realmActionId.toFrozen(),
+  }) => CommandCapabilityAction._(
+    capabilityId.toFrozen(),
     payload.toFrozen(),
   );
 
-  RealmCallbackAction._(
-    this.realmActionId,
+  CommandCapabilityAction._(
+    this.capabilityId,
     this.payload,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = RealmCallbackAction._(
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+  static final defaultInstance = CommandCapabilityAction._(
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmCallbackAction_mutable mutable() => RealmCallbackAction_mutable._(
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+  static CommandCapabilityAction_mutable mutable() => CommandCapabilityAction_mutable._(
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  RealmCallbackAction toFrozen() => this;
+  CommandCapabilityAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmCallbackAction_mutable toMutable() => RealmCallbackAction_mutable._(
-    this.realmActionId,
+  CommandCapabilityAction_mutable toMutable() => CommandCapabilityAction_mutable._(
+    this.capabilityId,
     this.payload,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! RealmCallbackAction) return false;
+    if (other is! CommandCapabilityAction) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -2015,24 +2015,24 @@ final class RealmCallbackAction implements RealmCallbackAction_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.realmActionId,
+    this.capabilityId,
     this.payload,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `RealmCallbackAction` instances.
-  static _skir.StructSerializer<RealmCallbackAction, RealmCallbackAction_mutable> get serializer {
+  /// Serializer for `CommandCapabilityAction` instances.
+  static _skir.StructSerializer<CommandCapabilityAction, CommandCapabilityAction_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "realm_action_id",
-        "realmActionId",
+        "capability_id",
+        "capabilityId",
         0,
-        _lib_editor_v1_type_catalog.RealmActionId.serializer,
+        _lib_editor_v1_type_catalog.CapabilityId.serializer,
         "",
-        (it) => it.realmActionId,
-        (it, v) => it.realmActionId = v,
+        (it) => it.capabilityId,
+        (it, v) => it.capabilityId = v,
       );
       _serializerBuilder.addField(
         "payload",
@@ -2049,35 +2049,35 @@ final class RealmCallbackAction implements RealmCallbackAction_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/action.skir:RealmCallbackAction",
+    recordId: "editor/v1/action.skir:CommandCapabilityAction",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (RealmCallbackAction_mutable it) => it.toFrozen(),
+    toFrozen: (CommandCapabilityAction_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [RealmCallbackAction].
-final class RealmCallbackAction_mutable implements RealmCallbackAction_orMutable {
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId;
+/// Mutable version of [CommandCapabilityAction].
+final class CommandCapabilityAction_mutable implements CommandCapabilityAction_orMutable {
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
   _lib_editor_v1_expression.TypedExpression_orMutable payload;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmCallbackAction_mutable._(
-    this.realmActionId,
+  CommandCapabilityAction_mutable._(
+    this.capabilityId,
     this.payload,
   );
 
-  /// If the value of [realmActionId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
-  _lib_editor_v1_type_catalog.RealmActionId_mutable get mutableRealmActionId {
-    final value = this.realmActionId;
-    if (value is _lib_editor_v1_type_catalog.RealmActionId_mutable) {
+  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
+  _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
+    final value = this.capabilityId;
+    if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.realmActionId = (value as _lib_editor_v1_type_catalog.RealmActionId).toMutable();
+      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -2094,8 +2094,8 @@ final class RealmCallbackAction_mutable implements RealmCallbackAction_orMutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmCallbackAction toFrozen() => RealmCallbackAction(
-    realmActionId: this.realmActionId,
+  CommandCapabilityAction toFrozen() => CommandCapabilityAction(
+    capabilityId: this.capabilityId,
     payload: this.payload,
   ).._u = this._u;
 }
@@ -2109,7 +2109,7 @@ final class RealmCallbackAction_mutable implements RealmCallbackAction_orMutable
 ///   switch (e) {
 ///     case RealmEditorAction_unknown(): { ... }
 ///     case RealmEditorAction_reload(:var value): { ... }
-///     case RealmEditorAction_callback(:var value): { ... }
+///     case RealmEditorAction_command(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2129,18 +2129,18 @@ sealed class RealmEditorAction {
     ReloadRealmAction()
   );
 
-  /// Create a 'callback' variant wrapping around the given value.
-  factory RealmEditorAction.wrapCallback(
-    RealmCallbackAction value
-  ) => RealmEditorAction_callbackWrapper._(value);
+  /// Create a 'command' variant wrapping around the given value.
+  factory RealmEditorAction.wrapCommand(
+    CommandCapabilityAction value
+  ) => RealmEditorAction_commandWrapper._(value);
 
-  /// Same as `wrapCallback(RealmCallbackAction(...))`.
-  factory RealmEditorAction.createCallback({
-    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+  /// Same as `wrapCommand(CommandCapabilityAction(...))`.
+  factory RealmEditorAction.createCommand({
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_expression.TypedExpression_orMutable payload,
-  }) => RealmEditorAction.wrapCallback(
-    RealmCallbackAction(
-      realmActionId: realmActionId,
+  }) => RealmEditorAction.wrapCommand(
+    CommandCapabilityAction(
+      capabilityId: capabilityId,
       payload: payload,
     )
   );
@@ -2163,13 +2163,13 @@ sealed class RealmEditorAction {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "callback",
-        "wrapCallback",
-        RealmCallbackAction.serializer,
+        "command",
+        "wrapCommand",
+        CommandCapabilityAction.serializer,
         "",
-        RealmEditorAction_callbackWrapper._,
+        RealmEditorAction_commandWrapper._,
         (it) => it.value,
-        ordinal: RealmEditorAction_kind.callbackWrapper._ordinal,
+        ordinal: RealmEditorAction_kind.commandWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2191,7 +2191,7 @@ sealed class RealmEditorAction {
 enum RealmEditorAction_kind {
   unknown(0),
   reloadWrapper(1),
-  callbackWrapper(2);
+  commandWrapper(2);
 
   final _core.int _ordinal;
 
@@ -2241,13 +2241,13 @@ final class RealmEditorAction_reloadWrapper extends _RealmEditorAction_wrapper {
   RealmEditorAction_kind get kind => RealmEditorAction_kind.reloadWrapper;
 }
 
-final class RealmEditorAction_callbackWrapper extends _RealmEditorAction_wrapper {
-  final RealmCallbackAction value;
+final class RealmEditorAction_commandWrapper extends _RealmEditorAction_wrapper {
+  final CommandCapabilityAction value;
 
-  RealmEditorAction_callbackWrapper._(this.value);
+  RealmEditorAction_commandWrapper._(this.value);
 
   @_core.override
-  RealmEditorAction_kind get kind => RealmEditorAction_kind.callbackWrapper;
+  RealmEditorAction_kind get kind => RealmEditorAction_kind.commandWrapper;
 }
 
 // -----------------------------------------------------------------------------

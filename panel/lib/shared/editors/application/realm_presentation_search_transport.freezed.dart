@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RealmPresentationSearchRequest {
 
- String get subscriptionId; RealmActionId get actionId; DataValue get payload; TypeExpression get resultType; SearchQueryContext get query;
+ String get subscriptionId; CatalogGeneration get generation; CapabilityId get capabilityId; DataValue get payload; TypeExpression get resultType; SearchQueryContext get query;
 /// Create a copy of RealmPresentationSearchRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $RealmPresentationSearchRequestCopyWith<RealmPresentationSearchRequest> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmPresentationSearchRequest&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.actionId, actionId) || other.actionId == actionId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.query, query) || other.query == query));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmPresentationSearchRequest&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.generation, generation) || other.generation == generation)&&(identical(other.capabilityId, capabilityId) || other.capabilityId == capabilityId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.query, query) || other.query == query));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,subscriptionId,actionId,payload,resultType,query);
+int get hashCode => Object.hash(runtimeType,subscriptionId,generation,capabilityId,payload,resultType,query);
 
 @override
 String toString() {
-  return 'RealmPresentationSearchRequest(subscriptionId: $subscriptionId, actionId: $actionId, payload: $payload, resultType: $resultType, query: $query)';
+  return 'RealmPresentationSearchRequest(subscriptionId: $subscriptionId, generation: $generation, capabilityId: $capabilityId, payload: $payload, resultType: $resultType, query: $query)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $RealmPresentationSearchRequestCopyWith<$Res>  {
   factory $RealmPresentationSearchRequestCopyWith(RealmPresentationSearchRequest value, $Res Function(RealmPresentationSearchRequest) _then) = _$RealmPresentationSearchRequestCopyWithImpl;
 @useResult
 $Res call({
- String subscriptionId, RealmActionId actionId, DataValue payload, TypeExpression resultType, SearchQueryContext query
+ String subscriptionId, CatalogGeneration generation, CapabilityId capabilityId, DataValue payload, TypeExpression resultType, SearchQueryContext query
 });
 
 
-$RealmActionIdCopyWith<$Res> get actionId;$DataValueCopyWith<$Res> get payload;$TypeExpressionCopyWith<$Res> get resultType;$SearchQueryContextCopyWith<$Res> get query;
+$CatalogGenerationCopyWith<$Res> get generation;$CapabilityIdCopyWith<$Res> get capabilityId;$DataValueCopyWith<$Res> get payload;$TypeExpressionCopyWith<$Res> get resultType;$SearchQueryContextCopyWith<$Res> get query;
 
 }
 /// @nodoc
@@ -62,11 +62,12 @@ class _$RealmPresentationSearchRequestCopyWithImpl<$Res>
 
 /// Create a copy of RealmPresentationSearchRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? subscriptionId = null,Object? actionId = null,Object? payload = null,Object? resultType = null,Object? query = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? subscriptionId = null,Object? generation = null,Object? capabilityId = null,Object? payload = null,Object? resultType = null,Object? query = null,}) {
   return _then(_self.copyWith(
 subscriptionId: null == subscriptionId ? _self.subscriptionId : subscriptionId // ignore: cast_nullable_to_non_nullable
-as String,actionId: null == actionId ? _self.actionId : actionId // ignore: cast_nullable_to_non_nullable
-as RealmActionId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as String,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
+as CatalogGeneration,capabilityId: null == capabilityId ? _self.capabilityId : capabilityId // ignore: cast_nullable_to_non_nullable
+as CapabilityId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
 as DataValue,resultType: null == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
 as TypeExpression,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as SearchQueryContext,
@@ -76,10 +77,19 @@ as SearchQueryContext,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RealmActionIdCopyWith<$Res> get actionId {
+$CatalogGenerationCopyWith<$Res> get generation {
   
-  return $RealmActionIdCopyWith<$Res>(_self.actionId, (value) {
-    return _then(_self.copyWith(actionId: value));
+  return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
+    return _then(_self.copyWith(generation: value));
+  });
+}/// Create a copy of RealmPresentationSearchRequest
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CapabilityIdCopyWith<$Res> get capabilityId {
+  
+  return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
+    return _then(_self.copyWith(capabilityId: value));
   });
 }/// Create a copy of RealmPresentationSearchRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -190,10 +200,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String subscriptionId,  RealmActionId actionId,  DataValue payload,  TypeExpression resultType,  SearchQueryContext query)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String subscriptionId,  CatalogGeneration generation,  CapabilityId capabilityId,  DataValue payload,  TypeExpression resultType,  SearchQueryContext query)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmPresentationSearchRequest() when $default != null:
-return $default(_that.subscriptionId,_that.actionId,_that.payload,_that.resultType,_that.query);case _:
+return $default(_that.subscriptionId,_that.generation,_that.capabilityId,_that.payload,_that.resultType,_that.query);case _:
   return orElse();
 
 }
@@ -211,10 +221,10 @@ return $default(_that.subscriptionId,_that.actionId,_that.payload,_that.resultTy
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String subscriptionId,  RealmActionId actionId,  DataValue payload,  TypeExpression resultType,  SearchQueryContext query)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String subscriptionId,  CatalogGeneration generation,  CapabilityId capabilityId,  DataValue payload,  TypeExpression resultType,  SearchQueryContext query)  $default,) {final _that = this;
 switch (_that) {
 case _RealmPresentationSearchRequest():
-return $default(_that.subscriptionId,_that.actionId,_that.payload,_that.resultType,_that.query);case _:
+return $default(_that.subscriptionId,_that.generation,_that.capabilityId,_that.payload,_that.resultType,_that.query);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -231,10 +241,10 @@ return $default(_that.subscriptionId,_that.actionId,_that.payload,_that.resultTy
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String subscriptionId,  RealmActionId actionId,  DataValue payload,  TypeExpression resultType,  SearchQueryContext query)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String subscriptionId,  CatalogGeneration generation,  CapabilityId capabilityId,  DataValue payload,  TypeExpression resultType,  SearchQueryContext query)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmPresentationSearchRequest() when $default != null:
-return $default(_that.subscriptionId,_that.actionId,_that.payload,_that.resultType,_that.query);case _:
+return $default(_that.subscriptionId,_that.generation,_that.capabilityId,_that.payload,_that.resultType,_that.query);case _:
   return null;
 
 }
@@ -246,11 +256,12 @@ return $default(_that.subscriptionId,_that.actionId,_that.payload,_that.resultTy
 
 
 class _RealmPresentationSearchRequest implements RealmPresentationSearchRequest {
-  const _RealmPresentationSearchRequest({required this.subscriptionId, required this.actionId, required this.payload, required this.resultType, required this.query});
+  const _RealmPresentationSearchRequest({required this.subscriptionId, required this.generation, required this.capabilityId, required this.payload, required this.resultType, required this.query});
   
 
 @override final  String subscriptionId;
-@override final  RealmActionId actionId;
+@override final  CatalogGeneration generation;
+@override final  CapabilityId capabilityId;
 @override final  DataValue payload;
 @override final  TypeExpression resultType;
 @override final  SearchQueryContext query;
@@ -265,16 +276,16 @@ _$RealmPresentationSearchRequestCopyWith<_RealmPresentationSearchRequest> get co
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmPresentationSearchRequest&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.actionId, actionId) || other.actionId == actionId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.query, query) || other.query == query));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmPresentationSearchRequest&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.generation, generation) || other.generation == generation)&&(identical(other.capabilityId, capabilityId) || other.capabilityId == capabilityId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.query, query) || other.query == query));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,subscriptionId,actionId,payload,resultType,query);
+int get hashCode => Object.hash(runtimeType,subscriptionId,generation,capabilityId,payload,resultType,query);
 
 @override
 String toString() {
-  return 'RealmPresentationSearchRequest(subscriptionId: $subscriptionId, actionId: $actionId, payload: $payload, resultType: $resultType, query: $query)';
+  return 'RealmPresentationSearchRequest(subscriptionId: $subscriptionId, generation: $generation, capabilityId: $capabilityId, payload: $payload, resultType: $resultType, query: $query)';
 }
 
 
@@ -285,11 +296,11 @@ abstract mixin class _$RealmPresentationSearchRequestCopyWith<$Res> implements $
   factory _$RealmPresentationSearchRequestCopyWith(_RealmPresentationSearchRequest value, $Res Function(_RealmPresentationSearchRequest) _then) = __$RealmPresentationSearchRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String subscriptionId, RealmActionId actionId, DataValue payload, TypeExpression resultType, SearchQueryContext query
+ String subscriptionId, CatalogGeneration generation, CapabilityId capabilityId, DataValue payload, TypeExpression resultType, SearchQueryContext query
 });
 
 
-@override $RealmActionIdCopyWith<$Res> get actionId;@override $DataValueCopyWith<$Res> get payload;@override $TypeExpressionCopyWith<$Res> get resultType;@override $SearchQueryContextCopyWith<$Res> get query;
+@override $CatalogGenerationCopyWith<$Res> get generation;@override $CapabilityIdCopyWith<$Res> get capabilityId;@override $DataValueCopyWith<$Res> get payload;@override $TypeExpressionCopyWith<$Res> get resultType;@override $SearchQueryContextCopyWith<$Res> get query;
 
 }
 /// @nodoc
@@ -302,11 +313,12 @@ class __$RealmPresentationSearchRequestCopyWithImpl<$Res>
 
 /// Create a copy of RealmPresentationSearchRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? subscriptionId = null,Object? actionId = null,Object? payload = null,Object? resultType = null,Object? query = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? subscriptionId = null,Object? generation = null,Object? capabilityId = null,Object? payload = null,Object? resultType = null,Object? query = null,}) {
   return _then(_RealmPresentationSearchRequest(
 subscriptionId: null == subscriptionId ? _self.subscriptionId : subscriptionId // ignore: cast_nullable_to_non_nullable
-as String,actionId: null == actionId ? _self.actionId : actionId // ignore: cast_nullable_to_non_nullable
-as RealmActionId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as String,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
+as CatalogGeneration,capabilityId: null == capabilityId ? _self.capabilityId : capabilityId // ignore: cast_nullable_to_non_nullable
+as CapabilityId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
 as DataValue,resultType: null == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
 as TypeExpression,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as SearchQueryContext,
@@ -317,10 +329,19 @@ as SearchQueryContext,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RealmActionIdCopyWith<$Res> get actionId {
+$CatalogGenerationCopyWith<$Res> get generation {
   
-  return $RealmActionIdCopyWith<$Res>(_self.actionId, (value) {
-    return _then(_self.copyWith(actionId: value));
+  return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
+    return _then(_self.copyWith(generation: value));
+  });
+}/// Create a copy of RealmPresentationSearchRequest
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CapabilityIdCopyWith<$Res> get capabilityId {
+  
+  return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
+    return _then(_self.copyWith(capabilityId: value));
   });
 }/// Create a copy of RealmPresentationSearchRequest
 /// with the given fields replaced by the non-null parameter values.

@@ -25,7 +25,7 @@ spec:
             - handler
             - consumer
           config:
-            subscriptions: service.*.status,typewriter.from.service.*.status,typewriter.from.service.*.heartbeat,typewriter.from.service.*.shutdown,typewriter.from.user.*.organization.*.services.*
+            subscriptions: service.*.status,service.*.messaging.scope,typewriter.from.service.*.status,typewriter.from.service.*.messaging.scope,typewriter.from.service.*.heartbeat,typewriter.from.service.*.shutdown,typewriter.from.user.*.organization.*.services.*,typewriter.from.user.*.organization.*.topology.*,typewriter.from.service.*.execution.*
         - namespace: seamlezz
           package: surrealdb
           version: "0.4.0"

@@ -16,7 +16,7 @@ Service _service({String name = "Original", int revision = 1}) => Service(
   serviceId: recordId("service:service1"),
   revision: revision,
   name: name,
-  roles: [RealmServiceRole(version: "1")],
+  role: HostServiceRole(version: "1"),
   createdAt: DateTime.utc(2025),
 );
 
@@ -56,7 +56,7 @@ class _Harness {
   }
 
   static const _default = Object();
-  final MockNatsClient nats = MockNatsClient();
+  final FakeNatsClient nats = FakeNatsClient();
   late final _SeededServices notifier;
   late final ProviderContainer container;
   ProviderSubscription<AsyncValue<List<Service>>>? subscription;
@@ -98,7 +98,7 @@ void main() {
           skir.BindServiceResponse.createSuccess(
             serviceId: "service1",
             serviceName: "Service",
-            serviceRoles: [skir.ServiceRole.createRealm(version: "1")],
+            serviceRole: skir.ServiceRole.createHost(version: "1"),
           ),
         );
       });
@@ -152,7 +152,6 @@ void main() {
         expect(request!.serviceId, updated.serviceId);
         expect(request!.expectedRevision, updated.revision);
         expect(request!.name, "Updated");
-        expect(request!.runsIn, updated.runsIn);
         expect(result, isA<MutationSuccess>());
         expect(harness.container.read(servicesProvider).requireValue, [
           canonical,

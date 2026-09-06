@@ -20,6 +20,7 @@ void main() {
 
   test("maps every type expression variant and its fields", () {
     final expressions = <(TypeExpression, wire_type.TypeExpression_kind)>[
+      (const AnyType(), wire_type.TypeExpression_kind.anyConst),
       (const UnitType(), wire_type.TypeExpression_kind.unitConst),
       (const BooleanType(), wire_type.TypeExpression_kind.booleanConst),
       (

@@ -21,9 +21,12 @@ toml.workspace = true
 uuid.workspace = true
 wash-runtime.workspace = true
 wasmcloud-plugin-surrealdb.workspace = true
-wasmcloud-utils.workspace = true
+wasmcloud-utils = { path = "../../../../wasmcloud-utils" }
 
 [build-dependencies]
 indexmap.workspace = true
 serde.workspace = true
 toml.workspace = true
+
+[dev-dependencies]
+trybuild = "1"

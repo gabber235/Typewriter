@@ -119,7 +119,61 @@ func (m *Typewriter) PanelTest(
 	source *dagger.Workspace,
 ) *dagger.Container {
 	return m.panelContainer(source).
+		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithWorkdir("/workspace/panel").
 		WithExec([]string{"flutter", "pub", "get"}).
 		WithExec([]string{"flutter", "test"})
+}
+
+// +check
+func (m *Typewriter) PanelTestKitTest(source *dagger.Workspace) *dagger.Container {
+	return m.panelContainer(source).
+		WithWorkdir("/workspace/panel/testkit").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"flutter", "test"})
+}
+
+// +check
+func (m *Typewriter) PanelWidgetbookTest(source *dagger.Workspace) *dagger.Container {
+	return m.panelContainer(source).
+		WithWorkdir("/workspace/panel/widgetbook").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"flutter", "test"})
+}
+
+// +check
+func (m *Typewriter) PanelNatsIntegration(
+	source *dagger.Workspace,
+) *dagger.Container {
+	config := `
+port: 4222
+authorization {
+  users: [{
+    nkey: "UD466L6EBCM3YY5HEGHJANNTN4LSKTSUXTH7RILHCKEQMQHTBNLHJJXT"
+    permissions: {
+      publish: {allow: ["allowed.>", "_INBOX.integration.>"]}
+      subscribe: {allow: ["allowed.>", "_INBOX.integration.>"]}
+    }
+  }]
+}
+`
+	nats := dag.Container().
+		From("nats:2.14.6-alpine").
+		WithNewFile("/etc/nats/nats.conf", config).
+		WithExposedPort(4222).
+		AsService(dagger.ContainerAsServiceOpts{
+			Args:          []string{"-c", "/etc/nats/nats.conf"},
+			UseEntrypoint: true,
+		})
+
+	return m.panelContainer(source).
+		WithServiceBinding("nats", nats).
+		WithEnvVariable("NATS_ADAPTER_URL", "nats://nats:4222").
+		WithWorkdir("/workspace/panel").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{
+			"flutter",
+			"test",
+			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
+		})
 }

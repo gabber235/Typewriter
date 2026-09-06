@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Page {
 
- skir.RecordId get pageId; skir.RecordId get bookId; String get name; PageType get type; String get chapter; int get priority;
+ skir.RecordId get pageId; int get authoringSequence; skir.RecordId get bookId; String get name; PageKindRef get kind; String get chapter; int get priority;
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PageCopyWith<Page> get copyWith => _$PageCopyWithImpl<Page>(this as Page, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,pageId,bookId,name,type,chapter,priority);
+int get hashCode => Object.hash(runtimeType,pageId,authoringSequence,bookId,name,kind,chapter,priority);
 
 @override
 String toString() {
-  return 'Page(pageId: $pageId, bookId: $bookId, name: $name, type: $type, chapter: $chapter, priority: $priority)';
+  return 'Page(pageId: $pageId, authoringSequence: $authoringSequence, bookId: $bookId, name: $name, kind: $kind, chapter: $chapter, priority: $priority)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $PageCopyWith<$Res>  {
   factory $PageCopyWith(Page value, $Res Function(Page) _then) = _$PageCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId pageId, skir.RecordId bookId, String name, PageType type, String chapter, int priority
+ skir.RecordId pageId, int authoringSequence, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
 });
 
 
-
+$PageKindRefCopyWith<$Res> get kind;
 
 }
 /// @nodoc
@@ -62,18 +62,28 @@ class _$PageCopyWithImpl<$Res>
 
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? pageId = null,Object? bookId = null,Object? name = null,Object? type = null,Object? chapter = null,Object? priority = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? pageId = null,Object? authoringSequence = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
   return _then(_self.copyWith(
 pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
+as int,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as PageType,chapter: null == chapter ? _self.chapter : chapter // ignore: cast_nullable_to_non_nullable
+as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as PageKindRef,chapter: null == chapter ? _self.chapter : chapter // ignore: cast_nullable_to_non_nullable
 as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
+/// Create a copy of Page
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PageKindRefCopyWith<$Res> get kind {
 
+  return $PageKindRefCopyWith<$Res>(_self.kind, (value) {
+    return _then(_self.copyWith(kind: value));
+  });
+}
 }
 
 
@@ -155,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId pageId,  skir.RecordId bookId,  String name,  PageType type,  String chapter,  int priority)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId pageId,  int authoringSequence,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Page() when $default != null:
-return $default(_that.pageId,_that.bookId,_that.name,_that.type,_that.chapter,_that.priority);case _:
+return $default(_that.pageId,_that.authoringSequence,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
   return orElse();
 
 }
@@ -176,10 +186,10 @@ return $default(_that.pageId,_that.bookId,_that.name,_that.type,_that.chapter,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId pageId,  skir.RecordId bookId,  String name,  PageType type,  String chapter,  int priority)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId pageId,  int authoringSequence,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)  $default,) {final _that = this;
 switch (_that) {
 case _Page():
-return $default(_that.pageId,_that.bookId,_that.name,_that.type,_that.chapter,_that.priority);case _:
+return $default(_that.pageId,_that.authoringSequence,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +206,10 @@ return $default(_that.pageId,_that.bookId,_that.name,_that.type,_that.chapter,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId pageId,  skir.RecordId bookId,  String name,  PageType type,  String chapter,  int priority)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId pageId,  int authoringSequence,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,) {final _that = this;
 switch (_that) {
 case _Page() when $default != null:
-return $default(_that.pageId,_that.bookId,_that.name,_that.type,_that.chapter,_that.priority);case _:
+return $default(_that.pageId,_that.authoringSequence,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
   return null;
 
 }
@@ -211,13 +221,14 @@ return $default(_that.pageId,_that.bookId,_that.name,_that.type,_that.chapter,_t
 
 
 class _Page extends Page {
-  const _Page({required this.pageId, required this.bookId, required this.name, required this.type, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
-  
+  const _Page({required this.pageId, required this.authoringSequence, required this.bookId, required this.name, required this.kind, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
+
 
 @override final  skir.RecordId pageId;
+@override final  int authoringSequence;
 @override final  skir.RecordId bookId;
 @override final  String name;
-@override final  PageType type;
+@override final  PageKindRef kind;
 @override final  String chapter;
 @override final  int priority;
 
@@ -231,16 +242,16 @@ _$PageCopyWith<_Page> get copyWith => __$PageCopyWithImpl<_Page>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,pageId,bookId,name,type,chapter,priority);
+int get hashCode => Object.hash(runtimeType,pageId,authoringSequence,bookId,name,kind,chapter,priority);
 
 @override
 String toString() {
-  return 'Page(pageId: $pageId, bookId: $bookId, name: $name, type: $type, chapter: $chapter, priority: $priority)';
+  return 'Page(pageId: $pageId, authoringSequence: $authoringSequence, bookId: $bookId, name: $name, kind: $kind, chapter: $chapter, priority: $priority)';
 }
 
 
@@ -251,11 +262,11 @@ abstract mixin class _$PageCopyWith<$Res> implements $PageCopyWith<$Res> {
   factory _$PageCopyWith(_Page value, $Res Function(_Page) _then) = __$PageCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId pageId, skir.RecordId bookId, String name, PageType type, String chapter, int priority
+ skir.RecordId pageId, int authoringSequence, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
 });
 
 
-
+@override $PageKindRefCopyWith<$Res> get kind;
 
 }
 /// @nodoc
@@ -268,19 +279,29 @@ class __$PageCopyWithImpl<$Res>
 
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? pageId = null,Object? bookId = null,Object? name = null,Object? type = null,Object? chapter = null,Object? priority = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? pageId = null,Object? authoringSequence = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
   return _then(_Page(
 pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
+as int,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as PageType,chapter: null == chapter ? _self.chapter : chapter // ignore: cast_nullable_to_non_nullable
+as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as PageKindRef,chapter: null == chapter ? _self.chapter : chapter // ignore: cast_nullable_to_non_nullable
 as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
 
+/// Create a copy of Page
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PageKindRefCopyWith<$Res> get kind {
 
+  return $PageKindRefCopyWith<$Res>(_self.kind, (value) {
+    return _then(_self.copyWith(kind: value));
+  });
+}
 }
 
 // dart format on

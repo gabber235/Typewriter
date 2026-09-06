@@ -460,41 +460,41 @@ impl ReloadRealmAction {
 }
 
 // ==============================================================================
-// struct RealmCallbackAction
+// struct CommandCapabilityAction
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmCallbackAction {
-    pub realm_action_id: crate::skirout::base::editor::v1::type_catalog::RealmActionId,
+pub struct CommandCapabilityAction {
+    pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
     pub payload: crate::skirout::base::editor::v1::expression::TypedExpression,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmCallbackAction>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CommandCapabilityAction>>,
 }
 
-impl RealmCallbackAction {
-    pub fn default_ref() -> &'static RealmCallbackAction {
-        static D: std::sync::LazyLock<RealmCallbackAction> = std::sync::LazyLock::new(RealmCallbackAction::default);
+impl CommandCapabilityAction {
+    pub fn default_ref() -> &'static CommandCapabilityAction {
+        static D: std::sync::LazyLock<CommandCapabilityAction> = std::sync::LazyLock::new(CommandCapabilityAction::default);
         &D
     }
 }
 
-impl RealmCallbackAction {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmCallbackAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmCallbackAction>> =
+impl CommandCapabilityAction {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CommandCapabilityAction> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CommandCapabilityAction>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/action.skir",
-                    "RealmCallbackAction",
+                    "CommandCapabilityAction",
                     "",
-                    |x: &RealmCallbackAction| &x._unrecognized,
-                    |x: &mut RealmCallbackAction, u| x._unrecognized = u,
+                    |x: &CommandCapabilityAction| &x._unrecognized,
+                    |x: &mut CommandCapabilityAction, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<RealmCallbackAction> {
+    pub fn serializer() -> crate::skir_client::Serializer<CommandCapabilityAction> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmCallbackAction::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(CommandCapabilityAction::_adapter())
     }
 }
 
@@ -506,7 +506,7 @@ impl RealmCallbackAction {
 pub enum RealmEditorAction {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RealmEditorAction>>),
     Reload(Box<ReloadRealmAction>),
-    Callback(Box<RealmCallbackAction>),
+    Command(Box<CommandCapabilityAction>),
 }
 
 impl Default for RealmEditorAction {
@@ -523,7 +523,7 @@ impl RealmEditorAction {
                     |x: &RealmEditorAction| match x {
                         RealmEditorAction::Unknown(_) => 0,
                         RealmEditorAction::Reload(_) => 1,
-                        RealmEditorAction::Callback(_) => 2,
+                        RealmEditorAction::Command(_) => 2,
                     },
                     |u| RealmEditorAction::Unknown(Some(u)),
                     |x: &RealmEditorAction| match x { RealmEditorAction::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -828,15 +828,15 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmCallbackAction> = RealmCallbackAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_action_id", 0, crate::skirout::base::editor::v1::type_catalog::RealmActionId::serializer(), "", |x: &RealmCallbackAction| &x.realm_action_id, |x: &mut RealmCallbackAction, v| x.realm_action_id = v);
-                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &RealmCallbackAction| &x.payload, |x: &mut RealmCallbackAction, v| x.payload = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<CommandCapabilityAction> = CommandCapabilityAction::_adapter() as *const _ as *mut _;
+                (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &CommandCapabilityAction| &x.capability_id, |x: &mut CommandCapabilityAction, v| x.capability_id = v);
+                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &CommandCapabilityAction| &x.payload, |x: &mut CommandCapabilityAction, v| x.payload = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<RealmEditorAction> = RealmEditorAction::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("reload", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ReloadRealmAction::_adapter()), "", |v| RealmEditorAction::Reload(Box::new(v)), |x| match x { RealmEditorAction::Reload(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("callback", 2, 2, crate::skir_client::internal::struct_serializer_from_static(RealmCallbackAction::_adapter()), "", |v| RealmEditorAction::Callback(Box::new(v)), |x| match x { RealmEditorAction::Callback(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("command", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CommandCapabilityAction::_adapter()), "", |v| RealmEditorAction::Command(Box::new(v)), |x| match x { RealmEditorAction::Command(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

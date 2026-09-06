@@ -1,0 +1,164 @@
+package com.typewritermc.loader.standalone.shell.commands
+
+import com.github.ajalt.clikt.testing.test
+import com.typewritermc.loader.standalone.shell.LoaderShellContext
+import com.typewritermc.services.libs.registrar.MessagingOperation
+import com.typewritermc.services.libs.registrar.OrganizationBinding
+import com.typewritermc.services.libs.registrar.ReadySession
+import com.typewritermc.services.libs.registrar.RegistrarFailure
+import com.typewritermc.services.libs.registrar.RegistrarSnapshot
+import com.typewritermc.services.libs.registrar.RegistrarStage
+import com.typewritermc.services.libs.registrar.RegistrarState
+import com.typewritermc.services.libs.registrar.RegistrarStopResult
+import com.typewritermc.services.libs.registrar.RegistrationToken
+import com.typewritermc.services.libs.registrar.RetrySchedule
+import com.typewritermc.services.libs.registrar.ServiceIdentity
+import com.typewritermc.services.libs.registrar.ServiceRole
+import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
+
+val StatusCommandTest by testSuite {
+    test("displays uptime from the injected monotonic time source") {
+        val timeSource = TestTimeSource()
+        val context =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = timeSource,
+            )
+        timeSource += 3_661.seconds
+
+        StatusCommand(context).test().output shouldContain "Uptime:  01:01:01"
+    }
+
+    test("displays each startup lifecycle state") {
+        val states =
+            listOf(
+                RegistrarState.Idle to "Status: Idle",
+                RegistrarState.LoadingIdentity to "Status: Loading Identity",
+                RegistrarState.IssuingIdentity to "Status: Issuing Identity",
+                RegistrarState.PersistingIdentity(identity) to "Status: Persisting Identity",
+                RegistrarState.AcquiringAccessToken(identity) to "Status: Acquiring Access Token",
+                RegistrarState.AcquiringSentinelCredentials to "Status: Acquiring Sentinel Credentials",
+                RegistrarState.Connecting(3) to "Connection Attempt: 3",
+                RegistrarState.Reauthorizing(OrganizationBinding("organization123", null)) to "Status: Reauthorizing",
+            )
+
+        states.forEach { (state, expected) ->
+            val context =
+                LoaderShellContext(
+                    registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                    timeSource = TestTimeSource(),
+                )
+            StatusCommand(context).test().output shouldContain expected
+        }
+    }
+
+    test("displays awaiting binding without revealing the registration token") {
+        val state = RegistrarState.AwaitingBinding(identity, RegistrationToken("SECRET12345"))
+        val context =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
+            )
+
+        val output = StatusCommand(context).test().output
+
+        output shouldContain "Status: Awaiting Binding"
+        output shouldContain "Service ID: service123"
+        output shouldContain "Token: [REDACTED]"
+        output shouldNotContain "SECRET12345"
+    }
+
+    test("displays ready service and organization identity") {
+        val state = RegistrarState.Ready(readySession(), connectionGeneration = 4)
+        val context =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
+            )
+
+        val output = StatusCommand(context).test().output
+
+        output shouldContain "Status: Ready"
+        output shouldContain "Service ID: service123"
+        output shouldContain "Org ID: organization123"
+        output shouldContain "Org: Test Organization"
+        output shouldContain "Connection Generation: 4"
+    }
+
+    test("displays degraded stage failure and retry context") {
+        val state =
+            RegistrarState.DegradedAfterReady(
+                session = readySession(),
+                stage = RegistrarStage.HEARTBEAT,
+                failure = RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT),
+                retry = RetrySchedule(attempt = 7, delay = 5.seconds),
+            )
+        val context =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
+            )
+
+        val output = StatusCommand(context).test().output
+
+        output shouldContain "Status: Degraded After Ready"
+        output shouldContain "Stage: heartbeat"
+        output shouldContain "Error: messaging heartbeat"
+        output shouldContain "Retry Attempt: 7"
+        output shouldContain "Retry Delay: 5s"
+    }
+
+    test("displays terminal failure") {
+        val state =
+            RegistrarState.Failed(RegistrarFailure.Internal("registration_unavailable"))
+        val context =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
+            )
+
+        val output = StatusCommand(context).test().output
+
+        output shouldContain "Status: Failed"
+        output shouldContain "Error: internal registration_unavailable"
+    }
+
+    test("displays stopping and stopped states") {
+        val stoppingContext =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Stopping)),
+                timeSource = TestTimeSource(),
+            )
+        StatusCommand(stoppingContext).test().output shouldContain "Status: Stopping"
+
+        val stopped = RegistrarState.Stopped(RegistrarStopResult.Success)
+        val stoppedContext =
+            LoaderShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, stopped)),
+                timeSource = TestTimeSource(),
+            )
+        val output = StatusCommand(stoppedContext).test().output
+
+        output shouldContain "Status: Stopped"
+        output shouldContain "Shutdown: completed"
+    }
+}
+
+private val identity =
+    ServiceIdentity(
+        serviceId = "service123",
+        displayName = "Loader Service",
+        username = "loader_service",
+        role = ServiceRole.Host("1.0.0"),
+    )
+
+private fun readySession() =
+    ReadySession(
+        identity = identity,
+        binding = OrganizationBinding("organization123", "Test Organization"),
+    )

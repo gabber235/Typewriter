@@ -157,14 +157,13 @@ final class SkirActionEncoder {
         ReloadRealmAction() => TypeResult.success(
           wire.RealmEditorAction.createReload(),
         ),
-        InvokeRealmCallbackAction() =>
+        InvokeRealmCommandAction() =>
           expressions
               .encode(value.payload)
               .mapValue(
-                (payload) => wire.RealmEditorAction.createCallback(
-                  realmActionId: wire_type.RealmActionId(
-                    namespace: value.actionId.namespace,
-                    name: value.actionId.name,
+                (payload) => wire.RealmEditorAction.createCommand(
+                  capabilityId: wire_type.CapabilityId(
+                    value: value.capabilityId.value,
                   ),
                   payload: payload,
                 ),

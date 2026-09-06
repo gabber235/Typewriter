@@ -1,0 +1,72 @@
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct OrganizationPresence(812400001) {}
+
+struct MembersPresence(812400002) {}
+
+struct ServicesPresence(812400003) {}
+
+struct ServicePresence(812400004) {
+  service_id: RecordId = 0;
+}
+
+struct RealmsPresence(812400005) {}
+
+struct RealmPresence(812400006) {
+  realm_id: RecordId = 0;
+}
+
+struct RealmLibraryPresence(812400007) {
+  realm_id: RecordId = 0;
+}
+
+struct RealmTagsPresence(812400008) {
+  realm_id: RecordId = 0;
+}
+
+struct BookPresence(812400009) {
+  realm_id: RecordId = 0;
+  book_id: RecordId = 1;
+}
+
+enum PageActivity(812400010) {
+  overview = 1;
+  graph = 2;
+  timeline = 3;
+  inspector = 4;
+}
+
+struct PagePresence(812400011) {
+  realm_id: RecordId = 0;
+  book_id: RecordId = 1;
+  page_id: RecordId = 2;
+  activity: PageActivity = 3;
+}
+
+enum PresenceLocation(812400012) {
+  organization: OrganizationPresence = 1;
+  members: MembersPresence = 2;
+  services: ServicesPresence = 3;
+  service: ServicePresence = 4;
+  realms: RealmsPresence = 5;
+  realm: RealmPresence = 6;
+  realm_library: RealmLibraryPresence = 7;
+  realm_tags: RealmTagsPresence = 8;
+  book: BookPresence = 9;
+  page: PagePresence = 10;
+}
+
+struct PanelPresence(812400013) {
+  session_id: string = 0;
+  sequence: int64 = 1;
+  location: PresenceLocation = 2;
+}
+
+struct PresenceLeft(812400014) {
+  session_id: string = 0;
+}
+
+enum PresenceEvent(812400015) {
+  active: PanelPresence = 1;
+  left: PresenceLeft = 2;
+}

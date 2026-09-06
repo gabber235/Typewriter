@@ -3,12 +3,12 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
         THROW "role-unknown-property-error"
     };
 
-    IF $role.type NOT IN ["engine", "realm", "custom"] {
+    IF $role.type NOT IN ["host", "custom"] {
         THROW "role-type-invalid-error"
     };
 
-    IF $role.version = NONE OR string::len(string::trim($role.version)) < 1 {
-        THROW "role-version-blank-error"
+    IF $role.version = NONE OR !string::is_semver($role.version) {
+        THROW "role-version-invalid-error"
     };
 
     IF $role.type = "custom" {
@@ -18,7 +18,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
         IF !fn::is_id($role.name) {
             THROW "custom-role-name-invalid-error"
         };
-        IF $role.name IN ["engine", "realm"] {
+        IF $role.name IN ["host"] {
             THROW "builtin-role-name-forbidden-error"
         };
         RETURN true;
@@ -31,77 +31,44 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
     RETURN true;
 };
 
-DEFINE FUNCTION OVERWRITE fn::service::valid_roles($roles: array<object>) -> bool {
-    IF array::len($roles) < 1 {
-        THROW "roles-required-error"
-    };
-
-    IF !array::all($roles, |$role| fn::service::valid_role($role)) {
-        THROW "role-invalid-error"
-    };
-
-    LET $engines = $roles.filter(|$role| $role.type = "engine");
-    LET $realms = $roles.filter(|$role| $role.type = "realm");
-    LET $custom = $roles.filter(|$role| $role.type = "custom");
-
-    IF array::len($engines) > 1 {
-        THROW "engine-role-duplicate-error"
-    };
-
-    IF array::len($realms) > 1 {
-        THROW "realm-role-duplicate-error"
-    };
-
-    LET $custom_slugs = $custom.map(|$role| $role.name);
-    IF array::len(array::distinct($custom_slugs)) != array::len($custom_slugs) {
-        THROW "custom-role-duplicate-error"
-    };
-
-    RETURN true;
-};
-
-DEFINE FUNCTION OVERWRITE fn::service::has_role($service: object, $role_type: string) -> bool {
-    RETURN array::any($service.roles, |$role| $role.type = $role_type);
-};
-
-DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: option<record<service>>) -> bool {
-    IF $realm == NONE { RETURN true };
-
-    IF $realm = $service.id {
-        THROW "runs-in-self-reference-error"
-    };
-
-    LET $can_run_in = fn::service::has_role($service, "engine") OR fn::service::has_role($service, "custom");
-    IF !$can_run_in {
-        THROW "runs-in-requires-engine-or-custom-role"
-    };
-
-    IF $realm.roles == NONE {
-        THROW "runs-in-service-not-found-error"
-    };
-
-    IF !fn::service::has_role({ roles: $realm.roles }, "realm") {
-        THROW "runs-in-must-reference-realm-role"
-    };
-
-    LET $service_org = $service.organization;
-    LET $realm_org = $realm.organization;
-
-    IF !($service_org == NONE AND $realm_org == NONE) AND !($service_org != NONE AND $realm_org != NONE AND $service_org = $realm_org) {
-        THROW "runs-in-organization-mismatch"
-    };
-
-    IF $service.id IN $realm.{1..256+collect}.runs_in {
-        THROW "runs-in-cycle-error"
-    };
-
-    RETURN true;
-};
-
 DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
-    fn::service::valid_roles($service.roles);
+    fn::service::valid_role($service.role);
     IF $service.organization != NONE AND $service.registration != NONE {
         THROW "service-organization-registration-conflict"
     };
-    RETURN fn::service::valid_runs_in($service, $service.runs_in);
+    RETURN true;
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::valid_engine_target($target: object) -> bool {
+    IF !array::all(object::keys($target), |$key| $key IN ["engine_id", "version_constraint"]) {
+        THROW "engine-target-unknown-property-error"
+    };
+    IF !fn::is_artifact_id($target.engine_id) {
+        THROW "engine-target-id-invalid-error"
+    };
+    IF string::len(string::trim($target.version_constraint)) == 0 {
+        THROW "engine-target-version-constraint-invalid-error"
+    };
+    RETURN true;
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::valid_supported_engine($engine: object) -> bool {
+    IF !array::all(object::keys($engine), |$key| $key IN ["engine_id"]) {
+        THROW "supported-engine-unknown-property-error"
+    };
+    IF !fn::is_artifact_id($engine.engine_id) {
+        THROW "supported-engine-id-invalid-error"
+    };
+    RETURN true;
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::valid_supported_engines($engines: array<object>) -> bool {
+    IF !array::all($engines, |$engine| fn::service::valid_supported_engine($engine)) {
+        THROW "supported-engine-invalid-error"
+    };
+    LET $ids = $engines.map(|$engine| $engine.engine_id);
+    IF array::len(array::distinct($ids)) != array::len($ids) {
+        THROW "supported-engine-duplicate-error"
+    };
+    RETURN true;
 };

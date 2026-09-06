@@ -131,8 +131,11 @@ class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   EditorValue value(DataPath path) => _state;
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) =>
-      EditorMutationResult.applied(value);
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) => EditorMutationResult.applied(value);
 
   @override
   void refreshDocument(EditorDocument document) {}
@@ -152,11 +155,11 @@ class _StoryEditorSource extends ChangeNotifier implements EditorSource {
       );
 
   @override
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,
-  ) async => _unavailable();
+  ) async => LocalEditorActionResult(_unavailable());
 
   @override
   void acceptRemote({required int revision, required DataValue value}) {}

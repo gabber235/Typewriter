@@ -4,25 +4,21 @@ struct Service {
   service_id: RecordId;
   revision: int64;
   name: string;
-  roles: [ServiceRole];
+  role: ServiceRole;
   created_at: timestamp;
   organization: RecordId?;
   registration: ServiceRegistration?;
   state: ServiceState?;
-  runs_in: RecordId?;
 }
 
 enum ServiceRole {
-  engine: struct {
+  host: struct {
     version: string;
-  };
-  realm: struct {
-    version: string;
-  };
+  } = 1;
   custom: struct {
     name: string;
     version: string;
-  };
+  } = 2;
 }
 
 enum ServiceStatus {

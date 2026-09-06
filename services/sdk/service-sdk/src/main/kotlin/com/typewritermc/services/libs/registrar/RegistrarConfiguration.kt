@@ -1,0 +1,60 @@
+package com.typewritermc.services.libs.registrar
+
+import java.net.URI
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Validates registrar endpoints, identity role, refresh intervals, and shutdown budget.
+ *
+ * Endpoint URIs require supported schemes, a host, and no embedded user credentials. Durations must be positive
+ * and finite; binding refresh stays below the registration lease and Sentinel refresh cannot exceed maximum
+ * staleness. OAuth scopes are copied at construction.
+ */
+class RegistrarConfiguration(
+    val identityIssueUri: URI,
+    val sentinelCredentialsUri: URI,
+    val oauthTokenUri: URI,
+    val oauthClientId: String,
+    oauthScopes: Set<String>,
+    val natsServerUri: URI,
+    val role: ServiceRole,
+    val bindingRefreshInterval: Duration = 2.minutes,
+    val heartbeatInterval: Duration = 30.seconds,
+    val accessTokenRefreshSkew: Duration = 1.minutes,
+    val sentinelRefreshAfter: Duration = 1.hours,
+    val sentinelMaximumStaleness: Duration = 24.hours,
+    val shutdownTimeout: Duration = 30.seconds,
+) {
+    val oauthScopes: Set<String> = oauthScopes.toSet()
+
+    init {
+        listOf(identityIssueUri, sentinelCredentialsUri, oauthTokenUri).forEach { requireUri(it, setOf("http", "https")) }
+        requireUri(natsServerUri, setOf("nats", "tls", "ws", "wss"))
+        require(oauthClientId.isNotBlank() && oauthClientId == oauthClientId.trim())
+        require(this.oauthScopes.isNotEmpty() && this.oauthScopes.all { it.isNotBlank() && it == it.trim() })
+        listOf(
+            bindingRefreshInterval,
+            heartbeatInterval,
+            accessTokenRefreshSkew,
+            sentinelRefreshAfter,
+            sentinelMaximumStaleness,
+            shutdownTimeout,
+        ).forEach {
+            require(it.isFinite() && it.isPositive()) { "durations must be positive and finite" }
+        }
+        require(bindingRefreshInterval < 150.seconds) { "binding refresh must be below the registration lease" }
+        require(sentinelRefreshAfter <= sentinelMaximumStaleness)
+    }
+}
+
+private fun requireUri(
+    uri: URI,
+    schemes: Set<String>,
+) {
+    require(
+        uri.isAbsolute && uri.scheme.lowercase() in schemes && !uri.host.isNullOrBlank() && uri.userInfo == null,
+    ) { "invalid endpoint URI" }
+}

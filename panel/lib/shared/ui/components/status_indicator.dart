@@ -20,78 +20,21 @@ class StatusIndicator extends HookWidget {
   final double dotSize;
   final double fontSize;
 
-  String get _lastSeenLabel {
-    if (lastSeen == null) return "Never";
-    final now = DateTime.now();
-    final difference = now.difference(lastSeen!);
-
-    if (difference.inSeconds < 60) {
-      return "Just now";
-    } else if (difference.inMinutes < 60) {
-      return "${difference.inMinutes}m ago";
-    } else if (difference.inHours < 24) {
-      return "${difference.inHours}h ago";
-    } else if (difference.inDays < 7) {
-      return "${difference.inDays}d ago";
-    } else if (difference.inDays < 30) {
-      final weeks = difference.inDays ~/ 7;
-      return "${weeks}w ago";
-    } else if (difference.inDays < 365) {
-      final months = difference.inDays ~/ 30;
-      return "${months}mo ago";
-    } else {
-      final years = difference.inDays ~/ 365;
-      return "${years}y ago";
-    }
-  }
-
-  DateTime get nextRefreshAt {
-    final now = DateTime.now();
-    if (isOnline) return now.add(Duration(seconds: 10));
-    if (lastSeen == null) return now;
-
-    final difference = now.difference(lastSeen!);
-    if (difference.inMinutes < 60) {
-      return now.add(Duration(seconds: 60 - difference.inSeconds % 60));
-    }
-    if (difference.inHours < 24) {
-      return now.add(
-        Duration(seconds: 60 * 60 - difference.inSeconds % 60 * 60),
-      );
-    }
-    if (difference.inDays < 7) {
-      return now.add(
-        Duration(seconds: 60 * 60 * 24 - difference.inSeconds % 60 * 60 * 24),
-      );
-    }
-    if (difference.inDays < 30) {
-      return now.add(
-        Duration(
-          seconds: 60 * 60 * 24 * 7 - difference.inSeconds % 60 * 60 * 24 * 7,
-        ),
-      );
-    }
-    if (difference.inDays < 365) {
-      return now.add(
-        Duration(
-          seconds: 60 * 60 * 24 * 30 - difference.inSeconds % 60 * 60 * 24 * 30,
-        ),
-      );
-    }
-    return now.add(
-      Duration(
-        seconds: 60 * 60 * 24 * 365 - difference.inSeconds % 60 * 60 * 24 * 365,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final description = lastSeen == null
+        ? null
+        : describeRelativeTime(value: lastSeen!, now: now);
     final effectiveDotColor =
         dotColor ?? (isOnline ? context.colors.online : context.colors.offline);
     final effectiveTextColor = textColor ?? context.colors.contentSecondary;
 
-    useRefreshAt(nextRefreshAt);
+    useRefreshAt(
+      isOnline
+          ? now.add(const Duration(seconds: 10))
+          : description?.nextRefreshAt ?? now,
+    );
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -106,7 +49,7 @@ class StatusIndicator extends HookWidget {
         ),
         SizedBox(width: dotSize * 0.75),
         Text(
-          isOnline ? "Online" : _lastSeenLabel,
+          isOnline ? "Online" : description?.compact ?? "Never",
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: fontSize,
             color: effectiveTextColor,

@@ -6,22 +6,22 @@ use typewriter_component_test::prelude::{DatabaseHandle, SkirHttpExt};
 use wasmcloud_utils::{
     skir::base::service::v1::{
         identity::{IssueServiceIdentityRequest, IssueServiceIdentityResponse},
-        service::{ServiceRole, ServiceRole_Custom, ServiceRole_Engine},
+        service::{ServiceRole, ServiceRole_Custom, ServiceRole_Host},
     },
     skir_variant,
 };
 
 use super::{Authentik, ServiceIdentity};
 
-fn engine_role() -> ServiceRole {
-    skir_variant!(ServiceRole::Engine {
-        version: "1".into(),
+fn host_role() -> ServiceRole {
+    skir_variant!(ServiceRole::Host {
+        version: "1.0.0".into(),
     })
 }
 
-fn request(roles: Vec<ServiceRole>) -> IssueServiceIdentityRequest {
+fn request(role: ServiceRole) -> IssueServiceIdentityRequest {
     IssueServiceIdentityRequest {
-        roles,
+        role,
         _unrecognized: None,
     }
 }
@@ -78,44 +78,16 @@ async fn issue(
 }
 
 #[component_test(ServiceIdentity)]
-async fn empty_roles_are_rejected_without_provider_call(
-    context: &mut TestContext<ServiceIdentity>,
-) -> TestResult {
-    let response = issue(context, &request(Vec::new())).await?;
-
-    assert_eq!(response.status, http::StatusCode::BAD_REQUEST);
-    assert!(matches!(
-        response.body,
-        IssueServiceIdentityResponse::RolesRequiredError(_)
-    ));
-    Ok(())
-}
-
-#[component_test(ServiceIdentity)]
-async fn duplicate_engine_roles_are_rejected_without_provider_call(
-    context: &mut TestContext<ServiceIdentity>,
-) -> TestResult {
-    let response = issue(context, &request(vec![engine_role(), engine_role()])).await?;
-
-    assert_eq!(response.status, http::StatusCode::BAD_REQUEST);
-    assert!(matches!(
-        response.body,
-        IssueServiceIdentityResponse::EngineRoleDuplicateError(_)
-    ));
-    Ok(())
-}
-
-#[component_test(ServiceIdentity)]
 async fn built_in_custom_role_name_is_rejected(
     context: &mut TestContext<ServiceIdentity>,
 ) -> TestResult {
     let response = issue(
         context,
-        &request(vec![ServiceRole::Custom(Box::new(ServiceRole_Custom {
-            name: "engine".into(),
-            version: "1".into(),
+        &request(ServiceRole::Custom(Box::new(ServiceRole_Custom {
+            name: "host".into(),
+            version: "1.0.0".into(),
             _unrecognized: None,
-        }))]),
+        }))),
     )
     .await?;
 
@@ -128,12 +100,12 @@ async fn built_in_custom_role_name_is_rejected(
 }
 
 #[component_test(ServiceIdentity)]
-async fn engine_identity_persists_credentials_and_roles(
+async fn host_identity_persists_credentials_and_role(
     context: &mut TestContext<ServiceIdentity>,
 ) -> TestResult {
     expect_account_creation(context, "fixture-service-uid", 314)?;
 
-    let response = issue(context, &request(vec![engine_role()])).await?;
+    let response = issue(context, &request(host_role())).await?;
 
     assert_eq!(response.status, http::StatusCode::OK);
     let IssueServiceIdentityResponse::Success(success) = response.body else {
@@ -146,10 +118,10 @@ async fn engine_identity_persists_credentials_and_roles(
     let database = context
         .extension::<DatabaseHandle>()
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
-    let services = database.query_json("SELECT id, roles FROM service").await?;
+    let services = database.query_json("SELECT id, role FROM service").await?;
     assert_jm!(services, [{
         "id": "service:`fixture-service-uid`",
-        "roles": [{ "type": "engine", "version": "1" }]
+        "role": { "type": "host", "version": "1.0.0" }
     }]);
     Ok(())
 }
@@ -166,7 +138,7 @@ async fn unavailable_provider_returns_service_unavailable_without_persistence(
         .status(http::StatusCode::SERVICE_UNAVAILABLE)
         .register()?;
 
-    let response = issue(context, &request(vec![engine_role()])).await?;
+    let response = issue(context, &request(host_role())).await?;
 
     assert_eq!(response.status, http::StatusCode::SERVICE_UNAVAILABLE);
     assert!(matches!(
@@ -197,7 +169,7 @@ async fn rejected_provider_response_returns_internal_error_without_persistence(
 
     let response = tokio::time::timeout(
         Duration::from_secs(2),
-        issue(context, &request(vec![engine_role()])),
+        issue(context, &request(host_role())),
     )
     .await
     .map_err(|_| {
@@ -225,7 +197,7 @@ async fn persistence_failure_deletes_provisioned_account(
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
     database
         .seed(
-            "CREATE service:duplicate_uid SET name = 'existing', roles = [{ type: 'engine', version: '1' }]",
+            "CREATE service:duplicate_uid SET name = 'existing', role = { type: 'host', version: '1.0.0' }",
         )
         .execute()
         .await?;
@@ -238,7 +210,7 @@ async fn persistence_failure_deletes_provisioned_account(
         .status(http::StatusCode::NO_CONTENT)
         .register()?;
 
-    let response = issue(context, &request(vec![engine_role()])).await?;
+    let response = issue(context, &request(host_role())).await?;
 
     assert_eq!(response.status, http::StatusCode::INTERNAL_SERVER_ERROR);
     assert!(matches!(

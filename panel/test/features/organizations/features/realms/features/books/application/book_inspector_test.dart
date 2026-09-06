@@ -13,7 +13,7 @@ class _Books extends Books {
   final List<Book> books;
 
   @override
-  Stream<List<Book>> build() => Stream.value(books);
+  Future<List<Book>> build() async => books;
 }
 
 class _Tags extends Tags {
@@ -22,7 +22,7 @@ class _Tags extends Tags {
   final List<Tag> tags;
 
   @override
-  Stream<List<Tag>> build() => Stream.value(tags);
+  Future<List<Tag>> build() async => tags;
 }
 
 final _refProvider = Provider<Ref>((ref) => ref);
@@ -33,7 +33,7 @@ void main() {
   test("Book inspector exposes direct and effective Tags", () async {
     final directTag = Tag(
       tagId: recordId("tag:direct"),
-      revision: 1,
+      authoringSequence: 1,
       name: "Direct",
       color: Colors.blue,
       parentIds: [recordId("tag:parent")],
@@ -41,7 +41,7 @@ void main() {
     );
     final parentTag = Tag(
       tagId: recordId("tag:parent"),
-      revision: 1,
+      authoringSequence: 1,
       name: "Parent",
       color: Colors.green,
       parentIds: const [],
@@ -49,7 +49,7 @@ void main() {
     );
     final book = Book(
       bookId: recordId("book:test"),
-      revision: 4,
+      authoringSequence: 4,
       title: "Test Book",
       icon: "mdi:book",
       color: Colors.deepPurple,
@@ -82,6 +82,10 @@ void main() {
         .select(BookIdentifier(book.bookId));
 
     final selected = await _selected(container);
+    final open = selected.capabilities
+        .whereType<OpenSelectionCapability>()
+        .single;
+    expect(open.allowMultiSelect, isFalse);
     final document = (selected as BookSelection).document;
     final resolved = TypeRegistry(
       document.typeCatalog,
@@ -155,7 +159,7 @@ void main() {
     (tester) async {
       final book = Book(
         bookId: recordId("book:empty"),
-        revision: 1,
+        authoringSequence: 1,
         title: "Empty Book",
         icon: "mdi:book",
         color: Colors.deepPurple,

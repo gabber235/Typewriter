@@ -220,7 +220,7 @@ return unknown(_that.cursorOffset,_that.activeRange,_that.partial,_that.side);ca
 
 class SelectorKeyCursorContext implements QueryCursorContext {
   const SelectorKeyCursorContext({required this.cursorOffset, required this.activeRange, required this.partialKey});
-
+  
 
 @override final  int cursorOffset;
 @override final  QueryRange activeRange;
@@ -290,7 +290,7 @@ as String,
 
 class SelectorValueCursorContext implements QueryCursorContext {
   const SelectorValueCursorContext({required this.cursorOffset, required this.activeRange, required this.selectorId, required this.partialValue, required this.keyRange, required this.valueRange});
-
+  
 
 @override final  int cursorOffset;
 @override final  QueryRange activeRange;
@@ -366,7 +366,7 @@ as QueryRange?,
 
 class OperatorCursorContext implements QueryCursorContext {
   const OperatorCursorContext({required this.cursorOffset, required this.activeRange, required this.partialOperator});
-
+  
 
 @override final  int cursorOffset;
 @override final  QueryRange activeRange;
@@ -436,7 +436,7 @@ as String,
 
 class UnknownCursorContext implements QueryCursorContext {
   const UnknownCursorContext({required this.cursorOffset, required this.activeRange, required this.partial, required this.side});
-
+  
 
 @override final  int cursorOffset;
 @override final  QueryRange activeRange;
@@ -706,7 +706,7 @@ return operator(_that.label,_that.replaceRange,_that.operatorToken);case _:
 
 class SelectorKeySuggestion implements QuerySuggestion {
   const SelectorKeySuggestion({required this.label, required this.replaceRange, required this.selectorId});
-
+  
 
 @override final  String label;
 @override final  QueryRange replaceRange;
@@ -776,7 +776,7 @@ as String,
 
 class SelectorValueSuggestion implements QuerySuggestion {
   const SelectorValueSuggestion({required this.label, required this.replaceRange, required this.selectorId, required this.value});
-
+  
 
 @override final  String label;
 @override final  QueryRange replaceRange;
@@ -848,7 +848,7 @@ as String,
 
 class OperatorSuggestion implements QuerySuggestion {
   const OperatorSuggestion({required this.label, required this.replaceRange, required this.operatorToken});
-
+  
 
 @override final  String label;
 @override final  QueryRange replaceRange;

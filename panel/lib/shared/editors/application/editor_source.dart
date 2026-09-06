@@ -6,7 +6,11 @@ abstract interface class EditorSource implements Listenable {
 
   EditorValue value(DataPath path);
 
-  EditorMutationResult update(DataPath path, DataValue value);
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  });
 
   void refreshDocument(EditorDocument document);
 
@@ -16,7 +20,7 @@ abstract interface class EditorSource implements Listenable {
 
   Future<TypedMutationResult> flush({Set<DataPath>? paths});
 
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,

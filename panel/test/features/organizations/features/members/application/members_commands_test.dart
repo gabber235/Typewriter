@@ -12,10 +12,10 @@ import "support/members_test_support.dart";
 
 void main() {
   group("OrganizationMembers command state", () {
-    late MockNatsClient mockNats;
+    late FakeNatsClient mockNats;
 
     setUp(() {
-      mockNats = MockNatsClient();
+      mockNats = FakeNatsClient();
     });
 
     tearDown(() {

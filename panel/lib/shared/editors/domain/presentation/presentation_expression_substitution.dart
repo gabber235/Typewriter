@@ -223,8 +223,8 @@ extension on RealmAction {
     final value = this;
     return switch (value) {
       ReloadRealmAction() => value,
-      InvokeRealmCallbackAction() => InvokeRealmCallbackAction(
-        actionId: value.actionId,
+      InvokeRealmCommandAction() => InvokeRealmCommandAction(
+        capabilityId: value.capabilityId,
         payload: value.payload.substituteTypes(substitutions),
       ),
     };

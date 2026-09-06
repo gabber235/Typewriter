@@ -132,7 +132,7 @@ final class BindServiceRequest_mutable implements BindServiceRequest_orMutable {
 sealed class BindServiceResponse_Success_orMutable {
   _core.String get serviceId;
   _core.String? get serviceName;
-  _core.Iterable<_lib_service_v1_service.ServiceRole> get serviceRoles;
+  _lib_service_v1_service.ServiceRole get serviceRole;
 
   BindServiceResponse_Success toFrozen();
 }
@@ -144,30 +144,30 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
   @_core.override
   final _core.String? serviceName;
   @_core.override
-  final _core.Iterable<_lib_service_v1_service.ServiceRole> serviceRoles;
+  final _lib_service_v1_service.ServiceRole serviceRole;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BindServiceResponse_Success({
     required _core.String serviceId,
     required _core.String? serviceName,
-    required _core.Iterable<_lib_service_v1_service.ServiceRole> serviceRoles,
+    required _lib_service_v1_service.ServiceRole serviceRole,
   }) => BindServiceResponse_Success._(
     serviceId,
     serviceName,
-    _skir.internal__frozenCopy(serviceRoles),
+    serviceRole,
   );
 
   BindServiceResponse_Success._(
     this.serviceId,
     this.serviceName,
-    this.serviceRoles,
+    this.serviceRole,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BindServiceResponse_Success._(
     "",
     null,
-    _skir.KeyedIterable.empty,
+    _lib_service_v1_service.ServiceRole.unknown,
   );
 
   /// Returns a new mutable instance.
@@ -175,7 +175,7 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
   static BindServiceResponse_Success_mutable mutable() => BindServiceResponse_Success_mutable._(
     "",
     null,
-    _skir.KeyedIterable.empty,
+    _lib_service_v1_service.ServiceRole.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -187,7 +187,7 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
   BindServiceResponse_Success_mutable toMutable() => BindServiceResponse_Success_mutable._(
     this.serviceId,
     this.serviceName,
-    this.serviceRoles,
+    this.serviceRole,
   );
 
   @_core.override
@@ -203,7 +203,7 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
   _core.List get _equality_proxy => [
     this.serviceId,
     this.serviceName,
-    this.serviceRoles,
+    this.serviceRole,
   ];
 
   @_core.override
@@ -233,15 +233,13 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
         (it, v) => it.serviceName = v,
       );
       _serializerBuilder.addField(
-        "service_roles",
-        "serviceRoles",
+        "service_role",
+        "serviceRole",
         2,
-        _skir.Serializers.iterable(
-          _lib_service_v1_service.ServiceRole.serializer,
-        ),
+        _lib_service_v1_service.ServiceRole.serializer,
         "",
-        (it) => it.serviceRoles,
-        (it, v) => it.serviceRoles = v,
+        (it) => it.serviceRole,
+        (it, v) => it.serviceRole = v,
       );
       _serializerBuilder.finalize();
     }
@@ -263,32 +261,21 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
 final class BindServiceResponse_Success_mutable implements BindServiceResponse_Success_orMutable {
   _core.String serviceId;
   _core.String? serviceName;
-  _core.Iterable<_lib_service_v1_service.ServiceRole> serviceRoles;
+  _lib_service_v1_service.ServiceRole serviceRole;
   _skir.internal__UnrecognizedFields? _u;
 
   BindServiceResponse_Success_mutable._(
     this.serviceId,
     this.serviceName,
-    this.serviceRoles,
+    this.serviceRole,
   );
-
-  /// If the value of [serviceRoles] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [serviceRoles] and returns it.
-  _core.List<_lib_service_v1_service.ServiceRole> get mutableServiceRoles {
-    final value = this.serviceRoles;
-    if (value is _skir.internal__MutableList<_lib_service_v1_service.ServiceRole>) {
-      return value;
-    } else {
-      return this.serviceRoles = _skir.internal__MutableList([...value]);
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   BindServiceResponse_Success toFrozen() => BindServiceResponse_Success(
     serviceId: this.serviceId,
     serviceName: this.serviceName,
-    serviceRoles: this.serviceRoles,
+    serviceRole: this.serviceRole,
   ).._u = this._u;
 }
 
@@ -484,12 +471,12 @@ sealed class BindServiceResponse {
   factory BindServiceResponse.createSuccess({
     required _core.String serviceId,
     required _core.String? serviceName,
-    required _core.Iterable<_lib_service_v1_service.ServiceRole> serviceRoles,
+    required _lib_service_v1_service.ServiceRole serviceRole,
   }) => BindServiceResponse.wrapSuccess(
     BindServiceResponse_Success(
       serviceId: serviceId,
       serviceName: serviceName,
-      serviceRoles: serviceRoles,
+      serviceRole: serviceRole,
     )
   );
 

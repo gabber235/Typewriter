@@ -11,20 +11,14 @@ import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
 Service generateRandomService({
   skir.RecordId? organization,
-  List<ServiceRole>? roles,
+  ServiceRole? role,
 }) {
-  final generatedRoles = <ServiceRole>[];
-  if (roles == null && faker.randomGenerator.boolean()) {
-    generatedRoles.add(
-      EngineServiceRole(version: generateRandomVersion().canonicalizedVersion),
-    );
-  }
-  if (roles == null &&
-      (faker.randomGenerator.boolean() || generatedRoles.isEmpty)) {
-    generatedRoles.add(
-      RealmServiceRole(version: generateRandomVersion().canonicalizedVersion),
-    );
-  }
+  final generatedRole = faker.randomGenerator.boolean()
+      ? HostServiceRole(version: generateRandomVersion().canonicalizedVersion)
+      : CustomServiceRole(
+          name: "integration",
+          version: generateRandomVersion().canonicalizedVersion,
+        );
   final createdAt = faker.date.dateTimeBetween(
     DateTime.now().subtract(365.days),
     DateTime.now().subtract(14.days),
@@ -43,7 +37,7 @@ Service generateRandomService({
         .words(faker.randomGenerator.integer(3, min: 1))
         .join("_")
         .toLowerCase(),
-    roles: roles ?? generatedRoles,
+    role: role ?? generatedRole,
     createdAt: createdAt,
     state: ServiceState(
       status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
@@ -61,20 +55,17 @@ class ServicesMock extends Services {
     yield await displayState.generateBatch((count) {
       final organization = recordId("organization:${faker.guid.guid()}");
       return List.generate(count, (index) {
-        final roles = switch (index) {
-          0 => [
-            EngineServiceRole(
-              version: generateRandomVersion().canonicalizedVersion,
-            ),
-          ],
-          1 => [
-            RealmServiceRole(
-              version: generateRandomVersion().canonicalizedVersion,
-            ),
-          ],
+        final role = switch (index) {
+          0 => HostServiceRole(
+            version: generateRandomVersion().canonicalizedVersion,
+          ),
+          1 => CustomServiceRole(
+            name: "realm",
+            version: generateRandomVersion().canonicalizedVersion,
+          ),
           _ => null,
         };
-        return generateRandomService(organization: organization, roles: roles);
+        return generateRandomService(organization: organization, role: role);
       });
     });
   }
@@ -116,7 +107,7 @@ List<Override> servicesProviderOverrides({
 
 List<Override> realmProviderOverrides() => [
   realmIdProvider.overrideWith(
-    (ref) => ref.watch(realmsProvider).value?.firstOrNull?.serviceId,
+    (ref) => ref.watch(realmsProvider).value?.firstOrNull?.realmId,
   ),
   selectedRealmProvider.overrideWith(
     (ref) async => (await ref.watch(realmsProvider.future)).firstOrNull,

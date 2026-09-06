@@ -53,7 +53,7 @@ final class SkirTypeCodec {
 
   TypeResult<wire.TypeExpression> encodeExpression(TypeExpression value) =>
       switch (value) {
-        AnyType() => invalidWire("Any type has no wire representation"),
+        AnyType() => const TypeResult.success(wire.TypeExpression.any),
         UnitType() => const TypeResult.success(wire.TypeExpression.unit),
         BooleanType() => const TypeResult.success(wire.TypeExpression.boolean),
         StringType() => SkirTypeScalarCodec.encodeString(value),
@@ -93,6 +93,7 @@ final class SkirTypeCodec {
       wire.TypeExpression_unknown() => invalidWire(
         "Unknown wire type expression",
       ),
+      wire.TypeExpression.any => const TypeResult.success(AnyType()),
       wire.TypeExpression.unit => const TypeResult.success(UnitType()),
       wire.TypeExpression.boolean => const TypeResult.success(BooleanType()),
       wire.TypeExpression.timestamp => const TypeResult.success(
@@ -185,10 +186,9 @@ final class SkirTypeCodec {
     OptionTypeId() => wire.TypeId.wrapBuiltin(wire.BuiltinTypeId.option),
     SomeTypeId() => wire.TypeId.wrapBuiltin(wire.BuiltinTypeId.some),
     NoneTypeId() => wire.TypeId.wrapBuiltin(wire.BuiltinTypeId.none),
-    QualifiedTypeId(:final namespace, :final name) => wire.TypeId.createRealm(
-      namespace: namespace,
-      name: name,
-    ),
+    DeclaredTypeId(:final uuid) => wire.TypeId.createDeclared(value: uuid),
+    QualifiedTypeId(:final namespace, :final name) =>
+      wire.TypeId.createQualified(namespace: namespace, name: name),
   };
 
   TypeResult<TypeId> _decodeTypeId(wire.TypeId value) => switch (value) {
@@ -198,7 +198,11 @@ final class SkirTypeCodec {
       wire.BuiltinTypeId.none => const TypeResult.success(TypeId.none()),
       _ => invalidWire("Unknown builtin type id"),
     },
-    wire.TypeId_realmWrapper(:final value) =>
+    wire.TypeId_declaredWrapper(:final value) =>
+      value.value.length != 32
+          ? invalidWire("Declared type UUID is invalid")
+          : TypeResult.success(DeclaredTypeId(value.value)),
+    wire.TypeId_qualifiedWrapper(:final value) =>
       value.namespace.isEmpty || value.name.isEmpty
           ? invalidWire("Qualified type id is empty")
           : TypeResult.success(

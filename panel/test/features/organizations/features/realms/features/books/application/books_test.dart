@@ -14,15 +14,13 @@ class _MockBooks extends Books {
   final List<Book> _books;
 
   @override
-  Stream<List<Book>> build() async* {
-    yield _books;
-  }
+  Future<List<Book>> build() async => _books;
 }
 
 Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
   return Book(
     bookId: recordId("book:$id"),
-    revision: 1,
+    authoringSequence: 1,
     title: title,
     icon: "book",
     color: Colors.blue,
@@ -33,7 +31,7 @@ Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
 Tag _tag(String id) {
   return Tag(
     tagId: recordId("tag:$id"),
-    revision: 1,
+    authoringSequence: 1,
     name: id,
     color: Colors.blue,
     parentIds: const [],

@@ -1,6 +1,7 @@
 library;
 
 export "editors/editors.dart";
+export "graph/graph.dart";
 export "hooks/hooks.dart";
 export "inspector/inspector.dart";
 export "interaction_mode/interaction_mode.dart";

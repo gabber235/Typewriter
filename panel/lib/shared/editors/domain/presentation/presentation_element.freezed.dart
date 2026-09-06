@@ -55,7 +55,7 @@ extension PresentationElementPatterns on PresentationElement {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ChipElement value)?  chip,TResult Function( ProgressElement value)?  progress,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( CollectionLookupElement value)?  collectionLookup,TResult Function( CollectionGraphElement value)?  collectionGraph,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( SearchInputElement value)?  searchInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( SectionElement value)?  section,TResult Function( ContainerElement value)?  container,TResult Function( PresentationAnchorElement value)?  anchor,TResult Function( ConnectionLayerElement value)?  connectionLayer,TResult Function( PaddingElement value)?  padding,TResult Function( PresentationSlotElement value)?  slot,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ChipElement value)?  chip,TResult Function( ProgressElement value)?  progress,TResult Function( StatusElement value)?  status,TResult Function( DateTimeElement value)?  dateTime,TResult Function( RelativeTimeElement value)?  relativeTime,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( CollectionLookupElement value)?  collectionLookup,TResult Function( CollectionGraphElement value)?  collectionGraph,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( SearchInputElement value)?  searchInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( SectionElement value)?  section,TResult Function( ContainerElement value)?  container,TResult Function( PresentationAnchorElement value)?  anchor,TResult Function( ConnectionLayerElement value)?  connectionLayer,TResult Function( PaddingElement value)?  padding,TResult Function( PresentationSlotElement value)?  slot,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -67,7 +67,10 @@ return icon(_that);case ImageElement() when image != null:
 return image(_that);case BadgeElement() when badge != null:
 return badge(_that);case ChipElement() when chip != null:
 return chip(_that);case ProgressElement() when progress != null:
-return progress(_that);case TypedFieldElement() when typedField != null:
+return progress(_that);case StatusElement() when status != null:
+return status(_that);case DateTimeElement() when dateTime != null:
+return dateTime(_that);case RelativeTimeElement() when relativeTime != null:
+return relativeTime(_that);case TypedFieldElement() when typedField != null:
 return typedField(_that);case ConditionalElement() when conditional != null:
 return conditional(_that);case RepeatedElement() when repeated != null:
 return repeated(_that);case ScopedBindingElement() when scopedBinding != null:
@@ -126,7 +129,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ChipElement value)  chip,required TResult Function( ProgressElement value)  progress,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( CollectionLookupElement value)  collectionLookup,required TResult Function( CollectionGraphElement value)  collectionGraph,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( SearchInputElement value)  searchInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( PolymorphicMatchElement value)  polymorphicMatch,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( SectionElement value)  section,required TResult Function( ContainerElement value)  container,required TResult Function( PresentationAnchorElement value)  anchor,required TResult Function( ConnectionLayerElement value)  connectionLayer,required TResult Function( PaddingElement value)  padding,required TResult Function( PresentationSlotElement value)  slot,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ChipElement value)  chip,required TResult Function( ProgressElement value)  progress,required TResult Function( StatusElement value)  status,required TResult Function( DateTimeElement value)  dateTime,required TResult Function( RelativeTimeElement value)  relativeTime,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( CollectionLookupElement value)  collectionLookup,required TResult Function( CollectionGraphElement value)  collectionGraph,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( SearchInputElement value)  searchInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( PolymorphicMatchElement value)  polymorphicMatch,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( SectionElement value)  section,required TResult Function( ContainerElement value)  container,required TResult Function( PresentationAnchorElement value)  anchor,required TResult Function( ConnectionLayerElement value)  connectionLayer,required TResult Function( PaddingElement value)  padding,required TResult Function( PresentationSlotElement value)  slot,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement():
@@ -138,7 +141,10 @@ return icon(_that);case ImageElement():
 return image(_that);case BadgeElement():
 return badge(_that);case ChipElement():
 return chip(_that);case ProgressElement():
-return progress(_that);case TypedFieldElement():
+return progress(_that);case StatusElement():
+return status(_that);case DateTimeElement():
+return dateTime(_that);case RelativeTimeElement():
+return relativeTime(_that);case TypedFieldElement():
 return typedField(_that);case ConditionalElement():
 return conditional(_that);case RepeatedElement():
 return repeated(_that);case ScopedBindingElement():
@@ -193,7 +199,7 @@ return spacer(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ChipElement value)?  chip,TResult? Function( ProgressElement value)?  progress,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( CollectionLookupElement value)?  collectionLookup,TResult? Function( CollectionGraphElement value)?  collectionGraph,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( SearchInputElement value)?  searchInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( SectionElement value)?  section,TResult? Function( ContainerElement value)?  container,TResult? Function( PresentationAnchorElement value)?  anchor,TResult? Function( ConnectionLayerElement value)?  connectionLayer,TResult? Function( PaddingElement value)?  padding,TResult? Function( PresentationSlotElement value)?  slot,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ChipElement value)?  chip,TResult? Function( ProgressElement value)?  progress,TResult? Function( StatusElement value)?  status,TResult? Function( DateTimeElement value)?  dateTime,TResult? Function( RelativeTimeElement value)?  relativeTime,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( CollectionLookupElement value)?  collectionLookup,TResult? Function( CollectionGraphElement value)?  collectionGraph,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( SearchInputElement value)?  searchInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( SectionElement value)?  section,TResult? Function( ContainerElement value)?  container,TResult? Function( PresentationAnchorElement value)?  anchor,TResult? Function( ConnectionLayerElement value)?  connectionLayer,TResult? Function( PaddingElement value)?  padding,TResult? Function( PresentationSlotElement value)?  slot,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -205,7 +211,10 @@ return icon(_that);case ImageElement() when image != null:
 return image(_that);case BadgeElement() when badge != null:
 return badge(_that);case ChipElement() when chip != null:
 return chip(_that);case ProgressElement() when progress != null:
-return progress(_that);case TypedFieldElement() when typedField != null:
+return progress(_that);case StatusElement() when status != null:
+return status(_that);case DateTimeElement() when dateTime != null:
+return dateTime(_that);case RelativeTimeElement() when relativeTime != null:
+return relativeTime(_that);case TypedFieldElement() when typedField != null:
 return typedField(_that);case ConditionalElement() when conditional != null:
 return conditional(_that);case RepeatedElement() when repeated != null:
 return repeated(_that);case ScopedBindingElement() when scopedBinding != null:
@@ -263,7 +272,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression label,  TypedExpression? color)?  chip,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  PresentationBorder? border)?  section,TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult Function( String slotId)?  slot,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression label,  TypedExpression? color)?  chip,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)?  status,TResult Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)?  dateTime,TResult Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)?  relativeTime,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  PresentationBorder? border)?  section,TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult Function( String slotId)?  slot,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -274,7 +283,10 @@ return icon(_that.name,_that.semanticLabel,_that.color,_that.size);case ImageEle
 return image(_that.source,_that.semanticLabel);case BadgeElement() when badge != null:
 return badge(_that.label,_that.tone);case ChipElement() when chip != null:
 return chip(_that.label,_that.color);case ProgressElement() when progress != null:
-return progress(_that.value,_that.maximum,_that.label);case TypedFieldElement() when typedField != null:
+return progress(_that.value,_that.maximum,_that.label);case StatusElement() when status != null:
+return status(_that.value,_that.cases,_that.fallback);case DateTimeElement() when dateTime != null:
+return dateTime(_that.value,_that.format,_that.timeZone);case RelativeTimeElement() when relativeTime != null:
+return relativeTime(_that.value,_that.style,_that.timeZone);case TypedFieldElement() when typedField != null:
 return typedField(_that.binding,_that.expectedType,_that.presentation);case ConditionalElement() when conditional != null:
 return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case RepeatedElement() when repeated != null:
 return repeated(_that.source,_that.itemBindingId,_that.presentation);case ScopedBindingElement() when scopedBinding != null:
@@ -333,7 +345,7 @@ return spacer(_that.width,_that.height);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)  text,required TResult Function( TypedExpression value,  TypedExpression? color)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression label,  TypedExpression? color)  chip,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)  collectionLookup,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)  collectionGraph,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)  searchInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)  polymorphicMatch,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  PresentationBorder? border)  section,required TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)  container,required TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)  anchor,required TResult Function( PresentationNode child,  List<PresentationConnection> connections)  connectionLayer,required TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)  padding,required TResult Function( String slotId)  slot,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)  text,required TResult Function( TypedExpression value,  TypedExpression? color)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression label,  TypedExpression? color)  chip,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)  status,required TResult Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)  dateTime,required TResult Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)  relativeTime,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)  collectionLookup,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)  collectionGraph,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)  searchInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)  polymorphicMatch,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  PresentationBorder? border)  section,required TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)  container,required TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)  anchor,required TResult Function( PresentationNode child,  List<PresentationConnection> connections)  connectionLayer,required TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)  padding,required TResult Function( String slotId)  slot,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement():
 return diagnostic(_that.diagnostics);case DefaultPresentationElement():
@@ -344,7 +356,10 @@ return icon(_that.name,_that.semanticLabel,_that.color,_that.size);case ImageEle
 return image(_that.source,_that.semanticLabel);case BadgeElement():
 return badge(_that.label,_that.tone);case ChipElement():
 return chip(_that.label,_that.color);case ProgressElement():
-return progress(_that.value,_that.maximum,_that.label);case TypedFieldElement():
+return progress(_that.value,_that.maximum,_that.label);case StatusElement():
+return status(_that.value,_that.cases,_that.fallback);case DateTimeElement():
+return dateTime(_that.value,_that.format,_that.timeZone);case RelativeTimeElement():
+return relativeTime(_that.value,_that.style,_that.timeZone);case TypedFieldElement():
 return typedField(_that.binding,_that.expectedType,_that.presentation);case ConditionalElement():
 return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case RepeatedElement():
 return repeated(_that.source,_that.itemBindingId,_that.presentation);case ScopedBindingElement():
@@ -399,7 +414,7 @@ return spacer(_that.width,_that.height);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult? Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression label,  TypedExpression? color)?  chip,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  PresentationBorder? border)?  section,TResult? Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult? Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult? Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult? Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult? Function( String slotId)?  slot,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult? Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression label,  TypedExpression? color)?  chip,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)?  status,TResult? Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)?  dateTime,TResult? Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)?  relativeTime,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  PresentationBorder? border)?  section,TResult? Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult? Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult? Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult? Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult? Function( String slotId)?  slot,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -410,7 +425,10 @@ return icon(_that.name,_that.semanticLabel,_that.color,_that.size);case ImageEle
 return image(_that.source,_that.semanticLabel);case BadgeElement() when badge != null:
 return badge(_that.label,_that.tone);case ChipElement() when chip != null:
 return chip(_that.label,_that.color);case ProgressElement() when progress != null:
-return progress(_that.value,_that.maximum,_that.label);case TypedFieldElement() when typedField != null:
+return progress(_that.value,_that.maximum,_that.label);case StatusElement() when status != null:
+return status(_that.value,_that.cases,_that.fallback);case DateTimeElement() when dateTime != null:
+return dateTime(_that.value,_that.format,_that.timeZone);case RelativeTimeElement() when relativeTime != null:
+return relativeTime(_that.value,_that.style,_that.timeZone);case TypedFieldElement() when typedField != null:
 return typedField(_that.binding,_that.expectedType,_that.presentation);case ConditionalElement() when conditional != null:
 return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case RepeatedElement() when repeated != null:
 return repeated(_that.source,_that.itemBindingId,_that.presentation);case ScopedBindingElement() when scopedBinding != null:
@@ -464,7 +482,7 @@ return spacer(_that.width,_that.height);case _:
 
 class DiagnosticElement implements PresentationElement {
    DiagnosticElement(final  List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -536,7 +554,7 @@ as List<TypeDiagnostic>,
 
 class DefaultPresentationElement implements PresentationElement {
   const DefaultPresentationElement({required this.binding, this.presentationId});
-
+  
 
  final  BindingReference binding;
  final  PresentationId? presentationId;
@@ -601,7 +619,7 @@ as PresentationId?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -625,7 +643,7 @@ $PresentationIdCopyWith<$Res>? get presentationId {
 
 class TextElement implements PresentationElement {
   const TextElement(this.value, {this.color, this.fontSize, this.fontWeight, this.fontItalic, this.fontOpticalSize, this.fontSlant, this.fontWidth, this.textAlignment, this.lineHeight, this.letterSpacing, this.decoration, this.semanticLabel});
-
+  
 
  final  TypedExpression value;
  final  TypedExpression? color;
@@ -712,7 +730,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -868,7 +886,7 @@ $TypedExpressionCopyWith<$Res>? get semanticLabel {
 
 class MarkdownElement implements PresentationElement {
   const MarkdownElement(this.value, {this.color});
-
+  
 
  final  TypedExpression value;
  final  TypedExpression? color;
@@ -933,7 +951,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -957,7 +975,7 @@ $TypedExpressionCopyWith<$Res>? get color {
 
 class IconElement implements PresentationElement {
   const IconElement({required this.name, this.semanticLabel, this.color, this.size});
-
+  
 
  final  TypedExpression name;
  final  TypedExpression? semanticLabel;
@@ -1026,7 +1044,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get name {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.name, (value) {
     return _then(_self.copyWith(name: value));
   });
@@ -1074,7 +1092,7 @@ $TypedExpressionCopyWith<$Res>? get size {
 
 class ImageElement implements PresentationElement {
   const ImageElement({required this.source, this.semanticLabel});
-
+  
 
  final  TypedExpression source;
  final  TypedExpression? semanticLabel;
@@ -1139,7 +1157,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1163,7 +1181,7 @@ $TypedExpressionCopyWith<$Res>? get semanticLabel {
 
 class BadgeElement implements PresentationElement {
   const BadgeElement({required this.label, required this.tone});
-
+  
 
  final  TypedExpression label;
  final  String tone;
@@ -1228,7 +1246,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1240,7 +1258,7 @@ $TypedExpressionCopyWith<$Res> get label {
 
 class ChipElement implements PresentationElement {
   const ChipElement({required this.label, this.color});
-
+  
 
  final  TypedExpression label;
  final  TypedExpression? color;
@@ -1305,7 +1323,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1329,7 +1347,7 @@ $TypedExpressionCopyWith<$Res>? get color {
 
 class ProgressElement implements PresentationElement {
   const ProgressElement({required this.value, required this.maximum, this.label});
-
+  
 
  final  TypedExpression value;
  final  TypedExpression maximum;
@@ -1396,7 +1414,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1405,7 +1423,7 @@ $TypedExpressionCopyWith<$Res> get value {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximum {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
     return _then(_self.copyWith(maximum: value));
   });
@@ -1427,9 +1445,273 @@ $TypedExpressionCopyWith<$Res>? get label {
 /// @nodoc
 
 
+class StatusElement implements PresentationElement {
+  const StatusElement({required this.value, required final  List<StatusCase> cases, this.fallback}): _cases = cases;
+  
+
+ final  TypedExpression value;
+ final  List<StatusCase> _cases;
+ List<StatusCase> get cases {
+  if (_cases is EqualUnmodifiableListView) return _cases;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_cases);
+}
+
+ final  StatusAppearance? fallback;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StatusElementCopyWith<StatusElement> get copyWith => _$StatusElementCopyWithImpl<StatusElement>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatusElement&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other._cases, _cases)&&(identical(other.fallback, fallback) || other.fallback == fallback));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,value,const DeepCollectionEquality().hash(_cases),fallback);
+
+@override
+String toString() {
+  return 'PresentationElement.status(value: $value, cases: $cases, fallback: $fallback)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $StatusElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
+  factory $StatusElementCopyWith(StatusElement value, $Res Function(StatusElement) _then) = _$StatusElementCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression value, List<StatusCase> cases, StatusAppearance? fallback
+});
+
+
+$TypedExpressionCopyWith<$Res> get value;$StatusAppearanceCopyWith<$Res>? get fallback;
+
+}
+/// @nodoc
+class _$StatusElementCopyWithImpl<$Res>
+    implements $StatusElementCopyWith<$Res> {
+  _$StatusElementCopyWithImpl(this._self, this._then);
+
+  final StatusElement _self;
+  final $Res Function(StatusElement) _then;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? value = null,Object? cases = null,Object? fallback = freezed,}) {
+  return _then(StatusElement(
+value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression,cases: null == cases ? _self._cases : cases // ignore: cast_nullable_to_non_nullable
+as List<StatusCase>,fallback: freezed == fallback ? _self.fallback : fallback // ignore: cast_nullable_to_non_nullable
+as StatusAppearance?,
+  ));
+}
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get value {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$StatusAppearanceCopyWith<$Res>? get fallback {
+    if (_self.fallback == null) {
+    return null;
+  }
+
+  return $StatusAppearanceCopyWith<$Res>(_self.fallback!, (value) {
+    return _then(_self.copyWith(fallback: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class DateTimeElement implements PresentationElement {
+  const DateTimeElement({required this.value, required this.format, this.timeZone = DateTimeZone.local});
+  
+
+ final  TypedExpression value;
+ final  TypedExpression format;
+@JsonKey() final  DateTimeZone timeZone;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DateTimeElementCopyWith<DateTimeElement> get copyWith => _$DateTimeElementCopyWithImpl<DateTimeElement>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DateTimeElement&&(identical(other.value, value) || other.value == value)&&(identical(other.format, format) || other.format == format)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,value,format,timeZone);
+
+@override
+String toString() {
+  return 'PresentationElement.dateTime(value: $value, format: $format, timeZone: $timeZone)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DateTimeElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
+  factory $DateTimeElementCopyWith(DateTimeElement value, $Res Function(DateTimeElement) _then) = _$DateTimeElementCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression value, TypedExpression format, DateTimeZone timeZone
+});
+
+
+$TypedExpressionCopyWith<$Res> get value;$TypedExpressionCopyWith<$Res> get format;
+
+}
+/// @nodoc
+class _$DateTimeElementCopyWithImpl<$Res>
+    implements $DateTimeElementCopyWith<$Res> {
+  _$DateTimeElementCopyWithImpl(this._self, this._then);
+
+  final DateTimeElement _self;
+  final $Res Function(DateTimeElement) _then;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? value = null,Object? format = null,Object? timeZone = null,}) {
+  return _then(DateTimeElement(
+value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
+as TypedExpression,timeZone: null == timeZone ? _self.timeZone : timeZone // ignore: cast_nullable_to_non_nullable
+as DateTimeZone,
+  ));
+}
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get value {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get format {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.format, (value) {
+    return _then(_self.copyWith(format: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class RelativeTimeElement implements PresentationElement {
+  const RelativeTimeElement({required this.value, this.style = RelativeTimeStyle.compact, this.timeZone = DateTimeZone.local});
+  
+
+ final  TypedExpression value;
+@JsonKey() final  RelativeTimeStyle style;
+@JsonKey() final  DateTimeZone timeZone;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RelativeTimeElementCopyWith<RelativeTimeElement> get copyWith => _$RelativeTimeElementCopyWithImpl<RelativeTimeElement>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RelativeTimeElement&&(identical(other.value, value) || other.value == value)&&(identical(other.style, style) || other.style == style)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,value,style,timeZone);
+
+@override
+String toString() {
+  return 'PresentationElement.relativeTime(value: $value, style: $style, timeZone: $timeZone)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RelativeTimeElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
+  factory $RelativeTimeElementCopyWith(RelativeTimeElement value, $Res Function(RelativeTimeElement) _then) = _$RelativeTimeElementCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression value, RelativeTimeStyle style, DateTimeZone timeZone
+});
+
+
+$TypedExpressionCopyWith<$Res> get value;
+
+}
+/// @nodoc
+class _$RelativeTimeElementCopyWithImpl<$Res>
+    implements $RelativeTimeElementCopyWith<$Res> {
+  _$RelativeTimeElementCopyWithImpl(this._self, this._then);
+
+  final RelativeTimeElement _self;
+  final $Res Function(RelativeTimeElement) _then;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? value = null,Object? style = null,Object? timeZone = null,}) {
+  return _then(RelativeTimeElement(
+value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression,style: null == style ? _self.style : style // ignore: cast_nullable_to_non_nullable
+as RelativeTimeStyle,timeZone: null == timeZone ? _self.timeZone : timeZone // ignore: cast_nullable_to_non_nullable
+as DateTimeZone,
+  ));
+}
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get value {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}
+}
+
+/// @nodoc
+
+
 class TypedFieldElement implements PresentationElement {
   const TypedFieldElement({required this.binding, required this.expectedType, this.presentation});
-
+  
 
  final  BindingReference binding;
  final  TypeExpression expectedType;
@@ -1496,7 +1778,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -1505,7 +1787,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get expectedType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.expectedType, (value) {
     return _then(_self.copyWith(expectedType: value));
   });
@@ -1529,7 +1811,7 @@ $PresentationNodeCopyWith<$Res>? get presentation {
 
 class ConditionalElement implements PresentationElement {
   const ConditionalElement({required this.condition, required this.whenTrue, this.whenFalse});
-
+  
 
  final  TypedExpression condition;
  final  PresentationNode whenTrue;
@@ -1596,7 +1878,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get condition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
     return _then(_self.copyWith(condition: value));
   });
@@ -1605,7 +1887,7 @@ $TypedExpressionCopyWith<$Res> get condition {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get whenTrue {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.whenTrue, (value) {
     return _then(_self.copyWith(whenTrue: value));
   });
@@ -1629,7 +1911,7 @@ $PresentationNodeCopyWith<$Res>? get whenFalse {
 
 class RepeatedElement implements PresentationElement {
   const RepeatedElement({required this.source, required this.itemBindingId, required this.presentation});
-
+  
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1696,7 +1978,7 @@ as SequencePresentation,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1705,7 +1987,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1714,7 +1996,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SequencePresentationCopyWith<$Res> get presentation {
-
+  
   return $SequencePresentationCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -1726,7 +2008,7 @@ $SequencePresentationCopyWith<$Res> get presentation {
 
 class ScopedBindingElement implements PresentationElement {
   const ScopedBindingElement({required this.binding, required this.scopeBindingId, required this.child});
-
+  
 
  final  BindingReference binding;
  final  BindingId scopeBindingId;
@@ -1793,7 +2075,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -1802,7 +2084,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get scopeBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.scopeBindingId, (value) {
     return _then(_self.copyWith(scopeBindingId: value));
   });
@@ -1811,7 +2093,7 @@ $BindingIdCopyWith<$Res> get scopeBindingId {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -1823,7 +2105,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class CollectionLookupElement implements PresentationElement {
   const CollectionLookupElement({required this.sourceId, required this.key, required this.found, required this.missing, this.loading});
-
+  
 
  final  PresentationCollectionSourceId sourceId;
  final  BindingReference key;
@@ -1894,7 +2176,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
-
+  
   return $PresentationCollectionSourceIdCopyWith<$Res>(_self.sourceId, (value) {
     return _then(_self.copyWith(sourceId: value));
   });
@@ -1903,7 +2185,7 @@ $PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get key {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1912,7 +2194,7 @@ $BindingReferenceCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get found {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.found, (value) {
     return _then(_self.copyWith(found: value));
   });
@@ -1921,7 +2203,7 @@ $PresentationNodeCopyWith<$Res> get found {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get missing {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.missing, (value) {
     return _then(_self.copyWith(missing: value));
   });
@@ -1945,7 +2227,7 @@ $PresentationNodeCopyWith<$Res>? get loading {
 
 class CollectionGraphElement implements PresentationElement {
   const CollectionGraphElement({required this.sourceId, required this.roots, required this.rootSequence, required this.relation, required this.direction, required this.node, required this.childrenBindingId, required this.childBindingId, required this.children, this.maximumDepth});
-
+  
 
  final  PresentationCollectionSourceId sourceId;
  final  BindingReference roots;
@@ -2026,7 +2308,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
-
+  
   return $PresentationCollectionSourceIdCopyWith<$Res>(_self.sourceId, (value) {
     return _then(_self.copyWith(sourceId: value));
   });
@@ -2035,7 +2317,7 @@ $PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get roots {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.roots, (value) {
     return _then(_self.copyWith(roots: value));
   });
@@ -2044,7 +2326,7 @@ $BindingReferenceCopyWith<$Res> get roots {
 @override
 @pragma('vm:prefer-inline')
 $SequencePresentationCopyWith<$Res> get rootSequence {
-
+  
   return $SequencePresentationCopyWith<$Res>(_self.rootSequence, (value) {
     return _then(_self.copyWith(rootSequence: value));
   });
@@ -2053,7 +2335,7 @@ $SequencePresentationCopyWith<$Res> get rootSequence {
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get relation {
-
+  
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.relation, (value) {
     return _then(_self.copyWith(relation: value));
   });
@@ -2062,7 +2344,7 @@ $PresentationCollectionRelationIdCopyWith<$Res> get relation {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -2071,7 +2353,7 @@ $PresentationNodeCopyWith<$Res> get node {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get childrenBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.childrenBindingId, (value) {
     return _then(_self.copyWith(childrenBindingId: value));
   });
@@ -2080,7 +2362,7 @@ $BindingIdCopyWith<$Res> get childrenBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get childBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.childBindingId, (value) {
     return _then(_self.copyWith(childBindingId: value));
   });
@@ -2089,7 +2371,7 @@ $BindingIdCopyWith<$Res> get childBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SequencePresentationCopyWith<$Res> get children {
-
+  
   return $SequencePresentationCopyWith<$Res>(_self.children, (value) {
     return _then(_self.copyWith(children: value));
   });
@@ -2101,7 +2383,7 @@ $SequencePresentationCopyWith<$Res> get children {
 
 class TextInputElement implements PresentationElement {
   const TextInputElement({required this.control, this.multiline = true, this.placeholder, final  List<TextInputFormat> inputFormatters = const []}): _inputFormatters = inputFormatters;
-
+  
 
  final  BoundControl control;
 @JsonKey() final  bool multiline;
@@ -2176,7 +2458,7 @@ as List<TextInputFormat>,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2200,7 +2482,7 @@ $TypedExpressionCopyWith<$Res>? get placeholder {
 
 class NumericInputElement implements PresentationElement {
   const NumericInputElement(this.control);
-
+  
 
  final  BoundControl control;
 
@@ -2263,7 +2545,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2275,7 +2557,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class ToggleInputElement implements PresentationElement {
   const ToggleInputElement(this.control);
-
+  
 
  final  BoundControl control;
 
@@ -2338,7 +2620,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2350,7 +2632,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class SelectInputElement implements PresentationElement {
   const SelectInputElement({required this.control, required final  List<SelectOption> options, this.allowCustomValue = false}): _options = options;
-
+  
 
  final  BoundControl control;
  final  List<SelectOption> _options;
@@ -2423,7 +2705,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2435,7 +2717,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class SliderInputElement implements PresentationElement {
   const SliderInputElement({required this.control, required this.minimum, required this.maximum, this.divisions});
-
+  
 
  final  BoundControl control;
  final  TypedExpression minimum;
@@ -2504,7 +2786,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2513,7 +2795,7 @@ $BoundControlCopyWith<$Res> get control {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get minimum {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.minimum, (value) {
     return _then(_self.copyWith(minimum: value));
   });
@@ -2522,7 +2804,7 @@ $TypedExpressionCopyWith<$Res> get minimum {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximum {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
     return _then(_self.copyWith(maximum: value));
   });
@@ -2546,7 +2828,7 @@ $TypedExpressionCopyWith<$Res>? get divisions {
 
 class DateTimeInputElement implements PresentationElement, SimpleInputElement {
   const DateTimeInputElement({required this.control, this.includeDate = true, this.includeTime = true});
-
+  
 
  final  BoundControl control;
 @JsonKey() final  bool includeDate;
@@ -2613,7 +2895,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2625,7 +2907,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class DurationInputElement implements PresentationElement, SimpleInputElement {
   const DurationInputElement(this.control);
-
+  
 
  final  BoundControl control;
 
@@ -2688,7 +2970,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2700,7 +2982,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class ColorInputElement implements PresentationElement, SimpleInputElement {
   const ColorInputElement({required this.control, this.includeAlpha = false});
-
+  
 
  final  BoundControl control;
 @JsonKey() final  bool includeAlpha;
@@ -2765,7 +3047,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2777,7 +3059,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class SearchInputElement implements PresentationElement {
   const SearchInputElement({required this.control, required this.selectionMode, required this.queryBindingId, required this.summaryBindingId, required this.maximumExtent, required this.provider, this.summary, this.placeholder, this.customValue, this.initialQuery});
-
+  
 
  final  BoundControl control;
  final  SearchSelectionMode selectionMode;
@@ -2858,7 +3140,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2867,7 +3149,7 @@ $BoundControlCopyWith<$Res> get control {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get queryBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.queryBindingId, (value) {
     return _then(_self.copyWith(queryBindingId: value));
   });
@@ -2876,7 +3158,7 @@ $BindingIdCopyWith<$Res> get queryBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get summaryBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.summaryBindingId, (value) {
     return _then(_self.copyWith(summaryBindingId: value));
   });
@@ -2885,7 +3167,7 @@ $BindingIdCopyWith<$Res> get summaryBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximumExtent {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.maximumExtent, (value) {
     return _then(_self.copyWith(maximumExtent: value));
   });
@@ -2894,7 +3176,7 @@ $TypedExpressionCopyWith<$Res> get maximumExtent {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get provider {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.provider, (value) {
     return _then(_self.copyWith(provider: value));
   });
@@ -2954,7 +3236,7 @@ $TypedExpressionCopyWith<$Res>? get initialQuery {
 
 class BytesInputElement implements PresentationElement, SimpleInputElement {
   const BytesInputElement(this.control);
-
+  
 
  final  BoundControl control;
 
@@ -3017,7 +3299,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3029,7 +3311,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class EnumInputElement implements PresentationElement, SimpleInputElement {
   const EnumInputElement(this.control);
-
+  
 
  final  BoundControl control;
 
@@ -3092,7 +3374,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3104,7 +3386,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class NamedInputElement implements PresentationElement, SimpleInputElement {
   const NamedInputElement(this.control);
-
+  
 
  final  BoundControl control;
 
@@ -3167,7 +3449,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3179,7 +3461,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class ListInputElement implements PresentationElement {
   const ListInputElement({required this.control, this.itemPresentation, this.allowAdd = true, this.allowRemove = true, this.allowReorder = true, this.itemBindingId = const BindingId(1), this.indexBindingId = const BindingId(2)});
-
+  
 
  final  BoundControl control;
  final  PresentationNode? itemPresentation;
@@ -3254,7 +3536,7 @@ as BindingId,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3275,7 +3557,7 @@ $PresentationNodeCopyWith<$Res>? get itemPresentation {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -3284,7 +3566,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get indexBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.indexBindingId, (value) {
     return _then(_self.copyWith(indexBindingId: value));
   });
@@ -3296,7 +3578,7 @@ $BindingIdCopyWith<$Res> get indexBindingId {
 
 class MapInputElement implements PresentationElement {
   const MapInputElement({required this.control, this.keyPresentation, this.valuePresentation, this.allowAdd = true, this.allowRemove = true, this.keyBindingId = const BindingId(1), this.valueBindingId = const BindingId(2)});
-
+  
 
  final  BoundControl control;
  final  PresentationNode? keyPresentation;
@@ -3371,7 +3653,7 @@ as BindingId,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3404,7 +3686,7 @@ $PresentationNodeCopyWith<$Res>? get valuePresentation {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get keyBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.keyBindingId, (value) {
     return _then(_self.copyWith(keyBindingId: value));
   });
@@ -3413,7 +3695,7 @@ $BindingIdCopyWith<$Res> get keyBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get valueBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
     return _then(_self.copyWith(valueBindingId: value));
   });
@@ -3425,7 +3707,7 @@ $BindingIdCopyWith<$Res> get valueBindingId {
 
 class RecordInputElement implements PresentationElement {
   const RecordInputElement({required this.control, this.fieldPresentation});
-
+  
 
  final  BoundControl control;
  final  PresentationNode? fieldPresentation;
@@ -3490,7 +3772,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3514,7 +3796,7 @@ $PresentationNodeCopyWith<$Res>? get fieldPresentation {
 
 class PolymorphicInputElement implements PresentationElement {
    PolymorphicInputElement({required this.control, required final  List<ConcreteTypePresentation> concreteTypes}): assert(concreteTypes.isNotEmpty, 'Concrete types must not be empty.'),_concreteTypes = concreteTypes;
-
+  
 
  final  BoundControl control;
  final  List<ConcreteTypePresentation> _concreteTypes;
@@ -3585,7 +3867,7 @@ as List<ConcreteTypePresentation>,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-
+  
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3597,7 +3879,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class PolymorphicMatchElement implements PresentationElement {
    PolymorphicMatchElement({required this.binding, required this.scopeBindingId, required final  List<PolymorphicMatchCase> cases, this.fallback}): assert(cases.isNotEmpty, 'Polymorphic match cases must not be empty.'),_cases = cases;
-
+  
 
  final  BindingReference binding;
  final  BindingId scopeBindingId;
@@ -3672,7 +3954,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -3681,7 +3963,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get scopeBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.scopeBindingId, (value) {
     return _then(_self.copyWith(scopeBindingId: value));
   });
@@ -3705,7 +3987,7 @@ $PresentationNodeCopyWith<$Res>? get fallback {
 
 class ButtonElement implements PresentationElement {
   const ButtonElement({required this.label, required this.action});
-
+  
 
  final  TypedExpression label;
  final  EditorAction action;
@@ -3770,7 +4052,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -3779,7 +4061,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -3791,7 +4073,7 @@ $EditorActionCopyWith<$Res> get action {
 
 class IconButtonElement implements PresentationElement {
   const IconButtonElement({required this.icon, required this.semanticLabel, required this.action});
-
+  
 
  final  TypedExpression icon;
  final  TypedExpression semanticLabel;
@@ -3858,7 +4140,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get icon {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -3867,7 +4149,7 @@ $TypedExpressionCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get semanticLabel {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.semanticLabel, (value) {
     return _then(_self.copyWith(semanticLabel: value));
   });
@@ -3876,7 +4158,7 @@ $TypedExpressionCopyWith<$Res> get semanticLabel {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -3888,7 +4170,7 @@ $EditorActionCopyWith<$Res> get action {
 
 class MenuElement implements PresentationElement {
    MenuElement({required final  List<PresentationMenuItem> items, this.label}): assert(items.isNotEmpty, 'Menu items must not be empty.'),_items = items;
-
+  
 
  final  List<PresentationMenuItem> _items;
  List<PresentationMenuItem> get items {
@@ -3974,7 +4256,7 @@ $TypedExpressionCopyWith<$Res>? get label {
 
 class TooltipElement implements PresentationElement {
   const TooltipElement({required this.message, required this.child});
-
+  
 
  final  TypedExpression message;
  final  PresentationNode child;
@@ -4039,7 +4321,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get message {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.message, (value) {
     return _then(_self.copyWith(message: value));
   });
@@ -4048,7 +4330,7 @@ $TypedExpressionCopyWith<$Res> get message {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4060,7 +4342,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class ColumnElement implements PresentationElement, ChildrenLayoutElement {
   const ColumnElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
-
+  
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4138,7 +4420,7 @@ as PresentationCrossAxisAlignment,
 
 class RowElement implements PresentationElement, ChildrenLayoutElement {
   const RowElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
-
+  
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4216,7 +4498,7 @@ as PresentationCrossAxisAlignment,
 
 class WrapElement implements PresentationElement, ChildrenLayoutElement {
   const WrapElement({required final  List<PresentationNode> children, this.spacing = 0, this.runSpacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
-
+  
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4296,7 +4578,7 @@ as PresentationCrossAxisAlignment,
 
 class StackElement implements PresentationElement {
   const StackElement({required final  List<PresentationNode> children}): _children = children;
-
+  
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4368,7 +4650,7 @@ as List<PresentationNode>,
 
 class GridElement implements PresentationElement {
   const GridElement({required final  List<PresentationNode> children, required this.columns, this.horizontalSpacing = 0, this.verticalSpacing = 0}): assert(columns > 0, 'Column count must be positive.'),assert(horizontalSpacing >= 0, 'Horizontal spacing must not be negative.'),assert(verticalSpacing >= 0, 'Vertical spacing must not be negative.'),_children = children;
-
+  
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4446,7 +4728,7 @@ as double,
 
 class SectionElement implements PresentationElement, SingleChildLayoutElement {
   const SectionElement({required this.child, this.border});
-
+  
 
  final  PresentationNode child;
  final  PresentationBorder? border;
@@ -4511,7 +4793,7 @@ as PresentationBorder?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4535,7 +4817,7 @@ $PresentationBorderCopyWith<$Res>? get border {
 
 class ContainerElement implements PresentationElement, SingleChildLayoutElement {
   const ContainerElement({required this.child, this.border, this.backgroundColor, this.radius = const PresentationRadius.small()});
-
+  
 
  final  PresentationNode child;
  final  PresentationBorder? border;
@@ -4604,7 +4886,7 @@ as PresentationRadius,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4637,7 +4919,7 @@ $TypedExpressionCopyWith<$Res>? get backgroundColor {
 @override
 @pragma('vm:prefer-inline')
 $PresentationRadiusCopyWith<$Res> get radius {
-
+  
   return $PresentationRadiusCopyWith<$Res>(_self.radius, (value) {
     return _then(_self.copyWith(radius: value));
   });
@@ -4649,7 +4931,7 @@ $PresentationRadiusCopyWith<$Res> get radius {
 
 class PresentationAnchorElement implements PresentationElement, SingleChildLayoutElement {
    PresentationAnchorElement({required this.child, required final  List<PresentationAnchorPoint> anchors}): assert(anchors.isNotEmpty, 'At least one anchor must be provided.'),_anchors = anchors;
-
+  
 
  final  PresentationNode child;
  final  List<PresentationAnchorPoint> _anchors;
@@ -4720,7 +5002,7 @@ as List<PresentationAnchorPoint>,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4732,7 +5014,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class ConnectionLayerElement implements PresentationElement, SingleChildLayoutElement {
    ConnectionLayerElement({required this.child, required final  List<PresentationConnection> connections}): assert(connections.isNotEmpty, 'At least one connection must be provided.'),_connections = connections;
-
+  
 
  final  PresentationNode child;
  final  List<PresentationConnection> _connections;
@@ -4803,7 +5085,7 @@ as List<PresentationConnection>,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4815,7 +5097,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class PaddingElement implements PresentationElement, SingleChildLayoutElement {
   const PaddingElement({required this.child, this.top = 0, this.start = 0, this.end = 0, this.bottom = 0}): assert(top >= 0 && top < double.infinity, 'Top padding must be finite and nonnegative.'),assert(start >= 0 && start < double.infinity, 'Start padding must be finite and nonnegative.'),assert(end >= 0 && end < double.infinity, 'End padding must be finite and nonnegative.'),assert(bottom >= 0 && bottom < double.infinity, 'Bottom padding must be finite and nonnegative.');
-
+  
 
  final  PresentationNode child;
 @JsonKey() final  double top;
@@ -4886,7 +5168,7 @@ as double,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4898,7 +5180,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class PresentationSlotElement implements PresentationElement {
   const PresentationSlotElement({required this.slotId}): assert(slotId != "", 'Presentation slot ID must not be empty.');
-
+  
 
  final  String slotId;
 
@@ -4964,7 +5246,7 @@ as String,
 
 class TabsElement implements PresentationElement {
    TabsElement({required final  List<TabItem> tabs, this.initiallySelectedTabId}): assert(tabs.isNotEmpty, 'Tabs must not be empty.'),_tabs = tabs;
-
+  
 
  final  List<TabItem> _tabs;
  List<TabItem> get tabs {
@@ -5038,7 +5320,7 @@ as String?,
 
 class DividerElement implements PresentationElement {
   const DividerElement();
-
+  
 
 
 
@@ -5070,7 +5352,7 @@ String toString() {
 
 class SpacerElement implements PresentationElement {
   const SpacerElement({this.width, this.height});
-
+  
 
  final  TypedExpression? width;
  final  TypedExpression? height;
@@ -5220,7 +5502,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get x {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.x, (value) {
     return _then(_self.copyWith(x: value));
   });
@@ -5229,7 +5511,7 @@ $TypedExpressionCopyWith<$Res> get x {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get y {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.y, (value) {
     return _then(_self.copyWith(y: value));
   });
@@ -5372,7 +5654,7 @@ return $default(_that.x,_that.y);case _:
 
 class _PresentationOffset implements PresentationOffset {
   const _PresentationOffset({required this.x, required this.y});
-
+  
 
 @override final  TypedExpression x;
 @override final  TypedExpression y;
@@ -5437,7 +5719,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get x {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.x, (value) {
     return _then(_self.copyWith(x: value));
   });
@@ -5446,7 +5728,7 @@ $TypedExpressionCopyWith<$Res> get x {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get y {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.y, (value) {
     return _then(_self.copyWith(y: value));
   });
@@ -5678,7 +5960,7 @@ return $default(_that.id,_that.groupIds,_that.alignment,_that.offset,_that.visib
 
 class _PresentationAnchorPoint implements PresentationAnchorPoint {
   const _PresentationAnchorPoint({required this.id, final  List<String> groupIds = const [], this.alignment = PresentationAnchorAlignment.center, this.offset, this.visibleIf, this.exportToParent = false}): assert(id != "", 'Anchor ID must not be empty.'),_groupIds = groupIds;
-
+  
 
 @override final  String id;
  final  List<String> _groupIds;
@@ -5944,7 +6226,7 @@ return exportedGroup(_that.groupId);case _:
 
 class LocalAnchor implements PresentationAnchorSelector {
   const LocalAnchor(this.id): assert(id != "", 'Anchor ID must not be empty.');
-
+  
 
  final  String id;
 
@@ -6010,7 +6292,7 @@ as String,
 
 class ExportedAnchorGroup implements PresentationAnchorSelector {
   const ExportedAnchorGroup(this.groupId): assert(groupId != "", 'Anchor group ID must not be empty.');
-
+  
 
  final  String groupId;
 
@@ -6134,7 +6416,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get color {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
     return _then(_self.copyWith(color: value));
   });
@@ -6143,7 +6425,7 @@ $TypedExpressionCopyWith<$Res> get color {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get width {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.width, (value) {
     return _then(_self.copyWith(width: value));
   });
@@ -6286,7 +6568,7 @@ return $default(_that.color,_that.width);case _:
 
 class _ConnectorStroke implements ConnectorStroke {
   const _ConnectorStroke({required this.color, required this.width});
-
+  
 
 @override final  TypedExpression color;
 @override final  TypedExpression width;
@@ -6351,7 +6633,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get color {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
     return _then(_self.copyWith(color: value));
   });
@@ -6360,7 +6642,7 @@ $TypedExpressionCopyWith<$Res> get color {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get width {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.width, (value) {
     return _then(_self.copyWith(width: value));
   });
@@ -6532,7 +6814,7 @@ return circle(_that.diameter);case _:
 
 class ArrowConnectorMarker implements ConnectorEndpointMarker {
   const ArrowConnectorMarker({required this.size});
-
+  
 
  final  TypedExpression size;
 
@@ -6595,7 +6877,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get size {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.size, (value) {
     return _then(_self.copyWith(size: value));
   });
@@ -6607,7 +6889,7 @@ $TypedExpressionCopyWith<$Res> get size {
 
 class CircleConnectorMarker implements ConnectorEndpointMarker {
   const CircleConnectorMarker({required this.diameter});
-
+  
 
  final  TypedExpression diameter;
 
@@ -6670,7 +6952,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get diameter {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.diameter, (value) {
     return _then(_self.copyWith(diameter: value));
   });
@@ -6742,7 +7024,7 @@ as ConnectorEndpointMarker?,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStrokeCopyWith<$Res> get stroke {
-
+  
   return $ConnectorStrokeCopyWith<$Res>(_self.stroke, (value) {
     return _then(_self.copyWith(stroke: value));
   });
@@ -6751,7 +7033,7 @@ $ConnectorStrokeCopyWith<$Res> get stroke {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get cornerRadius {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.cornerRadius, (value) {
     return _then(_self.copyWith(cornerRadius: value));
   });
@@ -6918,7 +7200,7 @@ return $default(_that.stroke,_that.cornerRadius,_that.startMarker,_that.endMarke
 
 class _ConnectorStyle implements ConnectorStyle {
   const _ConnectorStyle({required this.stroke, required this.cornerRadius, this.startMarker, this.endMarker});
-
+  
 
 @override final  ConnectorStroke stroke;
 @override final  TypedExpression cornerRadius;
@@ -6987,7 +7269,7 @@ as ConnectorEndpointMarker?,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStrokeCopyWith<$Res> get stroke {
-
+  
   return $ConnectorStrokeCopyWith<$Res>(_self.stroke, (value) {
     return _then(_self.copyWith(stroke: value));
   });
@@ -6996,7 +7278,7 @@ $ConnectorStrokeCopyWith<$Res> get stroke {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get cornerRadius {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.cornerRadius, (value) {
     return _then(_self.copyWith(cornerRadius: value));
   });
@@ -7092,7 +7374,7 @@ as ConnectionExpressionScope,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -7101,7 +7383,7 @@ $PresentationNodeCopyWith<$Res> get node {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get position {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.position, (value) {
     return _then(_self.copyWith(position: value));
   });
@@ -7110,7 +7392,7 @@ $TypedExpressionCopyWith<$Res> get position {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get alignToPath {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.alignToPath, (value) {
     return _then(_self.copyWith(alignToPath: value));
   });
@@ -7253,7 +7535,7 @@ return $default(_that.node,_that.position,_that.alignToPath,_that.scope);case _:
 
 class _ConnectionMarker implements ConnectionMarker {
   const _ConnectionMarker({required this.node, required this.position, required this.alignToPath, this.scope = ConnectionExpressionScope.layer});
-
+  
 
 @override final  PresentationNode node;
 @override final  TypedExpression position;
@@ -7322,7 +7604,7 @@ as ConnectionExpressionScope,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -7331,7 +7613,7 @@ $PresentationNodeCopyWith<$Res> get node {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get position {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.position, (value) {
     return _then(_self.copyWith(position: value));
   });
@@ -7340,7 +7622,7 @@ $TypedExpressionCopyWith<$Res> get position {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get alignToPath {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.alignToPath, (value) {
     return _then(_self.copyWith(alignToPath: value));
   });
@@ -7409,7 +7691,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -7552,7 +7834,7 @@ return $default(_that.bendPosition);case _:
 
 class _OrthogonalConnectionPath implements OrthogonalConnectionPath {
   const _OrthogonalConnectionPath({required this.bendPosition});
-
+  
 
 @override final  TypedExpression bendPosition;
 
@@ -7615,7 +7897,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -7685,7 +7967,7 @@ as PresentationOffset,
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
-
+  
   return $PresentationOffsetCopyWith<$Res>(_self.sourceControlOffset, (value) {
     return _then(_self.copyWith(sourceControlOffset: value));
   });
@@ -7694,7 +7976,7 @@ $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get targetControlOffset {
-
+  
   return $PresentationOffsetCopyWith<$Res>(_self.targetControlOffset, (value) {
     return _then(_self.copyWith(targetControlOffset: value));
   });
@@ -7837,7 +8119,7 @@ return $default(_that.sourceControlOffset,_that.targetControlOffset);case _:
 
 class _CurvedConnectionPath implements CurvedConnectionPath {
   const _CurvedConnectionPath({required this.sourceControlOffset, required this.targetControlOffset});
-
+  
 
 @override final  PresentationOffset sourceControlOffset;
 @override final  PresentationOffset targetControlOffset;
@@ -7902,7 +8184,7 @@ as PresentationOffset,
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
-
+  
   return $PresentationOffsetCopyWith<$Res>(_self.sourceControlOffset, (value) {
     return _then(_self.copyWith(sourceControlOffset: value));
   });
@@ -7911,7 +8193,7 @@ $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get targetControlOffset {
-
+  
   return $PresentationOffsetCopyWith<$Res>(_self.targetControlOffset, (value) {
     return _then(_self.copyWith(targetControlOffset: value));
   });
@@ -8089,7 +8371,7 @@ return curved(_that.path);case _:
 
 class StraightConnectionPath implements ConnectionPath {
   const StraightConnectionPath();
-
+  
 
 
 
@@ -8121,7 +8403,7 @@ String toString() {
 
 class OrthogonalPath implements ConnectionPath {
   const OrthogonalPath(this.path);
-
+  
 
  final  OrthogonalConnectionPath path;
 
@@ -8184,7 +8466,7 @@ as OrthogonalConnectionPath,
 @override
 @pragma('vm:prefer-inline')
 $OrthogonalConnectionPathCopyWith<$Res> get path {
-
+  
   return $OrthogonalConnectionPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -8196,7 +8478,7 @@ $OrthogonalConnectionPathCopyWith<$Res> get path {
 
 class CurvedPath implements ConnectionPath {
   const CurvedPath(this.path);
-
+  
 
  final  CurvedConnectionPath path;
 
@@ -8259,7 +8541,7 @@ as CurvedConnectionPath,
 @override
 @pragma('vm:prefer-inline')
 $CurvedConnectionPathCopyWith<$Res> get path {
-
+  
   return $CurvedConnectionPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -8329,7 +8611,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -8472,7 +8754,7 @@ return $default(_that.axis,_that.bendPosition);case _:
 
 class _OrthogonalConnectionBundlePath implements OrthogonalConnectionBundlePath {
   const _OrthogonalConnectionBundlePath({required this.axis, required this.bendPosition});
-
+  
 
 @override final  ConnectionAxis axis;
 @override final  TypedExpression bendPosition;
@@ -8537,7 +8819,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -8709,7 +8991,7 @@ return fan();case _:
 
 class OrthogonalBundlePath implements ConnectionBundlePath {
   const OrthogonalBundlePath(this.path);
-
+  
 
  final  OrthogonalConnectionBundlePath path;
 
@@ -8772,7 +9054,7 @@ as OrthogonalConnectionBundlePath,
 @override
 @pragma('vm:prefer-inline')
 $OrthogonalConnectionBundlePathCopyWith<$Res> get path {
-
+  
   return $OrthogonalConnectionBundlePathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -8784,7 +9066,7 @@ $OrthogonalConnectionBundlePathCopyWith<$Res> get path {
 
 class FanBundlePath implements ConnectionBundlePath {
   const FanBundlePath();
-
+  
 
 
 
@@ -8874,7 +9156,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get source {
-
+  
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -9029,7 +9311,7 @@ return bundle(_that.source,_that.targets,_that.path,_that.trunkStyle,_that.branc
 
 class AnchoredConnection implements PresentationConnection {
   const AnchoredConnection({required this.source, required this.target, required this.path, required this.style, final  List<ConnectionMarker> markers = const [], this.visibleIf}): _markers = markers;
-
+  
 
 @override final  PresentationAnchorSelector source;
  final  PresentationAnchorSelector target;
@@ -9108,7 +9390,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get source {
-
+  
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -9117,7 +9399,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get target {
-
+  
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -9126,7 +9408,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $ConnectionPathCopyWith<$Res> get path {
-
+  
   return $ConnectionPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -9135,7 +9417,7 @@ $ConnectionPathCopyWith<$Res> get path {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get style {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.style, (value) {
     return _then(_self.copyWith(style: value));
   });
@@ -9159,7 +9441,7 @@ $TypedExpressionCopyWith<$Res>? get visibleIf {
 
 class AnchoredConnectionBundle implements PresentationConnection {
   const AnchoredConnectionBundle({required this.source, required this.targets, required this.path, required this.trunkStyle, required this.branchStyle, final  List<ConnectionMarker> trunkMarkers = const [], final  List<ConnectionMarker> branchMarkers = const [], this.visibleIf}): _trunkMarkers = trunkMarkers,_branchMarkers = branchMarkers;
-
+  
 
 @override final  PresentationAnchorSelector source;
  final  PresentationAnchorSelector targets;
@@ -9248,7 +9530,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get source {
-
+  
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -9257,7 +9539,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get targets {
-
+  
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.targets, (value) {
     return _then(_self.copyWith(targets: value));
   });
@@ -9266,7 +9548,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get targets {
 @override
 @pragma('vm:prefer-inline')
 $ConnectionBundlePathCopyWith<$Res> get path {
-
+  
   return $ConnectionBundlePathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -9275,7 +9557,7 @@ $ConnectionBundlePathCopyWith<$Res> get path {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get trunkStyle {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.trunkStyle, (value) {
     return _then(_self.copyWith(trunkStyle: value));
   });
@@ -9284,7 +9566,7 @@ $ConnectorStyleCopyWith<$Res> get trunkStyle {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get branchStyle {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.branchStyle, (value) {
     return _then(_self.copyWith(branchStyle: value));
   });
@@ -9486,7 +9768,7 @@ return custom(_that.value);case _:
 
 class NoPresentationRadius implements PresentationRadius {
   const NoPresentationRadius();
-
+  
 
 
 
@@ -9518,7 +9800,7 @@ String toString() {
 
 class SmallPresentationRadius implements PresentationRadius {
   const SmallPresentationRadius();
-
+  
 
 
 
@@ -9550,7 +9832,7 @@ String toString() {
 
 class MediumPresentationRadius implements PresentationRadius {
   const MediumPresentationRadius();
-
+  
 
 
 
@@ -9582,7 +9864,7 @@ String toString() {
 
 class LargePresentationRadius implements PresentationRadius {
   const LargePresentationRadius();
-
+  
 
 
 
@@ -9614,7 +9896,7 @@ String toString() {
 
 class CustomPresentationRadius implements PresentationRadius {
   const CustomPresentationRadius(this.value);
-
+  
 
  final  TypedExpression value;
 
@@ -9677,7 +9959,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -9749,7 +10031,7 @@ as PresentationSequenceLayout,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get item {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.item, (value) {
     return _then(_self.copyWith(item: value));
   });
@@ -9782,7 +10064,7 @@ $PresentationNodeCopyWith<$Res>? get separator {
 @override
 @pragma('vm:prefer-inline')
 $PresentationSequenceLayoutCopyWith<$Res> get layout {
-
+  
   return $PresentationSequenceLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -9925,7 +10207,7 @@ return $default(_that.item,_that.empty,_that.separator,_that.layout);case _:
 
 class _SequencePresentation implements SequencePresentation {
   const _SequencePresentation({required this.item, this.empty, this.separator, this.layout = const PresentationSequenceLayout.children(PresentationChildrenLayout.column())});
-
+  
 
 @override final  PresentationNode item;
 @override final  PresentationNode? empty;
@@ -9994,7 +10276,7 @@ as PresentationSequenceLayout,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get item {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.item, (value) {
     return _then(_self.copyWith(item: value));
   });
@@ -10027,7 +10309,7 @@ $PresentationNodeCopyWith<$Res>? get separator {
 @override
 @pragma('vm:prefer-inline')
 $PresentationSequenceLayoutCopyWith<$Res> get layout {
-
+  
   return $PresentationSequenceLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -10100,7 +10382,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -10291,7 +10573,7 @@ return $default(_that.binding,_that.label,_that.description,_that.prefix,_that.s
 
 class _BoundControl implements BoundControl {
   const _BoundControl({required this.binding, this.label, this.description, this.prefix, this.semanticLabel});
-
+  
 
 @override final  BindingReference binding;
 @override final  TypedExpression? label;
@@ -10362,7 +10644,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -10481,7 +10763,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -10490,7 +10772,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -10633,7 +10915,7 @@ return $default(_that.id,_that.label,_that.value);case _:
 
 class _SelectOption implements SelectOption {
   const _SelectOption({required this.id, required this.label, required this.value}): assert(id != "", 'Select option ID must not be empty.');
-
+  
 
 @override final  String id;
 @override final  TypedExpression label;
@@ -10700,7 +10982,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -10709,7 +10991,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -10780,7 +11062,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -10789,7 +11071,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -10944,7 +11226,7 @@ return $default(_that.type,_that.label,_that.presentation);case _:
 
 class _ConcreteTypePresentation implements ConcreteTypePresentation {
   const _ConcreteTypePresentation({required this.type, required this.label, this.presentation});
-
+  
 
 @override final  ResolvedTypeRef type;
 @override final  TypedExpression label;
@@ -11011,7 +11293,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -11020,7 +11302,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -11102,7 +11384,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -11111,7 +11393,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -11254,7 +11536,7 @@ return $default(_that.type,_that.child);case _:
 
 class _PolymorphicMatchCase implements PolymorphicMatchCase {
   const _PolymorphicMatchCase({required this.type, required this.child});
-
+  
 
 @override final  ResolvedTypeRef type;
 @override final  PresentationNode child;
@@ -11319,7 +11601,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -11328,7 +11610,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -11399,7 +11681,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -11408,7 +11690,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -11551,7 +11833,7 @@ return $default(_that.id,_that.label,_that.action);case _:
 
 class _PresentationMenuItem implements PresentationMenuItem {
   const _PresentationMenuItem({required this.id, required this.label, required this.action}): assert(id != "", 'Menu item ID must not be empty.');
-
+  
 
 @override final  String id;
 @override final  TypedExpression label;
@@ -11618,7 +11900,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -11627,7 +11909,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -11843,7 +12125,7 @@ return $default(_that.color,_that.width);case _:
 
 class _PresentationBorderSide implements PresentationBorderSide {
   const _PresentationBorderSide({this.color, this.width = 1}): assert(width > 0, 'Border width must be positive.');
-
+  
 
 @override final  TypedExpression? color;
 @override@JsonKey() final  double width;
@@ -12165,7 +12447,7 @@ return $default(_that.top,_that.start,_that.end,_that.bottom);case _:
 
 class _DirectionalPresentationBorder implements DirectionalPresentationBorder {
   const _DirectionalPresentationBorder({this.top, this.start, this.end, this.bottom}): assert(top != null || start != null || end != null || bottom != null, 'At least one border side must be provided.');
-
+  
 
 @override final  PresentationBorderSide? top;
 @override final  PresentationBorderSide? start;
@@ -12445,7 +12727,7 @@ return sides(_that.top,_that.start,_that.end,_that.bottom);case _:
 
 class PresentationBorderAll implements PresentationBorder {
   const PresentationBorderAll(this.side);
-
+  
 
  final  PresentationBorderSide side;
 
@@ -12508,7 +12790,7 @@ as PresentationBorderSide,
 @override
 @pragma('vm:prefer-inline')
 $PresentationBorderSideCopyWith<$Res> get side {
-
+  
   return $PresentationBorderSideCopyWith<$Res>(_self.side, (value) {
     return _then(_self.copyWith(side: value));
   });
@@ -12520,7 +12802,7 @@ $PresentationBorderSideCopyWith<$Res> get side {
 
 class PresentationBorderSides implements PresentationBorder {
   const PresentationBorderSides({this.top, this.start, this.end, this.bottom}): assert(top != null || start != null || end != null || bottom != null, 'At least one border side must be provided.');
-
+  
 
  final  PresentationBorderSide? top;
  final  PresentationBorderSide? start;
@@ -12818,7 +13100,7 @@ return stack();case _:
 
 class PresentationColumnLayout implements PresentationChildrenLayout {
   const PresentationColumnLayout({this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.stretch}): assert(spacing >= 0, 'Spacing must not be negative.');
-
+  
 
 @JsonKey() final  double spacing;
 @JsonKey() final  PresentationMainAxisAlignment mainAxisAlignment;
@@ -12888,7 +13170,7 @@ as PresentationCrossAxisAlignment,
 
 class PresentationRowLayout implements PresentationChildrenLayout {
   const PresentationRowLayout({this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.');
-
+  
 
 @JsonKey() final  double spacing;
 @JsonKey() final  PresentationMainAxisAlignment mainAxisAlignment;
@@ -12958,7 +13240,7 @@ as PresentationCrossAxisAlignment,
 
 class PresentationWrapLayout implements PresentationChildrenLayout {
   const PresentationWrapLayout({this.spacing = 0, this.runSpacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),assert(runSpacing >= 0, 'Run spacing must not be negative.');
-
+  
 
 @JsonKey() final  double spacing;
 @JsonKey() final  double runSpacing;
@@ -13030,7 +13312,7 @@ as PresentationCrossAxisAlignment,
 
 class PresentationGridLayout implements PresentationChildrenLayout {
   const PresentationGridLayout({required this.columns, this.horizontalSpacing = 0, this.verticalSpacing = 0}): assert(columns > 0, 'Column count must be positive.'),assert(horizontalSpacing >= 0, 'Horizontal spacing must not be negative.'),assert(verticalSpacing >= 0, 'Vertical spacing must not be negative.');
-
+  
 
  final  int columns;
 @JsonKey() final  double horizontalSpacing;
@@ -13100,7 +13382,7 @@ as double,
 
 class PresentationStackLayout implements PresentationChildrenLayout {
   const PresentationStackLayout();
-
+  
 
 
 
@@ -13298,7 +13580,7 @@ return offset(_that.value);case _:
 
 class StartConnectorAnchor implements ConnectorAnchor {
   const StartConnectorAnchor();
-
+  
 
 
 
@@ -13330,7 +13612,7 @@ String toString() {
 
 class CenterConnectorAnchor implements ConnectorAnchor {
   const CenterConnectorAnchor();
-
+  
 
 
 
@@ -13362,7 +13644,7 @@ String toString() {
 
 class OffsetConnectorAnchor implements ConnectorAnchor {
   const OffsetConnectorAnchor(this.value);
-
+  
 
  final  TypedExpression value;
 
@@ -13425,7 +13707,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -13502,7 +13784,7 @@ as PresentationCrossAxisAlignment,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get unaryConnector {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.unaryConnector, (value) {
     return _then(_self.copyWith(unaryConnector: value));
   });
@@ -13511,7 +13793,7 @@ $ConnectorStyleCopyWith<$Res> get unaryConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get trunkConnector {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.trunkConnector, (value) {
     return _then(_self.copyWith(trunkConnector: value));
   });
@@ -13520,7 +13802,7 @@ $ConnectorStyleCopyWith<$Res> get trunkConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get branchConnector {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.branchConnector, (value) {
     return _then(_self.copyWith(branchConnector: value));
   });
@@ -13529,7 +13811,7 @@ $ConnectorStyleCopyWith<$Res> get branchConnector {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get itemSpacing {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.itemSpacing, (value) {
     return _then(_self.copyWith(itemSpacing: value));
   });
@@ -13538,7 +13820,7 @@ $TypedExpressionCopyWith<$Res> get itemSpacing {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get indentation {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.indentation, (value) {
     return _then(_self.copyWith(indentation: value));
   });
@@ -13547,7 +13829,7 @@ $TypedExpressionCopyWith<$Res> get indentation {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get leadingSpacing {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.leadingSpacing, (value) {
     return _then(_self.copyWith(leadingSpacing: value));
   });
@@ -13556,7 +13838,7 @@ $TypedExpressionCopyWith<$Res> get leadingSpacing {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorAnchorCopyWith<$Res> get itemAnchor {
-
+  
   return $ConnectorAnchorCopyWith<$Res>(_self.itemAnchor, (value) {
     return _then(_self.copyWith(itemAnchor: value));
   });
@@ -13565,7 +13847,7 @@ $ConnectorAnchorCopyWith<$Res> get itemAnchor {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get flattenSingleItem {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.flattenSingleItem, (value) {
     return _then(_self.copyWith(flattenSingleItem: value));
   });
@@ -13708,7 +13990,7 @@ return $default(_that.unaryConnector,_that.trunkConnector,_that.branchConnector,
 
 class _HierarchySequenceLayout implements HierarchySequenceLayout {
   const _HierarchySequenceLayout({required this.unaryConnector, required this.trunkConnector, required this.branchConnector, required this.itemSpacing, required this.indentation, required this.leadingSpacing, required this.itemAnchor, required this.flattenSingleItem, this.crossAxisAlignment = PresentationCrossAxisAlignment.stretch});
-
+  
 
 @override final  ConnectorStyle unaryConnector;
 @override final  ConnectorStyle trunkConnector;
@@ -13787,7 +14069,7 @@ as PresentationCrossAxisAlignment,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get unaryConnector {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.unaryConnector, (value) {
     return _then(_self.copyWith(unaryConnector: value));
   });
@@ -13796,7 +14078,7 @@ $ConnectorStyleCopyWith<$Res> get unaryConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get trunkConnector {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.trunkConnector, (value) {
     return _then(_self.copyWith(trunkConnector: value));
   });
@@ -13805,7 +14087,7 @@ $ConnectorStyleCopyWith<$Res> get trunkConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get branchConnector {
-
+  
   return $ConnectorStyleCopyWith<$Res>(_self.branchConnector, (value) {
     return _then(_self.copyWith(branchConnector: value));
   });
@@ -13814,7 +14096,7 @@ $ConnectorStyleCopyWith<$Res> get branchConnector {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get itemSpacing {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.itemSpacing, (value) {
     return _then(_self.copyWith(itemSpacing: value));
   });
@@ -13823,7 +14105,7 @@ $TypedExpressionCopyWith<$Res> get itemSpacing {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get indentation {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.indentation, (value) {
     return _then(_self.copyWith(indentation: value));
   });
@@ -13832,7 +14114,7 @@ $TypedExpressionCopyWith<$Res> get indentation {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get leadingSpacing {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.leadingSpacing, (value) {
     return _then(_self.copyWith(leadingSpacing: value));
   });
@@ -13841,7 +14123,7 @@ $TypedExpressionCopyWith<$Res> get leadingSpacing {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorAnchorCopyWith<$Res> get itemAnchor {
-
+  
   return $ConnectorAnchorCopyWith<$Res>(_self.itemAnchor, (value) {
     return _then(_self.copyWith(itemAnchor: value));
   });
@@ -13850,7 +14132,7 @@ $ConnectorAnchorCopyWith<$Res> get itemAnchor {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get flattenSingleItem {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.flattenSingleItem, (value) {
     return _then(_self.copyWith(flattenSingleItem: value));
   });
@@ -14022,7 +14304,7 @@ return hierarchy(_that.layout);case _:
 
 class PresentationStandardSequenceLayout implements PresentationSequenceLayout {
   const PresentationStandardSequenceLayout(this.layout);
-
+  
 
 @override final  PresentationChildrenLayout layout;
 
@@ -14085,7 +14367,7 @@ as PresentationChildrenLayout,
 @override
 @pragma('vm:prefer-inline')
 $PresentationChildrenLayoutCopyWith<$Res> get layout {
-
+  
   return $PresentationChildrenLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -14097,7 +14379,7 @@ $PresentationChildrenLayoutCopyWith<$Res> get layout {
 
 class PresentationHierarchySequenceLayout implements PresentationSequenceLayout {
   const PresentationHierarchySequenceLayout(this.layout);
-
+  
 
 @override final  HierarchySequenceLayout layout;
 
@@ -14160,7 +14442,7 @@ as HierarchySequenceLayout,
 @override
 @pragma('vm:prefer-inline')
 $HierarchySequenceLayoutCopyWith<$Res> get layout {
-
+  
   return $HierarchySequenceLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -14231,7 +14513,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -14240,7 +14522,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -14383,7 +14665,7 @@ return $default(_that.id,_that.label,_that.child);case _:
 
 class _TabItem implements TabItem {
   const _TabItem({required this.id, required this.label, required this.child}): assert(id != "", 'Tab ID must not be empty.');
-
+  
 
 @override final  String id;
 @override final  TypedExpression label;
@@ -14450,7 +14732,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -14459,7 +14741,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -14631,7 +14913,7 @@ return enumeration(_that.values);case _:
 
 class FreeTextSearchSelectorValues implements SearchSelectorValues {
   const FreeTextSearchSelectorValues();
-
+  
 
 
 
@@ -14663,7 +14945,7 @@ String toString() {
 
 class EnumeratedSearchSelectorValues implements SearchSelectorValues {
    EnumeratedSearchSelectorValues(final  List<String> values): assert(values.isNotEmpty, 'Selector values must not be empty.'),_values = values;
-
+  
 
  final  List<String> _values;
  List<String> get values {
@@ -14798,7 +15080,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get valueBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
     return _then(_self.copyWith(valueBindingId: value));
   });
@@ -14807,7 +15089,7 @@ $BindingIdCopyWith<$Res> get valueBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorValuesCopyWith<$Res> get values {
-
+  
   return $SearchSelectorValuesCopyWith<$Res>(_self.values, (value) {
     return _then(_self.copyWith(values: value));
   });
@@ -14950,7 +15232,7 @@ return keyValue(_that.id,_that.key,_that.valueBindingId,_that.values,_that.caseS
 
 class KeyValueSearchSelectorDefinition implements SearchSelectorDefinition {
   const KeyValueSearchSelectorDefinition({required this.id, required this.key, required this.valueBindingId, required this.values, this.caseSensitive = false, this.multiplicity = SearchSelectorMultiplicity.single, this.colorValue}): assert(id != "", 'Selector ID must not be empty.'),assert(key != "", 'Selector key must not be empty.');
-
+  
 
 @override final  String id;
 @override final  String key;
@@ -15025,7 +15307,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get valueBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
     return _then(_self.copyWith(valueBindingId: value));
   });
@@ -15034,7 +15316,7 @@ $BindingIdCopyWith<$Res> get valueBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorValuesCopyWith<$Res> get values {
-
+  
   return $SearchSelectorValuesCopyWith<$Res>(_self.values, (value) {
     return _then(_self.copyWith(values: value));
   });
@@ -15107,7 +15389,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15116,7 +15398,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -15125,7 +15407,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get selectedValue {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.selectedValue, (value) {
     return _then(_self.copyWith(selectedValue: value));
   });
@@ -15134,7 +15416,7 @@ $TypedExpressionCopyWith<$Res> get selectedValue {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get presentation {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -15289,7 +15571,7 @@ return $default(_that.bindingId,_that.key,_that.selectedValue,_that.presentation
 
 class _SearchResultMapping implements SearchResultMapping {
   const _SearchResultMapping({required this.bindingId, required this.key, required this.selectedValue, required this.presentation, this.label});
-
+  
 
 @override final  BindingId bindingId;
 @override final  TypedExpression key;
@@ -15360,7 +15642,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15369,7 +15651,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -15378,7 +15660,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get selectedValue {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.selectedValue, (value) {
     return _then(_self.copyWith(selectedValue: value));
   });
@@ -15387,7 +15669,7 @@ $TypedExpressionCopyWith<$Res> get selectedValue {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get presentation {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -15470,7 +15752,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -15613,7 +15895,7 @@ return $default(_that.name,_that.value,_that.omitIfEmpty);case _:
 
 class _HttpQueryParameter implements HttpQueryParameter {
   const _HttpQueryParameter({required this.name, required this.value, this.omitIfEmpty = false}): assert(name != "", 'Query parameter name must not be empty.');
-
+  
 
 @override final  String name;
 @override final  TypedExpression value;
@@ -15680,7 +15962,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -15751,7 +16033,7 @@ as TypeExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15760,7 +16042,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -15903,7 +16185,7 @@ return $default(_that.bindingId,_that.path,_that.type);case _:
 
 class _HttpJsonContextBinding implements HttpJsonContextBinding {
   const _HttpJsonContextBinding({required this.bindingId, required this.path, required this.type}): assert(path != "", 'Context binding path must not be empty.');
-
+  
 
 @override final  BindingId bindingId;
 @override final  String path;
@@ -15970,7 +16252,7 @@ as TypeExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15979,7 +16261,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -16049,7 +16331,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get expression {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -16192,7 +16474,7 @@ return $default(_that.expression,_that.weight);case _:
 
 class _SearchRankingField implements SearchRankingField {
   const _SearchRankingField({required this.expression, required this.weight}): assert(weight > 0, 'Ranking weight must be positive.');
-
+  
 
 @override final  TypedExpression expression;
 @override final  int weight;
@@ -16257,7 +16539,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get expression {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -16405,13 +16687,13 @@ return merge(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PresentationCollectionSourceId sourceId,  SearchResultMapping result,  TypedExpression? where,  List<SearchSelectorDefinition> selectors)?  collection,TResult Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  staticValues,TResult Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)?  httpJson,TResult Function( RealmActionId actionId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  realmCallback,TResult Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)?  gate,TResult Function( Duration duration,  SearchProvider child)?  debounce,TResult Function( int capacity,  SearchProvider child,  bool retainStaleResults)?  cache,TResult Function( List<SearchRankingField> fields,  SearchProvider child)?  rank,TResult Function( TypedExpression maximum,  SearchProvider child)?  limit,TResult Function( SearchProvider child)?  distinct,TResult Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)?  history,TResult Function( String id,  TypedExpression label,  SearchProvider child)?  section,TResult Function( List<SearchProvider> children)?  merge,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PresentationCollectionSourceId sourceId,  SearchResultMapping result,  TypedExpression? where,  List<SearchSelectorDefinition> selectors)?  collection,TResult Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  staticValues,TResult Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)?  httpJson,TResult Function( CapabilityId capabilityId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  realmCallback,TResult Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)?  gate,TResult Function( Duration duration,  SearchProvider child)?  debounce,TResult Function( int capacity,  SearchProvider child,  bool retainStaleResults)?  cache,TResult Function( List<SearchRankingField> fields,  SearchProvider child)?  rank,TResult Function( TypedExpression maximum,  SearchProvider child)?  limit,TResult Function( SearchProvider child)?  distinct,TResult Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)?  history,TResult Function( String id,  TypedExpression label,  SearchProvider child)?  section,TResult Function( List<SearchProvider> children)?  merge,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CollectionSearchProvider() when collection != null:
 return collection(_that.sourceId,_that.result,_that.where,_that.selectors);case StaticSearchProvider() when staticValues != null:
 return staticValues(_that.values,_that.result,_that.selectors);case HttpJsonSearchProvider() when httpJson != null:
 return httpJson(_that.uri,_that.parameters,_that.resultPath,_that.resultType,_that.result,_that.contextBindings,_that.selectors,_that.timeout);case RealmCallbackSearchProvider() when realmCallback != null:
-return realmCallback(_that.actionId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider() when gate != null:
+return realmCallback(_that.capabilityId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider() when gate != null:
 return gate(_that.condition,_that.child,_that.guidance);case DebouncedSearchProvider() when debounce != null:
 return debounce(_that.duration,_that.child);case CachedSearchProvider() when cache != null:
 return cache(_that.capacity,_that.child,_that.retainStaleResults);case RankedSearchProvider() when rank != null:
@@ -16438,13 +16720,13 @@ return merge(_that.children);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PresentationCollectionSourceId sourceId,  SearchResultMapping result,  TypedExpression? where,  List<SearchSelectorDefinition> selectors)  collection,required TResult Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)  staticValues,required TResult Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)  httpJson,required TResult Function( RealmActionId actionId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)  realmCallback,required TResult Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)  gate,required TResult Function( Duration duration,  SearchProvider child)  debounce,required TResult Function( int capacity,  SearchProvider child,  bool retainStaleResults)  cache,required TResult Function( List<SearchRankingField> fields,  SearchProvider child)  rank,required TResult Function( TypedExpression maximum,  SearchProvider child)  limit,required TResult Function( SearchProvider child)  distinct,required TResult Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)  history,required TResult Function( String id,  TypedExpression label,  SearchProvider child)  section,required TResult Function( List<SearchProvider> children)  merge,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PresentationCollectionSourceId sourceId,  SearchResultMapping result,  TypedExpression? where,  List<SearchSelectorDefinition> selectors)  collection,required TResult Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)  staticValues,required TResult Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)  httpJson,required TResult Function( CapabilityId capabilityId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)  realmCallback,required TResult Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)  gate,required TResult Function( Duration duration,  SearchProvider child)  debounce,required TResult Function( int capacity,  SearchProvider child,  bool retainStaleResults)  cache,required TResult Function( List<SearchRankingField> fields,  SearchProvider child)  rank,required TResult Function( TypedExpression maximum,  SearchProvider child)  limit,required TResult Function( SearchProvider child)  distinct,required TResult Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)  history,required TResult Function( String id,  TypedExpression label,  SearchProvider child)  section,required TResult Function( List<SearchProvider> children)  merge,}) {final _that = this;
 switch (_that) {
 case CollectionSearchProvider():
 return collection(_that.sourceId,_that.result,_that.where,_that.selectors);case StaticSearchProvider():
 return staticValues(_that.values,_that.result,_that.selectors);case HttpJsonSearchProvider():
 return httpJson(_that.uri,_that.parameters,_that.resultPath,_that.resultType,_that.result,_that.contextBindings,_that.selectors,_that.timeout);case RealmCallbackSearchProvider():
-return realmCallback(_that.actionId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider():
+return realmCallback(_that.capabilityId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider():
 return gate(_that.condition,_that.child,_that.guidance);case DebouncedSearchProvider():
 return debounce(_that.duration,_that.child);case CachedSearchProvider():
 return cache(_that.capacity,_that.child,_that.retainStaleResults);case RankedSearchProvider():
@@ -16467,13 +16749,13 @@ return merge(_that.children);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PresentationCollectionSourceId sourceId,  SearchResultMapping result,  TypedExpression? where,  List<SearchSelectorDefinition> selectors)?  collection,TResult? Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  staticValues,TResult? Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)?  httpJson,TResult? Function( RealmActionId actionId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  realmCallback,TResult? Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)?  gate,TResult? Function( Duration duration,  SearchProvider child)?  debounce,TResult? Function( int capacity,  SearchProvider child,  bool retainStaleResults)?  cache,TResult? Function( List<SearchRankingField> fields,  SearchProvider child)?  rank,TResult? Function( TypedExpression maximum,  SearchProvider child)?  limit,TResult? Function( SearchProvider child)?  distinct,TResult? Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)?  history,TResult? Function( String id,  TypedExpression label,  SearchProvider child)?  section,TResult? Function( List<SearchProvider> children)?  merge,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PresentationCollectionSourceId sourceId,  SearchResultMapping result,  TypedExpression? where,  List<SearchSelectorDefinition> selectors)?  collection,TResult? Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  staticValues,TResult? Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)?  httpJson,TResult? Function( CapabilityId capabilityId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  realmCallback,TResult? Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)?  gate,TResult? Function( Duration duration,  SearchProvider child)?  debounce,TResult? Function( int capacity,  SearchProvider child,  bool retainStaleResults)?  cache,TResult? Function( List<SearchRankingField> fields,  SearchProvider child)?  rank,TResult? Function( TypedExpression maximum,  SearchProvider child)?  limit,TResult? Function( SearchProvider child)?  distinct,TResult? Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)?  history,TResult? Function( String id,  TypedExpression label,  SearchProvider child)?  section,TResult? Function( List<SearchProvider> children)?  merge,}) {final _that = this;
 switch (_that) {
 case CollectionSearchProvider() when collection != null:
 return collection(_that.sourceId,_that.result,_that.where,_that.selectors);case StaticSearchProvider() when staticValues != null:
 return staticValues(_that.values,_that.result,_that.selectors);case HttpJsonSearchProvider() when httpJson != null:
 return httpJson(_that.uri,_that.parameters,_that.resultPath,_that.resultType,_that.result,_that.contextBindings,_that.selectors,_that.timeout);case RealmCallbackSearchProvider() when realmCallback != null:
-return realmCallback(_that.actionId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider() when gate != null:
+return realmCallback(_that.capabilityId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider() when gate != null:
 return gate(_that.condition,_that.child,_that.guidance);case DebouncedSearchProvider() when debounce != null:
 return debounce(_that.duration,_that.child);case CachedSearchProvider() when cache != null:
 return cache(_that.capacity,_that.child,_that.retainStaleResults);case RankedSearchProvider() when rank != null:
@@ -16495,7 +16777,7 @@ return merge(_that.children);case _:
 
 class CollectionSearchProvider implements SearchProvider {
   const CollectionSearchProvider({required this.sourceId, required this.result, this.where, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
-
+  
 
  final  PresentationCollectionSourceId sourceId;
  final  SearchResultMapping result;
@@ -16570,7 +16852,7 @@ as List<SearchSelectorDefinition>,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
-
+  
   return $PresentationCollectionSourceIdCopyWith<$Res>(_self.sourceId, (value) {
     return _then(_self.copyWith(sourceId: value));
   });
@@ -16579,7 +16861,7 @@ $PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-
+  
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16603,7 +16885,7 @@ $TypedExpressionCopyWith<$Res>? get where {
 
 class StaticSearchProvider implements SearchProvider {
   const StaticSearchProvider({required this.values, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
-
+  
 
  final  TypedExpression values;
  final  SearchResultMapping result;
@@ -16676,7 +16958,7 @@ as List<SearchSelectorDefinition>,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get values {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.values, (value) {
     return _then(_self.copyWith(values: value));
   });
@@ -16685,7 +16967,7 @@ $TypedExpressionCopyWith<$Res> get values {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-
+  
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16697,7 +16979,7 @@ $SearchResultMappingCopyWith<$Res> get result {
 
 class HttpJsonSearchProvider implements SearchProvider {
   const HttpJsonSearchProvider({required this.uri, required final  List<HttpQueryParameter> parameters, required this.resultPath, required this.resultType, required this.result, final  List<HttpJsonContextBinding> contextBindings = const [], final  List<SearchSelectorDefinition> selectors = const [], this.timeout = const Duration(seconds: 5)}): assert(resultPath != "", 'Result path must not be empty.'),_parameters = parameters,_contextBindings = contextBindings,_selectors = selectors;
-
+  
 
  final  TypedExpression uri;
  final  List<HttpQueryParameter> _parameters;
@@ -16792,7 +17074,7 @@ as Duration,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get uri {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.uri, (value) {
     return _then(_self.copyWith(uri: value));
   });
@@ -16801,7 +17083,7 @@ $TypedExpressionCopyWith<$Res> get uri {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -16810,7 +17092,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-
+  
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16821,10 +17103,10 @@ $SearchResultMappingCopyWith<$Res> get result {
 
 
 class RealmCallbackSearchProvider implements SearchProvider {
-  const RealmCallbackSearchProvider({required this.actionId, required this.payload, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
+  const RealmCallbackSearchProvider({required this.capabilityId, required this.payload, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
+  
 
-
- final  RealmActionId actionId;
+ final  CapabilityId capabilityId;
  final  TypedExpression payload;
  final  SearchResultMapping result;
  final  List<SearchSelectorDefinition> _selectors;
@@ -16845,16 +17127,16 @@ $RealmCallbackSearchProviderCopyWith<RealmCallbackSearchProvider> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmCallbackSearchProvider&&(identical(other.actionId, actionId) || other.actionId == actionId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._selectors, _selectors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmCallbackSearchProvider&&(identical(other.capabilityId, capabilityId) || other.capabilityId == capabilityId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._selectors, _selectors));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,actionId,payload,result,const DeepCollectionEquality().hash(_selectors));
+int get hashCode => Object.hash(runtimeType,capabilityId,payload,result,const DeepCollectionEquality().hash(_selectors));
 
 @override
 String toString() {
-  return 'SearchProvider.realmCallback(actionId: $actionId, payload: $payload, result: $result, selectors: $selectors)';
+  return 'SearchProvider.realmCallback(capabilityId: $capabilityId, payload: $payload, result: $result, selectors: $selectors)';
 }
 
 
@@ -16865,11 +17147,11 @@ abstract mixin class $RealmCallbackSearchProviderCopyWith<$Res> implements $Sear
   factory $RealmCallbackSearchProviderCopyWith(RealmCallbackSearchProvider value, $Res Function(RealmCallbackSearchProvider) _then) = _$RealmCallbackSearchProviderCopyWithImpl;
 @useResult
 $Res call({
- RealmActionId actionId, TypedExpression payload, SearchResultMapping result, List<SearchSelectorDefinition> selectors
+ CapabilityId capabilityId, TypedExpression payload, SearchResultMapping result, List<SearchSelectorDefinition> selectors
 });
 
 
-$RealmActionIdCopyWith<$Res> get actionId;$TypedExpressionCopyWith<$Res> get payload;$SearchResultMappingCopyWith<$Res> get result;
+$CapabilityIdCopyWith<$Res> get capabilityId;$TypedExpressionCopyWith<$Res> get payload;$SearchResultMappingCopyWith<$Res> get result;
 
 }
 /// @nodoc
@@ -16882,10 +17164,10 @@ class _$RealmCallbackSearchProviderCopyWithImpl<$Res>
 
 /// Create a copy of SearchProvider
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? actionId = null,Object? payload = null,Object? result = null,Object? selectors = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? capabilityId = null,Object? payload = null,Object? result = null,Object? selectors = null,}) {
   return _then(RealmCallbackSearchProvider(
-actionId: null == actionId ? _self.actionId : actionId // ignore: cast_nullable_to_non_nullable
-as RealmActionId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+capabilityId: null == capabilityId ? _self.capabilityId : capabilityId // ignore: cast_nullable_to_non_nullable
+as CapabilityId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
 as TypedExpression,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as SearchResultMapping,selectors: null == selectors ? _self._selectors : selectors // ignore: cast_nullable_to_non_nullable
 as List<SearchSelectorDefinition>,
@@ -16896,17 +17178,17 @@ as List<SearchSelectorDefinition>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RealmActionIdCopyWith<$Res> get actionId {
-
-  return $RealmActionIdCopyWith<$Res>(_self.actionId, (value) {
-    return _then(_self.copyWith(actionId: value));
+$CapabilityIdCopyWith<$Res> get capabilityId {
+  
+  return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
+    return _then(_self.copyWith(capabilityId: value));
   });
 }/// Create a copy of SearchProvider
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get payload {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.payload, (value) {
     return _then(_self.copyWith(payload: value));
   });
@@ -16915,7 +17197,7 @@ $TypedExpressionCopyWith<$Res> get payload {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-
+  
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16927,7 +17209,7 @@ $SearchResultMappingCopyWith<$Res> get result {
 
 class GatedSearchProvider implements SearchProvider {
   const GatedSearchProvider({required this.condition, required this.child, this.guidance});
-
+  
 
  final  TypedExpression condition;
  final  SearchProvider child;
@@ -16994,7 +17276,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get condition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
     return _then(_self.copyWith(condition: value));
   });
@@ -17003,7 +17285,7 @@ $TypedExpressionCopyWith<$Res> get condition {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17027,7 +17309,7 @@ $TypedExpressionCopyWith<$Res>? get guidance {
 
 class DebouncedSearchProvider implements SearchProvider {
   const DebouncedSearchProvider({required this.duration, required this.child});
-
+  
 
  final  Duration duration;
  final  SearchProvider child;
@@ -17092,7 +17374,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17104,7 +17386,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class CachedSearchProvider implements SearchProvider {
   const CachedSearchProvider({required this.capacity, required this.child, this.retainStaleResults = true}): assert(capacity > 0, 'Cache capacity must be positive.');
-
+  
 
  final  int capacity;
  final  SearchProvider child;
@@ -17171,7 +17453,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17183,7 +17465,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class RankedSearchProvider implements SearchProvider {
    RankedSearchProvider({required final  List<SearchRankingField> fields, required this.child}): assert(fields.isNotEmpty, 'Ranking fields must not be empty.'),_fields = fields;
-
+  
 
  final  List<SearchRankingField> _fields;
  List<SearchRankingField> get fields {
@@ -17254,7 +17536,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17266,7 +17548,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class LimitedSearchProvider implements SearchProvider {
   const LimitedSearchProvider({required this.maximum, required this.child});
-
+  
 
  final  TypedExpression maximum;
  final  SearchProvider child;
@@ -17331,7 +17613,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximum {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
     return _then(_self.copyWith(maximum: value));
   });
@@ -17340,7 +17622,7 @@ $TypedExpressionCopyWith<$Res> get maximum {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17352,7 +17634,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class DistinctSearchProvider implements SearchProvider {
   const DistinctSearchProvider({required this.child});
-
+  
 
  final  SearchProvider child;
 
@@ -17415,7 +17697,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17427,7 +17709,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class HistoricalSearchProvider implements SearchProvider {
   const HistoricalSearchProvider({required this.key, required this.label, required this.capacity, required this.child}): assert(key != "", 'History key must not be empty.'),assert(capacity > 0, 'History capacity must be positive.');
-
+  
 
  final  String key;
  final  TypedExpression label;
@@ -17496,7 +17778,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -17505,7 +17787,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17517,7 +17799,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class SectionSearchProvider implements SearchProvider {
   const SectionSearchProvider({required this.id, required this.label, required this.child}): assert(id != "", 'Section ID must not be empty.');
-
+  
 
  final  String id;
  final  TypedExpression label;
@@ -17584,7 +17866,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -17593,7 +17875,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-
+  
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17605,7 +17887,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class MergedSearchProvider implements SearchProvider {
    MergedSearchProvider({required final  List<SearchProvider> children}): assert(children.isNotEmpty, 'Merged providers must not be empty.'),_children = children;
-
+  
 
  final  List<SearchProvider> _children;
  List<SearchProvider> get children {
@@ -17670,6 +17952,586 @@ as List<SearchProvider>,
 }
 
 
+}
+
+/// @nodoc
+mixin _$StatusAppearance {
+
+ StatusTone get tone; TypedExpression? get label;
+/// Create a copy of StatusAppearance
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StatusAppearanceCopyWith<StatusAppearance> get copyWith => _$StatusAppearanceCopyWithImpl<StatusAppearance>(this as StatusAppearance, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatusAppearance&&(identical(other.tone, tone) || other.tone == tone)&&(identical(other.label, label) || other.label == label));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,tone,label);
+
+@override
+String toString() {
+  return 'StatusAppearance(tone: $tone, label: $label)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $StatusAppearanceCopyWith<$Res>  {
+  factory $StatusAppearanceCopyWith(StatusAppearance value, $Res Function(StatusAppearance) _then) = _$StatusAppearanceCopyWithImpl;
+@useResult
+$Res call({
+ StatusTone tone, TypedExpression? label
+});
+
+
+$TypedExpressionCopyWith<$Res>? get label;
+
+}
+/// @nodoc
+class _$StatusAppearanceCopyWithImpl<$Res>
+    implements $StatusAppearanceCopyWith<$Res> {
+  _$StatusAppearanceCopyWithImpl(this._self, this._then);
+
+  final StatusAppearance _self;
+  final $Res Function(StatusAppearance) _then;
+
+/// Create a copy of StatusAppearance
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? tone = null,Object? label = freezed,}) {
+  return _then(_self.copyWith(
+tone: null == tone ? _self.tone : tone // ignore: cast_nullable_to_non_nullable
+as StatusTone,label: freezed == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
+  ));
+}
+/// Create a copy of StatusAppearance
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get label {
+    if (_self.label == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.label!, (value) {
+    return _then(_self.copyWith(label: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [StatusAppearance].
+extension StatusAppearancePatterns on StatusAppearance {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _StatusAppearance value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _StatusAppearance() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _StatusAppearance value)  $default,){
+final _that = this;
+switch (_that) {
+case _StatusAppearance():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _StatusAppearance value)?  $default,){
+final _that = this;
+switch (_that) {
+case _StatusAppearance() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( StatusTone tone,  TypedExpression? label)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _StatusAppearance() when $default != null:
+return $default(_that.tone,_that.label);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( StatusTone tone,  TypedExpression? label)  $default,) {final _that = this;
+switch (_that) {
+case _StatusAppearance():
+return $default(_that.tone,_that.label);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( StatusTone tone,  TypedExpression? label)?  $default,) {final _that = this;
+switch (_that) {
+case _StatusAppearance() when $default != null:
+return $default(_that.tone,_that.label);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _StatusAppearance implements StatusAppearance {
+  const _StatusAppearance({required this.tone, this.label});
+  
+
+@override final  StatusTone tone;
+@override final  TypedExpression? label;
+
+/// Create a copy of StatusAppearance
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$StatusAppearanceCopyWith<_StatusAppearance> get copyWith => __$StatusAppearanceCopyWithImpl<_StatusAppearance>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StatusAppearance&&(identical(other.tone, tone) || other.tone == tone)&&(identical(other.label, label) || other.label == label));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,tone,label);
+
+@override
+String toString() {
+  return 'StatusAppearance(tone: $tone, label: $label)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$StatusAppearanceCopyWith<$Res> implements $StatusAppearanceCopyWith<$Res> {
+  factory _$StatusAppearanceCopyWith(_StatusAppearance value, $Res Function(_StatusAppearance) _then) = __$StatusAppearanceCopyWithImpl;
+@override @useResult
+$Res call({
+ StatusTone tone, TypedExpression? label
+});
+
+
+@override $TypedExpressionCopyWith<$Res>? get label;
+
+}
+/// @nodoc
+class __$StatusAppearanceCopyWithImpl<$Res>
+    implements _$StatusAppearanceCopyWith<$Res> {
+  __$StatusAppearanceCopyWithImpl(this._self, this._then);
+
+  final _StatusAppearance _self;
+  final $Res Function(_StatusAppearance) _then;
+
+/// Create a copy of StatusAppearance
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? tone = null,Object? label = freezed,}) {
+  return _then(_StatusAppearance(
+tone: null == tone ? _self.tone : tone // ignore: cast_nullable_to_non_nullable
+as StatusTone,label: freezed == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
+  ));
+}
+
+/// Create a copy of StatusAppearance
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get label {
+    if (_self.label == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.label!, (value) {
+    return _then(_self.copyWith(label: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$StatusCase {
+
+ DataValue get match; StatusAppearance get appearance;
+/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StatusCaseCopyWith<StatusCase> get copyWith => _$StatusCaseCopyWithImpl<StatusCase>(this as StatusCase, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatusCase&&(identical(other.match, match) || other.match == match)&&(identical(other.appearance, appearance) || other.appearance == appearance));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,match,appearance);
+
+@override
+String toString() {
+  return 'StatusCase(match: $match, appearance: $appearance)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $StatusCaseCopyWith<$Res>  {
+  factory $StatusCaseCopyWith(StatusCase value, $Res Function(StatusCase) _then) = _$StatusCaseCopyWithImpl;
+@useResult
+$Res call({
+ DataValue match, StatusAppearance appearance
+});
+
+
+$DataValueCopyWith<$Res> get match;$StatusAppearanceCopyWith<$Res> get appearance;
+
+}
+/// @nodoc
+class _$StatusCaseCopyWithImpl<$Res>
+    implements $StatusCaseCopyWith<$Res> {
+  _$StatusCaseCopyWithImpl(this._self, this._then);
+
+  final StatusCase _self;
+  final $Res Function(StatusCase) _then;
+
+/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? match = null,Object? appearance = null,}) {
+  return _then(_self.copyWith(
+match: null == match ? _self.match : match // ignore: cast_nullable_to_non_nullable
+as DataValue,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
+as StatusAppearance,
+  ));
+}
+/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataValueCopyWith<$Res> get match {
+  
+  return $DataValueCopyWith<$Res>(_self.match, (value) {
+    return _then(_self.copyWith(match: value));
+  });
+}/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$StatusAppearanceCopyWith<$Res> get appearance {
+  
+  return $StatusAppearanceCopyWith<$Res>(_self.appearance, (value) {
+    return _then(_self.copyWith(appearance: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [StatusCase].
+extension StatusCasePatterns on StatusCase {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _StatusCase value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _StatusCase() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _StatusCase value)  $default,){
+final _that = this;
+switch (_that) {
+case _StatusCase():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _StatusCase value)?  $default,){
+final _that = this;
+switch (_that) {
+case _StatusCase() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DataValue match,  StatusAppearance appearance)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _StatusCase() when $default != null:
+return $default(_that.match,_that.appearance);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DataValue match,  StatusAppearance appearance)  $default,) {final _that = this;
+switch (_that) {
+case _StatusCase():
+return $default(_that.match,_that.appearance);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DataValue match,  StatusAppearance appearance)?  $default,) {final _that = this;
+switch (_that) {
+case _StatusCase() when $default != null:
+return $default(_that.match,_that.appearance);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _StatusCase implements StatusCase {
+  const _StatusCase({required this.match, required this.appearance});
+  
+
+@override final  DataValue match;
+@override final  StatusAppearance appearance;
+
+/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$StatusCaseCopyWith<_StatusCase> get copyWith => __$StatusCaseCopyWithImpl<_StatusCase>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StatusCase&&(identical(other.match, match) || other.match == match)&&(identical(other.appearance, appearance) || other.appearance == appearance));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,match,appearance);
+
+@override
+String toString() {
+  return 'StatusCase(match: $match, appearance: $appearance)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$StatusCaseCopyWith<$Res> implements $StatusCaseCopyWith<$Res> {
+  factory _$StatusCaseCopyWith(_StatusCase value, $Res Function(_StatusCase) _then) = __$StatusCaseCopyWithImpl;
+@override @useResult
+$Res call({
+ DataValue match, StatusAppearance appearance
+});
+
+
+@override $DataValueCopyWith<$Res> get match;@override $StatusAppearanceCopyWith<$Res> get appearance;
+
+}
+/// @nodoc
+class __$StatusCaseCopyWithImpl<$Res>
+    implements _$StatusCaseCopyWith<$Res> {
+  __$StatusCaseCopyWithImpl(this._self, this._then);
+
+  final _StatusCase _self;
+  final $Res Function(_StatusCase) _then;
+
+/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? match = null,Object? appearance = null,}) {
+  return _then(_StatusCase(
+match: null == match ? _self.match : match // ignore: cast_nullable_to_non_nullable
+as DataValue,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
+as StatusAppearance,
+  ));
+}
+
+/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataValueCopyWith<$Res> get match {
+  
+  return $DataValueCopyWith<$Res>(_self.match, (value) {
+    return _then(_self.copyWith(match: value));
+  });
+}/// Create a copy of StatusCase
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$StatusAppearanceCopyWith<$Res> get appearance {
+  
+  return $StatusAppearanceCopyWith<$Res>(_self.appearance, (value) {
+    return _then(_self.copyWith(appearance: value));
+  });
+}
 }
 
 // dart format on

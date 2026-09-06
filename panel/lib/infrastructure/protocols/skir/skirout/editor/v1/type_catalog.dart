@@ -128,6 +128,114 @@ enum _BuiltinTypeId_consts implements BuiltinTypeId {
 }
 
 // -----------------------------------------------------------------------------
+// struct DeclaredTypeId
+// -----------------------------------------------------------------------------
+
+sealed class DeclaredTypeId_orMutable {
+  _core.String get value;
+
+  DeclaredTypeId toFrozen();
+}
+
+/// Deeply immutable.
+final class DeclaredTypeId implements DeclaredTypeId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DeclaredTypeId({
+    required _core.String value,
+  }) => DeclaredTypeId._(
+    value,
+  );
+
+  DeclaredTypeId._(
+    this.value,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DeclaredTypeId._(
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DeclaredTypeId_mutable mutable() => DeclaredTypeId_mutable._(
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DeclaredTypeId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DeclaredTypeId_mutable toMutable() => DeclaredTypeId_mutable._(
+    this.value,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DeclaredTypeId) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.value,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DeclaredTypeId` instances.
+  static _skir.StructSerializer<DeclaredTypeId, DeclaredTypeId_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/type_catalog.skir:DeclaredTypeId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DeclaredTypeId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DeclaredTypeId].
+final class DeclaredTypeId_mutable implements DeclaredTypeId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DeclaredTypeId_mutable._(
+    this.value,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DeclaredTypeId toFrozen() => DeclaredTypeId(
+    value: this.value,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct QualifiedTypeId
 // -----------------------------------------------------------------------------
 
@@ -266,7 +374,8 @@ final class QualifiedTypeId_mutable implements QualifiedTypeId_orMutable {
 ///   switch (e) {
 ///     case TypeId_unknown(): { ... }
 ///     case TypeId_builtin(:var value): { ... }
-///     case TypeId_realm(:var value): { ... }
+///     case TypeId_declared(:var value): { ... }
+///     case TypeId_qualified(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -281,16 +390,30 @@ sealed class TypeId {
     BuiltinTypeId value
   ) => TypeId_builtinWrapper._(value);
 
-  /// Create a 'realm' variant wrapping around the given value.
-  factory TypeId.wrapRealm(
-    QualifiedTypeId value
-  ) => TypeId_realmWrapper._(value);
+  /// Create a 'declared' variant wrapping around the given value.
+  factory TypeId.wrapDeclared(
+    DeclaredTypeId value
+  ) => TypeId_declaredWrapper._(value);
 
-  /// Same as `wrapRealm(QualifiedTypeId(...))`.
-  factory TypeId.createRealm({
+  /// Same as `wrapDeclared(DeclaredTypeId(...))`.
+  factory TypeId.createDeclared({
+    required _core.String value,
+  }) => TypeId.wrapDeclared(
+    DeclaredTypeId(
+      value: value,
+    )
+  );
+
+  /// Create a 'qualified' variant wrapping around the given value.
+  factory TypeId.wrapQualified(
+    QualifiedTypeId value
+  ) => TypeId_qualifiedWrapper._(value);
+
+  /// Same as `wrapQualified(QualifiedTypeId(...))`.
+  factory TypeId.createQualified({
     required _core.String namespace,
     required _core.String name,
-  }) => TypeId.wrapRealm(
+  }) => TypeId.wrapQualified(
     QualifiedTypeId(
       namespace: namespace,
       name: name,
@@ -315,13 +438,23 @@ sealed class TypeId {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "realm",
-        "wrapRealm",
+        "declared",
+        "wrapDeclared",
+        DeclaredTypeId.serializer,
+        "",
+        TypeId_declaredWrapper._,
+        (it) => it.value,
+        ordinal: TypeId_kind.declaredWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "qualified",
+        "wrapQualified",
         QualifiedTypeId.serializer,
         "",
-        TypeId_realmWrapper._,
+        TypeId_qualifiedWrapper._,
         (it) => it.value,
-        ordinal: TypeId_kind.realmWrapper._ordinal,
+        ordinal: TypeId_kind.qualifiedWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -343,7 +476,8 @@ sealed class TypeId {
 enum TypeId_kind {
   unknown(0),
   builtinWrapper(1),
-  realmWrapper(2);
+  declaredWrapper(2),
+  qualifiedWrapper(3);
 
   final _core.int _ordinal;
 
@@ -393,13 +527,22 @@ final class TypeId_builtinWrapper extends _TypeId_wrapper {
   TypeId_kind get kind => TypeId_kind.builtinWrapper;
 }
 
-final class TypeId_realmWrapper extends _TypeId_wrapper {
-  final QualifiedTypeId value;
+final class TypeId_declaredWrapper extends _TypeId_wrapper {
+  final DeclaredTypeId value;
 
-  TypeId_realmWrapper._(this.value);
+  TypeId_declaredWrapper._(this.value);
 
   @_core.override
-  TypeId_kind get kind => TypeId_kind.realmWrapper;
+  TypeId_kind get kind => TypeId_kind.declaredWrapper;
+}
+
+final class TypeId_qualifiedWrapper extends _TypeId_wrapper {
+  final QualifiedTypeId value;
+
+  TypeId_qualifiedWrapper._(this.value);
+
+  @_core.override
+  TypeId_kind get kind => TypeId_kind.qualifiedWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -3850,6 +3993,7 @@ final class EnumType_mutable implements EnumType_orMutable {
 ///   ```
 ///   switch (e) {
 ///     case TypeExpression_unknown(): { ... }
+///     case TypeExpression.any: { ... }
 ///     case TypeExpression.unit: { ... }
 ///     case TypeExpression.boolean: { ... }
 ///     case TypeExpression.timestamp: { ... }
@@ -3875,6 +4019,7 @@ sealed class TypeExpression {
   /// Default value for fields of type `TypeExpression`.
   static const TypeExpression unknown = TypeExpression_unknown._instance;
 
+  static const any = _TypeExpression_consts.anyConst;
   static const unit = _TypeExpression_consts.unitConst;
   static const boolean = _TypeExpression_consts.booleanConst;
   static const timestamp = _TypeExpression_consts.timestampConst;
@@ -4085,34 +4230,41 @@ sealed class TypeExpression {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
         1,
+        "any",
+        "any",
+        "",
+        any,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
         "unit",
         "unit",
         "",
         unit,
       );
       _serializerBuilder.addConstantVariant(
-        2,
+        3,
         "boolean",
         "boolean",
         "",
         boolean,
       );
       _serializerBuilder.addConstantVariant(
-        9,
+        10,
         "timestamp",
         "timestamp",
         "",
         timestamp,
       );
       _serializerBuilder.addConstantVariant(
-        10,
+        11,
         "duration",
         "duration",
         "",
         duration,
       );
       _serializerBuilder.addWrapperVariant(
-        3,
+        4,
         "string",
         "wrapString",
         StringConstraints.serializer,
@@ -4122,7 +4274,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.stringWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        4,
+        5,
         "bytes",
         "wrapBytes",
         CollectionConstraints.serializer,
@@ -4132,7 +4284,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.bytesWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        5,
+        6,
         "signed_integer",
         "wrapSignedInteger",
         IntegerType.serializer,
@@ -4142,7 +4294,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.signedIntegerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        6,
+        7,
         "unsigned_integer",
         "wrapUnsignedInteger",
         IntegerType.serializer,
@@ -4152,7 +4304,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.unsignedIntegerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        7,
+        8,
         "float",
         "wrapFloat",
         FloatType.serializer,
@@ -4162,7 +4314,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.floatWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        8,
+        9,
         "decimal",
         "wrapDecimal",
         NumericConstraints.serializer,
@@ -4172,7 +4324,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.decimalWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        11,
+        12,
         "list",
         "wrapList",
         ListType.serializer,
@@ -4182,7 +4334,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.listWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        12,
+        13,
         "map",
         "wrapMap",
         MapType.serializer,
@@ -4192,7 +4344,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.mapWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        13,
+        14,
         "record",
         "wrapRecord",
         RecordType.serializer,
@@ -4202,7 +4354,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.recordWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        14,
+        15,
         "enum_type",
         "wrapEnumType",
         EnumType.serializer,
@@ -4212,7 +4364,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.enumTypeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        15,
+        16,
         "parameter",
         "wrapParameter",
         _skir.Serializers.string,
@@ -4222,7 +4374,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.parameterWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        16,
+        17,
         "named",
         "wrapNamed",
         ResolvedTypeRef.serializer,
@@ -4250,22 +4402,23 @@ sealed class TypeExpression {
 /// The kind of variant held by a `TypeExpression`.
 enum TypeExpression_kind {
   unknown(0),
-  unitConst(1),
-  booleanConst(2),
-  timestampConst(3),
-  durationConst(4),
-  stringWrapper(5),
-  bytesWrapper(6),
-  signedIntegerWrapper(7),
-  unsignedIntegerWrapper(8),
-  floatWrapper(9),
-  decimalWrapper(10),
-  listWrapper(11),
-  mapWrapper(12),
-  recordWrapper(13),
-  enumTypeWrapper(14),
-  parameterWrapper(15),
-  namedWrapper(16);
+  anyConst(1),
+  unitConst(2),
+  booleanConst(3),
+  timestampConst(4),
+  durationConst(5),
+  stringWrapper(6),
+  bytesWrapper(7),
+  signedIntegerWrapper(8),
+  unsignedIntegerWrapper(9),
+  floatWrapper(10),
+  decimalWrapper(11),
+  listWrapper(12),
+  mapWrapper(13),
+  recordWrapper(14),
+  enumTypeWrapper(15),
+  parameterWrapper(16),
+  namedWrapper(17);
 
   final _core.int _ordinal;
 
@@ -4291,6 +4444,7 @@ final class TypeExpression_unknown implements TypeExpression {
 }
 
 enum _TypeExpression_consts implements TypeExpression {
+  anyConst(TypeExpression_kind.anyConst),
   unitConst(TypeExpression_kind.unitConst),
   booleanConst(TypeExpression_kind.booleanConst),
   timestampConst(TypeExpression_kind.timestampConst),
@@ -4966,65 +5120,56 @@ final class ConversionId_mutable implements ConversionId_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct RealmActionId
+// struct CapabilityId
 // -----------------------------------------------------------------------------
 
-sealed class RealmActionId_orMutable {
-  _core.String get namespace;
-  _core.String get name;
+sealed class CapabilityId_orMutable {
+  _core.String get value;
 
-  RealmActionId toFrozen();
+  CapabilityId toFrozen();
 }
 
 /// Deeply immutable.
-final class RealmActionId implements RealmActionId_orMutable {
+final class CapabilityId implements CapabilityId_orMutable {
   @_core.override
-  final _core.String namespace;
-  @_core.override
-  final _core.String name;
+  final _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory RealmActionId({
-    required _core.String namespace,
-    required _core.String name,
-  }) => RealmActionId._(
-    namespace,
-    name,
+  factory CapabilityId({
+    required _core.String value,
+  }) => CapabilityId._(
+    value,
   );
 
-  RealmActionId._(
-    this.namespace,
-    this.name,
+  CapabilityId._(
+    this.value,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = RealmActionId._(
-    "",
+  static final defaultInstance = CapabilityId._(
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmActionId_mutable mutable() => RealmActionId_mutable._(
-    "",
+  static CapabilityId_mutable mutable() => CapabilityId_mutable._(
     "",
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  RealmActionId toFrozen() => this;
+  CapabilityId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmActionId_mutable toMutable() => RealmActionId_mutable._(
-    this.namespace,
-    this.name,
+  CapabilityId_mutable toMutable() => CapabilityId_mutable._(
+    this.value,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! RealmActionId) return false;
+    if (other is! CapabilityId) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -5032,33 +5177,23 @@ final class RealmActionId implements RealmActionId_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.namespace,
-    this.name,
+    this.value,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `RealmActionId` instances.
-  static _skir.StructSerializer<RealmActionId, RealmActionId_mutable> get serializer {
+  /// Serializer for `CapabilityId` instances.
+  static _skir.StructSerializer<CapabilityId, CapabilityId_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "namespace",
-        "namespace",
+        "value",
+        "value",
         0,
         _skir.Serializers.string,
         "",
-        (it) => it.namespace,
-        (it, v) => it.namespace = v,
-      );
-      _serializerBuilder.addField(
-        "name",
-        "name",
-        1,
-        _skir.Serializers.string,
-        "",
-        (it) => it.name,
-        (it, v) => it.name = v,
+        (it) => it.value,
+        (it, v) => it.value = v,
       );
       _serializerBuilder.finalize();
     }
@@ -5066,32 +5201,137 @@ final class RealmActionId implements RealmActionId_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/type_catalog.skir:RealmActionId",
+    recordId: "editor/v1/type_catalog.skir:CapabilityId",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (RealmActionId_mutable it) => it.toFrozen(),
+    toFrozen: (CapabilityId_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [RealmActionId].
-final class RealmActionId_mutable implements RealmActionId_orMutable {
-  _core.String namespace;
-  _core.String name;
+/// Mutable version of [CapabilityId].
+final class CapabilityId_mutable implements CapabilityId_orMutable {
+  _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmActionId_mutable._(
-    this.namespace,
-    this.name,
+  CapabilityId_mutable._(
+    this.value,
   );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmActionId toFrozen() => RealmActionId(
-    namespace: this.namespace,
-    name: this.name,
+  CapabilityId toFrozen() => CapabilityId(
+    value: this.value,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CatalogGeneration
+// -----------------------------------------------------------------------------
+
+sealed class CatalogGeneration_orMutable {
+  _core.String get value;
+
+  CatalogGeneration toFrozen();
+}
+
+/// Deeply immutable.
+final class CatalogGeneration implements CatalogGeneration_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CatalogGeneration({
+    required _core.String value,
+  }) => CatalogGeneration._(
+    value,
+  );
+
+  CatalogGeneration._(
+    this.value,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CatalogGeneration._(
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CatalogGeneration_mutable mutable() => CatalogGeneration_mutable._(
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CatalogGeneration toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CatalogGeneration_mutable toMutable() => CatalogGeneration_mutable._(
+    this.value,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CatalogGeneration) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.value,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CatalogGeneration` instances.
+  static _skir.StructSerializer<CatalogGeneration, CatalogGeneration_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/type_catalog.skir:CatalogGeneration",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CatalogGeneration_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CatalogGeneration].
+final class CatalogGeneration_mutable implements CatalogGeneration_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CatalogGeneration_mutable._(
+    this.value,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CatalogGeneration toFrozen() => CatalogGeneration(
+    value: this.value,
   ).._u = this._u;
 }
 

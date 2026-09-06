@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -12,26 +14,60 @@ part "entries.g.dart";
 class Entry extends _$Entry {
   @override
   Future<EntryDefinition?> build(String entryId) async {
-    // TODO: Fetch entry from the backend
-    throw UnimplementedError();
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null) throw ApiException.noOrganization();
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    final index = ref.watch(realmEntryIndexProvider(organizationId, realmId));
+    return switch (index) {
+      AsyncData(:final value) => value[entryId]?.definition,
+      AsyncError(:final error, :final stackTrace) => Error.throwWithStackTrace(
+        error,
+        stackTrace,
+      ),
+      AsyncLoading() => Completer<EntryDefinition?>().future,
+    };
   }
 
   Future<void> updateFieldValue(DataPath path, DataValue value) async {
     state.ensureReady();
 
-    // TODO: Implement optimistic updates
-
-    // TODO: Make backend call to update field value for this entry
-    throw UnimplementedError();
+    final cached = _cachedEntry;
+    if (cached == null) throw ApiException.notFound("Entry");
+    await ref.withReadyPageElements(cached.pageId, (elements) {
+      _requireCurrentEntry(cached.pageId);
+      return elements.updateEntryFieldValue(entryId, path, value);
+    });
+    state = AsyncData(_cachedEntry?.definition);
   }
 
   Future<void> moveToPage(String pageId) async {
     state.ensureReady();
+    final cached = _cachedEntry;
+    if (cached == null) throw ApiException.notFound("Entry");
+    if (cached.pageId == pageId) return;
+    await ref.withReadyPageElements(cached.pageId, (elements) {
+      _requireCurrentEntry(cached.pageId);
+      return elements.moveEntriesToPage([entryId], pageId);
+    });
+  }
 
-    // TODO: Implement optimistic updates
+  CachedPageEntry? get _cachedEntry {
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    if (organizationId == null || realmId == null) return null;
+    return ref
+        .read(realmEntryIndexProvider(organizationId, realmId))
+        .value?[entryId];
+  }
 
-    // TODO: Make backend call to move this entry to a different page
-    throw UnimplementedError();
+  CachedPageEntry _requireCurrentEntry(String expectedPageId) {
+    final current = _cachedEntry;
+    if (current == null) throw ApiException.notFound("Entry");
+    if (current.pageId != expectedPageId) {
+      throw ApiException.conflict("The entry moved to another page");
+    }
+    return current;
   }
 }
 
@@ -80,6 +116,7 @@ abstract class EntryDefinition with _$EntryDefinition {
     required RecordValue data,
     required List<ElementLink> inwardEdges,
     required List<ElementLink> outwardEdges,
+    @Default(0) int authoringSequence,
     @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
 }
@@ -93,11 +130,14 @@ abstract class EntryPlacement with _$EntryPlacement {
     required int y,
     required int width,
     required int height,
+    @Default(EntryPlacementKind.graph) EntryPlacementKind kind,
   }) = _EntryPlacement;
 
   factory EntryPlacement.fromJson(Map<String, dynamic> json) =>
       _$EntryPlacementFromJson(json);
 }
+
+enum EntryPlacementKind { graph, timelineEntry }
 
 @Freezed(unionKey: "_kind")
 abstract class EntryMetadata with _$EntryMetadata {
@@ -165,11 +205,12 @@ class EntryIdentifier extends SelectableIdentifier
         );
         return catalogState.resolveElement(
           value.elementDefinition,
-          (catalog) => EntrySelection(
+          (catalog, presentations) => EntrySelection(
             ref: ref,
             id: this,
             definition: value,
             typeCatalog: catalog,
+            presentations: presentations,
           ),
         );
       },
@@ -198,6 +239,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
     required this.id,
     required this.definition,
     required this.typeCatalog,
+    required this.presentations,
   });
 
   @override
@@ -207,6 +249,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
 
   @override
   final TypeCatalog typeCatalog;
+  final List<PresentationDefinition> presentations;
 
   @override
   String get name => definition.name;
@@ -215,8 +258,9 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   EditorDocument get document => EditorDocument(
     rootType: NamedType(definition.elementDefinition.rootType),
     typeCatalog: typeCatalog,
+    presentations: presentations,
     confirmedValue: definition.data,
-    revision: 0,
+    revision: definition.authoringSequence,
   );
 
   @override
@@ -232,14 +276,39 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   }
 
   @override
-  Future<TypedMutationResult> commit(EditorCommit commit) => Future.value(
-    TypedMutationResult.unavailable([
-      const TypeDiagnostic(
-        code: TypeDiagnosticCode.invalidValue,
-        message: "Entry persistence is not available yet",
-      ),
-    ]),
-  );
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    final cached = organizationId == null || realmId == null
+        ? null
+        : ref
+              .read(realmEntryIndexProvider(organizationId, realmId))
+              .value?[id.id];
+    if (cached == null) {
+      return TypedMutationResult.unavailable([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "The entry is not in a loaded page document",
+        ),
+      ]);
+    }
+    return ref.withReadyPageElements(cached.pageId, (elements) {
+      final activeOrganizationId = ref.read(organizationIdProvider);
+      final activeRealmId = ref.read(realmIdProvider);
+      final current = activeOrganizationId == null || activeRealmId == null
+          ? null
+          : ref
+                .read(
+                  realmEntryIndexProvider(activeOrganizationId, activeRealmId),
+                )
+                .value?[id.id];
+      if (current == null) throw ApiException.notFound("Entry");
+      if (current.pageId != cached.pageId) {
+        throw ApiException.conflict("The entry moved to another page");
+      }
+      return elements.commitElementValue(id.id, commit);
+    });
+  }
 
   @override
   int get hashCode => id.hashCode;

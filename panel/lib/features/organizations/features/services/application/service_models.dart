@@ -8,17 +8,15 @@ const standaloneServiceColor = Colors.blueGrey;
 @freezed
 abstract class Service with _$Service {
   @Assert("name.isNotEmpty", "Name must not be empty.")
-  @Assert("roles.isNotEmpty", "Roles must not be empty.")
   factory Service({
     required skir.RecordId serviceId,
     required int revision,
     required String name,
-    required List<ServiceRole> roles,
+    required ServiceRole role,
     required DateTime createdAt,
     skir.RecordId? organization,
     ServiceRegistration? registration,
     ServiceState? state,
-    skir.RecordId? runsIn,
   }) = _Service;
 
   const Service._();
@@ -27,53 +25,50 @@ abstract class Service with _$Service {
     serviceId: service.serviceId,
     revision: service.revision,
     name: service.name,
-    roles: service.roles.map(ServiceRole.fromSkir).toList(),
+    role: ServiceRole.fromSkir(service.role),
     createdAt: service.createdAt,
     organization: service.organization,
     registration: service.registration != null
         ? ServiceRegistration.fromSkir(service.registration!)
         : null,
     state: service.state != null ? ServiceState.fromSkir(service.state!) : null,
-    runsIn: service.runsIn,
   );
 
   skir.Service toSkir() => skir.Service(
     serviceId: serviceId,
     revision: revision,
     name: name,
-    roles: roles.map((role) => role.toSkir()).toList(),
+    role: role.toSkir(),
     createdAt: createdAt,
     organization: organization,
     registration: registration?.toSkir(),
     state: state?.toSkir(),
-    runsIn: runsIn,
   );
 
   String get displayName =>
       name.isNotEmpty ? name.formatted : "Unnamed Service";
 
-  Color get color => roles.map((role) => role.color).toList().mix();
+  Color get color => role.color;
 
   bool get isOnline => state?.isOnline ?? false;
 
   DateTime? get lastSeen => state?.lastSeen;
-  String get lastSeenLabel => state?.lastSeenLabel ?? "Never";
 
-  String get label => roles.map((role) => role.label).toList().join(" & ");
+  String get label => role.label;
 
   DateTime get nextTimeout => state?.nextTimeout ?? lastSeen ?? DateTime.now();
 
-  bool get isEngine => roles.any((role) => role is EngineServiceRole);
-  bool get isRealm => roles.any((role) => role is RealmServiceRole);
-  bool get isCustom => roles.any((role) => role is CustomServiceRole);
+  bool get isHost => role is HostServiceRole;
+  bool get isCustom => role is CustomServiceRole;
+  bool get isRealm => switch (role) {
+    CustomServiceRole(name: "realm") => true,
+    _ => false,
+  };
 
   IconData get icon {
-    return switch ((isEngine, isRealm, isCustom)) {
-      (true, true, _) || (true, _, true) || (_, true, true) => Icons.dns,
-      (true, false, false) => Icons.memory,
-      (false, true, false) => Icons.cloud,
-      (false, false, true) => Icons.extension,
-      (false, false, false) => throw UnimplementedError(),
+    return switch (role) {
+      HostServiceRole() => Icons.dns,
+      CustomServiceRole() => Icons.extension,
     };
   }
 }
@@ -81,9 +76,7 @@ abstract class Service with _$Service {
 @freezed
 sealed class ServiceRole with _$ServiceRole {
   @Assert("version.isNotEmpty", "Version must not be empty.")
-  factory ServiceRole.engine({required String version}) = EngineServiceRole;
-  @Assert("version.isNotEmpty", "Version must not be empty.")
-  factory ServiceRole.realm({required String version}) = RealmServiceRole;
+  factory ServiceRole.host({required String version}) = HostServiceRole;
 
   @Assert("version.isNotEmpty", "Version must not be empty.")
   @Assert("name.isNotEmpty", "Name must not be empty.")
@@ -94,11 +87,8 @@ sealed class ServiceRole with _$ServiceRole {
 
   factory ServiceRole.fromSkir(skir.ServiceRole role) {
     return switch (role) {
-      skir.ServiceRole_engineWrapper(value: final engine) => ServiceRole.engine(
-        version: engine.version,
-      ),
-      skir.ServiceRole_realmWrapper(value: final realm) => ServiceRole.realm(
-        version: realm.version,
+      skir.ServiceRole_hostWrapper(value: final host) => ServiceRole.host(
+        version: host.version,
       ),
       skir.ServiceRole_customWrapper(value: final custom) => ServiceRole.custom(
         version: custom.version,
@@ -110,9 +100,7 @@ sealed class ServiceRole with _$ServiceRole {
 
   skir.ServiceRole toSkir() {
     return switch (this) {
-      EngineServiceRole(version: final version) =>
-        skir.ServiceRole.createEngine(version: version),
-      RealmServiceRole(version: final version) => skir.ServiceRole.createRealm(
+      HostServiceRole(version: final version) => skir.ServiceRole.createHost(
         version: version,
       ),
       CustomServiceRole(version: final version, name: final name) =>
@@ -121,14 +109,12 @@ sealed class ServiceRole with _$ServiceRole {
   }
 
   Color get color => switch (this) {
-    EngineServiceRole() => engineServiceRoleColor,
-    RealmServiceRole() => realmServiceRoleColor,
+    HostServiceRole() => standaloneServiceColor,
     CustomServiceRole() => customServiceRoleColor,
   };
 
   String get label => switch (this) {
-    EngineServiceRole() => "Engine",
-    RealmServiceRole() => "Realm",
+    HostServiceRole() => "Host",
     CustomServiceRole(:final name) => name,
   };
 }
@@ -185,14 +171,6 @@ abstract class ServiceState with _$ServiceState {
     if (status == ServiceStateStatus.offline) return lastSeen;
     return lastSeen.add(_serviceStateTimeout);
   }
-
-  String get lastSeenLabel {
-    final difference = DateTime.now().difference(lastSeen);
-    if (difference.inSeconds < 60) return "Just now";
-    if (difference.inMinutes < 60) return "${difference.inMinutes}m ago";
-    if (difference.inHours < 24) return "${difference.inHours}h ago";
-    return "${difference.inDays}d ago";
-  }
 }
 
 enum ServiceStateStatus {
@@ -228,3 +206,23 @@ enum ServiceStateStatus {
   identityOf: (service) => "Service ${service.serviceId.id}",
   entityName: "Service",
 );
+
+({List<Service> values, Service canonical}) _upsertWatchedService(
+  List<Service>? values,
+  Service incoming,
+) {
+  final current = values?.firstWhereOrNull(
+    (service) => service.serviceId == incoming.serviceId,
+  );
+  if (current?.revision == incoming.revision &&
+      current?.copyWith(state: incoming.state) == incoming) {
+    return (
+      values: [
+        for (final service in values!)
+          if (service.serviceId == incoming.serviceId) incoming else service,
+      ],
+      canonical: incoming,
+    );
+  }
+  return _upsertCanonicalService(values, incoming);
+}

@@ -105,14 +105,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  base32:
-    dependency: transitive
-    description:
-      name: base32
-      sha256: "37548444aaee8bd5e91db442ce69ee3a79d3652ed47c1fa7568aa3bb9af0aea5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -265,6 +257,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  cryptography:
+    dependency: transitive
+    description:
+      name: cryptography
+      sha256: "3eda3029d34ec9095a27a198ac9785630fe525c0eb6a49f3d575272f8e792ef0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.9.0"
   cupertino_icons:
     dependency: transitive
     description:
@@ -281,14 +281,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
-  dart_nats:
-    dependency: transitive
-    description:
-      name: dart_nats
-      sha256: "88c8d5aca85bf1380de9cace8740742e9f977ff50bcde6c3cd6600c31aa46adf"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.4.0"
   dart_style:
     dependency: transitive
     description:
@@ -656,6 +648,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "1ca20c894b1717686a2319b8548763d812bc0aabdac580420a44c5178c57a867"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.20.3"
   io:
     dependency: transitive
     description:
@@ -832,22 +832,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  mocktail:
+  nats_core:
     dependency: transitive
     description:
-      name: mocktail
-      sha256: "5e1bf53cc7baa8062a33b84424deb61513858ea05c601b8509e683815b5914aa"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
-  mutex:
-    dependency: transitive
-    description:
-      name: mutex
-      sha256: "8827da25de792088eb33e572115a5eb0d61d61a3c01acbc8bcbe76ed78f1a1f2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.0"
+      path: "packages/nats_core"
+      ref: "5c695ca2f0e46440dbd9e2afe618a20980673036"
+      resolved-ref: "5c695ca2f0e46440dbd9e2afe618a20980673036"
+      url: "https://github.com/gabber235/nats.dart.git"
+    source: git
+    version: "0.0.1"
   nested:
     dependency: transitive
     description:

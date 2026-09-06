@@ -9,8 +9,8 @@ void main() {
       final definition = _elementDefinition();
 
       expect(definition.typeId, _rootType.id);
-      expect(definition.namespace, "example");
-      expect(definition.qualifiedName, "example::Entry");
+      expect(definition.namespace, _rootTypeId);
+      expect(definition.qualifiedName, _rootTypeId);
     });
 
     test("derives deprecation state from its metadata", () {
@@ -72,15 +72,57 @@ void main() {
         catalog: catalog,
         generation: const CatalogGeneration("1"),
       );
-      final ready = AsyncValue<RealmEditorCatalogState>.data(
-        RealmEditorCatalogState.ready(snapshot),
-      ).resolveElement(definition, (resolvedCatalog) => resolvedCatalog);
-      final loading = const AsyncValue<RealmEditorCatalogState>.data(
-        RealmEditorCatalogState.loading(),
-      ).resolveElement(definition, (resolvedCatalog) => resolvedCatalog);
+      final ready =
+          AsyncValue<RealmEditorCatalogState>.data(
+            RealmEditorCatalogState.ready(snapshot),
+          ).resolveElement(
+            definition,
+            (resolvedCatalog, presentations) => resolvedCatalog,
+          );
+      final loading =
+          const AsyncValue<RealmEditorCatalogState>.data(
+            RealmEditorCatalogState.loading(),
+          ).resolveElement(
+            definition,
+            (resolvedCatalog, presentations) => resolvedCatalog,
+          );
 
       expect(ready.requireValue.definitions, isNotEmpty);
       expect(loading, isA<AsyncLoading<TypeCatalog>>());
+    });
+
+    test("catalogue resolution rejects missing presentation dependencies", () {
+      const missingId = PresentationId(namespace: "example", name: "editor");
+      final snapshot = RealmEditorCatalogSnapshot(
+        catalog: TypeCatalog([
+          TypeDefinition(
+            id: _rootType,
+            kind: NominalTypeKind.concrete,
+            representation: RecordType(fields: {}),
+            defaultPresentationId: missingId,
+          ),
+        ]),
+        generation: const CatalogGeneration("1"),
+      );
+
+      final result =
+          AsyncValue<RealmEditorCatalogState>.data(
+            RealmEditorCatalogState.ready(snapshot),
+          ).resolveElement(
+            _elementDefinition(),
+            (catalog, presentations) => catalog,
+          );
+
+      expect(result, isA<AsyncError<TypeCatalog>>());
+      final exception = result.error! as ElementDefinitionException;
+      expect(
+        exception.diagnostics.single.code,
+        TypeDiagnosticCode.invalidPresentation,
+      );
+      expect(
+        exception.diagnostics.single.message,
+        "Realm catalog omitted required presentations: example/editor",
+      );
     });
   });
 
@@ -91,6 +133,18 @@ void main() {
 
       expect(first.center, const Offset(50, 50));
       expect(first.distanceSquaredTo(second), 10000);
+    });
+
+    test("preserves timeline entry placement through serialization", () {
+      const placement = EntryPlacement(
+        x: 3,
+        y: 0,
+        width: 1,
+        height: 1,
+        kind: EntryPlacementKind.timelineEntry,
+      );
+
+      expect(EntryPlacement.fromJson(placement.toJson()), placement);
     });
 
     test("exposes the identifier for every page entry state", () {
@@ -148,7 +202,6 @@ TypeRegistry _registry({
   ]),
 );
 
-final _rootType = ResolvedTypeRef(
-  id: const QualifiedTypeId(namespace: "example", name: "Entry"),
-  revision: 1,
-);
+final _rootType = ResolvedTypeRef(id: DeclaredTypeId(_rootTypeId), revision: 1);
+
+const _rootTypeId = "0123456789abcdef0123456789abcdef";

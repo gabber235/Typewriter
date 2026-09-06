@@ -1,0 +1,209 @@
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct ReconciledRevision {
+  desired: int64;
+  applied: int64;
+}
+
+struct EngineTarget {
+  engine_id: string;
+  version_constraint: string;
+}
+
+struct SupportedEngine {
+  engine_id: string;
+}
+
+enum HostRuntimeStatus {
+  offline;
+  reconciling;
+  active;
+  failed;
+  drifted;
+}
+
+struct HostRuntimeState {
+  status: HostRuntimeStatus;
+  message: string?;
+  updated_at: timestamp;
+}
+
+enum ChildRuntimeStatus {
+  absent;
+  staging;
+  active;
+  quiescing;
+  failed;
+  rolled_back;
+  drifted;
+}
+
+struct ChildRuntimeState {
+  status: ChildRuntimeStatus;
+  active_artifact_version: string?;
+  message: string?;
+  updated_at: timestamp;
+}
+
+struct ServiceHost {
+  host_id: RecordId;
+  service_id: RecordId;
+  revision: int64;
+  entrypoint: string;
+  can_host_realm: bool;
+  supported_engines: [SupportedEngine];
+  topology_revision: ReconciledRevision;
+  state: HostRuntimeState;
+}
+
+struct OwnerHost {
+  id: RecordId;
+  name: string;
+}
+
+struct RealmInstance {
+  realm_id: RecordId;
+  owner_host: OwnerHost;
+  revision: int64;
+  target_engine: EngineTarget;
+  state: ChildRuntimeState;
+}
+
+struct RealmInfo {
+  realm_id: RecordId;
+  owner_host: OwnerHost;
+}
+
+struct EngineInstance {
+  engine_id: RecordId;
+  owner_host: OwnerHost;
+  realm: RealmInfo;
+  revision: int64;
+  target: EngineTarget;
+  state: ChildRuntimeState;
+}
+
+struct HostedRealmConfiguration {
+  primary_engine: EngineTarget;
+}
+
+enum EngineRealmSelection {
+  hosted_realm;
+  existing_realm: struct {
+    realm_id: RecordId;
+  };
+}
+
+struct HostedEngineConfiguration {
+  target: EngineTarget;
+  realm: EngineRealmSelection;
+}
+
+struct HostExecutionConfiguration {
+  realm: HostedRealmConfiguration?;
+  primary_engine: HostedEngineConfiguration?;
+}
+
+method RegisterServiceHost(
+  struct {
+    entrypoint: string;
+    can_host_realm: bool;
+    supported_engines: [SupportedEngine];
+  }
+): enum {
+  success: ServiceHost;
+  internal_error: InternalError;
+} = 934206;
+
+method ConfigureServiceHost(
+  struct {
+    host_id: RecordId;
+    expected_revision: int64;
+    execution: HostExecutionConfiguration;
+  }
+): enum {
+  success: struct {
+    host: ServiceHost;
+    realm: RealmInstance?;
+    engine: EngineInstance?;
+  };
+
+  conflict_error: struct {
+    actual: ServiceHost;
+  };
+
+  invalid_configuration_error: struct {
+    message: string;
+  };
+
+  incompatible_engine_error: struct {
+    target: EngineTarget;
+  };
+
+  realm_not_found_error: struct {
+    realm_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+  internal_error: InternalError;
+} = 934201;
+
+method WatchOrganizationTopology(
+  struct {}
+): enum {
+  list: struct {
+    hosts: [ServiceHost];
+    realms: [RealmInstance];
+    engines: [EngineInstance];
+  };
+
+  host_updated: ServiceHost;
+  realm_updated: RealmInstance;
+  engine_updated: EngineInstance;
+  resource_removed: RecordId;
+  internal_error: InternalError;
+} = 934202;
+
+method WatchHostExecution(
+  struct {}
+): enum {
+  desired: struct {
+    topology_revision: int64;
+    realm: RealmInstance?;
+    engine: EngineInstance?;
+  };
+
+  internal_error: InternalError;
+} = 934203;
+
+method ReportHostExecution(
+  struct {
+    topology_revision: int64;
+    realm_state: ChildRuntimeState?;
+    engine_state: ChildRuntimeState?;
+  }
+): enum {
+  success: struct {};
+  stale_revision_error: struct {};
+  internal_error: InternalError;
+} = 934204;
+
+struct ServiceMessagingScope {
+  organization_id: string;
+  owned_realm: RecordId?;
+  attached_realm: RecordId?;
+}
+
+method GetServiceMessagingScope(
+  struct {
+    service_id: RecordId;
+  }
+): enum {
+  found: ServiceMessagingScope;
+  not_found: struct {};
+  internal_error: InternalError;
+} = 934205;

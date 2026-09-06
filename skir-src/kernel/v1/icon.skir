@@ -1,0 +1,4 @@
+enum Icon(800100001) {
+  iconify: string = 1;
+  svg: string = 2;
+}

@@ -118,4 +118,95 @@ extension SkirPresentationContentDecoder on SkirPresentationDecoder {
           )
         : TypeResult.failure(diagnostics);
   }
+
+  TypeResult<PresentationElement> _status(wire.StatusContent value) {
+    final source = expressions.decode(value.value);
+    final cases = value.cases.map(_statusCase).toList();
+    final fallback = value.fallback == null
+        ? const TypeResult<StatusAppearance?>.success(null)
+        : _statusAppearance(value.fallback!).mapValue((item) => item);
+    final diagnostics = [
+      ...source.diagnostics,
+      ...cases.expand((item) => item.diagnostics),
+      ...fallback.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            StatusElement(
+              value: source.valueOrNull!,
+              cases: cases.map((item) => item.valueOrNull!).toList(),
+              fallback: fallback.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<StatusCase> _statusCase(wire.StatusCase value) => combineResults(
+    expressions.valueCodec.decode(value.match),
+    _statusAppearance(value.appearance),
+    (match, appearance) => StatusCase(match: match, appearance: appearance),
+  );
+
+  TypeResult<StatusAppearance> _statusAppearance(wire.StatusAppearance value) =>
+      _optionalExpression(value.label).mapValue(
+        (label) => StatusAppearance(tone: value.tone._decode, label: label),
+      );
+
+  TypeResult<PresentationElement> _dateTime(wire.DateTimeContent value) =>
+      combineResults(
+        expressions.decode(value.value),
+        expressions.decode(value.format),
+        (source, format) => DateTimeElement(
+          value: source,
+          format: format,
+          timeZone: value.timeZone._decode,
+        ),
+      );
+
+  TypeResult<PresentationElement> _relativeTime(
+    wire.RelativeTimeContent value,
+  ) => expressions
+      .decode(value.value)
+      .mapValue(
+        (source) => RelativeTimeElement(
+          value: source,
+          style: value.style._decode,
+          timeZone: value.timeZone._decode,
+        ),
+      );
+}
+
+extension on wire.StatusTone {
+  StatusTone get _decode => switch (this) {
+    wire.StatusTone.neutral => StatusTone.neutral,
+    wire.StatusTone.unknownStatus ||
+    wire.StatusTone_unknown() => StatusTone.unknown,
+    wire.StatusTone.information => StatusTone.information,
+    wire.StatusTone.success => StatusTone.success,
+    wire.StatusTone.warning => StatusTone.warning,
+    wire.StatusTone.danger => StatusTone.danger,
+    wire.StatusTone.active => StatusTone.active,
+    wire.StatusTone.inactive => StatusTone.inactive,
+    wire.StatusTone.online => StatusTone.online,
+    wire.StatusTone.offline => StatusTone.offline,
+    wire.StatusTone.pending => StatusTone.pending,
+    wire.StatusTone.inProgress => StatusTone.inProgress,
+    wire.StatusTone.paused => StatusTone.paused,
+  };
+}
+
+extension on wire.DateTimeZone {
+  DateTimeZone get _decode => switch (this) {
+    wire.DateTimeZone.local => DateTimeZone.local,
+    wire.DateTimeZone.utc => DateTimeZone.utc,
+    wire.DateTimeZone_unknown() => DateTimeZone.local,
+  };
+}
+
+extension on wire.RelativeTimeStyle {
+  RelativeTimeStyle get _decode => switch (this) {
+    wire.RelativeTimeStyle.compact => RelativeTimeStyle.compact,
+    wire.RelativeTimeStyle.natural => RelativeTimeStyle.natural,
+    wire.RelativeTimeStyle_unknown() => RelativeTimeStyle.compact,
+  };
 }

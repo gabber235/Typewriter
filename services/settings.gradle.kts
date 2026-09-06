@@ -1,86 +1,65 @@
+pluginManagement {
+    includeBuild("build-logic")
+    includeBuild("imprint")
+
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+
+plugins {
+    id("com.typewritermc.settings-conventions")
+}
+
 rootProject.name = "services"
 
-data class ServiceBuild(
-    val name: String,
-    val path: String,
-    val checkedProjects: List<String>,
-)
+includeBuild("imprint")
 
-val serviceBuilds =
-    listOf(
-        ServiceBuild("service-utils", "libs/service-utils", listOf(":")),
-        ServiceBuild(
-            "service-telemetry",
-            "libs/service-telemetry",
-            listOf(
-                ":service-telemetry-core",
-                ":service-telemetry-console",
-                ":service-telemetry-koin",
-                ":service-telemetry-testing",
-            ),
-        ),
-        ServiceBuild(
-            "service-http",
-            "libs/service-http",
-            listOf(":service-http-core", ":service-http-jdk", ":service-http-testing"),
-        ),
-        ServiceBuild(
-            "service-communicator",
-            "libs/service-communicator",
-            listOf(
-                ":service-communicator-core",
-                ":service-communicator-nats",
-                ":service-communicator-skir",
-                ":service-communicator-koin",
-                ":service-communicator-testing",
-            ),
-        ),
-        ServiceBuild(
-            "service-registrar",
-            "libs/service-registrar",
-            listOf(
-                ":service-registrar-core",
-                ":service-registrar-runtime",
-                ":service-registrar-storage-file",
-                ":service-registrar-console",
-                ":service-registrar-koin",
-                ":service-registrar-testing",
-            ),
-        ),
-        ServiceBuild("realm", "realm", listOf(":")),
+val allowedNestedBuilds =
+    setOf(
+        file("build-logic/settings.gradle.kts").canonicalFile,
+        file("imprint/settings.gradle.kts").canonicalFile,
     )
-
-val declaredPaths = serviceBuilds.map(ServiceBuild::path).toSet()
-val discoveredPaths =
-    buildSet {
-        file("libs").listFiles()
-            ?.filter { it.resolve("settings.gradle.kts").isFile }
-            ?.mapTo(this) { "libs/${it.name}" }
-        settingsDir.listFiles()
-            ?.filter { it.isDirectory && it.name != "build-logic" && it.name != "libs" }
-            ?.filter { it.resolve("settings.gradle.kts").isFile }
-            ?.mapTo(this) { it.name }
-    }
-val missingPaths = declaredPaths - discoveredPaths
-val unknownPaths = discoveredPaths - declaredPaths
-
-check(missingPaths.isEmpty() && unknownPaths.isEmpty()) {
-    buildString {
-        append("Services composite inventory mismatch.")
-        if (missingPaths.isNotEmpty()) append(" Missing roots: ${missingPaths.sorted().joinToString()}.")
-        if (unknownPaths.isNotEmpty()) append(" Unknown roots: ${unknownPaths.sorted().joinToString()}.")
-    }
+val unexpectedNestedBuilds =
+    settingsDir
+        .walkTopDown()
+        .filter { it.name == "settings.gradle.kts" && it.parentFile != settingsDir }
+        .map(File::getCanonicalFile)
+        .filterNot(allowedNestedBuilds::contains)
+        .toList()
+check(unexpectedNestedBuilds.isEmpty()) {
+    "Normal service projects must belong to the services build. Unexpected roots: ${unexpectedNestedBuilds.joinToString()}."
 }
 
-gradle.beforeProject {
-    if (path == ":") {
-        extensions.extraProperties["serviceBuildProjects"] =
-            serviceBuilds.associate { it.name to it.checkedProjects }
-    }
+fun includeProject(name: String, directory: String) {
+    include(":$name")
+    project(":$name").projectDir = file(directory)
 }
 
-serviceBuilds.forEach { serviceBuild ->
-    includeBuild(serviceBuild.path) {
-        name = serviceBuild.name
-    }
-}
+includeProject("internal-utils", "platform/internal-utils")
+includeProject("protocol", "protocol")
+includeProject("typewriter-api", "sdk/typewriter-api")
+includeProject("typewriter-codegen", "sdk/typewriter-codegen")
+includeProject("service-sdk", "sdk/service-sdk")
+
+includeProject("telemetry", "platform/telemetry")
+includeProject("messaging", "platform/messaging")
+includeProject("file-transfer", "platform/file-transfer")
+
+includeProject("loader-distribution", "runtime/loader/distribution")
+includeProject("loader-api", "runtime/loader/api")
+includeProject("loader-core", "runtime/loader/core")
+includeProject("loader-standalone", "runtime/loader/standalone")
+includeProject("loader-paper", "runtime/loader/paper")
+includeProject("engine-api", "runtime/engine/api")
+includeProject("engine-core", "runtime/engine/core")
+includeProject("engine-minecraft", "runtime/engine/capabilities/minecraft")
+includeProject("engine-conformance-base", "runtime/engine/capabilities/conformance-base")
+includeProject("engine-conformance-composite", "runtime/engine/capabilities/conformance-composite")
+includeProject("engine-panel", "runtime/engine/runtimes/panel")
+includeProject("engine-paper", "runtime/engine/runtimes/paper")
+includeProject("engine-conformance", "runtime/engine/runtimes/conformance")
+includeProject("realm", "runtime/realm")
+includeProject("conformance-extension", "extensions/conformance")

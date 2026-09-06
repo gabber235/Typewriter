@@ -27,10 +27,6 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/mem
     as _widgetbook_workspace_stories_features_organizations_features_members_features_join_requests_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/presentation/member_list_route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_members_presentation_member_list_route_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_resizable_element_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_items.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/dropdown.stories.dart'
@@ -101,6 +97,10 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_e
     as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_string_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_editor/typed_editor.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_typed_editor_stories;
+import 'package:widgetbook_workspace/stories/shared/graph/presentation/graph.stories.dart'
+    as _widgetbook_workspace_stories_shared_graph_presentation_graph_stories;
+import 'package:widgetbook_workspace/stories/shared/graph/presentation/resizable_element.stories.dart'
+    as _widgetbook_workspace_stories_shared_graph_presentation_resizable_element_stories;
 import 'package:widgetbook_workspace/stories/shared/interaction_mode/presentation/mode_display_chip.stories.dart'
     as _widgetbook_workspace_stories_shared_interaction_mode_presentation_mode_display_chip_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_frame.stories.dart'
@@ -111,6 +111,8 @@ import 'package:widgetbook_workspace/stories/shared/selectables/operations/delet
     as _widgetbook_workspace_stories_shared_selectables_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/shared/selectables/presentation/selector.stories.dart'
     as _widgetbook_workspace_stories_shared_selectables_presentation_selector_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/adaptive_choice_control.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/blur_reveal.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_blur_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/countdown_badge.stories.dart'
@@ -337,74 +339,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                           _widgetbook.WidgetbookFolder(
                                             name: 'features',
                                             children: [
-                                              _widgetbook.WidgetbookFolder(
-                                                name: 'graph',
-                                                children: [
-                                                  _widgetbook.WidgetbookFolder(
-                                                    name: 'presentation',
-                                                    children: [
-                                                      _widgetbook.WidgetbookComponent(
-                                                        name: 'Graph',
-                                                        useCases: [
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name:
-                                                                'Complex Flow',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories
-                                                                    .complexFlowGraphUseCase,
-                                                          ),
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name:
-                                                                'Edge Orientation Test',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories
-                                                                    .edgeOrientationTestUseCase,
-                                                          ),
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name: 'Large Grid',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories
-                                                                    .largeGridGraphUseCase,
-                                                          ),
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name:
-                                                                'Nested Groups',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories
-                                                                    .nestedGroupsGraphUseCase,
-                                                          ),
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name:
-                                                                'Rich Content Nodes',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories
-                                                                    .richContentGraphUseCase,
-                                                          ),
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name:
-                                                                'Simple Graph',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories
-                                                                    .simpleGraphUseCase,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      _widgetbook.WidgetbookComponent(
-                                                        name:
-                                                            'ResizableElement',
-                                                        useCases: [
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name: 'Default',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_resizable_element_stories
-                                                                    .resizableElementDefault,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
                                               _widgetbook.WidgetbookFolder(
                                                 name: 'search',
                                                 children: [
@@ -1074,6 +1008,18 @@ final directories = <_widgetbook.WidgetbookNode>[
                                         .chipRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
+                                name: 'Date formats',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .dateFormatsRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Date time',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .dateTimeRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
                                 name: 'Icon',
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
@@ -1096,6 +1042,30 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
                                         .progressRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Relative styles',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .relativeStylesRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Relative time',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .relativeTimeRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Status',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .statusRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Status tones',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .statusTonesRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Text',
@@ -1524,6 +1494,68 @@ final directories = <_widgetbook.WidgetbookNode>[
         ],
       ),
       _widgetbook.WidgetbookFolder(
+        name: 'graph',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'presentation',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'Graph',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Complex Flow',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .complexFlowGraphUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Edge Orientation Test',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .edgeOrientationTestUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Large Grid',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .largeGridGraphUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Nested Groups',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .nestedGroupsGraphUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Rich Content Nodes',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .richContentGraphUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Simple Graph',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .simpleGraphUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'ResizableElement',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_resizable_element_stories
+                            .resizableElementDefault,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
         name: 'interaction_mode',
         children: [
           _widgetbook.WidgetbookFolder(
@@ -1637,6 +1669,17 @@ final directories = <_widgetbook.WidgetbookNode>[
           _widgetbook.WidgetbookFolder(
             name: 'components',
             children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'AdaptiveChoiceControl<Object>',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Empty and available choices',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories
+                            .adaptiveChoiceControlUseCase,
+                  ),
+                ],
+              ),
               _widgetbook.WidgetbookComponent(
                 name: 'BlurReveal',
                 useCases: [

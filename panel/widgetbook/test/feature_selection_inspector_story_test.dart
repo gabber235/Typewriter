@@ -95,36 +95,20 @@ void main() {
     "Services page story opens the Service inspector",
     (tester) async {
       await _prepareStory(tester);
-      await tester.pumpWidget(
-        servicesPageStory(servicesState: DisplayState.fewItems),
-      );
+      await tester.pumpWidget(servicesPageStory());
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(GridSelectableCard).first);
       await tester.pumpAndSettle();
 
-      expect(find.text("Runs in"), findsOneWidget);
+      expect(find.text("Name"), findsOneWidget);
+      expect(find.text("Version"), findsOneWidget);
+      expect(find.text("Service"), findsOneWidget);
+      expect(find.text("Identity and connection"), findsOneWidget);
+      expect(find.text("CONNECTION"), findsOneWidget);
+      expect(find.text("Connected"), findsWidgets);
       expect(find.text("Expected a record"), findsNothing);
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TypedEditor)),
-      );
-      final services = container.read(servicesProvider).requireValue;
-      final editing = services.first;
-      final realm = services.firstWhere((service) => service.isRealm);
-      await _openSearch(tester);
-      expect(find.text("No matching results"), findsNothing);
-      expect(find.text("Standalone"), findsWidgets);
-      expect(find.bySemanticsLabel(realm.displayName), findsOneWidget);
-      await tester.tap(find.bySemanticsLabel(realm.displayName));
-      await tester.pumpAndSettle();
-      final updated = container
-          .read(servicesProvider)
-          .requireValue
-          .singleWhere((service) => service.serviceId == editing.serviceId);
-      expect(updated.runsIn, realm.serviceId);
-      expect(find.text("Runs in"), findsOneWidget);
-      expect(find.text("Expected a record"), findsNothing);
-      expect(find.text("Realm"), findsOneWidget);
+      expect(find.text("Last seen"), findsOneWidget);
     },
   );
 

@@ -36,9 +36,12 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(PagePage)),
       );
+      final entry = tester
+          .widget<EntryNode>(find.byType(EntryNode).first)
+          .entry;
       container
           .read(selectionProvider.notifier)
-          .select(const EntryIdentifier("sequence_entry_0"));
+          .select(EntryIdentifier(entry.id));
       await tester.pumpAndSettle();
 
       expect(find.byType(PagePage), findsOneWidget);

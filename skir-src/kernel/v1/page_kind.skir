@@ -1,0 +1,8 @@
+struct PageKindId {
+  value: string;
+}
+
+struct PageKindRef {
+  id: PageKindId;
+  revision: int32;
+}

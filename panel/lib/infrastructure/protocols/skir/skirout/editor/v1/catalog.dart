@@ -14,118 +14,13 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "./capability.dart" as _lib_editor_v1_capability;
 import "./conversion.dart" as _lib_editor_v1_conversion;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
+import "./element_catalog.dart" as _lib_editor_v1_element_catalog;
+import "./page_catalog.dart" as _lib_editor_v1_page_catalog;
 import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
-
-// -----------------------------------------------------------------------------
-// struct CatalogGeneration
-// -----------------------------------------------------------------------------
-
-sealed class CatalogGeneration_orMutable {
-  _core.String get value;
-
-  CatalogGeneration toFrozen();
-}
-
-/// Deeply immutable.
-final class CatalogGeneration implements CatalogGeneration_orMutable {
-  @_core.override
-  final _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CatalogGeneration({
-    required _core.String value,
-  }) => CatalogGeneration._(
-    value,
-  );
-
-  CatalogGeneration._(
-    this.value,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CatalogGeneration._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CatalogGeneration_mutable mutable() => CatalogGeneration_mutable._(
-    "",
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CatalogGeneration toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CatalogGeneration_mutable toMutable() => CatalogGeneration_mutable._(
-    this.value,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CatalogGeneration) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.value,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CatalogGeneration` instances.
-  static _skir.StructSerializer<CatalogGeneration, CatalogGeneration_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:CatalogGeneration",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CatalogGeneration_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CatalogGeneration].
-final class CatalogGeneration_mutable implements CatalogGeneration_orMutable {
-  _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CatalogGeneration_mutable._(
-    this.value,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CatalogGeneration toFrozen() => CatalogGeneration(
-    value: this.value,
-  ).._u = this._u;
-}
 
 // -----------------------------------------------------------------------------
 // struct SubtypeQueryId
@@ -542,191 +437,13 @@ final class SubtypeResult_mutable implements SubtypeResult_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct RealmActionDefinition
-// -----------------------------------------------------------------------------
-
-sealed class RealmActionDefinition_orMutable {
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable get realmActionId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get payloadType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable? get resultType;
-
-  RealmActionDefinition toFrozen();
-}
-
-/// Deeply immutable.
-final class RealmActionDefinition implements RealmActionDefinition_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.RealmActionId realmActionId;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef payloadType;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef? resultType;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory RealmActionDefinition({
-    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable payloadType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable? resultType,
-  }) => RealmActionDefinition._(
-    realmActionId.toFrozen(),
-    payloadType.toFrozen(),
-    (resultType != null) ? resultType.toFrozen() : null,
-  );
-
-  RealmActionDefinition._(
-    this.realmActionId,
-    this.payloadType,
-    this.resultType,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = RealmActionDefinition._(
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    null,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static RealmActionDefinition_mutable mutable() => RealmActionDefinition_mutable._(
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    null,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  RealmActionDefinition toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  RealmActionDefinition_mutable toMutable() => RealmActionDefinition_mutable._(
-    this.realmActionId,
-    this.payloadType,
-    this.resultType,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! RealmActionDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.realmActionId,
-    this.payloadType,
-    this.resultType,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `RealmActionDefinition` instances.
-  static _skir.StructSerializer<RealmActionDefinition, RealmActionDefinition_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "realm_action_id",
-        "realmActionId",
-        0,
-        _lib_editor_v1_type_catalog.RealmActionId.serializer,
-        "",
-        (it) => it.realmActionId,
-        (it, v) => it.realmActionId = v,
-      );
-      _serializerBuilder.addField(
-        "payload_type",
-        "payloadType",
-        1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
-        "",
-        (it) => it.payloadType,
-        (it, v) => it.payloadType = v,
-      );
-      _serializerBuilder.addField(
-        "result_type",
-        "resultType",
-        2,
-        _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
-        ),
-        "",
-        (it) => it.resultType,
-        (it, v) => it.resultType = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:RealmActionDefinition",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (RealmActionDefinition_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [RealmActionDefinition].
-final class RealmActionDefinition_mutable implements RealmActionDefinition_orMutable {
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable payloadType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable? resultType;
-  _skir.internal__UnrecognizedFields? _u;
-
-  RealmActionDefinition_mutable._(
-    this.realmActionId,
-    this.payloadType,
-    this.resultType,
-  );
-
-  /// If the value of [realmActionId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
-  _lib_editor_v1_type_catalog.RealmActionId_mutable get mutableRealmActionId {
-    final value = this.realmActionId;
-    if (value is _lib_editor_v1_type_catalog.RealmActionId_mutable) {
-      return value;
-    } else {
-      return this.realmActionId = (value as _lib_editor_v1_type_catalog.RealmActionId).toMutable();
-    }
-  }
-
-  /// If the value of [payloadType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [payloadType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutablePayloadType {
-    final value = this.payloadType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.payloadType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  RealmActionDefinition toFrozen() => RealmActionDefinition(
-    realmActionId: this.realmActionId,
-    payloadType: this.payloadType,
-    resultType: this.resultType,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct CatalogFetchRequest
 // -----------------------------------------------------------------------------
 
 sealed class CatalogFetchRequest_orMutable {
-  CatalogGeneration_orMutable? get expectedGeneration;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable? get expectedGeneration;
   _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get requestedTypes;
   _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> get presentationIds;
-  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> get conversionIds;
-  _core.Iterable<_lib_editor_v1_type_catalog.RealmActionId_orMutable> get realmActionIds;
   _core.Iterable<SubtypeQuery_orMutable> get subtypeQueries;
 
   CatalogFetchRequest toFrozen();
@@ -735,32 +452,24 @@ sealed class CatalogFetchRequest_orMutable {
 /// Deeply immutable.
 final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
   @_core.override
-  final CatalogGeneration? expectedGeneration;
+  final _lib_editor_v1_type_catalog.CatalogGeneration? expectedGeneration;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> requestedTypes;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.PresentationId> presentationIds;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ConversionId> conversionIds;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.RealmActionId> realmActionIds;
-  @_core.override
   final _core.Iterable<SubtypeQuery> subtypeQueries;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogFetchRequest({
-    required CatalogGeneration_orMutable? expectedGeneration,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable? expectedGeneration,
     required _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> requestedTypes,
     required _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentationIds,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversionIds,
-    required _core.Iterable<_lib_editor_v1_type_catalog.RealmActionId_orMutable> realmActionIds,
     required _core.Iterable<SubtypeQuery_orMutable> subtypeQueries,
   }) => CatalogFetchRequest._(
     (expectedGeneration != null) ? expectedGeneration.toFrozen() : null,
     _skir.internal__frozenMappedCopy(requestedTypes, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(presentationIds, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(conversionIds, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(realmActionIds, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(subtypeQueries, (it) => it.toFrozen()),
   );
 
@@ -768,8 +477,6 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
     this.expectedGeneration,
     this.requestedTypes,
     this.presentationIds,
-    this.conversionIds,
-    this.realmActionIds,
     this.subtypeQueries,
   );
 
@@ -779,16 +486,12 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CatalogFetchRequest_mutable mutable() => CatalogFetchRequest_mutable._(
     null,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -804,8 +507,6 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
     this.expectedGeneration,
     this.requestedTypes,
     this.presentationIds,
-    this.conversionIds,
-    this.realmActionIds,
     this.subtypeQueries,
   );
 
@@ -823,8 +524,6 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
     this.expectedGeneration,
     this.requestedTypes,
     this.presentationIds,
-    this.conversionIds,
-    this.realmActionIds,
     this.subtypeQueries,
   ];
 
@@ -839,7 +538,7 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
         "expectedGeneration",
         0,
         _skir.Serializers.optional(
-          CatalogGeneration.serializer,
+          _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         ),
         "",
         (it) => it.expectedGeneration,
@@ -868,31 +567,9 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
         (it, v) => it.presentationIds = v,
       );
       _serializerBuilder.addField(
-        "conversion_ids",
-        "conversionIds",
-        3,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ConversionId.serializer,
-        ),
-        "",
-        (it) => it.conversionIds,
-        (it, v) => it.conversionIds = v,
-      );
-      _serializerBuilder.addField(
-        "realm_action_ids",
-        "realmActionIds",
-        4,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.RealmActionId.serializer,
-        ),
-        "",
-        (it) => it.realmActionIds,
-        (it, v) => it.realmActionIds = v,
-      );
-      _serializerBuilder.addField(
         "subtype_queries",
         "subtypeQueries",
-        5,
+        3,
         _skir.Serializers.iterable(
           SubtypeQuery.serializer,
         ),
@@ -918,11 +595,9 @@ final class CatalogFetchRequest implements CatalogFetchRequest_orMutable {
 
 /// Mutable version of [CatalogFetchRequest].
 final class CatalogFetchRequest_mutable implements CatalogFetchRequest_orMutable {
-  CatalogGeneration_orMutable? expectedGeneration;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable? expectedGeneration;
   _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> requestedTypes;
   _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentationIds;
-  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversionIds;
-  _core.Iterable<_lib_editor_v1_type_catalog.RealmActionId_orMutable> realmActionIds;
   _core.Iterable<SubtypeQuery_orMutable> subtypeQueries;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -930,8 +605,6 @@ final class CatalogFetchRequest_mutable implements CatalogFetchRequest_orMutable
     this.expectedGeneration,
     this.requestedTypes,
     this.presentationIds,
-    this.conversionIds,
-    this.realmActionIds,
     this.subtypeQueries,
   );
 
@@ -957,28 +630,6 @@ final class CatalogFetchRequest_mutable implements CatalogFetchRequest_orMutable
     }
   }
 
-  /// If the value of [conversionIds] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [conversionIds] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable> get mutableConversionIds {
-    final value = this.conversionIds;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ConversionId_orMutable>) {
-      return value;
-    } else {
-      return this.conversionIds = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [realmActionIds] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmActionIds] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.RealmActionId_orMutable> get mutableRealmActionIds {
-    final value = this.realmActionIds;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.RealmActionId_orMutable>) {
-      return value;
-    } else {
-      return this.realmActionIds = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// If the value of [subtypeQueries] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [subtypeQueries] and returns it.
   _core.List<SubtypeQuery_orMutable> get mutableSubtypeQueries {
@@ -996,8 +647,6 @@ final class CatalogFetchRequest_mutable implements CatalogFetchRequest_orMutable
     expectedGeneration: this.expectedGeneration,
     requestedTypes: this.requestedTypes,
     presentationIds: this.presentationIds,
-    conversionIds: this.conversionIds,
-    realmActionIds: this.realmActionIds,
     subtypeQueries: this.subtypeQueries,
   ).._u = this._u;
 }
@@ -1007,13 +656,16 @@ final class CatalogFetchRequest_mutable implements CatalogFetchRequest_orMutable
 // -----------------------------------------------------------------------------
 
 sealed class CatalogFetchSuccess_orMutable {
-  CatalogGeneration_orMutable get generation;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> get typeDefinitions;
   _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> get presentationDefinitions;
   _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> get conversions;
-  _core.Iterable<RealmActionDefinition_orMutable> get realmActionDefinitions;
+  _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> get capabilityDefinitions;
   _core.Iterable<SubtypeResult_orMutable> get subtypeResults;
   _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_element_catalog.ElementCatalogEntry_orMutable> get elementEntries;
+  _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> get pageEntries;
+  _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> get pageDiagnostics;
 
   CatalogFetchSuccess toFrozen();
 }
@@ -1021,7 +673,7 @@ sealed class CatalogFetchSuccess_orMutable {
 /// Deeply immutable.
 final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   @_core.override
-  final CatalogGeneration generation;
+  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition> typeDefinitions;
   @_core.override
@@ -1029,29 +681,41 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   @_core.override
   final _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition> conversions;
   @_core.override
-  final _core.Iterable<RealmActionDefinition> realmActionDefinitions;
+  final _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions;
   @_core.override
   final _core.Iterable<SubtypeResult> subtypeResults;
   @_core.override
   final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> diagnostics;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_element_catalog.ElementCatalogEntry> elementEntries;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry> pageEntries;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic> pageDiagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogFetchSuccess({
-    required CatalogGeneration_orMutable generation,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> typeDefinitions,
     required _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> presentationDefinitions,
     required _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> conversions,
-    required _core.Iterable<RealmActionDefinition_orMutable> realmActionDefinitions,
+    required _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions,
     required _core.Iterable<SubtypeResult_orMutable> subtypeResults,
     required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_element_catalog.ElementCatalogEntry_orMutable> elementEntries,
+    required _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> pageEntries,
+    required _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> pageDiagnostics,
   }) => CatalogFetchSuccess._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(typeDefinitions, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(presentationDefinitions, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(conversions, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(realmActionDefinitions, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(capabilityDefinitions),
     _skir.internal__frozenMappedCopy(subtypeResults, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(elementEntries, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(pageEntries, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(pageDiagnostics, (it) => it.toFrozen()),
   );
 
   CatalogFetchSuccess._(
@@ -1059,14 +723,20 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
     this.typeDefinitions,
     this.presentationDefinitions,
     this.conversions,
-    this.realmActionDefinitions,
+    this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
+    this.elementEntries,
+    this.pageEntries,
+    this.pageDiagnostics,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogFetchSuccess._(
-    CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -1078,7 +748,10 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CatalogFetchSuccess_mutable mutable() => CatalogFetchSuccess_mutable._(
-    CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -1098,9 +771,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
     this.typeDefinitions,
     this.presentationDefinitions,
     this.conversions,
-    this.realmActionDefinitions,
+    this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
+    this.elementEntries,
+    this.pageEntries,
+    this.pageDiagnostics,
   );
 
   @_core.override
@@ -1118,9 +794,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
     this.typeDefinitions,
     this.presentationDefinitions,
     this.conversions,
-    this.realmActionDefinitions,
+    this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
+    this.elementEntries,
+    this.pageEntries,
+    this.pageDiagnostics,
   ];
 
   @_core.override
@@ -1133,7 +812,7 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
         "generation",
         "generation",
         0,
-        CatalogGeneration.serializer,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.generation,
         (it, v) => it.generation = v,
@@ -1172,15 +851,15 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
         (it, v) => it.conversions = v,
       );
       _serializerBuilder.addField(
-        "realm_action_definitions",
-        "realmActionDefinitions",
+        "capability_definitions",
+        "capabilityDefinitions",
         4,
         _skir.Serializers.iterable(
-          RealmActionDefinition.serializer,
+          _lib_editor_v1_capability.CapabilityDefinition.serializer,
         ),
         "",
-        (it) => it.realmActionDefinitions,
-        (it, v) => it.realmActionDefinitions = v,
+        (it) => it.capabilityDefinitions,
+        (it, v) => it.capabilityDefinitions = v,
       );
       _serializerBuilder.addField(
         "subtype_results",
@@ -1204,6 +883,39 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
         (it) => it.diagnostics,
         (it, v) => it.diagnostics = v,
       );
+      _serializerBuilder.addField(
+        "element_entries",
+        "elementEntries",
+        7,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_element_catalog.ElementCatalogEntry.serializer,
+        ),
+        "",
+        (it) => it.elementEntries,
+        (it, v) => it.elementEntries = v,
+      );
+      _serializerBuilder.addField(
+        "page_entries",
+        "pageEntries",
+        8,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_page_catalog.PageCatalogEntry.serializer,
+        ),
+        "",
+        (it) => it.pageEntries,
+        (it, v) => it.pageEntries = v,
+      );
+      _serializerBuilder.addField(
+        "page_diagnostics",
+        "pageDiagnostics",
+        9,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_page_catalog.PageDiagnostic.serializer,
+        ),
+        "",
+        (it) => it.pageDiagnostics,
+        (it, v) => it.pageDiagnostics = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1222,13 +934,16 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
 
 /// Mutable version of [CatalogFetchSuccess].
 final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable {
-  CatalogGeneration_orMutable generation;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> typeDefinitions;
   _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> presentationDefinitions;
   _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> conversions;
-  _core.Iterable<RealmActionDefinition_orMutable> realmActionDefinitions;
+  _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions;
   _core.Iterable<SubtypeResult_orMutable> subtypeResults;
   _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_element_catalog.ElementCatalogEntry_orMutable> elementEntries;
+  _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> pageEntries;
+  _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> pageDiagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   CatalogFetchSuccess_mutable._(
@@ -1236,19 +951,22 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
     this.typeDefinitions,
     this.presentationDefinitions,
     this.conversions,
-    this.realmActionDefinitions,
+    this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
+    this.elementEntries,
+    this.pageEntries,
+    this.pageDiagnostics,
   );
 
   /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  CatalogGeneration_mutable get mutableGeneration {
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
-    if (value is CatalogGeneration_mutable) {
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.generation = (value as CatalogGeneration).toMutable();
+      return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -1285,14 +1003,14 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
     }
   }
 
-  /// If the value of [realmActionDefinitions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmActionDefinitions] and returns it.
-  _core.List<RealmActionDefinition_orMutable> get mutableRealmActionDefinitions {
-    final value = this.realmActionDefinitions;
-    if (value is _skir.internal__MutableList<RealmActionDefinition_orMutable>) {
+  /// If the value of [capabilityDefinitions] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capabilityDefinitions] and returns it.
+  _core.List<_lib_editor_v1_capability.CapabilityDefinition> get mutableCapabilityDefinitions {
+    final value = this.capabilityDefinitions;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_capability.CapabilityDefinition>) {
       return value;
     } else {
-      return this.realmActionDefinitions = _skir.internal__MutableList([...value]);
+      return this.capabilityDefinitions = _skir.internal__MutableList([...value]);
     }
   }
 
@@ -1318,6 +1036,39 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
     }
   }
 
+  /// If the value of [elementEntries] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [elementEntries] and returns it.
+  _core.List<_lib_editor_v1_element_catalog.ElementCatalogEntry_orMutable> get mutableElementEntries {
+    final value = this.elementEntries;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_element_catalog.ElementCatalogEntry_orMutable>) {
+      return value;
+    } else {
+      return this.elementEntries = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [pageEntries] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [pageEntries] and returns it.
+  _core.List<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> get mutablePageEntries {
+    final value = this.pageEntries;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable>) {
+      return value;
+    } else {
+      return this.pageEntries = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [pageDiagnostics] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [pageDiagnostics] and returns it.
+  _core.List<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> get mutablePageDiagnostics {
+    final value = this.pageDiagnostics;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable>) {
+      return value;
+    } else {
+      return this.pageDiagnostics = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   CatalogFetchSuccess toFrozen() => CatalogFetchSuccess(
@@ -1325,9 +1076,12 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
     typeDefinitions: this.typeDefinitions,
     presentationDefinitions: this.presentationDefinitions,
     conversions: this.conversions,
-    realmActionDefinitions: this.realmActionDefinitions,
+    capabilityDefinitions: this.capabilityDefinitions,
     subtypeResults: this.subtypeResults,
     diagnostics: this.diagnostics,
+    elementEntries: this.elementEntries,
+    pageEntries: this.pageEntries,
+    pageDiagnostics: this.pageDiagnostics,
   ).._u = this._u;
 }
 
@@ -1336,7 +1090,7 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
 // -----------------------------------------------------------------------------
 
 sealed class CatalogGenerationMismatch_orMutable {
-  CatalogGeneration_orMutable get actualGeneration;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get actualGeneration;
 
   CatalogGenerationMismatch toFrozen();
 }
@@ -1344,11 +1098,11 @@ sealed class CatalogGenerationMismatch_orMutable {
 /// Deeply immutable.
 final class CatalogGenerationMismatch implements CatalogGenerationMismatch_orMutable {
   @_core.override
-  final CatalogGeneration actualGeneration;
+  final _lib_editor_v1_type_catalog.CatalogGeneration actualGeneration;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogGenerationMismatch({
-    required CatalogGeneration_orMutable actualGeneration,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration,
   }) => CatalogGenerationMismatch._(
     actualGeneration.toFrozen(),
   );
@@ -1359,13 +1113,13 @@ final class CatalogGenerationMismatch implements CatalogGenerationMismatch_orMut
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogGenerationMismatch._(
-    CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CatalogGenerationMismatch_mutable mutable() => CatalogGenerationMismatch_mutable._(
-    CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -1402,7 +1156,7 @@ final class CatalogGenerationMismatch implements CatalogGenerationMismatch_orMut
         "actual_generation",
         "actualGeneration",
         0,
-        CatalogGeneration.serializer,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.actualGeneration,
         (it, v) => it.actualGeneration = v,
@@ -1425,7 +1179,7 @@ final class CatalogGenerationMismatch implements CatalogGenerationMismatch_orMut
 
 /// Mutable version of [CatalogGenerationMismatch].
 final class CatalogGenerationMismatch_mutable implements CatalogGenerationMismatch_orMutable {
-  CatalogGeneration_orMutable actualGeneration;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration;
   _skir.internal__UnrecognizedFields? _u;
 
   CatalogGenerationMismatch_mutable._(
@@ -1434,12 +1188,12 @@ final class CatalogGenerationMismatch_mutable implements CatalogGenerationMismat
 
   /// If the value of [actualGeneration] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [actualGeneration] and returns it.
-  CatalogGeneration_mutable get mutableActualGeneration {
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableActualGeneration {
     final value = this.actualGeneration;
-    if (value is CatalogGeneration_mutable) {
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.actualGeneration = (value as CatalogGeneration).toMutable();
+      return this.actualGeneration = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -1477,22 +1231,28 @@ sealed class CatalogFetchResult {
 
   /// Same as `wrapSuccess(CatalogFetchSuccess(...))`.
   factory CatalogFetchResult.createSuccess({
-    required CatalogGeneration_orMutable generation,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> typeDefinitions,
     required _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> presentationDefinitions,
     required _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> conversions,
-    required _core.Iterable<RealmActionDefinition_orMutable> realmActionDefinitions,
+    required _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions,
     required _core.Iterable<SubtypeResult_orMutable> subtypeResults,
     required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_element_catalog.ElementCatalogEntry_orMutable> elementEntries,
+    required _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> pageEntries,
+    required _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> pageDiagnostics,
   }) => CatalogFetchResult.wrapSuccess(
     CatalogFetchSuccess(
       generation: generation,
       typeDefinitions: typeDefinitions,
       presentationDefinitions: presentationDefinitions,
       conversions: conversions,
-      realmActionDefinitions: realmActionDefinitions,
+      capabilityDefinitions: capabilityDefinitions,
       subtypeResults: subtypeResults,
       diagnostics: diagnostics,
+      elementEntries: elementEntries,
+      pageEntries: pageEntries,
+      pageDiagnostics: pageDiagnostics,
     )
   );
 
@@ -1503,7 +1263,7 @@ sealed class CatalogFetchResult {
 
   /// Same as `wrapGenerationMismatch(CatalogGenerationMismatch(...))`.
   factory CatalogFetchResult.createGenerationMismatch({
-    required CatalogGeneration_orMutable actualGeneration,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration,
   }) => CatalogFetchResult.wrapGenerationMismatch(
     CatalogGenerationMismatch(
       actualGeneration: actualGeneration,
@@ -1647,7 +1407,7 @@ final class CatalogFetchResult_unavailableWrapper extends _CatalogFetchResult_wr
 // -----------------------------------------------------------------------------
 
 sealed class CatalogInvalidated_orMutable {
-  CatalogGeneration_orMutable get generation;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _core.String get reason;
 
   CatalogInvalidated toFrozen();
@@ -1656,13 +1416,13 @@ sealed class CatalogInvalidated_orMutable {
 /// Deeply immutable.
 final class CatalogInvalidated implements CatalogInvalidated_orMutable {
   @_core.override
-  final CatalogGeneration generation;
+  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogInvalidated({
-    required CatalogGeneration_orMutable generation,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.String reason,
   }) => CatalogInvalidated._(
     generation.toFrozen(),
@@ -1676,14 +1436,14 @@ final class CatalogInvalidated implements CatalogInvalidated_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogInvalidated._(
-    CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CatalogInvalidated_mutable mutable() => CatalogInvalidated_mutable._(
-    CatalogGeneration.defaultInstance,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     "",
   );
 
@@ -1723,7 +1483,7 @@ final class CatalogInvalidated implements CatalogInvalidated_orMutable {
         "generation",
         "generation",
         0,
-        CatalogGeneration.serializer,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.generation,
         (it, v) => it.generation = v,
@@ -1755,7 +1515,7 @@ final class CatalogInvalidated implements CatalogInvalidated_orMutable {
 
 /// Mutable version of [CatalogInvalidated].
 final class CatalogInvalidated_mutable implements CatalogInvalidated_orMutable {
-  CatalogGeneration_orMutable generation;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1766,12 +1526,12 @@ final class CatalogInvalidated_mutable implements CatalogInvalidated_orMutable {
 
   /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  CatalogGeneration_mutable get mutableGeneration {
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
-    if (value is CatalogGeneration_mutable) {
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.generation = (value as CatalogGeneration).toMutable();
+      return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -1804,14 +1564,14 @@ sealed class CatalogWatchUpdate {
 
   /// Create a 'initial' variant wrapping around the given value.
   factory CatalogWatchUpdate.wrapInitial(
-    CatalogGeneration value
+    _lib_editor_v1_type_catalog.CatalogGeneration value
   ) => CatalogWatchUpdate_initialWrapper._(value);
 
-  /// Same as `wrapInitial(CatalogGeneration(...))`.
+  /// Same as `wrapInitial(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
   factory CatalogWatchUpdate.createInitial({
     required _core.String value,
   }) => CatalogWatchUpdate.wrapInitial(
-    CatalogGeneration(
+    _lib_editor_v1_type_catalog.CatalogGeneration(
       value: value,
     )
   );
@@ -1823,7 +1583,7 @@ sealed class CatalogWatchUpdate {
 
   /// Same as `wrapInvalidated(CatalogInvalidated(...))`.
   factory CatalogWatchUpdate.createInvalidated({
-    required CatalogGeneration_orMutable generation,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.String reason,
   }) => CatalogWatchUpdate.wrapInvalidated(
     CatalogInvalidated(
@@ -1842,7 +1602,7 @@ sealed class CatalogWatchUpdate {
         1,
         "initial",
         "wrapInitial",
-        CatalogGeneration.serializer,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         CatalogWatchUpdate_initialWrapper._,
         (it) => it.value,
@@ -1920,7 +1680,7 @@ sealed class _CatalogWatchUpdate_wrapper implements CatalogWatchUpdate {
 }
 
 final class CatalogWatchUpdate_initialWrapper extends _CatalogWatchUpdate_wrapper {
-  final CatalogGeneration value;
+  final _lib_editor_v1_type_catalog.CatalogGeneration value;
 
   CatalogWatchUpdate_initialWrapper._(this.value);
 

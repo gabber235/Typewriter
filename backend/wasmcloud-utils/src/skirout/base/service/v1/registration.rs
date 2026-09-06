@@ -59,7 +59,7 @@ impl BindServiceRequest {
 pub struct BindServiceResponse_Success {
     pub service_id: String,
     pub service_name: Option<String>,
-    pub service_roles: Vec<crate::skirout::base::service::v1::service::ServiceRole>,
+    pub service_role: crate::skirout::base::service::v1::service::ServiceRole,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BindServiceResponse_Success>>,
 }
@@ -422,7 +422,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<BindServiceResponse_Success> = BindServiceResponse_Success::_adapter() as *const _ as *mut _;
                 (*a).add_field("service_id", 0, crate::skir_client::Serializer::string(), "", |x: &BindServiceResponse_Success| &x.service_id, |x: &mut BindServiceResponse_Success, v| x.service_id = v);
                 (*a).add_field("service_name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &BindServiceResponse_Success| &x.service_name, |x: &mut BindServiceResponse_Success, v| x.service_name = v);
-                (*a).add_field("service_roles", 2, crate::skir_client::Serializer::array(crate::skirout::base::service::v1::service::ServiceRole::serializer()), "", |x: &BindServiceResponse_Success| &x.service_roles, |x: &mut BindServiceResponse_Success, v| x.service_roles = v);
+                (*a).add_field("service_role", 2, crate::skirout::base::service::v1::service::ServiceRole::serializer(), "", |x: &BindServiceResponse_Success| &x.service_role, |x: &mut BindServiceResponse_Success, v| x.service_role = v);
                 (*a).finalize();
             }
             unsafe {

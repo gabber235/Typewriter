@@ -11,7 +11,7 @@ method BindService(
   success: struct {
     service_id: string;
     service_name: string?;
-    service_roles: [ServiceRole];
+    service_role: ServiceRole;
   };
 
   invalid_registration_token_error: struct {};

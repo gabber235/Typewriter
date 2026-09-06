@@ -9,9 +9,18 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "services.freezed.dart";
 part "services.g.dart";
 part "service_models.dart";
-part "service_collection.dart";
 part "service_inspector_presentation.dart";
 part "service_selection.dart";
+part "topology_models.dart";
+part "topology.dart";
+part "topology_inspector_presentations.dart";
+part "topology_host_inspector_presentation.dart";
+part "topology_host_configuration_presentation.dart";
+part "topology_runtime_inspector_presentation.dart";
+part "topology_inspector_types.dart";
+part "topology_selection.dart";
+part "topology_host_selection.dart";
+part "topology_runtime_selection.dart";
 
 @riverpod
 class Services extends _$Services {
@@ -44,7 +53,7 @@ class Services extends _$Services {
         skir.WatchOrganizationServicesResponse_addWrapper(:final value) ||
         skir.WatchOrganizationServicesResponse_updateWrapper(
           :final value,
-        ) => _upsertCanonicalService(previous, Service.fromSkir(value)).values,
+        ) => _upsertWatchedService(previous, Service.fromSkir(value)).values,
         skir.WatchOrganizationServicesResponse_removeWrapper(:final value) =>
           previous?.where((service) => service.serviceId != value).toList() ??
               [],
@@ -87,7 +96,6 @@ class Services extends _$Services {
       serviceId: service.serviceId,
       expectedRevision: service.revision,
       name: service.name,
-      runsIn: service.runsIn,
     );
     final response =
         await runPanelMutation<skir.UpdateOrganizationServiceResponse?>(
@@ -124,8 +132,6 @@ class Services extends _$Services {
           "The service no longer exists",
           targetDeleted: true,
         );
-      case skir.UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper():
-        return invalidMutation("The selected Realm service no longer exists");
       case skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
         return invalidMutation("The service contains invalid values");
       case skir.UpdateOrganizationServiceResponse_successWrapper(:final value):

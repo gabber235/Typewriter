@@ -1,219 +1,194 @@
+import "dart:async";
+
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart"
+    show ProviderScope, WidgetRef;
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+    show TypedValue;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
+    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "page_element_codec.dart";
+part "page_element_access.dart";
+part "page_element_models.dart";
+part "page_element_mutation_context.dart";
+part "page_element_mutations.dart";
+part "page_element_values.dart";
 part "page_elements.freezed.dart";
 part "page_elements.g.dart";
 
 @riverpod
-class PageElements extends _$PageElements {
+AsyncValue<Map<String, List<PageElement>>> decodedRealmDocuments(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+) {
+  final activeOrganizationId = ref.watch(organizationIdProvider);
+  final activeRealmId = ref.watch(realmIdProvider);
+  if (activeOrganizationId != organizationId || activeRealmId != realmId) {
+    return const AsyncLoading();
+  }
+
+  final session = ref.watch(authoringSessionProvider(organizationId, realmId));
+  if (session.sequence == null) return const AsyncLoading();
+  ref.watch(
+    realmEditorCatalogLeaseProvider(
+      RealmEditorCatalogRequest(
+        types: {
+          for (final document in session.documents.values)
+            for (final element in document.elements)
+              ResolvedTypeRef(
+                id: DeclaredTypeId(element.elementType),
+                revision: element.schemaRevision,
+              ),
+        },
+      ),
+    ),
+  );
+
+  final catalog = ref.watch(realmEditorCatalogProvider);
+  if (catalog.isLoading) return const AsyncLoading();
+  return catalog.when(
+    data: (state) => switch (state) {
+      RealmEditorCatalogReady(:final value) => AsyncData({
+        for (final document in session.documents.entries)
+          document.key.id: _decodePageElements(
+            document.value,
+            value,
+            session.sequence!,
+          ),
+      }),
+      RealmEditorCatalogUnavailable(:final diagnostics) => AsyncError(
+        ElementDefinitionException(diagnostics),
+        StackTrace.current,
+      ),
+      RealmEditorCatalogLoading() => const AsyncLoading(),
+    },
+    error: AsyncError.new,
+    loading: AsyncLoading.new,
+  );
+}
+
+@riverpod
+AsyncValue<Map<String, CachedPageEntry>> realmEntryIndex(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+) {
+  return ref
+      .watch(decodedRealmDocumentsProvider(organizationId, realmId))
+      .whenData(
+        (documents) => {
+          for (final document in documents.entries)
+            for (final element in document.value)
+              if (element case PageElementEntry(
+                entry: DefinitionPageEntry(:final definition),
+              ))
+                definition.id: CachedPageEntry(
+                  pageId: document.key,
+                  definition: definition,
+                ),
+        },
+      );
+}
+
+@riverpod
+PageDocumentHealth? pageDocumentHealth(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+  skir.RecordId pageId,
+) {
+  final activeOrganizationId = ref.watch(organizationIdProvider);
+  final activeRealmId = ref.watch(realmIdProvider);
+  if (activeOrganizationId != organizationId || activeRealmId != realmId) {
+    return null;
+  }
+  final document = ref
+      .watch(authoringSessionProvider(organizationId, realmId))
+      .documents[pageId];
+  if (document == null) return null;
+  return PageDocumentHealth(
+    diagnostics: document.diagnostics
+        .map((diagnostic) => diagnostic.message)
+        .toList(growable: false),
+    compileBlocked:
+        document.compileStatus is wire.PageCompileStatus_blockedWrapper,
+    activeManifestId: switch (document.compileStatus) {
+      wire.PageCompileStatus_activeWrapper(:final value) => value.manifestId,
+      wire.PageCompileStatus_blockedWrapper(:final value) =>
+        value.lastActiveManifestId,
+      _ => null,
+    },
+  );
+}
+
+@riverpod
+class PageElements extends _$PageElements
+    with
+        _PageElementMutationContext,
+        _PageElementMutations,
+        _PageElementValues {
   @override
-  Future<List<PageElement>> build(String pageId) async {
-    throw UnimplementedError();
-  }
-
-  void optimisticMoveAll(List<(String, int, int)> changed) {
-    final data = state.requireValue;
-    final map = <String, (int, int)>{
-      for (final e in changed) e.$1: (e.$2, e.$3),
-    };
-    final newData = data.map((element) {
-      final placement = map[element.id];
-      if (placement == null) return element;
-      return element.moveTo(placement.$1, placement.$2);
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-
-  void optimisticResizeAll(List<(String, int, int)> changed) {
-    final data = state.requireValue;
-    final map = <String, (int, int)>{
-      for (final e in changed) e.$1: (e.$2, e.$3),
-    };
-    final newData = data.map((element) {
-      final placement = map[element.id];
-      if (placement == null) return element;
-      return element.resizeTo(placement.$1, placement.$2);
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-
-  Future<void> moveAll(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    optimisticMoveAll(changed);
-
-    throw UnimplementedError();
-  }
-
-  Future<void> resizeAll(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    optimisticResizeAll(changed);
-
-    throw UnimplementedError();
-  }
-
-  void optimisticCuesUpdate(List<(String, int, int)> changed) {
-    final data = state.requireValue;
-    final map = <String, (int, int)>{
-      for (final entry in changed) entry.$1: (entry.$2, entry.$3),
-    };
-    final newData = data.map((element) {
-      final frameRange = map[element.id];
-      if (frameRange == null) return element;
-      return element.updateCueTo(frameRange.$1, frameRange.$2);
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-
-  Future<void> updateCues(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    optimisticCuesUpdate(changed);
-  }
-
-  Future<void> updateCueFieldValue(
-    String cueId,
-    DataPath path,
-    DataValue value,
+  Future<List<PageElement>> build(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+    String pageId,
   ) async {
-    state.ensureReady();
-    final data = state.requireValue;
-    final newData = data.map((element) {
-      if (element.id != cueId) return element;
-      return element.updateFieldValue(path, value);
-    }).toList();
-
-    state = AsyncValue.data(newData);
-  }
-}
-
-@Freezed(unionKey: "_kind")
-abstract class PageElement with _$PageElement {
-  const factory PageElement.entry({required PageEntry entry}) =
-      PageElementEntry;
-
-  @Assert("id != \"\"", "ID must not be empty.")
-  const factory PageElement.group({
-    required String id,
-    required String name,
-    required EntryPlacement placement,
-  }) = PageElementGroup;
-
-  const factory PageElement.cue({required Cue cue}) = PageElementCue;
-}
-
-extension PageElementExtension on PageElement {
-  String get id => switch (this) {
-    PageElementEntry(:final entry) => entry.id,
-    PageElementGroup(:final id) => id,
-    PageElementCue(:final cue) => cue.id,
-    _ => throw StateError("Unknown page element type"),
-  };
-
-  PageElement moveTo(int x, int y) {
-    return switch (this) {
-      PageElementEntry(:final entry) => PageElement.entry(
-        entry: switch (entry) {
-          DefinitionPageEntry() => entry.copyWith.definition.placement(
-            x: x,
-            y: y,
-          ),
-          MissingElementDefinitionPageEntry() => entry.copyWith.placement(
-            x: x,
-            y: y,
-          ),
-          _ => entry,
-        },
-      ),
-      PageElementGroup(:final id, :final name, :final placement) =>
-        PageElement.group(
-          id: id,
-          name: name,
-          placement: placement.copyWith(x: x, y: y),
+    _pageId = recordId("page:$pageId");
+    if (ref.watch(organizationIdProvider) != organizationId ||
+        ref.watch(realmIdProvider) != realmId) {
+      throw ApiException.conflict("The selected realm changed");
+    }
+    _sessionProvider = authoringSessionProvider(organizationId, realmId);
+    final lease = ref.watch(
+      authoringPageScopeProvider(organizationId, realmId, _pageId),
+    );
+    final documentsProvider = decodedRealmDocumentsProvider(
+      organizationId,
+      realmId,
+    );
+    var scopeReady = false;
+    final initial = Completer<List<PageElement>>();
+    void applyDocuments(AsyncValue<Map<String, List<PageElement>>> documents) {
+      if (!scopeReady) return;
+      final AsyncValue<List<PageElement>>? projected = switch (documents) {
+        AsyncData(:final value) when value[pageId] != null => AsyncData(
+          value[pageId]!,
         ),
-      _ => this,
-    };
-  }
-
-  PageElement resizeTo(int width, int height) {
-    return switch (this) {
-      PageElementEntry(:final entry) => PageElement.entry(
-        entry: switch (entry) {
-          DefinitionPageEntry() => entry.copyWith.definition.placement(
-            width: width,
-            height: height,
-          ),
-          MissingElementDefinitionPageEntry() => entry.copyWith.placement(
-            width: width,
-            height: height,
-          ),
-          _ => entry,
-        },
-      ),
-      PageElementGroup(:final id, :final name, :final placement) =>
-        PageElement.group(
-          id: id,
-          name: name,
-          placement: placement.copyWith(width: width, height: height),
+        AsyncData() => AsyncError(
+          ApiException.notFound("Page"),
+          StackTrace.current,
         ),
-      _ => this,
-    };
+        AsyncError(:final error, :final stackTrace) => AsyncError(
+          error,
+          stackTrace,
+        ),
+        AsyncLoading() => null,
+      };
+      if (projected == null) return;
+      if (!initial.isCompleted) {
+        switch (projected) {
+          case AsyncData(:final value):
+            initial.complete(value);
+          case AsyncError(:final error, :final stackTrace):
+            initial.completeError(error, stackTrace);
+          case AsyncLoading():
+        }
+        return;
+      }
+      state = projected;
+    }
+
+    ref.listen(documentsProvider, (_, documents) => applyDocuments(documents));
+    await lease.ready;
+    if (!ref.mounted) return initial.future;
+    scopeReady = true;
+    applyDocuments(ref.read(documentsProvider));
+    return initial.future;
   }
-
-  PageElement updateCueTo(int startFrame, int endFrame) {
-    return switch (this) {
-      PageElementCue(:final cue) => PageElement.cue(
-        cue: switch (cue) {
-          Segment() => cue.copyWith(startFrame: startFrame, endFrame: endFrame),
-          Keyframe() => cue.copyWith(frame: startFrame),
-          _ => cue,
-        },
-      ),
-      _ => this,
-    };
-  }
-
-  PageElement updateFieldValue(DataPath path, DataValue value) {
-    return switch (this) {
-      PageElementEntry(:final entry) => PageElement.entry(
-        entry: switch (entry) {
-          DefinitionPageEntry() => entry.copyWith.definition(
-            data: entry.definition.data.updatedAt(path, value),
-          ),
-          _ => entry,
-        },
-      ),
-      PageElementCue(:final cue) => PageElement.cue(
-        cue: switch (cue) {
-          Segment() => cue.copyWith(data: cue.data.updatedAt(path, value)),
-          Keyframe() => cue.copyWith(data: cue.data.updatedAt(path, value)),
-          _ => cue,
-        },
-      ),
-      _ => this,
-    };
-  }
-}
-
-extension on RecordValue {
-  RecordValue updatedAt(DataPath path, DataValue value) {
-    final updated = path.replace(this, value).valueOrNull;
-    return updated is RecordValue ? updated : this;
-  }
-}
-
-@freezed
-abstract class ElementLink with _$ElementLink {
-  @Assert("linkId != \"\"", "Link ID must not be empty.")
-  @Assert("otherId != \"\"", "Other ID must not be empty.")
-  const factory ElementLink({
-    required String linkId,
-    required String otherId,
-    required String path,
-  }) = _ElementLink;
-
-  factory ElementLink.fromJson(Map<String, dynamic> json) =>
-      _$ElementLinkFromJson(json);
 }

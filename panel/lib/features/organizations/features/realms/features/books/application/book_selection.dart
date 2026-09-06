@@ -158,14 +158,24 @@ class BookSelection extends InspectableSelectable<BookIdentifier> {
     rootType: NamedType(bookInspectorTypeRef),
     typeCatalog: _bookInspectorCatalog,
     confirmedValue: _data,
-    revision: book.revision,
+    revision: book.authoringSequence,
     mergePolicies: {DataPath.root.field("tags"): EditorMergePolicy.set},
     collections: [tagCollection],
     presentations: [_bookInspectorPresentation],
   );
 
   @override
-  List<SelectionCapability> get capabilities => [];
+  List<SelectionCapability> get capabilities => [
+    OpenSelectionCapability(onOpen: _open, allowMultiSelect: false),
+  ];
+
+  void _open() {
+    final realmId = ref.read(realmIdProvider);
+    if (realmId == null) return;
+    ref
+        .read(appRouterProvider)
+        .navigate(BookRoute(realmId: realmId.id, bookId: book.bookId.id));
+  }
 
   @override
   Widget? buildInspectorHeader() => BookHeader(
@@ -190,7 +200,7 @@ class BookSelection extends InspectableSelectable<BookIdentifier> {
         ]),
       );
     }
-    return ref.read(booksProvider.notifier).updateBook(next);
+    return ref.read(booksProvider.notifier).updateBook(next, expected: book);
   }
 
   @override
@@ -233,7 +243,7 @@ class BookSelection extends InspectableSelectable<BookIdentifier> {
       SvgIconValue(:final source) => source,
     };
     return book.copyWith(
-      revision: expectedRevision,
+      authoringSequence: expectedRevision,
       title: title.value,
       icon: encodedIcon,
       color: decodedColor,

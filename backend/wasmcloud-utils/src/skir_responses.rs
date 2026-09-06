@@ -15,6 +15,7 @@ use crate::skir::base::service::v1::identity::*;
 use crate::skir::base::service::v1::organization::*;
 use crate::skir::base::service::v1::registration::*;
 use crate::skir::base::service::v1::status::*;
+use crate::skir::base::service::v1::topology::*;
 use crate::skirout::base::organization::v1::role::*;
 
 wasmcloud_utils_macros::skir_response! {
@@ -30,17 +31,12 @@ wasmcloud_utils_macros::skir_response! {
         errors {
             MalformedRequestError => "Malformed request",
             UnknownRoleError => "Unknown role",
-            RolesRequiredError => "Roles required",
             RoleUnknownPropertyError => "Unknown role property",
             RoleTypeInvalidError => "Invalid role type",
-            RoleVersionBlankError => "Blank role version",
-            RoleInvalidError => "Invalid role",
+            RoleVersionInvalidError => "Invalid role version",
             CustomRoleNameRequiredError => "Custom role name required",
             CustomRoleNameInvalidError => "Invalid custom role name",
             BuiltinRoleNameForbiddenError => "Built-in role name forbidden",
-            EngineRoleDuplicateError => "Duplicate engine role",
-            RealmRoleDuplicateError => "Duplicate realm role",
-            CustomRoleDuplicateError => "Duplicate custom role",
             IdentityProviderUnavailableError => "Identity provider unavailable",
         }
     }
@@ -88,8 +84,59 @@ wasmcloud_utils_macros::skir_response! {
             InvalidRecordIdError,
             ConflictError => "Service changed elsewhere",
             ServiceNotFoundError => "Service not found in organization",
-            RunsInNotFoundError => "Runs in service not found",
             ValidationError => "Service update is invalid",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    RegisterServiceHostResponse {
+        success: Success,
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    ConfigureServiceHostResponse {
+        success: Success,
+        errors {
+            InvalidRecordIdError,
+            ConflictError => "Host changed elsewhere",
+            InvalidConfigurationError => "Host configuration is invalid",
+            IncompatibleEngineError => "Engine target is incompatible",
+            RealmNotFoundError => "Realm not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationTopologyResponse {
+        success: [List, HostUpdated, RealmUpdated, EngineUpdated, ResourceRemoved],
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchHostExecutionResponse {
+        success: Desired,
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    ReportHostExecutionResponse {
+        success: Success,
+        errors {
+            StaleRevisionError => "Host topology revision is stale",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    GetServiceMessagingScopeResponse {
+        success: Found,
+        errors {
+            NotFound => "Service messaging scope not found",
         }
     }
 }

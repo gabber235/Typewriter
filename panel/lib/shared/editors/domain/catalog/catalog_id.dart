@@ -23,13 +23,9 @@ abstract class ConversionId with _$ConversionId {
 }
 
 @freezed
-abstract class RealmActionId with _$RealmActionId {
-  @Assert("namespace != \"\"", "Namespace must not be empty.")
-  @Assert("name != \"\"", "Name must not be empty.")
-  const factory RealmActionId({
-    required String namespace,
-    required String name,
-  }) = _RealmActionId;
+abstract class CapabilityId with _$CapabilityId {
+  @Assert("value != \"\"", "Capability ID must not be empty.")
+  const factory CapabilityId(String value) = _CapabilityId;
 }
 
 @freezed

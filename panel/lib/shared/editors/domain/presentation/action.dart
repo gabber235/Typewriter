@@ -63,10 +63,164 @@ sealed class LocalAction with _$LocalAction {
 sealed class RealmAction with _$RealmAction {
   const factory RealmAction.reload() = ReloadRealmAction;
 
-  const factory RealmAction.invokeCallback({
-    required RealmActionId actionId,
+  const factory RealmAction.invokeCommand({
+    required CapabilityId capabilityId,
     required TypedExpression payload,
-  }) = InvokeRealmCallbackAction;
+  }) = InvokeRealmCommandAction;
+}
+
+sealed class EditorActionResult {
+  const EditorActionResult();
+}
+
+final class LocalEditorActionResult extends EditorActionResult {
+  const LocalEditorActionResult(this.mutation, {this.structuralMutation});
+
+  final TypedMutationResult mutation;
+  final EditorStructuralMutation? structuralMutation;
+}
+
+final class RealmEditorActionResult extends EditorActionResult {
+  const RealmEditorActionResult(this.command);
+
+  final RealmCommandResult command;
+}
+
+sealed class RealmCommandResult {
+  const RealmCommandResult();
+
+  const factory RealmCommandResult.success(
+    List<PanelInstruction> instructions,
+  ) = RealmCommandSuccess;
+  const factory RealmCommandResult.invalid(List<TypeDiagnostic> diagnostics) =
+      RealmCommandInvalid;
+  const factory RealmCommandResult.unavailable(
+    List<TypeDiagnostic> diagnostics,
+  ) = RealmCommandUnavailable;
+  const factory RealmCommandResult.permissionDenied(String message) =
+      RealmCommandPermissionDenied;
+  const factory RealmCommandResult.staleGeneration(
+    CatalogGeneration actualGeneration,
+  ) = RealmCommandStaleGeneration;
+}
+
+final class RealmCommandSuccess extends RealmCommandResult {
+  const RealmCommandSuccess(this.instructions);
+
+  final List<PanelInstruction> instructions;
+}
+
+final class RealmCommandInvalid extends RealmCommandResult {
+  const RealmCommandInvalid(this.diagnostics);
+
+  final List<TypeDiagnostic> diagnostics;
+}
+
+final class RealmCommandUnavailable extends RealmCommandResult {
+  const RealmCommandUnavailable(this.diagnostics);
+
+  final List<TypeDiagnostic> diagnostics;
+}
+
+final class RealmCommandPermissionDenied extends RealmCommandResult {
+  const RealmCommandPermissionDenied(this.message);
+
+  final String message;
+}
+
+final class RealmCommandStaleGeneration extends RealmCommandResult {
+  const RealmCommandStaleGeneration(this.actualGeneration);
+
+  final CatalogGeneration actualGeneration;
+}
+
+sealed class PanelInstruction {
+  const PanelInstruction();
+
+  const factory PanelInstruction.invalidateResource(ResourceAddress resource) =
+      InvalidateResourceInstruction;
+  const factory PanelInstruction.openResource(ResourceAddress resource) =
+      OpenResourceInstruction;
+  const factory PanelInstruction.notify(
+    NotificationSeverity severity,
+    String message,
+  ) = NotifyInstruction;
+}
+
+final class ResourceAddress {
+  const ResourceAddress({required this.type, required this.identity});
+
+  final ResolvedTypeRef type;
+  final DataValue identity;
+}
+
+final class InvalidateResourceInstruction extends PanelInstruction {
+  const InvalidateResourceInstruction(this.resource);
+
+  final ResourceAddress resource;
+}
+
+final class OpenResourceInstruction extends PanelInstruction {
+  const OpenResourceInstruction(this.resource);
+
+  final ResourceAddress resource;
+}
+
+enum NotificationSeverity { info, success, warning, error }
+
+final class NotifyInstruction extends PanelInstruction {
+  const NotifyInstruction(this.severity, this.message);
+
+  final NotificationSeverity severity;
+  final String message;
+}
+
+sealed class RealmComputationResult {
+  const RealmComputationResult();
+
+  const factory RealmComputationResult.success(DataValue value) =
+      RealmComputationSuccess;
+  const factory RealmComputationResult.invalid(
+    List<TypeDiagnostic> diagnostics,
+  ) = RealmComputationInvalid;
+  const factory RealmComputationResult.unavailable(
+    List<TypeDiagnostic> diagnostics,
+  ) = RealmComputationUnavailable;
+  const factory RealmComputationResult.permissionDenied(String message) =
+      RealmComputationPermissionDenied;
+  const factory RealmComputationResult.staleGeneration(
+    CatalogGeneration actualGeneration,
+  ) = RealmComputationStaleGeneration;
+}
+
+final class RealmComputationSuccess extends RealmComputationResult {
+  const RealmComputationSuccess(this.value);
+
+  final DataValue value;
+}
+
+final class RealmComputationInvalid extends RealmComputationResult {
+  const RealmComputationInvalid(this.diagnostics);
+
+  final List<TypeDiagnostic> diagnostics;
+}
+
+final class RealmComputationUnavailable extends RealmComputationResult {
+  const RealmComputationUnavailable(this.diagnostics);
+
+  final List<TypeDiagnostic> diagnostics;
+}
+
+final class RealmComputationPermissionDenied extends RealmComputationResult {
+  const RealmComputationPermissionDenied(this.message);
+
+  final String message;
+}
+
+final class RealmComputationStaleGeneration extends RealmComputationResult {
+  const RealmComputationStaleGeneration(this.actualGeneration);
+
+  final CatalogGeneration actualGeneration;
 }
 
 @freezed

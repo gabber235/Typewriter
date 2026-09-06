@@ -8,7 +8,7 @@ typedef EditorCommitter =
 typedef EditorMutationValidator =
     EditorMutationResult Function(DataPath path, DataValue value);
 typedef EditorRealmActionExecutor =
-    Future<TypedMutationResult> Function(
+    Future<RealmCommandResult> Function(
       RealmAction action,
       ExpressionContext context,
     );
@@ -52,6 +52,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   bool _disposed = false;
   int _localRevision = 0;
   int _generation = 0;
+  final List<_PendingStructuralMutation> _pendingMutations = [];
 
   @override
   EditorDocument get document => _document;
@@ -65,7 +66,11 @@ final class TransactionalEditorSource extends ChangeNotifier
   }
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) {
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) {
     if (_disposed) {
       return EditorMutationResult.invalid([_diagnostic("Editor is disposed")]);
     }
@@ -89,6 +94,12 @@ final class TransactionalEditorSource extends ChangeNotifier
     }
     _draft = replaced.valueOrNull!;
     _localRevision++;
+    _pendingMutations.add(
+      _PendingStructuralMutation(
+        _localRevision,
+        structuralMutation ?? EditorSetValue(path, validation.value),
+      ),
+    );
     _states.markEdited(path);
     _notify();
     _scheduleAutoFlush();
@@ -106,6 +117,7 @@ final class TransactionalEditorSource extends ChangeNotifier
       presentations: document.presentations,
       collections: document.collections,
       mergePolicies: document.mergePolicies,
+      commitGroups: document.commitGroups,
       rootPresentation: document.rootPresentation,
       clearRootPresentation: document.rootPresentation == null,
       diagnostics: document.diagnostics,
@@ -124,6 +136,7 @@ final class TransactionalEditorSource extends ChangeNotifier
       source: this,
       path: path,
       origin: path.read(_draft).valueOrNull,
+      startingRevision: _localRevision,
     );
     if (_disposed || _deleted) {
       interaction.close();
@@ -149,16 +162,53 @@ final class TransactionalEditorSource extends ChangeNotifier
     if (_disposed) return _unavailable("Editor is disposed");
     if (_deleted) return _unavailable("Deleted elsewhere");
 
-    while (_activeCommit != null) {
-      final result = await _activeCommit!;
-      if (_disposed) return _unavailable("Editor is disposed");
-      if (_deleted) return _unavailable("Deleted elsewhere");
-      if (_states.flushCandidates(paths).isEmpty) return result;
-    }
+    var result = _settledResult();
+    final processedGroups = <String?>{};
+    while (true) {
+      while (_activeCommit != null) {
+        result = await _activeCommit!;
+        if (_disposed) return _unavailable("Editor is disposed");
+        if (_deleted) return _unavailable("Deleted elsewhere");
+      }
 
-    final selected = _states.flushCandidates(paths);
-    if (selected.isEmpty) return _settledResult();
-    return _runCommit(selected);
+      final selected = _states
+          .flushCandidates(paths)
+          .where((path) => !processedGroups.contains(_commitGroupFor(path)))
+          .toSet();
+      if (selected.isEmpty) return result;
+      final commitPaths = _firstCommitGroup(selected);
+      processedGroups.add(_commitGroupFor(commitPaths.first));
+      result = await _runCommit(commitPaths);
+      if (_disposed) return _unavailable("Editor is disposed");
+      if (_deleted) {
+        return result is MutationConflict
+            ? result
+            : _unavailable("Deleted elsewhere");
+      }
+      if (result is! MutationSuccess) return result;
+    }
+  }
+
+  Set<DataPath> _firstCommitGroup(Set<DataPath> paths) {
+    final ordered = paths.toList()
+      ..sort((left, right) => left.toString().compareTo(right.toString()));
+    final group = _commitGroupFor(ordered.first);
+    return {
+      for (final path in ordered)
+        if (_commitGroupFor(path) == group) path,
+    };
+  }
+
+  String? _commitGroupFor(DataPath path) {
+    MapEntry<DataPath, String>? closest;
+    for (final entry in _document.commitGroups.entries) {
+      if (!path.isAtOrBelow(entry.key)) continue;
+      if (closest == null ||
+          entry.key.segments.length > closest.key.segments.length) {
+        closest = entry;
+      }
+    }
+    return closest?.value;
   }
 
   TypedMutationResult _settledResult() {
@@ -192,6 +242,7 @@ final class TransactionalEditorSource extends ChangeNotifier
         if (_disposed) return _unavailable("Editor is disposed");
         final generation = _generation;
         final rootValue = _commitValue(activePaths);
+        final pendingMutations = _mutationsFor(activePaths);
         _states.markSaving(activePaths);
         _notify();
         final result = await _commit(
@@ -200,6 +251,10 @@ final class TransactionalEditorSource extends ChangeNotifier
             localRevision: _localRevision,
             rootValue: rootValue,
             changedPaths: activePaths,
+            mutations: pendingMutations
+                .map((pending) => pending.mutation)
+                .toList(),
+            group: _commitGroupFor(activePaths.first),
           ),
         );
         if (_disposed || _deleted || generation != _generation) {
@@ -223,6 +278,7 @@ final class TransactionalEditorSource extends ChangeNotifier
               return result;
             }
             _acceptSuccess(revision, value, rootValue, activePaths);
+            _pendingMutations.removeWhere(pendingMutations.contains);
             return result;
           case MutationConflict(:final actualRevision, :final actualValue):
             acceptRemote(revision: actualRevision, value: actualValue);
@@ -312,28 +368,58 @@ final class TransactionalEditorSource extends ChangeNotifier
   }
 
   @override
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,
   ) async {
-    if (_disposed) return _unavailable("Editor is disposed");
+    if (_disposed) {
+      return LocalEditorActionResult(_unavailable("Editor is disposed"));
+    }
     final result = switch (action) {
-      LocalEditorAction() =>
-        action
-            .canonicalizedWith(aliases)
-            .execute(context, registry: TypeRegistry(_document.typeCatalog)),
-      RealmEditorAction(:final action) => await _executeRealm(action, context),
+      LocalEditorAction() => _executeLocalAction(action, context, aliases),
+      RealmEditorAction(:final action) => RealmEditorActionResult(
+        await _executeRealm(action, context),
+      ),
     };
     return result;
   }
 
-  Future<TypedMutationResult> _executeRealm(
+  LocalEditorActionResult _executeLocalAction(
+    LocalEditorAction action,
+    ExpressionContext context,
+    Map<BindingId, BindingReference> aliases,
+  ) {
+    final canonical = action.canonicalizedWith(aliases);
+    final registry = TypeRegistry(_document.typeCatalog);
+    final result = canonical.execute(context, registry: registry);
+    return LocalEditorActionResult(
+      result,
+      structuralMutation: _structuralMutation(
+        canonical.action,
+        context,
+        result,
+        registry,
+      ),
+    );
+  }
+
+  List<_PendingStructuralMutation> _mutationsFor(Set<DataPath> paths) => [
+    for (final pending in _pendingMutations)
+      if (paths.any((path) => _pathsOverlap(path, pending.mutation.path)))
+        pending,
+  ];
+
+  Future<RealmCommandResult> _executeRealm(
     RealmAction action,
     ExpressionContext context,
   ) async {
     final executor = _executeRealmAction;
-    if (executor == null) return _unavailable("Realm actions are unavailable");
+    if (executor == null) {
+      return RealmCommandResult.unavailable([
+        _diagnostic("Realm actions are unavailable"),
+      ]);
+    }
     return executor(action, context);
   }
 
@@ -380,6 +466,9 @@ final class TransactionalEditorSource extends ChangeNotifier
     final remote = path.read(_document.confirmedValue).valueOrNull;
     if (remote == null) return;
     _draft = path.replace(_draft, remote).valueOrNull ?? _draft;
+    _pendingMutations.removeWhere(
+      (pending) => _pathsOverlap(path, pending.mutation.path),
+    );
     _states.adoptRemote(path, EditorSavePhase.saved);
     _notify();
   }
@@ -396,6 +485,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   void acceptRemoteDeletion() {
     if (_disposed || _deleted) return;
     _deleted = true;
+    _pendingMutations.clear();
     _generation++;
     _cancelScheduledTasks();
     _closeGates();
@@ -452,6 +542,11 @@ final class TransactionalEditorSource extends ChangeNotifier
     if (origin != null) {
       _draft = interaction.path.replace(_draft, origin).valueOrNull ?? _draft;
     }
+    _pendingMutations.removeWhere(
+      (pending) =>
+          pending.revision > interaction.startingRevision &&
+          _pathsOverlap(interaction.path, pending.mutation.path),
+    );
     _states.reset(interaction.path);
     _notify();
   }
@@ -485,12 +580,14 @@ final class _Interaction implements EditorInteractionSession {
     required this.source,
     required this.path,
     required this.origin,
+    required this.startingRevision,
   });
 
   final TransactionalEditorSource source;
   @override
   final DataPath path;
   final DataValue? origin;
+  final int startingRevision;
   @override
   bool active = true;
 
@@ -522,6 +619,216 @@ bool _targetWasDeleted(List<TypeDiagnostic> diagnostics) {
       (detail) => detail.key == "editor.target" && detail.value == "deleted",
     ),
   );
+}
+
+final class _PendingStructuralMutation {
+  const _PendingStructuralMutation(this.revision, this.mutation);
+
+  final int revision;
+  final EditorStructuralMutation mutation;
+}
+
+EditorStructuralMutation? _structuralMutation(
+  LocalAction action,
+  ExpressionContext context,
+  TypedMutationResult result,
+  TypeRegistry registry,
+) {
+  if (result is! MutationSuccess) return null;
+  final root = result.value;
+  return switch (action) {
+    SetValueAction(:final target) => _rootTarget(
+      target,
+      root,
+      EditorSetValue.new,
+    ),
+    InsertListItemAction(:final target, :final index) => _rootListTarget(
+      target,
+      root,
+      context,
+      (path, before, after) {
+        final position = _evaluateIndex(index, context, registry);
+        if (position == null ||
+            after.values.length != before.values.length + 1) {
+          return null;
+        }
+        return EditorInsertListItems(path, position, [after.values[position]]);
+      },
+    ),
+    AppendListItemAction(:final target) => _rootListTarget(
+      target,
+      root,
+      context,
+      (path, before, after) => EditorInsertListItems(
+        path,
+        before.values.length,
+        [after.values.last],
+      ),
+    ),
+    RemoveListItemAction(:final target, :final index) => _removeListMutation(
+      target,
+      index,
+      context,
+      registry,
+    ),
+    DuplicateListItemAction(:final source) => _duplicateListMutation(source),
+    ReorderListItemAction(:final source, :final newIndex) =>
+      _reorderListMutation(source, newIndex, context, registry),
+    PutMapEntryAction(:final target) => _rootMapTarget(
+      target,
+      root,
+      context,
+      (path, before, after) => EditorPutMapEntries(
+        path,
+        after.entries
+            .where((entry) => !before.entries.contains(entry))
+            .toList(),
+      ),
+    ),
+    RemoveMapEntryAction(:final target) => _rootMapTarget(
+      target,
+      root,
+      context,
+      (path, before, after) => EditorRemoveMapEntries(
+        path,
+        before.entries
+            .where((entry) => !after.entries.contains(entry))
+            .map((entry) => entry.key)
+            .toList(),
+      ),
+    ),
+    ReplaceConcreteTypeAction(:final target, :final concreteType) =>
+      _rootTarget(
+        target,
+        root,
+        (path, value) => value is PolymorphicValue
+            ? EditorReplaceConcreteType(path, concreteType, value.value)
+            : null,
+      ),
+  };
+}
+
+EditorStructuralMutation? _rootTarget(
+  BindingReference target,
+  DataValue root,
+  EditorStructuralMutation? Function(DataPath path, DataValue value) create,
+) {
+  if (target.bindingId != const BindingId(0)) return null;
+  final value = target.path.read(root).valueOrNull;
+  return value == null ? null : create(target.path, value);
+}
+
+EditorStructuralMutation? _rootListTarget(
+  BindingReference target,
+  DataValue root,
+  ExpressionContext context,
+  EditorStructuralMutation? Function(
+    DataPath path,
+    ListValue before,
+    ListValue after,
+  )
+  create,
+) {
+  if (target.bindingId != const BindingId(0)) return null;
+  final before = context.bindings.resolve(target).valueOrNull?.value;
+  final after = target.path.read(root).valueOrNull;
+  if (before is! ListValue || after is! ListValue) return null;
+  return create(target.path, before, after);
+}
+
+EditorStructuralMutation? _rootMapTarget(
+  BindingReference target,
+  DataValue root,
+  ExpressionContext context,
+  EditorStructuralMutation Function(
+    DataPath path,
+    MapValue before,
+    MapValue after,
+  )
+  create,
+) {
+  if (target.bindingId != const BindingId(0)) return null;
+  final before = context.bindings.resolve(target).valueOrNull?.value;
+  final after = target.path.read(root).valueOrNull;
+  if (before is! MapValue || after is! MapValue) return null;
+  return create(target.path, before, after);
+}
+
+int? _evaluateIndex(
+  TypedExpression expression,
+  ExpressionContext context,
+  TypeRegistry registry,
+) {
+  final value = expression.evaluate(context, registry: registry).valueOrNull;
+  return value is IntegerValue ? value.value.toInt() : null;
+}
+
+(BindingReference, int)? _listItemLocation(BindingReference reference) {
+  if (reference.path.segments.lastOrNull case IndexPathSegment(:final index)) {
+    return (
+      BindingReference(
+        bindingId: reference.bindingId,
+        path: DataPath(
+          reference.path.segments.sublist(
+            0,
+            reference.path.segments.length - 1,
+          ),
+        ),
+      ),
+      index,
+    );
+  }
+  return null;
+}
+
+EditorStructuralMutation? _removeListMutation(
+  BindingReference target,
+  TypedExpression index,
+  ExpressionContext context,
+  TypeRegistry registry,
+) {
+  final position = _evaluateIndex(index, context, registry);
+  if (target.bindingId != const BindingId(0) || position == null) return null;
+  return EditorRemoveListItems(target.path, position, 1);
+}
+
+EditorStructuralMutation? _duplicateListMutation(BindingReference source) {
+  final location = _listItemLocation(source);
+  if (location == null || location.$1.bindingId != const BindingId(0)) {
+    return null;
+  }
+  return EditorDuplicateListItems(
+    location.$1.path,
+    location.$2,
+    1,
+    location.$2 + 1,
+  );
+}
+
+EditorStructuralMutation? _reorderListMutation(
+  BindingReference source,
+  TypedExpression newIndex,
+  ExpressionContext context,
+  TypeRegistry registry,
+) {
+  final location = _listItemLocation(source);
+  final destination = _evaluateIndex(newIndex, context, registry);
+  if (location == null ||
+      location.$1.bindingId != const BindingId(0) ||
+      destination == null) {
+    return null;
+  }
+  return EditorReorderListItems(location.$1.path, location.$2, 1, destination);
+}
+
+bool _pathsOverlap(DataPath first, DataPath second) {
+  final shared = first.segments.length < second.segments.length
+      ? first.segments.length
+      : second.segments.length;
+  for (var index = 0; index < shared; index++) {
+    if (first.segments[index] != second.segments[index]) return false;
+  }
+  return true;
 }
 
 const _retryDelays = [

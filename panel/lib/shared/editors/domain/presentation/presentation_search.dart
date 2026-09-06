@@ -95,7 +95,7 @@ sealed class SearchProvider with _$SearchProvider {
   }) = HttpJsonSearchProvider;
 
   const factory SearchProvider.realmCallback({
-    required RealmActionId actionId,
+    required CapabilityId capabilityId,
     required TypedExpression payload,
     required SearchResultMapping result,
     @Default([]) List<SearchSelectorDefinition> selectors,

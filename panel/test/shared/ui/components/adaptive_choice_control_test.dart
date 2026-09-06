@@ -1,10 +1,47 @@
 import "package:flutter/cupertino.dart";
+import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets(
+    "empty choices are disabled and recover without changing the value",
+    (tester) async {
+      var choices = <String, String>{"one": "One"};
+      var changes = 0;
+      late StateSetter rebuild;
+      await tester.pumpTestApp(
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return AdaptiveChoiceControl<String>(
+              choices: choices,
+              selected: "one",
+              onSelected: (_) => changes++,
+            );
+          },
+        ),
+      );
+      rebuild(() => choices = {});
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.text("No options available"), findsOneWidget);
+      expect(find.text("One"), findsNothing);
+      await tester.tap(find.text("No options available"));
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(changes, 0);
+      rebuild(() => choices = {"one": "One", "two": "Two"});
+      await tester.pump();
+      expect(find.text("No options available"), findsNothing);
+      await tester.tap(find.text("Two"));
+      await tester.pump();
+      expect(changes, 1);
+    },
+  );
+
   testWidgets("uses segmented controls for three choices", (tester) async {
     String? selected;
 

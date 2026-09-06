@@ -120,7 +120,7 @@ void main() {
     final firstLeaf = _tag("tag:firstLeaf", name: "First leaf");
     final secondLeaf = _tag("tag:secondLeaf", name: "Second leaf");
     late StateSetter rebuild;
-    var revision = firstRoot.revision;
+    var revision = firstRoot.authoringSequence;
 
     await tester.pumpTestApp(
       child: StatefulBuilder(
@@ -131,7 +131,7 @@ void main() {
               width: 400,
               child: _renderer(
                 [
-                  firstRoot.copyWith(revision: revision),
+                  firstRoot.copyWith(authoringSequence: revision),
                   secondRoot,
                   shared,
                   firstLeaf,
@@ -185,7 +185,7 @@ void main() {
 Tag _tag(String id, {required String name, List<String> parents = const []}) =>
     Tag(
       tagId: recordId(id),
-      revision: 1,
+      authoringSequence: 1,
       name: name,
       color: Colors.blue,
       parentIds: parents.map(recordId).toList(),

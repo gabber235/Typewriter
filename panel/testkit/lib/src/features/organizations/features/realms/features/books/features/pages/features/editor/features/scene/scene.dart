@@ -2,6 +2,7 @@ import "dart:math" as math;
 
 import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/entries.dart";
 
 part "scene_element_definition.dart";
 part "scene_building.dart";

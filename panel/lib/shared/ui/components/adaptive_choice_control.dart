@@ -9,7 +9,7 @@ class AdaptiveChoiceControl<T extends Object> extends StatelessWidget {
     required this.onSelected,
     this.enabled = true,
     super.key,
-  }) : assert(choices.length > 0);
+  });
 
   final Map<T, String> choices;
   final T? selected;
@@ -18,6 +18,20 @@ class AdaptiveChoiceControl<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (choices.isEmpty) {
+      return Semantics(
+        enabled: false,
+        child: InputDecorator(
+          decoration: const InputDecoration(enabled: false),
+          child: Text(
+            "No options available",
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: context.colors.contentSecondary,
+            ),
+          ),
+        ),
+      );
+    }
     final selected = choices.containsKey(this.selected) ? this.selected : null;
     if (choices.length < 2 || choices.length > 3) {
       return Dropdown<T>(

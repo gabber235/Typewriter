@@ -40,7 +40,11 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
   EditorValue value(DataPath path) => _value.readEditorValue(path);
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) {
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) {
     lastUpdatedPath = path;
     final validation = rootType.validateEditorMutation(
       path,
@@ -78,19 +82,22 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
       TypedMutationResult.success(revision: 0, value: _value);
 
   @override
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,
   ) async => switch (action) {
-    LocalEditorAction() =>
+    LocalEditorAction() => LocalEditorActionResult(
       action.canonicalizedWith(aliases).execute(context, registry: registry),
-    RealmEditorAction() => TypedMutationResult.unavailable([
-      const TypeDiagnostic(
-        code: TypeDiagnosticCode.invalidValue,
-        message: "Realm actions are unavailable in tests",
-      ),
-    ]),
+    ),
+    RealmEditorAction() => RealmEditorActionResult(
+      RealmCommandResult.unavailable([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Realm actions are unavailable in tests",
+        ),
+      ]),
+    ),
   };
 
   @override

@@ -12,7 +12,7 @@ part of 'tags.dart';
 @ProviderFor(Tags)
 final tagsProvider = TagsProvider._();
 
-final class TagsProvider extends $StreamNotifierProvider<Tags, List<Tag>> {
+final class TagsProvider extends $AsyncNotifierProvider<Tags, List<Tag>> {
   TagsProvider._()
     : super(
         from: null,
@@ -32,10 +32,10 @@ final class TagsProvider extends $StreamNotifierProvider<Tags, List<Tag>> {
   Tags create() => Tags();
 }
 
-String _$tagsHash() => r'cff5346e6670e149e73f97295e5c925399bac2a2';
+String _$tagsHash() => r'c483f4a07bbc83834ac96a7d5fb58be2d17393eb';
 
-abstract class _$Tags extends $StreamNotifier<List<Tag>> {
-  Stream<List<Tag>> build();
+abstract class _$Tags extends $AsyncNotifier<List<Tag>> {
+  FutureOr<List<Tag>> build();
   @$mustCallSuper
   @override
   void runBuild() {

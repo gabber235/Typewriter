@@ -70,13 +70,13 @@ extension on SearchProvider {
             timeout: timeout,
           ),
         RealmCallbackSearchProvider(
-          :final actionId,
+          :final capabilityId,
           :final payload,
           :final result,
           :final selectors,
         ) =>
           RealmCallbackSearchProvider(
-            actionId: actionId,
+            capabilityId: capabilityId,
             payload: payload._substituteTypes(substitutions),
             result: result._substituteTypes(substitutions),
             selectors: selectors,

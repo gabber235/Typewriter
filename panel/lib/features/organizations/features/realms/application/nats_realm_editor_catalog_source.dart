@@ -4,8 +4,14 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as wire_catalog;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
     as wire_diagnostic;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/element_catalog.dart"
+    as wire_element;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/page_catalog.dart"
+    as wire_page;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
     as wire_type;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/icon.dart"
+    as wire_icon;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "nats_realm_editor_catalog_source.freezed.dart";
@@ -28,12 +34,10 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
     final request = wire_catalog.CatalogFetchRequest(
       expectedGeneration: expectedGeneration == null
           ? null
-          : wire_catalog.CatalogGeneration(value: expectedGeneration.value),
+          : wire_type.CatalogGeneration(value: expectedGeneration.value),
       requestedTypes: encoded.valueOrNull!.$1,
       presentationIds: encoded.valueOrNull!.$2,
-      conversionIds: encoded.valueOrNull!.$3,
-      realmActionIds: encoded.valueOrNull!.$4,
-      subtypeQueries: encoded.valueOrNull!.$5,
+      subtypeQueries: encoded.valueOrNull!.$3,
     );
     final response = await ref.requestSkir(
       route.fetchSubject,
@@ -58,6 +62,173 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
       transformer: (previous, response) => response._decodeDomain(),
     );
   }
+}
+
+extension on Iterable<wire_element.ElementCatalogEntry> {
+  TypeResult<Map<String, RealmElementCatalogEntry>> _decodeDomain(
+    TypeCatalog catalog,
+  ) {
+    final registry = TypeRegistry(catalog);
+    final codec = SkirTypeCodec(registry);
+    final entries = <String, RealmElementCatalogEntry>{};
+    for (final entry in this) {
+      final decodedType = codec.decodeReference(entry.descriptor.type);
+      final type = decodedType.valueOrNull;
+      if (type == null) {
+        return TypeResult.failure(decodedType.diagnostics);
+      }
+      if (registry.resolveExact(type).valueOrNull == null) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm protocol inconsistency: element type '$type' is absent from the authoritative catalog",
+          ),
+        ]);
+      }
+      final id = entry.descriptor.elementTypeId.value.value;
+      if (type.id != DeclaredTypeId(id)) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Element descriptor identity does not match its structural type",
+          ),
+        ]);
+      }
+      final eligibility = entry.eligibility._decodeDomain();
+      entries[id] = RealmElementCatalogEntry(
+        originArtifactId: entry.originArtifactId,
+        sourcePart: entry.sourcePart,
+        definition: DiscoveredElementDefinition(
+          id: id,
+          type: type,
+          name: entry.descriptor.name,
+          description: entry.descriptor.description,
+          icon: entry.descriptor.icon._decodeDomain(),
+          color: entry.descriptor.color.toFlutterColor(),
+          availability: entry.descriptor.availability._decodeDomain(),
+        ),
+        eligible: eligibility.$1,
+        available: entry.available,
+        ineligibilityReasons: eligibility.$2,
+      );
+    }
+    return TypeResult.success(entries);
+  }
+}
+
+extension on Iterable<wire_page.PageCatalogEntry> {
+  TypeResult<Map<PageKindRef, RealmPageDefinition>> _decodeDomain(
+    TypeCatalog catalog,
+  ) {
+    final codec = SkirTypeCodec(TypeRegistry(catalog));
+    final definitions = <PageKindRef, RealmPageDefinition>{};
+    for (final entry in this) {
+      final editor = entry.descriptor.editor._decodeDomain(codec);
+      if (editor == null) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an invalid page editor definition",
+          ),
+        ]);
+      }
+      final kind = PageKindRef.fromSkir(entry.descriptor.kind);
+      definitions[kind] = RealmPageDefinition(
+        kind: kind,
+        name: entry.descriptor.name,
+        description: entry.descriptor.description,
+        icon: entry.descriptor.icon._decodeDomain(),
+        color: entry.descriptor.color.toFlutterColor(),
+        editor: editor,
+        originArtifactId: entry.originArtifactId,
+        sourcePart: entry.sourcePart,
+      );
+    }
+    return TypeResult.success(definitions);
+  }
+}
+
+extension on wire_icon.Icon {
+  IconValue _decodeDomain() => switch (this) {
+    wire_icon.Icon_iconifyWrapper(:final value) => IconValue.iconify(value),
+    wire_icon.Icon_svgWrapper(:final value) => IconValue.svg(value),
+    wire_icon.Icon_unknown() => throw StateError("Unknown icon"),
+  };
+}
+
+extension on wire_page.PageEditorDefinition {
+  RealmPageEditor? _decodeDomain(SkirTypeCodec codec) {
+    switch (this) {
+      case wire_page.PageEditorDefinition_graphWrapper(:final value):
+        final nodes = value.nodeTypes._decodeReferences(codec);
+        if (nodes == null) return null;
+        return RealmGraphPageEditor(
+          direction: switch (value.direction) {
+            wire_page.GraphDirection.leftToRight => GraphDirection.leftToRight,
+            wire_page.GraphDirection.rightToLeft => GraphDirection.rightToLeft,
+            wire_page.GraphDirection.topToBottom => GraphDirection.topToBottom,
+            wire_page.GraphDirection.bottomToTop => GraphDirection.bottomToTop,
+            _ => throw StateError("Unknown graph direction"),
+          },
+          nodeTypes: nodes,
+        );
+      case wire_page.PageEditorDefinition_timelineWrapper(:final value):
+        final tracks = value.trackTypes._decodeReferences(codec);
+        final segments = value.segmentTypes._decodeReferences(codec);
+        final keyframes = value.keyframeTypes._decodeReferences(codec);
+        if (tracks == null || segments == null || keyframes == null) {
+          return null;
+        }
+        return RealmTimelinePageEditor(
+          trackTypes: tracks,
+          segmentTypes: segments,
+          keyframeTypes: keyframes,
+        );
+      case wire_page.PageEditorDefinition_unknown():
+        return null;
+    }
+  }
+}
+
+extension on Iterable<wire_type.ResolvedTypeRef> {
+  List<ResolvedTypeRef>? _decodeReferences(SkirTypeCodec codec) {
+    final decoded = map(codec.decodeReference).toList();
+    if (decoded.any((result) => result.valueOrNull == null)) return null;
+    return decoded.map((result) => result.valueOrNull!).toList();
+  }
+}
+
+extension on wire_element.ElementEligibility {
+  (bool, List<String>) _decodeDomain() => switch (this) {
+    wire_element.ElementEligibility_eligibleWrapper() => (true, const []),
+    wire_element.ElementEligibility_ineligibleWrapper(:final value) => (
+      false,
+      value.reasons.toList(),
+    ),
+    wire_element.ElementEligibility_unknown() => (
+      false,
+      const ["Unknown eligibility"],
+    ),
+  };
+}
+
+extension on wire_element.AvailabilityExpression {
+  ElementAvailability _decodeDomain() => switch (this) {
+    wire_element.AvailabilityExpression_alwaysWrapper() =>
+      const ElementAvailability.always(),
+    wire_element.AvailabilityExpression_factWrapper(:final value) =>
+      ElementAvailability.fact(key: value.key, expected: value.expected),
+    wire_element.AvailabilityExpression_allWrapper(:final value) =>
+      ElementAvailability.all(
+        value.expressions.map((item) => item._decodeDomain()).toList(),
+      ),
+    wire_element.AvailabilityExpression_anyWrapper(:final value) =>
+      ElementAvailability.any(
+        value.expressions.map((item) => item._decodeDomain()).toList(),
+      ),
+    wire_element.AvailabilityExpression_notWrapper(:final value) =>
+      ElementAvailability.not(value.expression._decodeDomain()),
+    wire_element.AvailabilityExpression_unknown() => throw StateError(
+      "Unknown element availability",
+    ),
+  };
 }
 
 extension on wire_catalog.CatalogFetchResult {
@@ -88,15 +259,43 @@ extension on wire_catalog.CatalogFetchSuccess {
       return RealmEditorCatalogFetchUnavailable(decoded.diagnostics);
     }
     final decodedParts = value._decodeCatalogParts(catalog);
+    final decodedElements = value.elementEntries._decodeDomain(catalog.catalog);
+    final elements = decodedElements.valueOrNull;
+    if (elements == null) {
+      return RealmEditorCatalogFetchUnavailable(decodedElements.diagnostics);
+    }
+    final decodedPages = value.pageEntries._decodeDomain(catalog.catalog);
+    final pages = decodedPages.valueOrNull;
+    if (pages == null) {
+      return RealmEditorCatalogFetchUnavailable(decodedPages.diagnostics);
+    }
     return RealmEditorCatalogFetched(
       RealmEditorCatalogSnapshot(
         catalog: catalog.catalog,
         generation: CatalogGeneration(value.generation.value),
         presentations: decodedParts.presentations,
         conversions: decodedParts.conversions,
-        realmActions: decodedParts.realmActions,
+        capabilities: decodedParts.capabilities,
         subtypeResults: decodedParts.subtypeResults,
         diagnostics: decodedParts.diagnostics,
+        elements: elements,
+        pageCatalog: RealmPageCatalog(
+          definitions: pages,
+          diagnostics: value.pageDiagnostics
+              .map(
+                (diagnostic) => RealmPageDiagnostic(
+                  code: diagnostic.code,
+                  message: diagnostic.message,
+                  originArtifactId: diagnostic.originArtifactId,
+                  sourcePart: diagnostic.sourcePart,
+                  declarationName: diagnostic.declarationName,
+                  kind: diagnostic.kind == null
+                      ? null
+                      : PageKindRef.fromSkir(diagnostic.kind!),
+                ),
+              )
+              .toList(growable: false),
+        ),
       ),
     );
   }
@@ -122,8 +321,6 @@ extension on RealmEditorCatalogRequest {
     (
       List<wire_type.ResolvedTypeRef>,
       List<wire_type.PresentationId>,
-      List<wire_type.ConversionId>,
-      List<wire_type.RealmActionId>,
       List<wire_catalog.SubtypeQuery>,
     )
   >
@@ -133,13 +330,9 @@ extension on RealmEditorCatalogRequest {
     final encodedQueries = subtypeQueries
         .map((query) => types.encodeReference(query.target))
         .toList();
-    final encodedConversions = conversions
-        .map((id) => id.encodeWire())
-        .toList();
     final diagnostics = [
       ...encodedTypes.expand((result) => result.diagnostics),
       ...encodedQueries.expand((result) => result.diagnostics),
-      ...encodedConversions.expand((result) => result.diagnostics),
     ];
     if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
     return TypeResult.success((
@@ -147,11 +340,6 @@ extension on RealmEditorCatalogRequest {
       [
         for (final id in presentations)
           wire_type.PresentationId(namespace: id.namespace, name: id.name),
-      ],
-      encodedConversions.map((result) => result.valueOrNull!).toList(),
-      [
-        for (final id in realmActions)
-          wire_type.RealmActionId(namespace: id.namespace, name: id.name),
       ],
       [
         for (final entry in subtypeQueries.indexed)
@@ -205,7 +393,7 @@ extension on wire_catalog.CatalogFetchSuccess {
     );
     final presentations = <PresentationId, PresentationDefinition>{};
     final conversions = <ConversionId, ConversionDefinition>{};
-    final actions = <RealmActionId, RealmActionDefinition>{};
+    final capabilities = <CapabilityId, CapabilityDefinition>{};
     final subtypeResults = <String, RealmEditorSubtypeResult>{};
     final diagnostics = value.diagnostics._decodeDiagnostics(
       registry: catalog.registry,
@@ -224,11 +412,11 @@ extension on wire_catalog.CatalogFetchSuccess {
         conversions[definition.id] = definition;
       }
     }
-    for (final item in value.realmActionDefinitions) {
-      final decoded = definitionCodec.decodeRealmAction(item);
+    for (final item in value.capabilityDefinitions) {
+      final decoded = definitionCodec.decodeCapability(item);
       diagnostics.addAll(decoded.diagnostics);
       if (decoded.valueOrNull case final definition?) {
-        actions[definition.id] = definition;
+        capabilities[definition.id] = definition;
       }
     }
     for (final item in value.subtypeResults) {
@@ -246,7 +434,7 @@ extension on wire_catalog.CatalogFetchSuccess {
     return _DecodedCatalogParts(
       presentations: presentations,
       conversions: conversions,
-      realmActions: actions,
+      capabilities: capabilities,
       subtypeResults: subtypeResults,
       diagnostics: diagnostics,
     );
@@ -258,7 +446,7 @@ abstract class _DecodedCatalogParts with _$DecodedCatalogParts {
   const factory _DecodedCatalogParts({
     required Map<PresentationId, PresentationDefinition> presentations,
     required Map<ConversionId, ConversionDefinition> conversions,
-    required Map<RealmActionId, RealmActionDefinition> realmActions,
+    required Map<CapabilityId, CapabilityDefinition> capabilities,
     required Map<String, RealmEditorSubtypeResult> subtypeResults,
     required List<TypeDiagnostic> diagnostics,
   }) = _DecodedCatalogPartsValue;

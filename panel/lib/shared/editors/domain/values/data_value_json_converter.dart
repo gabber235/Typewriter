@@ -67,6 +67,7 @@ class DataValueJsonConverter
     OptionTypeId() => {"kind": "builtin", "name": "option"},
     SomeTypeId() => {"kind": "builtin", "name": "some"},
     NoneTypeId() => {"kind": "builtin", "name": "none"},
+    DeclaredTypeId() => {"kind": "declared", "uuid": id.uuid},
     QualifiedTypeId() => {
       "kind": "qualified",
       "namespace": id.namespace,
@@ -194,6 +195,7 @@ final class _DataValueDecoder {
     final kind = json.required("kind").string();
     return switch (kind) {
       "builtin" => _decodeBuiltinTypeId(json.required("name")),
+      "declared" => TypeId.declared(json.required("uuid").string()),
       "qualified" => QualifiedTypeId(
         namespace: json.required("namespace").string(),
         name: json.required("name").string(),

@@ -1,0 +1,52 @@
+error[E0277]: the trait bound `Outcome: serde::Deserialize<'de>` is not satisfied
+ --> tests/ui/query/fail/outcome_missing_deserialize.rs:6:18
+  |
+6 |       let _query = transaction_query!(
+  |  __________________^
+7 | |         Outcome,
+8 | |         "BEGIN TRANSACTION; RETURN true; COMMIT TRANSACTION;",
+9 | |     );
+  | |_____^ unsatisfied trait bound
+  |
+help: the trait `for<'de> serde_core::de::Deserialize<'de>` is not implemented for `Outcome`
+ --> tests/ui/query/fail/outcome_missing_deserialize.rs:3:1
+  |
+3 | struct Outcome;
+  | ^^^^^^^^^^^^^^
+  = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `Outcome` type
+  = note: for types from other crates check whether the crate offers a `serde` feature flag
+  = help: the following other types implement trait `serde_core::de::Deserialize<'de>`:
+            `&'a Path` implements `serde_core::de::Deserialize<'de>`
+            `&'a [u8]` implements `serde_core::de::Deserialize<'de>`
+            `&'a str` implements `serde_core::de::Deserialize<'de>`
+            `()` implements `serde_core::de::Deserialize<'de>`
+            `(T,)` implements `serde_core::de::Deserialize<'de>`
+            `(T0, T1)` implements `serde_core::de::Deserialize<'de>`
+            `(T0, T1, T2)` implements `serde_core::de::Deserialize<'de>`
+            `(T0, T1, T2, T3)` implements `serde_core::de::Deserialize<'de>`
+          and $N others
+  = note: required for `Outcome` to implement `serde_core::de::DeserializeOwned`
+note: required by a bound in `TransactionQuery`
+ --> $WASMCLOUD_UTILS/src/database/mod.rs
+  |
+  | pub struct TransactionQuery<'a, T: DeserializeOwned> {
+  |                                    ^^^^^^^^^^^^^^^^ required by this bound in `TransactionQuery`
+  = note: this error originates in the macro `transaction_query` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: the associated item `__from_literal` exists for struct `TransactionQuery<'_, Outcome>`, but its trait bounds were not satisfied
+ --> tests/ui/query/fail/outcome_missing_deserialize.rs:6:18
+  |
+3 |   struct Outcome;
+  |   -------------- doesn't satisfy `Outcome: serde_core::de::Deserialize<'de>` or `Outcome: serde_core::de::DeserializeOwned`
+...
+6 |       let _query = transaction_query!(
+  |  __________________^
+7 | |         Outcome,
+8 | |         "BEGIN TRANSACTION; RETURN true; COMMIT TRANSACTION;",
+9 | |     );
+  | |_____^ associated item cannot be called on `TransactionQuery<'_, Outcome>` due to unsatisfied trait bounds
+  |
+  = note: the following trait bounds were not satisfied:
+          `Outcome: serde_core::de::Deserialize<'de>`
+          which is required by `Outcome: serde_core::de::DeserializeOwned`
+  = note: this error originates in the macro `transaction_query` (in Nightly builds, run with -Z macro-backtrace for more info)

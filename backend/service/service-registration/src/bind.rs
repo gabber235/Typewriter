@@ -12,7 +12,7 @@ use wasmcloud_utils::{
             ServiceBoundNotification,
         },
     },
-    skir_domain_result,
+    skir_domain_result, skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -85,13 +85,7 @@ pub async fn handle_bind(
 
     let service_id = result.service.id.key.to_string();
     let service_name = result.service.name.clone();
-    let roles = result
-        .service
-        .roles
-        .clone()
-        .into_iter()
-        .map(TryInto::try_into)
-        .collect::<Result<Vec<_>, _>>()?;
+    let role = result.service.role.clone().try_into()?;
 
     let service = result.service.try_into()?;
 
@@ -111,12 +105,9 @@ pub async fn handle_bind(
         "service.id" = service_id.clone(),
         "service.outcome" = "bound"
     );
-    Ok(BindServiceResponse::Success(Box::new(
-        BindServiceResponse_Success {
-            service_id,
-            service_name: Some(service_name),
-            service_roles: roles,
-            _unrecognized: None,
-        },
-    )))
+    Ok(skir_variant!(BindServiceResponse::Success {
+        service_id,
+        service_name: Some(service_name),
+        service_role: role,
+    }))
 }

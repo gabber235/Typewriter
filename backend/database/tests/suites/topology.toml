@@ -1,0 +1,112 @@
+name = "topology"
+tags = ["service", "topology", "invariants"]
+
+[[fixtures]]
+name = "organization_seed"
+actor = "root"
+file = "../fixtures/organization_seed.surql"
+
+[[cases]]
+name = "host_defaults_are_reconcilable"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service_host:paper SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; RETURN service_host:paper.revision = 1 AND service_host:paper.topology_revision = { desired: 0, applied: 0 } AND service_host:paper.state.status = 'OFFLINE'; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "host_entrypoint_is_open_and_normalized"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service:entrypoint_test SET name = 'entrypoint_test', role = { type: 'host', version: '1.0.0' }; CREATE service_host:custom SET service_id = service:entrypoint_test, entrypoint = 'velocity', can_host_realm = false, supported_engines = []; RETURN service_host:custom.entrypoint = 'VELOCITY'; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "host_entrypoint_must_not_be_blank"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service_host:blank SET service_id = service:engine_unbound, entrypoint = '   ', can_host_realm = false, supported_engines = [];"
+allow = false
+error_contains = "service-host-entrypoint-invalid-error"
+
+[[cases]]
+name = "one_service_owns_at_most_one_host"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service_host:first SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE service_host:second SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }];"
+allow = false
+error_contains = "service_host_by_service"
+
+[[cases]]
+name = "supported_engine_id_must_not_be_blank"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service_host:invalid SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: '   ' }];"
+allow = false
+error_contains = "supported-engine-id-invalid-error"
+
+[[cases]]
+name = "engine_target_constraint_must_not_be_blank"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:invalid_target_service SET name = 'invalid_target_service', role = { type: 'host', version: '1.0.0' }; CREATE service_host:invalid SET service_id = service:invalid_target_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = []; CREATE realm_instance:invalid SET owner_host_id = service_host:invalid, target_engine = { engine_id: 'paper', version_constraint: '' };"
+allow = false
+error_contains = "engine-target-version-constraint-invalid-error"
+
+[[cases]]
+name = "artifact_coordinates_are_valid_engine_ids"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:artifact_coordinate_service SET name = 'artifact_coordinate_service', role = { type: 'host', version: '1.0.0' }; CREATE service_host:artifact_coordinate_host SET service_id = service:artifact_coordinate_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'typewritermc:paper' }]; CREATE realm_instance:artifact_coordinate_realm SET owner_host_id = service_host:artifact_coordinate_host, target_engine = { engine_id: 'typewritermc:paper', version_constraint: '^1' };"
+allow = true
+
+[[cases]]
+name = "prerelease_artifact_versions_are_supported"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service_host:prerelease SET service_id = service:prerelease_engine, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'custom_engine' }]; CREATE realm_instance:prerelease SET owner_host_id = service_host:prerelease, target_engine = { engine_id: 'custom_engine', version_constraint: '^0.4' }, state = { status: 'ACTIVE', active_artifact_version: '0.4.0-alpha.2+local.7', updated_at: time::now() }; RETURN realm_instance:prerelease.state.active_artifact_version = '0.4.0-alpha.2+local.7'; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "one_realm_and_engine_are_allowed_per_host"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service_host:composite_host SET service_id = service:realm_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:realm SET owner_host_id = service_host:composite_host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE engine_instance:engine SET owner_host_id = service_host:composite_host, realm_id = realm_instance:realm, target = { engine_id: 'paper', version_constraint: '^1' }; RETURN realm_instance:realm.state.status = 'ABSENT' AND engine_instance:engine.state.status = 'ABSENT'; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "second_realm_for_host_is_rejected"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service_host:second_realm_host SET service_id = service:engine_unbound, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:first SET owner_host_id = service_host:second_realm_host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE realm_instance:second SET owner_host_id = service_host:second_realm_host, target_engine = { engine_id: 'paper', version_constraint: '^1' };"
+allow = false
+error_contains = "realm_instance_by_owner"
+
+[[cases]]
+name = "engine_prevents_assigned_realm_deletion"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:reject_service SET name = 'reject_service', role = { type: 'host', version: '1.0.0' }; CREATE service_host:reject_host SET service_id = service:reject_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:reject_realm SET owner_host_id = service_host:reject_host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE engine_instance:reject_engine SET owner_host_id = service_host:reject_host, realm_id = realm_instance:reject_realm, target = { engine_id: 'paper', version_constraint: '^1' }; DELETE realm_instance:reject_realm;"
+allow = false
+error_contains = "referenced"
+
+[[cases]]
+name = "deleting_host_cascades_local_children"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service:cascade_service SET name = 'cascade_service', role = { type: 'host', version: '1.0.0' }; CREATE service_host:cascade_host SET service_id = service:cascade_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:cascade_realm SET owner_host_id = service_host:cascade_host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE engine_instance:cascade_engine SET owner_host_id = service_host:cascade_host, realm_id = realm_instance:cascade_realm, target = { engine_id: 'paper', version_constraint: '^1' }; DELETE service_host:cascade_host; RETURN array::is_empty(SELECT * FROM service_host:cascade_host) AND array::is_empty(SELECT * FROM realm_instance:cascade_realm) AND array::is_empty(SELECT * FROM engine_instance:cascade_engine); };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true

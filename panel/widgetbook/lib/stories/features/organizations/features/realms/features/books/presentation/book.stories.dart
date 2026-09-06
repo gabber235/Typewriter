@@ -8,7 +8,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 Widget bookUseCase(BuildContext context) {
   final inheritedTag = Tag(
     tagId: recordId("tag:inherited_lore"),
-    revision: 1,
+    authoringSequence: 1,
     name: "inherited_lore",
     color: Colors.purple,
     parentIds: const [],
@@ -16,7 +16,7 @@ Widget bookUseCase(BuildContext context) {
   );
   final directTag = Tag(
     tagId: recordId("tag:direct_story"),
-    revision: 1,
+    authoringSequence: 1,
     name: "direct_story",
     color: Colors.blue,
     parentIds: [inheritedTag.tagId],
@@ -24,7 +24,7 @@ Widget bookUseCase(BuildContext context) {
   );
   final book = Book(
     bookId: recordId("book:widgetbook"),
-    revision: 1,
+    authoringSequence: 1,
     title: "widgetbook",
     icon: "mdi:book",
     color: Colors.teal,
@@ -46,14 +46,16 @@ class _BookStoryBooks extends Books {
   final Book book;
 
   @override
-  Stream<List<Book>> build() => Stream.value([book]);
+  Future<List<Book>> build() async => [book];
 
   @override
-  Future<TypedMutationResult> updateBook(Book book) async {
-    final canonical = book.copyWith(revision: book.revision + 1);
+  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
+    final canonical = book.copyWith(
+      authoringSequence: book.authoringSequence + 1,
+    );
     state = AsyncData([canonical]);
     return TypedMutationResult.success(
-      revision: canonical.revision,
+      revision: canonical.authoringSequence,
       value: bookMockInspectorValue(canonical),
     );
   }

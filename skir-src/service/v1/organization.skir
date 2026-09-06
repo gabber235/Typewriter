@@ -7,11 +7,6 @@ import { Service } from "service/v1/service.skir";
 
 enum ServiceUpdateValidationError {
   name_invalid;
-  runs_in_requires_engine_or_custom_role;
-  runs_in_must_reference_realm_role;
-  runs_in_organization_mismatch;
-  runs_in_self_reference;
-  runs_in_cycle;
 }
 
 method WatchOrganizationServices(
@@ -30,7 +25,6 @@ method UpdateOrganizationService(
     service_id: RecordId;
     expected_revision: int64;
     name: string;
-    runs_in: RecordId?;
   }
 ): enum {
   internal_error: InternalError;
@@ -43,10 +37,6 @@ method UpdateOrganizationService(
   };
 
   service_not_found_error: struct {};
-
-  runs_in_not_found_error: struct {
-    service_id: RecordId;
-  };
 
   validation_error: ServiceUpdateValidationError;
 

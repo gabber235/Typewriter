@@ -1,8 +1,7 @@
-import "package:dart_nats/dart_nats.dart";
 import "package:dartastic_opentelemetry/dartastic_opentelemetry.dart";
 import "package:http/http.dart" as http;
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/typewriter_panel.dart" hide Header;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "telemetry.g.dart";
 
@@ -11,7 +10,7 @@ abstract interface class PanelTelemetry {
     required String subject,
     required int payloadSize,
     required String operationName,
-    required Future<T> Function(Header? header) operation,
+    required Future<T> Function(Map<String, String> headers) operation,
   });
 
   Future<http.Response> traceHttp({
@@ -30,8 +29,8 @@ final class NoopPanelTelemetry implements PanelTelemetry {
     required String subject,
     required int payloadSize,
     required String operationName,
-    required Future<T> Function(Header? header) operation,
-  }) => operation(null);
+    required Future<T> Function(Map<String, String> headers) operation,
+  }) => operation(const {});
 
   @override
   Future<http.Response> traceHttp({
@@ -64,7 +63,7 @@ final class OpenTelemetryPanelTelemetry implements PanelTelemetry {
     required String subject,
     required int payloadSize,
     required String operationName,
-    required Future<T> Function(Header? header) operation,
+    required Future<T> Function(Map<String, String> headers) operation,
   }) => _tracer.startActiveSpanAsync(
     name: "nats $operationName",
     kind: SpanKind.producer,
@@ -75,7 +74,7 @@ final class OpenTelemetryPanelTelemetry implements PanelTelemetry {
       "messaging.destination.name": subject,
       "messaging.message.body.size": payloadSize,
     }),
-    fn: (_) => operation(Header(headers: _headers())),
+    fn: (_) => operation(_headers()),
   );
 
   @override

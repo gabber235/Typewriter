@@ -131,10 +131,7 @@ extension SkirPresentationSearchProviderEncoder on SkirPresentationEncoder {
       payload,
       result,
       (payload, result) => wire.SearchProvider.createRealmCallback(
-        realmActionId: wire_type.RealmActionId(
-          namespace: value.actionId.namespace,
-          name: value.actionId.name,
-        ),
+        capabilityId: wire_type.CapabilityId(value: value.capabilityId.value),
         payload: payload,
         result: result,
         selectors: value.selectors.map(_searchSelector),

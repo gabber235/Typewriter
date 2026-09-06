@@ -1,0 +1,51 @@
+import { ResolvedTypeRef } from "editor/v1/type_catalog.skir";
+import { Color } from "kernel/v1/color.skir";
+import { Icon } from "kernel/v1/icon.skir";
+import { PageKindRef } from "kernel/v1/page_kind.skir";
+
+enum GraphDirection(811300001) {
+  left_to_right = 1;
+  right_to_left = 2;
+  top_to_bottom = 3;
+  bottom_to_top = 4;
+}
+
+struct GraphPageEditorDefinition(811300002) {
+  direction: GraphDirection = 0;
+  node_types: [ResolvedTypeRef] = 1;
+}
+
+struct TimelinePageEditorDefinition(811300003) {
+  track_types: [ResolvedTypeRef] = 0;
+  segment_types: [ResolvedTypeRef] = 1;
+  keyframe_types: [ResolvedTypeRef] = 2;
+}
+
+enum PageEditorDefinition(811300004) {
+  graph: GraphPageEditorDefinition = 1;
+  timeline: TimelinePageEditorDefinition = 2;
+}
+
+struct PageDescriptor(811300005) {
+  kind: PageKindRef = 0;
+  name: string = 1;
+  description: string? = 2;
+  icon: Icon = 3;
+  color: Color = 4;
+  editor: PageEditorDefinition = 5;
+}
+
+struct PageCatalogEntry(811300006) {
+  origin_artifact_id: string = 0;
+  source_part: string = 1;
+  descriptor: PageDescriptor = 2;
+}
+
+struct PageDiagnostic(811300007) {
+  code: string = 0;
+  message: string = 1;
+  origin_artifact_id: string? = 2;
+  source_part: string? = 3;
+  declaration_name: string? = 4;
+  kind: PageKindRef? = 5;
+}

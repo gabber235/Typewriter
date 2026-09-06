@@ -39,8 +39,50 @@ void main() {
 
     await source.flush();
     expect(commits.single.changedPaths, {title});
+    expect(
+      commits.single.mutations.single,
+      isA<EditorSetValue>()
+          .having((mutation) => mutation.path, "path", title)
+          .having(
+            (mutation) => mutation.value,
+            "value",
+            const StringValue("New"),
+          ),
+    );
     expect(source.document.revision, 2);
     expect(source.saveState(title).phase, EditorSavePhase.saved);
+    source.dispose();
+  });
+
+  test("commit groups flush through independent commits", () async {
+    final commits = <EditorCommit>[];
+    final source = _source(
+      commitGroups: {
+        DataPath.root.field("title"): "content",
+        DataPath.root.field("color"): "appearance",
+      },
+      commit: (commit) async {
+        commits.add(commit);
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
+    );
+
+    source
+      ..update(title, const StringValue("New"))
+      ..update(color, const StringValue("Blue"));
+    await source.flush();
+
+    expect(commits, hasLength(2));
+    expect(commits.map((commit) => commit.group), ["appearance", "content"]);
+    expect(commits[0].changedPaths, {color});
+    expect(commits[1].changedPaths, {title});
+    expect(
+      source.value(DataPath.root).valueOrNull,
+      _value(title: "New", color: "Blue"),
+    );
     source.dispose();
   });
 
@@ -659,6 +701,7 @@ void main() {
 
 TransactionalEditorSource _source({
   required EditorCommitter commit,
+  Map<DataPath, String> commitGroups = const {},
   EditorDelayScheduler? scheduler,
   EditorJitterSource? jitter,
   EditorSavePhase successfulSavePhase = EditorSavePhase.saved,
@@ -676,6 +719,7 @@ TransactionalEditorSource _source({
       typeCatalog: const TypeCatalog([]),
       confirmedValue: _value(title: "Old", color: "Red"),
       revision: 1,
+      commitGroups: commitGroups,
     ),
     debounce: debounce,
     commit: commit,

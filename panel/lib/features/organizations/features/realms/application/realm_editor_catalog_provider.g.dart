@@ -55,7 +55,7 @@ final class RealmEditorCatalogSourceProvider
 }
 
 String _$realmEditorCatalogSourceHash() =>
-    r'0e74125192df1c16e74a0cd988bc2e68d72b81b8';
+    r'4c919983889dddf4d34eb24e95e09953663d68a1';
 
 @ProviderFor(realmEditorCatalogCache)
 final realmEditorCatalogCacheProvider = RealmEditorCatalogCacheProvider._();
@@ -206,7 +206,7 @@ final class RealmEditorCatalogForTypeProvider
 }
 
 String _$realmEditorCatalogForTypeHash() =>
-    r'39980356c3859f9a615c02cee80cb0b85c7ef543';
+    r'dfbda60452b4295e94fb556a46e76b065802ced9';
 
 final class RealmEditorCatalogForTypeFamily extends $Family
     with
@@ -229,3 +229,141 @@ final class RealmEditorCatalogForTypeFamily extends $Family
   @override
   String toString() => r'realmEditorCatalogForTypeProvider';
 }
+
+@ProviderFor(realmEditorCatalogLease)
+final realmEditorCatalogLeaseProvider = RealmEditorCatalogLeaseFamily._();
+
+final class RealmEditorCatalogLeaseProvider
+    extends
+        $FunctionalProvider<
+          RealmEditorCatalogLease?,
+          RealmEditorCatalogLease?,
+          RealmEditorCatalogLease?
+        >
+    with $Provider<RealmEditorCatalogLease?> {
+  RealmEditorCatalogLeaseProvider._({
+    required RealmEditorCatalogLeaseFamily super.from,
+    required RealmEditorCatalogRequest super.argument,
+  }) : super(
+         retry: null,
+         name: r'realmEditorCatalogLeaseProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmEditorCatalogLeaseHash();
+
+  @override
+  String toString() {
+    return r'realmEditorCatalogLeaseProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<RealmEditorCatalogLease?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  RealmEditorCatalogLease? create(Ref ref) {
+    final argument = this.argument as RealmEditorCatalogRequest;
+    return realmEditorCatalogLease(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RealmEditorCatalogLease? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RealmEditorCatalogLease?>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RealmEditorCatalogLeaseProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$realmEditorCatalogLeaseHash() =>
+    r'0ebc66158a07b11aa18b2893e85a14ae2a2bed70';
+
+final class RealmEditorCatalogLeaseFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          RealmEditorCatalogLease?,
+          RealmEditorCatalogRequest
+        > {
+  RealmEditorCatalogLeaseFamily._()
+    : super(
+        retry: null,
+        name: r'realmEditorCatalogLeaseProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  RealmEditorCatalogLeaseProvider call(RealmEditorCatalogRequest request) =>
+      RealmEditorCatalogLeaseProvider._(argument: request, from: this);
+
+  @override
+  String toString() => r'realmEditorCatalogLeaseProvider';
+}
+
+@ProviderFor(availableElementDefinitions)
+final availableElementDefinitionsProvider =
+    AvailableElementDefinitionsProvider._();
+
+final class AvailableElementDefinitionsProvider
+    extends
+        $FunctionalProvider<
+          List<ElementDefinition>,
+          List<ElementDefinition>,
+          List<ElementDefinition>
+        >
+    with $Provider<List<ElementDefinition>> {
+  AvailableElementDefinitionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'availableElementDefinitionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$availableElementDefinitionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<ElementDefinition>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ElementDefinition> create(Ref ref) {
+    return availableElementDefinitions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<ElementDefinition> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<ElementDefinition>>(value),
+    );
+  }
+}
+
+String _$availableElementDefinitionsHash() =>
+    r'd898191de647937a90584eb81e62ae72aaeb4bc4';

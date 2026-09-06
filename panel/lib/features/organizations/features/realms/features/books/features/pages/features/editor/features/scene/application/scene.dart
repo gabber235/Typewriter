@@ -18,6 +18,7 @@ abstract class Cue with _$Cue {
     required RecordValue data,
     required List<ElementLink> inwardLinks,
     required List<ElementLink> outwardLinks,
+    @Default(0) int authoringSequence,
   }) = Segment;
 
   @Assert("id != \"\"", "ID must not be empty.")
@@ -28,6 +29,7 @@ abstract class Cue with _$Cue {
     required ElementDefinition elementDefinition,
     required RecordValue data,
     required List<ElementLink> inwardLinks,
+    @Default(0) int authoringSequence,
   }) = Keyframe;
 }
 
@@ -41,7 +43,17 @@ class CueIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable<CueIdentifier>> create(Ref ref) {
-    final asyncElements = ref.watch(pageElementsProvider(pageId));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null || realmId == null) {
+      return AsyncValue.error(
+        ApiException.badRequest("No realm selected"),
+        StackTrace.current,
+      );
+    }
+    final asyncElements = ref.watch(
+      pageElementsProvider(organizationId, realmId, pageId),
+    );
     return asyncElements.when(
       data: (elements) {
         Cue? cue;
@@ -63,8 +75,13 @@ class CueIdentifier extends SelectableIdentifier {
         );
         return catalogState.resolveElement(
           cue.elementDefinition,
-          (catalog) =>
-              CueSelection(ref: ref, id: this, cue: cue!, typeCatalog: catalog),
+          (catalog, presentations) => CueSelection(
+            ref: ref,
+            id: this,
+            cue: cue!,
+            typeCatalog: catalog,
+            presentations: presentations,
+          ),
         );
       },
       error: AsyncValue.error,
@@ -91,6 +108,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
     required this.id,
     required this.cue,
     required this.typeCatalog,
+    required this.presentations,
   });
 
   final Ref ref;
@@ -102,6 +120,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
 
   @override
   final TypeCatalog typeCatalog;
+  final List<PresentationDefinition> presentations;
 
   @override
   String get name => cue.elementDefinition.name;
@@ -110,8 +129,9 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
   EditorDocument get document => EditorDocument(
     rootType: NamedType(cue.elementDefinition.rootType),
     typeCatalog: typeCatalog,
+    presentations: presentations,
     confirmedValue: cue.data,
-    revision: 0,
+    revision: cue.authoringSequence,
   );
 
   @override
@@ -124,23 +144,9 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
 
   @override
   Future<TypedMutationResult> commit(EditorCommit commit) async {
-    final notifier = ref.read(pageElementsProvider(id.pageId).notifier);
-    for (final path in commit.changedPaths) {
-      final value = path.read(commit.rootValue).valueOrNull;
-      if (value == null) {
-        return TypedMutationResult.invalid([
-          TypeDiagnostic(
-            code: TypeDiagnosticCode.invalidPath,
-            message: "The Cue field could not be resolved",
-            path: path,
-          ),
-        ]);
-      }
-      await notifier.updateCueFieldValue(id.id, path, value);
-    }
-    return TypedMutationResult.success(
-      revision: commit.localRevision,
-      value: commit.rootValue,
+    return ref.withReadyPageElements(
+      id.pageId,
+      (elements) => elements.commitElementValue(id.id, commit),
     );
   }
 

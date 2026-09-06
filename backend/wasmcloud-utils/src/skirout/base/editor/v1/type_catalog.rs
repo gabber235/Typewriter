@@ -58,6 +58,44 @@ impl BuiltinTypeId {
 }
 
 // ==============================================================================
+// struct DeclaredTypeId
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeclaredTypeId {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeclaredTypeId>>,
+}
+
+impl DeclaredTypeId {
+    pub fn default_ref() -> &'static DeclaredTypeId {
+        static D: std::sync::LazyLock<DeclaredTypeId> = std::sync::LazyLock::new(DeclaredTypeId::default);
+        &D
+    }
+}
+
+impl DeclaredTypeId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeclaredTypeId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeclaredTypeId>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "DeclaredTypeId",
+                    "",
+                    |x: &DeclaredTypeId| &x._unrecognized,
+                    |x: &mut DeclaredTypeId, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeclaredTypeId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DeclaredTypeId::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct QualifiedTypeId
 // ==============================================================================
 
@@ -104,7 +142,8 @@ impl QualifiedTypeId {
 pub enum TypeId {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeId>>),
     Builtin(Box<BuiltinTypeId>),
-    Realm(Box<QualifiedTypeId>),
+    Declared(Box<DeclaredTypeId>),
+    Qualified(Box<QualifiedTypeId>),
 }
 
 impl Default for TypeId {
@@ -121,7 +160,8 @@ impl TypeId {
                     |x: &TypeId| match x {
                         TypeId::Unknown(_) => 0,
                         TypeId::Builtin(_) => 1,
-                        TypeId::Realm(_) => 2,
+                        TypeId::Declared(_) => 2,
+                        TypeId::Qualified(_) => 3,
                     },
                     |u| TypeId::Unknown(Some(u)),
                     |x: &TypeId| match x { TypeId::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1060,6 +1100,7 @@ impl EnumType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeExpression {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeExpression>>),
+    Any,
     Unit,
     Boolean,
     String(Box<StringConstraints>),
@@ -1091,22 +1132,23 @@ impl TypeExpression {
                 crate::skir_client::internal::EnumAdapter::new(
                     |x: &TypeExpression| match x {
                         TypeExpression::Unknown(_) => 0,
-                        TypeExpression::Unit => 1,
-                        TypeExpression::Boolean => 2,
-                        TypeExpression::String(_) => 3,
-                        TypeExpression::Bytes(_) => 4,
-                        TypeExpression::SignedInteger(_) => 5,
-                        TypeExpression::UnsignedInteger(_) => 6,
-                        TypeExpression::Float(_) => 7,
-                        TypeExpression::Decimal(_) => 8,
-                        TypeExpression::Timestamp => 9,
-                        TypeExpression::Duration => 10,
-                        TypeExpression::List(_) => 11,
-                        TypeExpression::Map(_) => 12,
-                        TypeExpression::Record(_) => 13,
-                        TypeExpression::EnumType(_) => 14,
-                        TypeExpression::Parameter(_) => 15,
-                        TypeExpression::Named(_) => 16,
+                        TypeExpression::Any => 1,
+                        TypeExpression::Unit => 2,
+                        TypeExpression::Boolean => 3,
+                        TypeExpression::String(_) => 4,
+                        TypeExpression::Bytes(_) => 5,
+                        TypeExpression::SignedInteger(_) => 6,
+                        TypeExpression::UnsignedInteger(_) => 7,
+                        TypeExpression::Float(_) => 8,
+                        TypeExpression::Decimal(_) => 9,
+                        TypeExpression::Timestamp => 10,
+                        TypeExpression::Duration => 11,
+                        TypeExpression::List(_) => 12,
+                        TypeExpression::Map(_) => 13,
+                        TypeExpression::Record(_) => 14,
+                        TypeExpression::EnumType(_) => 15,
+                        TypeExpression::Parameter(_) => 16,
+                        TypeExpression::Named(_) => 17,
                     },
                     |u| TypeExpression::Unknown(Some(u)),
                     |x: &TypeExpression| match x { TypeExpression::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1303,41 +1345,78 @@ impl ConversionId {
 }
 
 // ==============================================================================
-// struct RealmActionId
+// struct CapabilityId
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmActionId {
-    pub namespace: String,
-    pub name: String,
+pub struct CapabilityId {
+    pub value: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmActionId>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CapabilityId>>,
 }
 
-impl RealmActionId {
-    pub fn default_ref() -> &'static RealmActionId {
-        static D: std::sync::LazyLock<RealmActionId> = std::sync::LazyLock::new(RealmActionId::default);
+impl CapabilityId {
+    pub fn default_ref() -> &'static CapabilityId {
+        static D: std::sync::LazyLock<CapabilityId> = std::sync::LazyLock::new(CapabilityId::default);
         &D
     }
 }
 
-impl RealmActionId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmActionId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmActionId>> =
+impl CapabilityId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapabilityId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CapabilityId>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/type_catalog.skir",
-                    "RealmActionId",
+                    "CapabilityId",
                     "",
-                    |x: &RealmActionId| &x._unrecognized,
-                    |x: &mut RealmActionId, u| x._unrecognized = u,
+                    |x: &CapabilityId| &x._unrecognized,
+                    |x: &mut CapabilityId, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<RealmActionId> {
+    pub fn serializer() -> crate::skir_client::Serializer<CapabilityId> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmActionId::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(CapabilityId::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CatalogGeneration
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CatalogGeneration {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogGeneration>>,
+}
+
+impl CatalogGeneration {
+    pub fn default_ref() -> &'static CatalogGeneration {
+        static D: std::sync::LazyLock<CatalogGeneration> = std::sync::LazyLock::new(CatalogGeneration::default);
+        &D
+    }
+}
+
+impl CatalogGeneration {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogGeneration> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CatalogGeneration>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "CatalogGeneration",
+                    "",
+                    |x: &CatalogGeneration| &x._unrecognized,
+                    |x: &mut CatalogGeneration, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CatalogGeneration> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter())
     }
 }
 
@@ -1497,6 +1576,11 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DeclaredTypeId> = DeclaredTypeId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &DeclaredTypeId| &x.value, |x: &mut DeclaredTypeId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<QualifiedTypeId> = QualifiedTypeId::_adapter() as *const _ as *mut _;
                 (*a).add_field("namespace", 0, crate::skir_client::Serializer::string(), "", |x: &QualifiedTypeId| &x.namespace, |x: &mut QualifiedTypeId, v| x.namespace = v);
                 (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &QualifiedTypeId| &x.name, |x: &mut QualifiedTypeId, v| x.name = v);
@@ -1505,7 +1589,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TypeId> = TypeId::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("builtin", 1, 1, crate::skir_client::internal::enum_serializer_from_static(BuiltinTypeId::_adapter()), "", |v| TypeId::Builtin(Box::new(v)), |x| match x { TypeId::Builtin(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm", 2, 2, crate::skir_client::internal::struct_serializer_from_static(QualifiedTypeId::_adapter()), "", |v| TypeId::Realm(Box::new(v)), |x| match x { TypeId::Realm(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("declared", 2, 2, crate::skir_client::internal::struct_serializer_from_static(DeclaredTypeId::_adapter()), "", |v| TypeId::Declared(Box::new(v)), |x| match x { TypeId::Declared(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("qualified", 3, 3, crate::skir_client::internal::struct_serializer_from_static(QualifiedTypeId::_adapter()), "", |v| TypeId::Qualified(Box::new(v)), |x| match x { TypeId::Qualified(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1664,22 +1749,23 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TypeExpression> = TypeExpression::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("unit", 1, 1, "", TypeExpression::Unit);
-                (*a).add_constant_variant("boolean", 2, 2, "", TypeExpression::Boolean);
-                (*a).add_wrapper_variant("string", 3, 3, crate::skir_client::internal::struct_serializer_from_static(StringConstraints::_adapter()), "", |v| TypeExpression::String(Box::new(v)), |x| match x { TypeExpression::String(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("bytes", 4, 4, crate::skir_client::internal::struct_serializer_from_static(CollectionConstraints::_adapter()), "", |v| TypeExpression::Bytes(Box::new(v)), |x| match x { TypeExpression::Bytes(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("signed_integer", 5, 5, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::SignedInteger(Box::new(v)), |x| match x { TypeExpression::SignedInteger(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unsigned_integer", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::UnsignedInteger(Box::new(v)), |x| match x { TypeExpression::UnsignedInteger(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("float", 7, 7, crate::skir_client::internal::struct_serializer_from_static(FloatType::_adapter()), "", |v| TypeExpression::Float(Box::new(v)), |x| match x { TypeExpression::Float(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("decimal", 8, 8, crate::skir_client::internal::struct_serializer_from_static(NumericConstraints::_adapter()), "", |v| TypeExpression::Decimal(Box::new(v)), |x| match x { TypeExpression::Decimal(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_constant_variant("timestamp", 9, 9, "", TypeExpression::Timestamp);
-                (*a).add_constant_variant("duration", 10, 10, "", TypeExpression::Duration);
-                (*a).add_wrapper_variant("list", 11, 11, crate::skir_client::internal::struct_serializer_from_static(ListType::_adapter()), "", |v| TypeExpression::List(Box::new(v)), |x| match x { TypeExpression::List(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("map", 12, 12, crate::skir_client::internal::struct_serializer_from_static(MapType::_adapter()), "", |v| TypeExpression::Map(Box::new(v)), |x| match x { TypeExpression::Map(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("record", 13, 13, crate::skir_client::internal::struct_serializer_from_static(RecordType::_adapter()), "", |v| TypeExpression::Record(Box::new(v)), |x| match x { TypeExpression::Record(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("enum_type", 14, 14, crate::skir_client::internal::struct_serializer_from_static(EnumType::_adapter()), "", |v| TypeExpression::EnumType(Box::new(v)), |x| match x { TypeExpression::EnumType(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("parameter", 15, 15, crate::skir_client::Serializer::string(), "", |v| TypeExpression::Parameter(v), |x| match x { TypeExpression::Parameter(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("named", 16, 16, crate::skir_client::internal::struct_serializer_from_static(ResolvedTypeRef::_adapter()), "", |v| TypeExpression::Named(Box::new(v)), |x| match x { TypeExpression::Named(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_constant_variant("any", 1, 1, "", TypeExpression::Any);
+                (*a).add_constant_variant("unit", 2, 2, "", TypeExpression::Unit);
+                (*a).add_constant_variant("boolean", 3, 3, "", TypeExpression::Boolean);
+                (*a).add_wrapper_variant("string", 4, 4, crate::skir_client::internal::struct_serializer_from_static(StringConstraints::_adapter()), "", |v| TypeExpression::String(Box::new(v)), |x| match x { TypeExpression::String(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("bytes", 5, 5, crate::skir_client::internal::struct_serializer_from_static(CollectionConstraints::_adapter()), "", |v| TypeExpression::Bytes(Box::new(v)), |x| match x { TypeExpression::Bytes(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("signed_integer", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::SignedInteger(Box::new(v)), |x| match x { TypeExpression::SignedInteger(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("unsigned_integer", 7, 7, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::UnsignedInteger(Box::new(v)), |x| match x { TypeExpression::UnsignedInteger(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("float", 8, 8, crate::skir_client::internal::struct_serializer_from_static(FloatType::_adapter()), "", |v| TypeExpression::Float(Box::new(v)), |x| match x { TypeExpression::Float(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("decimal", 9, 9, crate::skir_client::internal::struct_serializer_from_static(NumericConstraints::_adapter()), "", |v| TypeExpression::Decimal(Box::new(v)), |x| match x { TypeExpression::Decimal(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_constant_variant("timestamp", 10, 10, "", TypeExpression::Timestamp);
+                (*a).add_constant_variant("duration", 11, 11, "", TypeExpression::Duration);
+                (*a).add_wrapper_variant("list", 12, 12, crate::skir_client::internal::struct_serializer_from_static(ListType::_adapter()), "", |v| TypeExpression::List(Box::new(v)), |x| match x { TypeExpression::List(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("map", 13, 13, crate::skir_client::internal::struct_serializer_from_static(MapType::_adapter()), "", |v| TypeExpression::Map(Box::new(v)), |x| match x { TypeExpression::Map(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("record", 14, 14, crate::skir_client::internal::struct_serializer_from_static(RecordType::_adapter()), "", |v| TypeExpression::Record(Box::new(v)), |x| match x { TypeExpression::Record(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("enum_type", 15, 15, crate::skir_client::internal::struct_serializer_from_static(EnumType::_adapter()), "", |v| TypeExpression::EnumType(Box::new(v)), |x| match x { TypeExpression::EnumType(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("parameter", 16, 16, crate::skir_client::Serializer::string(), "", |v| TypeExpression::Parameter(v), |x| match x { TypeExpression::Parameter(v) => v, _ => unreachable!() });
+                (*a).add_wrapper_variant("named", 17, 17, crate::skir_client::internal::struct_serializer_from_static(ResolvedTypeRef::_adapter()), "", |v| TypeExpression::Named(Box::new(v)), |x| match x { TypeExpression::Named(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1709,9 +1795,13 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmActionId> = RealmActionId::_adapter() as *const _ as *mut _;
-                (*a).add_field("namespace", 0, crate::skir_client::Serializer::string(), "", |x: &RealmActionId| &x.namespace, |x: &mut RealmActionId, v| x.namespace = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &RealmActionId| &x.name, |x: &mut RealmActionId, v| x.name = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<CapabilityId> = CapabilityId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &CapabilityId| &x.value, |x: &mut CapabilityId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<CatalogGeneration> = CatalogGeneration::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &CatalogGeneration| &x.value, |x: &mut CatalogGeneration, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {

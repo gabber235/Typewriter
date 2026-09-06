@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:flutter/material.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -15,8 +17,31 @@ extension FlutterColorToSkirExtension on Color {
 }
 
 extension RecordIdExtension on skir.RecordId {
-  String get id => _formatRecordIdKey(key);
+  /// The opaque string key used by routes and resource references.
+  String get id => switch (key) {
+    skir.RecordIdKey_stringWrapper(:final value) => value,
+    _ => throw StateError("Expected a string record key for $table"),
+  };
+
+  String toSurrealQl() =>
+      "${_formatStringKey(table)}:${_formatRecordIdKey(key)}";
 }
+
+enum AuthoringResource { book, tag, page, element }
+
+final _resourceRandom = Random.secure();
+const _resourceAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+/// Allocate once before batch submission, preserving the ID through retries.
+skir.RecordId newResourceId(AuthoringResource resource) => skir.RecordId(
+  table: resource.name,
+  key: skir.RecordIdKey.wrapString(
+    String.fromCharCodes([
+      for (var index = 0; index < 20; index++)
+        _resourceAlphabet.codeUnitAt(_resourceRandom.nextInt(36)),
+    ]),
+  ),
+);
 
 String _formatRecordIdKey(skir.RecordIdKey key) {
   return switch (key) {
@@ -49,7 +74,8 @@ String _formatRecordIdValue(skir.RecordIdValue value) {
 
 String _formatStringKey(String value) {
   if (_isSimpleId(value)) return value;
-  return "`$value`";
+  final escaped = value.replaceAll(r"\", r"\\").replaceAll("`", r"\`");
+  return "`$escaped`";
 }
 
 final _maxInt64 = (BigInt.one << 63) - BigInt.one;
@@ -67,10 +93,12 @@ bool _isSimpleId(String value) {
 }
 
 skir.RecordId recordId(String id) {
-  final parts = id.split(":");
-  assert(parts.length == 2, "id must be of format `<table>:<id>`");
+  final separator = id.indexOf(":");
+  if (separator <= 0 || separator == id.length - 1) {
+    throw ArgumentError.value(id, "id", "Expected <table>:<string key>");
+  }
   return skir.RecordId(
-    table: parts[0],
-    key: skir.RecordIdKey.wrapString(parts[1]),
+    table: id.substring(0, separator),
+    key: skir.RecordIdKey.wrapString(id.substring(separator + 1)),
   );
 }

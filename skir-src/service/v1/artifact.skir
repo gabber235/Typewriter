@@ -1,0 +1,174 @@
+struct ArtifactDigest(812100001) {
+  algorithm: DigestAlgorithm = 0;
+  value: string = 1;
+}
+
+enum DigestAlgorithm(812100002) {
+  sha256 = 1;
+}
+
+struct BlobMetadata(812100003) {
+  digest: ArtifactDigest = 0;
+  size: int64 = 1;
+}
+
+struct BlobChunk(812100004) {
+  offset: int64 = 0;
+  bytes: bytes = 1;
+  complete: bool = 2;
+}
+
+struct SharedArtifactDescriptor(812100005) {
+  id: string = 0;
+  revision: int64 = 1;
+  label: string = 2;
+  media_type: string = 3;
+  digest: ArtifactDigest? = 4;
+  size: int64? = 5;
+  metadata: ProducerMetadata? = 6;
+  provenance: SharedArtifactProvenance = 7;
+  deleted: bool = 8;
+}
+
+enum SharedArtifactProvenance(812100006) {
+  local_inbox: struct {
+    relative_path: string = 0;
+  } = 1;
+  panel: struct {
+    user_id: string = 0;
+  } = 2;
+  service: struct {
+    host_id: string = 0;
+    runtime_id: string = 1;
+  } = 3;
+}
+
+struct SharedArtifactCatalog(812100007) {
+  revision: int64 = 0;
+  artifacts: [SharedArtifactDescriptor] = 1;
+}
+
+struct SharedArtifactChanged(812100008) {
+  realm_id: string = 0;
+  artifact: SharedArtifactDescriptor = 1;
+  catalog_revision: int64 = 2;
+}
+
+struct ProducerMetadataEntry(812100009) {
+  key: string = 0;
+  value: string = 1;
+}
+
+struct ProducerMetadata(812100010) {
+  entries: [ProducerMetadataEntry] = 0;
+}
+
+method FetchSharedArtifactCatalog(
+  struct {
+    after_revision: int64? = 0;
+  }
+): enum {
+  success: SharedArtifactCatalog = 1;
+  unavailable: struct {} = 2;
+} = 910005;
+
+method PublishSharedArtifact(
+  struct {
+    id: string = 0;
+    expected_revision: int64? = 1;
+    label: string = 2;
+    media_type: string = 3;
+    digest: ArtifactDigest? = 4;
+    size: int64? = 5;
+    metadata: ProducerMetadata? = 6;
+    provenance: SharedArtifactProvenance = 7;
+    deleted: bool = 8;
+  }
+): enum {
+  published: SharedArtifactDescriptor = 1;
+  unchanged: SharedArtifactDescriptor = 2;
+  conflict: SharedArtifactDescriptor? = 3;
+  unavailable: struct {} = 4;
+} = 910006;
+
+method ReadArtifactBlob(
+  struct {
+    digest: ArtifactDigest = 0;
+    offset: int64 = 1;
+    maximum_bytes: int32 = 2;
+  }
+): enum {
+  success: BlobChunk = 1;
+  not_found: struct {} = 2;
+  invalid: struct {
+    reason: string = 0;
+  } = 3;
+  unavailable: struct {} = 4;
+} = 910007;
+
+method BeginArtifactBlobWrite(
+  struct {
+    transfer_id: string = 0;
+    expected: BlobMetadata = 1;
+  }
+): enum {
+  accepted: struct {
+    offset: int64 = 0;
+  } = 1;
+  invalid: struct {
+    reason: string = 0;
+  } = 2;
+  conflict: struct {
+    reason: string = 0;
+  } = 3;
+  unavailable: struct {} = 4;
+} = 910008;
+
+method WriteArtifactBlobChunk(
+  struct {
+    transfer_id: string = 0;
+    offset: int64 = 1;
+    bytes: bytes = 2;
+  }
+): enum {
+  accepted: struct {
+    offset: int64 = 0;
+  } = 1;
+  not_found: struct {} = 2;
+  invalid: struct {
+    reason: string = 0;
+  } = 3;
+  conflict: struct {
+    reason: string = 0;
+  } = 4;
+  unavailable: struct {} = 5;
+} = 910009;
+
+method CompleteArtifactBlobWrite(
+  struct {
+    transfer_id: string = 0;
+  }
+): enum {
+  success: BlobMetadata = 1;
+  not_found: struct {} = 2;
+  invalid: struct {
+    reason: string = 0;
+  } = 3;
+  conflict: struct {
+    reason: string = 0;
+  } = 4;
+  unavailable: struct {} = 5;
+} = 910010;
+
+method FetchArtifactBlobMetadata(
+  struct {
+    digest: ArtifactDigest = 0;
+  }
+): enum {
+  success: BlobMetadata = 1;
+  not_found: struct {} = 2;
+  invalid: struct {
+    reason: string = 0;
+  } = 3;
+  unavailable: struct {} = 4;
+} = 910011;

@@ -6,42 +6,47 @@ enum BuiltinTypeId(810100001) {
   none = 3;
 }
 
-struct QualifiedTypeId(810100002) {
+struct DeclaredTypeId(810100002) {
+  value: string = 0;
+}
+
+struct QualifiedTypeId(810100003) {
   namespace: string = 0;
   name: string = 1;
 }
 
-enum TypeId(810100003) {
+enum TypeId(810100004) {
   builtin: BuiltinTypeId = 1;
-  realm: QualifiedTypeId = 2;
+  declared: DeclaredTypeId = 2;
+  qualified: QualifiedTypeId = 3;
 }
 
-enum TypeVariance(810100004) {
+enum TypeVariance(810100005) {
   invariant = 1;
   covariant = 2;
   contravariant = 3;
 }
 
-enum IntegerWidth(810100005) {
+enum IntegerWidth(810100006) {
   eight_bits = 1;
   sixteen_bits = 2;
   thirty_two_bits = 3;
   sixty_four_bits = 4;
 }
 
-enum FloatWidth(810100006) {
+enum FloatWidth(810100007) {
   thirty_two_bits = 1;
   sixty_four_bits = 2;
 }
 
-struct StringConstraints(810100007) {
+struct StringConstraints(810100008) {
   minimum_length: int32? = 0;
   maximum_length: int32? = 1;
   pattern: string? = 2;
   allowed_values: [string] = 3;
 }
 
-struct NumericConstraints(810100008) {
+struct NumericConstraints(810100009) {
   minimum: string? = 0;
   minimum_inclusive: bool = 1;
   maximum: string? = 2;
@@ -49,13 +54,13 @@ struct NumericConstraints(810100008) {
   multiple_of: string? = 4;
 }
 
-struct CollectionConstraints(810100009) {
+struct CollectionConstraints(810100010) {
   minimum_length: int32? = 0;
   maximum_length: int32? = 1;
   unique_items: bool = 2;
 }
 
-struct ResolvedTypeRef(810100010) {
+struct ResolvedTypeRef(810100011) {
   type_id: TypeId = 0;
   revision: int32 = 1;
   arguments: [TypeExpression] = 2;
@@ -112,95 +117,99 @@ enum TypedValue(810200007) {
   duration: TypedDurationValue = 21;
 }
 
-struct ListType(810100011) {
+struct ListType(810100012) {
   element: TypeExpression = 0;
   constraints: CollectionConstraints = 1;
 }
 
-struct MapType(810100012) {
+struct MapType(810100013) {
   key: TypeExpression = 0;
   value: TypeExpression = 1;
   constraints: CollectionConstraints = 2;
 }
 
-struct RecordField(810100013) {
+struct RecordField(810100014) {
   name: string = 0;
   value_type: TypeExpression = 1;
   initializer: TypedValue? = 2;
 }
 
-struct RecordType(810100014) {
+struct RecordType(810100015) {
   fields: [RecordField|name] = 0;
   closed: bool = 1;
 }
 
-struct IntegerType(810100015) {
+struct IntegerType(810100016) {
   width: IntegerWidth = 0;
   constraints: NumericConstraints = 1;
 }
 
-struct FloatType(810100016) {
+struct FloatType(810100017) {
   width: FloatWidth = 0;
   constraints: NumericConstraints = 1;
 }
 
-struct EnumType(810100017) {
+struct EnumType(810100018) {
   value_type: TypeExpression = 0;
   canonical_values: [TypedValue] = 1;
 }
 
-enum TypeExpression(810100018) {
-  unit = 1;
-  boolean = 2;
-  string: StringConstraints = 3;
-  bytes: CollectionConstraints = 4;
-  signed_integer: IntegerType = 5;
-  unsigned_integer: IntegerType = 6;
-  float: FloatType = 7;
-  decimal: NumericConstraints = 8;
-  timestamp = 9;
-  duration = 10;
-  list: ListType = 11;
-  map: MapType = 12;
-  record: RecordType = 13;
-  enum_type: EnumType = 14;
-  parameter: string = 15;
-  named: ResolvedTypeRef = 16;
+enum TypeExpression(810100019) {
+  any = 1;
+  unit = 2;
+  boolean = 3;
+  string: StringConstraints = 4;
+  bytes: CollectionConstraints = 5;
+  signed_integer: IntegerType = 6;
+  unsigned_integer: IntegerType = 7;
+  float: FloatType = 8;
+  decimal: NumericConstraints = 9;
+  timestamp = 10;
+  duration = 11;
+  list: ListType = 12;
+  map: MapType = 13;
+  record: RecordType = 14;
+  enum_type: EnumType = 15;
+  parameter: string = 16;
+  named: ResolvedTypeRef = 17;
 }
 
-struct TypeParameter(810100019) {
+struct TypeParameter(810100020) {
   name: string = 0;
   variance: TypeVariance = 1;
   upper_bounds: [TypeExpression] = 2;
 }
 
-enum TypeDefinitionKind(810100020) {
+enum TypeDefinitionKind(810100021) {
   concrete = 1;
   open_abstract = 2;
   sealed_abstract = 3;
 }
 
-struct PresentationId(810100021) {
+struct PresentationId(810100022) {
   namespace: string = 0;
   name: string = 1;
 }
 
-struct ConversionId(810100022) {
+struct ConversionId(810100023) {
   namespace: string = 0;
   name: string = 1;
 }
 
-struct RealmActionId(810100023) {
-  namespace: string = 0;
-  name: string = 1;
+struct CapabilityId(810100028) {
+  value: string = 0;
 }
 
-struct NamedPresentation(810100024) {
+struct CatalogGeneration(810900001) {
+  value: string = 0;
+}
+
+struct NamedPresentation(810100025) {
   name: string = 0;
   presentation_id: PresentationId = 1;
 }
 
-struct TypeDefinition(810100025) {
+struct TypeDefinition(810100026) {
   display_name: string = 0;
   parameters: [TypeParameter|name] = 1;
   direct_parents: [ResolvedTypeRef] = 2;
@@ -213,6 +222,6 @@ struct TypeDefinition(810100025) {
   outgoing_conversion_ids: [ConversionId] = 9;
 }
 
-struct TypeCatalog(810100026) {
+struct TypeCatalog(810100027) {
   definitions: [TypeDefinition] = 0;
 }

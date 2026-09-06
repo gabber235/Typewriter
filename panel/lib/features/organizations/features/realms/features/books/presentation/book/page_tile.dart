@@ -26,9 +26,11 @@ class _PageTile extends HookConsumerWidget {
           title: "Change chapter of $name",
           chapter: chapter,
           onChapterChanged: (newChapter) async {
-            await ref
-                .read(pagesProvider(pageId).notifier)
-                .updatePage(chapter: newChapter);
+            final result = await ref.readAuthoringSession().notifier.patchPage(
+              id: pageId,
+              chapter: skir.StringChange(expected: chapter, value: newChapter),
+            );
+            result.requireApplied(conflictMessage: "The page chapter changed");
           },
         ),
       ),
@@ -78,9 +80,11 @@ class _PageTile extends HookConsumerWidget {
           title: "Change chapter of $name",
           chapter: chapter,
           onChapterChanged: (newChapter) async {
-            await ref
-                .read(pagesProvider(pageId).notifier)
-                .updatePage(chapter: newChapter);
+            final result = await ref.readAuthoringSession().notifier.patchPage(
+              id: pageId,
+              chapter: skir.StringChange(expected: chapter, value: newChapter),
+            );
+            result.requireApplied(conflictMessage: "The page chapter changed");
           },
         ),
       ),
@@ -113,7 +117,13 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
-    final elementTypes = ref.watch(pageElementTypesProvider(page.type)).value;
+    final definition = ref
+        .watch(realmEditorCatalogProvider)
+        .value
+        ?.snapshot
+        ?.pageCatalog
+        .definitions[page.kind];
+    final elementTypes = ref.watch(pageElementTypesProvider(page.kind)).value;
 
     final color = Theme.of(context).colorScheme.onSurface;
 
@@ -122,7 +132,10 @@ class _PageTile extends HookConsumerWidget {
       child: Row(
         children: [
           SizedBox(width: context.spacing.space1),
-          Icones(page.type.icon, size: 11, color: color),
+          if (definition == null)
+            Icon(Icons.warning_rounded, size: 11, color: color)
+          else
+            Icones.value(definition.icon, size: 11, color: color),
           SizedBox(width: context.spacing.space2),
           Expanded(
             child: Text(
@@ -158,11 +171,15 @@ class _PageTile extends HookConsumerWidget {
       builder: (context, entryCandidateData, entryRejectedData) {
         return DragTarget<PageDrag>(
           onWillAcceptWithDetails: (details) => true,
-          onAcceptWithDetails: (details) {
-            final pageId = details.data.pageId;
-            ref
-                .read(pagesProvider(pageId).notifier)
-                .updatePage(chapter: chapter);
+          onAcceptWithDetails: (details) async {
+            final result = await ref.readAuthoringSession().notifier.patchPage(
+              id: details.data.pageId,
+              chapter: skir.StringChange(
+                expected: details.data.chapter,
+                value: chapter,
+              ),
+            );
+            result.requireApplied(conflictMessage: "The page chapter changed");
           },
           builder: (context, pageCandidateData, rejectedData) {
             final isAccepting =
@@ -189,7 +206,7 @@ class _PageTile extends HookConsumerWidget {
                   child: ContextMenuRegion(
                     items: _contextMenuItems(ref),
                     child: Draggable<PageDrag>(
-                      data: PageDrag(pageId: pageId),
+                      data: PageDrag(pageId: pageId, chapter: chapter),
                       feedback: Surface(
                         color: Surface.colorOf(context),
                         child: Material(
@@ -232,6 +249,12 @@ class _SmallPageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+    final definition = ref
+        .watch(realmEditorCatalogProvider)
+        .value
+        ?.snapshot
+        ?.pageCatalog
+        .definitions[page.kind];
 
     return Material(
       color: isSelected
@@ -240,13 +263,21 @@ class _SmallPageTile extends HookConsumerWidget {
       borderRadius: context.shapes.mediumBorderRadius,
       child: Padding(
         padding: EdgeInsets.all(context.spacing.space2),
-        child: Icones(
-          page.type.icon,
-          size: 11,
-          color: isSelected
-              ? context.colors.onSelectionContainer
-              : context.colors.contentSecondary,
-        ),
+        child: definition == null
+            ? Icon(
+                Icons.warning_rounded,
+                size: 11,
+                color: isSelected
+                    ? context.colors.onSelectionContainer
+                    : context.colors.contentSecondary,
+              )
+            : Icones.value(
+                definition.icon,
+                size: 11,
+                color: isSelected
+                    ? context.colors.onSelectionContainer
+                    : context.colors.contentSecondary,
+              ),
       ),
     );
   }

@@ -141,6 +141,64 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
         : TypeResult.failure(diagnostics);
   }
 
+  TypeResult<wire.PresentationElement> _status(StatusElement value) {
+    final source = expressions.encode(value.value);
+    final cases = value.cases.map(_statusCase).toList();
+    final fallback = value.fallback == null
+        ? const TypeResult<wire.StatusAppearance?>.success(null)
+        : _statusAppearance(value.fallback!).mapValue((item) => item);
+    final diagnostics = [
+      ...source.diagnostics,
+      ...cases.expand((item) => item.diagnostics),
+      ...fallback.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationElement.createStatus(
+              value: source.valueOrNull!,
+              cases: cases.map((item) => item.valueOrNull!).toList(),
+              fallback: fallback.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.StatusCase> _statusCase(StatusCase value) => combineResults(
+    expressions.values.encode(value.match),
+    _statusAppearance(value.appearance),
+    (match, appearance) =>
+        wire.StatusCase(match: match, appearance: appearance),
+  );
+
+  TypeResult<wire.StatusAppearance> _statusAppearance(StatusAppearance value) =>
+      _optional(value.label).mapValue(
+        (label) =>
+            wire.StatusAppearance(tone: value.tone._encode, label: label),
+      );
+
+  TypeResult<wire.PresentationElement> _dateTime(DateTimeElement value) =>
+      combineResults(
+        expressions.encode(value.value),
+        expressions.encode(value.format),
+        (source, format) => wire.PresentationElement.createDateTime(
+          value: source,
+          format: format,
+          timeZone: value.timeZone._encode,
+        ),
+      );
+
+  TypeResult<wire.PresentationElement> _relativeTime(
+    RelativeTimeElement value,
+  ) => expressions
+      .encode(value.value)
+      .mapValue(
+        (source) => wire.PresentationElement.createRelativeTime(
+          value: source,
+          style: value.style._encode,
+          timeZone: value.timeZone._encode,
+        ),
+      );
+
   TypeResult<wire.PresentationElement> _pair(
     TypedExpression first,
     TypedExpression? second,
@@ -176,4 +234,36 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
               semanticLabel: null,
             ),
           );
+}
+
+extension on StatusTone {
+  wire.StatusTone get _encode => switch (this) {
+    StatusTone.neutral => wire.StatusTone.neutral,
+    StatusTone.unknown => wire.StatusTone.unknownStatus,
+    StatusTone.information => wire.StatusTone.information,
+    StatusTone.success => wire.StatusTone.success,
+    StatusTone.warning => wire.StatusTone.warning,
+    StatusTone.danger => wire.StatusTone.danger,
+    StatusTone.active => wire.StatusTone.active,
+    StatusTone.inactive => wire.StatusTone.inactive,
+    StatusTone.online => wire.StatusTone.online,
+    StatusTone.offline => wire.StatusTone.offline,
+    StatusTone.pending => wire.StatusTone.pending,
+    StatusTone.inProgress => wire.StatusTone.inProgress,
+    StatusTone.paused => wire.StatusTone.paused,
+  };
+}
+
+extension on DateTimeZone {
+  wire.DateTimeZone get _encode => switch (this) {
+    DateTimeZone.local => wire.DateTimeZone.local,
+    DateTimeZone.utc => wire.DateTimeZone.utc,
+  };
+}
+
+extension on RelativeTimeStyle {
+  wire.RelativeTimeStyle get _encode => switch (this) {
+    RelativeTimeStyle.compact => wire.RelativeTimeStyle.compact,
+    RelativeTimeStyle.natural => wire.RelativeTimeStyle.natural,
+  };
 }

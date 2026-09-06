@@ -11,15 +11,15 @@ abstract class Placement with _$Placement {
 
   const Placement._();
 
-  factory Placement.fromSkir(skir.Placement placement) => Placement(
+  factory Placement.fromWire(wire.GraphPlacement placement) => Placement(
     x: placement.x,
     y: placement.y,
     width: placement.width,
     height: placement.height,
   );
 
-  skir.Placement toSkir() =>
-      skir.Placement(x: x, y: y, width: width, height: height);
+  wire.GraphPlacement toWire() =>
+      wire.GraphPlacement(x: x, y: y, width: width, height: height);
 }
 
 @freezed
@@ -27,7 +27,7 @@ abstract class Tag with _$Tag {
   @Assert("name != \"\"", "Name must not be empty.")
   const factory Tag({
     required skir.RecordId tagId,
-    required int revision,
+    required int authoringSequence,
     required String name,
     required Color color,
     required List<skir.RecordId> parentIds,
@@ -36,22 +36,21 @@ abstract class Tag with _$Tag {
 
   const Tag._();
 
-  factory Tag.fromSkir(skir.Tag tag) => Tag(
-    tagId: tag.tagId,
-    revision: tag.revision,
+  factory Tag.fromWire(wire.Tag tag, int authoringSequence) => Tag(
+    tagId: tag.id,
+    authoringSequence: authoringSequence,
     name: tag.name,
     color: tag.color.toFlutterColor(),
-    parentIds: tag.parentIds.toList(),
-    placement: Placement.fromSkir(tag.placement),
+    parentIds: tag.parents.toList(),
+    placement: Placement.fromWire(tag.placement),
   );
 
-  skir.Tag toSkir() => skir.Tag(
-    tagId: tagId,
-    revision: revision,
+  wire.Tag toWire() => wire.Tag(
+    id: tagId,
     name: name,
     color: color.toSkirColor(),
-    parentIds: parentIds,
-    placement: placement.toSkir(),
+    parents: parentIds,
+    placement: placement.toWire(),
   );
 }
 
@@ -122,15 +121,3 @@ bool? _isAncestor(
 
   return false;
 }
-
-({List<Tag> values, Tag canonical}) _upsertCanonicalTag(
-  List<Tag>? values,
-  Tag incoming,
-) => reconcileCanonicalRevision(
-  values: values,
-  incoming: incoming,
-  keyOf: (tag) => tag.tagId,
-  revisionOf: (tag) => tag.revision,
-  identityOf: (tag) => "Tag ${tag.tagId.id}",
-  entityName: "Tag",
-);

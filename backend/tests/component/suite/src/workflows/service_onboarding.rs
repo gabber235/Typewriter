@@ -11,7 +11,7 @@ use wasmcloud_utils::{
     skir::base::service::v1::{
         identity::{IssueServiceIdentityRequest, IssueServiceIdentityResponse},
         registration::{BindServiceRequest, BindServiceResponse},
-        service::{ServiceRole, ServiceRole_Engine},
+        service::{ServiceRole, ServiceRole_Host},
         status::{GetServiceStatusRequest, GetServiceStatusResponse, ServiceBinding},
     },
     skir_client::UnrecognizedValues,
@@ -79,9 +79,9 @@ async fn issued_service_can_register_with_an_organization(
         .skir_post(
             "/service/identity/issue",
             &IssueServiceIdentityRequest {
-                roles: vec![skir_variant!(ServiceRole::Engine {
-                    version: "1".into(),
-                })],
+                role: skir_variant!(ServiceRole::Host {
+                    version: "1.0.0".into(),
+                }),
                 _unrecognized: None,
             },
             IssueServiceIdentityRequest::serializer(),

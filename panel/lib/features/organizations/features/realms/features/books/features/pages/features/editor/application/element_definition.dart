@@ -17,6 +17,16 @@ abstract class ElementDefinition with _$ElementDefinition {
   }) = _ElementDefinition;
 }
 
+extension DiscoveredElementDefinitionConversion on DiscoveredElementDefinition {
+  ElementDefinition toElementDefinition() => ElementDefinition(
+    rootType: type,
+    name: name,
+    description: description,
+    icon: icon,
+    color: color,
+  );
+}
+
 @freezed
 abstract class ElementDeprecation with _$ElementDeprecation {
   const factory ElementDeprecation({@Default("") String reason}) =
@@ -33,24 +43,24 @@ final class ElementDefinitionException implements Exception {
 }
 
 extension ElementDefinitionType on ElementDefinition {
-  QualifiedTypeId get typeId {
+  DeclaredTypeId get typeId {
     final id = rootType.id;
-    if (id is QualifiedTypeId) return id;
-    throw StateError("Element root type does not have a qualified identity");
+    if (id is DeclaredTypeId) return id;
+    throw StateError("Element root type does not have a declared identity");
   }
 
-  String get namespace => typeId.namespace;
+  String get namespace => typeId.uuid;
 
   String get qualifiedName => typeId.displayName;
 
   bool get isDeprecated => deprecation != null;
 
   TypeResult<ResolvedType> resolve(TypeRegistry registry) {
-    if (rootType.id is! QualifiedTypeId) {
+    if (rootType.id is! DeclaredTypeId) {
       return TypeResult.failure([
         TypeDiagnostic(
           code: TypeDiagnosticCode.invalidTypeId,
-          message: "Element root type must have a qualified identity",
+          message: "Element root type must have a declared identity",
           type: rootType,
           pathPresent: false,
         ),

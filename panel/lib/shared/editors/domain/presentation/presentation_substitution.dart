@@ -137,6 +137,27 @@ extension on PresentationElement {
         maximum: value.maximum._substituteTypes(substitutions),
         label: value.label._substituteTypes(substitutions),
       ),
+      StatusElement() => StatusElement(
+        value: value.value._substituteTypes(substitutions),
+        cases: [
+          for (final item in value.cases)
+            StatusCase(
+              match: item.match,
+              appearance: item.appearance._substituteTypes(substitutions),
+            ),
+        ],
+        fallback: value.fallback?._substituteTypes(substitutions),
+      ),
+      DateTimeElement() => DateTimeElement(
+        value: value.value._substituteTypes(substitutions),
+        format: value.format._substituteTypes(substitutions),
+        timeZone: value.timeZone,
+      ),
+      RelativeTimeElement() => RelativeTimeElement(
+        value: value.value._substituteTypes(substitutions),
+        style: value.style,
+        timeZone: value.timeZone,
+      ),
       TypedFieldElement() => TypedFieldElement(
         binding: value.binding,
         expectedType: value.expectedType.substitute(substitutions),
@@ -292,6 +313,15 @@ extension on PresentationElement {
       ),
     };
   }
+}
+
+extension on StatusAppearance {
+  StatusAppearance _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => StatusAppearance(
+    tone: tone,
+    label: label._substituteTypes(substitutions),
+  );
 }
 
 extension on BoundControl {

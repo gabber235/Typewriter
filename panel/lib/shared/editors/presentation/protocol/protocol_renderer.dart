@@ -5,7 +5,10 @@ import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef RealmActionExecutor =
-    FutureOr<TypedMutationResult> Function(RealmAction action);
+    FutureOr<RealmCommandResult> Function(
+      RealmAction action,
+      DataValue? payload,
+    );
 
 final _defaultEditorHeaderShortcuts =
     Map<HeaderItemCommandId, List<ShortcutActivator>>.unmodifiable({
@@ -30,13 +33,14 @@ class EditorProtocolRenderer extends StatefulWidget {
     required this.envelope,
     required this.typeCatalog,
     this.conversions = const [],
-    this.realmActions = const [],
+    this.capabilities = const [],
     this.presentations = const [],
     this.collections = const [],
     this.presentation,
     this.diagnostics = const [],
     this.onRealmAction,
     this.realmSearchSourceBuilder,
+    this.executePanelInstruction,
     this.headerShortcuts = const {},
     this.readOnly = false,
     this.historyNamespace = "local",
@@ -46,13 +50,15 @@ class EditorProtocolRenderer extends StatefulWidget {
   final TypedValueEnvelope envelope;
   final TypeCatalog typeCatalog;
   final List<ConversionDefinition> conversions;
-  final List<RealmActionDefinition> realmActions;
+  final List<CapabilityDefinition> capabilities;
   final List<PresentationDefinition> presentations;
   final List<PresentationCollectionSource> collections;
   final PresentationNode? presentation;
   final List<TypeDiagnostic> diagnostics;
   final RealmActionExecutor? onRealmAction;
   final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
+  final FutureOr<void> Function(PanelInstruction instruction)?
+  executePanelInstruction;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final bool readOnly;
   final String historyNamespace;
@@ -94,6 +100,7 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
       source: _source,
       conversions: widget.conversions,
       realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
+      executePanelInstruction: widget.executePanelInstruction,
       headerShortcuts: {
         ..._defaultEditorHeaderShortcuts,
         ...widget.headerShortcuts,
@@ -135,36 +142,43 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
     );
   }
 
-  Future<TypedMutationResult> _executeRealm(
+  Future<RealmCommandResult> _executeRealm(
     RealmAction action,
     ExpressionContext context,
   ) async {
     final executor = widget.onRealmAction;
-    if (executor == null) return _unavailable("Realm actions are unavailable");
-    if (action case InvokeRealmCallbackAction(
-      :final actionId,
+    if (executor == null) {
+      return _commandUnavailable("Realm actions are unavailable");
+    }
+    DataValue? evaluatedPayload;
+    if (action case InvokeRealmCommandAction(
+      :final capabilityId,
       :final payload,
     )) {
-      final definition = widget.realmActions
-          .where((candidate) => candidate.id == actionId)
+      final definition = widget.capabilities
+          .whereType<CommandCapabilityDefinition>()
+          .where((candidate) => candidate.id == capabilityId)
           .firstOrNull;
-      if (definition == null) return _unavailable("Realm action is unknown");
+      if (definition == null) {
+        return _commandUnavailable("Realm command capability is unknown");
+      }
       final evaluated = payload.evaluate(
         context,
         registry: TypeRegistry(widget.typeCatalog),
       );
       if (evaluated case TypeFailure(:final diagnostics)) {
-        return TypedMutationResult.invalid(diagnostics);
+        return RealmCommandResult.invalid(diagnostics);
       }
+      evaluatedPayload = evaluated.valueOrNull;
       final diagnostics = evaluated.valueOrNull!.validateAgainst(
-        NamedType(definition.payloadType),
+        NamedType(definition.requestType),
         registry: TypeRegistry(widget.typeCatalog),
       );
       if (diagnostics.isNotEmpty) {
-        return TypedMutationResult.invalid(diagnostics);
+        return RealmCommandResult.invalid(diagnostics);
       }
     }
-    return executor(action);
+    return executor(action, evaluatedPayload);
   }
 
   @override
@@ -174,8 +188,8 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
   }
 }
 
-TypedMutationResult _unavailable(String message) {
-  return TypedMutationResult.unavailable([
+RealmCommandResult _commandUnavailable(String message) {
+  return RealmCommandResult.unavailable([
     TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
   ]);
 }

@@ -37,7 +37,7 @@ ElementDefinition generateSceneElementDefinition({
 }) {
   return ElementDefinition(
     rootType: ResolvedTypeRef(
-      id: QualifiedTypeId(namespace: "scene", name: id),
+      id: fixtureDeclaredTypeId("scene:$id"),
       revision: 1,
     ),
     name: name,

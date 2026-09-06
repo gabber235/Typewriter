@@ -13,6 +13,12 @@ sealed class TypeId with _$TypeId {
 
   const factory TypeId.none() = NoneTypeId;
 
+  @Assert(
+    "RegExp(r\"^[0-9a-fA-F]{32}\$\").hasMatch(uuid)",
+    "Declared type UUIDs must contain 32 hexadecimal characters.",
+  )
+  factory TypeId.declared(String uuid) = DeclaredTypeId;
+
   @Assert("namespace != \"\"", "Namespace must not be empty.")
   @Assert("name != \"\"", "Name must not be empty.")
   const factory TypeId.qualified({
@@ -24,12 +30,14 @@ sealed class TypeId with _$TypeId {
     OptionTypeId() => "Option",
     SomeTypeId() => "Some",
     NoneTypeId() => "None",
+    DeclaredTypeId(:final uuid) => uuid,
     QualifiedTypeId(:final namespace, :final name) => "$namespace::$name",
   };
 
   @override
   String toString() => switch (this) {
     OptionTypeId() || SomeTypeId() || NoneTypeId() => "builtin::$displayName",
+    DeclaredTypeId() => "declared::$displayName",
     QualifiedTypeId() => displayName,
   };
 }

@@ -23,7 +23,7 @@ void main() {
     }
   });
 
-  group("RecordIdExtension.id", () {
+  group("RecordIdExtension.toSurrealQl", () {
     test("formats unknown, number, and string keys", () {
       expect(_id(skir.RecordIdKey.unknown), "<unknown>");
       expect(_id(skir.RecordIdKey.wrapNumber(-42)), "-42");
@@ -84,5 +84,8 @@ void main() {
 }
 
 String _id(skir.RecordIdKey key) {
-  return skir.RecordId(table: "ignored", key: key).id;
+  return skir.RecordId(
+    table: "ignored",
+    key: key,
+  ).toSurrealQl().substring("ignored:".length);
 }

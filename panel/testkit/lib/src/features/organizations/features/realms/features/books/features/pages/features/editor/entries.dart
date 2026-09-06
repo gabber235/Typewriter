@@ -2,13 +2,17 @@ import "package:faker/faker.dart";
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
 
+DeclaredTypeId fixtureDeclaredTypeId(String name) => DeclaredTypeId(
+  uuid.v5("6ba7b811-9dad-11d1-80b4-00c04fd430c8", name).replaceAll("-", ""),
+);
+
 ElementDefinition generateRandomElementDefinition() {
   final extensions = ["basic", "combat", "dialogue", "quest", "npc", "item"];
   final namespace = extensions.randomOrNull()!;
 
   return ElementDefinition(
     rootType: ResolvedTypeRef(
-      id: QualifiedTypeId(namespace: namespace, name: faker.guid.guid()),
+      id: fixtureDeclaredTypeId("$namespace:${faker.guid.guid()}"),
       revision: 1,
     ),
     name: faker.lorem.words(2).join(" ").formatted,

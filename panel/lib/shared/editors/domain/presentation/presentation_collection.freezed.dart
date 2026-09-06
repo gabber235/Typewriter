@@ -203,7 +203,7 @@ return $default(_that.value);case _:
 
 class _PresentationCollectionSourceId extends PresentationCollectionSourceId {
   const _PresentationCollectionSourceId(this.value): assert(value != "", 'Collection source ID must not be empty.'),super._();
-
+  
 
 @override final  String value;
 
@@ -452,7 +452,7 @@ return $default(_that.value);case _:
 
 class _PresentationCollectionRelationId extends PresentationCollectionRelationId {
   const _PresentationCollectionRelationId(this.value): assert(value != "", 'Collection relation ID must not be empty.'),super._();
-
+  
 
 @override final  String value;
 
@@ -575,7 +575,7 @@ as List<PresentationCollectionRelation>,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get rowType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.rowType, (value) {
     return _then(_self.copyWith(rowType: value));
   });
@@ -584,7 +584,7 @@ $TypeExpressionCopyWith<$Res> get rowType {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get keyType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.keyType, (value) {
     return _then(_self.copyWith(keyType: value));
   });
@@ -593,7 +593,7 @@ $TypeExpressionCopyWith<$Res> get keyType {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rowBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.rowBindingId, (value) {
     return _then(_self.copyWith(rowBindingId: value));
   });
@@ -602,7 +602,7 @@ $BindingIdCopyWith<$Res> get rowBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -745,7 +745,7 @@ return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.r
 
 class _PresentationCollectionSchema implements PresentationCollectionSchema {
   const _PresentationCollectionSchema({required this.rowType, required this.keyType, required this.rowBindingId, required this.key, final  List<PresentationCollectionRelation> relations = const <PresentationCollectionRelation>[]}): _relations = relations;
-
+  
 
 @override final  TypeExpression rowType;
 @override final  TypeExpression keyType;
@@ -822,7 +822,7 @@ as List<PresentationCollectionRelation>,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get rowType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.rowType, (value) {
     return _then(_self.copyWith(rowType: value));
   });
@@ -831,7 +831,7 @@ $TypeExpressionCopyWith<$Res> get rowType {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get keyType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.keyType, (value) {
     return _then(_self.copyWith(keyType: value));
   });
@@ -840,7 +840,7 @@ $TypeExpressionCopyWith<$Res> get keyType {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rowBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.rowBindingId, (value) {
     return _then(_self.copyWith(rowBindingId: value));
   });
@@ -849,7 +849,7 @@ $BindingIdCopyWith<$Res> get rowBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -919,7 +919,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get id {
-
+  
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -928,7 +928,7 @@ $PresentationCollectionRelationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get targets {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.targets, (value) {
     return _then(_self.copyWith(targets: value));
   });
@@ -1071,7 +1071,7 @@ return $default(_that.id,_that.targets);case _:
 
 class _PresentationCollectionRelation implements PresentationCollectionRelation {
   const _PresentationCollectionRelation({required this.id, required this.targets});
-
+  
 
 @override final  PresentationCollectionRelationId id;
 @override final  TypedExpression targets;
@@ -1136,7 +1136,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get id {
-
+  
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1145,7 +1145,7 @@ $PresentationCollectionRelationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get targets {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.targets, (value) {
     return _then(_self.copyWith(targets: value));
   });
@@ -1329,7 +1329,7 @@ return graph(_that.roots,_that.relation,_that.direction,_that.maximumDepth);case
 
 class PresentationCollectionAll implements PresentationCollectionQuery {
   const PresentationCollectionAll();
-
+  
 
 
 
@@ -1361,7 +1361,7 @@ String toString() {
 
 class PresentationCollectionKeys implements PresentationCollectionQuery {
   const PresentationCollectionKeys(final  List<DataValue> keys): _keys = keys;
-
+  
 
  final  List<DataValue> _keys;
  List<DataValue> get keys {
@@ -1433,7 +1433,7 @@ as List<DataValue>,
 
 class PresentationCollectionSearch implements PresentationCollectionQuery {
   const PresentationCollectionSearch(this.query);
-
+  
 
  final  SearchQueryContext query;
 
@@ -1496,7 +1496,7 @@ as SearchQueryContext,
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
-
+  
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
   });
@@ -1508,7 +1508,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 
 class PresentationCollectionGraph implements PresentationCollectionQuery {
   const PresentationCollectionGraph({required final  List<DataValue> roots, required this.relation, required this.direction, this.maximumDepth}): assert(maximumDepth == null || maximumDepth > 0, 'Maximum depth must be positive.'),_roots = roots;
-
+  
 
  final  List<DataValue> _roots;
  List<DataValue> get roots {
@@ -1583,7 +1583,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get relation {
-
+  
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.relation, (value) {
     return _then(_self.copyWith(relation: value));
   });
@@ -1653,7 +1653,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-
+  
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1662,7 +1662,7 @@ $DataValueCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1805,7 +1805,7 @@ return $default(_that.key,_that.value);case _:
 
 class _PresentationCollectionRow implements PresentationCollectionRow {
   const _PresentationCollectionRow({required this.key, required this.value});
-
+  
 
 @override final  DataValue key;
 @override final  DataValue value;
@@ -1870,7 +1870,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-
+  
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1879,7 +1879,7 @@ $DataValueCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -2082,7 +2082,7 @@ return $default(_that.keys);case _:
 
 class _PresentationCollectionPath implements PresentationCollectionPath {
   const _PresentationCollectionPath(final  List<DataValue> keys): _keys = keys;
-
+  
 
  final  List<DataValue> _keys;
 @override List<DataValue> get keys {
@@ -2349,7 +2349,7 @@ return $default(_that.rootRows,_that.rows,_that.paths,_that.diagnostics,_that.lo
 
 class _PresentationCollectionSnapshot extends PresentationCollectionSnapshot {
   const _PresentationCollectionSnapshot({final  List<PresentationCollectionRow> rootRows = const <PresentationCollectionRow>[], final  List<PresentationCollectionRow> rows = const <PresentationCollectionRow>[], final  List<PresentationCollectionPath> paths = const <PresentationCollectionPath>[], final  List<TypeDiagnostic> diagnostics = const <TypeDiagnostic>[], this.loading = false}): _rootRows = rootRows,_rows = rows,_paths = paths,_diagnostics = diagnostics,super._();
-
+  
 
  final  List<PresentationCollectionRow> _rootRows;
 @override@JsonKey() List<PresentationCollectionRow> get rootRows {

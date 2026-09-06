@@ -14,12 +14,15 @@
 //   cargo add skir-client
 pub mod type_catalog;
 pub mod path;
+pub mod typed_value;
 pub mod diagnostic;
+pub mod search;
 pub mod binding;
 pub mod expression;
 pub mod action;
-pub mod conversion;
 pub mod presentation;
+pub mod page_catalog;
+pub mod element_catalog;
+pub mod conversion;
+pub mod capability;
 pub mod catalog;
-pub mod search;
-pub mod typed_value;

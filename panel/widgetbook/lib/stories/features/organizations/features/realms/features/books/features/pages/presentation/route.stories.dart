@@ -61,6 +61,12 @@ Widget pagePageStory({
         (ref, rootType) =>
             Stream.value(pageStoryCatalog(rootType, storyElements ?? const [])),
       ),
+      realmEditorCatalogProvider.overrideWith(
+        (ref) => Stream.value(
+          pageStoryPageCatalog(pageType, storyElements ?? const []),
+        ),
+      ),
+      pageDocumentHealthProvider.overrideWith((ref, argument) => null),
       ...entryProviderOverrides(),
       ...pageElementsProviderOverrides(
         state: entriesState,
@@ -73,7 +79,12 @@ Widget pagePageStory({
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: pagesState),
       ...servicesProviderOverrides(state: servicesState),
-      ...realmProviderOverrides(),
+      realmIdProvider.overrideWith(
+        (ref) => recordId("realm_instance:example-realm-id"),
+      ),
+      realmsProvider.overrideWith((ref) async => const []),
+      selectedRealmProvider.overrideWith((ref) async => null),
+      activeRealmEditorRuntimeProvider.overrideWith((ref) => null),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),

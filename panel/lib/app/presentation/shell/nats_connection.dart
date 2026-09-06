@@ -1,7 +1,6 @@
-import "package:dart_nats/dart_nats.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/typewriter_panel.dart" hide Header;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class RequiredNatsConnection extends HookConsumerWidget {
   const RequiredNatsConnection({required this.child, super.key});
@@ -16,23 +15,79 @@ class RequiredNatsConnection extends HookConsumerWidget {
       return child;
     }
 
-    final status = ref.watch(natsStatusProvider);
-    switch (status) {
-      case Status.connecting:
-      case Status.tlsHandshake:
-      case Status.infoHandshake:
-      case Status.reconnecting:
+    final connectionState = ref.watch(natsLifecycleProvider);
+    ref.watch(organizationPresenceProvider);
+    switch (connectionState) {
+      case NatsConnecting() || NatsReconnecting():
         return const LoadingScreen();
-      case Status.connected:
+      case NatsConnected():
         return child;
-      case Status.closed:
-      case Status.disconnected:
-        return ErrorScreen(
-          title: "Error",
-          message:
-              "Could not connect to the server, please check your internet connection.\nSometimes sign out and sign in again helps.",
-          child: SignOutButton(),
-        );
+      case NatsFailed(:final failure):
+        return _ConnectionFailure(failure);
+      case NatsClosed():
+        return const _ConnectionClosed();
     }
+  }
+}
+
+final class _ConnectionFailure extends StatelessWidget {
+  const _ConnectionFailure(this.failure);
+
+  final NatsClientException failure;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (failure.kind) {
+      NatsFailureKind.authentication ||
+      NatsFailureKind.permission => const ErrorScreen(
+        title: "Access denied",
+        message:
+            "Your session could not be authorized. Sign out, then sign in again.",
+        child: SignOutButton(),
+      ),
+      NatsFailureKind.protocol => ErrorScreen(
+        title: "Connection incompatible",
+        message:
+            "The panel could not complete the NATS protocol handshake. Retry, then report the problem if it continues.",
+        child: _RetryNatsButton(),
+      ),
+      NatsFailureKind.unavailable ||
+      NatsFailureKind.timeout ||
+      NatsFailureKind.noResponders => ErrorScreen(
+        title: "Server unavailable",
+        message:
+            "The Typewriter service is unavailable. Check your connection and try again.",
+        child: _RetryNatsButton(),
+      ),
+      NatsFailureKind.closed || NatsFailureKind.unknown => ErrorScreen(
+        title: "Connection failed",
+        message:
+            "The panel could not connect to Typewriter. Retry, then report the problem if it continues.",
+        child: _RetryNatsButton(),
+      ),
+    };
+  }
+}
+
+final class _ConnectionClosed extends StatelessWidget {
+  const _ConnectionClosed();
+
+  @override
+  Widget build(BuildContext context) => const ErrorScreen(
+    title: "Connection closed",
+    message: "The Typewriter connection was closed.",
+    child: _RetryNatsButton(),
+  );
+}
+
+final class _RetryNatsButton extends ConsumerWidget {
+  const _RetryNatsButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return LoadingButton(
+      onPressed: () => ref.read(natsProvider.notifier).retry(),
+      child: const Text("Retry"),
+    );
   }
 }

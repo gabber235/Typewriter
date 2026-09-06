@@ -329,100 +329,87 @@ $PresentationNodeCopyWith<$Res> get root {
 }
 
 /// @nodoc
-mixin _$RealmActionDefinition {
+mixin _$CapabilityDefinition {
 
- RealmActionId get id; ResolvedTypeRef get payloadType; ResolvedTypeRef? get resultType;
-/// Create a copy of RealmActionDefinition
+ CapabilityId get id; ResolvedTypeRef get requestType;
+/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$RealmActionDefinitionCopyWith<RealmActionDefinition> get copyWith => _$RealmActionDefinitionCopyWithImpl<RealmActionDefinition>(this as RealmActionDefinition, _$identity);
+$CapabilityDefinitionCopyWith<CapabilityDefinition> get copyWith => _$CapabilityDefinitionCopyWithImpl<CapabilityDefinition>(this as CapabilityDefinition, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmActionDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.payloadType, payloadType) || other.payloadType == payloadType)&&(identical(other.resultType, resultType) || other.resultType == resultType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CapabilityDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.requestType, requestType) || other.requestType == requestType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,payloadType,resultType);
+int get hashCode => Object.hash(runtimeType,id,requestType);
 
 @override
 String toString() {
-  return 'RealmActionDefinition(id: $id, payloadType: $payloadType, resultType: $resultType)';
+  return 'CapabilityDefinition(id: $id, requestType: $requestType)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $RealmActionDefinitionCopyWith<$Res>  {
-  factory $RealmActionDefinitionCopyWith(RealmActionDefinition value, $Res Function(RealmActionDefinition) _then) = _$RealmActionDefinitionCopyWithImpl;
+abstract mixin class $CapabilityDefinitionCopyWith<$Res>  {
+  factory $CapabilityDefinitionCopyWith(CapabilityDefinition value, $Res Function(CapabilityDefinition) _then) = _$CapabilityDefinitionCopyWithImpl;
 @useResult
 $Res call({
- RealmActionId id, ResolvedTypeRef payloadType, ResolvedTypeRef? resultType
+ CapabilityId id, ResolvedTypeRef requestType
 });
 
 
-$RealmActionIdCopyWith<$Res> get id;$ResolvedTypeRefCopyWith<$Res> get payloadType;$ResolvedTypeRefCopyWith<$Res>? get resultType;
+$CapabilityIdCopyWith<$Res> get id;$ResolvedTypeRefCopyWith<$Res> get requestType;
 
 }
 /// @nodoc
-class _$RealmActionDefinitionCopyWithImpl<$Res>
-    implements $RealmActionDefinitionCopyWith<$Res> {
-  _$RealmActionDefinitionCopyWithImpl(this._self, this._then);
+class _$CapabilityDefinitionCopyWithImpl<$Res>
+    implements $CapabilityDefinitionCopyWith<$Res> {
+  _$CapabilityDefinitionCopyWithImpl(this._self, this._then);
 
-  final RealmActionDefinition _self;
-  final $Res Function(RealmActionDefinition) _then;
+  final CapabilityDefinition _self;
+  final $Res Function(CapabilityDefinition) _then;
 
-/// Create a copy of RealmActionDefinition
+/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? payloadType = null,Object? resultType = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? requestType = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as RealmActionId,payloadType: null == payloadType ? _self.payloadType : payloadType // ignore: cast_nullable_to_non_nullable
-as ResolvedTypeRef,resultType: freezed == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
-as ResolvedTypeRef?,
+as CapabilityId,requestType: null == requestType ? _self.requestType : requestType // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,
   ));
 }
-/// Create a copy of RealmActionDefinition
+/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RealmActionIdCopyWith<$Res> get id {
+$CapabilityIdCopyWith<$Res> get id {
   
-  return $RealmActionIdCopyWith<$Res>(_self.id, (value) {
+  return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
-}/// Create a copy of RealmActionDefinition
+}/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ResolvedTypeRefCopyWith<$Res> get payloadType {
+$ResolvedTypeRefCopyWith<$Res> get requestType {
   
-  return $ResolvedTypeRefCopyWith<$Res>(_self.payloadType, (value) {
-    return _then(_self.copyWith(payloadType: value));
-  });
-}/// Create a copy of RealmActionDefinition
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResolvedTypeRefCopyWith<$Res>? get resultType {
-    if (_self.resultType == null) {
-    return null;
-  }
-
-  return $ResolvedTypeRefCopyWith<$Res>(_self.resultType!, (value) {
-    return _then(_self.copyWith(resultType: value));
+  return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
+    return _then(_self.copyWith(requestType: value));
   });
 }
 }
 
 
-/// Adds pattern-matching-related methods to [RealmActionDefinition].
-extension RealmActionDefinitionPatterns on RealmActionDefinition {
+/// Adds pattern-matching-related methods to [CapabilityDefinition].
+extension CapabilityDefinitionPatterns on CapabilityDefinition {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -435,11 +422,13 @@ extension RealmActionDefinitionPatterns on RealmActionDefinition {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RealmActionDefinition value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchCapabilityDefinition value)?  search,TResult Function( ComputationCapabilityDefinition value)?  computation,TResult Function( CommandCapabilityDefinition value)?  command,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _RealmActionDefinition() when $default != null:
-return $default(_that);case _:
+case SearchCapabilityDefinition() when search != null:
+return search(_that);case ComputationCapabilityDefinition() when computation != null:
+return computation(_that);case CommandCapabilityDefinition() when command != null:
+return command(_that);case _:
   return orElse();
 
 }
@@ -457,14 +446,13 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RealmActionDefinition value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchCapabilityDefinition value)  search,required TResult Function( ComputationCapabilityDefinition value)  computation,required TResult Function( CommandCapabilityDefinition value)  command,}){
 final _that = this;
 switch (_that) {
-case _RealmActionDefinition():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+case SearchCapabilityDefinition():
+return search(_that);case ComputationCapabilityDefinition():
+return computation(_that);case CommandCapabilityDefinition():
+return command(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -478,11 +466,13 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RealmActionDefinition value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchCapabilityDefinition value)?  search,TResult? Function( ComputationCapabilityDefinition value)?  computation,TResult? Function( CommandCapabilityDefinition value)?  command,}){
 final _that = this;
 switch (_that) {
-case _RealmActionDefinition() when $default != null:
-return $default(_that);case _:
+case SearchCapabilityDefinition() when search != null:
+return search(_that);case ComputationCapabilityDefinition() when computation != null:
+return computation(_that);case CommandCapabilityDefinition() when command != null:
+return command(_that);case _:
   return null;
 
 }
@@ -499,10 +489,12 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( RealmActionId id,  ResolvedTypeRef payloadType,  ResolvedTypeRef? resultType)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( CapabilityId id,  ResolvedTypeRef requestType,  ResolvedTypeRef resultType)?  search,TResult Function( CapabilityId id,  ResolvedTypeRef requestType,  ResolvedTypeRef resultType)?  computation,TResult Function( CapabilityId id,  ResolvedTypeRef requestType)?  command,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _RealmActionDefinition() when $default != null:
-return $default(_that.id,_that.payloadType,_that.resultType);case _:
+case SearchCapabilityDefinition() when search != null:
+return search(_that.id,_that.requestType,_that.resultType);case ComputationCapabilityDefinition() when computation != null:
+return computation(_that.id,_that.requestType,_that.resultType);case CommandCapabilityDefinition() when command != null:
+return command(_that.id,_that.requestType);case _:
   return orElse();
 
 }
@@ -520,13 +512,12 @@ return $default(_that.id,_that.payloadType,_that.resultType);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( RealmActionId id,  ResolvedTypeRef payloadType,  ResolvedTypeRef? resultType)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( CapabilityId id,  ResolvedTypeRef requestType,  ResolvedTypeRef resultType)  search,required TResult Function( CapabilityId id,  ResolvedTypeRef requestType,  ResolvedTypeRef resultType)  computation,required TResult Function( CapabilityId id,  ResolvedTypeRef requestType)  command,}) {final _that = this;
 switch (_that) {
-case _RealmActionDefinition():
-return $default(_that.id,_that.payloadType,_that.resultType);case _:
-  throw StateError('Unexpected subclass');
-
-}
+case SearchCapabilityDefinition():
+return search(_that.id,_that.requestType,_that.resultType);case ComputationCapabilityDefinition():
+return computation(_that.id,_that.requestType,_that.resultType);case CommandCapabilityDefinition():
+return command(_that.id,_that.requestType);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -540,10 +531,12 @@ return $default(_that.id,_that.payloadType,_that.resultType);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( RealmActionId id,  ResolvedTypeRef payloadType,  ResolvedTypeRef? resultType)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( CapabilityId id,  ResolvedTypeRef requestType,  ResolvedTypeRef resultType)?  search,TResult? Function( CapabilityId id,  ResolvedTypeRef requestType,  ResolvedTypeRef resultType)?  computation,TResult? Function( CapabilityId id,  ResolvedTypeRef requestType)?  command,}) {final _that = this;
 switch (_that) {
-case _RealmActionDefinition() when $default != null:
-return $default(_that.id,_that.payloadType,_that.resultType);case _:
+case SearchCapabilityDefinition() when search != null:
+return search(_that.id,_that.requestType,_that.resultType);case ComputationCapabilityDefinition() when computation != null:
+return computation(_that.id,_that.requestType,_that.resultType);case CommandCapabilityDefinition() when command != null:
+return command(_that.id,_that.requestType);case _:
   return null;
 
 }
@@ -554,99 +547,279 @@ return $default(_that.id,_that.payloadType,_that.resultType);case _:
 /// @nodoc
 
 
-class _RealmActionDefinition implements RealmActionDefinition {
-  const _RealmActionDefinition({required this.id, required this.payloadType, this.resultType});
+class SearchCapabilityDefinition implements CapabilityDefinition {
+  const SearchCapabilityDefinition({required this.id, required this.requestType, required this.resultType});
   
 
-@override final  RealmActionId id;
-@override final  ResolvedTypeRef payloadType;
-@override final  ResolvedTypeRef? resultType;
+@override final  CapabilityId id;
+@override final  ResolvedTypeRef requestType;
+ final  ResolvedTypeRef resultType;
 
-/// Create a copy of RealmActionDefinition
+/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$RealmActionDefinitionCopyWith<_RealmActionDefinition> get copyWith => __$RealmActionDefinitionCopyWithImpl<_RealmActionDefinition>(this, _$identity);
+$SearchCapabilityDefinitionCopyWith<SearchCapabilityDefinition> get copyWith => _$SearchCapabilityDefinitionCopyWithImpl<SearchCapabilityDefinition>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmActionDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.payloadType, payloadType) || other.payloadType == payloadType)&&(identical(other.resultType, resultType) || other.resultType == resultType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchCapabilityDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.requestType, requestType) || other.requestType == requestType)&&(identical(other.resultType, resultType) || other.resultType == resultType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,payloadType,resultType);
+int get hashCode => Object.hash(runtimeType,id,requestType,resultType);
 
 @override
 String toString() {
-  return 'RealmActionDefinition(id: $id, payloadType: $payloadType, resultType: $resultType)';
+  return 'CapabilityDefinition.search(id: $id, requestType: $requestType, resultType: $resultType)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$RealmActionDefinitionCopyWith<$Res> implements $RealmActionDefinitionCopyWith<$Res> {
-  factory _$RealmActionDefinitionCopyWith(_RealmActionDefinition value, $Res Function(_RealmActionDefinition) _then) = __$RealmActionDefinitionCopyWithImpl;
+abstract mixin class $SearchCapabilityDefinitionCopyWith<$Res> implements $CapabilityDefinitionCopyWith<$Res> {
+  factory $SearchCapabilityDefinitionCopyWith(SearchCapabilityDefinition value, $Res Function(SearchCapabilityDefinition) _then) = _$SearchCapabilityDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- RealmActionId id, ResolvedTypeRef payloadType, ResolvedTypeRef? resultType
+ CapabilityId id, ResolvedTypeRef requestType, ResolvedTypeRef resultType
 });
 
 
-@override $RealmActionIdCopyWith<$Res> get id;@override $ResolvedTypeRefCopyWith<$Res> get payloadType;@override $ResolvedTypeRefCopyWith<$Res>? get resultType;
+@override $CapabilityIdCopyWith<$Res> get id;@override $ResolvedTypeRefCopyWith<$Res> get requestType;$ResolvedTypeRefCopyWith<$Res> get resultType;
 
 }
 /// @nodoc
-class __$RealmActionDefinitionCopyWithImpl<$Res>
-    implements _$RealmActionDefinitionCopyWith<$Res> {
-  __$RealmActionDefinitionCopyWithImpl(this._self, this._then);
+class _$SearchCapabilityDefinitionCopyWithImpl<$Res>
+    implements $SearchCapabilityDefinitionCopyWith<$Res> {
+  _$SearchCapabilityDefinitionCopyWithImpl(this._self, this._then);
 
-  final _RealmActionDefinition _self;
-  final $Res Function(_RealmActionDefinition) _then;
+  final SearchCapabilityDefinition _self;
+  final $Res Function(SearchCapabilityDefinition) _then;
 
-/// Create a copy of RealmActionDefinition
+/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? payloadType = null,Object? resultType = freezed,}) {
-  return _then(_RealmActionDefinition(
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? requestType = null,Object? resultType = null,}) {
+  return _then(SearchCapabilityDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as RealmActionId,payloadType: null == payloadType ? _self.payloadType : payloadType // ignore: cast_nullable_to_non_nullable
-as ResolvedTypeRef,resultType: freezed == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
-as ResolvedTypeRef?,
+as CapabilityId,requestType: null == requestType ? _self.requestType : requestType // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,resultType: null == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,
   ));
 }
 
-/// Create a copy of RealmActionDefinition
+/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RealmActionIdCopyWith<$Res> get id {
+$CapabilityIdCopyWith<$Res> get id {
   
-  return $RealmActionIdCopyWith<$Res>(_self.id, (value) {
+  return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
-}/// Create a copy of RealmActionDefinition
+}/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ResolvedTypeRefCopyWith<$Res> get payloadType {
+$ResolvedTypeRefCopyWith<$Res> get requestType {
   
-  return $ResolvedTypeRefCopyWith<$Res>(_self.payloadType, (value) {
-    return _then(_self.copyWith(payloadType: value));
+  return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
+    return _then(_self.copyWith(requestType: value));
   });
-}/// Create a copy of RealmActionDefinition
+}/// Create a copy of CapabilityDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ResolvedTypeRefCopyWith<$Res>? get resultType {
-    if (_self.resultType == null) {
-    return null;
-  }
-
-  return $ResolvedTypeRefCopyWith<$Res>(_self.resultType!, (value) {
+$ResolvedTypeRefCopyWith<$Res> get resultType {
+  
+  return $ResolvedTypeRefCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class ComputationCapabilityDefinition implements CapabilityDefinition {
+  const ComputationCapabilityDefinition({required this.id, required this.requestType, required this.resultType});
+  
+
+@override final  CapabilityId id;
+@override final  ResolvedTypeRef requestType;
+ final  ResolvedTypeRef resultType;
+
+/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ComputationCapabilityDefinitionCopyWith<ComputationCapabilityDefinition> get copyWith => _$ComputationCapabilityDefinitionCopyWithImpl<ComputationCapabilityDefinition>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ComputationCapabilityDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.requestType, requestType) || other.requestType == requestType)&&(identical(other.resultType, resultType) || other.resultType == resultType));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,requestType,resultType);
+
+@override
+String toString() {
+  return 'CapabilityDefinition.computation(id: $id, requestType: $requestType, resultType: $resultType)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ComputationCapabilityDefinitionCopyWith<$Res> implements $CapabilityDefinitionCopyWith<$Res> {
+  factory $ComputationCapabilityDefinitionCopyWith(ComputationCapabilityDefinition value, $Res Function(ComputationCapabilityDefinition) _then) = _$ComputationCapabilityDefinitionCopyWithImpl;
+@override @useResult
+$Res call({
+ CapabilityId id, ResolvedTypeRef requestType, ResolvedTypeRef resultType
+});
+
+
+@override $CapabilityIdCopyWith<$Res> get id;@override $ResolvedTypeRefCopyWith<$Res> get requestType;$ResolvedTypeRefCopyWith<$Res> get resultType;
+
+}
+/// @nodoc
+class _$ComputationCapabilityDefinitionCopyWithImpl<$Res>
+    implements $ComputationCapabilityDefinitionCopyWith<$Res> {
+  _$ComputationCapabilityDefinitionCopyWithImpl(this._self, this._then);
+
+  final ComputationCapabilityDefinition _self;
+  final $Res Function(ComputationCapabilityDefinition) _then;
+
+/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? requestType = null,Object? resultType = null,}) {
+  return _then(ComputationCapabilityDefinition(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as CapabilityId,requestType: null == requestType ? _self.requestType : requestType // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,resultType: null == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,
+  ));
+}
+
+/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CapabilityIdCopyWith<$Res> get id {
+  
+  return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResolvedTypeRefCopyWith<$Res> get requestType {
+  
+  return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
+    return _then(_self.copyWith(requestType: value));
+  });
+}/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResolvedTypeRefCopyWith<$Res> get resultType {
+  
+  return $ResolvedTypeRefCopyWith<$Res>(_self.resultType, (value) {
+    return _then(_self.copyWith(resultType: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CommandCapabilityDefinition implements CapabilityDefinition {
+  const CommandCapabilityDefinition({required this.id, required this.requestType});
+  
+
+@override final  CapabilityId id;
+@override final  ResolvedTypeRef requestType;
+
+/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CommandCapabilityDefinitionCopyWith<CommandCapabilityDefinition> get copyWith => _$CommandCapabilityDefinitionCopyWithImpl<CommandCapabilityDefinition>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommandCapabilityDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.requestType, requestType) || other.requestType == requestType));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,requestType);
+
+@override
+String toString() {
+  return 'CapabilityDefinition.command(id: $id, requestType: $requestType)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CommandCapabilityDefinitionCopyWith<$Res> implements $CapabilityDefinitionCopyWith<$Res> {
+  factory $CommandCapabilityDefinitionCopyWith(CommandCapabilityDefinition value, $Res Function(CommandCapabilityDefinition) _then) = _$CommandCapabilityDefinitionCopyWithImpl;
+@override @useResult
+$Res call({
+ CapabilityId id, ResolvedTypeRef requestType
+});
+
+
+@override $CapabilityIdCopyWith<$Res> get id;@override $ResolvedTypeRefCopyWith<$Res> get requestType;
+
+}
+/// @nodoc
+class _$CommandCapabilityDefinitionCopyWithImpl<$Res>
+    implements $CommandCapabilityDefinitionCopyWith<$Res> {
+  _$CommandCapabilityDefinitionCopyWithImpl(this._self, this._then);
+
+  final CommandCapabilityDefinition _self;
+  final $Res Function(CommandCapabilityDefinition) _then;
+
+/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? requestType = null,}) {
+  return _then(CommandCapabilityDefinition(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as CapabilityId,requestType: null == requestType ? _self.requestType : requestType // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,
+  ));
+}
+
+/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CapabilityIdCopyWith<$Res> get id {
+  
+  return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}/// Create a copy of CapabilityDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResolvedTypeRefCopyWith<$Res> get requestType {
+  
+  return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
+    return _then(_self.copyWith(requestType: value));
   });
 }
 }

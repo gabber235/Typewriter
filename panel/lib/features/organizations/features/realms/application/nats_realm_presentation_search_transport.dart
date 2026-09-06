@@ -18,11 +18,15 @@ final class NatsRealmPresentationSearchTransport {
   final skir.RecordId realmId;
   final TypeRegistry registry;
 
-  String get _requestSubject =>
-      "service.to.${realmId.id}.organization.${organizationId.id}.realm.editor.presentation.search";
+  RealmServiceAddress get _address =>
+      RealmServiceAddress(organizationId: organizationId, realmId: realmId);
 
-  String get _updateSubject =>
-      "service.from.${realmId.id}.organization.${organizationId.id}.realm.editor.presentation.search";
+  String get _requestSubject => _address.request("editor.presentation.search");
+
+  String get _updateSubject => _address.event("editor.presentation.search");
+
+  String get _cancelSubject =>
+      _address.request("editor.presentation.search.cancel");
 
   Stream<RealmPresentationSearchUpdate> watch(
     RealmPresentationSearchRequest request,
@@ -36,14 +40,26 @@ final class NatsRealmPresentationSearchTransport {
       );
       return;
     }
-    yield* ref.watchRequest(
-      subject: _requestSubject,
-      listenSubject: _updateSubject,
-      requestBytes: wire.RealmPresentationSearchRequest.serializer.toBytes(
-        encoded.valueOrNull!,
-      ),
-      serializer: wire.RealmPresentationSearchUpdate.serializer,
-      transformer: (_, update) => codec.decodeUpdate(update),
-    );
+    try {
+      yield* ref.watchRequest(
+        subject: _requestSubject,
+        listenSubject: _updateSubject,
+        requestBytes: wire.RealmPresentationSearchRequest.serializer.toBytes(
+          encoded.valueOrNull!,
+        ),
+        serializer: wire.RealmPresentationSearchUpdate.serializer,
+        transformer: (_, update) => codec.decodeUpdate(update),
+      );
+    } finally {
+      await ref.requestSkir(
+        _cancelSubject,
+        wire.CancelRealmPresentationSearchRequest.serializer.toBytes(
+          wire.CancelRealmPresentationSearchRequest(
+            subscriptionId: request.subscriptionId,
+          ),
+        ),
+        wire.CancelRealmPresentationSearchResult.serializer,
+      );
+    }
   }
 }

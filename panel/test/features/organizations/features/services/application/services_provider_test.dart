@@ -16,7 +16,7 @@ Service _service(String id, {String? name, int revision = 1}) => Service(
   serviceId: recordId("service:$id"),
   revision: revision,
   name: name ?? "Service $id",
-  roles: [RealmServiceRole(version: "1")],
+  role: HostServiceRole(version: "1"),
   createdAt: DateTime.utc(2025),
 );
 
@@ -30,6 +30,12 @@ Future<void> _waitFor(bool Function() condition) async {
 
 class _Harness {
   _Harness() {
+    nats.registerHandler(
+      _publishSubject,
+      (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
+        skir.WatchOrganizationServicesResponse.wrapList([]),
+      ),
+    );
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
@@ -44,14 +50,14 @@ class _Harness {
     );
   }
 
-  final MockNatsClient nats = MockNatsClient();
+  final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
   late final ProviderSubscription<AsyncValue<List<Service>>> subscription;
   AsyncValue<List<Service>> value = const AsyncLoading();
 
   Future<void> start() => _waitFor(
     () =>
-        nats.publications.isNotEmpty &&
+        nats.requests.isNotEmpty &&
         nats.subscriptionSubjects.contains(_listenSubject),
   );
 
@@ -119,14 +125,13 @@ void main() {
 
     tearDown(() => harness.dispose());
 
-    test("publishes decoded request and subscribes to exact subject", () {
-      final publication = harness.nats.publications.single;
-      expect(publication.subject, _publishSubject);
-      expect(publication.replyTo, _listenSubject);
+    test("requests initial data and subscribes to exact subject", () {
+      final request = harness.nats.requests.single;
+      expect(request.subject, _publishSubject);
       expect(harness.nats.subscriptionSubjects, contains(_listenSubject));
       expect(
         skir.WatchOrganizationServicesRequest.serializer.fromBytes(
-          publication.data,
+          request.payload,
         ),
         isA<skir.WatchOrganizationServicesRequest>(),
       );
@@ -209,6 +214,31 @@ void main() {
       );
     });
 
+    test("accepts equal revision heartbeat state updates", () async {
+      final current = _service("one").copyWith(
+        state: ServiceState(
+          status: ServiceStateStatus.offline,
+          lastSeen: DateTime.utc(2025, 1, 1),
+        ),
+      );
+      final heartbeat = current.copyWith(
+        state: ServiceState(
+          status: ServiceStateStatus.online,
+          lastSeen: DateTime.utc(2025, 1, 1, 0, 1),
+        ),
+      );
+      await harness.emit(
+        skir.WatchOrganizationServicesResponse.wrapList([current.toSkir()]),
+      );
+
+      expect(
+        await harness.emit(
+          skir.WatchOrganizationServicesResponse.wrapUpdate(heartbeat.toSkir()),
+        ),
+        [heartbeat],
+      );
+    });
+
     test("maps internal and unknown errors", () async {
       expect(
         await harness.emitError(
@@ -231,7 +261,7 @@ void main() {
     (userId: "user1", organizationId: null),
   ]) {
     test("null watch guard yields empty without publication", () async {
-      final nats = MockNatsClient();
+      final nats = FakeNatsClient();
       final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => auth.userId),
@@ -248,7 +278,7 @@ void main() {
       addTearDown(subscription.close);
 
       expect(await container.read(servicesProvider.future), isEmpty);
-      expect(nats.publications, isEmpty);
+      expect(nats.requests, isEmpty);
       expect(nats.subscriptionSubjects, isEmpty);
     });
   }

@@ -78,6 +78,11 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_badgeWrapper(:final value) => _badge(value),
     wire.PresentationElement_chipWrapper(:final value) => _chip(value),
     wire.PresentationElement_progressWrapper(:final value) => _progress(value),
+    wire.PresentationElement_statusWrapper(:final value) => _status(value),
+    wire.PresentationElement_dateTimeWrapper(:final value) => _dateTime(value),
+    wire.PresentationElement_relativeTimeWrapper(:final value) => _relativeTime(
+      value,
+    ),
     wire.PresentationElement_typedFieldWrapper(:final value) => _typedField(
       value,
     ),

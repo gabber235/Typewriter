@@ -4,33 +4,27 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 Service service({
   String name = "test_service",
-  List<ServiceRole>? roles,
+  ServiceRole? role,
   ServiceState? state,
 }) => Service(
   serviceId: recordId("service:test"),
   revision: 1,
   name: name,
-  roles: roles ?? [RealmServiceRole(version: "1")],
+  role: role ?? HostServiceRole(version: "1"),
   createdAt: DateTime.utc(2025),
   state: state,
 );
 
 void main() {
   test("converts to and from Skir", () {
-    final original = service(roles: [RealmServiceRole(version: "1")]);
+    final original = service(role: HostServiceRole(version: "1"));
     expect(Service.fromSkir(original.toSkir()), original);
   });
 
-  test("detects wrapped roles", () {
-    final value = service(
-      roles: [
-        EngineServiceRole(version: "1"),
-        RealmServiceRole(version: "1"),
-      ],
-    );
-    expect(value.isEngine, isTrue);
-    expect(value.isRealm, isTrue);
-    expect(value.label, "Engine & Realm");
+  test("detects host role", () {
+    final value = service(role: HostServiceRole(version: "1"));
+    expect(value.isHost, isTrue);
+    expect(value.label, "Host");
     expect(value.icon, Icons.dns);
   });
 
@@ -59,7 +53,7 @@ void main() {
   test("formats display name and missing state", () {
     final value = service();
     expect(value.displayName, "Test Service");
-    expect(value.lastSeenLabel, "Never");
-    expect(value.label, "Realm");
+    expect(value.lastSeen, isNull);
+    expect(value.label, "Host");
   });
 }

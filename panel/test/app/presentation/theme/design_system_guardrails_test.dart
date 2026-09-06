@@ -19,11 +19,6 @@ final exemptions = <Exemption>[
     "design-system palette seeds",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/domain/page_type_extensions.dart",
-    RegExp(r"Colors\.(?:blue|green|red|purple|deepPurple|orange)"),
-    "persisted page-type identity colors",
-  ),
-  Exemption(
     "lib/features/organizations/features/services/application/service_models.dart",
     RegExp(r"Colors\.(?:blue|deepPurple|deepOrangeAccent|green)"),
     "service-role identity colors",
@@ -80,7 +75,7 @@ final exemptions = <Exemption>[
     "color value conversion",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph.dart",
+    "lib/shared/graph/presentation/graph.dart",
     RegExp(r"Colors\.grey"),
     "custom graph painter geometry",
   ),
@@ -119,7 +114,7 @@ final exemptions = <Exemption>[
     "lib/app/presentation/shell/sidebar.dart",
     "lib/app/presentation/shell/sidebar_links.dart",
     "lib/shared/editors/presentation/header.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.dart",
+    "lib/shared/graph/presentation/resizable_element.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
@@ -150,7 +145,7 @@ final exemptions = <Exemption>[
   for (final path in [
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/panes.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph_group.dart",
+    "lib/shared/graph/presentation/graph_group.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_segment_surface.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
@@ -313,8 +308,7 @@ void main() {
         final isUi =
             path.contains("/presentation/") ||
             path.contains("/shared/ui/") ||
-            path.contains("/application/services.dart") ||
-            path.contains("/domain/page_type_extensions.dart");
+            path.contains("/application/services.dart");
         if (!isUi) {
           continue;
         }

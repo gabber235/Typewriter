@@ -140,13 +140,23 @@ async fn member_receives_all_organization_capabilities(
         "cloud.to.user.panel_user.organization.writers.members.update",
         "cloud.to.user.panel_user.organization.writers.members.remove",
         "cloud.to.user.panel_user.organization.writers.services.bind",
+        "cloud.to.user.panel_user.organization.writers.topology.watch",
+        "cloud.to.user.panel_user.organization.writers.topology.configure",
         "cloud.to.organization.writers.realm.create",
         "service.to.*.organization.writers.realm.editor.catalog.fetch",
         "service.to.*.organization.writers.realm.editor.catalog.invalidate",
+        "service.to.*.organization.writers.realm.editor.elements.fetch",
         "service.to.*.organization.writers.realm.editor.presentation.search",
-        "service.to.*.organization.writers.realm.book.create",
-        "service.to.*.organization.writers.realm.pages.chapters",
-        "service.to.*.organization.writers.realm.tag.resize",
+        "service.to.*.organization.writers.realm.editor.presentation.search.cancel",
+        "service.to.*.organization.writers.realm.editor.capability.computation.invoke",
+        "service.to.*.organization.writers.realm.editor.capability.command.invoke",
+        "service.to.*.organization.writers.realm.shared.catalog.fetch",
+        "service.to.*.organization.writers.realm.shared.publish",
+        "service.to.*.organization.writers.realm.shared.blob.read",
+        "service.to.*.organization.writers.realm.library.authoring.snapshot.get",
+        "service.to.*.organization.writers.realm.library.authoring.batch.apply",
+        "service.to.*.organization.writers.realm.compiled.content.watch",
+        "typewriter.presence.organization.writers.user.panel_user",
     ] {
         assert!(publish.iter().any(|subject| subject == required));
     }
@@ -155,12 +165,13 @@ async fn member_receives_all_organization_capabilities(
         "cloud.from.organization.writers.roles.watch",
         "cloud.from.organization.writers.members.watch",
         "cloud.from.organization.writers.services.watch",
+        "cloud.from.organization.writers.topology.watch",
         "cloud.from.organization.writers.realm.list",
         "service.from.*.organization.writers.realm.editor.catalog.invalidate",
         "service.from.*.organization.writers.realm.editor.presentation.search",
-        "service.from.*.organization.writers.realm.book.resource.watch",
-        "service.from.*.organization.writers.realm.page.watch",
-        "service.from.*.organization.writers.realm.tag.resource.watch",
+        "service.from.*.organization.writers.realm.library.authoring.changed",
+        "service.from.*.organization.writers.realm.compiled.content.watch",
+        "typewriter.presence.organization.writers.user.*",
     ] {
         assert!(subscribe.iter().any(|subject| subject == required));
     }
