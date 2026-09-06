@@ -6310,6 +6310,7 @@ dependencies = [
  "surrealdb",
  "tokio",
  "toml",
+ "trybuild",
  "uuid",
  "wash-runtime",
  "wasmcloud-plugin-surrealdb",

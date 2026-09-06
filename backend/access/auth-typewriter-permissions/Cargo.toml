@@ -26,4 +26,3 @@ tracing-opentelemetry.workspace = true
 
 [dev-dependencies]
 rstest.workspace = true
-trybuild.workspace = true

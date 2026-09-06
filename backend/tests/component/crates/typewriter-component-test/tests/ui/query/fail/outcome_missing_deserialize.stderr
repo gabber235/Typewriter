@@ -16,18 +16,18 @@ help: the trait `for<'de> serde_core::de::Deserialize<'de>` is not implemented f
   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `Outcome` type
   = note: for types from other crates check whether the crate offers a `serde` feature flag
   = help: the following other types implement trait `serde_core::de::Deserialize<'de>`:
-            &'a Path
-            &'a [u8]
-            &'a str
-            ()
-            (T,)
-            (T0, T1)
-            (T0, T1, T2)
-            (T0, T1, T2, T3)
+            `&'a Path` implements `serde_core::de::Deserialize<'de>`
+            `&'a [u8]` implements `serde_core::de::Deserialize<'de>`
+            `&'a str` implements `serde_core::de::Deserialize<'de>`
+            `()` implements `serde_core::de::Deserialize<'de>`
+            `(T,)` implements `serde_core::de::Deserialize<'de>`
+            `(T0, T1)` implements `serde_core::de::Deserialize<'de>`
+            `(T0, T1, T2)` implements `serde_core::de::Deserialize<'de>`
+            `(T0, T1, T2, T3)` implements `serde_core::de::Deserialize<'de>`
           and $N others
   = note: required for `Outcome` to implement `serde_core::de::DeserializeOwned`
 note: required by a bound in `TransactionQuery`
- --> $WORKSPACE/wasmcloud-utils/src/database/mod.rs
+ --> $WASMCLOUD_UTILS/src/database/mod.rs
   |
   | pub struct TransactionQuery<'a, T: DeserializeOwned> {
   |                                    ^^^^^^^^^^^^^^^^ required by this bound in `TransactionQuery`
