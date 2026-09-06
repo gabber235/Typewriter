@@ -3,6 +3,12 @@ package com.typewritermc.loader.artifact
 import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.shared.SharedArtifactDescriptor
 
+/**
+ * Collects retention roots before blob garbage collection.
+ *
+ * Current and previous deployments, shared descriptors, transfers, accepted candidates, and rollout projections
+ * protect their digests. The caller supplies a coherent view and coordinates concurrent publication.
+ */
 data class DigestProtectionState(
     val currentDeployment: DeploymentSnapshot?,
     val previousDeployment: DeploymentSnapshot?,

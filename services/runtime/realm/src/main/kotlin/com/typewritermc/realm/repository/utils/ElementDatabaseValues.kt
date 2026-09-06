@@ -5,6 +5,11 @@ import com.typewritermc.elements.StoredReference
 import com.typewritermc.types.TypeExpression
 import kotlinx.serialization.json.Json
 
+/**
+ * Maps editor placement to the versioned database field layout understood by the element record parser.
+ *
+ * Frame values and graph geometry are preserved; execution compilation later discards graph layout.
+ */
 internal fun ElementPlacement.databaseValue(): Map<String, Any> =
     when (this) {
         is ElementPlacement.Graph -> {

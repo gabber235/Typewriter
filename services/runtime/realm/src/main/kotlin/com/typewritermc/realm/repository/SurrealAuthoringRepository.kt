@@ -18,6 +18,13 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 
+/**
+ * Applies authoring changes and idempotency replay records in one Surreal transaction.
+ *
+ * Identical replay returns the stored result; reuse with a different payload fails. Applied batches advance
+ * collaboration sequence, and relevant changes also advance compiler source revision. Domain rejection unwinds the
+ * transaction before becoming a result.
+ */
 class SurrealAuthoringRepository(
     private val database: Surreal,
     private val pageDocuments: SurrealPageDocumentRepository,
@@ -137,6 +144,11 @@ private fun Transaction.store(
     ).take(0)
 }
 
+/**
+ * Unwinds a transaction with a typed authoring rejection.
+ *
+ * The repository catches it outside the transaction so rejected batches cannot commit partial edits.
+ */
 internal class AuthoringRejected(
     val result: AuthoringBatchResult,
 ) : RuntimeException(null, null, false, false)

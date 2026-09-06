@@ -20,6 +20,11 @@ import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.GeneratedContribution
 import com.typewritermc.imprint.ImprintManifest
 
+/**
+ * Separates editor metadata from executable type discovery and unknown producer payloads.
+ *
+ * Retaining unknown contributions allows specialized readers to process them without losing provenance.
+ */
 data class AssembledDeploymentCatalog(
     val discovery: DeploymentDiscoverySnapshot,
     val elements: ElementCatalog,
@@ -27,6 +32,13 @@ data class AssembledDeploymentCatalog(
     val unknownContributions: List<GeneratedContribution>,
 )
 
+/**
+ * Assembles catalogs from the selected engines, extensions, and other deployment manifests.
+ *
+ * Structural metadata and runtime bindings remain separate. Source part eligibility controls executable
+ * contributions, while element availability also considers facts. Artifact entries are deduplicated by identity
+ * and processing order is stable.
+ */
 object DeploymentCatalogAssembler {
     fun assemble(
         generation: CatalogGeneration,

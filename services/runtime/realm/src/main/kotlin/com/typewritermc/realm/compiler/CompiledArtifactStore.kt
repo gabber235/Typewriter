@@ -14,6 +14,12 @@ import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
 import com.typewritermc.loader.api.artifact.TransferId
 import kotlinx.serialization.json.Json
 
+/**
+ * Stores serialized manifest and shard bytes before their activation is published.
+ *
+ * The returned pointers must address complete immutable blobs. Storage alone does not advance the active compiled
+ * manifest.
+ */
 fun interface CompiledArtifactPublisher {
     suspend fun store(
         activationRevision: Long,
@@ -22,6 +28,12 @@ fun interface CompiledArtifactPublisher {
     ): CompiledContentActivation
 }
 
+/**
+ * Writes compiled JSON payloads into digest addressed blob storage and returns activation pointers.
+ *
+ * Semantic manifest and shard identities remain distinct from serialized blob digests. Existing blobs are reused;
+ * failures propagate before repository activation, potentially leaving reusable unreferenced bytes.
+ */
 class CompiledArtifactStore(
     private val blobs: BlobEndpoint,
 ) : CompiledArtifactPublisher {

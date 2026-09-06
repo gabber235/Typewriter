@@ -17,6 +17,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
+/**
+ * Exchanges bounded presence, command, and status requests with hosts.
+ *
+ * Timeouts can produce incomplete replies. The coordinator validates expected hosts and exact attempt and
+ * projection state.
+ */
 interface RolloutMessenger {
     suspend fun discover(
         probe: ProbeRealmHosts,
@@ -36,10 +42,19 @@ interface RolloutMessenger {
     ): Map<HostId, ParticipantStatus>
 }
 
+/**
+ * Publishes immutable canonical host projections and returns exact references for participant retrieval.
+ */
 interface ProjectionRepository {
     suspend fun publish(projection: HostDeploymentProjection): ProjectionReference
 }
 
+/**
+ * Persists attempt ordering, progress, participant observations, and committed deployments.
+ *
+ * Progress persistence and final commit are separate operations. Attempt ordinals must survive restart to
+ * distinguish stale commands.
+ */
 interface RolloutStateRepository {
     suspend fun nextAttempt(generation: DeploymentGeneration): RolloutAttempt
 
@@ -54,6 +69,13 @@ interface RolloutStateRepository {
     suspend fun record(event: ParticipantStateChanged)
 }
 
+/**
+ * Stages and activates projections across responding assigned hosts, then proves a healthy stability interval.
+ *
+ * The Realm host must answer discovery; absent engine hosts can reconcile later. Topology must remain unchanged
+ * before commit. Failure triggers abort before committing or rollback afterward; compensation itself may fail and
+ * is not an atomic distributed transaction.
+ */
 class CoordinatedRollout(
     private val realmId: RealmId,
     private val topology: RealmTopology,
@@ -112,6 +134,12 @@ class CoordinatedRollout(
         }
     }
 
+    /**
+     * Repairs stale or unhealthy responding hosts to the current committed snapshot.
+     *
+     * Only stale participants receive commands. Topology and stability checks still apply, and no newer content is
+     * selected.
+     */
     suspend fun reconcileCommitted(deployment: CommittedDeployment) {
         require(state.committed()?.snapshot == deployment.snapshot) { "Only the committed deployment can be reconciled." }
         val active = discover()

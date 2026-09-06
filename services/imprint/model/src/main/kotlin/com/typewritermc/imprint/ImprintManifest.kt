@@ -11,7 +11,11 @@ const val IMPRINT_MANIFEST_PATH = "META-INF/typewriter/manifest.cbor"
 const val IMPRINT_CONTRIBUTIONS_PATH = "META-INF/typewriter/contributions"
 const val CURRENT_IMPRINT_FORMAT = 1
 
-/** Canonical machine readable description embedded in every Imprint artifact. */
+/**
+ * Canonical artifact description embedded at [IMPRINT_MANIFEST_PATH]. Shared by Gradle packaging, loader
+ * validation, and discovery so artifact identity and generated contributions travel with the bytes they describe.
+ * The format version governs this envelope independently of each producer's contribution payload format.
+ */
 @Serializable
 sealed interface ImprintManifest {
     val format: Int
@@ -20,7 +24,11 @@ sealed interface ImprintManifest {
     val contributions: List<GeneratedContribution>
 }
 
-/** Describes an artifact that is started by a stable Typewriter host. */
+/**
+ * Manifest for a runtime started through the stable loader API. [hostApi] declares the compatible host contract
+ * range; it is independent of the artifact version. Packaging validates that hosted artifacts expose exactly one
+ * runtime provider.
+ */
 @Serializable
 sealed interface HostedArtifactManifest : ImprintManifest {
     val hostApi: VersionConstraint
@@ -37,7 +45,11 @@ data class RealmManifest(
     override val contributions: List<GeneratedContribution>,
 ) : HostedArtifactManifest
 
-/** Describes an engine and every Typewriter component bundled into its canonical JAR. */
+/**
+ * Manifest for an engine and its bundled component graph. Direct capabilities preserve declared constraints,
+ * resolved capabilities record exact selections, and bundled components describe packaged Typewriter components.
+ * Contributions include discovery metadata assembled for the canonical engine JAR.
+ */
 @Serializable
 @SerialName("engine")
 data class EngineManifest(
@@ -60,7 +72,11 @@ data class EngineManifest(
     }
 }
 
-/** Describes a reusable engine capability and its complete capability dependency graph. */
+/**
+ * Manifest for a reusable engine capability. Direct requirements retain compatibility constraints and resolved
+ * capabilities describe the complete selected dependency graph. Capabilities contribute contracts and generated
+ * metadata to engines rather than serving as independently hosted runtimes.
+ */
 @Serializable
 @SerialName("capability")
 data class CapabilityManifest(
@@ -78,7 +94,12 @@ data class CapabilityManifest(
     }
 }
 
-/** Describes the independently targeted source parts contained by one extension JAR. */
+/**
+ * Manifest for independently targeted source parts packaged in one extension JAR. Common must be first, names must
+ * be unique, and explicit includes must reference existing parts without cycles or redundant common inclusion.
+ * Build provenance records compilation selections; runtime source eligibility is evaluated against the deployment
+ * catalog.
+ */
 @Serializable
 @SerialName("extension")
 data class ExtensionManifest(
@@ -129,7 +150,12 @@ private fun validateSourcePartIncludes(sourceParts: List<ExtensionSourcePart>) {
     sourceParts.forEach { visit(it.name) }
 }
 
-/** Encodes and decodes the canonical CBOR manifest format. */
+/**
+ * CBOR boundary for canonical artifact manifests. Encoding includes default fields so the envelope is explicit.
+ * Decoding constructs the typed manifest, applies its model invariants, and rejects unsupported format versions.
+ * Malformed data and invariant failures propagate to the caller; this codec performs no signature or digest
+ * verification.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 object ImprintManifestCodec {
     private val cbor = Cbor { encodeDefaults = true }

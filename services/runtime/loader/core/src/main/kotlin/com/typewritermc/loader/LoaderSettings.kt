@@ -7,6 +7,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
 
+/**
+ * Loader configuration snapshot with precedence: nonblank JVM property, environment variable, then configuration
+ * file value. Missing or blank values fall through to the next source. [system] selects the optional properties
+ * file through TYPEWRITER_CONFIG_FILE; a configured missing file fails startup rather than silently using
+ * defaults.
+ */
 internal class LoaderSettings(
     private val properties: Map<String, String> = emptyMap(),
     private val environment: Map<String, String> = emptyMap(),

@@ -4,6 +4,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
 
+/**
+ * Resolves nonblank settings in system property, environment, configuration file, then default order.
+ *
+ * The system factory snapshots process inputs and loads TYPEWRITER_CONFIG_FILE when specified. Missing configured
+ * files fail immediately; settings do not refresh automatically.
+ */
 internal class RealmSettings(
     private val systemProperties: Map<String, String> = emptyMap(),
     private val environment: Map<String, String> = emptyMap(),

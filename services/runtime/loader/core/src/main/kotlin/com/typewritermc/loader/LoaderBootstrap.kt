@@ -24,6 +24,11 @@ interface LoaderBootstrap {
     ): RunningHost
 }
 
+/**
+ * Ownership handle returned after host startup. Exposes the service connection to callers while retaining the stop
+ * action supplied by the bootstrap. The entrypoint must stop this handle before closing its [LoaderApplication];
+ * this wrapper itself does not enforce idempotence or cancel the entrypoint scope.
+ */
 class RunningHost(
     private val ownedService: LoaderService,
     private val stopAction: suspend () -> Unit,

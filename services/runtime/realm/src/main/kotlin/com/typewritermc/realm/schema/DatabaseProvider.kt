@@ -14,6 +14,12 @@ import com.typewritermc.services.libs.telemetry.withErrorSlug
 
 private val DATABASE_CONNECT_FAILURE = ErrorSlug.of("realm-database-connect-failed")
 
+/**
+ * Owns creation and release of an initialized Realm database handle.
+ *
+ * Connect runs beneath a main telemetry scope and must return a connection ready for repository use. The Realm
+ * lifecycle pairs it with close.
+ */
 interface RealmDatabaseProvider {
     context(_: MainSpanScope)
     fun connect(): Surreal
@@ -23,6 +29,12 @@ interface RealmDatabaseProvider {
     }
 }
 
+/**
+ * Connects, authenticates, checks the pinned server version, and migrates Realm storage before returning.
+ *
+ * RocksDB configuration is rejected because the current SDK does not support it. Any initialization failure closes
+ * the acquired handle and preserves cleanup causes.
+ */
 class DatabaseProvider(
     private val configuration: RealmDatabaseConfiguration,
 ) : RealmDatabaseProvider {

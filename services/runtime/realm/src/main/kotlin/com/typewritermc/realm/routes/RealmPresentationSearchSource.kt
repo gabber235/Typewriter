@@ -30,6 +30,12 @@ import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import java.util.concurrent.ConcurrentHashMap
 import skirout.editor.v1.search.RealmSearchSelectorExpression as WireSelectorExpression
 
+/**
+ * Starts a search with an initial response and separately published updates.
+ *
+ * The subscription id identifies producer work for explicit cancellation. Cancelling a client watch alone does not
+ * call this source cancellation operation.
+ */
 interface RealmPresentationSearchSource {
     suspend fun watch(
         request: RealmPresentationSearchRequest,
@@ -52,6 +58,12 @@ class UnavailableRealmPresentationSearchSource : RealmPresentationSearchSource {
     override fun cancel(subscriptionId: String): Boolean = false
 }
 
+/**
+ * Runs validated search capabilities in the supplied scope and tracks jobs by subscription id.
+ *
+ * Reusing an id cancels its previous job. Partial batches accumulate into complete snapshots; an explicit Complete
+ * update marks readiness. Jobs are removed on termination, and cancellation propagates within the search worker.
+ */
 class CapabilityRealmPresentationSearchSource(
     private val scope: CoroutineScope,
     private val capabilities: RealmCapabilityRegistry,

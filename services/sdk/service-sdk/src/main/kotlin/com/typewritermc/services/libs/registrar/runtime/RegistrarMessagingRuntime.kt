@@ -173,6 +173,12 @@ private fun NatsConnectionState.toRuntimeConnectivity(): RuntimeConnectivity =
         NatsConnectionState.Disconnected, NatsConnectionState.ShuttingDown -> RuntimeConnectivity.DISCONNECTED
     }
 
+/**
+ * Adapts NATS lifecycle and service protocol operations to registrar contracts.
+ *
+ * It maps binding, heartbeat, and shutdown failures without conflating unknown protocol variants with transient
+ * connectivity. Closure shuts down NATS and clears authentication caches.
+ */
 internal class TypewriterRegistrarRuntime(
     override val communicator: Communicator,
     private val service: ServiceAddress,
@@ -344,6 +350,12 @@ internal class RegistrarAuthenticationException(
     val failure: RegistrarFailure,
 ) : RuntimeException(null, null, false, false)
 
+/**
+ * Acquires token and Sentinel material, then constructs the NATS backed registrar runtime.
+ *
+ * Setup progress exposes the authentication phase. Creating the runtime is separate from the supervisor connecting
+ * it; returned runtime resources become registrar owned.
+ */
 class TypewriterRegistrarRuntimeFactory(
     private val configuration: RegistrarConfiguration,
     private val httpClient: ServiceHttpClient,

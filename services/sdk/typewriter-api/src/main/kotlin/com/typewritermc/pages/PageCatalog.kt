@@ -10,6 +10,12 @@ import com.typewritermc.types.TypePrototypeRegistry
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
+/**
+ * Describes editor roles using structural type references that can cross the process boundary.
+ *
+ * This is the catalog form of [PageEditorDefinition]; consumers need no Kotlin class loading to render the editor
+ * choices.
+ */
 @Serializable
 sealed interface ResolvedPageEditorDefinition {
     @Serializable
@@ -26,6 +32,11 @@ sealed interface ResolvedPageEditorDefinition {
     ) : ResolvedPageEditorDefinition
 }
 
+/**
+ * Publishes a page kind revision with validated visual values and resolved editor roles.
+ *
+ * The descriptor is catalog metadata; it contains no authored page instances or runtime resources.
+ */
 @Serializable
 data class PageDescriptor(
     val kind: PageKindRef,
@@ -40,6 +51,12 @@ data class PageDescriptor(
     }
 }
 
+/**
+ * Generated bridge from a page declaration to runtime catalog assembly.
+ *
+ * Provenance locates invalid specifications. [specification] executes authored code, so assembly catches its
+ * failures and excludes invalid pages with diagnostics.
+ */
 interface PageProvider {
     val kind: PageKindRef
     val namespace: String
@@ -59,6 +76,12 @@ data class PageDiagnostic(
     val kind: PageKindRef? = null,
 )
 
+/**
+ * Stores accepted page definitions alongside diagnostics for rejected declarations.
+ *
+ * Exact kind references must be unique. [definition] returns null for absent revisions rather than selecting a
+ * newer or older schema.
+ */
 data class PageCatalog(
     val entries: List<PageCatalogEntry>,
     val diagnostics: List<PageDiagnostic>,
@@ -82,6 +105,13 @@ data class PageCatalogEntry(
     val descriptor: PageDescriptor,
 )
 
+/**
+ * Compiles page providers into deterministic editor metadata.
+ *
+ * Invalid specifications become diagnostics. All declarations sharing a duplicate kind identity are excluded,
+ * including different revisions. Successful entries are sorted by display name; unresolved role classes fall back
+ * to qualified type identities at revision one.
+ */
 object PageCatalogAssembler {
     fun assemble(
         providers: Collection<PageProvider>,

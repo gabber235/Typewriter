@@ -4,7 +4,11 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
 
-/** Result of an expected registrar operation. */
+/**
+ * Returns an expected registration outcome without requiring exception based control flow.
+ *
+ * Cancellation and fatal runtime failures remain exceptional and are not ordinary retryable results.
+ */
 sealed interface RegistrarResult<out Value> {
     data class Success<Value>(
         val value: Value,
@@ -15,7 +19,12 @@ sealed interface RegistrarResult<out Value> {
     ) : RegistrarResult<Nothing>
 }
 
-/** Safe, typed registrar failure. */
+/**
+ * Classifies registration failure by boundary and retry policy.
+ *
+ * Recoverability is explicit where retry can help. Protocol incompatibility and ambiguous identity issuance
+ * require different handling from transient connectivity loss. Causes are wrapped for deliberate disclosure.
+ */
 sealed interface RegistrarFailure {
     data class Configuration(
         val slug: String,
@@ -174,6 +183,12 @@ sealed interface CredentialStoreResult {
     ) : CredentialStoreResult
 }
 
+/**
+ * Owns durable identity credentials across registrar restarts.
+ *
+ * Missing storage permits initial issuance; corrupt or unsupported storage must remain distinguishable from
+ * missing data to avoid silently creating another identity.
+ */
 interface CredentialStorage {
     suspend fun load(): CredentialLoadResult
 
@@ -191,6 +206,12 @@ enum class IdentityRejectionReason {
     BUILTIN_ROLE_NAME_FORBIDDEN,
 }
 
+/**
+ * Reports whether identity issuance failed definitively or may have succeeded remotely.
+ *
+ * When [outcomeMayBeAmbiguous] is true, automatic reissuance can create another identity. The registrar exposes an
+ * explicit unknown outcome state instead of treating this as a normal retry.
+ */
 sealed interface IdentityIssueError {
     val outcomeMayBeAmbiguous: Boolean
 
@@ -264,6 +285,13 @@ sealed interface RuntimeCloseResult {
     ) : RuntimeCloseResult
 }
 
+/**
+ * Owns one authenticated messaging runtime used by the registrar supervisor.
+ *
+ * Connectivity and organization binding are separate concerns. The registrar drives connection, binding
+ * observation, permission refresh, heartbeats, shutdown notification, and final closure. The communicator is
+ * borrowed by service callers and must not be independently closed.
+ */
 interface RegistrarRuntime {
     val communicator: Communicator
     val connectivity: Flow<RuntimeConnectivity>
@@ -304,6 +332,12 @@ fun interface RuntimeSetupProgressSink {
     fun report(progress: RuntimeSetupProgress)
 }
 
+/**
+ * Creates a messaging runtime from persisted identity credentials and reports setup progress.
+ *
+ * Creation may acquire authentication material before returning. A successful runtime becomes registrar owned;
+ * failure must not leave unowned transport resources.
+ */
 fun interface RegistrarRuntimeFactory {
     suspend fun create(
         credentials: IdentityCredentials,

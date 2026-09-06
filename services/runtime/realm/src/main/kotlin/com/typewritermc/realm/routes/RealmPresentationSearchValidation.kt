@@ -8,6 +8,12 @@ import skirout.editor.v1.search.RealmSearchSelectorExpression
 import skirout.editor.v1.type_catalog.TypeExpression
 import skirout.editor.v1.type_catalog.TypedValue
 
+/**
+ * Collects request shape diagnostics before search execution.
+ *
+ * It checks required fields and known selector expression structure with a bounded node count. A null result means
+ * these checks passed, not that catalog generation or capability types match.
+ */
 internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSearchRequest): RealmPresentationSearchUpdate? {
     val messages =
         buildList {

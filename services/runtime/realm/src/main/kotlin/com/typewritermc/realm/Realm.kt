@@ -47,7 +47,13 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 
-/** Owns Realm storage and application routes for one hosted deployment. */
+/**
+ * Owns database access, authoring compilation, and application routes for one hosted Realm.
+ *
+ * Startup initializes storage and waits for routes on a usable host messaging session. Session replacement
+ * rebuilds the router without recreating authored state. Compiler and catalog invalidation workers belong to this
+ * lifecycle; shutdown must finish before the host closes deployment resources.
+ */
 class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val editorCatalog: RealmEditorCatalogSource,

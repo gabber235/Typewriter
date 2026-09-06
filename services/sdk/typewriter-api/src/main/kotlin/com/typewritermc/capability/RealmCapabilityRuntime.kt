@@ -4,6 +4,12 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypePrototypeRegistry
 
+/**
+ * Advertises an operation shape and resolved payload types to catalog consumers.
+ *
+ * Descriptors contain no executable handler. Invocation requires a provider with the same id in
+ * [RealmCapabilityRegistry].
+ */
 sealed interface RealmCapabilityDescriptor {
     val id: CapabilityId
     val requestType: ResolvedTypeRef
@@ -26,12 +32,24 @@ sealed interface RealmCapabilityDescriptor {
     ) : RealmCapabilityDescriptor
 }
 
+/**
+ * Bridge implemented by generated adapters between authored handlers and generic Realm invocation.
+ *
+ * [descriptor] resolves handler types through the deployment prototype registry and may fail when required codecs
+ * are unavailable.
+ */
 sealed interface RealmCapabilityProvider {
     val id: CapabilityId
 
     fun descriptor(prototypes: TypePrototypeRegistry): RealmCapabilityDescriptor
 }
 
+/**
+ * Adapts a typed search handler into a stream of structural values.
+ *
+ * The invocation context and registry belong to the calling deployment. Collection owns the lifetime of the
+ * resulting search work.
+ */
 interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
     fun invoke(
         context: RealmSearchContext,
@@ -41,6 +59,11 @@ interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
     ): RealmSearch<DataValue>
 }
 
+/**
+ * Adapts one suspending computation to structural request and result values.
+ *
+ * Handler and codec failures propagate to the Realm invocation boundary for classification.
+ */
 interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
     suspend fun invoke(
         context: RealmComputationContext,
@@ -49,6 +72,11 @@ interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
     ): DataValue
 }
 
+/**
+ * Adapts a command handler to a structural request and panel instruction outcome.
+ *
+ * The adapter does not provide a transaction or retry guarantee for handler side effects.
+ */
 interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
     suspend fun invoke(
         context: RealmCommandContext,
@@ -57,6 +85,12 @@ interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
     ): RealmCommandOutcome
 }
 
+/**
+ * Indexes the capability providers of one deployment and resolves their catalog descriptors.
+ *
+ * Ids must be globally unique across operation kinds. Typed lookups reject both missing ids and the wrong
+ * operation kind. Descriptors are sorted by id for stable publication.
+ */
 class RealmCapabilityRegistry(
     providers: Collection<RealmCapabilityProvider>,
     prototypes: TypePrototypeRegistry,

@@ -10,8 +10,20 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
+/**
+ * Marks domain types that may be addressed through a typed [Ref].
+ *
+ * The marker does not provide lookup, persistence, or a universal identity property.
+ */
 interface Referenceable
 
+/**
+ * Combines a validated table name with a typed record key.
+ *
+ * [referenceString] preserves ordinary string keys and uses a reserved prefix plus JSON for nonstring keys.
+ * Strings beginning with that prefix are escaped. Use [parse] for the inverse instead of splitting or coercing
+ * keys manually.
+ */
 @Serializable
 data class ResourceId(
     val table: String,
@@ -34,6 +46,12 @@ data class ResourceId(
     }
 }
 
+/**
+ * Carries a typed resource address without loading the referenced object.
+ *
+ * The generic type aids Kotlin callers but is erased from the scalar serialized reference. Receiving boundaries
+ * must verify the target table and expected type; construction does not establish existence.
+ */
 @Serializable(with = RefSerializer::class)
 @TypewriterString
 data class Ref<out T : Referenceable>(
@@ -42,6 +60,11 @@ data class Ref<out T : Referenceable>(
     constructor(table: String, key: String) : this(ResourceId(table, key))
 }
 
+/**
+ * Encodes references with [ResourceId.referenceString] and reconstructs their typed key on decode.
+ *
+ * The generic target type is not included in the payload. Parsing failures propagate to the receiving boundary.
+ */
 object RefSerializer : KSerializer<Ref<*>> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Ref", PrimitiveKind.STRING)
 
@@ -55,6 +78,12 @@ object RefSerializer : KSerializer<Ref<*>> {
     override fun deserialize(decoder: Decoder): Ref<*> = Ref<Referenceable>(ResourceId.parse(decoder.decodeString()))
 }
 
+/**
+ * Preserves the database identity distinction between strings, numbers, UUIDs, arrays, and objects.
+ *
+ * Do not flatten keys with toString for persistence or transport. Composite keys contain [RecordIdValue] trees;
+ * UUID keys validate syntax at construction.
+ */
 @Serializable
 sealed interface RecordIdKey {
     @Serializable
@@ -92,6 +121,12 @@ sealed interface RecordIdKey {
     ) : RecordIdKey
 }
 
+/**
+ * Represents values nested inside array and object record keys.
+ *
+ * It is separate from [DataValue] because database key identity has its own supported value shapes and
+ * serialization contract.
+ */
 @Serializable
 sealed interface RecordIdValue {
     @Serializable

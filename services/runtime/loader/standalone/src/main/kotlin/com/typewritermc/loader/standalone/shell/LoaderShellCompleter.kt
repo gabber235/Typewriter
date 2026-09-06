@@ -6,6 +6,11 @@ import org.jline.reader.Completer
 import org.jline.reader.LineReader
 import org.jline.reader.ParsedLine
 
+/**
+ * Derives completion candidates from the actual Clikt command tree. Walks preceding command words to identify the
+ * current command and matches subcommands or options against the current prefix without case sensitivity. It does
+ * not execute commands or inspect remote state.
+ */
 class LoaderShellCompleter(
     private val rootCommand: BaseCliktCommand<*>,
 ) : Completer {

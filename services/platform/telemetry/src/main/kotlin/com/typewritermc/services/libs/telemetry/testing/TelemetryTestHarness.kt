@@ -22,6 +22,12 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Owns an isolated SDK with in memory span and log exporters for contract tests.
+ *
+ * Simple processors expose completed records synchronously. Active span tracking detects leaked boundaries. Close
+ * flushes and shuts down providers with bounded waits; clear removes recorded output without closing active spans.
+ */
 class TelemetryTestHarness private constructor(
     val openTelemetry: OpenTelemetrySdk,
     val telemetry: ServiceTelemetry,

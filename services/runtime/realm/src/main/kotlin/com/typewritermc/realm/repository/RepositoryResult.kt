@@ -3,6 +3,12 @@ package com.typewritermc.realm.repository
 import com.surrealdb.ErrorKind
 import com.surrealdb.ServerException
 
+/**
+ * Maps recognized database domain errors to stable protocol identifiers.
+ *
+ * Thrown message matching is exact; unknown errors remain exceptional rather than being guessed into a domain
+ * category.
+ */
 enum class RepositoryFailure(
     val wireValue: String,
 ) {
@@ -20,6 +26,11 @@ enum class RepositoryFailure(
     }
 }
 
+/**
+ * Separates repository success from recognized domain rejection.
+ *
+ * Unexpected database and transport errors remain exceptions with their causes preserved.
+ */
 sealed interface RepositoryResult<out Value> {
     data class Success<Value>(
         val value: Value,
@@ -30,6 +41,11 @@ sealed interface RepositoryResult<out Value> {
     ) : RepositoryResult<Nothing>
 }
 
+/**
+ * Converts only recognized Surreal THROWN failures into typed domain results.
+ *
+ * All other runtime failures propagate unchanged.
+ */
 internal inline fun <Value> repositoryMutation(operation: () -> Value): RepositoryResult<Value> =
     try {
         RepositoryResult.Success(operation())

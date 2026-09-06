@@ -13,10 +13,22 @@ import org.koin.dsl.koinApplication
 import java.net.URL
 import java.net.URLClassLoader
 
+/**
+ * Factory implemented by generated providers to bind a contribution into an isolated Koin application.
+ *
+ * The contribution key carries provenance into the generated bindings. Providers are loaded reflectively and
+ * require a public zero argument constructor.
+ */
 interface GeneratedDiscoveryModule {
     fun module(contribution: ContributionKey): Module
 }
 
+/**
+ * Supplies executable artifact URLs and deployment context to discovery loading.
+ *
+ * Artifact selection and eligibility must be resolved before loading. The module loader consumes the already
+ * assembled bindings; these selection fields do not independently filter its classpath.
+ */
 data class DiscoveryArtifactPackage(
     val artifacts: List<URL>,
     val selectedEngine: com.typewritermc.imprint.ArtifactId?,
@@ -24,6 +36,12 @@ data class DiscoveryArtifactPackage(
     val facts: DeploymentFacts,
 )
 
+/**
+ * Owns the isolated Koin application and class loader for a loaded discovery domain.
+ *
+ * Close after activation resources have been released. Closure attempts both resources even if one fails and
+ * attaches later failures as suppressed exceptions.
+ */
 class DiscoveryDeployment(
     val domain: DiscoveryDomainId,
     val application: KoinApplication,
@@ -43,6 +61,13 @@ class DiscoveryDeployment(
     }
 }
 
+/**
+ * Loads domain specific generated modules and prototypes from a deployment classpath.
+ *
+ * Bindings are loaded in local name order into an isolated Koin application with overrides disabled. Failure
+ * closes acquired resources and preserves cleanup failures. The returned [DiscoveryDeployment] transfers resource
+ * ownership to the caller.
+ */
 class DiscoveryModuleLoader {
     fun load(
         artifactPackage: DiscoveryArtifactPackage,

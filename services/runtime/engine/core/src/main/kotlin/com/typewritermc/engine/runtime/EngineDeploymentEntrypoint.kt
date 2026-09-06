@@ -26,6 +26,13 @@ import kotlinx.coroutines.cancel
 import java.nio.file.Path
 import java.util.zip.ZipFile
 
+/**
+ * Stages an engine by reading artifact manifests and loading execution discovery into an isolated deployment.
+ *
+ * The package must contain one engine plus extensions. Staging constructs the content gateway and delivery adapter
+ * but registration starts on activation. Failure during runtime construction cancels its parent scope and closes
+ * discovery resources.
+ */
 class EngineDeploymentEntrypoint : HostedRuntimeProvider {
     override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime {
         val artifactPaths = listOf(context.artifacts.runtimeArtifact) + context.artifacts.extensions.map { it.path }

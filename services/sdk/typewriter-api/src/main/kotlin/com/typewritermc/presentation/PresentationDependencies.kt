@@ -20,6 +20,12 @@ import skirout.editor.v1.type_catalog.ConversionId as SkirConversionId
 import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
 import skirout.editor.v1.type_catalog.ResolvedTypeRef as SkirResolvedTypeRef
 
+/**
+ * Records catalog identities referenced by a compiled presentation, including its target type.
+ *
+ * Dependencies are collected from the canonical node tree and support availability checks and catalog exchange.
+ * Sets remove repeated references; wire conversion imposes stable ordering.
+ */
 data class PresentationDependencies(
     val types: Set<ResolvedTypeRef> = emptySet(),
     val presentations: Set<PresentationId> = emptySet(),

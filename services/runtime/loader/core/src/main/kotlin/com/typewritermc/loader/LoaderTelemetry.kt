@@ -25,6 +25,11 @@ fun interface LoaderLogOutput {
     fun write(line: String)
 }
 
+/**
+ * Creates the loader owned telemetry SDK with W3C context propagation and host directed console logging.
+ * Configured OTLP endpoints add batched span and log exporters; console records use a synchronous processor. The
+ * caller must flush and shut down this SDK after dependent runtimes stop.
+ */
 internal fun loaderOpenTelemetry(
     logOutput: LoaderLogOutput,
     configuration: LoaderTelemetryConfiguration,
@@ -72,6 +77,11 @@ internal fun loaderOpenTelemetry(
         .build()
 }
 
+/**
+ * Flushes trace and log providers before requesting SDK shutdown, waiting up to ten seconds at each stage. Foreign
+ * OpenTelemetry implementations are ignored. Timeout completion is not inspected here, so returning does not
+ * guarantee that every record reached an exporter.
+ */
 internal fun closeLoaderOpenTelemetry(openTelemetry: OpenTelemetry) {
     val sdk = openTelemetry as? OpenTelemetrySdk ?: return
     sdk.sdkTracerProvider.forceFlush().join(10, TimeUnit.SECONDS)

@@ -74,7 +74,12 @@ fun interface ResponseClassifier<Response : Any> {
     fun classify(response: Response): ResponseClassification
 }
 
-/** Classification and internal-failure response policy for replying operations. */
+/**
+ * Pairs a safe internal failure response with semantic classification of normal replies.
+ *
+ * Handlers and clients use the same classification for telemetry. Domain rejection remains a typed response; it is
+ * distinct from a transport or codec failure.
+ */
 class ResponsePolicy<Response : Any>(
     val internalFailureResponse: Response,
     private val classifier: ResponseClassifier<Response>,
@@ -86,14 +91,23 @@ class ResponsePolicy<Response : Any>(
     }
 }
 
-/** Binary payload encoder and decoder. */
+/**
+ * Converts a contract payload between typed values and immutable bytes.
+ *
+ * Codec failures may throw and are classified by communicator boundaries. Implementations must use the same wire
+ * representation on both ends.
+ */
 interface PayloadCodec<Value : Any> {
     fun encode(value: Value): Payload
 
     fun decode(payload: Payload): Value
 }
 
-/** Typed unary request/reply operation contract. */
+/**
+ * Defines a typed request with one reply, timeout, response semantics, and failure identity.
+ *
+ * A contract is metadata shared by caller and router; constructing it creates no subscription.
+ */
 class UnaryContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
     val requestAddress: AddressTemplate<Address>,
@@ -108,7 +122,12 @@ class UnaryContract<Address : Any, Request : Any, Response : Any>(
     }
 }
 
-/** Typed request contract that permits every listener to reply to one inbox. */
+/**
+ * Defines a request that can receive replies from multiple listeners through one reply channel.
+ *
+ * Collection lifetime and completion policy are supplied by the caller. Responders may deliberately decline to
+ * reply.
+ */
 class ScatterContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
     val requestAddress: AddressTemplate<Address>,
@@ -118,7 +137,11 @@ class ScatterContract<Address : Any, Request : Any, Response : Any>(
     val failureSlug: ErrorSlug,
 )
 
-/** Typed event publication contract. */
+/**
+ * Defines a typed publication with no application reply.
+ *
+ * Successful publication means transport acceptance, not confirmation that every consumer processed the event.
+ */
 class EventContract<Address : Any, Event : Any>(
     val name: OperationName,
     val address: AddressTemplate<Address>,
@@ -126,7 +149,12 @@ class EventContract<Address : Any, Event : Any>(
     val failureSlug: ErrorSlug,
 )
 
-/** Typed request, initial response, and streamed-update operation contract. */
+/**
+ * Combines an initial request with a separate update subscription and optional update filtering.
+ *
+ * The client subscribes before requesting initial state to reduce lost updates. Snapshot and update consistency
+ * still belongs to the application protocol; this metadata provides no transactional snapshot boundary.
+ */
 class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val name: OperationName,
     val requestAddress: AddressTemplate<Address>,

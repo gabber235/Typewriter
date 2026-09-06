@@ -114,7 +114,12 @@ data class IncomingWatchCall<Address : Any, Request : Any, Initial : Any, Update
     val communicator: Communicator,
 )
 
-/** Concurrency and shutdown settings for a router. */
+/**
+ * Bounds global in flight work, per route worker concurrency, buffering, and shutdown draining.
+ *
+ * Parallel workers can complete messages out of arrival order. Use route parallelism one where handler ordering is
+ * part of the application contract.
+ */
 data class RouterOptions(
     val maxInFlight: Int = 16,
     val defaultRouteParallelism: Int = 16,
@@ -159,7 +164,12 @@ class CommunicatorRoutes internal constructor(
     internal val routes: List<Route>,
 )
 
-/** Builder for typed communicator routes. */
+/**
+ * Collects typed handlers and their subscription and concurrency settings.
+ *
+ * Unqualified registrations use the contract pattern; the At variants bind one concrete address. Building
+ * definitions does not start transport subscriptions.
+ */
 @CommunicatorRoutesDsl
 class CommunicatorRoutesBuilder internal constructor() {
     private val routes = mutableListOf<Route>()
@@ -269,7 +279,13 @@ internal data class Route(
     val process: suspend (CommunicatorRouter, InboundMessage) -> Unit,
 )
 
-/** Hosts typed message handlers with bounded concurrency and structured lifecycle ownership. */
+/**
+ * Owns route subscriptions and bounded handler workers beneath the supplied parent scope.
+ *
+ * Overlapping patterns are rejected. Start is allowed once and releases acquired subscriptions on failure. Stop
+ * closes subscriptions and drains accepted work within its timeout, then cancels remaining workers. Recreate the
+ * router for a replacement transport session.
+ */
 class CommunicatorRouter internal constructor(
     private val transport: MessageTransport,
     routes: CommunicatorRoutes,

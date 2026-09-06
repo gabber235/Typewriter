@@ -8,6 +8,12 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import java.time.Instant
 
+/**
+ * Supplies operator display text separately from the stable operation name.
+ *
+ * Use a nonblank description when lifecycle log projection should be understandable without exposing telemetry
+ * identifiers.
+ */
 data class SpanPresentation(
     val displayName: String,
 ) {
@@ -24,6 +30,11 @@ enum class LogSeverity {
     ERROR,
 }
 
+/**
+ * Chooses whether an event remains on the trace or also becomes a correlated log record.
+ *
+ * Log projection uses the same attributes and timestamp as the span event. It does not replace the trace event.
+ */
 sealed interface EventProjection {
     data object TraceOnly : EventProjection
 
@@ -43,6 +54,12 @@ sealed interface EventProjection {
     }
 }
 
+/**
+ * Builds attributes for one trace event and optional log projection.
+ *
+ * Values are emitted as supplied. Exception recording includes message and stack trace, so callers must use safe
+ * data and avoid revealing secret wrappers.
+ */
 class TelemetryEventAttributes internal constructor() {
     private val attributes = Attributes.builder()
 

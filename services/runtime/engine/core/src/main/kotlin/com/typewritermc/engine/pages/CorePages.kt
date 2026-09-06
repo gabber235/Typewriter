@@ -8,12 +8,28 @@ import com.typewritermc.pages.PageEditorDefinition
 import com.typewritermc.pages.TypewriterPage
 import com.typewritermc.pages.page
 
+/**
+ * Marks entries accepted by the core sequence graph page.
+ *
+ * The marker defines an editor role; execution behavior must be supplied by the entry or a runtime facet.
+ */
 interface SequenceEntry : Entry
 
+/**
+ * Marks entries accepted by the core static graph page.
+ *
+ * The page specification defines layout, while runtime behavior remains separate.
+ */
 interface StaticEntry : Entry
 
+/**
+ * Marks entries accepted by the core manifest graph page.
+ */
 interface ManifestEntry : Entry
 
+/**
+ * Marks track entries accepted by the core scene timeline alongside segments and keyframes.
+ */
 interface SceneEntry : Entry
 
 @TypewriterPage(

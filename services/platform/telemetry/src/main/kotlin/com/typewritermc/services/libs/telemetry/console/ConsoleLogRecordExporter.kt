@@ -9,6 +9,11 @@ import io.opentelemetry.sdk.logs.export.LogRecordExporter
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
+/**
+ * Receives formatted console lines from telemetry adapters.
+ *
+ * The host supplies terminal or logger integration and retains ownership of that output destination.
+ */
 fun interface ConsoleLogOutput {
     fun write(line: String)
 }

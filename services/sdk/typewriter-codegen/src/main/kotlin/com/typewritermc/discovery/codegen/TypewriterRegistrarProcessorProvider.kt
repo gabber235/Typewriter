@@ -32,6 +32,12 @@ import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.discovery.runtime.GeneratedDiscoveryModule
 
+/**
+ * KSP entrypoint generating registrar discovery modules and executable bindings from annotated Kotlin
+ * declarations. Each compiler environment receives a fresh processor. Processing defers unresolved symbols,
+ * validates supported declaration shapes, and generates its output once for the compilation. Generated resources
+ * feed manifest discovery so runtime consumers do not scan source annotations.
+ */
 class TypewriterRegistrarProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         TypewriterRegistrarProcessor(environment.codeGenerator, environment.logger, environment.options)

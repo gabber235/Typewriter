@@ -50,6 +50,13 @@ import skirout.service.v1.artifact.PublishSharedArtifact as PublishSharedArtifac
 import skirout.service.v1.artifact.SharedArtifactDescriptor as SkirSharedArtifactDescriptor
 import skirout.service.v1.artifact.SharedArtifactProvenance as SkirSharedArtifactProvenance
 
+/**
+ * Maintains shared artifact access across messaging session replacement.
+ *
+ * Requests wait for a nonnull session. Communication failure waits for a different session id before retrying,
+ * without a local timeout. Remembered transfer metadata supports write recovery and lost completion responses.
+ * Bound operations with caller cancellation or a suitable timeout.
+ */
 class ReconnectingSharedArtifactAccess(
     private val realmId: String,
     private val sessions: StateFlow<HostedMessagingSession?>,

@@ -48,6 +48,13 @@ val SharedArtifactChangedContract =
         ErrorSlug.of("realm-shared-change-failed"),
     )
 
+/**
+ * Drains persisted changes through each ready registrar session.
+ *
+ * Construction starts a worker in the supplied scope. Session replacement cancels the current drain. Only
+ * successful publication acknowledges an event, so consumers must tolerate duplicates after interrupted
+ * acknowledgment.
+ */
 class SharedArtifactOutboxPublisher(
     scope: CoroutineScope,
     states: StateFlow<RegistrarSnapshot>,
@@ -95,10 +102,18 @@ class SharedArtifactOutboxPublisher(
         }
     }
 
+    /**
+     * Cancels and joins the publisher before repositories or transport are released.
+     */
     suspend fun stop() {
         publisher.cancelAndJoin()
     }
 
+    /**
+     * Requests worker cancellation without awaiting completion.
+     *
+     * Use [stop] for an awaited shutdown boundary.
+     */
     override fun close() {
         publisher.cancel()
     }

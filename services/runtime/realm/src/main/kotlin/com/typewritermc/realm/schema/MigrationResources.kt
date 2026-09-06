@@ -10,6 +10,13 @@ private const val PATCH_DIRECTORY = "schema/patches"
 private val SCHEMA_FILENAME_PATTERN = Regex("^(?:[a-z0-9_]+/)*[a-z0-9_]+\\.surql$")
 private val PATCH_FILENAME_PATTERN = Regex("^[0-9]{4}_[a-z0-9_]+\\.surql$")
 
+/**
+ * Loads ordered schema and patch resources from explicit classpath indexes.
+ *
+ * Indexes reject duplicates, paths follow constrained grammars, and required scripts must be nonblank. Patch
+ * ordering is validated and checksums use exact UTF8 script content, so editing an applied patch changes its
+ * identity.
+ */
 internal class MigrationResources(
     private val loadText: (String) -> String? = ::loadClasspathResource,
 ) {

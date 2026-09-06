@@ -214,14 +214,24 @@ sealed interface TransportDelivery {
     data object Completed : TransportDelivery
 }
 
-/** A subscription whose deliveries stop on cancellation or explicit suspending close. */
+/**
+ * Owns a delivery stream until explicit suspending closure or cancellation.
+ *
+ * The acquiring router or watch must release it on every exit. Delivery can report terminal failure separately
+ * from clean completion.
+ */
 interface TransportSubscription {
     val deliveries: Flow<TransportDelivery>
 
     suspend fun close()
 }
 
-/** A transport-owned reply subscription whose address follows the transport's native inbox rules. */
+/**
+ * Owns a temporary subscription at a transport selected reply address.
+ *
+ * Use for scatter replies rather than inventing an inbox incompatible with transport permissions. The acquiring
+ * caller must close it.
+ */
 interface ReplyChannel {
     val address: MessageAddress
     val deliveries: Flow<TransportDelivery>
@@ -229,7 +239,12 @@ interface ReplyChannel {
     suspend fun close()
 }
 
-/** Adapter SPI whose operational failures are returned and whose cancellation remains explicit. */
+/**
+ * Defines the transport boundary for publication, unary requests, subscriptions, and reply channels.
+ *
+ * Operational failures are result values while cancellation remains exceptional. Successful publication does not
+ * prove consumer execution. Callers own returned subscriptions; connection lifetime belongs to the adapter owner.
+ */
 interface MessageTransport {
     val system: MessagingSystem
 

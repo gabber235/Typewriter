@@ -12,10 +12,22 @@ import com.typewritermc.types.TypeGraph
 import com.typewritermc.types.TypeId
 import java.util.UUID
 
+/**
+ * Allocates identities for newly decomposed reference occurrences.
+ *
+ * Supply a deterministic allocator in tests. Production allocators must avoid duplicate slots within the stored
+ * value.
+ */
 fun interface ReferenceSlotAllocator {
     fun allocate(): ReferenceSlotId
 }
 
+/**
+ * Projects logical resource references into stored markers and separate edges using a type graph.
+ *
+ * Each occurrence gets a fresh slot, even when targets repeat. Malformed values or reference shapes throw;
+ * decomposition does not look up target resources.
+ */
 class ReferenceDecomposer(
     private val slotAllocator: ReferenceSlotAllocator = ReferenceSlotAllocator { ReferenceSlotId(UUID.randomUUID().toString()) },
 ) {
@@ -42,6 +54,13 @@ class ReferenceDecomposer(
     }
 }
 
+/**
+ * Reconstructs logical references from stored slot markers and edges.
+ *
+ * Assembly checks marker shape, slot uniqueness, missing or unused edges, and expected types. It returns
+ * diagnostics with a best effort value on failure, so callers must inspect the result before compiling or
+ * executing it.
+ */
 class ReferenceAssembler {
     fun assemble(
         graph: TypeGraph,
@@ -99,6 +118,12 @@ class ReferenceAssembler {
     }
 }
 
+/**
+ * Carries the reconstructed value and whether reference projection was internally consistent.
+ *
+ * The value in a failure is diagnostic output and may still contain unresolved slot markers; it is not validated
+ * runtime content.
+ */
 sealed interface ReferenceAssemblyResult {
     val value: DataValue
 

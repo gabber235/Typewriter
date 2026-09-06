@@ -16,7 +16,12 @@ interface TypeDecodingContext {
     val prototypes: TypePrototypeRegistry
 }
 
-/** Describes one catalog type in a form reusable by execution and Realm features such as presentations. */
+/**
+ * Connects a Kotlin runtime class to its resolved catalog definition.
+ *
+ * [serializedFieldNames] maps Kotlin property names to serialized names for presentation bindings. Concrete and
+ * abstract specializations supply value conversion; a plain prototype only describes metadata.
+ */
 interface TypePrototype<T : Any> {
     val runtimeType: KClass<T>
     val type: ResolvedTypeRef
@@ -25,7 +30,12 @@ interface TypePrototype<T : Any> {
         get() = emptyMap()
 }
 
-/** Converts values for a concrete type with a stable declared identity. */
+/**
+ * Converts one concrete runtime type to and from its portable representation.
+ *
+ * Encoding and decoding use the contextual deployment registry for nested and polymorphic values. Callers must
+ * supply the matching structural shape; malformed input and missing dependencies may throw.
+ */
 interface ConcreteTypePrototype<T : Any> : TypePrototype<T> {
     val serializer: KSerializer<T>
 
@@ -36,7 +46,12 @@ interface ConcreteTypePrototype<T : Any> : TypePrototype<T> {
     fun decode(value: DataValue): T
 }
 
-/** Represents an abstract catalog type and dispatches values through eligible concrete implementations. */
+/**
+ * Dispatches an abstract contract through concrete implementations registered in the deployment.
+ *
+ * Encoded values carry their concrete reference in [DataValue.Polymorphic]. Decoding must reject unregistered or
+ * incompatible concrete types rather than loading arbitrary classes named by input.
+ */
 interface AbstractTypePrototype<T : Any> : TypePrototype<T> {
     context(prototypes: TypePrototypeRegistry)
     fun implementations(): List<ConcreteTypePrototype<out T>>
@@ -54,7 +69,13 @@ interface AbstractTypePrototype<T : Any> : TypePrototype<T> {
     fun decode(value: DataValue): T
 }
 
-/** Owns the immutable prototype graph for one assembled deployment. */
+/**
+ * Builds the codec graph for one assembled deployment.
+ *
+ * Prototype references and runtime classes must be unique, and every prototype must match its catalog definition.
+ * Construction builds the serialization module and validates concrete serializer shapes. Lookup failures throw;
+ * keep registries scoped to the deployment whose classes they retain.
+ */
 class TypePrototypeRegistry(
     prototypes: Collection<TypePrototype<*>>,
     definitions: Collection<TypeDefinition> = prototypes.map(TypePrototype<*>::definition),
@@ -96,6 +117,12 @@ class TypePrototypeRegistry(
     fun <T : Any> require(type: KClass<T>): TypePrototype<T> =
         byRuntimeType[type] as? TypePrototype<T> ?: error("Type prototype is unavailable: ${type.qualifiedName}")
 
+    /**
+     * Lists registered concrete descendants in stable type order.
+     *
+     * Ancestry matching compares nominal identities and follows registered parent prototypes. This method does not
+     * perform generic variance checking or full revision compatibility analysis.
+     */
     fun concreteImplementationsOf(parent: ResolvedTypeRef): List<ConcreteTypePrototype<*>> =
         concrete
             .filter { prototype -> prototype.definition.isSubtypeOf(parent.id, emptySet()) }
@@ -148,7 +175,12 @@ class TypePrototypeRegistry(
     }
 }
 
-/** Creates an abstract prototype from catalog metadata without generating duplicate classes in contributing artifacts. */
+/**
+ * Supplies abstract dispatch directly from catalog metadata without generating an extra provider class.
+ *
+ * Encoding requires exactly one matching concrete implementation. Decoding requires a polymorphic envelope whose
+ * prototype is both assignable to the runtime class and registered beneath this abstract type.
+ */
 class CatalogAbstractTypePrototype<T : Any>(
     override val runtimeType: KClass<T>,
     override val type: ResolvedTypeRef,

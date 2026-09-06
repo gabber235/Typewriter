@@ -7,6 +7,12 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
+/**
+ * Replaces the ordinary main inputs with common and declared target source sets. Common output and explicit
+ * included parts are visible during target compilation; engine and capability dependencies remain compile only.
+ * Each part receives its own KSP origin context, tests see every part, and the final thin JAR rejects duplicate
+ * resources.
+ */
 internal fun Project.configureExtensionProject(declaration: DeclaredArtifact) {
     configureArtifactVersion(declaration)
     val sourceSets = productionSourceSets()

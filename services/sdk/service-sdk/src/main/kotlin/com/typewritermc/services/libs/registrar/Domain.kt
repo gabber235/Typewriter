@@ -64,13 +64,23 @@ data class OrganizationBinding(
     }
 }
 
-/** Stable resources exposed while registration is ready. */
+/**
+ * Pairs durable identity with the organization binding confirmed for ready service use.
+ *
+ * Connection generation is carried by the surrounding Ready state, so this value alone cannot identify a usable
+ * communicator.
+ */
 data class ReadySession(
     val identity: ServiceIdentity,
     val binding: OrganizationBinding,
 )
 
-/** A value whose disclosure must be explicit. */
+/**
+ * Requires explicit disclosure of credential text through [reveal].
+ *
+ * String rendering is always redacted. This prevents accidental interpolation but does not encrypt or erase the
+ * underlying value.
+ */
 sealed class RedactedSecret private constructor(
     private val value: String,
 ) {
@@ -100,7 +110,12 @@ sealed class RedactedSecret private constructor(
     ) : RedactedSecret(value)
 }
 
-/** Durable identity material. */
+/**
+ * Retains durable public identity and its app password for restart and token exchange.
+ *
+ * Normal rendering redacts the password. Persistence and authentication must explicitly request its value through
+ * [revealAppPassword].
+ */
 class IdentityCredentials(
     val identity: ServiceIdentity,
     private val appPassword: RedactedSecret.AppPassword,

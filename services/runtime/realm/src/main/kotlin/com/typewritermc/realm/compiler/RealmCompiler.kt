@@ -10,6 +10,13 @@ import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.realm.repository.AuthoringSnapshot
 import java.security.MessageDigest
 
+/**
+ * Compiles a full authoring snapshot and reuses shards by input fingerprint.
+ *
+ * Any error diagnostic blocks publication while retaining active content. Otherwise blobs are stored first and
+ * repository publication checks freshness. Stale publication requests a fresh snapshot; already stored bytes
+ * remain reusable.
+ */
 class RealmCompiler(
     private val content: CompiledContentRepository,
     private val artifacts: CompiledArtifactPublisher,
@@ -56,6 +63,12 @@ class RealmCompiler(
     }
 }
 
+/**
+ * Distinguishes activation, blocked input, and a stale publication race.
+ *
+ * Blocked may carry the previous active manifest. Reuse counts describe shard caching, not omission of document
+ * validation.
+ */
 sealed interface RealmCompileResult {
     data object Stale : RealmCompileResult
 

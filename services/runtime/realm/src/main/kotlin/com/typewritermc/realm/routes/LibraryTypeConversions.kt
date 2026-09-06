@@ -12,6 +12,11 @@ internal fun PageKindRef.toSkir(): SkirPageKindRef =
         revision = revision,
     )
 
+/**
+ * Reconstructs a validated page kind from wire identity and revision.
+ *
+ * The canonical constructors reject malformed ids and nonpositive revisions; no schema migration occurs here.
+ */
 internal fun SkirPageKindRef.toLibrary(): PageKindRef =
     PageKindRef(
         id = PageKindId(DeclaredTypeId.parse(id.value)),

@@ -12,6 +12,12 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
+/**
+ * Stores portable values in a versioned database envelope using explicit variant discriminators.
+ *
+ * Decode requires the supported storage format and known database value shapes. Reference slot projection remains
+ * encoded in the value tree; this codec does not resolve edges.
+ */
 internal object DataValueDatabaseCodec {
     private val json = Json { classDiscriminator = "kind" }
 

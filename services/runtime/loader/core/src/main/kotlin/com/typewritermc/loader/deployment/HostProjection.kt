@@ -26,6 +26,12 @@ value class HostId(
     }
 }
 
+/**
+ * Describes host assignments, API versions, and deployment facts.
+ *
+ * Every assigned host must have an API version. The Realm host receives the panel engine as well; primary engines
+ * use their own host set.
+ */
 @Serializable
 data class RealmTopology(
     val realmHost: HostId,
@@ -68,6 +74,12 @@ data class ProjectedExtension(
     val sourceParts: List<ProjectedSourcePart>,
 )
 
+/**
+ * Pins runtime roles, extension source part dispositions, and facts for one host generation.
+ *
+ * Canonicalization sorts roles, extensions, source parts, and fact keys. This projection is specific to a host
+ * even when deployment content is shared.
+ */
 @Serializable
 data class HostDeploymentProjection(
     val realmId: String,
@@ -90,6 +102,11 @@ data class HostDeploymentProjection(
         )
 }
 
+/**
+ * Serializes canonical projections as CBOR with defaults included.
+ *
+ * Decoding reconstructs metadata; retrieval must separately verify digest, host, Realm, and generation.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 object HostDeploymentProjectionCodec {
     private val cbor = Cbor { encodeDefaults = true }
@@ -99,6 +116,12 @@ object HostDeploymentProjectionCodec {
     fun decode(bytes: ByteArray): HostDeploymentProjection = cbor.decodeFromByteArray(bytes)
 }
 
+/**
+ * Derives runtime roles and source part eligibility for an assigned host.
+ *
+ * Unassigned hosts and missing required manifests are rejected. Extension parts retain eligible placements or
+ * concrete reasons when none of the projected engines can load them.
+ */
 fun DeploymentSnapshot.projectFor(
     realmId: String,
     topology: RealmTopology,

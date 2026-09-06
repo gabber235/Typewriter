@@ -20,6 +20,11 @@ import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.terminal.TerminalBuilder
 
+/**
+ * Interactive JLine loop for local loader commands. Owns its terminal while running and attaches console output so
+ * telemetry can print above the prompt. Each input creates a fresh command tree; interruption, end of input, and
+ * an explicit stop request terminate the loop and release terminal ownership.
+ */
 class LoaderShell(
     private val context: LoaderShellContext,
     private val telemetry: ServiceTelemetry,

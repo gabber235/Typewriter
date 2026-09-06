@@ -9,11 +9,21 @@ import com.typewritermc.types.Ref
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Identifies the authored source of compiled content independently of its expansion context.
+ *
+ * A source can appear in more than one compiled instance; use [CompiledElementKey] when indexing runtime elements.
+ */
 @Serializable
 data class SourceElementKey(
     val element: Ref<Element>,
 )
 
+/**
+ * Distinguishes an instance within compiled expansion using an ordered sequence of segments.
+ *
+ * [Root] represents content without an expansion path. Segment syntax is not validated by this value object.
+ */
 @Serializable
 data class InstancePath(
     val segments: List<String>,
@@ -23,6 +33,11 @@ data class InstancePath(
     }
 }
 
+/**
+ * Carries the instance context that distinguishes compilations of the same authored source.
+ *
+ * The root context is used when no instancing path is required.
+ */
 @Serializable
 data class CompilationContext(
     val instancePath: InstancePath,
@@ -32,12 +47,23 @@ data class CompilationContext(
     }
 }
 
+/**
+ * Identifies one compiled occurrence by source and compilation context.
+ *
+ * Runtime maps must use this complete key so expanded occurrences do not overwrite one another.
+ */
 @Serializable
 data class CompiledElementKey(
     val source: SourceElementKey,
     val context: CompilationContext,
 )
 
+/**
+ * Carries a logical element payload prepared for engine decoding.
+ *
+ * The source identity and schema revision retain authoring provenance, while [key] distinguishes compiled
+ * occurrences. Values have already passed compiler projection; this data class does not repeat validation.
+ */
 @Serializable
 data class CompiledElement(
     val key: CompiledElementKey,
@@ -49,6 +75,12 @@ data class CompiledElement(
     val placement: CompiledPlacement,
 )
 
+/**
+ * Retains placement information relevant to execution.
+ *
+ * Graph coordinates and dimensions are intentionally absent. Timeline placements retain track or frame positions;
+ * these data classes do not validate scheduling bounds.
+ */
 @Serializable
 sealed interface CompiledPlacement {
     @Serializable
@@ -75,6 +107,12 @@ sealed interface CompiledPlacement {
     ) : CompiledPlacement
 }
 
+/**
+ * Identifies compiled content using 64 lowercase SHA256 hexadecimal characters.
+ *
+ * Compiled semantic identities and serialized blob digests use the same shape but may represent different bytes.
+ * Consult the containing pointer before fetching content.
+ */
 @JvmInline
 @Serializable
 value class ContentDigest(
@@ -85,6 +123,12 @@ value class ContentDigest(
     }
 }
 
+/**
+ * Packages the compiled elements of one page with its semantic digest and input fingerprint.
+ *
+ * The fingerprint supports reuse when compiler inputs are unchanged. The shard digest identifies compiled output;
+ * the blob pointer separately identifies its serialized bytes.
+ */
 @Serializable
 data class CompiledPageShard(
     val formatRevision: Int,
@@ -100,6 +144,12 @@ data class CompiledPageReference(
     val shard: ContentDigest,
 )
 
+/**
+ * Selects the page shards forming one compiled content revision.
+ *
+ * Source and catalog revisions record compilation inputs. The manifest is metadata, so loading requires the
+ * referenced shards and validation of their page identities.
+ */
 @Serializable
 data class CompiledManifest(
     val formatRevision: Int,
@@ -109,6 +159,11 @@ data class CompiledManifest(
     val pages: List<CompiledPageReference>,
 )
 
+/**
+ * Addresses serialized compiled bytes by digest and exact size in bytes.
+ *
+ * Size must be nonnegative. Readers verify both size and digest before decoding the payload.
+ */
 @Serializable
 data class CompiledBlobPointer(
     val digest: ContentDigest,
@@ -119,12 +174,23 @@ data class CompiledBlobPointer(
     }
 }
 
+/**
+ * Maps a semantic shard digest to the blob containing its serialized representation.
+ *
+ * Keep the two identities distinct when resolving manifest pages and verifying downloaded bytes.
+ */
 @Serializable
 data class CompiledShardPointer(
     val shard: ContentDigest,
     val blob: CompiledBlobPointer,
 )
 
+/**
+ * Announces a positive activation revision and the blob pointers needed to load it.
+ *
+ * Shard identities must be unique. [manifestDigest] is the semantic manifest identity, while [manifest] verifies
+ * its serialized blob. Consumers use activation revision to reject stale delivery.
+ */
 @Serializable
 data class CompiledContentActivation(
     val activationRevision: Long,
@@ -140,6 +206,12 @@ data class CompiledContentActivation(
     }
 }
 
+/**
+ * Groups a decoded manifest with all page shards it references.
+ *
+ * Construction rejects duplicate shard digests and missing or mismatched page shards. It does not recompute
+ * content digests or forbid extra unreferenced shards.
+ */
 @Serializable
 data class CompiledContentBundle(
     val manifest: CompiledManifest,
@@ -154,6 +226,11 @@ data class CompiledContentBundle(
     }
 }
 
+/**
+ * Pairs loaded content with the positive delivery revision used to order runtime application.
+ *
+ * The revision describes activation order, not the schema or file format revision.
+ */
 @Serializable
 data class ActivatedCompiledContent(
     val activationRevision: Long,
@@ -179,6 +256,11 @@ data class CompileDiagnostic(
     val target: com.typewritermc.types.ResourceId? = null,
 )
 
+/**
+ * Returns a reusable page shard or diagnostics that block publication of that page.
+ *
+ * Blocked output retains its input fingerprint so the coordinator can track which authoring state failed.
+ */
 @Serializable
 sealed interface PageCompileResult {
     @Serializable

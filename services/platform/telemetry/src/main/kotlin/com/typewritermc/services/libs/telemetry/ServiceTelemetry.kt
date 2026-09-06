@@ -6,6 +6,11 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.logs.Logger
 import io.opentelemetry.api.trace.Tracer
 
+/**
+ * Names the library or service producing telemetry, with optional version and schema metadata.
+ *
+ * This is instrumentation identity, not a deployment resource or individual request name.
+ */
 data class InstrumentationScope(
     val name: String,
     val version: String? = null,
@@ -16,6 +21,12 @@ data class InstrumentationScope(
     }
 }
 
+/**
+ * Provides tracing and log emission under one instrumentation scope.
+ *
+ * Use the span boundary helpers to create owned operation scopes and correlate projected logs. The supplied
+ * OpenTelemetry instance remains externally owned; this facade does not shut down exporters.
+ */
 class ServiceTelemetry(
     openTelemetry: OpenTelemetry,
     instrumentation: InstrumentationScope,

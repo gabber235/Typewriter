@@ -51,6 +51,11 @@ import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Describes the Realm and roles assigned to a loader host.
+ *
+ * A Realm role requires a primary engine target and panel engine intent for deployment coordination.
+ */
 data class ArtifactHostAssignment(
     val realmId: RealmId,
     val roles: Set<RuntimePlacement>,
@@ -67,10 +72,22 @@ data class ArtifactHostAssignment(
     }
 }
 
+/**
+ * Streams desired assignment changes; null requests removal.
+ *
+ * The artifact host owns applying changes and releasing prior assignment resources.
+ */
 fun interface ArtifactHostAssignmentSource {
     fun assignments(hostId: HostId): Flow<ArtifactHostAssignment?>
 }
 
+/**
+ * Coordinates registration, inbox imports, assignments, messaging, and hosted rollouts.
+ *
+ * Assignment and session replacement share a lifecycle mutex. Assignment changes rotate authorization; selected
+ * transient registrar states retain a valid hosted session. Background jobs and assignment resources are released
+ * through [stop].
+ */
 class ArtifactHost(
     private val hostId: HostId,
     private val workDirectory: Path,

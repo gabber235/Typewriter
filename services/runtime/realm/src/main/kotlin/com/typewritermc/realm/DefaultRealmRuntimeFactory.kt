@@ -59,7 +59,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.ZipFile
 import kotlin.time.Duration.Companion.seconds
 
-/** Creates the complete Realm lifecycle exclusively for a loader managed deployment. */
+/**
+ * Stages the Realm composition from loader supplied artifacts, directories, facts, and host services.
+ *
+ * It assembles discovery, page and presentation catalogs, capabilities, and isolated application resources.
+ * Activation starts Realm storage and routes; quiescing retains the staged deployment for resume. Construction
+ * failure releases resources already acquired.
+ */
 class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
     override suspend fun stage(context: HostedDeploymentContext): ManagedRealmRuntime {
         val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

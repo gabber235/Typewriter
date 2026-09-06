@@ -7,6 +7,12 @@ import io.opentelemetry.sdk.trace.data.EventData
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.time.Duration
 
+/**
+ * Asserts observable trace structure within captured spans.
+ *
+ * Roots are local to this collection, so a span with an uncollected remote parent counts as a local root. Named
+ * selectors require exactly one match.
+ */
 class SpanAssertions(
     private val spans: List<SpanData>,
 ) {
@@ -40,6 +46,12 @@ class SpanAssertions(
     }
 }
 
+/**
+ * Checks a finished span and its locally collected relatives.
+ *
+ * Assertions inspect exported attributes, events, errors, and parent relationships rather than private
+ * instrumentation objects.
+ */
 class SpanAssertion(
     private val span: SpanData,
     private val all: List<SpanData>,
@@ -151,6 +163,11 @@ class SpanAssertion(
     }
 }
 
+/**
+ * Checks exported attributes on one span event.
+ *
+ * Use these assertions when event content is a contract consumed by operators or telemetry queries.
+ */
 class EventAssertion(
     private val event: EventData,
 ) {

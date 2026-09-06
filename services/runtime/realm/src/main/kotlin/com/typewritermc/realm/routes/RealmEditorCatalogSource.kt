@@ -31,12 +31,24 @@ import skirout.editor.v1.diagnostic.TypeDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CapabilityId as SkirCapabilityId
 
+/**
+ * Provides editor metadata and initial generation state without owning messaging subscriptions.
+ *
+ * Callers can request a generation to prevent mixing metadata from different deployments.
+ */
 interface RealmEditorCatalogSource {
     suspend fun fetch(request: CatalogFetchRequest): CatalogFetchResult
 
     suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogWatchUpdate
 }
 
+/**
+ * Builds catalog responses from one captured discovery snapshot.
+ *
+ * Generation mismatch is explicit. Requested types, editor role types, presentations, and capabilities expand into
+ * a dependency closure; conversions are currently returned empty. Unknown definitions are not supplied by loading
+ * arbitrary runtime code.
+ */
 class SnapshotRealmEditorCatalogSource(
     private val snapshot: suspend () -> RealmDiscoverySnapshot?,
 ) : RealmEditorCatalogSource {

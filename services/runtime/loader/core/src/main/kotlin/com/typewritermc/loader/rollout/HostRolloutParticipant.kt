@@ -40,18 +40,38 @@ import kotlin.io.path.createDirectories
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Retrieves and validates an exact host projection before runtime staging.
+ */
 interface ProjectionSource {
     suspend fun fetch(reference: ProjectionReference): HostDeploymentProjection
 }
 
+/**
+ * Provides a local path for verified digest addressed artifact bytes.
+ *
+ * The file must remain available during loading; the caller does not own deletion of shared cache content.
+ */
 interface VerifiedArtifactSource {
     suspend fun fetch(digest: com.typewritermc.loader.artifact.ArtifactDigest): Path
 }
 
+/**
+ * Publishes participant lifecycle observations.
+ *
+ * Delivery can fail separately from the runtime transition; direct status probes provide another observation path.
+ */
 fun interface ParticipantStatePublisher {
     suspend fun publish(event: ParticipantStateChanged)
 }
 
+/**
+ * Owns staged, active, and retained projections for one Realm and host.
+ *
+ * A mutex serializes commands and rejects stale or conflicting attempts. Commit quiesces the baseline before
+ * activating a candidate and attempts recovery on failure. Successful replacement retains one prior projection for
+ * rollback. The assignment lifecycle must close the participant and its health monitor.
+ */
 class HostRolloutParticipant(
     internal val realmId: RealmId,
     internal val hostId: HostId,

@@ -36,10 +36,22 @@ sealed interface AccessTokenResult {
     ) : AccessTokenResult
 }
 
+/**
+ * Exchanges durable identity credentials for a temporary bearer token and lifetime.
+ *
+ * Implementations classify rejection separately from transient unavailability so the registrar can choose retry
+ * behavior.
+ */
 fun interface AccessTokenExchanger {
     suspend fun exchange(credentials: IdentityCredentials): AccessTokenResult
 }
 
+/**
+ * Uses the configured OAuth endpoint to exchange service credentials through a bounded form request.
+ *
+ * Client errors are nonrecoverable rejection; other unsuccessful statuses are unavailable. Successful payloads
+ * must contain a nonblank bearer token and positive finite lifetime. This adapter does not retry.
+ */
 class AuthentikTokenExchanger(
     private val client: ServiceHttpClient,
     private val uri: URI,
@@ -123,6 +135,12 @@ private data class TokenResponse(
 
 private val oauthJson = Json { ignoreUnknownKeys = true }
 
+/**
+ * Serializes token refresh and reuses tokens only outside the configured expiry skew.
+ *
+ * Lifetime is measured with the supplied monotonic time source. Failed refresh is returned rather than serving a
+ * stale token; invalidate and clear discard the cached entry.
+ */
 class AccessTokenCache(
     private val credentials: IdentityCredentials,
     private val exchanger: AccessTokenExchanger,

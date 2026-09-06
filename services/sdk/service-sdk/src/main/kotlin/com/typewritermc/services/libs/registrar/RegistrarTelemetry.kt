@@ -5,6 +5,12 @@ import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.TelemetryEventAttributes
 
+/**
+ * Projects meaningful registrar transitions into trace events and operator logs.
+ *
+ * Repeated awaiting binding states and Ready observations within one connection generation are suppressed.
+ * Attributes use explicit safe fields; raw credentials and exception causes are not interpolated.
+ */
 internal fun MainSpanScope.recordRegistrarStateChanged(
     previous: RegistrarState,
     snapshot: RegistrarSnapshot,

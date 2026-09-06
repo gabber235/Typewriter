@@ -28,6 +28,12 @@ class FileTransferCoordinator(
         destination: FileTransferEndpoint,
     ): FileTransferResult<FileMetadata> = transfer(transferId, key, source, destination)
 
+    /**
+     * Copies the selected revision from source to destination using its accepted resume offset.
+     *
+     * Each returned chunk and destination offset is checked for exact forward progress. Completion owns final
+     * digest verification. Failure or cancellation leaves destination state available for resumption.
+     */
     suspend fun transfer(
         transferId: TransferId,
         key: FileKey,

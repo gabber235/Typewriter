@@ -3,22 +3,41 @@ package com.typewritermc.discovery
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 
+/**
+ * Retains a decoded type contribution together with its origin for deterministic assembly and conflict reporting.
+ */
 data class KeyedTypeContribution(
     val key: ContributionKey,
     val contribution: TypeDiscoveryContribution,
 )
 
+/**
+ * Retains the originating contribution alongside a runtime module binding so module providers receive provenance.
+ */
 data class KeyedExecutableBinding(
     val key: ContributionKey,
     val binding: ExecutableBinding,
 )
 
+/**
+ * Separates the structural catalog from the prototypes and modules that may execute.
+ *
+ * Definitions can remain visible even when their source part is ineligible. Runtime loaders further filter
+ * executable bindings by discovery domain.
+ */
 data class AssembledTypeDiscovery(
     val catalog: TypeCatalog,
     val prototypeBindings: List<PrototypeBinding>,
     val executableBindings: List<KeyedExecutableBinding>,
 )
 
+/**
+ * Merges generated type contributions in stable origin order.
+ *
+ * Identical definitions and bindings may be shared; conflicting identities and duplicate contribution keys are
+ * rejected. Ineligible source parts still contribute structural definitions but not executable or prototype
+ * bindings. A missing eligibility entry does not exclude a binding.
+ */
 object TypeContributionAssembler {
     fun assemble(
         contributions: Collection<KeyedTypeContribution>,

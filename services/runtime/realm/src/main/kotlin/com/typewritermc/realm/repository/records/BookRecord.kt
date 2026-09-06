@@ -10,6 +10,12 @@ import com.typewritermc.realm.repository.utils.toTagId
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 
+/**
+ * Maps a database row into a validated book domain value.
+ *
+ * Defaults support SDK record materialization, not valid authored content. Conversion checks typed ids, name, and
+ * visual values and can reject malformed stored rows.
+ */
 internal data class BookRecord(
     val id: RecordId = RecordId("book", ""),
     val title: String = "",

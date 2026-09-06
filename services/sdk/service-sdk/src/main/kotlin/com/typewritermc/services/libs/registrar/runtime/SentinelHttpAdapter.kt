@@ -18,6 +18,11 @@ import kotlin.time.Duration
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
+/**
+ * Holds the Sentinel JWT and signing seed with redacted rendering.
+ *
+ * Authentication must explicitly reveal each secret; the wrapper provides no encryption or memory erasure.
+ */
 class SentinelCredentials(
     val jwt: RedactedSecret.SentinelJwt,
     val seed: RedactedSecret.SentinelSeed,
@@ -39,6 +44,12 @@ fun interface SentinelProvider {
     suspend fun fetch(): SentinelResult
 }
 
+/**
+ * Fetches bounded Skir credentials and validates media type, status, and response variant together.
+ *
+ * Malformed or unknown protocol responses are nonrecoverable; transport and declared internal failures are
+ * unavailable. No retries occur inside the adapter.
+ */
 class TypewriterSentinelProvider(
     private val client: ServiceHttpClient,
     private val uri: URI,
@@ -104,6 +115,12 @@ class TypewriterSentinelProvider(
         )
 }
 
+/**
+ * Serializes Sentinel refresh with bounded stale credential fallback.
+ *
+ * After the refresh age, only a recoverable unavailable response permits reuse through maximum staleness. Protocol
+ * errors do not receive that fallback. Age uses the supplied time source.
+ */
 class SentinelCache(
     private val provider: SentinelProvider,
     private val refreshAfter: Duration,

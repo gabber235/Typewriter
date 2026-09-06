@@ -25,7 +25,13 @@ import java.nio.file.Path
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
-/** One supported Typewriter service identity, connection, and lifecycle. */
+/**
+ * Owns one service registrar and its isolated dependency injection application.
+ *
+ * Start waits for a ready organization binding. Communicators belong to a connection generation and must be
+ * reacquired after replacement. Stop releases registrar resources and closes the application; the supplied parent
+ * scope and telemetry remain caller owned.
+ */
 class TypewriterService private constructor(
     private val registrar: ServiceRegistrar,
     private val application: KoinApplication,
@@ -38,6 +44,12 @@ class TypewriterService private constructor(
         return registrar.awaitReady()
     }
 
+    /**
+     * Borrows the communicator for the currently ready generation.
+     *
+     * Returns a typed failure when not ready. The caller must not close the borrowed communicator or assume it
+     * remains current after a state change.
+     */
     suspend fun communicator(): RegistrarResult<Communicator> {
         val ready =
             states.value.state as? RegistrarState.Ready

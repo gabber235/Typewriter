@@ -15,6 +15,13 @@ import kotlin.io.path.exists
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 
+/**
+ * Persists the accepted inbox index and diagnostics in one CBOR state file.
+ *
+ * A mutex serializes operations within this instance; it is not a process lock. Quarantine retains the prior
+ * accepted candidate, and two consecutive missing observations remove it. State writes use replacement with an
+ * atomic move when supported; write failures propagate.
+ */
 class FileCandidateRepository(
     artifactsRoot: Path,
 ) : CandidateRepository {
@@ -29,6 +36,11 @@ class FileCandidateRepository(
     override suspend fun accepted(relativePath: String): AcceptedInboxCandidate? =
         mutex.withLock { state.accepted.singleOrNull { it.observation.relativePath == relativePath } }
 
+    /**
+     * Reserves and persists the next import ordinal before candidate acceptance.
+     *
+     * Failed imports can leave gaps; the ordinal is ordering, not a count of accepted candidates.
+     */
     override suspend fun reserveImportRevision(): Long =
         mutex.withLock {
             val revision = state.nextImportRevision

@@ -12,6 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Serializes compilation of latest authored state in a background worker.
+ *
+ * Pending invalidations are conflated. Stale publication retries immediately; operational failures update health
+ * and retry after a delay. Start triggers an initial pass, and stop cancels and joins the worker.
+ */
 class RealmCompileCoordinator(
     private val documents: PageDocumentRepository,
     private val compiler: RealmCompiler,
@@ -33,6 +39,11 @@ class RealmCompileCoordinator(
             }
     }
 
+    /**
+     * Requests compilation without waiting for it.
+     *
+     * Pending requests collapse into one; observe health or activation state for completion.
+     */
     fun invalidate() {
         invalidations.trySend(Unit).getOrThrow()
     }
@@ -73,6 +84,11 @@ class RealmCompileCoordinator(
     }
 }
 
+/**
+ * Reports compiler activity separately from the previous active manifest.
+ *
+ * Blocked identifies invalid input, while Failed identifies an operational exception being retried.
+ */
 sealed interface RealmCompileHealth {
     data object Idle : RealmCompileHealth
 

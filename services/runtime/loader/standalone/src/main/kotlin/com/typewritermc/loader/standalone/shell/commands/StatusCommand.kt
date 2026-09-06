@@ -14,6 +14,10 @@ import com.typewritermc.services.libs.registrar.RegistrarStopResult
 import com.typewritermc.services.libs.registrar.SentinelFailureReason
 import kotlin.time.Duration
 
+/**
+ * Displays process uptime, loader version, and the latest registrar snapshot without initiating network requests.
+ * Reports public identity and connection state while keeping authorization tokens out of command output.
+ */
 class StatusCommand(
     private val context: LoaderShellContext,
 ) : CliktCommand(name = "status") {

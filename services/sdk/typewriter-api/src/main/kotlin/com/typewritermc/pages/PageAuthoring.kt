@@ -6,7 +6,12 @@ import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
 import kotlin.reflect.KClass
 
-/** Marks a top level page specification and assigns its persistent identity. */
+/**
+ * Declares a top level page specification for generation into a persistent page kind and provider.
+ *
+ * Keep the identity stable across releases. The revision belongs to the page schema consumed by stored pages and
+ * catalog lookup.
+ */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterPage(
@@ -29,6 +34,12 @@ enum class GraphDirection {
     BOTTOM_TO_TOP,
 }
 
+/**
+ * Selects graph or timeline authoring and the Kotlin role types accepted by that editor.
+ *
+ * Graph nodes and timeline tracks must be nonempty; each role list must contain unique classes. Catalog assembly
+ * resolves these classes into structural type references.
+ */
 sealed interface PageEditorDefinition {
     data class Graph(
         val direction: GraphDirection,
@@ -54,7 +65,12 @@ sealed interface PageEditorDefinition {
     }
 }
 
-/** Authored page metadata before Kotlin role types are resolved into catalog identities. */
+/**
+ * Defines editor structure and visual metadata before catalog assembly resolves Kotlin classes.
+ *
+ * An omitted name is derived from the declaration name. Icon and color strings are parsed during assembly, which
+ * reports invalid specifications as diagnostics.
+ */
 data class PageSpec(
     val editor: PageEditorDefinition,
     val icon: String,

@@ -51,6 +51,11 @@ class KspTypeGraphConverter(
     }
 }
 
+/**
+ * Outcome of compiler type traversal. Success contains the complete portable graph; failure retains traversal
+ * diagnostics instead of exposing a partially usable schema. Exceptions from a custom identity policy are not
+ * represented by this result.
+ */
 sealed interface KspTypeConversionResult {
     data class Success(
         val graph: TypeGraph,
@@ -61,6 +66,10 @@ sealed interface KspTypeConversionResult {
     ) : KspTypeConversionResult
 }
 
+/**
+ * Unsupported compiler type or declaration encountered during graph traversal. The path records the route from the
+ * requested root to the failure, making nested generic and field errors actionable at the source declaration.
+ */
 data class KspTypeDiagnostic(
     val path: List<String>,
     val message: String,
@@ -68,10 +77,20 @@ data class KspTypeDiagnostic(
     override fun toString(): String = "${path.joinToString(" -> ")}: $message"
 }
 
+/**
+ * Assigns stable nominal references while compiler declarations become a portable graph. Implementations define
+ * namespace and revision policy and must return consistent identities for repeated visits to the same declaration.
+ * Annotations can supply public identity independently of Kotlin package layout.
+ */
 fun interface KspTypeIdentityPolicy {
     fun identity(declaration: KSClassDeclaration): ResolvedTypeRef
 }
 
+/**
+ * Default nominal identity derived from the Kotlin package and relative declaration name at revision one. Root
+ * package and anonymous declarations cannot supply the required qualified identity and fail conversion. Use an
+ * explicit policy when renaming Kotlin declarations must preserve public schema identity.
+ */
 object QualifiedKotlinTypeIdentityPolicy : KspTypeIdentityPolicy {
     override fun identity(declaration: KSClassDeclaration): ResolvedTypeRef {
         val packageName = declaration.packageName.asString()

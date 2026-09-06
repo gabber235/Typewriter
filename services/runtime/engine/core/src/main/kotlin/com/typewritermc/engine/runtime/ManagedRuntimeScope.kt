@@ -8,10 +8,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 
 /**
- * Owns coroutines and resources created during one engine activation.
+ * Owns jobs and cleanup actions for one engine activation.
  *
- * [close] is idempotent. It cancels child coroutines before running cleanup in reverse registration order. Cleanup
- * continues after failures, then throws the first failure with later failures attached as suppressed causes.
+ * Closure cancels and joins child jobs, then runs cleanup in reverse registration order. Once the closed flag is
+ * set, repeated calls return and new ownership registrations fail. Lifecycle and registration access must be
+ * serialized; the cleanup list is not synchronized. Cleanup exceptions are collected with later causes suppressed.
  */
 class ManagedRuntimeScope(
     parent: CoroutineScope,
@@ -33,6 +34,12 @@ class ManagedRuntimeScope(
         return resource
     }
 
+    /**
+     * Retires activation work before releasing registered resources.
+     *
+     * Call from the lifecycle owner rather than a child job of this scope. The caller must provide a context in
+     * which suspending shutdown can finish; cancellation during joining can interrupt cleanup.
+     */
     suspend fun close() {
         if (closed) return
         closed = true

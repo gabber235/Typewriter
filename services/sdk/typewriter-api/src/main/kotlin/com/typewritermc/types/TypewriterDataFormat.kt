@@ -21,11 +21,23 @@ import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-/** Converts Kotlin serialization events directly to the portable Typewriter value model. */
+/**
+ * Bridges Kotlin serialization directly to [DataValue] using the deployment type registry.
+ *
+ * Structural expressions guide scalar representation, generic substitution, nullable Option values, and
+ * polymorphic dispatch. Conversion failures report value paths where available. This codec is not a complete
+ * validator of every constraint declared in a type expression.
+ */
 class TypewriterDataFormat internal constructor(
     val serializersModule: SerializersModule,
     private val prototypes: TypePrototypeRegistry,
 ) {
+    /**
+     * Runs the supplied serializer against the expected structural expression.
+     *
+     * The serializer must produce a value and any named dependencies must exist in this registry. No JSON
+     * intermediate representation is used.
+     */
     fun <T> encodeToDataValue(
         serializer: SerializationStrategy<T>,
         value: T,
@@ -44,6 +56,12 @@ class TypewriterDataFormat internal constructor(
         return encoded ?: throw SerializationException("The serializer produced no value at ${DataValuePath.Root}.")
     }
 
+    /**
+     * Reconstructs a Kotlin value using the supplied deserializer and expected expression.
+     *
+     * Shape mismatches, unsupported serialization events, and unavailable prototypes fail; callers at transport or
+     * persistence boundaries must classify those errors.
+     */
     fun <T> decodeFromDataValue(
         deserializer: DeserializationStrategy<T>,
         value: DataValue,

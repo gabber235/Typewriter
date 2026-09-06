@@ -10,6 +10,12 @@ import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Owns operation level annotations, events, and recovered failure reporting.
+ *
+ * The scope is valid only within its span boundary. Child work can add operation context through this receiver
+ * while retaining its own child span details.
+ */
 interface MainSpanScope {
     fun annotate(block: MainAttributes.() -> Unit)
 
@@ -25,6 +31,12 @@ interface MainSpanScope {
     )
 }
 
+/**
+ * Annotates a bounded suboperation beneath a main span.
+ *
+ * Use the main scope for overall domain outcome and the child scope for dependency or transport details. Neither
+ * receiver should escape its owning boundary.
+ */
 interface ChildSpanScope {
     fun annotate(block: ChildAttributes.() -> Unit)
 
@@ -49,6 +61,11 @@ internal fun interface SpanMutation {
     fun apply(action: (Span) -> Unit)
 }
 
+/**
+ * Writes typed attributes through the owning span mutation boundary.
+ *
+ * It does not sanitize values or control attribute cardinality; callers choose stable keys and safe values.
+ */
 open class TypedAttributes internal constructor(
     private val mutation: SpanMutation,
 ) {
@@ -106,6 +123,12 @@ class CounterKey(
     }
 }
 
+/**
+ * Collects the operation outcome, workflow stages, feature decisions, and counters on the main span.
+ *
+ * Counters are scoped to the operation rather than global metrics. Stage helpers group attributes without creating
+ * extra spans.
+ */
 class MainAttributes internal constructor(
     mutation: SpanMutation,
     private val incrementCounter: (CounterKey, Long) -> Long,
@@ -167,6 +190,9 @@ class MainAttributes internal constructor(
     fun messagingMessageId(value: String) = attribute(MessagingAttributeKeys.MessageId, value)
 }
 
+/**
+ * Adds dependency specific semantic attributes to a child span while retaining typed custom attribute access.
+ */
 class ChildAttributes internal constructor(
     mutation: SpanMutation,
 ) : TypedAttributes(mutation) {
@@ -183,6 +209,11 @@ class ChildAttributes internal constructor(
     fun serverPort(value: Int) = attribute(ServerAttributes.SERVER_PORT, value.toLong())
 }
 
+/**
+ * Records stage outcome, attempt count, and elapsed milliseconds on the parent operation.
+ *
+ * Stage names are stable key segments; do not derive them from user input.
+ */
 class StageAttributes internal constructor(
     private val attributes: MainAttributes,
     private val name: String,

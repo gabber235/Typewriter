@@ -51,7 +51,13 @@ sealed interface NatsLifecycleError {
     ) : NatsLifecycleError
 }
 
-/** Owns NATS lifecycle and clears constructed clients before exceptional failures escape. */
+/**
+ * Owns the NATS client, connectivity monitor, and explicit connection lifecycle.
+ *
+ * A mutex serializes connect, reconnect, and shutdown. Reconnect constructs a fresh configured client rather than
+ * making old subscriptions portable. Exceptional setup failures release constructed clients before escaping.
+ * Transport adapters borrow the currently connected client.
+ */
 class NatsConnection internal constructor(
     private val configurationProvider: NatsConfigurationProvider,
     private val authenticationProvider: NatsAuthenticationProvider,

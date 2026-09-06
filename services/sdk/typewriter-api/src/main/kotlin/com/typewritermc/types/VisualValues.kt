@@ -3,6 +3,12 @@ package com.typewritermc.types
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Carries either an Iconify identifier or inline SVG source in catalog metadata.
+ *
+ * [parse] recognizes Iconify syntax and treats other nonblank input as SVG. SVG construction checks only that
+ * source is nonblank; rendering boundaries remain responsible for interpreting it safely.
+ */
 @Serializable
 sealed interface Icon {
     val wireValue: String
@@ -42,6 +48,12 @@ sealed interface Icon {
     }
 }
 
+/**
+ * Stores color as an unsigned ARGB word shared by catalog and transport consumers.
+ *
+ * [parseRgb] accepts exactly six hexadecimal RGB digits prefixed by # and supplies fully opaque alpha. Direct
+ * construction retains the supplied alpha bits.
+ */
 @JvmInline
 @Serializable
 value class Color(

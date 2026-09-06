@@ -4,6 +4,13 @@ import com.surrealdb.Response
 import com.surrealdb.SurrealException
 import com.surrealdb.Value
 
+/**
+ * Consumes transaction statement results while preserving the substantive failure rather than a skipped query
+ * message.
+ *
+ * The requested index must exist. Errors at other statements can fail the operation because a successful target
+ * result alone does not prove the transaction succeeded.
+ */
 fun Response.takeTransaction(index: Int): Value {
     require(index >= 0) { "Index must be non-negative, got $index" }
     require(index < size()) { "Index must be less than the size of the response, got $index and size ${size()}" }
@@ -25,6 +32,9 @@ fun Response.takeTransaction(index: Int): Value {
     return result ?: throw checkNotNull(targetFailure)
 }
 
+/**
+ * Adds the failing statement index while retaining the original database exception as cause.
+ */
 class TransactionException(
     index: Int,
     cause: Throwable,

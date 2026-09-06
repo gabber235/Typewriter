@@ -9,6 +9,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * Owns the activation scope of a staged discovery deployment and orders compiled content application.
+ *
+ * Activation runs registrars in list order and starts delivery. Quiescing stops delivery and releases activation
+ * resources while retaining discovery and the last content for resume. Final closure also closes discovery.
+ * Lifecycle methods and external content application require serialized access.
+ */
 class ReloadableEngineRuntime(
     deployment: DiscoveryDeployment,
     private val registrars: List<RuntimeRegistrar>,
@@ -41,6 +48,12 @@ class ReloadableEngineRuntime(
         }
     }
 
+    /**
+     * Applies content only while active and only if its activation revision exceeds the last successful one.
+     *
+     * The remembered revision advances after the gateway succeeds. Missing gateways return Unsupported; older or
+     * equal revisions return the current activation without reapplying.
+     */
     suspend fun applyContent(content: ActivatedCompiledContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
         val current = lastContent
@@ -61,6 +74,12 @@ class ReloadableEngineRuntime(
         mutableHealth.value = RuntimeHealth.Staged
     }
 
+    /**
+     * Creates a fresh activation scope, reruns registrars, and reapplies the last accepted content before
+     * restarting delivery.
+     *
+     * Resume requires a quiesced deployment; it is not valid after final closure.
+     */
     override suspend fun resume() {
         activate()
     }

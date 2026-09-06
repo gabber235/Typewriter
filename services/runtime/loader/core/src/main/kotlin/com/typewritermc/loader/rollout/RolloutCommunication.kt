@@ -103,6 +103,12 @@ val ParticipantStatusContract =
         ErrorSlug.of("realm-host-status-failed"),
     )
 
+/**
+ * Implements rollout probes and commands through typed messaging contracts.
+ *
+ * The coordinator supplies expected hosts and timeouts, then validates replies against its attempt and
+ * projections.
+ */
 class CommunicatorRolloutMessenger(
     private val organizationId: String,
     private val communicator: Communicator,
@@ -161,6 +167,12 @@ class CommunicatorRolloutMessenger(
             .associate { it.hostId to it.requireStatus() }
 }
 
+/**
+ * Registers presence, command, and status handlers for a local participant.
+ *
+ * The router owns subscriptions; the participant owns runtime transitions. Session replacement requires fresh
+ * routes.
+ */
 class RolloutHostRoutes(
     private val presence: suspend (ProbeRealmHosts) -> RealmHostPresence?,
     private val participant: HostRolloutParticipant,
@@ -185,6 +197,11 @@ class RolloutHostRoutes(
     }
 }
 
+/**
+ * Registers participant event ingestion into coordinator persistence.
+ *
+ * Events supplement status probes and do not independently commit a deployment.
+ */
 class RolloutCoordinatorRoutes(
     private val state: RolloutStateRepository,
 ) {
@@ -198,6 +215,11 @@ class RolloutCoordinatorRoutes(
     }
 }
 
+/**
+ * Publishes participant state through the rollout event contract.
+ *
+ * Communication failure propagates; publication is not transactional with local runtime transitions.
+ */
 class CommunicatorParticipantStatePublisher(
     private val organizationId: String,
     private val communicator: Communicator,

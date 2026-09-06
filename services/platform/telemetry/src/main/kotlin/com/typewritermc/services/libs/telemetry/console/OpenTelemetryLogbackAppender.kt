@@ -16,6 +16,12 @@ import org.slf4j.ILoggerFactory
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
+/**
+ * Bridges accepted Logback events into OpenTelemetry logs with current trace context.
+ *
+ * The configured level is a threshold. Key value pairs and throwable details are forwarded, so upstream logging
+ * must avoid secret content.
+ */
 class OpenTelemetryLogbackAppender(
     private val openTelemetry: OpenTelemetry,
     private val minimumLevel: Level = Level.WARN,
@@ -44,6 +50,12 @@ class OpenTelemetryLogbackAppender(
     }
 }
 
+/**
+ * Installs the bridge on the Logback root logger and detaches existing appenders.
+ *
+ * The returned handle removes this bridge and restores the previous root level, but does not reinstall detached
+ * appenders. Other logging backends return a no op handle. Installation belongs to the host lifecycle.
+ */
 fun installOpenTelemetryLogback(
     openTelemetry: OpenTelemetry,
     minimumLevel: Level,

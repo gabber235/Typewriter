@@ -16,10 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.Path
 
 /**
- * Runs the combined loader JAR as a standalone service host.
- *
- * The optional first argument selects the working directory. [run] owns the shell and guarantees host cleanup after an
- * operator stop, end of input, failure, cancellation, or process shutdown.
+ * Process entrypoint that owns the loader application, running host, and interactive shell. The first argument
+ * selects the work directory, defaulting to typewriter. Normal shell exit and the JVM shutdown hook share a
+ * guarded stop path so teardown is requested once; application closure follows host shutdown.
  */
 object StandaloneLoader {
     @JvmStatic

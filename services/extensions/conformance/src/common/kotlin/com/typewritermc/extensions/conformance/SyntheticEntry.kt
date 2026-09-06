@@ -33,6 +33,11 @@ import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Polymorphic message family exercising generated schema discovery, serialized field aliases, and presentation
+ * variant selection. The literal and repeated variants provide distinct concrete payloads for the conformance
+ * entry and Realm capability fixtures.
+ */
 @Serializable
 sealed interface SyntheticMessage
 
@@ -54,6 +59,11 @@ data class RepeatedMessage(
     val repetitions: Int,
 ) : SyntheticMessage
 
+/**
+ * Conformance fixture connecting generated element discovery to executable entry dispatch. Execution forwards the
+ * message payload to the runtime output, allowing the surrounding engine tests to observe delivery without
+ * introducing external resources.
+ */
 @Serializable
 @TypewriterElement(
     id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",

@@ -37,6 +37,12 @@ data class InboxDiagnostic(
     val reason: String,
 )
 
+/**
+ * Captures filesystem metadata used to detect whether an inbox JAR remained stable between scans.
+ *
+ * Equal observations are a readiness heuristic. Import additionally hashes content and rechecks the observation
+ * before accepting it.
+ */
 @kotlinx.serialization.Serializable
 data class InboxObservation(
     val relativePath: String,
@@ -51,6 +57,12 @@ data class AcceptedInboxCandidate(
     val candidate: ArtifactCandidate,
 )
 
+/**
+ * Persists inbox acceptance, diagnostics, and import ordering independently of blob storage.
+ *
+ * Reserving an import revision and accepting a candidate are separate operations, so unused revisions are valid.
+ * Presence tracking lets implementations defer removal of briefly missing files.
+ */
 interface CandidateRepository {
     suspend fun accepted(relativePath: String): AcceptedInboxCandidate?
 
@@ -65,6 +77,13 @@ interface CandidateRepository {
     suspend fun observePresence(relativePaths: Set<String>)
 }
 
+/**
+ * Imports stable inbox JARs into immutable blob storage and the candidate index.
+ *
+ * Two observations separated by [stableDuration] must agree before import. Invalid imports become quarantine
+ * diagnostics; accepted files are not moved. Capability JARs are rejected because only engines distribute
+ * capabilities. [run] owns a watch service and also rescans periodically.
+ */
 class ArtifactInboxReconciler(
     artifactsRoot: Path,
     private val blobs: BlobEndpoint,
@@ -77,6 +96,12 @@ class ArtifactInboxReconciler(
     private val manualInbox = inbox.resolve("manual").also(Path::createDirectories)
     private val developmentInbox = inbox.resolve("development").also(Path::createDirectories)
 
+    /**
+     * Performs one stability check and import pass, then reports observed presence to the repository.
+     *
+     * A failed replacement can leave a previously accepted candidate available. Cancellation propagates instead of
+     * being recorded as a quarantine failure.
+     */
     suspend fun reconcile() =
         telemetry.artifactSpan(
             "artifact.inbox.reconcile",

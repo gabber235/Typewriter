@@ -14,11 +14,20 @@ import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.TypeExpression
 import kotlinx.serialization.json.Json
 
+/**
+ * Keeps parsed stored elements with their database page ownership for later logical projection.
+ */
 internal data class StoredPageElements(
     val elements: List<StoredElement>,
     val pages: Map<com.typewritermc.elements.ElementInstanceId, com.surrealdb.RecordId>,
 )
 
+/**
+ * Joins element rows with outgoing reference rows to reconstruct persistence values.
+ *
+ * Expected types are decoded separately from value trees. Placement discriminators must be known; logical
+ * reference assembly and target existence checks happen later in the document repository.
+ */
 internal object ElementRecordParser {
     private val json = Json
 

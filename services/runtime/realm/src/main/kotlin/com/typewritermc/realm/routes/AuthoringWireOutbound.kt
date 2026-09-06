@@ -51,11 +51,19 @@ import skirout.library.v1.authoring.PropertyConflict as WirePropertyConflict
 import skirout.library.v1.authoring.ResourceSummary as WireSummary
 import skirout.library.v1.authoring.Tag as WireTag
 
+/**
+ * Encodes consistent snapshot slices with their collaboration sequence for editor reconciliation.
+ */
 internal fun AuthoringSnapshotResult.toWireResponse(): GetAuthoringSnapshotResponse =
     GetAuthoringSnapshotResponse.SuccessWrapper(
         WireSnapshot(sequence = sequence, slices = slices.map(AuthoringSnapshotSlice::toWire)),
     )
 
+/**
+ * Preserves applied, conflict, and invalid outcomes at the wire boundary.
+ *
+ * Conflict details and diagnostics remain structured rather than collapsed to a generic error.
+ */
 internal fun AuthoringBatchResult.toWireResponse(): ApplyAuthoringBatchResponse =
     when (this) {
         is AuthoringBatchResult.Applied -> {
@@ -77,6 +85,9 @@ internal fun AuthoringBatchResult.toWireResponse(): ApplyAuthoringBatchResponse 
         }
     }
 
+/**
+ * Encodes direct changes and indirect refresh targets without losing typed resource identities.
+ */
 internal fun AuthoringChanged.toWire() =
     skirout.library.v1.authoring.AuthoringChanged(
         sequence = sequence,

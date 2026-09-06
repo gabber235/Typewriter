@@ -23,14 +23,33 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 
+/**
+ * Accepts a loaded activation at the engine content boundary.
+ *
+ * Successful return means the implementation applied its own content contract. Ordering and stale revision
+ * rejection belong to the runtime invoking this gateway.
+ */
 fun interface EngineContentGateway {
     suspend fun apply(content: ActivatedCompiledContent)
 }
 
+/**
+ * Loads the manifest and shards described by an activation.
+ *
+ * Implementations are responsible for verifying external bytes before returning a usable bundle; failures
+ * propagate to delivery.
+ */
 fun interface CompiledContentSource {
     suspend fun load(activation: CompiledContentActivation): ActivatedCompiledContent
 }
 
+/**
+ * Loads compiled JSON blobs with exact size, contiguous chunk, and SHA256 verification.
+ *
+ * Manifest and shard identities must match their descriptors. Shards are cached by semantic digest for reuse
+ * across activations. Calls must be serialized because the cache is mutable; each blob is buffered in memory and
+ * must fit an Int sized array.
+ */
 class BlobCompiledContentSource(
     private val blobs: BlobEndpoint,
 ) : CompiledContentSource {
@@ -88,11 +107,23 @@ class BlobCompiledContentSource(
     }
 }
 
+/**
+ * Publishes decoded elements indexed by compiled occurrence together with their manifest.
+ *
+ * This is decoded content, not a set of attached runtime facets or proof that entries are being executed.
+ */
 data class EngineContentSnapshot(
     val manifest: CompiledManifest,
     val elements: Map<CompiledElementKey, Element>,
 )
 
+/**
+ * Decodes compiled elements using the engine catalog and deployment prototypes.
+ *
+ * Only manifest format revision one is supported. Duplicate compiled keys, missing concrete prototypes, and
+ * decoded values that are not elements fail assembly. Decoding follows the catalog descriptor; no schema migration
+ * is performed here.
+ */
 class EngineContentAssembler(
     private val catalog: ElementCatalog,
     private val prototypes: TypePrototypeRegistry,
@@ -128,6 +159,12 @@ class EngineContentAssembler(
     }
 }
 
+/**
+ * Replaces the observable decoded snapshot only after complete assembly succeeds.
+ *
+ * A failed assembly leaves the previous snapshot in place. This gateway does not attach facets, dispatch entries,
+ * or provide player execution.
+ */
 class AssemblingEngineContentGateway(
     private val assembler: EngineContentAssembler,
 ) : EngineContentGateway {
@@ -139,6 +176,11 @@ class AssemblingEngineContentGateway(
     }
 }
 
+/**
+ * Distinguishes newly applied content, a stale activation, and runtimes without a content gateway.
+ *
+ * Ignored reports the current activation and manifest, not the rejected incoming revision.
+ */
 sealed interface ContentApplicationResult {
     data class Applied(
         val activationRevision: Long,

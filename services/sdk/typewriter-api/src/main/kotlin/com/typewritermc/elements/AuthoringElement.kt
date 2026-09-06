@@ -7,6 +7,12 @@ import com.typewritermc.types.TypeExpression
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Represents an authored element in persistence, including schema revision and editor placement.
+ *
+ * [value] contains reference slots rather than the logical values consumed by extension codecs. Assemble
+ * references before decoding. Names must be nonblank and schema revisions positive.
+ */
 @Serializable
 data class StoredElement(
     val id: ElementInstanceId,
@@ -22,6 +28,12 @@ data class StoredElement(
     }
 }
 
+/**
+ * Separates an element value tree from its outgoing reference edges.
+ *
+ * [valueWithSlots] contains markers keyed by [references]. Slots must be unique, but construction does not verify
+ * that every marker has a matching edge; [ReferenceAssembler] performs that check.
+ */
 @Serializable
 data class StoredElementValue(
     val valueWithSlots: DataValue,
@@ -34,6 +46,12 @@ data class StoredElementValue(
     }
 }
 
+/**
+ * Identifies a reference occurrence within one stored element value.
+ *
+ * Slots distinguish multiple occurrences of the same target and survive mutations that preserve those occurrences.
+ * Only nonblank values are accepted.
+ */
 @JvmInline
 @Serializable
 value class ReferenceSlotId(
@@ -44,6 +62,11 @@ value class ReferenceSlotId(
     }
 }
 
+/**
+ * Connects one stored slot to its resource target and expected structural type.
+ *
+ * The expected type is checked during assembly; recording an edge does not establish that its target exists.
+ */
 @Serializable
 data class StoredReference(
     val slot: ReferenceSlotId,
@@ -51,6 +74,13 @@ data class StoredReference(
     val expectedType: TypeExpression,
 )
 
+/**
+ * Stores editor layout independently of the element payload.
+ *
+ * Graph dimensions must be positive. Timeline positions use nonnegative frame indices, and segment end frames
+ * cannot precede their starts. Choosing a placement compatible with the page is the authoring boundary
+ * responsibility.
+ */
 @Serializable
 sealed interface ElementPlacement {
     @Serializable

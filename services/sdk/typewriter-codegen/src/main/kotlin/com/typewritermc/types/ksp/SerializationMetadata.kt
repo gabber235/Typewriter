@@ -5,6 +5,10 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
+/**
+ * Maps Kotlin property names to serialized field names for generated schema and value adapters. This keeps
+ * generated access aligned with serialization annotations rather than assuming source names are wire names.
+ */
 fun KSClassDeclaration.serializedFieldNames(): Map<String, String> =
     getAllProperties()
         .filter(KSPropertyDeclaration::isSerializedProperty)

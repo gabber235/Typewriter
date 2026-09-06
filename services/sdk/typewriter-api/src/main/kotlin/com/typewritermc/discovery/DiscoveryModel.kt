@@ -8,6 +8,12 @@ import kotlinx.serialization.Serializable
 private val SEGMENT_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9_.]*")
 private val QUALIFIED_CLASS_PATTERN = Regex("[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)+")
 
+/**
+ * Selects the environment in which an executable contribution may load.
+ *
+ * Identifiers must be safe path segments. Runtime loading currently recognizes the Realm and Execution domains in
+ * [DiscoveryDomains].
+ */
 @JvmInline
 @Serializable
 value class DiscoveryDomainId(
@@ -18,11 +24,20 @@ value class DiscoveryDomainId(
     }
 }
 
+/**
+ * Defines the Realm and Execution discovery boundaries used when filtering generated modules and prototypes.
+ */
 object DiscoveryDomains {
     val Realm = DiscoveryDomainId("realm")
     val Execution = DiscoveryDomainId("execution")
 }
 
+/**
+ * Identifies the generator responsible for a discovery payload.
+ *
+ * The reader uses this safe path segment to choose a codec; unknown producers can be retained without decoding
+ * their payloads.
+ */
 @JvmInline
 @Serializable
 value class ProducerId(
@@ -33,6 +48,12 @@ value class ProducerId(
     }
 }
 
+/**
+ * Names a contribution within its producer using a safe relative path.
+ *
+ * Each slash separated segment must match the discovery segment grammar; blank names and empty segments are
+ * rejected.
+ */
 @JvmInline
 @Serializable
 value class ContributionName(
@@ -45,6 +66,11 @@ value class ContributionName(
     }
 }
 
+/**
+ * Identifies a contribution across artifacts, source parts, and generators.
+ *
+ * Use the complete key for deduplication and diagnostics. A local contribution name alone is not globally unique.
+ */
 @Serializable
 data class ContributionKey(
     val origin: ArtifactId,
@@ -53,6 +79,13 @@ data class ContributionKey(
     val name: ContributionName,
 )
 
+/**
+ * Points discovery at a generated module provider for one runtime domain.
+ *
+ * The provider class is stored as a qualified JVM name so manifests can be inspected without loading executable
+ * code. The runtime loader expects a public zero argument constructor and a generated discovery module
+ * implementation.
+ */
 @Serializable
 data class ExecutableBinding(
     val localName: String,
@@ -65,6 +98,12 @@ data class ExecutableBinding(
     }
 }
 
+/**
+ * Connects a resolved structural type to its runtime codec provider in the listed domains.
+ *
+ * Class names remain metadata until runtime loading. At load time the returned prototype must match [type]; a
+ * structurally similar codec is not interchangeable.
+ */
 @Serializable
 data class PrototypeBinding(
     val type: ResolvedTypeRef,
@@ -79,6 +118,12 @@ data class PrototypeBinding(
     }
 }
 
+/**
+ * Carries generated structural definitions and optional executable bindings inside an Imprint contribution.
+ *
+ * Construction rejects unsupported schema versions and repeated definition or prototype identities. Deployment
+ * assembly performs the additional conflict checks across contributions.
+ */
 @Serializable
 data class TypeDiscoveryContribution(
     val schema: String = TYPE_DISCOVERY_SCHEMA,

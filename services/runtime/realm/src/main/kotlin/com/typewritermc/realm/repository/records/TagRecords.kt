@@ -18,6 +18,12 @@ internal data class PlacementRecord(
     fun toPlacement(): GridPlacement = GridPlacement(x = x, y = y, width = width, height = height)
 }
 
+/**
+ * Adapts a tag row and joined parent ids into the library model.
+ *
+ * Database field spelling remains local to this adapter. Conversion validates ids and names; hierarchy acyclicity
+ * belongs to transactional authoring.
+ */
 @Suppress("PropertyName")
 internal data class TagRecord(
     val id: RecordId = RecordId("tag", ""),

@@ -15,7 +15,11 @@ const val EXTENSION_API_CONFIGURATION = "imprintExtensionApi"
 const val HOST_API_CONFIGURATION = "imprintHostApi"
 const val PROCESSORS_CONFIGURATION = "imprintProcessors"
 
-/** Configures one canonical engine, capability, or extension artifact. */
+/**
+ * Gradle entrypoint for declaring a Typewriter artifact through [TypewriterProjectExtension]. Installs Java
+ * library and KSP support, creates dependency buckets, and exposes an inspection task. The chosen declaration
+ * configures source sets, processor context, manifest generation, and canonical packaging.
+ */
 class ImprintPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("java-library")
@@ -49,7 +53,12 @@ private fun Project.createDependencyBuckets() {
     }
 }
 
-/** Entry point for declaring the single artifact produced by one Gradle project. */
+/**
+ * Project DSL selecting one Realm, engine, capability, extension, or engine core configuration. Declarations are
+ * applied immediately and are mutually exclusive. Artifact identity and version are validated when converted to
+ * the internal model; engine core supplies shared code generation without producing its own hosted artifact
+ * declaration.
+ */
 open class TypewriterProjectExtension(
     private val project: Project,
 ) {
@@ -118,6 +127,11 @@ open class TypewriterProjectExtension(
     }
 }
 
+/**
+ * Mutable Gradle DSL input for one artifact identity and version. Conversion validates strings and snapshots
+ * relationships and source parts before project configuration consumes them. Subclasses determine which dependency
+ * contracts and host API requirements are legal.
+ */
 sealed class ArtifactDeclaration(
     private val kind: ArtifactKind,
 ) {
@@ -139,6 +153,10 @@ sealed class ArtifactDeclaration(
 
 open class RealmDeclaration : HostedArtifactDeclaration(ArtifactKind.REALM)
 
+/**
+ * Declaration shared by Realm and engine artifacts that execute inside a stable host. The host API constraint is
+ * required and validated as a semantic version constraint when the declaration becomes a model.
+ */
 sealed class HostedArtifactDeclaration(
     kind: ArtifactKind,
 ) : ArtifactDeclaration(kind) {

@@ -8,6 +8,13 @@ import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.SearchProvider
 import skirout.editor.v1.presentation.SequencePresentation
 
+/**
+ * Rejects repeated ids across the presentation tree, including nested headers, controls, and search result
+ * templates.
+ *
+ * Stable unique ids are required for panel state. Traversal follows known protocol variants; this check is not a
+ * full binding or expression validator.
+ */
 internal fun assertUniqueNodeIds(root: PresentationNode) {
     val duplicates =
         root

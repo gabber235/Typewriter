@@ -31,6 +31,12 @@ import skirout.service.v1.artifact.ProducerMetadata as SkirProducerMetadata
 import skirout.service.v1.artifact.SharedArtifactDescriptor as SkirSharedArtifactDescriptor
 import skirout.service.v1.artifact.SharedArtifactProvenance as SkirSharedArtifactProvenance
 
+/**
+ * Registers loader owned shared artifact and blob routes at the logical Realm address.
+ *
+ * Storage survives replacement of the hosted Realm runtime. Wire conversions validate domain values, while the
+ * enclosing router owns subscriptions and unexpected handler failure responses.
+ */
 class StableRealmArtifactRoutes(
     private val artifacts: SharedArtifactAccess,
 ) {

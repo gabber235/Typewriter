@@ -4,7 +4,12 @@ import kotlin.math.pow
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 
-/** Calculates bounded retry delays without owning time, randomness, or execution. */
+/**
+ * Calculates bounded delays without owning scheduling, randomness, or retry attempts.
+ *
+ * Attempts start at zero and jitter samples range from zero to one. Exponential jitter is applied around capped
+ * growth, then clamped positive and below the maximum. Callers decide eligibility and exhaustion.
+ */
 sealed interface RetryPolicy {
     /** Returns the delay for a zero-based [attempt] and normalized [jitterSample]. */
     fun delayFor(

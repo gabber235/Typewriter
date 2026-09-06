@@ -49,6 +49,12 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 import kotlin.io.encoding.Base64
 
+/**
+ * KSP entrypoint generating type prototypes and portable schema contributions from annotated Kotlin declarations.
+ * Each compiler environment receives a fresh processor. Processing defers unresolved symbols, validates supported
+ * declaration shapes, and generates its output once for the compilation. Generated resources feed manifest
+ * discovery so runtime consumers do not scan source annotations.
+ */
 class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         TypewriterTypeProcessor(environment.codeGenerator, environment.logger, environment.options)

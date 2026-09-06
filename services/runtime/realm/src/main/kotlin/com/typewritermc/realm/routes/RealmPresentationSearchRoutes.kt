@@ -4,6 +4,12 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 
+/**
+ * Registers search startup, update publication, and explicit cancellation.
+ *
+ * It validates request shape and verifies subscription identity on both initial and later responses. Publication
+ * failure is surfaced to the producer rather than silently reported as successful delivery.
+ */
 internal class RealmPresentationSearchRoutes(
     private val source: RealmPresentationSearchSource,
     private val contracts: LibraryContracts,

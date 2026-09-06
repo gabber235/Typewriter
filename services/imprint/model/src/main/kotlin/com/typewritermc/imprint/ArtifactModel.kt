@@ -14,7 +14,11 @@ import io.github.z4kn4fein.semver.toVersionOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Identifies one Typewriter artifact independently from its Gradle or Maven coordinates. */
+/**
+ * Stable logical artifact identity shared by build manifests, deployment selection, and discovery origins.
+ * Coordinates may change without changing this identity. Construction rejects empty or unsafe identifier segments;
+ * it does not resolve an artifact or establish its availability.
+ */
 @JvmInline
 @Serializable
 value class ArtifactId(
@@ -33,7 +37,11 @@ value class ArtifactId(
     }
 }
 
-/** Stores an exact Semantic Versioning value used as an artifact identity. */
+/**
+ * Exact semantic version attached to a built artifact. Construction requires complete strict semantic version
+ * syntax. Ordering uses semantic version precedence through [semanticVersion], while the original string remains
+ * the serialized value.
+ */
 @JvmInline
 @Serializable
 value class ArtifactVersion(
@@ -144,14 +152,22 @@ enum class ArtifactKind {
     EXTENSION,
 }
 
-/** Records one declared compatibility requirement. */
+/**
+ * Compatibility requirement for one logical artifact. The constraint records acceptable versions before
+ * resolution; [ResolvedArtifact] records the exact selection. Consumers must validate the selected version against
+ * this requirement.
+ */
 @Serializable
 data class ArtifactRequirement(
     val id: ArtifactId,
     val version: VersionConstraint,
 )
 
-/** Records the exact artifact selected while building another artifact. */
+/**
+ * Exact identity, version, and kind selected during a build. Used for dependency provenance and compatibility
+ * checks in manifests. This descriptor contains no artifact bytes or download location and does not prove that a
+ * runtime has installed the artifact.
+ */
 @Serializable
 data class ResolvedArtifact(
     val id: ArtifactId,
@@ -159,7 +175,11 @@ data class ResolvedArtifact(
     val kind: ArtifactKind,
 )
 
-/** Carries one opaque generated resource into a final artifact manifest. */
+/**
+ * Opaque generated discovery payload carried into the canonical manifest. The origin, source part, producer, and
+ * name together identify a contribution; manifest generation rejects duplicate keys. Producer and name validation
+ * prevents unsafe resource paths, while the producer owns payload encoding and interpretation.
+ */
 @Serializable
 data class GeneratedContribution(
     val origin: ArtifactId,
@@ -177,7 +197,11 @@ data class GeneratedContribution(
     }
 }
 
-/** Describes one source part embedded in an extension JAR. */
+/**
+ * Named compilation unit inside an extension artifact. Every targeted part inherits common code implicitly;
+ * [includes] names additional targeted parts whose output is visible to it. The enclosing [ExtensionManifest]
+ * validates names and inclusion cycles, while build tooling validates compatibility between included targets.
+ */
 @Serializable
 sealed interface ExtensionSourcePart {
     val name: String
@@ -192,7 +216,11 @@ data object CommonExtensionSourcePart : ExtensionSourcePart {
     override val includes: List<String> = emptyList()
 }
 
-/** Describes one extension source part compiled against a single engine. */
+/**
+ * Extension code compiled against one engine contract. [requirement] preserves its supported version range and
+ * [resolved] records the engine used to compile it. Construction checks identity and kind; build resolution
+ * performs version compatibility checks.
+ */
 @Serializable
 @SerialName("engine")
 data class EngineExtensionSourcePart(
@@ -209,7 +237,11 @@ data class EngineExtensionSourcePart(
     }
 }
 
-/** Describes one extension source part compiled against one or more capabilities. */
+/**
+ * Extension code compiled against a set of capability contracts. Requirements express direct compatibility and
+ * resolved descriptors record the selected capability graph. A runtime uses the source part metadata to decide
+ * eligibility; compilation alone does not make the part available in every deployment.
+ */
 @Serializable
 @SerialName("capabilities")
 data class CapabilityExtensionSourcePart(

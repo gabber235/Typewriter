@@ -5,7 +5,12 @@ import java.net.URI
 import java.util.Collections
 import kotlin.time.Duration
 
-/** Immutable case-insensitive HTTP header collection preserving all values. */
+/**
+ * Stores validated HTTP header pairs while preserving repeated values.
+ *
+ * Lookup and replacement use case insensitive names. Rendering redacts values; explicit iteration exposes them for
+ * transport. Construct through the factories to reject invalid header syntax.
+ */
 class HttpHeaders private constructor(
     private val entries: List<Pair<String, String>>,
 ) : Iterable<Pair<String, String>> {
@@ -75,6 +80,13 @@ enum class HttpMethod(
     OPTIONS(true),
 }
 
+/**
+ * Captures a bounded HTTP operation with validated endpoint, headers, and body policy.
+ *
+ * Body bytes are copied on input and access. GET and HEAD cannot carry bodies, transport controlled headers are
+ * rejected, and URI user credentials are forbidden. Optional limits override transport defaults; rendering omits
+ * paths, queries, and body content.
+ */
 class HttpRequest(
     val operation: HttpOperation,
     val failureSlug: ErrorSlug,
@@ -107,6 +119,12 @@ class HttpRequest(
     }
 }
 
+/**
+ * Returns HTTP status, headers, and defensively copied response bytes.
+ *
+ * Transport success includes error status codes. The calling protocol adapter must interpret the status and body
+ * together.
+ */
 class HttpResponse(
     val statusCode: Int,
     val headers: HttpHeaders,
@@ -165,6 +183,12 @@ sealed interface HttpResult {
     }
 }
 
+/**
+ * Executes one HTTP exchange and classifies transport failures.
+ *
+ * HTTP error statuses remain successful responses for protocol interpretation. Implementations must preserve
+ * cancellation and apply request or configured byte and timeout limits.
+ */
 fun interface HttpTransport {
     suspend fun execute(request: HttpRequest): HttpResult
 }

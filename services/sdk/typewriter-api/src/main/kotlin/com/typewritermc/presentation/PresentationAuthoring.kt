@@ -7,7 +7,12 @@ import skirout.editor.v1.presentation.PresentationNode
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-/** Marks a top level presentation specification for compile time discovery. */
+/**
+ * Registers a top level presentation declaration for generated discovery.
+ *
+ * [default] participates in the target type default selection. Higher priorities are considered first; tied
+ * priorities produce diagnostics and selection proceeds to a lower unique priority.
+ */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterPresentation(
@@ -15,6 +20,12 @@ annotation class TypewriterPresentation(
     val priority: Int = 0,
 )
 
+/**
+ * Resolves authored Kotlin property references against deployment serialization metadata.
+ *
+ * A property must have a serialized name in its prototype. This prevents UI bindings from silently using Kotlin
+ * names that differ from the stored value.
+ */
 class PresentationBuildContext internal constructor(
     private val prototypes: TypePrototypeRegistry,
 ) {
@@ -31,7 +42,12 @@ class PresentationBuildContext internal constructor(
     }
 }
 
-/** An authored presentation before deployment specific type metadata is applied. */
+/**
+ * Retains an authored presentation tree and target class until deployment catalog compilation.
+ *
+ * The name must be nonblank and combines with the provider namespace to form the presentation identity.
+ * Compilation resolves field paths, type references, and capability dependencies.
+ */
 class PresentationSpec<T : Any> internal constructor(
     val name: String,
     val target: KClass<T>,
@@ -51,6 +67,13 @@ inline fun <reified T : Any> presentation(
         .apply(block)
         .build(name)
 
+/**
+ * Builds an ordered presentation for one Kotlin target type.
+ *
+ * Property based controls resolve serialized names immediately through the build context. The resulting tree is
+ * compiled later into the canonical panel protocol, where duplicate node identities and missing capabilities are
+ * diagnosed.
+ */
 @PresentationDsl
 class PresentationBuilder<T : Any>
     @PublishedApi
@@ -120,7 +143,13 @@ class PresentationBuilder<T : Any>
             children += AuthoredPresentationNode.PolymorphicInput(context.field(target, property.name), types)
         }
 
-        /** Embeds any node from the complete canonical presentation algebra. */
+        /**
+         * Embeds a canonical protocol node when the typed DSL does not expose the required control.
+         *
+         * The node must have an explicit nonblank id. It is retained verbatim rather than rebased to the
+         * surrounding field path, so the author owns its bindings and ids; full tree uniqueness is checked during
+         * compilation.
+         */
         fun wire(node: PresentationNode) {
             require(node.nodeId.isNotBlank()) { "Embedded presentation nodes require an explicit node id." }
             children += AuthoredPresentationNode.Wire(node)
@@ -133,6 +162,12 @@ class PresentationBuilder<T : Any>
         internal fun column(): AuthoredPresentationNode = AuthoredPresentationNode.Column(children.toList())
     }
 
+/**
+ * Collects explicitly offered concrete alternatives for a polymorphic field.
+ *
+ * Each alternative has its own typed builder and nonblank label. Runtime catalog compilation requires prototypes
+ * for these concrete classes.
+ */
 @PresentationDsl
 class PolymorphicPresentationBuilder<T : Any> internal constructor(
     @PublishedApi internal val context: PresentationBuildContext,

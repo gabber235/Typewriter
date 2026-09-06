@@ -13,6 +13,12 @@ import com.typewritermc.types.ResourceId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Groups authored pages under a stable identity and library name.
+ *
+ * Tags are references to separate records; constructing a book does not resolve them or enforce database
+ * uniqueness.
+ */
 @Serializable
 data class Book(
     val id: BookId,
@@ -22,6 +28,12 @@ data class Book(
     val tags: Set<Ref<Tag>>,
 ) : Referenceable
 
+/**
+ * Represents a library tag with potentially multiple parents and editor placement.
+ *
+ * Hierarchy validation belongs to [TagHierarchy] and the repository. The record itself permits unresolved parent
+ * references.
+ */
 @Serializable
 data class Tag(
     val id: TagId,
@@ -31,6 +43,12 @@ data class Tag(
     val placement: GridPlacement,
 ) : Referenceable
 
+/**
+ * Stores page metadata and its selected editor schema independently of element content.
+ *
+ * [PageDocument] adds elements, reference summaries, and diagnostics. The kind includes a revision so consumers
+ * can detect incompatible schema changes.
+ */
 @Serializable
 data class Page(
     val id: PageId,
@@ -49,6 +67,12 @@ data class GridPlacement(
     val height: Int,
 )
 
+/**
+ * Provides the editor view of a page with logical element values and reference diagnostics.
+ *
+ * Element identities and source slot pairs must be unique. Cross page summaries may describe missing resources.
+ * [compileStatus] reports publication state separately from whether the document can be edited.
+ */
 @Serializable
 data class PageDocument(
     val page: Page,
@@ -69,6 +93,12 @@ data class PageDocument(
     }
 }
 
+/**
+ * Carries an editor element with assembled logical values rather than persistence slot markers.
+ *
+ * The schema revision identifies the shape of [value]; consult document diagnostics before treating it as valid
+ * compiled content.
+ */
 @Serializable
 data class PageDocumentElement(
     val id: ElementInstanceId,
@@ -87,6 +117,12 @@ data class PageReference(
     val expectedType: com.typewritermc.types.TypeExpression,
 )
 
+/**
+ * Describes a referenced resource without loading its full document.
+ *
+ * [exists] distinguishes missing targets, while optional name, element type, and page fields supply context when
+ * known.
+ */
 @Serializable
 data class ResourceSummary(
     val id: ResourceId,
@@ -105,6 +141,12 @@ data class PageDocumentDiagnostic(
     val target: ResourceId? = null,
 )
 
+/**
+ * Reports whether the current authored page has usable compiled content.
+ *
+ * A blocked page may retain a previously active manifest. Consumers must not interpret that manifest as proof that
+ * the latest authoring revision compiled successfully.
+ */
 @Serializable
 sealed interface PageCompileStatus {
     @Serializable

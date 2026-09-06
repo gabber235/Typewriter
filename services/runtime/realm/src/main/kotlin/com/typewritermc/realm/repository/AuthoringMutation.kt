@@ -45,6 +45,12 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeGraph
 
+/**
+ * Enforces authoring invariants inside a caller owned transaction and accumulates resulting changes.
+ *
+ * It checks expected values, related records, tag cycles, and reference bookkeeping while tracking indirectly
+ * affected pages. It does not commit; rejection must unwind the whole batch.
+ */
 internal class AuthoringMutation(
     private val transaction: Transaction,
     private val typeGraphs: Map<ElementTypeId, TypeGraph>,

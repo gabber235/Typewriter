@@ -41,7 +41,13 @@ data class JdkHttpTransportConfiguration(
     }
 }
 
-/** Java 21 asynchronous HTTP transport. Closing is idempotent and subsequent execution fails immediately. */
+/**
+ * Performs asynchronous JDK HTTP requests with bounded buffering and no redirects.
+ *
+ * Request settings override defaults. Expected timeout, connection, and IO failures become typed results;
+ * cancellation and fatal failures propagate. The transport owns its executor. Closure is idempotent and subsequent
+ * calls fail immediately.
+ */
 class JdkHttpTransport(
     private val configuration: JdkHttpTransportConfiguration = JdkHttpTransportConfiguration(),
 ) : HttpTransport,

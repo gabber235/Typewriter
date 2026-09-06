@@ -11,6 +11,13 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
+/**
+ * Owns the current deployment catalog snapshot and its invalidation notifications.
+ *
+ * Replace updates StateFlow before emitting a change. Change notifications have a small dropping buffer and are
+ * hints to reread current state, not a durable history. Consumers requiring an initial snapshot must read
+ * [current] or collect [snapshots].
+ */
 class RealmDiscoverySnapshotStore {
     val snapshots: StateFlow<RealmDiscoverySnapshot?>
         field: MutableStateFlow<RealmDiscoverySnapshot?> = MutableStateFlow(null)
@@ -34,6 +41,11 @@ class RealmDiscoverySnapshotStore {
     fun current(): RealmDiscoverySnapshot? = snapshots.value
 }
 
+/**
+ * Combines structural discovery, elements, pages, presentations, and capabilities for one Realm deployment.
+ *
+ * Editor routes consume this assembled view; diagnostics remain visible alongside valid definitions.
+ */
 data class RealmDiscoverySnapshot(
     val discovery: DeploymentDiscoverySnapshot,
     val elements: ElementCatalog,

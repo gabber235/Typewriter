@@ -1,5 +1,11 @@
 package com.typewritermc.library
 
+/**
+ * Answers ancestry and link eligibility against a fixed collection of tags.
+ *
+ * Duplicate identities are rejected. Traversal tolerates cycles through a visited set, but missing records produce
+ * an unknown ancestry result rather than a false claim.
+ */
 class TagHierarchy(
     tags: Collection<Tag>,
 ) {
@@ -9,6 +15,12 @@ class TagHierarchy(
         require(tagsById.size == tags.size) { "Tag hierarchy ids must be unique." }
     }
 
+    /**
+     * Returns true when traversal finds [candidate] among the parents of [descendant].
+     *
+     * Returns null if an endpoint or a traversed record is missing. This is a parent traversal, not a reflexive
+     * identity comparison.
+     */
     fun isAncestor(
         candidate: TagId,
         descendant: TagId,
@@ -30,6 +42,11 @@ class TagHierarchy(
         return false
     }
 
+    /**
+     * Accepts a new parent edge only when both records exist and neither is already an ancestor of the other.
+     *
+     * Self links, duplicate edges, cycles, redundant ancestor links, and incomplete ancestry are rejected.
+     */
     fun canLink(
         child: TagId,
         parent: TagId,

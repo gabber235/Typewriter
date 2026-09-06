@@ -37,7 +37,11 @@ import skirout.editor.v1.type_catalog.TypeId as SkirTypeId
 import skirout.editor.v1.type_catalog.TypeParameter as SkirTypeParameter
 import skirout.editor.v1.type_catalog.TypeVariance as SkirTypeVariance
 
-/** Converts portable Typewriter catalog values to and from generated Skir values. */
+/**
+ * Converts catalogs, type expressions, and resolved references across the Skir boundary. Traversal preserves
+ * nominal identities and revisions while translating schema variants. Unsupported representations become path
+ * diagnostics; this adapter does not load runtime prototypes or verify deployment availability.
+ */
 object SkirTypeCodec {
     fun encode(catalog: TypeCatalog): SkirConversionResult<SkirTypeCatalog> =
         captureSkirConversion {

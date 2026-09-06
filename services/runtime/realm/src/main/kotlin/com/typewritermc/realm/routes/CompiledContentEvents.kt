@@ -5,6 +5,12 @@ import com.typewritermc.engine.CompiledContentActivation
 import com.typewritermc.services.libs.communicator.client.Communicator
 import skirout.library.v1.compiled_content.WatchCompiledContentResponse
 
+/**
+ * Retargets compiler notifications to the current Realm session without rebuilding compiler storage.
+ *
+ * Before configuration, publication does nothing. Notifications are not persisted or acknowledged here; watchers
+ * must obtain current activation through their initial snapshot after reconnect.
+ */
 class CompiledContentEvents {
     @Volatile
     private var publisher: Publisher? = null

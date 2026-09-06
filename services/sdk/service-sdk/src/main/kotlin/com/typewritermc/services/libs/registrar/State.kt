@@ -1,6 +1,12 @@
 package com.typewritermc.services.libs.registrar
 
-/** Observable registrar lifecycle state. */
+/**
+ * Describes registration progress, readiness, degradation, and terminal outcomes.
+ *
+ * Ready includes a connection generation for safe communicator borrowing. DegradedAfterReady retains the last
+ * session context but does not itself promise transport usability. IdentityOutcomeUnknown distinguishes ambiguous
+ * issuance from a retryable failure.
+ */
 sealed interface RegistrarState {
     data object Idle : RegistrarState
 
@@ -64,6 +70,12 @@ sealed interface RegistrarState {
     ) : RegistrarState
 }
 
+/**
+ * Orders observable state transitions and relates them to a registrar attempt.
+ *
+ * Sequence distinguishes observations within an attempt. StateFlow consumers see current state and may skip
+ * intermediate transitions when collecting slowly.
+ */
 data class RegistrarSnapshot(
     val sequence: Long,
     val attempt: Long,

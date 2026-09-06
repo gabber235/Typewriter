@@ -9,7 +9,13 @@ import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapSetter
 import kotlinx.coroutines.CancellationException
 
-/** Automatically instrumented, propagating HTTP client with no retry behavior. */
+/**
+ * Instruments a single HTTP exchange and injects the current trace propagation headers.
+ *
+ * Existing propagation fields are replaced to avoid stale context. Explicit request size limits are checked before
+ * transport. The client does not retry or classify HTTP error statuses as transport failure, and cancellation
+ * propagates.
+ */
 class ServiceHttpClient(
     private val transport: HttpTransport,
     private val telemetry: ServiceTelemetry,

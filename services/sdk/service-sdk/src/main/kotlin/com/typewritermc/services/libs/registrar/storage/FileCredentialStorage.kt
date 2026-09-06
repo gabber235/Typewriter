@@ -24,7 +24,13 @@ import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermission
 
-/** Versioned plaintext credential storage backed by one atomically replaced file. */
+/**
+ * Persists versioned plaintext credentials using a bounded JSON file and replacement writes.
+ *
+ * Missing, corrupt, unsupported, and unavailable storage remain distinct. Reads reject symlinks and oversized
+ * files. Writes flush temporary bytes and attempt owner only permissions; unsupported permission operations are
+ * tolerated. Atomic moves are used when available, with ordinary replacement as fallback.
+ */
 class FileCredentialStorage(
     private val path: Path,
     private val maximumBytes: Long = 64 * 1024,

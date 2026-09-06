@@ -13,10 +13,21 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
 
+/**
+ * Marks a class whose annotated methods are processed into Realm capability providers and typed references.
+ *
+ * Use [RealmCapability] annotations to distinguish streamed searches, computations, and commands.
+ */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class RealmCapabilities
 
+/**
+ * Classifies generated Realm operations by invocation shape.
+ *
+ * Search produces updates, computation produces one value, and command produces panel instructions. The
+ * classification supplies dispatch metadata; it does not itself enforce authorization or purity.
+ */
 object RealmCapability {
     @Target(AnnotationTarget.FUNCTION)
     @Retention(AnnotationRetention.BINARY)
@@ -40,6 +51,11 @@ value class CapabilityId(
     }
 }
 
+/**
+ * Identifies a Realm operation together with the Kotlin request type used by generated callers.
+ *
+ * Use the specialized search, computation, or command reference to preserve the operation shape.
+ */
 sealed interface RealmCapabilityRef<Request : Any> {
     val id: CapabilityId
     val requestType: KClass<Request>
@@ -62,6 +78,12 @@ data class RealmCommandCapabilityRef<Request : Any>(
     override val requestType: KClass<Request>,
 ) : RealmCapabilityRef<Request>
 
+/**
+ * Carries normalized search text and parsed selector structure to a search capability.
+ *
+ * Selector expression leaves refer to selector ids. This data class does not normalize text or validate those
+ * references; the invocation boundary supplies validated input.
+ */
 data class RealmSearchQuery(
     val normalizedQuery: String,
     val selectors: List<RealmSearchSelector> = emptyList(),
@@ -99,6 +121,12 @@ data class RealmSearchRequest<Request : Any>(
     val query: RealmSearchQuery,
 )
 
+/**
+ * Streams partial result batches and an explicit completion signal from a Realm search.
+ *
+ * Guidance accompanies a partial batch. Flow termination and the [Complete] value are distinct: the emitter does
+ * not automatically append a completion update.
+ */
 sealed interface RealmSearchUpdate<out Result : Any> {
     data class Partial<Result : Any>(
         val values: List<Result>,
@@ -108,10 +136,22 @@ sealed interface RealmSearchUpdate<out Result : Any> {
     data object Complete : RealmSearchUpdate<Nothing>
 }
 
+/**
+ * Wraps the update flow returned by a search capability.
+ *
+ * Searches built with [realmSearch] are cold: collecting starts the producer, and each collection runs it again.
+ * Collection cancellation propagates to the producer.
+ */
 class RealmSearch<Result : Any> internal constructor(
     val updates: Flow<RealmSearchUpdate<Result>>,
 )
 
+/**
+ * Emits search updates into the current flow collector with suspending backpressure.
+ *
+ * [complete] emits a protocol marker; it does not prevent further emissions or terminate the producer block. Emit
+ * it deliberately as the final update.
+ */
 class RealmSearchEmitter<Result : Any> internal constructor(
     private val collector: FlowCollector<RealmSearchUpdate<Result>>,
 ) {
@@ -127,6 +167,12 @@ class RealmSearchEmitter<Result : Any> internal constructor(
     }
 }
 
+/**
+ * Builds a cold search whose producer runs when updates are collected.
+ *
+ * The block owns completion signalling and propagates exceptions to the collector. Use
+ * [RealmSearchEmitter.partial] for batches and [RealmSearchEmitter.complete] for explicit successful completion.
+ */
 fun <Result : Any> realmSearch(block: suspend RealmSearchEmitter<Result>.() -> Unit): RealmSearch<Result> =
     RealmSearch(
         flow {
@@ -134,6 +180,11 @@ fun <Result : Any> realmSearch(block: suspend RealmSearchEmitter<Result>.() -> U
         },
     )
 
+/**
+ * Identifies one Realm invocation for handlers and their operation specific contexts.
+ *
+ * The identifier correlates work; it is not an authorization credential.
+ */
 interface RealmInvocationContext {
     val invocationId: String
 }
@@ -144,6 +195,11 @@ interface RealmComputationContext : RealmInvocationContext
 
 interface RealmCommandContext : RealmInvocationContext
 
+/**
+ * Signals an authorization refusal that the Realm invocation boundary can map to its permission denied result.
+ *
+ * Throw with a safe caller facing explanation rather than secret policy or credential details.
+ */
 class RealmCapabilityPermissionDeniedException(
     message: String,
 ) : RuntimeException(message)
@@ -160,6 +216,12 @@ enum class NotificationSeverity {
     ERROR,
 }
 
+/**
+ * Describes requested panel effects after a Realm command.
+ *
+ * Instructions are data returned to the caller. Constructing an instruction does not invalidate, navigate, or
+ * display anything on its own.
+ */
 sealed interface PanelInstruction {
     data class InvalidateResource(
         val resource: ResourceAddress,
@@ -175,6 +237,12 @@ sealed interface PanelInstruction {
     ) : PanelInstruction
 }
 
+/**
+ * Returns panel instructions from a completed command.
+ *
+ * An empty list is a valid outcome. The returned instructions do not constitute a transaction with any server side
+ * effects performed by the command.
+ */
 data class RealmCommandOutcome(
     val instructions: List<PanelInstruction> = emptyList(),
 )
@@ -189,6 +257,12 @@ fun <Source : Any, Target : Any> RealmSearch<Source>.mapValues(transform: (Sourc
         },
     )
 
+/**
+ * Decodes a capability payload through the registered concrete or abstract prototype.
+ *
+ * The registry must contain the request type and any nested codecs. Missing prototypes and invalid payloads throw
+ * for the invocation boundary to classify.
+ */
 fun <T : Any> TypePrototypeRegistry.decodeCapabilityValue(
     type: KClass<T>,
     value: DataValue,
@@ -201,6 +275,12 @@ fun <T : Any> TypePrototypeRegistry.decodeCapabilityValue(
     }
 }
 
+/**
+ * Encodes a capability result using this deployment registry.
+ *
+ * Abstract types dispatch through the concrete runtime prototype. Missing or incompatible codecs fail rather than
+ * falling back to reflection serialization.
+ */
 fun <T : Any> TypePrototypeRegistry.encodeCapabilityValue(
     type: KClass<T>,
     value: T,

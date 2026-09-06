@@ -15,6 +15,12 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
+/**
+ * Owns compiled shard reuse, compile attempts, and the active manifest pointer.
+ *
+ * Blob storage precedes publication. [publish] must reject stale authoring or activation revisions without
+ * advancing active content. Blocked attempts are recorded separately and retain the previous active manifest.
+ */
 interface CompiledContentRepository {
     suspend fun findShard(inputFingerprint: ContentDigest): CompiledPageShard?
 
@@ -22,6 +28,11 @@ interface CompiledContentRepository {
 
     suspend fun activeActivation(): CompiledContentActivation?
 
+    /**
+     * Returns the proposed next activation revision.
+     *
+     * This does not reserve it. Publication must recheck current state because another activation may win first.
+     */
     suspend fun nextActivationRevision(): Long
 
     suspend fun recordBlocked(
@@ -38,6 +49,12 @@ interface CompiledContentRepository {
     ): Boolean
 }
 
+/**
+ * Persists immutable compilation records and conditionally advances the active pointer in a transaction.
+ *
+ * Publication checks authoring source and proposed activation revisions. Notifications run after commit, so
+ * callback failure cannot undo stored content. Blocked attempts leave the previous active manifest in place.
+ */
 class SurrealCompiledContentRepository(
     private val database: Surreal,
     private val onActivated: suspend (CompiledContentActivation) -> Unit = {},

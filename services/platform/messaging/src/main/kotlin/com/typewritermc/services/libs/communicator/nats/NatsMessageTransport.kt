@@ -31,7 +31,13 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.time.Duration
 
-/** Core-NATS transport adapter backed by a connected [NatsConnection]. */
+/**
+ * Adapts core NATS messaging through a borrowed connected [NatsConnection].
+ *
+ * Operations fail when disconnected. Subscription creation waits for activation and flushes before returning so
+ * callers can safely issue a subsequent request. Native request inbox ownership stays with the client; no
+ * persistence or application delivery acknowledgment is added.
+ */
 class NatsMessageTransport(
     private val connection: NatsConnection,
 ) : MessageTransport {

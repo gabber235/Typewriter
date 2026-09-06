@@ -1,6 +1,10 @@
 package com.typewritermc.types
 
-/** Canonical Typewriter definitions for nullable values and logical platform values. */
+/**
+ * Canonical portable definitions for optional values, color, date time, and duration. These identities and
+ * revision one schemas are shared by compiler conversion and runtime serialization. Reuse these definitions so
+ * independently generated graphs agree on standard type identity and representation.
+ */
 object StandardTypes {
     val option = ResolvedTypeRef(TypeId.Option, revision = 1)
     val some = ResolvedTypeRef(TypeId.Some, revision = 1)

@@ -55,6 +55,12 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.TypePrototypeRegistry
 import java.security.MessageDigest
 
+/**
+ * KSP entrypoint generating capability invocation bindings and discovery contributions from annotated Kotlin
+ * declarations. Each compiler environment receives a fresh processor. Processing defers unresolved symbols,
+ * validates supported declaration shapes, and generates its output once for the compilation. Generated resources
+ * feed manifest discovery so runtime consumers do not scan source annotations.
+ */
 class TypewriterCapabilityProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         TypewriterCapabilityProcessor(environment.codeGenerator, environment.logger, environment.options)

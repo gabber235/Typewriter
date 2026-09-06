@@ -26,6 +26,14 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import kotlin.io.path.outputStream
 
+/**
+ * Stores immutable digest addressed blobs and resumable transfer payloads on disk.
+ *
+ * Writes require the persisted offset and enforce size and chunk limits. Completion verifies SHA256 before
+ * publishing bytes. Existing final files are trusted by metadata lookup rather than rehashed. Callers must
+ * serialize writes to the same transfer and coordinate collection with producers; IO dispatching does not provide
+ * mutual exclusion.
+ */
 class FileDigestBlobStore(
     root: Path,
     private val clock: Clock = Clock.systemUTC(),
@@ -155,6 +163,11 @@ class FileDigestBlobStore(
             }
         }
 
+    /**
+     * Removes temporary transfers whose metadata lease expired, including directories lacking metadata.
+     *
+     * Lease activity uses metadata modification time. Coordinate cleanup with writers resuming transfers.
+     */
     suspend fun removeExpiredTransfers(): Int =
         withContext(Dispatchers.IO) {
             val expiredBefore = clock.instant().minus(transferLease)
@@ -185,6 +198,12 @@ class FileDigestBlobStore(
             }
         }
 
+    /**
+     * Deletes old final blobs outside the supplied protection set, using modification time and [gracePeriod].
+     *
+     * This method does not discover deployment or transfer references. Supply all retention roots through
+     * [DigestProtectionState] and coordinate concurrent publication.
+     */
     suspend fun collectGarbage(
         protected: Set<ArtifactDigest>,
         gracePeriod: Duration = Duration.ofDays(7),
@@ -206,6 +225,11 @@ class FileDigestBlobStore(
             removed
         }
 
+    /**
+     * Returns the digest storage path without checking existence or integrity.
+     *
+     * Establish blob availability before opening this path.
+     */
     fun pathFor(digest: ArtifactDigest): Path = blobPath(digest)
 
     private fun blobPath(digest: ArtifactDigest): Path = blobs.resolve(digest.value.take(2)).resolve(digest.value.drop(2))

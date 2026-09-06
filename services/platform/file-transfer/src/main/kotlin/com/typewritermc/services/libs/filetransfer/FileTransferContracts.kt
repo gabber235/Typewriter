@@ -99,20 +99,33 @@ data class FileWriteSession(
 )
 
 /**
- * Provides resumable immutable file reads and writes without exposing storage or transport details.
+ * Transfers immutable logical file revisions without exposing storage paths.
  *
- * Offsets and returned byte counts are measured in bytes. Writes must be contiguous. [complete] verifies exact size and
- * digest before publishing the revision, while [cancel] removes only temporary session state.
+ * All offsets and sizes count bytes. Writes are contiguous and completion verifies exact size and digest before
+ * publication. Cancel removes temporary transfer state. A file identity plus revision is distinct from the
+ * transfer session used to deliver it.
  */
 interface FileTransferEndpoint {
     suspend fun metadata(key: FileKey): FileTransferResult<FileMetadata>
 
+    /**
+     * Reads at most [maximumBytes] from the byte offset.
+     *
+     * Reading exactly at the end may return an empty chunk. Invalid ranges return typed errors; consumers must
+     * distinguish end of file from premature empty progress.
+     */
     suspend fun read(
         key: FileKey,
         offset: Long,
         maximumBytes: Int,
     ): FileTransferResult<FileChunk>
 
+    /**
+     * Begins or resumes an upload for the exact immutable metadata.
+     *
+     * Reuse the same transfer id and metadata after interruption, then continue from
+     * [FileWriteSession.acceptedOffset]. A conflicting immutable revision is rejected.
+     */
     suspend fun beginWrite(
         transferId: TransferId,
         metadata: FileMetadata,
@@ -124,6 +137,11 @@ interface FileTransferEndpoint {
         bytes: ByteArray,
     ): FileTransferResult<Long>
 
+    /**
+     * Validates full byte count and digest before publishing the immutable revision.
+     *
+     * Transfer completion is separate from any domain metadata publication that references this file.
+     */
     suspend fun complete(transferId: TransferId): FileTransferResult<FileMetadata>
 
     suspend fun cancel(transferId: TransferId): FileTransferResult<Unit>

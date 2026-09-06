@@ -8,6 +8,12 @@ import com.typewritermc.services.libs.telemetry.withErrorSlug
 
 private val SCHEMA_MIGRATION_FAILURE = ErrorSlug.of("realm-schema-migration-failed")
 
+/**
+ * Initializes migration bookkeeping, applies pending patches, then installs current Realm schema definitions.
+ *
+ * This ordering lets patches transform old data before new schema enforcement. The entire migration is not one
+ * transaction; each patch manages its own atomic boundary.
+ */
 internal class SchemaMigrator(
     private val db: Surreal,
     private val resources: MigrationResources = MigrationResources(),

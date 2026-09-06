@@ -14,6 +14,13 @@ import kotlin.io.path.exists
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 
+/**
+ * Stores descriptors, catalog revision, and pending events together in a CBOR state file.
+ *
+ * A mutex serializes this instance. Failed transaction blocks discard working changes; file replacement uses
+ * atomic moves when supported. A persistence failure can leave memory advanced and propagates to the caller. This
+ * is not a multiprocess database.
+ */
 class FileSharedArtifactRepository(
     private val stateFile: Path,
 ) : SharedArtifactRepository {
@@ -39,6 +46,11 @@ class FileSharedArtifactRepository(
 
     suspend fun pendingChanges(): List<SharedArtifactChanged> = mutex.withLock { state.outbox }
 
+    /**
+     * Removes a pending event after successful publication.
+     *
+     * Acknowledgment is separate from delivery; interruption between them can cause duplicate events.
+     */
     suspend fun acknowledge(change: SharedArtifactChanged) {
         mutex.withLock {
             state = state.copy(outbox = state.outbox.filterNot { it == change })

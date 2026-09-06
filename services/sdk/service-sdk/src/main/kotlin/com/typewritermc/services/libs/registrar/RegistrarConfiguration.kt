@@ -6,7 +6,13 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-/** Fully validated registrar policy and endpoint configuration. */
+/**
+ * Validates registrar endpoints, identity role, refresh intervals, and shutdown budget.
+ *
+ * Endpoint URIs require supported schemes, a host, and no embedded user credentials. Durations must be positive
+ * and finite; binding refresh stays below the registration lease and Sentinel refresh cannot exceed maximum
+ * staleness. OAuth scopes are copied at construction.
+ */
 class RegistrarConfiguration(
     val identityIssueUri: URI,
     val sentinelCredentialsUri: URI,

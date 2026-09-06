@@ -24,6 +24,11 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 import java.nio.file.Path
 
+/**
+ * Assembles and starts the shared artifact host for a process entrypoint. Restores persistent host identity,
+ * creates registration and assignment dependencies, and returns a [RunningHost] whose stop action owns host
+ * teardown. Local Realm assignment overrides apply only to the standalone entrypoint.
+ */
 internal class ArtifactLoaderBootstrap(
     private val serviceFactory: LoaderServiceFactory,
     private val settings: LoaderSettings,
@@ -86,7 +91,11 @@ internal class ArtifactLoaderBootstrap(
     }
 }
 
-/** Owns the isolated dependency container and loader bootstrap for one host entrypoint lifetime. */
+/**
+ * Owns the loader dependency injection container and telemetry SDK for one entrypoint. Its bootstrap creates
+ * running hosts using entrypoint supplied directories and coroutine scopes. Close the running host first so
+ * runtime shutdown can still use these dependencies and emit telemetry.
+ */
 class LoaderApplication internal constructor(
     private val application: KoinApplication,
     val bootstrap: LoaderBootstrap,
@@ -98,9 +107,9 @@ class LoaderApplication internal constructor(
 }
 
 /**
- * Creates the loader application shared by standalone and embedded host entrypoints.
- *
- * The caller must close the returned application after its host stops.
+ * Creates an isolated loader application from process settings and a host supplied logging destination. The
+ * returned application owns its telemetry SDK and dependency container; the caller owns closing it after host
+ * shutdown.
  */
 fun loaderApplication(logOutput: LoaderLogOutput): LoaderApplication = createLoaderApplication(logOutput)
 

@@ -52,6 +52,11 @@ import skirout.library.v1.authoring.Page as WirePage
 import skirout.library.v1.authoring.PageElement as WireElement
 import skirout.library.v1.authoring.Tag as WireTag
 
+/**
+ * Converts requested snapshot scopes and removes duplicates.
+ *
+ * Unknown scope variants are rejected rather than broadening the requested snapshot.
+ */
 internal fun Iterable<WireScope>.toDomain(): Set<AuthoringSnapshotScope> =
     mapTo(linkedSetOf()) { scope ->
         when (scope) {
@@ -62,6 +67,12 @@ internal fun Iterable<WireScope>.toDomain(): Set<AuthoringSnapshotScope> =
         }
     }
 
+/**
+ * Validates and converts wire operations into an atomic domain batch.
+ *
+ * Unknown variants, malformed ids, values, or placements fail conversion. The route maps invalid arguments to
+ * request diagnostics before repository mutation.
+ */
 internal fun ApplyAuthoringBatchRequest.toDomain(): AuthoringBatch =
     AuthoringBatch(BatchId(batchId), operations.map(WireOperation::toDomain))
 

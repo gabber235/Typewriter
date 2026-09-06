@@ -55,13 +55,25 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 
-/** Typed outbound communication client with mandatory telemetry and context propagation. */
+/**
+ * Executes typed messaging contracts with telemetry, classification, and trace propagation.
+ *
+ * The transport is borrowed; router and watch operations own the subscriptions they create. Expected codec and
+ * transport failures become [CommunicationResult] failures while cancellation propagates. Domain error responses
+ * remain typed values for caller interpretation.
+ */
 class Communicator(
     private val transport: MessageTransport,
     private val telemetry: ServiceTelemetry,
     private val propagators: ContextPropagators,
 ) {
-    /** Collects typed replies from every listener through one temporary inbox. */
+    /**
+     * Creates a cold scatter flow whose collection owns a temporary reply channel.
+     *
+     * Replies accumulate until the supplied policy completes or its timeout expires. Collection cancellation
+     * releases the channel. The transport does not provide exactly one reply per logical host; callers choose
+     * validation and completion rules.
+     */
     fun <Address : Any, Request : Any, Response : Any> scatter(
         contract: ScatterContract<Address, Request, Response>,
         address: Address,
@@ -341,7 +353,13 @@ class Communicator(
         return classification.operationOutcome(Unit)
     }
 
-    /** Creates a cold-typed watch flow; every collector owns a subscription. */
+    /**
+     * Creates a cold flow with a separate subscription for every collector.
+     *
+     * Updates are subscribed and buffered before the initial request, then emitted after its response. The bounded
+     * buffer applies backpressure. Completion, terminal transport failure, or cancellation closes the
+     * subscription; reconnect and duplicate revision handling belong to the consumer.
+     */
     fun <Address : Any, Request : Any, Initial : Any, Update : Any> watch(
         contract: WatchContract<Address, Request, Initial, Update>,
         address: Address,

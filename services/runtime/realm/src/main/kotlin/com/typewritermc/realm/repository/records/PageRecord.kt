@@ -10,6 +10,12 @@ import com.typewritermc.realm.repository.utils.pageKindRef
 import com.typewritermc.realm.repository.utils.toBookId
 import com.typewritermc.realm.repository.utils.toPageId
 
+/**
+ * Adapts database page metadata into typed library values.
+ *
+ * Defaults allow materialization but do not imply a valid page. Conversion validates table identities, name, and
+ * positive kind revision; elements are loaded separately.
+ */
 internal data class PageRecord(
     val id: RecordId = RecordId("page", ""),
     val book: RecordId = RecordId("book", ""),

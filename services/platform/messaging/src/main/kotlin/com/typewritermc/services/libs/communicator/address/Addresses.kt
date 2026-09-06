@@ -58,7 +58,13 @@ class AddressValues private constructor(
 /** Creates immutable typed-address values. */
 fun addressValuesOf(vararg values: Pair<String, String>): AddressValues = AddressValues.of(*values)
 
-/** A validated typed address renderer, parser, and transport subscription definition. */
+/**
+ * Connects typed address values to validated concrete subjects and subscription patterns.
+ *
+ * Rendering validates substituted tokens; matching returns null for a different subject. [subscribedAt] narrows
+ * subscription to one concrete address while preserving typed rendering and parsing. Use templates in contracts so
+ * telemetry can retain bounded subject structure.
+ */
 class AddressTemplate<Address : Any> internal constructor(
     template: String,
     private val renderValues: (Address) -> AddressValues,

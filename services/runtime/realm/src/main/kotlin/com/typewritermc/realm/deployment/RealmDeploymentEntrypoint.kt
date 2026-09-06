@@ -8,10 +8,20 @@ import com.typewritermc.realm.DefaultRealmRuntimeFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * Stages Realm owned resources from the loader context.
+ *
+ * Success transfers ownership to the managed runtime, while activation remains a separate lifecycle step.
+ */
 fun interface RealmRuntimeFactory {
     suspend fun stage(context: HostedDeploymentContext): ManagedRealmRuntime
 }
 
+/**
+ * Defines Realm activation and reversible quiescing beneath the loader lifecycle adapter.
+ *
+ * Stop is final cleanup; resume may recreate active resources retained only as configuration during quiescence.
+ */
 interface ManagedRealmRuntime {
     suspend fun activate()
 
@@ -22,6 +32,12 @@ interface ManagedRealmRuntime {
     suspend fun stop()
 }
 
+/**
+ * Exposes Realm staging through the shared hosted provider contract.
+ *
+ * The adapter reports activation success or failure as loader health. It does not continuously aggregate compiler
+ * or route health into that signal.
+ */
 class RealmDeploymentEntrypoint(
     private val factory: RealmRuntimeFactory = DefaultRealmRuntimeFactory(),
 ) : HostedRuntimeProvider {

@@ -24,6 +24,12 @@ import kotlin.io.path.exists
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 
+/**
+ * Publishes canonical projections as blobs and verifies retrieved content.
+ *
+ * Fetch bounds buffered size, checks SHA256, and checks Realm, host, and generation. Existing blobs are reused by
+ * digest.
+ */
 class BlobProjectionRepository(
     private val blobs: BlobEndpoint,
 ) : ProjectionRepository,
@@ -71,6 +77,12 @@ class BlobProjectionRepository(
     }
 }
 
+/**
+ * Persists coordinator state and current and previous deployments for one Realm.
+ *
+ * A mutex serializes this instance and attempt ordinals survive restart. Events for other Realms are ignored. File
+ * replacement is atomic when supported; disk failures propagate and no process lock is provided.
+ */
 class FileRolloutStateRepository(
     private val realmId: RealmId,
     artifactsRoot: Path,

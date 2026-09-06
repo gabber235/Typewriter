@@ -29,6 +29,12 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
 
+/**
+ * Reads logical page views and compiler snapshots from authored storage.
+ *
+ * Authoring revision tracks compiler inputs and collaboration revision tracks editor edits. Missing pages return
+ * null; invalid existing content remains inspectable with diagnostics.
+ */
 interface PageDocumentRepository {
     suspend fun getPageDocument(pageId: PageId): PageDocument?
 
@@ -39,11 +45,22 @@ interface PageDocumentRepository {
     suspend fun currentCollaborationRevision(): Long
 }
 
+/**
+ * Pairs compiler documents with the source revision observed during the read.
+ *
+ * Publication must recheck freshness because edits can occur after this snapshot is returned.
+ */
 data class AuthoringSnapshot(
     val revision: String,
     val documents: List<PageDocument>,
 )
 
+/**
+ * Assembles stored values and reference edges into logical page documents within read transactions.
+ *
+ * Missing targets and incompatible reference projection produce diagnostics. A full snapshot captures one catalog
+ * view and transaction across all pages.
+ */
 class SurrealPageDocumentRepository(
     private val database: Surreal,
     private val catalog: () -> PageDocumentCatalog?,
@@ -220,6 +237,12 @@ private fun Transaction.authoringRevision(): String =
         .getLong()
         .toString()
 
+/**
+ * Supplies descriptors and structural definitions for reconstructing stored element values.
+ *
+ * The repository captures this deployment metadata during a read so reference projection uses one consistent
+ * catalog view.
+ */
 data class PageDocumentCatalog(
     val elements: ElementCatalog,
     val definitions: List<com.typewritermc.types.TypeDefinition>,

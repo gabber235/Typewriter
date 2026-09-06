@@ -8,6 +8,12 @@ import com.typewritermc.pages.PageSpec
 import com.typewritermc.pages.TypewriterPage
 import com.typewritermc.pages.page
 
+/**
+ * Defines the element role exported by the conformance capability.
+ *
+ * Its generated page demonstrates that capability supplied abstract roles remain discoverable through engine
+ * composition.
+ */
 interface CapabilityElement : Element {
     override val id: ElementInstanceId
 }

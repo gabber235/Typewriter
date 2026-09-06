@@ -7,6 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.TimeSource
 
+/**
+ * Shared command context containing borrowed registrar state, monotonic uptime, and a stop request flag.
+ * Requesting stop only ends the shell loop; the standalone runner remains responsible for shutting down the host
+ * and application.
+ */
 class LoaderShellContext(
     val registrarStates: StateFlow<RegistrarSnapshot>,
     timeSource: TimeSource,

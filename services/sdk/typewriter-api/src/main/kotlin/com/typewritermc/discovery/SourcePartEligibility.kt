@@ -8,11 +8,24 @@ import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ExtensionSourcePart
 
+/**
+ * Supplies the selected engine and extension identities for source part eligibility.
+ *
+ * Engine capability resolution has already happened in the manifest; the resolver compares those resolved
+ * identities.
+ */
 data class DeploymentSelection(
     val engine: EngineManifest,
     val extensions: Set<ArtifactId>,
 )
 
+/**
+ * Explains which extension source parts can load with a selected engine.
+ *
+ * Unselected extensions remain visible with reasons. Engine and capability requirements, including recursively
+ * included source parts, must all match. Input manifests must already satisfy their include graph invariants; this
+ * resolver does not repair malformed graphs.
+ */
 object SourcePartEligibilityResolver {
     fun resolve(
         selection: DeploymentSelection,

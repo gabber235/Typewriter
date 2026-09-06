@@ -23,6 +23,13 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
 
+/**
+ * Validates generation and operation shape before dispatching Realm computations or commands.
+ *
+ * Computation result types must match descriptors and commands must omit them. Permission denial maps separately
+ * from unavailable handler or codec failure. Invocation ids correlate replies but are not deduplication keys; this
+ * source does not add transaction or retry semantics.
+ */
 class RealmCapabilityInvocationSource(
     private val capabilities: RealmCapabilityRegistry,
     private val prototypes: TypePrototypeRegistry,

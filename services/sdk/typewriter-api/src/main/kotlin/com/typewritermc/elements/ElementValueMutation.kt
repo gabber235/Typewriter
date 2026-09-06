@@ -10,6 +10,12 @@ import com.typewritermc.types.TypeGraph
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Addresses a nested value through fields, list indices, and map keys.
+ *
+ * An empty path selects the root. Segments are interpreted against the supplied type graph and value when a
+ * mutation is applied.
+ */
 @Serializable
 data class ElementValuePath(
     val segments: List<ElementValuePathSegment> = emptyList(),
@@ -36,6 +42,12 @@ sealed interface ElementValuePathSegment {
     ) : ElementValuePathSegment
 }
 
+/**
+ * Describes an immutable edit to a logical element value while preserving reference bookkeeping.
+ *
+ * Paths and indices are checked when applying the edit, not when constructing this request. Reorder destinations
+ * index the list after removing the moved range.
+ */
 @Serializable
 sealed interface ElementValueMutation {
     val path: ElementValuePath
@@ -104,6 +116,11 @@ sealed interface ElementValueMutation {
     ) : ElementValueMutation
 }
 
+/**
+ * Returns the complete replacement stored value or a mutation failure code.
+ *
+ * A failure does not expose partially applied edits, so callers can retain their original stored value.
+ */
 sealed interface ElementValueMutationResult {
     data class Success(
         val value: StoredElementValue,
@@ -114,9 +131,21 @@ sealed interface ElementValueMutationResult {
     ) : ElementValueMutationResult
 }
 
+/**
+ * Applies structural edits while keeping stored reference slots consistent with their value tree.
+ *
+ * Edits run sequentially against each preceding result. Replacement and duplication allocate slots for new
+ * reference occurrences; retained portions keep their existing slots. Inputs are not mutated.
+ */
 class ElementValueMutator(
     private val decomposer: ReferenceDecomposer = ReferenceDecomposer(),
 ) {
+    /**
+     * Reads a logical value after reference assembly and path resolution.
+     *
+     * Assembly diagnostics are not returned by this helper. Invalid paths or shapes may throw; use
+     * [ReferenceAssembler] directly when callers need diagnostic details.
+     */
     fun read(
         graph: TypeGraph,
         stored: StoredElementValue,
@@ -126,6 +155,12 @@ class ElementValueMutator(
         return ValueTarget.resolve(graph, logical, stored.valueWithSlots, path).logical
     }
 
+    /**
+     * Applies the entire mutation sequence and returns a replacement value only on success.
+     *
+     * An invalid edit stops the sequence and returns a failure code. An empty sequence succeeds with the supplied
+     * stored value.
+     */
     fun apply(
         graph: TypeGraph,
         stored: StoredElementValue,

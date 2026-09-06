@@ -10,6 +10,13 @@ import com.typewritermc.types.TypePrototypeProvider
 import com.typewritermc.types.TypePrototypeRegistry
 import kotlin.reflect.KClass
 
+/**
+ * Builds runtime codecs from assembled discovery using the deployment class loader.
+ *
+ * Concrete providers are filtered by domain and checked against the advertised type reference. Abstract
+ * definitions use catalog backed prototypes and qualified runtime names. Missing classes, invalid providers, or
+ * conflicting registry entries fail loading; this loader does not own the supplied class loader.
+ */
 class PrototypeRegistryLoader {
     fun load(
         discovery: AssembledTypeDiscovery,

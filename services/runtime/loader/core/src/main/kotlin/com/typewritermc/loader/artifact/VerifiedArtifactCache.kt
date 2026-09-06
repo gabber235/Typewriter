@@ -4,6 +4,13 @@ import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import java.nio.file.Path
 
+/**
+ * Materializes artifact bytes in a local digest store before classpath use.
+ *
+ * A metadata hit returns the cached path without rehashing. Missing content is transferred sequentially and
+ * verified on completion. Empty incomplete chunks fail; interrupted temporary transfers remain subject to store
+ * lease cleanup.
+ */
 class VerifiedArtifactCache(
     private val source: BlobEndpoint,
     private val cache: FileDigestBlobStore,

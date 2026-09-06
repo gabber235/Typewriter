@@ -6,6 +6,11 @@ import io.opentelemetry.api.OpenTelemetry
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
+/**
+ * Registers service telemetry for one instrumentation scope using an OpenTelemetry instance supplied by the
+ * enclosing container. The module owns no SDK lifecycle or exporter configuration; the application providing
+ * OpenTelemetry remains responsible for shutdown.
+ */
 fun serviceTelemetryModule(instrumentation: InstrumentationScope): Module =
     module {
         single { ServiceTelemetry(get<OpenTelemetry>(), instrumentation) }

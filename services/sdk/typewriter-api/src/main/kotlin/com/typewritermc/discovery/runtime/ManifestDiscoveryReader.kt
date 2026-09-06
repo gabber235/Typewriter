@@ -9,11 +9,23 @@ import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.imprint.GeneratedContribution
 import com.typewritermc.imprint.ImprintManifest
 
+/**
+ * Separates decoded type contributions from payloads owned by unknown producers.
+ *
+ * Unknown payloads remain intact so another reader can process them without requiring this SDK to understand their
+ * schema.
+ */
 data class ReadDiscoveryContributions(
     val types: List<KeyedTypeContribution>,
     val unknown: List<GeneratedContribution>,
 )
 
+/**
+ * Reads known type payloads from manifests without loading artifact classes.
+ *
+ * Duplicate contribution keys are rejected across all producers. Known malformed payloads fail with their origin
+ * and cause; unknown producers are returned separately. Results follow deterministic contribution order.
+ */
 object ManifestDiscoveryReader {
     fun read(manifests: Collection<ImprintManifest>): ReadDiscoveryContributions {
         val typeContributions = mutableListOf<KeyedTypeContribution>()

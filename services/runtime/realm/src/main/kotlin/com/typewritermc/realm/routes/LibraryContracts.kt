@@ -40,6 +40,12 @@ import skirout.library.v1.compiled_content.WatchCompiledContentResponse
 
 typealias RealmAddress = RealmServiceAddress
 
+/**
+ * Centralizes typed Realm request, event, and watch contracts for authoring and editor operations.
+ *
+ * Addresses use logical Realm identity. Shared codecs, failure responses, and response classifiers keep client and
+ * router semantics aligned without creating subscriptions at construction.
+ */
 internal class LibraryContracts(
     private val address: RealmAddress,
 ) {

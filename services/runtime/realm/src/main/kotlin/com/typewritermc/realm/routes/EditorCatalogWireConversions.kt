@@ -26,6 +26,11 @@ import skirout.editor.v1.page_catalog.PageDescriptor as SkirPageDescriptor
 import skirout.editor.v1.page_catalog.PageDiagnostic as SkirPageDiagnostic
 import skirout.editor.v1.page_catalog.PageEditorDefinition as SkirPageEditorDefinition
 
+/**
+ * Preserves descriptor metadata, eligibility, and availability when exposing elements to the editor.
+ *
+ * Unavailable entries remain visible with reasons so the panel can explain deployment constraints.
+ */
 internal fun ElementCatalogEntry.toSkir(): SkirElementCatalogEntry =
     SkirElementCatalogEntry(
         originArtifactId = origin.value,
@@ -74,6 +79,9 @@ private fun AvailabilityExpression.toSkir(): SkirAvailabilityExpression =
         }
     }
 
+/**
+ * Encodes a page schema and origin with resolved role references for panel use.
+ */
 internal fun PageCatalogEntry.toSkir(): SkirPageCatalogEntry =
     SkirPageCatalogEntry(
         originArtifactId = originArtifactId,

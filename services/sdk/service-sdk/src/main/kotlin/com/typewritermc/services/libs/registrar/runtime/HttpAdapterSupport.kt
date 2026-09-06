@@ -16,6 +16,11 @@ internal val skirGetHeaders =
         "X-Typewriter-Format" to "skir-binary",
     )
 
+/**
+ * Recognizes the binary Skir media type case insensitively, ignoring optional content type parameters.
+ *
+ * Absence of the header fails the check; callers still validate status and payload separately.
+ */
 internal fun HttpHeaders.hasSkirMediaType(): Boolean =
     first("Content-Type")
         ?.substringBefore(';')

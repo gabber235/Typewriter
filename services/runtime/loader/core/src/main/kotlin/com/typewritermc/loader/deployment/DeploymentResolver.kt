@@ -14,6 +14,12 @@ import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.loader.artifact.ArtifactProvenance
 import com.typewritermc.loader.artifact.DeploymentArtifact
 
+/**
+ * Pairs imported bytes with a validated manifest and positive import revision.
+ *
+ * Coordinate, version, and kind must match, and manifest integrity checks run at construction. Import ordering
+ * distinguishes repeated imports of one release.
+ */
 @kotlinx.serialization.Serializable
 data class ArtifactCandidate(
     val artifact: DeploymentArtifact,
@@ -30,6 +36,12 @@ data class ArtifactCandidate(
     }
 }
 
+/**
+ * Retains the latest import for each artifact coordinate.
+ *
+ * Version selection belongs to [resolveDeployment]; this index only resolves competing imports of the same
+ * release.
+ */
 class CandidateIndex(
     candidates: Collection<ArtifactCandidate>,
 ) {
@@ -47,6 +59,11 @@ class CandidateIndex(
     fun extensions(): List<ArtifactCandidate> = accepted.filter { it.manifest is ExtensionManifest }
 }
 
+/**
+ * Returns complete deployment content with manifests or concrete rejection reasons.
+ *
+ * A rejected selection exposes no partial deployment for activation.
+ */
 sealed interface ResolutionResult {
     data class Resolved(
         val content: DeploymentContent,
@@ -58,6 +75,13 @@ sealed interface ResolutionResult {
     ) : ResolutionResult
 }
 
+/**
+ * Selects newest compatible runtime artifacts for a topology and loader intent.
+ *
+ * Exactly one Realm artifact identity must be available. Host API compatibility is checked for assigned runtime
+ * hosts. The newest version of every extension is included; conflicting versions of a shared artifact identity
+ * reject the selection.
+ */
 fun resolveDeployment(
     candidates: CandidateIndex,
     topology: RealmTopology,

@@ -4,6 +4,12 @@ import com.typewritermc.realm.RealmSettings
 import java.net.URI
 import java.nio.file.Path
 
+/**
+ * Selects a Realm database endpoint, authentication scope, namespace, and database.
+ *
+ * Embedded storage requires no authentication. Nonblank names and endpoint syntax are checked here, while
+ * supported engine and exact version checks occur on connection.
+ */
 data class RealmDatabaseConfiguration(
     val endpoint: DatabaseEndpoint,
     val authentication: DatabaseAuthentication,
@@ -19,6 +25,12 @@ data class RealmDatabaseConfiguration(
     }
 }
 
+/**
+ * Separates remote database URLs from embedded engine configuration.
+ *
+ * Embedded file paths are resolved against runtime state by composition. Representing an endpoint does not
+ * guarantee the pinned SDK supports that engine.
+ */
 sealed interface DatabaseEndpoint {
     val connectionString: String
 
@@ -61,6 +73,12 @@ sealed interface DatabaseEndpoint {
     }
 }
 
+/**
+ * Selects root, namespace, database, bearer, or unauthenticated connection credentials.
+ *
+ * Secret rendering is redacted, but authentication fields remain plaintext in memory and are used only by the
+ * connection boundary.
+ */
 sealed interface DatabaseAuthentication {
     data object None : DatabaseAuthentication
 

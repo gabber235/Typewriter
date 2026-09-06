@@ -8,7 +8,13 @@ import java.math.BigInteger
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-/** Portable typed value representation used by manifests, Realm persistence, and Skir transport. */
+/**
+ * Represents portable values shared by manifests, Realm persistence, and transport codecs.
+ *
+ * Values retain distinctions such as arbitrary precision integers, decimal text, byte sequences, and explicit
+ * polymorphic type references. There is no null variant; nullable Kotlin values use the Option representation
+ * through [TypewriterDataFormat]. Structural constraints require a corresponding type graph.
+ */
 @Serializable
 sealed interface DataValue {
     @Serializable
@@ -106,6 +112,11 @@ sealed interface DataValue {
     ) : DataValue
 }
 
+/**
+ * Retains a map key as a full [DataValue] rather than forcing string keys.
+ *
+ * A map value stores a list of these entries, so construction alone does not reject duplicate keys.
+ */
 @Serializable
 data class DataMapEntry(
     val key: DataValue,

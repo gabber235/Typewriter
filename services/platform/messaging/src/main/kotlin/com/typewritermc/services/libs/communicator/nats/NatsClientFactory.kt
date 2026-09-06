@@ -36,6 +36,12 @@ internal interface NatsClientSubscription {
 
 internal enum class NatsClientConnectivity { Disconnected, Connecting, Connected }
 
+/**
+ * Isolates the vendor NATS client behind the operations needed by lifecycle and transport adapters.
+ *
+ * Subscriptions and connectivity remain observable for deterministic tests. The connection owner drives drain and
+ * disconnect; transport callers borrow this adapter.
+ */
 internal interface NatsClientAdapter {
     val connectivity: StateFlow<NatsClientConnectivity>
 
@@ -60,6 +66,12 @@ internal interface NatsClientAdapter {
     ): NatsClientSubscription
 }
 
+/**
+ * Constructs an unconnected client using explicit configuration and challenge authentication.
+ *
+ * Authentication can be invoked during connection or reconnection. Ownership transfers to [NatsConnection] after
+ * construction.
+ */
 internal fun interface NatsClientFactory {
     fun create(
         configuration: NatsConnectionConfiguration,

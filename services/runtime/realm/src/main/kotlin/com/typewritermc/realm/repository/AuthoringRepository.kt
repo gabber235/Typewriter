@@ -23,6 +23,12 @@ import com.typewritermc.library.Book as LibraryBook
 import com.typewritermc.library.Page as LibraryPage
 import com.typewritermc.library.Tag as LibraryTag
 
+/**
+ * Provides consistent scoped snapshots and transactional batches for collaborative editing.
+ *
+ * Stable batch ids support replay and expected property values detect optimistic conflicts. Domain rejection is
+ * returned explicitly; operational storage failures may throw.
+ */
 interface AuthoringRepository {
     suspend fun snapshot(scopes: Set<AuthoringSnapshotScope>): AuthoringSnapshotResult
 
@@ -58,6 +64,11 @@ sealed interface AuthoringSnapshotScope {
     ) : AuthoringSnapshotScope
 }
 
+/**
+ * Returns requested library, book, or page slices at one collaboration sequence.
+ *
+ * The sequence supports change event reconciliation and differs from compiler source revision.
+ */
 data class AuthoringSnapshotResult(
     val sequence: Long,
     val slices: List<AuthoringSnapshotSlice>,
@@ -81,18 +92,34 @@ sealed interface AuthoringSnapshotSlice {
     ) : AuthoringSnapshotSlice
 }
 
+/**
+ * Pairs the caller observed property with its intended replacement.
+ *
+ * Property level comparison avoids rejecting unrelated concurrent changes to the same record.
+ */
 @Serializable
 data class ExpectedChange<T>(
     val expected: T,
     val value: T,
 )
 
+/**
+ * Pairs a structural mutation with the logical target value observed by the caller.
+ *
+ * The repository checks this expectation before applying nested value edits.
+ */
 @Serializable
 data class ExpectedElementValueMutation(
     val expected: DataValue,
     val mutation: ElementValueMutation,
 )
 
+/**
+ * Carries a logical element in authoring requests and change events.
+ *
+ * Persistence decomposes references into slots and edges. Page ownership, schema revision, and placement remain
+ * explicit in this model.
+ */
 @Serializable
 data class AuthoringElement(
     val id: ElementInstanceId,
@@ -109,6 +136,12 @@ data class AuthoringElement(
     }
 }
 
+/**
+ * Groups resource operations under a stable idempotency key.
+ *
+ * Batches must be nonempty with at most one operation per resource. Retry an id only with the same payload;
+ * different content under an existing id is invalid.
+ */
 @Serializable
 data class AuthoringBatch(
     val id: BatchId,
@@ -122,6 +155,12 @@ data class AuthoringBatch(
     }
 }
 
+/**
+ * Describes create, patch, duplicate, or delete work inside a batch.
+ *
+ * Expected patch values support optimistic conflict detection. Record existence, containment, reference edges, and
+ * hierarchy rules are checked during application.
+ */
 @Serializable
 sealed interface AuthoringOperation {
     val resource: AuthoringResourceRef
@@ -370,6 +409,12 @@ sealed interface AuthoringResourceChange {
     }
 }
 
+/**
+ * Reports direct committed changes and indirectly affected resources at a collaboration sequence.
+ *
+ * Indirect resources identify views requiring refresh. Event delivery is separate from committing the database
+ * transaction.
+ */
 @Serializable
 data class AuthoringChanged(
     val sequence: Long,
@@ -423,6 +468,11 @@ sealed interface AuthoringPropertyValue {
     ) : AuthoringPropertyValue
 }
 
+/**
+ * Locates a rejected property edit with expected and current values when available.
+ *
+ * Callers should refresh and reconcile intent before retrying.
+ */
 @Serializable
 data class PropertyConflict(
     val resource: AuthoringResourceRef,
@@ -439,6 +489,12 @@ data class AuthoringDiagnostic(
     val path: ElementValuePath? = null,
 )
 
+/**
+ * Returns committed changes, optimistic conflicts, or validation diagnostics for the complete batch.
+ *
+ * Applied also identifies compilation invalidation. Conflict and Invalid never represent partially committed batch
+ * edits.
+ */
 @Serializable
 sealed interface AuthoringBatchResult {
     @Serializable

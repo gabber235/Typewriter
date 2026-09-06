@@ -47,7 +47,12 @@ import skirout.editor.v1.type_catalog.TypedValue
 import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
 import skirout.editor.v1.type_catalog.TypeExpression as SkirTypeExpression
 
-/** Runtime contribution generated for one annotated presentation function. */
+/**
+ * Generated bridge from an annotated declaration to deployment presentation assembly.
+ *
+ * Provenance identifies invalid declarations. [specification] runs authored builder code with deployment field
+ * metadata and may fail; the assembler turns such failures into diagnostics.
+ */
 interface PresentationProvider {
     val namespace: String
     val sourcePart: String
@@ -66,12 +71,25 @@ data class PresentationDiagnostic(
     val presentationName: String? = null,
 )
 
+/**
+ * Returns compiled protocol presentations, updated type associations, and rejected declaration diagnostics.
+ *
+ * Use the returned type catalog to observe default and named presentation choices; the input catalog is not
+ * mutated.
+ */
 data class PresentationCatalog(
     val types: TypeCatalog,
     val definitions: List<PresentationDefinition>,
     val diagnostics: List<PresentationDiagnostic>,
 )
 
+/**
+ * Compiles authored presentations and associates valid choices with their target types.
+ *
+ * Malformed trees, missing capabilities, and duplicate identities produce diagnostics. Default and named selection
+ * prefer the highest unique priority, skipping tied priority groups. Compiled definitions and provider processing
+ * use stable ordering.
+ */
 object PresentationCatalogAssembler {
     fun assemble(
         providers: Collection<PresentationProvider>,

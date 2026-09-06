@@ -14,6 +14,11 @@ import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.WatchRealmPresentationSearch
 
+/**
+ * Defines the initial search request and correlated update stream for a Realm.
+ *
+ * Subscription identity filters updates so concurrent searches on the same Realm route remain distinguishable.
+ */
 internal fun realmPresentationSearchContract(
     address: RealmAddress,
 ): WatchContract<

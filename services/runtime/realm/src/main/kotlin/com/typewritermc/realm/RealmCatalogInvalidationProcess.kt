@@ -20,7 +20,12 @@ import kotlinx.coroutines.launch
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
-/** Publishes catalog generation changes independently from client request lifetimes. */
+/**
+ * Publishes discovery generation invalidations independently of client request lifetimes. Replacing the
+ * communicator cancels and joins the old publisher before subscribing on the new connection. Failed publications
+ * retry until successful; a newer generation cancels the older retry loop. Startup waits for the change subscriber
+ * so subsequent snapshot updates are observed.
+ */
 class RealmCatalogInvalidationProcess internal constructor(
     private val snapshots: RealmDiscoverySnapshotStore,
     private val scope: CoroutineScope,

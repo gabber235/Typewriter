@@ -37,7 +37,13 @@ import kotlin.random.Random
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-/** Structured service bootstrap and registration supervisor. */
+/**
+ * Supervises durable identity, organization binding, messaging generations, and recovery for one service.
+ *
+ * A command loop owns lifecycle state while the coordinator performs setup and ready supervision. Ambiguous
+ * identity issuance is surfaced explicitly. The supplied scope must remain active while callers issue commands;
+ * stop before cancelling it. Shutdown uses one bounded budget and reports cleanup failures.
+ */
 class ServiceRegistrar(
     private val configuration: RegistrarConfiguration,
     private val scope: CoroutineScope,
@@ -69,10 +75,21 @@ class ServiceRegistrar(
 
     val states: StateFlow<RegistrarSnapshot> = mutableStates
 
+    /**
+     * Requests startup without waiting for organization readiness.
+     *
+     * Use [awaitReady] for the ready session or an explicit failure. A stopped registrar cannot be restarted.
+     */
     suspend fun start(): RegistrarResult<Unit> = request { RegistrarCommand.Start(Context.current(), it) }
 
     suspend fun retry(): RegistrarResult<Unit> = request { RegistrarCommand.Retry(Context.current(), it) }
 
+    /**
+     * Waits for Ready, explicit failure, ambiguous identity outcome, or Stopped.
+     *
+     * There is no local deadline; callers may cancel or provide a timeout. A successful result does not pin the
+     * connection generation.
+     */
     suspend fun awaitReady(): RegistrarResult<ReadySession> {
         val terminal =
             states
@@ -88,15 +105,33 @@ class ServiceRegistrar(
         }
     }
 
+    /**
+     * Borrows a communicator only when the requested generation is currently ready.
+     *
+     * Use the generation observed in [RegistrarState.Ready] to avoid accidentally binding work to a replacement
+     * session.
+     */
     suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
         request { RegistrarCommand.CommunicatorFor(connectionGeneration, it) }
 
+    /**
+     * Requests a fresh authorized runtime while retaining prior runtime resources for handover.
+     *
+     * After dependent routes switch to the returned generation, release the retained runtime through
+     * [releaseAuthorizationRotation].
+     */
     suspend fun rotateAuthorization(): RegistrarResult<Long> {
         val response = CompletableDeferred<RegistrarResult<Long>>()
         reauthorizationRequests.send(ReauthorizationRequest(Context.current(), response))
         return response.await()
     }
 
+    /**
+     * Closes the runtime retained for the completed authorization handover.
+     *
+     * Repeated release of an already absent retained generation succeeds. Release only after consumers have
+     * replaced old routes and subscriptions.
+     */
     suspend fun releaseAuthorizationRotation(connectionGeneration: Long): RegistrarResult<Unit> =
         request { RegistrarCommand.ReleaseAuthorizationRotation(connectionGeneration, it) }
 

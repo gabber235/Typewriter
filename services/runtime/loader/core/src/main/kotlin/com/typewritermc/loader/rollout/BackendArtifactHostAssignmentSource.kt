@@ -115,6 +115,12 @@ private val hostExecutionReportContract =
         failureSlug = ErrorSlug.of("host-execution-report-failed"),
     )
 
+/**
+ * Registers host capabilities and watches backend execution assignments through ready messaging generations.
+ *
+ * Session changes replace the watch and repeated assignments are suppressed. Realm assignment also supplies a
+ * panel engine role. Losing readiness alone does not emit a removal assignment.
+ */
 class BackendArtifactHostAssignmentSource(
     private val service: LoaderServiceConnection,
     private val panelEngine: ArtifactRequirement,
@@ -206,6 +212,12 @@ internal fun WatchHostExecutionResponse.toArtifactHostAssignment(
     )
 }
 
+/**
+ * Reports participant lifecycle state to the backend at the assigned topology revision.
+ *
+ * Reports are serialized and retain role state for refresh. Revision checking lets the backend reject observations
+ * from superseded assignments.
+ */
 internal class BackendHostExecutionReporter(
     private val topologyRevision: Long,
     private val serviceId: String,

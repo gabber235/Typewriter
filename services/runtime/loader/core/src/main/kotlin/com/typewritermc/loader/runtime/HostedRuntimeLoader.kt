@@ -7,6 +7,12 @@ import java.net.URLClassLoader
 import java.nio.file.Path
 import java.util.ServiceLoader
 
+/**
+ * Stages a runtime from resolved context and executable paths.
+ *
+ * Success transfers runtime and class loader ownership to the caller. Failure must release resources acquired
+ * while staging.
+ */
 fun interface HostedRuntimeStager {
     suspend fun stage(
         context: HostedDeploymentContext,
@@ -14,6 +20,12 @@ fun interface HostedRuntimeStager {
     ): LoadedHostedRuntime
 }
 
+/**
+ * Loads exactly one hosted provider through ServiceLoader in a new URL class loader.
+ *
+ * The parent supplies shared API types. Staging failure closes the loader with cleanup causes preserved; success
+ * must be released through [LoadedHostedRuntime].
+ */
 class HostedRuntimeLoader(
     private val parentClassLoader: ClassLoader = HostedRuntimeProvider::class.java.classLoader,
 ) : HostedRuntimeStager {
@@ -35,6 +47,11 @@ class HostedRuntimeLoader(
     }
 }
 
+/**
+ * Owns the staged runtime and the class loader retaining its artifact code.
+ *
+ * Closure attempts runtime cleanup before class loader cleanup and collects failures with later causes suppressed.
+ */
 class LoadedHostedRuntime internal constructor(
     val runtime: StagedHostedRuntime,
     private val classLoader: URLClassLoader,

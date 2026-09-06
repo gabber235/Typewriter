@@ -34,6 +34,12 @@ import skirout.library.v1.compiled_content.WatchCompiledContent
 import skirout.library.v1.compiled_content.WatchCompiledContentRequest
 import skirout.library.v1.compiled_content.WatchCompiledContentResponse
 
+/**
+ * Owns the subscription that brings compiled activations into an engine.
+ *
+ * [start] installs the application callback; [stop] must end delivery before activation resources are retired.
+ * Delivery health describes this subscription separately from overall runtime health.
+ */
 interface EngineContentDelivery {
     val health: StateFlow<EngineContentDeliveryHealth>
 
@@ -42,6 +48,12 @@ interface EngineContentDelivery {
     suspend fun stop()
 }
 
+/**
+ * Reports whether content delivery is idle, watching, successfully applied, or failed.
+ *
+ * Active records the applied activation revision. This state alone does not establish that player execution or
+ * facet reconciliation exists.
+ */
 sealed interface EngineContentDeliveryHealth {
     data object Idle : EngineContentDeliveryHealth
 
@@ -56,6 +68,13 @@ sealed interface EngineContentDeliveryHealth {
     ) : EngineContentDeliveryHealth
 }
 
+/**
+ * Watches the Realm compiled content route through the host current messaging session.
+ *
+ * A session change cancels the previous watch. Activations are fetched and verified before invoking the callback;
+ * failures are exposed through health and the watch is retried after a fixed delay. Start and stop require
+ * serialized lifecycle access.
+ */
 class MessagingEngineContentDelivery(
     private val host: HostedRuntimeHost,
     private val realmId: String,
@@ -117,6 +136,11 @@ class MessagingEngineContentDelivery(
             }
     }
 
+    /**
+     * Cancels and joins the delivery worker, then resets health to idle.
+     *
+     * Await this before releasing resources used by the application callback.
+     */
     override suspend fun stop() {
         worker?.cancelAndJoin()
         worker = null

@@ -44,6 +44,11 @@ internal fun RecordId.toPageId(): PageId {
     return PageId(key.toLibraryKey())
 }
 
+/**
+ * Converts a wire record id only when it targets the element table and uses a string key.
+ *
+ * Other resource kinds retain richer key forms, but element instance identity is currently scalar text.
+ */
 internal fun RecordId.toElementInstanceId(): ElementInstanceId {
     requireTable("element")
     val value = key.toLibraryKey()
@@ -79,6 +84,11 @@ internal fun Iterable<TagId>.surrealTagIds(): List<com.surrealdb.RecordId> = map
 
 internal fun Iterable<Ref<Tag>>.surrealTagRefs(): List<com.surrealdb.RecordId> = map { it.tagId().surrealId() }
 
+/**
+ * Validates the target table and preserves the typed key when crossing from wire to database identity.
+ *
+ * Avoid stringifying ids, which loses the distinction between string and composite keys.
+ */
 internal fun RecordId.surrealId(expectedTable: String): com.surrealdb.RecordId {
     requireTable(expectedTable)
     return key.toLibraryKey().toSurrealRecordId(table)
@@ -118,6 +128,11 @@ internal fun com.surrealdb.RecordId.toSkirRecordId(): RecordId =
         key = id.toLibraryKey().toSkirKey(),
     )
 
+/**
+ * Preserves table and typed key when projecting database identity into portable resource references.
+ *
+ * Nested array and object keys are converted recursively rather than flattened to display text.
+ */
 internal fun com.surrealdb.RecordId.toResourceId(): ResourceId = ResourceId(table, id.toLibraryKey())
 
 private fun RecordId.requireTable(expectedTable: String) {

@@ -35,6 +35,12 @@ import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationSpec
 import com.typewritermc.presentation.TypewriterPresentation
 
+/**
+ * KSP entrypoint generating presentation providers and discovery bindings from annotated Kotlin declarations. Each
+ * compiler environment receives a fresh processor. Processing defers unresolved symbols, validates supported
+ * declaration shapes, and generates its output once for the compilation. Generated resources feed manifest
+ * discovery so runtime consumers do not scan source annotations.
+ */
 class TypewriterPresentationProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         TypewriterPresentationProcessor(environment.codeGenerator, environment.logger)

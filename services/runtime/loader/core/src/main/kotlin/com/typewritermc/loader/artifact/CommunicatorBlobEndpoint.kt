@@ -39,11 +39,23 @@ import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
 
 typealias RealmArtifactAddress = RealmServiceAddress
 
+/**
+ * Identifies an unavailable Realm artifact request attempt.
+ *
+ * Reconnecting access waits for a new messaging generation after this failure; ordinary storage conflicts remain
+ * result values.
+ */
 internal class RealmArtifactCommunicationException(
     message: String,
     cause: Throwable? = null,
 ) : IllegalStateException(message, cause)
 
+/**
+ * Adapts blob operations to stable logical Realm request routes.
+ *
+ * Expected storage outcomes remain result values. Communication failures and unavailable responses throw a Realm
+ * artifact communication exception so reconnecting callers can replace the session.
+ */
 class CommunicatorBlobEndpoint(
     private val communicator: Communicator,
     private val address: RealmArtifactAddress,

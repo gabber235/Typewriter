@@ -16,6 +16,11 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 
+/**
+ * Names the provider that attaches behavior to an element in a discovery domain.
+ *
+ * The class name remains manifest metadata until runtime loading.
+ */
 @Serializable
 data class ElementFacetBinding(
     val elementType: ElementTypeId,
@@ -23,6 +28,12 @@ data class ElementFacetBinding(
     val providerClass: String,
 )
 
+/**
+ * Carries generated element descriptors and facet bindings in a versioned manifest payload.
+ *
+ * Construction rejects unknown schema versions and duplicate descriptor identities within the contribution.
+ * Deployment assembly checks uniqueness across artifacts.
+ */
 @Serializable
 data class ElementDiscoveryContribution(
     val schema: String = ELEMENT_DISCOVERY_SCHEMA,
@@ -39,6 +50,12 @@ data class ElementDiscoveryContribution(
     }
 }
 
+/**
+ * Keeps an element descriptor visible together with its deployment constraints.
+ *
+ * [eligible] reflects source part selection and requires reasons when false. [available] is evaluated
+ * independently against deployment facts; consumers must consider both before offering an element.
+ */
 @Serializable
 data class ElementCatalogEntry(
     val origin: ArtifactId,
@@ -58,6 +75,12 @@ data class KeyedElementContribution(
     val contribution: ElementDiscoveryContribution,
 )
 
+/**
+ * Decodes element payloads from manifests in stable origin order.
+ *
+ * Other producers are ignored. Duplicate element contribution keys and malformed known payloads fail with
+ * contribution context.
+ */
 object ElementContributionReader {
     fun read(manifests: Collection<ImprintManifest>): List<KeyedElementContribution> =
         manifests
@@ -84,6 +107,12 @@ object ElementContributionReader {
             }
 }
 
+/**
+ * Builds the deployment element catalog while retaining ineligible descriptors.
+ *
+ * Missing source part eligibility is treated as ineligible. Availability is evaluated against facts, entries are
+ * sorted by identity, and duplicate element identities across the deployment are rejected.
+ */
 object ElementCatalogAssembler {
     fun assemble(
         contributions: Collection<KeyedElementContribution>,
@@ -121,6 +150,12 @@ object ElementCatalogAssembler {
     }
 }
 
+/**
+ * Indexes the element schemas visible in a deployment, including unavailable entries.
+ *
+ * Element identities must be unique. [descriptor] matches an exact resolved type reference and does not filter
+ * eligibility or availability.
+ */
 @Serializable
 data class ElementCatalog(
     val entries: List<ElementCatalogEntry>,
@@ -134,6 +169,11 @@ data class ElementCatalog(
     fun descriptor(type: ResolvedTypeRef): ElementDescriptor? = entries.singleOrNull { it.descriptor.type == type }?.descriptor
 }
 
+/**
+ * Serializes versioned element discovery payloads as CBOR with defaults included.
+ *
+ * Decode failures propagate to the manifest reader, which supplies origin context.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 object ElementDiscoveryContributionCodec {
     private val cbor = Cbor { encodeDefaults = true }

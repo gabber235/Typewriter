@@ -8,6 +8,12 @@ import skirout.library.v1.authoring.AuthoringDiagnostic
 import skirout.library.v1.authoring.AuthoringInvalid
 import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
 
+/**
+ * Maps snapshot and batch requests to transactional authoring and publishes accepted changes afterward.
+ *
+ * Invalid arguments become protocol diagnostics. Publication and compiler invalidation occur after repository
+ * commit, so reply delivery is not an atomic part of the edit; clients recover through batch replay and snapshots.
+ */
 internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
     private val communicator: Communicator,

@@ -12,6 +12,11 @@ import com.typewritermc.loader.artifact.BlobEndpoint
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 
+/**
+ * Groups descriptor changes, catalog revision allocation, and outbox enqueueing.
+ *
+ * Use only inside the repository transaction block; do not retain the receiver after the block returns.
+ */
 interface SharedArtifactTransaction {
     suspend fun find(id: SharedArtifactId): SharedArtifactDescriptor?
 
@@ -22,12 +27,24 @@ interface SharedArtifactTransaction {
     suspend fun enqueue(change: SharedArtifactChanged)
 }
 
+/**
+ * Owns shared descriptors and their catalog change outbox.
+ *
+ * Transactions group logical updates. Blob storage is separate and bytes must be available before publication.
+ */
 interface SharedArtifactRepository {
     suspend fun <Value> transaction(block: suspend SharedArtifactTransaction.() -> Value): Value
 
     suspend fun catalog(): SharedArtifactCatalog
 }
 
+/**
+ * Publishes revisioned descriptors over preexisting immutable blobs.
+ *
+ * Descriptor, catalog revision, and outbox event are grouped in one repository transaction. Identical live content
+ * and metadata return Unchanged before revision comparison; provenance alone does not force a revision. Deletion
+ * writes a tombstone and leaves blob retention to the host.
+ */
 class SharedArtifactService(
     private val realmId: String,
     private val blobs: BlobEndpoint,

@@ -13,6 +13,11 @@ import kotlinx.serialization.encoding.Encoder
 import java.math.BigInteger
 import kotlin.uuid.Uuid
 
+/**
+ * Serializes arbitrary precision integers as decimal strings to avoid numeric width loss.
+ *
+ * Malformed decimal input fails during conversion to BigInteger.
+ */
 object BigIntegerAsStringSerializer : KSerializer<BigInteger> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BigInteger", PrimitiveKind.STRING)
 
@@ -26,6 +31,11 @@ object BigIntegerAsStringSerializer : KSerializer<BigInteger> {
     override fun deserialize(decoder: Decoder): BigInteger = decoder.decodeString().toBigInteger()
 }
 
+/**
+ * Uses the compact hexadecimal UUID form for persistent type identities.
+ *
+ * Invalid input becomes a serialization exception retaining the parsing cause.
+ */
 object DeclaredTypeIdSerializer : KSerializer<DeclaredTypeId> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DeclaredTypeId", PrimitiveKind.STRING)
 
@@ -43,6 +53,11 @@ object DeclaredTypeIdSerializer : KSerializer<DeclaredTypeId> {
         )
 }
 
+/**
+ * Preserves absent numeric constraints as null and present values as arbitrary precision decimal strings.
+ *
+ * Used by structural integer bounds so serialization never narrows them to a machine integer.
+ */
 object NullableBigIntegerAsStringSerializer : KSerializer<BigInteger?> {
     override val descriptor: SerialDescriptor =
         BigIntegerAsStringSerializer.nullable.descriptor

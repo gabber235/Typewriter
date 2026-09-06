@@ -16,7 +16,11 @@ import java.nio.file.Path
 typealias LoaderServiceSnapshot = RegistrarSnapshot
 typealias LoaderServiceResult<Value> = RegistrarResult<Value>
 
-/** Stable access to the loader owned service connection for managed child deployments. */
+/**
+ * Borrowed service access supplied to managed child deployments. Communicators belong to registrar connection
+ * generations and must be reacquired after reconnection. The loader owns registration, authorization rotation, and
+ * telemetry lifetime; child consumers use this surface without stopping the service.
+ */
 interface LoaderServiceConnection {
     val states: StateFlow<LoaderServiceSnapshot>
     val openTelemetry: OpenTelemetry
@@ -31,14 +35,22 @@ interface LoaderServiceConnection {
     fun sharedArtifacts(realmId: String): SharedArtifactAccess
 }
 
-/** Owns service registration and its underlying messaging runtime for one loader lifetime. */
+/**
+ * Owner of registration and its messaging runtime for a loader lifetime. Start returns readiness or a typed
+ * registrar failure; stop releases that runtime. Managed children receive [LoaderServiceConnection] so lifecycle
+ * authority remains with the host.
+ */
 interface LoaderService : LoaderServiceConnection {
     suspend fun start(): RegistrarResult<ReadySession>
 
     suspend fun stop(): RegistrarStopResult
 }
 
-/** Adapts the shared registrar to the loader service lifecycle. */
+/**
+ * Adapts [TypewriterService] to loader lifecycle and Realm scoped shared artifact access. Its stop operation
+ * always invokes the additional cleanup callback, including when registrar shutdown throws. Telemetry ownership
+ * stays with the enclosing loader application.
+ */
 class RegistrarLoaderService(
     private val service: TypewriterService,
     override val openTelemetry: OpenTelemetry,

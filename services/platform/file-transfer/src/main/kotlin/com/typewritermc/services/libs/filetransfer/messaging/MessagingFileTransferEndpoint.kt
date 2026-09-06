@@ -34,10 +34,10 @@ sealed interface MessageChannelResult {
 }
 
 /**
- * Adapts the generic file transfer endpoint to request and response messaging.
+ * Adapts logical file transfer calls to bounded serialized request and response messages.
  *
- * Wire payloads never include filesystem paths. Malformed payloads, unexpected response variants, and channel failures
- * become [FileTransferError.Unavailable], while coroutine cancellation is always propagated.
+ * The channel owns message transport. This endpoint preserves file transfer result semantics without exposing
+ * storage paths or selecting a broker.
  */
 class MessagingFileTransferEndpoint(
     private val channel: FileTransferMessageChannel,
@@ -120,10 +120,10 @@ class MessagingFileTransferEndpoint(
 }
 
 /**
- * Serves encoded file transfer requests against a local endpoint.
+ * Decodes transfer requests and dispatches them to a local endpoint.
  *
- * Domain failures are preserved as typed wire failures. Invalid requests become channel failures without exposing local
- * storage paths or exception types.
+ * Message validation and response encoding sit at this boundary; the endpoint retains ownership of immutable files
+ * and resumable sessions.
  */
 class FileTransferMessageHandler(
     private val endpoint: FileTransferEndpoint,

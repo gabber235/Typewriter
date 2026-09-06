@@ -12,6 +12,12 @@ import kotlinx.serialization.encodeToByteArray
 
 const val CURRENT_DEPLOYMENT_FORMAT = 1
 
+/**
+ * Selects exact artifacts for the Realm, both engine roles, and extensions.
+ *
+ * Role kinds and unique extension identities are enforced. Canonicalization sorts extensions so arrival order does
+ * not alter the encoded content digest.
+ */
 @Serializable
 data class DeploymentContent(
     val format: Int = CURRENT_DEPLOYMENT_FORMAT,
@@ -59,6 +65,12 @@ value class DeploymentGeneration(
     }
 }
 
+/**
+ * Binds a deployment generation to canonical selected content.
+ *
+ * Construction recomputes the digest and rejects mismatches. Generation orders deployments independently of
+ * artifact versions.
+ */
 @Serializable
 data class DeploymentSnapshot(
     val generation: DeploymentGeneration,
@@ -81,6 +93,11 @@ data class RealmLoaderIntent(
     val panelEngine: ArtifactRequirement,
 )
 
+/**
+ * Encodes canonical deployment content as CBOR with defaults included and computes its SHA256 identity.
+ *
+ * Digest equality reflects selected content rather than extension list arrival order.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 object DeploymentContentCodec {
     private val cbor = Cbor { encodeDefaults = true }

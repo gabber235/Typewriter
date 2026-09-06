@@ -17,6 +17,10 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
 
+/**
+ * Builds a hosted Realm artifact with the host API supplied only at compilation. Registers generated discovery
+ * metadata and the canonical manifest, then publishes the shaded runtime JAR as the project artifact.
+ */
 internal fun Project.configureRealmProject(declaration: DeclaredArtifact) {
     configureArtifactVersion(declaration)
     val main = productionSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
@@ -28,6 +32,11 @@ internal fun Project.configureRealmProject(declaration: DeclaredArtifact) {
     configureHostedJar(manifest)
 }
 
+/**
+ * Builds a hosted engine with engine core and declared capability dependencies included in its runtime graph. Host
+ * API classes remain supplied by the loader. Manifest generation receives the direct core artifact separately so
+ * its generated contributions can be incorporated into engine discovery.
+ */
 internal fun Project.configureEngineProject(declaration: DeclaredArtifact) {
     configureArtifactVersion(declaration)
     val relationships = configureRelationships(declaration.relationships, "main", ArtifactKind.CAPABILITY)
@@ -48,6 +57,10 @@ internal fun Project.configureEngineCoreProject() {
     configureMainCodegen("$group:$name", SourceSet.MAIN_SOURCE_SET_NAME)
 }
 
+/**
+ * Exposes engine core and required capabilities through the capability API configuration. Produces a thin JAR with
+ * its own manifest and contributions; dependent runtime classes are bundled later by a consuming engine.
+ */
 internal fun Project.configureCapabilityProject(declaration: DeclaredArtifact) {
     configureArtifactVersion(declaration)
     val relationships = configureRelationships(declaration.relationships, "main", ArtifactKind.CAPABILITY)
@@ -70,6 +83,11 @@ internal fun Project.configureArtifactVersion(declaration: DeclaredArtifact) {
     version = declaration.version.value
 }
 
+/**
+ * Creates one resolvable dependency configuration per declared relationship. Keeps direct artifact files separate
+ * from the transitive graph so manifest generation can associate each declaration with its selected artifact.
+ * Maven ranges guide external resolution; exact manifest constraints are checked again during generation.
+ */
 internal fun Project.configureRelationships(
     declarations: List<DeclaredRelationship>,
     sourcePart: String,
@@ -165,6 +183,11 @@ private fun Project.resolveEngineCoreArtifacts(): FileCollection =
         configuration.description = "Resolves the direct engine core contribution artifact."
     }
 
+/**
+ * Packages local and explicitly supplied source set outputs with the canonical manifest. Removes intermediate
+ * contribution resources because their payloads are already embedded in that manifest. Dependency classes are not
+ * copied into this JAR.
+ */
 internal fun Project.configureThinJar(
     manifest: org.gradle.api.tasks.TaskProvider<GenerateImprintManifestTask>,
     additionalSourceSets: Collection<SourceSet>,

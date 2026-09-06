@@ -10,6 +10,12 @@ private const val PATCH_TABLE = "_patch"
 private val CHECKSUM_PATTERN = Regex("^[a-f0-9]{64}$")
 private val PATCH_RUN_FAILURE = ErrorSlug.of("realm-patch-run-failed")
 
+/**
+ * Validates recorded patch history before applying pending patches in catalog order.
+ *
+ * Unknown historical ids and modified checksums fail startup. Each patch and its history record share one
+ * transaction; earlier successful patches remain applied if a later patch fails.
+ */
 internal class PatchRunner(
     private val db: Surreal,
 ) {

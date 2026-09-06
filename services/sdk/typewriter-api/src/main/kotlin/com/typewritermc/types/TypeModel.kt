@@ -9,7 +9,12 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
-/** Stable identity of a concrete Typewriter type whose values may be persisted. */
+/**
+ * Provides a persistent nominal identity that survives Kotlin class renames and deployment changes.
+ *
+ * [parse] accepts exactly 32 hexadecimal characters without UUID separators. Rendering uses hexadecimal UUID form;
+ * callers should compare typed identities rather than input spelling.
+ */
 @JvmInline
 @Serializable(with = DeclaredTypeIdSerializer::class)
 value class DeclaredTypeId(
@@ -27,7 +32,12 @@ value class DeclaredTypeId(
     override fun toString(): String = value.toHexString()
 }
 
-/** Marks a concrete serializable type whose values may be stored and resolved across deployments. */
+/**
+ * Opts a concrete serializable type into generated structural metadata and runtime prototypes.
+ *
+ * The id is persistent content identity, not a class name. Preserve it across refactors and evolve the revision
+ * deliberately when stored shape changes.
+ */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterType(
@@ -47,7 +57,12 @@ enum class BuiltinTypeId {
     NONE,
 }
 
-/** Stable nominal identity shared by compile time metadata, manifests, Realm, engines, and Skir transport. */
+/**
+ * Distinguishes built in, persistently declared, and qualified nominal identities.
+ *
+ * Declared identities decouple stored content from Kotlin names. Qualified identities describe named types such as
+ * abstract contracts. A revision and generic arguments belong to [ResolvedTypeRef], not this identity.
+ */
 @Serializable
 sealed interface TypeId {
     @Serializable
@@ -81,6 +96,12 @@ sealed interface TypeId {
     }
 }
 
+/**
+ * Identifies a particular schema revision and optional generic instantiation.
+ *
+ * Revisions must be positive. Definitions use references without arguments, while use sites may supply arguments;
+ * consumers must apply the definition parameters when interpreting them.
+ */
 @Serializable
 data class ResolvedTypeRef(
     val id: TypeId,
@@ -115,7 +136,13 @@ enum class FloatWidth {
     FLOAT_64,
 }
 
-/** Portable structural type expression independent of KSP, storage, and transport frameworks. */
+/**
+ * Describes portable value structure independently of Kotlin reflection, persistence, and wire frameworks.
+ *
+ * Named expressions refer into a catalog and parameters require substitution at use sites. Constraints are
+ * metadata with local constructor checks; constructing an expression does not validate a corresponding
+ * [DataValue].
+ */
 @Serializable
 sealed interface TypeExpression {
     @Serializable
@@ -294,6 +321,12 @@ sealed interface TypeExpression {
     }
 }
 
+/**
+ * Defines a serialized record field and an optional editor initial value.
+ *
+ * The name is the serialized name, which may differ from the Kotlin property. An initial value is catalog
+ * metadata, not evidence that a decoder supplies a missing field.
+ */
 @Serializable
 data class TypeField(
     val name: String,
@@ -352,6 +385,13 @@ data class ConversionId(
     }
 }
 
+/**
+ * Declares a nominal schema, its generic parameters, inheritance, and editor associations.
+ *
+ * [id] must have no type arguments and parameter names must be unique. Catalog assembly may attach presentations
+ * without changing the structural representation. Parent references describe subtype relationships; executable
+ * codecs live in prototypes.
+ */
 @Serializable
 data class TypeDefinition(
     val id: ResolvedTypeRef,
@@ -393,6 +433,12 @@ private val ResolvedTypeRef.displayName: String
             }
         }
 
+/**
+ * Holds uniquely identified nominal definitions for discovery and editor interpretation.
+ *
+ * Construction checks duplicate identities, not graph closure. Subtype lookup follows known parents with cycle
+ * protection, retains abstract descendants, and returns a stable ordering.
+ */
 @Serializable
 data class TypeCatalog(
     val definitions: List<TypeDefinition>,
@@ -429,7 +475,12 @@ private fun TypeDefinition.isSubtypeOf(
 private val ResolvedTypeRef.stableSortKey: String
     get() = "$id:$revision:${arguments.joinToString()}"
 
-/** A closed catalog graph rooted at one expression and containing every nominal definition needed to interpret it. */
+/**
+ * Packages a root expression with the nominal definitions needed to interpret it.
+ *
+ * Producers are responsible for graph closure. Construction only rejects duplicate definition identities;
+ * consumers may still fail when a named dependency is absent.
+ */
 @Serializable
 data class TypeGraph(
     val root: TypeExpression,
@@ -442,7 +493,12 @@ data class TypeGraph(
     }
 }
 
-/** Carries a portable value together with the structural type needed to interpret it. */
+/**
+ * Pairs a structural expression with its portable value for transport.
+ *
+ * Construction does not prove the value satisfies the expression or supply definitions for named types; the
+ * receiving boundary must provide that context.
+ */
 @Serializable
 data class TypedValueEnvelope(
     val rootType: TypeExpression,

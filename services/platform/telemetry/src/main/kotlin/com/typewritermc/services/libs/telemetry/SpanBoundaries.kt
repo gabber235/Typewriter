@@ -16,6 +16,9 @@ import kotlinx.coroutines.withContext
 
 private val mainScopeKey: ContextKey<MainSpanScope> = ContextKey.named("telemetry-main-scope")
 
+/**
+ * Returns the main operation scope installed in this telemetry context, or null outside an owned boundary.
+ */
 fun Context.mainSpanScope(): MainSpanScope? = get(mainScopeKey)
 
 private fun ServiceTelemetry.start(
@@ -88,6 +91,12 @@ private fun recordFailure(
     return classified ?: thrown
 }
 
+/**
+ * Runs synchronous work inside an owned main span and current thread telemetry context.
+ *
+ * The scope records lifecycle outcome and closes in finally. Ordinary failures receive the fallback slug when
+ * needed; cancellation and fatal failures propagate. Use the suspending boundary when work can suspend.
+ */
 fun <T> ServiceTelemetry.mainSpanBlocking(
     name: String,
     unhandledFailureSlug: ErrorSlug,
@@ -118,6 +127,13 @@ fun <T> ServiceTelemetry.mainSpanBlocking(
     }
 }
 
+/**
+ * Runs suspending work inside a main span with context propagated across coroutine suspension.
+ *
+ * The span closes on success, failure, or cancellation. Ordinary failures are recorded and classified, while
+ * cancellation remains cancellation. Receivers are valid only during the block; structured child work must finish
+ * before it returns.
+ */
 suspend fun <T> ServiceTelemetry.mainSpan(
     name: String,
     unhandledFailureSlug: ErrorSlug,
@@ -163,6 +179,12 @@ fun <T> ServiceTelemetry.serverSpanBlocking(
     block = block,
 )
 
+/**
+ * Creates a main SERVER span for an inbound request.
+ *
+ * Supply extracted remote context as parent at transport boundaries; lifecycle and failure behavior follow
+ * [mainSpan].
+ */
 suspend fun <T> ServiceTelemetry.serverSpan(
     name: String,
     unhandledFailureSlug: ErrorSlug,
@@ -178,6 +200,9 @@ suspend fun <T> ServiceTelemetry.serverSpan(
     block = block,
 )
 
+/**
+ * Creates a main CONSUMER span for processing a received message using the supplied parent context.
+ */
 suspend fun <T> ServiceTelemetry.consumerSpan(
     name: String,
     unhandledFailureSlug: ErrorSlug,
@@ -193,6 +218,12 @@ suspend fun <T> ServiceTelemetry.consumerSpan(
     block = block,
 )
 
+/**
+ * Creates a main INTERNAL span for one job execution.
+ *
+ * A recurring job should create a boundary per execution so failures and durations remain independently
+ * observable.
+ */
 suspend fun <T> ServiceTelemetry.jobSpan(
     name: String,
     unhandledFailureSlug: ErrorSlug,
@@ -208,6 +239,12 @@ suspend fun <T> ServiceTelemetry.jobSpan(
     block = block,
 )
 
+/**
+ * Runs synchronous dependency work beneath an active main scope.
+ *
+ * The child span closes on every exit. The main scope must originate from this API and remain active for the
+ * block.
+ */
 context(main: MainSpanScope)
 fun <T> childSpanBlocking(
     name: String,
@@ -234,6 +271,12 @@ fun <T> childSpanBlocking(
     }
 }
 
+/**
+ * Runs a suspending suboperation with coroutine propagated child context.
+ *
+ * The main scope remains available for operation annotations. Child failures are recorded and propagated without
+ * inventing a new fallback error slug.
+ */
 context(main: MainSpanScope)
 suspend fun <T> childSpan(
     name: String,

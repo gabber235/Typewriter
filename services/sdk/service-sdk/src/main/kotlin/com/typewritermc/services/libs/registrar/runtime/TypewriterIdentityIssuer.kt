@@ -21,6 +21,12 @@ import skirout.service.v1.identity.IssueServiceIdentityResponse
 import java.net.URI
 import skirout.service.v1.service.ServiceRole as SkirRole
 
+/**
+ * Issues a service identity through the bounded Skir HTTP contract.
+ *
+ * Status and payload variants are checked together. Lost or invalid success responses can be marked ambiguous
+ * because the backend may already have created credentials; the adapter deliberately does not retry issuance.
+ */
 class TypewriterIdentityIssuer(
     private val client: ServiceHttpClient,
     private val uri: URI,

@@ -17,7 +17,11 @@ import kotlinx.coroutines.launch
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
-/** Assembles the loader owned registration and NATS runtime for one host process. */
+/**
+ * Composes persistent registration, shared artifact storage, and publication workers for one host. Shared
+ * repositories and services are cached by Realm within the created service lifetime. The service close callback
+ * stops the outbox publisher and joins the registrar observer after registration shutdown.
+ */
 internal class DefaultLoaderServiceFactory(
     private val configuration: RegistrarConfiguration,
     private val telemetry: ServiceTelemetry,

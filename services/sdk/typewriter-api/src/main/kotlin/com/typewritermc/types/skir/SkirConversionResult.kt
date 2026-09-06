@@ -1,5 +1,10 @@
 package com.typewritermc.types.skir
 
+/**
+ * Typed outcome of conversion between portable Typewriter models and generated Skir values. Failures describe
+ * unsupported representations with a traversal path. Only explicitly reported conversion failures become
+ * diagnostics; unrelated exceptions propagate.
+ */
 sealed interface SkirConversionResult<out Value> {
     data class Success<Value>(
         val value: Value,

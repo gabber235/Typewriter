@@ -22,6 +22,13 @@ import com.typewritermc.types.DataValue
 import java.security.MessageDigest
 import java.util.Base64
 
+/**
+ * Transforms a logical page document into a deterministic shard or blocking diagnostics.
+ *
+ * Document diagnostics currently all become compile errors. Fingerprints include catalog revision and execution
+ * relevant content but exclude graph layout coordinates. Elements use sorted source identities and root
+ * compilation context; no instance expansion or execution occurs here.
+ */
 class PageCompiler(
     private val formatRevision: Int = CURRENT_COMPILER_FORMAT,
 ) {

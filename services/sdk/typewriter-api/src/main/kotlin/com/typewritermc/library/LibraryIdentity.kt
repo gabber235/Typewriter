@@ -4,6 +4,11 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
+/**
+ * Identifies a book using its database record key, including nonstring key forms.
+ *
+ * Use [ref] to add the book table when constructing a resource reference.
+ */
 @JvmInline
 @Serializable
 value class BookId(
@@ -15,6 +20,11 @@ value class BookId(
     )
 }
 
+/**
+ * Identifies a tag independently of its display name and hierarchy placement.
+ *
+ * The record key retains its original type; string construction is a convenience for string keys.
+ */
 @JvmInline
 @Serializable
 value class TagId(
@@ -26,6 +36,12 @@ value class TagId(
     )
 }
 
+/**
+ * Validates names used by authored library records.
+ *
+ * Names require at least three characters and lowercase alphanumeric segments separated by single underscores.
+ * Display text requiring spaces needs a separate representation.
+ */
 @JvmInline
 @Serializable
 value class LibraryName(

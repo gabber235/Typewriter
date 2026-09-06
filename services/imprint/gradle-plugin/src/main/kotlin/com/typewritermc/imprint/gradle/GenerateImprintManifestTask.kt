@@ -42,6 +42,11 @@ private const val RECORD_SEPARATOR = '\u001F'
 private const val LIST_SEPARATOR = '\u001E'
 private const val HOSTED_RUNTIME_PROVIDER = "META-INF/services/com.typewritermc.loader.api.HostedRuntimeProvider"
 
+/**
+ * Wires manifest generation to production KSP outputs and resolved artifact relationships. Input records preserve
+ * source part, expected kind, constraint, and a digest identifying the direct artifact. Hosted artifacts also
+ * provide service registration inputs so generation can verify the runtime provider contract.
+ */
 internal fun Project.registerManifestTask(
     declaration: DeclaredArtifact,
     relationships: List<ConfiguredRelationship>,
@@ -110,7 +115,12 @@ internal fun Project.registerManifestTask(
     }
 }
 
-/** Produces the one canonical manifest embedded in an Imprint artifact. */
+/**
+ * Produces the canonical manifest after validating the resolved artifact graph and generated contributions.
+ * Rejects conflicting identities, incompatible constraints, dependency cycles, unsafe contribution keys, and
+ * unsupported source part inclusions before writing CBOR. Hosted artifacts must expose exactly one runtime
+ * provider. Stable sorting makes manifest ordering independent of file enumeration.
+ */
 @CacheableTask
 abstract class GenerateImprintManifestTask : DefaultTask() {
     @get:Input

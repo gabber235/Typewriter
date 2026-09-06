@@ -15,7 +15,11 @@ import skirout.editor.v1.type_catalog.TypedRecordField as SkirTypedRecordField
 import skirout.editor.v1.type_catalog.TypedValue as SkirTypedValue
 import skirout.kernel.v1.duration.Duration as SkirDuration
 
-/** Converts portable Typewriter data values to and from generated Skir values. */
+/**
+ * Converts portable value trees to and from Skir typed values. Recursive conversion preserves represented
+ * structure and reports unsupported variants or numeric representations through [SkirConversionResult]. It does
+ * not resolve a catalog or establish that a value satisfies a domain schema.
+ */
 object SkirDataValueCodec {
     fun encode(value: DataValue): SkirConversionResult<SkirTypedValue> = captureSkirConversion { encodeDataValue(value) }
 

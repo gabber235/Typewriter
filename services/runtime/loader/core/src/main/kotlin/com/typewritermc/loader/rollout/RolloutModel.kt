@@ -44,6 +44,12 @@ sealed interface ParticipantStatusReply {
     ) : ParticipantStatusReply
 }
 
+/**
+ * Pins one host generation to immutable projection bytes.
+ *
+ * Validate Realm, host, and generation after decoding. Runtime versions support reporting but do not replace
+ * digest verification.
+ */
 @Serializable
 data class ProjectionReference(
     val realmId: RealmId,
@@ -99,6 +105,11 @@ sealed interface PresenceReply {
     ) : PresenceReply
 }
 
+/**
+ * Distinguishes coordinator attempts, including retries of the same generation.
+ *
+ * The positive ordinal fences stale commands; generation alone is not an attempt identity.
+ */
 @Serializable
 data class RolloutAttempt(
     val ordinal: Long,
@@ -117,6 +128,11 @@ enum class RolloutCommandKind {
     ROLLBACK,
 }
 
+/**
+ * Specifies whether a participant must restore an empty state or an exact retained projection.
+ *
+ * Recovery never means selecting whichever artifact version happens to be newest.
+ */
 @Serializable
 sealed interface RollbackTarget {
     @Serializable
@@ -155,6 +171,12 @@ sealed interface RolloutCommand {
     }
 }
 
+/**
+ * Binds a command to participants and their exact projections.
+ *
+ * Every participant needs a projection and rollback needs an explicit recovery target. Participants additionally
+ * validate attempt ordering and local lifecycle state.
+ */
 @Serializable
 data class RolloutEnvelope(
     val realmId: RealmId,
@@ -172,6 +194,11 @@ data class RolloutEnvelope(
     }
 }
 
+/**
+ * Reports command handling separately from sustained runtime health.
+ *
+ * The coordinator still probes status and waits for a healthy interval before committing the deployment.
+ */
 @Serializable
 data class CommandAcceptance(
     val hostId: HostId,
@@ -202,6 +229,12 @@ sealed interface RetainedProjection {
     ) : RetainedProjection
 }
 
+/**
+ * Describes resources retained after a participant command fails.
+ *
+ * Recovery distinguishes empty, active, and staged states instead of assuming every failure leaves the same
+ * baseline.
+ */
 @Serializable
 sealed interface RecoverableParticipantState {
     @Serializable
@@ -220,6 +253,12 @@ sealed interface RecoverableParticipantState {
     ) : RecoverableParticipantState
 }
 
+/**
+ * Reports lifecycle progress for one host attempt, including health and retained recovery state.
+ *
+ * Consumers must compare attempt and exact projection before treating an observation as confirmation. Active does
+ * not necessarily mean healthy.
+ */
 @Serializable
 sealed interface ParticipantStatus {
     val attempt: RolloutAttempt
@@ -308,6 +347,11 @@ enum class RolloutPhase {
     FAILED,
 }
 
+/**
+ * Journals coordinator phase and participant baselines for one attempt.
+ *
+ * This is separate from the committed deployment; reaching a command phase does not prove stability.
+ */
 @Serializable
 data class PersistedRollout(
     val realmId: RealmId,
@@ -318,6 +362,11 @@ data class PersistedRollout(
     val failure: String? = null,
 )
 
+/**
+ * Records a snapshot and host projections accepted after rollout stability checks.
+ *
+ * Reconciliation repairs hosts to this selection without choosing new artifact content.
+ */
 @Serializable
 data class CommittedDeployment(
     val snapshot: com.typewritermc.loader.deployment.DeploymentSnapshot,

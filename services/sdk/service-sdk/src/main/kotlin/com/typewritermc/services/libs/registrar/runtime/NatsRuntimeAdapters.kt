@@ -21,6 +21,12 @@ internal fun serviceNatsConfiguration(
     shutdownTimeout = configuration.shutdownTimeout,
 )
 
+/**
+ * Builds synchronous NATS challenge authentication from refreshed token and Sentinel caches.
+ *
+ * A server nonce is required. Missing nonce or signature becomes a nonrecoverable messaging failure; credential
+ * text is revealed only while assembling authentication.
+ */
 internal fun serviceNatsAuthenticationProvider(
     accessTokens: AccessTokenCache,
     sentinel: SentinelCache,
