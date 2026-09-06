@@ -34,7 +34,13 @@ class ServiceTelemetry(
 ) {
     private val meter = openTelemetry.meterBuilder(instrumentation.name).build()
     private val operations = meter.counterBuilder("typewriter.operation.completed").setUnit("{operation}").build()
-    private val duration = meter.histogramBuilder("typewriter.operation.duration").setUnit("s").build()
+    private val duration =
+        meter.histogramBuilder("typewriter.operation.duration")
+            .setUnit("s")
+            .setExplicitBucketBoundariesAdvice(
+                listOf(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
+            )
+            .build()
 
     internal fun recordOperation(name: String, outcome: String, durationSeconds: Double) {
         val attributes = Attributes.builder().put("operation.name", name).put("operation.outcome", outcome).build()
