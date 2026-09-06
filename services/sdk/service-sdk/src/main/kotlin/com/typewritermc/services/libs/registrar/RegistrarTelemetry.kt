@@ -30,9 +30,9 @@ internal fun MainSpanScope.recordRegistrarStateChanged(
 }
 
 private fun RegistrarState.isDuplicateTelemetryTransition(previous: RegistrarState): Boolean =
-    when {
-        this is RegistrarState.AwaitingBinding && previous is RegistrarState.AwaitingBinding -> true
-        this is RegistrarState.Ready && previous is RegistrarState.Ready -> connectionGeneration == previous.connectionGeneration
+    when (this) {
+        is RegistrarState.AwaitingBinding if previous is RegistrarState.AwaitingBinding -> true
+        is RegistrarState.Ready if previous is RegistrarState.Ready -> connectionGeneration == previous.connectionGeneration
         else -> false
     }
 
