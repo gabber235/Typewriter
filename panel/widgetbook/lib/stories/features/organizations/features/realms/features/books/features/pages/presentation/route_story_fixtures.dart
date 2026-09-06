@@ -20,7 +20,7 @@ List<PageElement>? pageStoryElements({
 
 List<PageElement> _entryStoryElements(PageType pageType, int count) {
   final rootType = ResolvedTypeRef(
-    id: QualifiedTypeId(namespace: "widgetbook", name: "${pageType.name}Entry"),
+    id: fixtureDeclaredTypeId("widgetbook:${pageType.name}Entry"),
     revision: 1,
   );
   return [
@@ -75,6 +75,47 @@ RealmEditorCatalogState pageStoryCatalog(
         ),
       ]),
       generation: const CatalogGeneration("widgetbook"),
+    ),
+  );
+}
+
+RealmEditorCatalogState pageStoryPageCatalog(
+  PageType pageType,
+  List<PageElement> elements,
+) {
+  final editor = switch (pageType) {
+    PageType.scene => const RealmTimelinePageEditor(
+      trackTypes: [],
+      segmentTypes: [],
+      keyframeTypes: [],
+    ),
+    _ => const RealmGraphPageEditor(
+      direction: GraphDirection.leftToRight,
+      nodeTypes: [],
+    ),
+  };
+  final definition = RealmPageDefinition(
+    kind: pageType.kind,
+    name: pageType.displayName.formatted,
+    description: "Widgetbook page definition",
+    icon: _storyEntryIcon,
+    color: safeColors.first,
+    editor: editor,
+    originArtifactId: "widgetbook",
+    sourcePart: "page-story",
+  );
+  return RealmEditorCatalogState.ready(
+    RealmEditorCatalogSnapshot(
+      catalog: TypeCatalog([
+        for (final entry in _rootValues(elements).entries)
+          TypeDefinition(
+            id: entry.key,
+            kind: NominalTypeKind.concrete,
+            representation: _recordType(entry.value),
+          ),
+      ]),
+      generation: const CatalogGeneration("widgetbook"),
+      pageCatalog: RealmPageCatalog(definitions: {pageType.kind: definition}),
     ),
   );
 }
