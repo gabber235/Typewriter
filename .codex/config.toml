@@ -1,0 +1,5 @@
+[mcp_servers.typewriter]
+command = "sh"
+args = ["-c", 'exec node "$(git rev-parse --show-toplevel)/tools/typewriter-mcp/dist/server.js"']
+startup_timeout_sec = 15
+tool_timeout_sec = 40
