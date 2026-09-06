@@ -119,7 +119,24 @@ func (m *Typewriter) PanelTest(
 	source *dagger.Workspace,
 ) *dagger.Container {
 	return m.panelContainer(source).
+		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithWorkdir("/workspace/panel").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"flutter", "test"})
+}
+
+// +check
+func (m *Typewriter) PanelTestKitTest(source *dagger.Workspace) *dagger.Container {
+	return m.panelContainer(source).
+		WithWorkdir("/workspace/panel/testkit").
+		WithExec([]string{"flutter", "pub", "get"}).
+		WithExec([]string{"flutter", "test"})
+}
+
+// +check
+func (m *Typewriter) PanelWidgetbookTest(source *dagger.Workspace) *dagger.Container {
+	return m.panelContainer(source).
+		WithWorkdir("/workspace/panel/widgetbook").
 		WithExec([]string{"flutter", "pub", "get"}).
 		WithExec([]string{"flutter", "test"})
 }

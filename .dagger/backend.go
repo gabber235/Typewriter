@@ -11,7 +11,7 @@ import (
 
 const componentTestXtask = "/workspace/backend/tests/component/target/debug/component-test-xtask"
 
-func (m *Typewriter) backendTestContainer(source *dagger.Workspace) *dagger.Container {
+func (m *Typewriter) backendContainer(source *dagger.Workspace) *dagger.Container {
 	return dag.Container().
 		From("rust:1.95-bookworm").
 		WithExec([]string{"rustup", "target", "add", "wasm32-wasip2"}).
@@ -26,11 +26,33 @@ func (m *Typewriter) backendTestContainer(source *dagger.Workspace) *dagger.Cont
 		WithMountedCache("/workspace/backend/target", dag.CacheVolume("component-test-backend-target")).
 		WithMountedCache("/workspace/backend/tests/component/target", dag.CacheVolume("component-test-host-target")).
 		WithEnvVariable("CARGO_PROFILE_DEV_DEBUG", "0").
-		WithEnvVariable("CARGO_PROFILE_TEST_DEBUG", "0").
+		WithEnvVariable("CARGO_PROFILE_TEST_DEBUG", "0")
+}
+
+func (m *Typewriter) backendTestContainer(source *dagger.Workspace) *dagger.Container {
+	return m.backendContainer(source).
 		WithExec([]string{
 			"cargo", "build",
 			"--manifest-path", "backend/tests/component/Cargo.toml",
 			"-p", "component-test-xtask",
+		})
+}
+
+// +check
+func (m *Typewriter) BackendUnitTest(source *dagger.Workspace) *dagger.Container {
+	return m.backendContainer(source).
+		WithExec([]string{
+			"cargo", "test", "--manifest-path", "backend/Cargo.toml",
+			"--workspace", "--no-fail-fast", "--jobs", "2",
+		})
+}
+
+// +check
+func (m *Typewriter) BackendSupportTest(source *dagger.Workspace) *dagger.Container {
+	return m.backendContainer(source).
+		WithExec([]string{
+			"cargo", "test", "--manifest-path", "backend/tests/component/Cargo.toml",
+			"--workspace", "--exclude", "typewriter-component-tests", "--no-fail-fast", "--jobs", "2",
 		})
 }
 
