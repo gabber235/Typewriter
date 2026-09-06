@@ -61,8 +61,6 @@ data class ArtifactHostAssignment(
     val roles: Set<RuntimePlacement>,
     val primaryEngine: PrimaryEngineTarget? = null,
     val intent: RealmLoaderIntent? = null,
-    val topologyRevision: Long? = null,
-    val serviceId: String? = null,
 ) {
     init {
         if (RuntimePlacement.REALM in roles) {
@@ -73,12 +71,12 @@ data class ArtifactHostAssignment(
 }
 
 /**
- * Streams desired assignment changes; null requests removal.
+ * Streams desired execution revisions, including explicit removal assignments.
  *
  * The artifact host owns applying changes and releasing prior assignment resources.
  */
 fun interface ArtifactHostAssignmentSource {
-    fun assignments(hostId: HostId): Flow<ArtifactHostAssignment?>
+    fun assignments(hostId: HostId): Flow<DesiredHostExecution>
 }
 
 /**
@@ -101,7 +99,26 @@ class ArtifactHost(
     private val inbox = ArtifactInboxReconciler(artifactsRoot, localBlobs, candidates, telemetry = service.telemetry)
     private val lifecycle = Mutex()
     private var latestSession: HostedMessagingSession? = null
-    private var assignmentRuntime: AssignmentRuntime? = null
+    private val execution =
+        HostExecutionOwner { assignment ->
+            AssignmentRuntime(
+                assignment,
+                hostId,
+                workDirectory,
+                artifactsRoot,
+                service.openTelemetry,
+                service.telemetry,
+                localBlobs,
+                candidates,
+                if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null,
+                scope,
+            )
+        }
+    private val desiredExecution = MutableStateFlow<DesiredHostExecution?>(null)
+    private val executionReporter = BackendHostExecutionReporter()
+    private var reconciliationJob: Job? = null
+    private val pendingAuthorizationReleases = linkedSetOf<Long>()
+    private var authorizedExecution: DesiredHostExecution? = null
     private var inboxJob: Job? = null
     private var assignmentJob: Job? = null
     private var sessionJob: Job? = null
@@ -111,24 +128,22 @@ class ArtifactHost(
         inboxJob = scope.launch { inbox.run() }
         sessionJob =
             scope.launch {
-                service.states.collect { snapshot ->
-                    val state = snapshot.state
-                    val session =
-                        (state as? RegistrarState.Ready)?.let {
-                            HostedMessagingSession(
-                                id = it.connectionGeneration,
-                                organizationId = it.session.binding.organizationId,
-                                communicator = service.communicatorFor(it.connectionGeneration).requireSuccess(),
-                            )
-                        }
-                    if (session == null && !state.invalidatesHostedMessagingSession()) {
-                        return@collect
-                    }
+                service.states.collect {
                     while (true) {
                         try {
                             lifecycle.withLock {
+                                val state = service.states.value.state
+                                val session =
+                                    (state as? RegistrarState.Ready)?.let {
+                                        HostedMessagingSession(
+                                            id = it.connectionGeneration,
+                                            organizationId = it.session.binding.organizationId,
+                                            communicator = service.communicatorFor(it.connectionGeneration).requireSuccess(),
+                                        )
+                                    }
+                                if (session == null && !state.invalidatesHostedMessagingSession()) return@withLock
                                 latestSession = session
-                                assignmentRuntime?.replaceSession(session)
+                                execution.replaceSession(session)
                             }
                             break
                         } catch (failure: Throwable) {
@@ -140,87 +155,96 @@ class ArtifactHost(
             }
         assignmentJob =
             scope.launch {
-                assignments.assignments(hostId).collect { assignment ->
-                    while (assignmentRuntime?.assignment != assignment) {
+                assignments.assignments(hostId).collect { desiredExecution.value = it }
+            }
+        reconciliationJob =
+            scope.launch {
+                while (true) {
+                    val desired = desiredExecution.value
+                    if (desired != null) {
                         try {
-                            service.telemetry.artifactSpan(
-                                "artifact.assignment.lifecycle",
-                                "artifact-assignment-lifecycle-failed",
-                            ) { span ->
-                                span?.annotate {
-                                    attribute("host.id", hostId.value)
-                                    attribute("realm.id", assignment?.realmId?.value ?: "unassigned")
-                                    attribute(
-                                        "host.roles",
-                                        assignment?.roles?.sortedBy(RuntimePlacement::name)?.joinToString(",") ?: "none",
-                                    )
+                            lifecycle.withLock {
+                                if (execution.isApplied(desired) && pendingAuthorizationReleases.isEmpty() &&
+                                    !execution.needsReport(desired, latestSession?.id)
+                                ) {
+                                    return@withLock
                                 }
-                                lifecycle.withLock { replaceAssignment(assignment) }
+                                service.telemetry.artifactSpan(
+                                    "artifact.assignment.lifecycle",
+                                    "artifact-assignment-lifecycle-failed",
+                                ) { span ->
+                                    span?.annotate {
+                                        attribute("host.id", hostId.value)
+                                        attribute("host.expected_revision", desired.revision?.value ?: 0L)
+                                        attribute("realm.id", desired.assignment?.realmId?.value ?: "unassigned")
+                                        attribute(
+                                            "host.roles",
+                                            desired.assignment
+                                                ?.roles
+                                                ?.sortedBy(RuntimePlacement::name)
+                                                ?.joinToString(",") ?: "none",
+                                        )
+                                    }
+                                    if (!execution.isApplied(desired)) replaceExecution(desired)
+                                    releasePendingAuthorization()
+                                    if (desiredExecution.value == desired) {
+                                        execution.report(desired, latestSession?.id) { observation ->
+                                            executionReporter.report(observation, requireNotNull(latestSession))
+                                        }
+                                    }
+                                }
                             }
                         } catch (failure: Throwable) {
                             rethrowExceptionalThrowable(failure)
-                            if (assignmentRuntime?.assignment == assignment) return@collect
-                            delay(1.seconds)
                         }
                     }
+                    delay(1.seconds)
                 }
             }
     }
 
-    private suspend fun replaceAssignment(assignment: ArtifactHostAssignment?) {
-        if (assignmentRuntime?.assignment == assignment) return
-        val rotatedGeneration =
-            if (assignmentRuntime != null || assignment != null) {
-                service.rotateAuthorization().requireSuccess()
-            } else {
-                null
+    private suspend fun replaceExecution(desired: DesiredHostExecution) {
+        if (authorizedExecution != desired) {
+            if (execution.hasRuntime || desired.assignment != null) {
+                pendingAuthorizationReleases += service.rotateAuthorization().requireSuccess()
             }
-        if (rotatedGeneration != null) {
-            val ready =
-                service.states.value.state as? RegistrarState.Ready
-                    ?: error("Authorization rotation did not produce a ready session.")
+            authorizedExecution = desired
+        }
+        val ready = service.states.value.state as? RegistrarState.Ready
+        if (ready != null) {
             latestSession =
                 HostedMessagingSession(
-                    id = rotatedGeneration,
+                    id = ready.connectionGeneration,
                     organizationId = ready.session.binding.organizationId,
-                    communicator = service.communicatorFor(rotatedGeneration).requireSuccess(),
+                    communicator = service.communicatorFor(ready.connectionGeneration).requireSuccess(),
                 )
+        } else if (pendingAuthorizationReleases.isNotEmpty()) {
+            error("Authorization rotation did not produce a ready session.")
         }
-        val previous = assignmentRuntime
-        try {
-            val replacement =
-                assignment?.let {
-                    AssignmentRuntime(
-                        assignment,
-                        hostId,
-                        workDirectory,
-                        artifactsRoot,
-                        service.openTelemetry,
-                        service.telemetry,
-                        localBlobs,
-                        candidates,
-                        if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null,
-                        scope,
-                    ).also { it.replaceSession(latestSession) }
-                }
-            assignmentRuntime = replacement
-            previous?.close()
-        } finally {
-            rotatedGeneration?.let { service.releaseAuthorizationRotation(it).requireSuccess() }
+        execution.apply(desired, latestSession)
+    }
+
+    private suspend fun releasePendingAuthorization() {
+        val iterator = pendingAuthorizationReleases.iterator()
+        while (iterator.hasNext()) {
+            service.releaseAuthorizationRotation(iterator.next()).requireSuccess()
+            iterator.remove()
         }
     }
 
     suspend fun stop() {
         assignmentJob?.cancelAndJoin()
+        reconciliationJob?.cancelAndJoin()
         sessionJob?.cancelAndJoin()
         lifecycle.withLock {
-            assignmentRuntime?.close()
-            assignmentRuntime = null
+            execution.close()
+            releasePendingAuthorization()
             latestSession = null
         }
         inboxJob?.cancelAndJoin()
         assignmentJob = null
         sessionJob = null
+        reconciliationJob = null
         inboxJob = null
         service.stop().requireSuccess()
     }
@@ -230,7 +254,7 @@ internal fun RegistrarState.invalidatesHostedMessagingSession(): Boolean =
     this is RegistrarState.DegradedAfterReady || this is RegistrarState.Failed || this is RegistrarState.Stopped
 
 internal class AssignmentRuntime(
-    val assignment: ArtifactHostAssignment,
+    override val assignment: ArtifactHostAssignment,
     private val hostId: HostId,
     private val workDirectory: Path,
     private val artifactsRoot: Path,
@@ -240,14 +264,12 @@ internal class AssignmentRuntime(
     private val candidates: FileCandidateRepository,
     private val localShared: SharedArtifactAccess?,
     private val scope: CoroutineScope,
-) {
+) : HostAssignmentRuntime {
+    @Volatile
+    override var status: ParticipantStatus? = null
+        private set
+
     private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
-    private val executionReporter =
-        if (assignment.topologyRevision != null && assignment.serviceId != null) {
-            BackendHostExecutionReporter(assignment.topologyRevision, assignment.serviceId, assignment.roles, mutableMessaging)
-        } else {
-            null
-        }
     private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
     private val projections = BlobProjectionRepository(sharedArtifacts)
     private val participant =
@@ -262,10 +284,10 @@ internal class AssignmentRuntime(
             },
             projections,
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
-            ReportingParticipantStatePublisher(
-                ReconnectingParticipantStatePublisher(mutableMessaging),
-                executionReporter,
-            ),
+            ParticipantStatePublisher { event ->
+                status = event.status
+                ReconnectingParticipantStatePublisher(mutableMessaging).publish(event)
+            },
             scope,
             telemetry = telemetry,
         )
@@ -283,20 +305,20 @@ internal class AssignmentRuntime(
             }
         }
 
-    suspend fun replaceSession(session: HostedMessagingSession?) {
-        if (mutableMessaging.value?.id == session?.id) return
-        val replacement = session?.let { createRouter(it) }
-        replacement?.start()?.requireSuccess("start")
-        val previous = router
-        router = replacement
-        mutableMessaging.value = session
-        if (session != null) executionReporter?.reportCurrent()
+    override suspend fun replaceSession(session: HostedMessagingSession?) {
+        if (mutableMessaging.value?.id == session?.id && (session != null || router == null)) return
         coordinator?.cancelAndJoin()
+        coordinator = null
+        router?.stop()?.requireSuccess("replace")
+        router = null
+        mutableMessaging.value = null
+        router = session?.let { createRouter(it) }
+        router?.start()?.requireSuccess("start")
+        mutableMessaging.value = session
         coordinator =
             session?.takeIf { rolloutState != null }?.let { current ->
                 scope.launch { coordinateDeployments(current, requireNotNull(rolloutState)) }
             }
-        previous?.stop()?.requireSuccess("replace")
     }
 
     private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
@@ -401,7 +423,7 @@ internal class AssignmentRuntime(
         return responses.toReadyTopology()
     }
 
-    suspend fun close() {
+    override suspend fun close() {
         maintenance?.cancelAndJoin()
         coordinator?.cancelAndJoin()
         coordinator = null
@@ -470,16 +492,6 @@ private class ReconnectingParticipantStatePublisher(
     override suspend fun publish(event: ParticipantStateChanged) {
         val session = sessions.value ?: return
         CommunicatorParticipantStatePublisher(session.organizationId, session.communicator).publish(event)
-    }
-}
-
-private class ReportingParticipantStatePublisher(
-    private val delegate: ParticipantStatePublisher,
-    private val reporter: BackendHostExecutionReporter?,
-) : ParticipantStatePublisher {
-    override suspend fun publish(event: ParticipantStateChanged) {
-        delegate.publish(event)
-        reporter?.report(event.status)
     }
 }
 

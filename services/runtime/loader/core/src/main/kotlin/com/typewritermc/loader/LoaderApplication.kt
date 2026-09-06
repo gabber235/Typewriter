@@ -11,12 +11,12 @@ import com.typewritermc.loader.rollout.ArtifactHost
 import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
+import com.typewritermc.loader.rollout.DesiredHostExecution
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
@@ -67,26 +67,22 @@ internal class ArtifactLoaderBootstrap(
             return BackendArtifactHostAssignmentSource(service, panelEngine, entrypoint)
         }
         return ArtifactHostAssignmentSource {
-            if (entrypoint == HostEntrypoint.STANDALONE) {
-                val realmId = RealmId(localRealmId)
-                flowOf(
-                    ArtifactHostAssignment(
-                        realmId = realmId,
-                        roles = RuntimePlacement.entries.toSet(),
-                        primaryEngine =
-                            PrimaryEngineTarget(
-                                ArtifactId(settings.get("TYPEWRITER_PRIMARY_ENGINE_ID", "typewritermc:paper")),
-                                VersionConstraint(settings.get("TYPEWRITER_PRIMARY_ENGINE_VERSION", "^1")),
-                            ),
-                        intent =
-                            RealmLoaderIntent(
-                                panelEngine,
-                            ),
-                    ),
-                )
-            } else {
-                emptyFlow()
-            }
+            flowOf(
+                DesiredHostExecution(
+                    revision = null,
+                    assignment =
+                        ArtifactHostAssignment(
+                            realmId = RealmId(localRealmId),
+                            roles = RuntimePlacement.entries.toSet(),
+                            primaryEngine =
+                                PrimaryEngineTarget(
+                                    ArtifactId(settings.get("TYPEWRITER_PRIMARY_ENGINE_ID", "typewritermc:paper")),
+                                    VersionConstraint(settings.get("TYPEWRITER_PRIMARY_ENGINE_VERSION", "^1")),
+                                ),
+                            intent = RealmLoaderIntent(panelEngine),
+                        ),
+                ),
+            )
         }
     }
 }

@@ -55,8 +55,8 @@ import com.typewritermc.loader.rollout.RolloutCommand
 import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
-import com.typewritermc.loader.rollout.toArtifactHostAssignment
 import com.typewritermc.loader.rollout.toChildRuntimeState
+import com.typewritermc.loader.rollout.toDesiredHostExecution
 import com.typewritermc.loader.rollout.toReadyTopology
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
@@ -545,20 +545,25 @@ val ArtifactDistributionTest by testSuite {
             )
         val panel = ArtifactRequirement(ArtifactId("typewritermc:panel"), VersionConstraint("^1"))
 
-        val assignment =
+        val desired =
             WatchHostExecutionResponse
                 .createDesired(topologyRevision = 1, realm = realm, engine = engine)
-                .toArtifactHostAssignment(panel, "service-id")
+                .toDesiredHostExecution(panel, "service-id")
 
+        val assignment = desired?.assignment
         assignment?.realmId shouldBe RealmId("realm")
         assignment?.roles shouldBe RuntimePlacement.entries.toSet()
         assignment?.primaryEngine?.id shouldBe ArtifactId("typewritermc:paper")
         assignment?.intent?.panelEngine shouldBe panel
-        assignment?.topologyRevision shouldBe 1
-        assignment?.serviceId shouldBe "service-id"
-        WatchHostExecutionResponse
-            .createDesired(topologyRevision = 2, realm = null, engine = null)
-            .toArtifactHostAssignment(panel) shouldBe null
+        desired?.revision?.value shouldBe 1
+        desired?.revision?.serviceId shouldBe "service-id"
+        val removal =
+            WatchHostExecutionResponse
+                .createDesired(topologyRevision = 2, realm = null, engine = null)
+                .toDesiredHostExecution(panel, "service-id")
+        removal?.assignment shouldBe null
+        removal?.revision?.value shouldBe 2
+        removal?.revision?.serviceId shouldBe "service-id"
     }
 
     test("participant health maps to backend execution state") {

@@ -479,10 +479,9 @@ class HostRolloutParticipant(
     suspend fun close() =
         commands.withLock {
             stopHealthMonitor()
-            val failure = runCatchingSuspend { localState.close() }.exceptionOrNull()
+            localState.close()
             localState = LocalParticipantState.Empty
             currentActiveProjection = null
-            failure?.let { throw it }
         }
 
     internal sealed interface LocalParticipantState {
@@ -547,12 +546,15 @@ class HostRolloutParticipant(
                 compensate = { it.runtime.quiesce() },
             )
 
+        private val pendingClose = runtimes.toMutableList()
+
         suspend fun close() {
             healthMonitor.cancelAndJoin()
             val failures = mutableListOf<Throwable>()
-            runtimes.asReversed().forEach { runtime ->
+            pendingClose.toList().asReversed().forEach { runtime ->
                 try {
                     withTimeout(lifecycleTimeout) { runtime.close() }
+                    pendingClose.remove(runtime)
                 } catch (failure: Throwable) {
                     failures += failure
                 }

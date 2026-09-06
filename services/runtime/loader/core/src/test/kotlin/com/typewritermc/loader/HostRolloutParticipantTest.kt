@@ -39,6 +39,7 @@ import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.api.OpenTelemetry
@@ -99,6 +100,26 @@ val HostRolloutParticipantTest by testSuite {
             older.accepted shouldBe false
             older.internalFailure shouldBe false
             fixture.participant.close()
+        }
+    }
+
+    test("failed shutdown retains the participant for retry and closes each successful runtime once") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = RolloutAttempt(2, DeploymentGeneration(1))
+            val reference = fixture.reference("shutdown")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage)).accepted shouldBe true
+            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit)).accepted shouldBe true
+            val runtime = fixture.runtimes.single()
+            runtime.failOn += "close"
+            shouldThrow<IllegalStateException> { fixture.participant.close() }
+            (fixture.participant.currentStatus(attempt) is ParticipantStatus.Active) shouldBe true
+            runtime.failOn.clear()
+            fixture.participant.close()
+            fixture.participant.close()
+            runtime.operations.count { it == "close" } shouldBe 2
+            (fixture.participant.currentStatus(attempt) is ParticipantStatus.Idle) shouldBe true
         }
     }
 

@@ -50,23 +50,19 @@ class HostedRuntimeLoader(
 /**
  * Owns the staged runtime and the class loader retaining its artifact code.
  *
- * Closure attempts runtime cleanup before class loader cleanup and collects failures with later causes suppressed.
+ * Closure retains the class loader until runtime cleanup succeeds. Failed cleanup can be retried.
  */
 class LoadedHostedRuntime internal constructor(
     val runtime: StagedHostedRuntime,
     private val classLoader: URLClassLoader,
 ) {
+    private var runtimeClosed = false
+
     suspend fun close() {
-        val failures = mutableListOf<Throwable>()
-        try {
+        if (!runtimeClosed) {
             runtime.close()
-        } catch (failure: Throwable) {
-            failures += failure
+            runtimeClosed = true
         }
-        runCatching { classLoader.close() }.exceptionOrNull()?.let(failures::add)
-        failures.firstOrNull()?.let { failure ->
-            failures.drop(1).forEach(failure::addSuppressed)
-            throw failure
-        }
+        classLoader.close()
     }
 }

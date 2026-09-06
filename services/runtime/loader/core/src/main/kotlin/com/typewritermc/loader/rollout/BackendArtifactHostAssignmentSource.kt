@@ -28,13 +28,10 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.service.v1.topology.ChildRuntimeState
@@ -127,7 +124,7 @@ class BackendArtifactHostAssignmentSource(
     private val entrypoint: HostEntrypoint,
 ) : ArtifactHostAssignmentSource {
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun assignments(hostId: HostId): Flow<ArtifactHostAssignment?> =
+    override fun assignments(hostId: HostId): Flow<DesiredHostExecution> =
         service.states
             .flatMapLatest { snapshot ->
                 val ready = snapshot.state as? RegistrarState.Ready ?: return@flatMapLatest emptyFlow()
@@ -161,7 +158,7 @@ class BackendArtifactHostAssignmentSource(
                                         is WatchMessage.Initial -> message.value
                                         is WatchMessage.Update -> message.value
                                     }
-                                emit(response.toArtifactHostAssignment(panelEngine, address.serviceId))
+                                response.toDesiredHostExecution(panelEngine, address.serviceId)?.let { emit(it) }
                             }
                         delay(1.seconds)
                     }
@@ -180,102 +177,66 @@ class BackendArtifactHostAssignmentSource(
         )
 }
 
-internal fun WatchHostExecutionResponse.toArtifactHostAssignment(
+/** A backend revision remains meaningful when both runtime roles are absent. */
+internal fun WatchHostExecutionResponse.toDesiredHostExecution(
     panelEngine: ArtifactRequirement,
-    serviceId: String? = null,
-): ArtifactHostAssignment? {
+    serviceId: String,
+): DesiredHostExecution? {
     val desired = (this as? WatchHostExecutionResponse.DesiredWrapper)?.value ?: return null
     val realm = desired.realm
     val engine = desired.engine
-    val realmId = realm?.realmId?.stringKey() ?: engine?.realm?.realmId?.stringKey() ?: return null
-    val roles =
-        buildSet {
-            if (realm != null) {
-                add(RuntimePlacement.REALM)
-                add(RuntimePlacement.PANEL_ENGINE)
-            }
-            if (engine != null) add(RuntimePlacement.PRIMARY_ENGINE)
+    val realmId = realm?.realmId?.stringKey() ?: engine?.realm?.realmId?.stringKey()
+    val assignment =
+        realmId?.let {
+            ArtifactHostAssignment(
+                realmId = RealmId(it),
+                roles =
+                    buildSet {
+                        if (realm != null) {
+                            add(RuntimePlacement.REALM)
+                            add(RuntimePlacement.PANEL_ENGINE)
+                        }
+                        if (engine != null) add(RuntimePlacement.PRIMARY_ENGINE)
+                    },
+                primaryEngine =
+                    realm?.targetEngine?.let { target ->
+                        PrimaryEngineTarget(ArtifactId(target.engineId), VersionConstraint(target.versionConstraint))
+                    },
+                intent = realm?.let { RealmLoaderIntent(panelEngine) },
+            )
         }
-    return ArtifactHostAssignment(
-        realmId = RealmId(realmId),
-        roles = roles,
-        primaryEngine =
-            realm?.targetEngine?.let { target ->
-                PrimaryEngineTarget(
-                    ArtifactId(target.engineId),
-                    VersionConstraint(target.versionConstraint),
-                )
-            },
-        intent = realm?.let { RealmLoaderIntent(panelEngine) },
-        topologyRevision = desired.topologyRevision,
-        serviceId = serviceId,
-    )
+    return DesiredHostExecution(ExecutionRevision(serviceId, desired.topologyRevision), assignment)
 }
 
-/**
- * Reports participant lifecycle state to the backend at the assigned topology revision.
- *
- * Reports are serialized and retain role state for refresh. Revision checking lets the backend reject observations
- * from superseded assignments.
- */
+/** Sends a host observation after local lifecycle completion, including an empty assignment. */
 internal class BackendHostExecutionReporter(
-    private val topologyRevision: Long,
-    private val serviceId: String,
-    private val roles: Set<RuntimePlacement>,
-    private val sessions: StateFlow<com.typewritermc.loader.api.HostedMessagingSession?>,
     private val clock: Clock = Clock.systemUTC(),
 ) {
-    private val reports = Mutex()
-    private var lastReport =
-        ExecutionReport(
-            realmState = absentState().takeIf { RuntimePlacement.REALM in roles },
-            engineState = absentState().takeIf { RuntimePlacement.PRIMARY_ENGINE in roles },
-        )
+    suspend fun report(
+        observation: HostExecutionObservation,
+        session: com.typewritermc.loader.api.HostedMessagingSession,
+    ) {
+        val now = clock.instant()
 
-    suspend fun reportCurrent() {
-        reports.withLock {
-            val now = clock.instant()
-            lastReport =
-                lastReport.copy(
-                    realmState = lastReport.realmState?.copy(updatedAt = now),
-                    engineState = lastReport.engineState?.copy(updatedAt = now),
-                )
-            submit(lastReport)
+        fun state(placement: RuntimePlacement): ChildRuntimeState? {
+            if (placement !in observation.roles) return null
+            return observation.status?.toChildRuntimeState(now, placement)
+                ?: ChildRuntimeState(status = ChildRuntimeStatus.ABSENT, activeArtifactVersion = null, message = null, updatedAt = now)
         }
-    }
-
-    suspend fun report(status: ParticipantStatus) {
-        reports.withLock {
-            val now = clock.instant()
-            lastReport =
-                ExecutionReport(
-                    realmState = status.toChildRuntimeState(now, RuntimePlacement.REALM).takeIf { RuntimePlacement.REALM in roles },
-                    engineState =
-                        status
-                            .toChildRuntimeState(now, RuntimePlacement.PRIMARY_ENGINE)
-                            .takeIf { RuntimePlacement.PRIMARY_ENGINE in roles },
-                )
-            submit(lastReport)
-        }
-    }
-
-    private fun absentState() =
-        ChildRuntimeState(
-            status = ChildRuntimeStatus.ABSENT,
-            activeArtifactVersion = null,
-            message = null,
-            updatedAt = clock.instant(),
-        )
-
-    private suspend fun submit(report: ExecutionReport) {
-        val session = sessions.value ?: return
         val request =
             ReportHostExecutionRequest(
-                topologyRevision = topologyRevision,
-                realmState = report.realmState,
-                engineState = report.engineState,
+                topologyRevision = observation.revision.value,
+                realmState = state(RuntimePlacement.REALM),
+                engineState = state(RuntimePlacement.PRIMARY_ENGINE),
             )
-        when (val result = session.communicator.request(hostExecutionReportContract, HostExecutionAddress(serviceId), request)) {
+        when (
+            val result =
+                session.communicator.request(
+                    hostExecutionReportContract,
+                    HostExecutionAddress(observation.revision.serviceId),
+                    request,
+                )
+        ) {
             is CommunicationResult.Failure -> {
                 error("Host execution report failed: ${result.error}")
             }
@@ -293,11 +254,6 @@ internal class BackendHostExecutionReporter(
             }
         }
     }
-
-    private data class ExecutionReport(
-        val realmState: ChildRuntimeState?,
-        val engineState: ChildRuntimeState?,
-    )
 }
 
 internal fun ParticipantStatus.toChildRuntimeState(
