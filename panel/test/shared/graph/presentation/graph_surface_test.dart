@@ -169,13 +169,21 @@ void main() {
         );
       }
 
+      Finder probeFinder(String id) => find.byWidgetPredicate(
+        (widget) => widget is _IdentityProbe && widget.id == id,
+      );
+
       await pump([probe("a", 0), probe("b", 1)]);
+      final aState = tester.state<_IdentityProbeState>(probeFinder("a"));
+      final bState = tester.state<_IdentityProbeState>(probeFinder("b"));
       expect(find.text("a:1"), findsOneWidget);
       expect(find.text("b:2"), findsOneWidget);
 
       await pump([probe("b", 0), probe("a", 1)]);
       expect(find.text("a:1"), findsOneWidget);
       expect(find.text("b:2"), findsOneWidget);
+      expect(tester.state<_IdentityProbeState>(probeFinder("a")), same(aState));
+      expect(tester.state<_IdentityProbeState>(probeFinder("b")), same(bState));
       expect(disposed, isEmpty);
 
       await pump([probe("a", 0)]);
@@ -183,8 +191,12 @@ void main() {
       expect(disposed, ["b"]);
 
       await pump([probe("a", 0), probe("c", 1)]);
+      final cState = tester.state<_IdentityProbeState>(probeFinder("c"));
       expect(find.text("a:1"), findsOneWidget);
-      expect(find.text("c:7"), findsOneWidget);
+      expect(find.text("c:${cState.token}"), findsOneWidget);
+      expect(tester.state<_IdentityProbeState>(probeFinder("a")), same(aState));
+      expect(cState, isNot(same(aState)));
+      expect(cState, isNot(same(bState)));
       expect(tester.takeException(), isNull);
     });
 
