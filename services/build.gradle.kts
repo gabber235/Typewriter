@@ -52,6 +52,7 @@ tasks.register("assembleDevelopmentArtifacts") {
             project(":realm").tasks.named<Jar>("shadowJar"),
             project(":engine-paper").tasks.named<Jar>("shadowJar"),
             project(":engine-panel").tasks.named<Jar>("shadowJar"),
+            project(":basic-extension").tasks.named<Jar>("jar"),
             project(":conformance-extension").tasks.named<Jar>("jar"),
         )
     val developmentArtifactFiles = developmentArtifactTasks.map { it.flatMap(Jar::getArchiveFile) }
