@@ -1,5 +1,3 @@
-@file:OptIn(kotlin.time.ExperimentalTime::class)
-
 package com.typewritermc.types
 
 import kotlinx.serialization.SerialName
@@ -12,8 +10,8 @@ import kotlin.uuid.Uuid
 /**
  * Provides a persistent nominal identity that survives Kotlin class renames and deployment changes.
  *
- * [parse] accepts exactly 32 hexadecimal characters without UUID separators. Rendering uses hexadecimal UUID form;
- * callers should compare typed identities rather than input spelling.
+ * [parse] accepts hexadecimal UUID text with or without separators. Rendering uses hexadecimal UUID form; callers
+ * should compare typed identities rather than input spelling.
  */
 @JvmInline
 @Serializable(with = DeclaredTypeIdSerializer::class)
@@ -21,12 +19,7 @@ value class DeclaredTypeId(
     val value: Uuid,
 ) {
     companion object {
-        fun parse(value: String): DeclaredTypeId {
-            require(value.matches(Regex("[0-9a-fA-F]{32}"))) {
-                "Declared type ids must contain exactly 32 hexadecimal characters."
-            }
-            return DeclaredTypeId(Uuid.parseHex(value))
-        }
+        fun parse(value: String): DeclaredTypeId = DeclaredTypeId(Uuid.parse(value))
     }
 
     override fun toString(): String = value.toHexString()
