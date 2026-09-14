@@ -101,7 +101,7 @@ class DiscoveryModuleLoader {
                     modules(modules)
                 }
             val prototypes = PrototypeRegistryLoader().load(discovery, domain, classLoader)
-            DiscoveryDeployment(domain, requireNotNull(application), prototypes, artifactPackage.facts, classLoader)
+            DiscoveryDeployment(domain, application, prototypes, artifactPackage.facts, classLoader)
         } catch (failure: Throwable) {
             runCatching { application?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { classLoader.close() }.exceptionOrNull()?.let(failure::addSuppressed)
