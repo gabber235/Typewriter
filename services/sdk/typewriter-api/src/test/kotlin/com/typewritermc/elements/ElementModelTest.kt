@@ -17,7 +17,7 @@ import io.kotest.matchers.shouldBe
 
 val ElementModelTest by testSuite {
     test("element contribution preserves typed icon and color values") {
-        val contribution = ElementDiscoveryContribution(descriptors = listOf(descriptor()), facets = emptyList())
+        val contribution = ElementDiscoveryContribution(descriptors = listOf(descriptor()))
 
         val decoded = ElementDiscoveryContributionCodec.decode(ElementDiscoveryContributionCodec.encode(contribution))
 
@@ -45,7 +45,7 @@ val ElementModelTest by testSuite {
                 listOf(
                     KeyedElementContribution(
                         ContributionKey(origin, "paper", ProducerId("elements"), ContributionName("catalog.cbor")),
-                        ElementDiscoveryContribution(descriptors = listOf(descriptor), facets = emptyList()),
+                        ElementDiscoveryContribution(descriptors = listOf(descriptor)),
                     ),
                 ),
                 listOf(
@@ -68,7 +68,7 @@ val ElementModelTest by testSuite {
         val contribution =
             KeyedElementContribution(
                 ContributionKey(origin, "common", ProducerId("elements"), ContributionName("catalog.cbor")),
-                ElementDiscoveryContribution(descriptors = listOf(descriptor), facets = emptyList()),
+                ElementDiscoveryContribution(descriptors = listOf(descriptor)),
             )
 
         val unavailable =

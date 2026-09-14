@@ -203,23 +203,31 @@ val SyntheticDiscoveryTest by testSuite {
                 )
             }
         val discovery = TypeContributionAssembler.assemble(contributions)
-        val deployment =
-            DiscoveryModuleLoader().load(
+        DiscoveryModuleLoader()
+            .load(
                 artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
                 domain = DiscoveryDomains.Execution,
                 discovery = discovery,
-            )
+            ).use {
+                it.application.koin
+                    .getAll<RuntimeRegistrar>()
+                    .map { registrar -> registrar::class } shouldBe
+                    listOf(SyntheticRuntimeRegistrar::class)
+                it.application.koin
+                    .getAll<ElementRuntimeFacet<*>>()
+                    .map { facet -> facet::class } shouldBe
+                    listOf(SyntheticEntryFacet::class)
+            }
 
-        deployment.use {
-            it.application.koin
-                .getAll<RuntimeRegistrar>()
-                .map { registrar -> registrar::class } shouldBe
-                listOf(SyntheticRuntimeRegistrar::class)
-            it.application.koin
-                .getAll<ElementRuntimeFacet<*>>()
-                .map { facet -> facet::class } shouldBe
-                listOf(SyntheticEntryFacet::class)
-        }
+        DiscoveryModuleLoader()
+            .load(
+                artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
+                domain = DiscoveryDomains.Realm,
+                discovery = discovery,
+            ).use {
+                it.application.koin.getAll<RuntimeRegistrar>() shouldHaveSize 0
+                it.application.koin.getAll<ElementRuntimeFacet<*>>() shouldHaveSize 0
+            }
     }
 
     test("loads and compiles the generated presentation for Realm discovery") {

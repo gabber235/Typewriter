@@ -69,12 +69,12 @@ import kotlinx.serialization.encodeToByteArray
 import kotlin.io.encoding.Base64
 
 /**
- * KSP entrypoint generating element prototypes, catalog descriptors, facet bindings, and discovery contributions from
- * annotated Kotlin declarations. It converts element schemas, writes generated prototype providers, and emits the
- * catalog and type resources consumed by manifest discovery. [com.typewritermc.discovery.runtime.DiscoveryModuleLoader]
- * later installs facet providers, while [com.typewritermc.discovery.runtime.PrototypeRegistryLoader] installs the
- * generated prototypes. Processing defers unresolved symbols, validates supported declaration shapes, and writes once
- * per compilation.
+ * KSP entrypoint generating element prototypes, catalog descriptors, execution facet bindings, and discovery
+ * contributions from annotated Kotlin declarations. It converts element schemas, writes generated prototype providers,
+ * and emits the catalog and type resources consumed by manifest discovery.
+ * [com.typewritermc.discovery.runtime.DiscoveryModuleLoader] later installs execution facet providers, while
+ * [com.typewritermc.discovery.runtime.PrototypeRegistryLoader] installs the generated prototypes. Processing defers
+ * unresolved symbols, validates supported declaration shapes, and writes once per compilation.
  */
 class TypewriterElementProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
@@ -161,13 +161,7 @@ private class TypewriterElementProcessor(
             logger.error("Typewriter element facets must target a TypewriterElement declaration.", declaration)
             return null
         }
-        val realm = annotation.booleanArgument("realm") ?: false
-        val execution = annotation.booleanArgument("execution") ?: true
-        if (!realm && !execution) {
-            logger.error("Typewriter element facets must select at least one discovery domain.", declaration)
-            return null
-        }
-        return GeneratedFacet(ElementTypeId(elementId), realm, execution, generateFacetProvider(declaration), declaration)
+        return GeneratedFacet(ElementTypeId(elementId), generateFacetProvider(declaration), declaration)
     }
 
     private fun generateFacetProvider(declaration: KSClassDeclaration): ClassName {
@@ -395,12 +389,11 @@ private class TypewriterElementProcessor(
                             domains = setOf(DiscoveryDomains.Realm, DiscoveryDomains.Execution),
                         )
                     },
-                executableBindings = facets.flatMap(GeneratedFacet::executableBindings),
+                executableBindings = facets.map(GeneratedFacet::executableBinding),
             )
         val elementContribution =
             ElementDiscoveryContribution(
                 descriptors = elements.map { it.element.descriptor },
-                facets = facets.flatMap(GeneratedFacet::elementBindings),
             )
         codeGenerator
             .createNewFileByPath(
@@ -445,22 +438,11 @@ private data class GeneratedElement(
 
 private data class GeneratedFacet(
     val elementType: ElementTypeId,
-    val realm: Boolean,
-    val execution: Boolean,
     val providerClass: ClassName,
     val declaration: KSClassDeclaration,
 ) {
-    fun executableBindings(): List<ExecutableBinding> =
-        buildList {
-            val name = "facet.${elementType.value}"
-            if (realm) add(ExecutableBinding(name, DiscoveryDomains.Realm, providerClass.canonicalName))
-            if (execution) add(ExecutableBinding(name, DiscoveryDomains.Execution, providerClass.canonicalName))
-        }
-
-    fun elementBindings(): List<com.typewritermc.elements.ElementFacetBinding> =
-        executableBindings().map { binding ->
-            com.typewritermc.elements.ElementFacetBinding(elementType, binding.domain, providerClass.canonicalName)
-        }
+    fun executableBinding(): ExecutableBinding =
+        ExecutableBinding("facet.${elementType.value}", DiscoveryDomains.Execution, providerClass.canonicalName)
 }
 
 private fun KSClassDeclaration.qualifiedReference(): ResolvedTypeRef {

@@ -94,17 +94,15 @@ annotation class TypewriterElement(
 )
 
 /**
- * Associates a runtime facet with an element type in selected discovery domains.
+ * Associates an execution runtime facet with an element type.
  *
- * Execution is selected by default. A facet supplies behavior separately from the serializable element model; its
- * attachment resources belong to the runtime activation.
+ * A facet supplies behavior separately from the serializable element model. Code generation exposes it only through
+ * execution discovery, and its attachment resources belong to the runtime activation.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterElementFacet(
     val element: KClass<out Element>,
-    val realm: Boolean = false,
-    val execution: Boolean = true,
 )
 
 /**

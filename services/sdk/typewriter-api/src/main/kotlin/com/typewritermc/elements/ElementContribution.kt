@@ -3,7 +3,6 @@ package com.typewritermc.elements
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.ContributionName
 import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomainId
 import com.typewritermc.discovery.Eligibility
 import com.typewritermc.discovery.ProducerId
 import com.typewritermc.discovery.SourcePartCatalogEntry
@@ -17,19 +16,7 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 
 /**
- * Names the provider that attaches behavior to an element in a discovery domain.
- *
- * The class name remains manifest metadata until runtime loading.
- */
-@Serializable
-data class ElementFacetBinding(
-    val elementType: ElementTypeId,
-    val domain: DiscoveryDomainId,
-    val providerClass: String,
-)
-
-/**
- * Carries generated element descriptors and facet bindings in a versioned manifest payload.
+ * Carries generated element descriptors in a versioned manifest payload.
  *
  * Construction rejects unknown schema versions and duplicate descriptor identities within the contribution.
  * Deployment assembly checks uniqueness across artifacts.
@@ -39,7 +26,6 @@ data class ElementDiscoveryContribution(
     val schema: String = ELEMENT_DISCOVERY_SCHEMA,
     val version: Int = ELEMENT_DISCOVERY_VERSION,
     val descriptors: List<ElementDescriptor>,
-    val facets: List<ElementFacetBinding>,
 ) {
     init {
         require(schema == ELEMENT_DISCOVERY_SCHEMA) { "Unsupported element discovery schema $schema." }
@@ -73,7 +59,7 @@ data class ElementCatalogEntry(
 data class KeyedElementContribution(
     /** Manifest identity used to distinguish contributions from the same artifact. */
     val key: ContributionKey,
-    /** Decoded element descriptors and runtime facet bindings for [key]. */
+    /** Decoded element descriptors for [key]. */
     val contribution: ElementDiscoveryContribution,
 )
 
@@ -194,7 +180,7 @@ object ElementDiscoveryContributionCodec {
 const val ELEMENT_DISCOVERY_SCHEMA = "typewriter.elements"
 
 /** Current encoded shape version for [ELEMENT_DISCOVERY_SCHEMA]. */
-const val ELEMENT_DISCOVERY_VERSION = 1
+const val ELEMENT_DISCOVERY_VERSION = 2
 
 /** Manifest producer name used to select element discovery contributions. */
 const val ELEMENT_DISCOVERY_PRODUCER = "elements"
