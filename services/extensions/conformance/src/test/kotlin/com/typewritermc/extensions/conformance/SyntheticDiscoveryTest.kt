@@ -22,8 +22,6 @@ import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeFacet
-import com.typewritermc.elements.EntryExecutionContext
-import com.typewritermc.elements.EntryOutput
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.PageId
 import com.typewritermc.pages.PageProvider
@@ -43,7 +41,6 @@ import com.typewritermc.types.TypePrototypeRegistry
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 
@@ -86,18 +83,6 @@ val SyntheticDiscoveryTest by testSuite {
                 DataValue.Record(mapOf("value" to DataValue.StringValue("hello"))),
             )
         with(registry) { with(CodecContext(registry)) { abstractPrototype.decode(encoded) } } shouldBe value
-    }
-
-    test("executes the synthetic entry through a context parameter") {
-        runTest {
-            val output = RecordingOutput()
-            val context = TestEntryExecutionContext(this, output)
-            with(context) {
-                SyntheticEntry(elementId("00000000000000000000000000000001"), RepeatedMessage("hello", 2)).execute()
-            }
-
-            output.values shouldBe listOf(RepeatedMessage("hello", 2))
-        }
     }
 
     test("encodes nested polymorphism through stable concrete identities") {
@@ -375,26 +360,6 @@ private class CodecContext(
     override val prototypes: TypePrototypeRegistry,
 ) : TypeEncodingContext,
     TypeDecodingContext
-
-private class RecordingOutput : EntryOutput {
-    val values = mutableListOf<Any>()
-
-    override suspend fun send(value: Any) {
-        values += value
-    }
-}
-
-private class TestEntryExecutionContext(
-    override val coroutineScope: CoroutineScope,
-    override val output: EntryOutput,
-) : EntryExecutionContext {
-    override val prototypes = TypePrototypeRegistry(emptyList())
-    override val facts = com.typewritermc.discovery.DeploymentFacts(emptyMap())
-
-    override fun own(cleanup: suspend () -> Unit) = Unit
-
-    override fun <Resource : AutoCloseable> own(resource: Resource): Resource = resource
-}
 
 private data object SyntheticCapabilityContext :
     RealmSearchContext,

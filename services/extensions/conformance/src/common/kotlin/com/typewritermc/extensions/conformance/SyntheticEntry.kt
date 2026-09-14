@@ -18,8 +18,7 @@ import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeContext
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementRuntimeHandle
-import com.typewritermc.elements.EntryExecutionContext
-import com.typewritermc.elements.ExecutableEntry
+import com.typewritermc.elements.Entry
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.elements.TypewriterElementFacet
 import com.typewritermc.pages.GraphDirection
@@ -57,11 +56,7 @@ data class RepeatedMessage(
     val repetitions: Int,
 ) : SyntheticMessage
 
-/**
- * Conformance fixture connecting generated element discovery to executable entry dispatch. Execution forwards the
- * message payload to the runtime output, allowing the surrounding engine tests to observe delivery without
- * introducing external resources.
- */
+/** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
 @TypewriterElement(
     id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
     name = "Synthetic Entry",
@@ -72,12 +67,7 @@ data class RepeatedMessage(
 data class SyntheticEntry(
     override val id: ElementInstanceId,
     val message: SyntheticMessage,
-) : ExecutableEntry {
-    context(context: EntryExecutionContext)
-    override suspend fun execute() {
-        context.output.send(message)
-    }
-}
+) : Entry
 
 /** Provides the generated page declaration used by page reference conformance checks. */
 @TypewriterPage(

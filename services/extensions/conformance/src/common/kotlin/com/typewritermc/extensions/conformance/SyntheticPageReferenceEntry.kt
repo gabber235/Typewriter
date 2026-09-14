@@ -1,15 +1,13 @@
 package com.typewritermc.extensions.conformance
 
 import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.EntryExecutionContext
-import com.typewritermc.elements.ExecutableEntry
+import com.typewritermc.elements.Entry
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.types.Ref
 
 /**
  * Conformance fixture proving that an element can reference the marker type generated for a page declaration. Its
- * payload exercises page kind resolution and reference projection. Execution deliberately has no effects because
- * this fixture validates authoring metadata rather than runtime behavior.
+ * payload exercises page kind resolution and reference projection.
  */
 @TypewriterElement(
     id = "019d3a87000270008000000000000002",
@@ -21,7 +19,4 @@ import com.typewritermc.types.Ref
 data class SyntheticPageReferenceEntry(
     override val id: ElementInstanceId,
     val page: Ref<SyntheticPageKind>,
-) : ExecutableEntry {
-    context(context: EntryExecutionContext)
-    override suspend fun execute() = Unit
-}
+) : Entry

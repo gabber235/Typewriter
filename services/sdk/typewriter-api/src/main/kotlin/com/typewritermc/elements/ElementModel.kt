@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
  * Base contract for authored instances that can be referenced by other content.
  *
  * [id] identifies the instance, while [ElementTypeId] identifies its schema. Runtime behavior is supplied through
- * execution contracts or separate facets.
+ * separate facets.
  */
 interface Element : Referenceable {
     val id: ElementInstanceId
@@ -28,8 +28,6 @@ interface Element : Referenceable {
 
 /**
  * Marks an element that can occupy an entry role, including a timeline track.
- *
- * This marker does not itself provide execution; entries that execute implement [ExecutableEntry].
  */
 interface Entry : Element
 
