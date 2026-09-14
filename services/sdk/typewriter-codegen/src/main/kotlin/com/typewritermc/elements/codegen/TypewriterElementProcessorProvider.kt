@@ -10,7 +10,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -25,6 +24,10 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.argument
+import com.typewritermc.codegen.getSymbolsWithAnnotation
+import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.codegen.stringMapCode
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
@@ -46,6 +49,7 @@ import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.elements.TypewriterElementFacet
+import com.typewritermc.pages.GeneratedPageKind
 import com.typewritermc.types.Color
 import com.typewritermc.types.ConcreteTypePrototype
 import com.typewritermc.types.DeclaredTypeId
@@ -91,8 +95,8 @@ private class TypewriterElementProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterElement::class.qualifiedName)).toList()
-        val facetSymbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterElementFacet::class.qualifiedName)).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterElement::class).toList()
+        val facetSymbols = resolver.getSymbolsWithAnnotation(TypewriterElementFacet::class).toList()
         val deferred = (symbols + facetSymbols).filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return (symbols + facetSymbols).distinct()
         if (!validateContextArguments()) return emptyList()
@@ -106,11 +110,11 @@ private class TypewriterElementProcessor(
         val indexedByName =
             buildMap<String, ResolvedTypeRef> {
                 resolver
-                    .getSymbolsWithAnnotation(requireNotNull(TypewriterType::class.qualifiedName))
+                    .getSymbolsWithAnnotation(TypewriterType::class)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration -> declaration.declaredTypeReference()?.let { put(declaration.qualifiedName!!.asString(), it) } }
                 resolver
-                    .getSymbolsWithAnnotation(GENERATED_PAGE_KIND_ANNOTATION)
+                    .getSymbolsWithAnnotation(GeneratedPageKind::class)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration ->
                         declaration.generatedPageKindReference()?.let {
@@ -148,15 +152,15 @@ private class TypewriterElementProcessor(
             logger.error("Typewriter element facets must implement ElementRuntimeFacet.", declaration)
             return null
         }
-        val annotation = requireNotNull(declaration.annotation(requireNotNull(TypewriterElementFacet::class.qualifiedName)))
+        val rawAnnotation = requireNotNull(declaration.rawAnnotation(TypewriterElementFacet::class))
         val elementDeclaration =
             (
-                annotation.argument(
+                rawAnnotation.argument(
                     "element",
                 ) as? com.google.devtools.ksp.symbol.KSType
             )?.declaration as? KSClassDeclaration
-        val elementAnnotation = elementDeclaration?.annotation(requireNotNull(TypewriterElement::class.qualifiedName))
-        val elementId = elementAnnotation?.stringArgument("id")?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() }
+        val elementAnnotation = elementDeclaration?.annotation<TypewriterElement>()
+        val elementId = elementAnnotation?.let { runCatching { DeclaredTypeId.parse(it.id) }.getOrNull() }
         if (elementId == null) {
             logger.error("Typewriter element facets must target a TypewriterElement declaration.", declaration)
             return null
@@ -216,7 +220,7 @@ private class TypewriterElementProcessor(
             logger.error("TypewriterElement may only annotate concrete classes and objects.", symbol)
             return null
         }
-        if (declaration.annotation(requireNotNull(TypewriterType::class.qualifiedName)) != null) {
+        if (declaration.annotation<TypewriterType>() != null) {
             logger.error("TypewriterElement and TypewriterType cannot annotate the same declaration.", declaration)
             return null
         }
@@ -242,28 +246,27 @@ private class TypewriterElementProcessor(
             logger.error("Cue elements must implement exactly one of Segment or Keyframe.", declaration)
             return null
         }
-        val annotation = requireNotNull(declaration.annotation(requireNotNull(TypewriterElement::class.qualifiedName)))
-        val idText = annotation.stringArgument("id")
-        val id = idText?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() }
+        val annotation = requireNotNull(declaration.annotation<TypewriterElement>())
+        val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull()
         if (id == null) {
             logger.error("Element ids must contain exactly 32 hexadecimal characters.", declaration)
             return null
         }
-        val revision = annotation.intArgument("revision") ?: 1
+        val revision = annotation.revision
         if (revision <= 0) {
             logger.error("Element type revisions must be positive.", declaration)
             return null
         }
-        val name = annotation.stringArgument("name").orEmpty()
-        val description = annotation.stringArgument("description").orEmpty()
+        val name = annotation.name
+        val description = annotation.description
         val icon =
-            runCatching { Icon.parse(annotation.stringArgument("icon").orEmpty()) }
+            runCatching { Icon.parse(annotation.icon) }
                 .getOrElse {
                     logger.error(it.message ?: "Invalid element icon.", declaration)
                     return null
                 }
         val color =
-            runCatching { Color.parseRgb(annotation.stringArgument("color").orEmpty()) }
+            runCatching { Color.parseRgb(annotation.color) }
                 .getOrElse {
                     logger.error(it.message ?: "Invalid element color.", declaration)
                     return null
@@ -452,32 +455,16 @@ private fun KSClassDeclaration.qualifiedReference(): ResolvedTypeRef {
 }
 
 private fun KSClassDeclaration.declaredTypeReference(): ResolvedTypeRef? {
-    val annotation = annotation(requireNotNull(TypewriterType::class.qualifiedName)) ?: return null
-    val id = annotation.stringArgument("id")?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() } ?: return null
-    return ResolvedTypeRef(TypeId.Declared(id), annotation.intArgument("revision") ?: 1)
+    val annotation = annotation<TypewriterType>() ?: return null
+    val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull() ?: return null
+    return ResolvedTypeRef(TypeId.Declared(id), annotation.revision)
 }
 
 private fun KSClassDeclaration.generatedPageKindReference(): ResolvedTypeRef? {
-    val annotation = annotation(GENERATED_PAGE_KIND_ANNOTATION) ?: return null
-    val id = annotation.stringArgument("id")?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() } ?: return null
-    return ResolvedTypeRef(TypeId.Declared(id), annotation.intArgument("revision") ?: 1)
+    val annotation = annotation<GeneratedPageKind>() ?: return null
+    val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull() ?: return null
+    return ResolvedTypeRef(TypeId.Declared(id), annotation.revision)
 }
-
-private fun KSClassDeclaration.annotation(name: String): KSAnnotation? =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == name
-    }
-
-private fun KSAnnotation.stringArgument(name: String): String? = arguments.firstOrNull { it.name?.asString() == name }?.value as? String
-
-private fun KSAnnotation.intArgument(name: String): Int? = arguments.firstOrNull { it.name?.asString() == name }?.value as? Int
-
-private fun KSAnnotation.booleanArgument(name: String): Boolean? = arguments.firstOrNull { it.name?.asString() == name }?.value as? Boolean
-
-private fun KSAnnotation.argument(name: String): Any? = arguments.firstOrNull { it.name?.asString() == name }?.value
 
 private fun TypeGraph.withDisplayNames(displayNames: Map<ResolvedTypeRef, String>): TypeGraph =
     copy(

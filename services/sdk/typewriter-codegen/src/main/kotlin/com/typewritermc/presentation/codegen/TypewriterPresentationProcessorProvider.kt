@@ -8,7 +8,6 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -24,6 +23,8 @@ import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
@@ -54,7 +55,7 @@ private class TypewriterPresentationProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterPresentation::class.qualifiedName)).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterPresentation::class).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
         val functions = symbols.mapNotNull(::presentationFunction).sortedBy { it.qualifiedName?.asString() }
@@ -100,7 +101,7 @@ private class TypewriterPresentationProcessor(
         val packageName = function.packageName.asString()
         val moduleClass = ClassName(packageName, moduleName)
         val providerClass = ClassName(packageName, providerName)
-        val annotation = requireNotNull(function.annotation(requireNotNull(TypewriterPresentation::class.qualifiedName)))
+        val annotation = requireNotNull(function.annotation<TypewriterPresentation>())
         val provider =
             TypeSpec
                 .classBuilder(providerName)
@@ -129,12 +130,12 @@ private class TypewriterPresentationProcessor(
                 ).addProperty(
                     PropertySpec
                         .builder("default", Boolean::class, KModifier.OVERRIDE)
-                        .initializer("%L", annotation.booleanArgument("default") ?: false)
+                        .initializer("%L", annotation.default)
                         .build(),
                 ).addProperty(
                     PropertySpec
                         .builder("priority", Int::class, KModifier.OVERRIDE)
-                        .initializer("%L", annotation.intArgument("priority") ?: 0)
+                        .initializer("%L", annotation.priority)
                         .build(),
                 ).addFunction(
                     FunSpec
@@ -201,17 +202,3 @@ private class TypewriterPresentationProcessor(
             ).use { it.write(TypeDiscoveryContributionCodec.encode(contribution)) }
     }
 }
-
-private fun KSAnnotated.annotation(qualifiedName: String): KSAnnotation? =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == qualifiedName
-    }
-
-private fun KSAnnotation.argument(name: String): Any? = arguments.firstOrNull { it.name?.asString() == name }?.value
-
-private fun KSAnnotation.booleanArgument(name: String): Boolean? = argument(name) as? Boolean
-
-private fun KSAnnotation.intArgument(name: String): Int? = argument(name) as? Int

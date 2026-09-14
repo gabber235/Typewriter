@@ -10,7 +10,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -23,6 +22,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
@@ -53,7 +54,7 @@ private class TypewriterRegistrarProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterRegistrar::class.qualifiedName)).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterRegistrar::class).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
         if (!validateContext()) return emptyList()
@@ -91,10 +92,10 @@ private class TypewriterRegistrarProcessor(
             logger.error("Typewriter registrars must implement RuntimeRegistrar.", declaration)
             return null
         }
-        val annotation = requireNotNull(declaration.annotation(requireNotNull(TypewriterRegistrar::class.qualifiedName)))
-        val id = annotation.stringArgument("id").orEmpty()
-        val realm = annotation.booleanArgument("realm") ?: false
-        val execution = annotation.booleanArgument("execution") ?: true
+        val annotation = requireNotNull(declaration.annotation<TypewriterRegistrar>())
+        val id = annotation.id
+        val realm = annotation.realm
+        val execution = annotation.execution
         if (!id.matches(IDENTIFIER_PATTERN)) {
             logger.error("Runtime registrar ids must be safe path segments.", declaration)
             return null
@@ -174,18 +175,6 @@ private data class Registrar(
     val execution: Boolean,
     val declaration: KSClassDeclaration,
 )
-
-private fun KSClassDeclaration.annotation(name: String): KSAnnotation? =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == name
-    }
-
-private fun KSAnnotation.stringArgument(name: String): String? = arguments.firstOrNull { it.name?.asString() == name }?.value as? String
-
-private fun KSAnnotation.booleanArgument(name: String): Boolean? = arguments.firstOrNull { it.name?.asString() == name }?.value as? Boolean
 
 private val IDENTIFIER_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9_.]*")
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"

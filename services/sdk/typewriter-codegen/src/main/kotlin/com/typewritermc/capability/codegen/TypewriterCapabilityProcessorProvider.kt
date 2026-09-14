@@ -8,7 +8,6 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -45,6 +44,8 @@ import com.typewritermc.capability.RealmSearchCapabilityRef
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchQuery
 import com.typewritermc.capability.RealmSearchRequest
+import com.typewritermc.codegen.getSymbolsWithAnnotation
+import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
@@ -54,6 +55,7 @@ import com.typewritermc.discovery.runtime.GeneratedDiscoveryModule
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.TypePrototypeRegistry
 import java.security.MessageDigest
+import kotlin.reflect.KClass
 
 /**
  * KSP entrypoint generating capability references, typed invocation providers, and discovery contributions from
@@ -105,7 +107,7 @@ private class TypewriterCapabilityProcessor(
     private fun capabilityFunction(symbol: KSAnnotated): KSFunctionDeclaration? {
         val function = symbol as? KSFunctionDeclaration
         val owner = function?.parentDeclaration as? KSClassDeclaration
-        if (function == null || owner == null || !owner.hasAnnotation(realmCapabilitiesName)) {
+        if (function == null || owner == null || owner.rawAnnotation(RealmCapabilities::class) == null) {
             logger.error("Realm capability functions must be members of a class annotated with RealmCapabilities.", symbol)
             return null
         }
@@ -121,7 +123,7 @@ private class TypewriterCapabilityProcessor(
             logger.error("Realm capability functions require exactly one value parameter.", function)
             return null
         }
-        if (function.annotations.count { it.qualifiedName() in capabilityAnnotations } != 1) {
+        if (capabilityAnnotations.count { function.rawAnnotation(it) != null } != 1) {
             logger.error("Realm capability functions require exactly one capability annotation.", function)
             return null
         }
@@ -157,7 +159,7 @@ private class TypewriterCapabilityProcessor(
         artifactId: String,
         sourcePart: String,
     ): CapabilityDeclaration? {
-        val kind = CapabilityKind.entries.single { function.hasAnnotation(it.annotationName) }
+        val kind = CapabilityKind.entries.single { function.rawAnnotation(it.annotationType) != null }
         val parameterType =
             function.parameters
                 .single()
@@ -450,11 +452,11 @@ private data class CapabilityDeclaration(
 }
 
 private enum class CapabilityKind(
-    val annotationName: String,
+    val annotationType: KClass<out Annotation>,
 ) {
-    SEARCH(requireNotNull(RealmCapability.Search::class.qualifiedName)),
-    COMPUTATION(requireNotNull(RealmCapability.Computation::class.qualifiedName)),
-    COMMAND(requireNotNull(RealmCapability.Command::class.qualifiedName)),
+    SEARCH(RealmCapability.Search::class),
+    COMPUTATION(RealmCapability.Computation::class),
+    COMMAND(RealmCapability.Command::class),
 }
 
 private fun KSType.singleTypeArgument(
@@ -476,21 +478,12 @@ private fun KSType.canonicalName(): String =
         if (isMarkedNullable) append("?")
     }
 
-private fun KSAnnotated.hasAnnotation(qualifiedName: String): Boolean = annotations.any { it.qualifiedName() == qualifiedName }
-
-private fun KSAnnotation.qualifiedName(): String? =
-    annotationType
-        .resolve()
-        .declaration.qualifiedName
-        ?.asString()
-
 private fun String.sha256(): String =
     MessageDigest
         .getInstance("SHA-256")
         .digest(toByteArray())
         .joinToString("") { "%02x".format(it) }
 
-private val capabilityAnnotations = CapabilityKind.entries.map(CapabilityKind::annotationName)
-private val realmCapabilitiesName = requireNotNull(RealmCapabilities::class.qualifiedName)
+private val capabilityAnnotations = CapabilityKind.entries.map(CapabilityKind::annotationType)
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"

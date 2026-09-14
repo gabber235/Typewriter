@@ -8,7 +8,6 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -25,6 +24,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
@@ -59,7 +60,7 @@ private class TypewriterPageProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterPage::class.qualifiedName)).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterPage::class).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
         val declarations = symbols.mapNotNull(::pageFunction).sortedBy { it.function.qualifiedName?.asString() }
@@ -101,14 +102,13 @@ private class TypewriterPageProcessor(
             logger.error("TypewriterPage functions must return PageSpec.", function)
             return null
         }
-        val annotation = requireNotNull(function.annotation(requireNotNull(TypewriterPage::class.qualifiedName)))
-        val idText = annotation.stringArgument("id")
-        val id = idText?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() }
+        val annotation = requireNotNull(function.annotation<TypewriterPage>())
+        val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull()
         if (id == null) {
             logger.error("Page ids must contain exactly 32 hexadecimal characters.", function)
             return null
         }
-        val revision = annotation.intArgument("revision") ?: 1
+        val revision = annotation.revision
         if (revision <= 0) {
             logger.error("Page revisions must be positive.", function)
             return null
@@ -258,19 +258,5 @@ private fun stringProperty(
         .builder(name, String::class, KModifier.OVERRIDE)
         .initializer("%S", value)
         .build()
-
-private fun KSAnnotated.annotation(qualifiedName: String): KSAnnotation? =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == qualifiedName
-    }
-
-private fun KSAnnotation.argument(name: String): Any? = arguments.firstOrNull { it.name?.asString() == name }?.value
-
-private fun KSAnnotation.stringArgument(name: String): String? = argument(name) as? String
-
-private fun KSAnnotation.intArgument(name: String): Int? = argument(name) as? Int
 
 private val KOTLIN_KCLASS = ClassName("kotlin.reflect", "KClass")

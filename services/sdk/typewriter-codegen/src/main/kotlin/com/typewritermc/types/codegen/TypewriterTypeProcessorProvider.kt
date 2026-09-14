@@ -9,7 +9,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -24,11 +23,14 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.codegen.stringMapCode
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.PrototypeBinding
 import com.typewritermc.discovery.TypeDiscoveryContribution
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
+import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.types.ConcreteTypePrototype
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.GeneratedTypeGraph
@@ -71,7 +73,7 @@ private class TypewriterTypeProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterType::class.qualifiedName)).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterType::class).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
         if (!validateContextArguments()) return emptyList()
@@ -88,13 +90,12 @@ private class TypewriterTypeProcessor(
         val indexedByName =
             buildMap {
                 resolver
-                    .getSymbolsWithAnnotation(ELEMENT_ANNOTATION)
+                    .getSymbolsWithAnnotation(TypewriterElement::class)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration ->
                         declaration
-                            .annotation(
-                                ELEMENT_ANNOTATION,
-                            )?.declaredIdentity()
+                            .annotation<TypewriterElement>()
+                            ?.declaredIdentity()
                             ?.let { put(declaration.qualifiedName!!.asString(), it) }
                     }
                 indexed.forEach { (declaration, identity) -> put(declaration.qualifiedName!!.asString(), identity) }
@@ -147,9 +148,9 @@ private class TypewriterTypeProcessor(
             logger.error("Indexed Typewriter types must use Kotlin Serializable.", declaration)
             return null
         }
-        val annotation = declaration.annotation(requireNotNull(TypewriterType::class.qualifiedName))
-        val id = annotation?.stringArgument("id")
-        val revision = annotation?.intArgument("revision") ?: 1
+        val annotation = declaration.annotation<TypewriterType>()
+        val id = annotation?.id
+        val revision = annotation?.revision ?: 1
         if (id == null || runCatching { DeclaredTypeId.parse(id) }.isFailure) {
             logger.error("Typewriter type ids must contain exactly 32 hexadecimal characters.", declaration)
             return null
@@ -287,13 +288,18 @@ private data class GeneratedType(
 )
 
 private fun KSClassDeclaration.typeIdentity(): IndexedIdentity {
-    val annotation = requireNotNull(annotation(requireNotNull(TypewriterType::class.qualifiedName)))
+    val annotation = requireNotNull(annotation<TypewriterType>())
     return requireNotNull(annotation.declaredIdentity())
 }
 
-private fun KSAnnotation.declaredIdentity(): IndexedIdentity? {
-    val id = stringArgument("id")?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() } ?: return null
-    return IndexedIdentity(id, intArgument("revision") ?: 1)
+private fun TypewriterType.declaredIdentity(): IndexedIdentity? {
+    val id = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null
+    return IndexedIdentity(id, revision)
+}
+
+private fun TypewriterElement.declaredIdentity(): IndexedIdentity? {
+    val id = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null
+    return IndexedIdentity(id, revision)
 }
 
 private fun KSClassDeclaration.qualifiedReference(): ResolvedTypeRef {
@@ -301,18 +307,6 @@ private fun KSClassDeclaration.qualifiedReference(): ResolvedTypeRef {
     val name = qualifiedName!!.asString().removePrefix("$packageName.")
     return ResolvedTypeRef(TypeId.Qualified(packageName, name), revision = 1)
 }
-
-private fun KSClassDeclaration.annotation(name: String): KSAnnotation? =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == name
-    }
-
-private fun KSAnnotation.stringArgument(name: String): String? = arguments.firstOrNull { it.name?.asString() == name }?.value as? String
-
-private fun KSAnnotation.intArgument(name: String): Int? = arguments.firstOrNull { it.name?.asString() == name }?.value as? Int
 
 private fun TypeGraph.withDisplayNames(displayNames: Map<ResolvedTypeRef, String>): TypeGraph =
     copy(

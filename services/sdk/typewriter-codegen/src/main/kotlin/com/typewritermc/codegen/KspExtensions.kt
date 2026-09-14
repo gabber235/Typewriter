@@ -1,6 +1,8 @@
 package com.typewritermc.codegen
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAllSuperTypes
+import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -18,8 +20,8 @@ fun KSClassDeclaration.implements(type: KClass<*>): Boolean {
     return getAllSuperTypes().any { it.declaration.qualifiedName?.asString() == qualifiedName }
 }
 
-/** Finds the single annotation of [type], returning `null` when it is absent. */
-fun KSAnnotated.annotation(type: KClass<out Annotation>): KSAnnotation? {
+/** Finds the raw annotation of [type] for KSP values that need symbol resolution, such as class arguments. */
+fun KSAnnotated.rawAnnotation(type: KClass<out Annotation>): KSAnnotation? {
     val qualifiedName = requireNotNull(type.qualifiedName)
     return annotations.singleOrNull {
         it.annotationType
@@ -29,8 +31,12 @@ fun KSAnnotated.annotation(type: KClass<out Annotation>): KSAnnotation? {
     }
 }
 
-/** Reads a named string argument without coercing values of another annotation type. */
-fun KSAnnotation.stringArgument(name: String): String? = arguments.singleOrNull { it.name?.asString() == name }?.value as? String
+/** Returns the single typed annotation of [type], including declared default values. */
+@OptIn(KspExperimental::class)
+inline fun <reified T : Annotation> KSAnnotated.annotation(): T? = getAnnotationsByType(T::class).singleOrNull()
+
+/** Reads a raw annotation argument for values that require KSP symbol resolution. */
+fun KSAnnotation.argument(name: String): Any? = arguments.singleOrNull { it.name?.asString() == name }?.value
 
 /**
  * Converts an open identifier into the stable upper camel form used by generated declaration names.

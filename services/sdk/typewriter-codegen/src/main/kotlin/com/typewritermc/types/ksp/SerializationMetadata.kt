@@ -1,9 +1,11 @@
 package com.typewritermc.types.ksp
 
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.typewritermc.codegen.annotation
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Transient
 
 /**
  * Maps Kotlin property names to serialized field names for generated schema and value adapters.
@@ -19,27 +21,11 @@ fun KSClassDeclaration.serializedFieldNames(): Map<String, String> =
         }
 
 private val KSDeclaration.serialName: String?
-    get() = annotation(SERIAL_NAME_ANNOTATION)?.argument("value") as? String
+    get() = annotation<SerialName>()?.value
 
 private val KSPropertyDeclaration.isSerializedProperty: Boolean
     get() =
         extensionReceiver == null &&
             hasBackingField &&
             !isDelegated() &&
-            !hasAnnotation(TRANSIENT_ANNOTATION)
-
-private fun KSAnnotated.hasAnnotation(qualifiedName: String): Boolean = annotation(qualifiedName) != null
-
-private fun KSAnnotated.annotation(qualifiedName: String) =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == qualifiedName
-    }
-
-private fun com.google.devtools.ksp.symbol.KSAnnotation.argument(name: String): Any? =
-    arguments.firstOrNull { it.name?.asString() == name }?.value
-
-private const val SERIAL_NAME_ANNOTATION = "kotlinx.serialization.SerialName"
-private const val TRANSIENT_ANNOTATION = "kotlinx.serialization.Transient"
+            annotation<Transient>() == null

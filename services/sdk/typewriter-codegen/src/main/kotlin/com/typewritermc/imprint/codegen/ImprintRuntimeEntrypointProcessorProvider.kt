@@ -14,6 +14,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
+import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadata
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
@@ -33,7 +34,7 @@ private class ImprintRuntimeEntrypointProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(ImprintRuntimeEntrypoint::class.qualifiedName)).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(ImprintRuntimeEntrypoint::class).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
         val declarations = symbols.mapNotNull(::entrypoint).sortedBy { it.qualifiedName?.asString() }
