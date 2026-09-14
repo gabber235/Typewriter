@@ -69,6 +69,10 @@ The viewer sees a different skin on the target, in the world and in the tab list
 takes a texture and signature pair, and can be fetched from a url or a player uuid the same way an
 NPC skin is.
 
+Showing the target their own new skin needs their client to respawn in place. They see a loading
+screen for a moment and any open inventory closes, so avoid toggling it while they are in a menu. A
+dead player sees the skin once they respawn.
+
 ### Name
 
 <EntrySearch entryName='name_visibility_effect' />
@@ -121,15 +125,15 @@ changes while the effect is running does not update the target's appearance.
 
 ## Seeing yourself
 
-Glow, ghost, invisibility, pose and scale each have an **Also apply to the target's own view of
-themselves** toggle.
+Glow, ghost, invisibility, pose, scale and skin each have an **Also apply to the target's own view
+of themselves** toggle.
 
 Your own view follows the target selection alone, so a selected target sees the effect on themselves
 even when the rule's viewer selector matches nobody. A player who is shrunk for everyone else can
 therefore also be shrunk in their own view, or stay their normal size, whichever you configure.
 
-The other effects cannot do this. A client reads its own name and skin from the session it logged in
-with, so those cannot be changed for the player themselves.
+The other effects cannot do this. A client reads its own name from the session it logged in with,
+so a name cannot be changed for the player themselves.
 
 ## Combining effects
 
