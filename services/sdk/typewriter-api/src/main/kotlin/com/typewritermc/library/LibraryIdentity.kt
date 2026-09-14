@@ -1,5 +1,6 @@
 package com.typewritermc.library
 
+import com.typewritermc.types.RecordIdKey
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
