@@ -1,8 +1,8 @@
 package com.typewritermc.loader.artifact
 
 import com.typewritermc.loader.api.artifact.ArtifactDigest
+import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
 import com.typewritermc.loader.deployment.DeploymentSnapshot
-import com.typewritermc.loader.shared.SharedArtifactDescriptor
 
 /**
  * Collects retention roots before blob garbage collection.

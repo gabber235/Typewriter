@@ -7,7 +7,15 @@ import com.typewritermc.loader.api.artifact.BlobMetadata
 import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.PublishResult
+import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
+import com.typewritermc.loader.api.artifact.SharedArtifactCatalog
+import com.typewritermc.loader.api.artifact.SharedArtifactChanged
+import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
+import com.typewritermc.loader.api.artifact.SharedArtifactId
+import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
+import com.typewritermc.loader.api.artifact.SharedArtifactRevision
+import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry

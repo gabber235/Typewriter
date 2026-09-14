@@ -2,6 +2,12 @@
 
 package com.typewritermc.loader.shared
 
+import com.typewritermc.loader.api.artifact.SharedArtifactCatalog
+import com.typewritermc.loader.api.artifact.SharedArtifactChanged
+import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
+import com.typewritermc.loader.api.artifact.SharedArtifactId
+import com.typewritermc.loader.api.artifact.SharedArtifactRevision
+import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
