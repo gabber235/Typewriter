@@ -56,6 +56,8 @@ data class RepeatedMessage(
     val repetitions: Int,
 ) : SyntheticMessage
 
+interface ConformanceEntry : Entry
+
 /** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
 @TypewriterElement(
     id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
@@ -67,7 +69,7 @@ data class RepeatedMessage(
 data class SyntheticEntry(
     override val id: ElementInstanceId,
     val message: SyntheticMessage,
-) : Entry
+) : ConformanceEntry
 
 /** Provides the generated page declaration used by page reference conformance checks. */
 @TypewriterPage(
@@ -78,7 +80,7 @@ fun syntheticPage() =
         name = "Synthetic",
         icon = "material-symbols:account-tree",
         color = "#7C4DFF",
-        editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT, listOf(SyntheticEntry::class)),
+        editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT, listOf(ConformanceEntry::class)),
     )
 
 /** Exposes search, computation, and command fixtures for generated Realm capability discovery. */
