@@ -224,16 +224,6 @@ private class TypewriterElementProcessor(
             logger.error("TypewriterElement and TypewriterType cannot annotate the same declaration.", declaration)
             return null
         }
-        if (declaration.annotations.none {
-                it.annotationType
-                    .resolve()
-                    .declaration.qualifiedName
-                    ?.asString() == SERIALIZABLE_ANNOTATION
-            }
-        ) {
-            logger.error("Typewriter elements must use Kotlin Serializable.", declaration)
-            return null
-        }
         val superTypes = declaration.getAllSuperTypes().mapNotNull { it.declaration.qualifiedName?.asString() }.toSet()
         if (Element::class.qualifiedName !in superTypes) {
             logger.error("Typewriter elements must implement Element.", declaration)
@@ -502,5 +492,3 @@ private fun String.escape(): String = replace("\\", "\\\\").replace("\"", "\\\""
 
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"
-private const val SERIALIZABLE_ANNOTATION = "kotlinx.serialization.Serializable"
-private const val GENERATED_PAGE_KIND_ANNOTATION = "com.typewritermc.pages.GeneratedPageKind"

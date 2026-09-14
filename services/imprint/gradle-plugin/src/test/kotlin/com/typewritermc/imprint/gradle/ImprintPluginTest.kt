@@ -126,6 +126,48 @@ val ImprintPluginTest by testSuite {
         fixture.run("compileCommonKotlin").output shouldNotContain "Unresolved reference"
     }
 
+    test("Imprint applies Kotlin serialization to artifact compilations") {
+        val fixture = fixture()
+        fixture.writeBuild(
+            """
+            plugins {
+                kotlin("jvm") version "2.4.10"
+                id("com.typewritermc.imprint")
+            }
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+            }
+            typewriter {
+                engineCapability {
+                    id = "typewritermc:fixture"
+                    version = "1.0.0"
+                }
+            }
+            """.trimIndent(),
+        )
+        fixture.write(
+            "src/main/kotlin/fixture/SerializableFixture.kt",
+            """
+            package fixture
+
+            import kotlinx.serialization.ExperimentalSerializationApi
+            import kotlinx.serialization.MetaSerializable
+
+            @OptIn(ExperimentalSerializationApi::class)
+            @MetaSerializable
+            @Target(AnnotationTarget.CLASS)
+            annotation class FixtureSerializable
+
+            @FixtureSerializable
+            data class Payload(val value: String)
+
+            val payloadSerializer = Payload.serializer()
+            """.trimIndent(),
+        )
+
+        fixture.run("compileKotlin").task(":compileKotlin")?.outcome shouldBe TaskOutcome.SUCCESS
+    }
+
     test("capability JAR is thin and contains one canonical manifest") {
         val fixture = fixture("core", "capability")
         fixture.writeBuild("core", javaLibraryBuild())

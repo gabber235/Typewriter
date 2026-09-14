@@ -10,6 +10,8 @@ import com.typewritermc.types.Referenceable
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypewriterString
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -79,9 +81,12 @@ value class ElementInstanceId(
 /**
  * Declares the persistent schema identity and editor metadata of an authored element.
  *
- * Code generation produces its prototype and discovery descriptor. Keep the identity stable across releases and
- * change the revision deliberately when evolving the stored schema.
+ * The serialization compiler plugin generates its default serializer. Typewriter code generation produces its
+ * prototype and discovery descriptor. Keep the identity stable across releases and change the revision deliberately
+ * when evolving the stored schema.
  */
+@OptIn(ExperimentalSerializationApi::class)
+@MetaSerializable
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterElement(

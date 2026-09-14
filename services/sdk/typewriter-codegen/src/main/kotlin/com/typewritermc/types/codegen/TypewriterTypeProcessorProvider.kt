@@ -138,16 +138,6 @@ private class TypewriterTypeProcessor(
             logger.error("Indexed Typewriter types must be visible qualified declarations.", declaration)
             return null
         }
-        if (declaration.annotations.none {
-                it.annotationType
-                    .resolve()
-                    .declaration.qualifiedName
-                    ?.asString() == SERIALIZABLE_ANNOTATION
-            }
-        ) {
-            logger.error("Indexed Typewriter types must use Kotlin Serializable.", declaration)
-            return null
-        }
         val annotation = declaration.annotation<TypewriterType>()
         val id = annotation?.id
         val revision = annotation?.revision ?: 1
@@ -324,5 +314,3 @@ private fun ResolvedTypeRef.code(): String =
 
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"
-private const val SERIALIZABLE_ANNOTATION = "kotlinx.serialization.Serializable"
-private const val ELEMENT_ANNOTATION = "com.typewritermc.elements.TypewriterElement"

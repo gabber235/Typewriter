@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":imprint-archive"))
     implementation(project(":imprint-model"))
     implementation(libs.kotlin.gradle.plugin)
+    implementation(libs.kotlin.serialization.gradle.plugin)
     implementation(libs.ksp.gradle.plugin)
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.semver)

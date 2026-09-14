@@ -1,5 +1,7 @@
 package com.typewritermc.types
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
@@ -26,11 +28,13 @@ value class DeclaredTypeId(
 }
 
 /**
- * Opts a concrete serializable type into generated structural metadata and runtime prototypes.
+ * Opts a concrete type into default Kotlin serialization, generated structural metadata, and runtime prototypes.
  *
  * The id is persistent content identity, not a class name. Preserve it across refactors and evolve the revision
  * deliberately when stored shape changes.
  */
+@OptIn(ExperimentalSerializationApi::class)
+@MetaSerializable
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterType(

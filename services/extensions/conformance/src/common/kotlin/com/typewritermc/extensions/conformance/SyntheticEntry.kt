@@ -41,7 +41,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface SyntheticMessage
 
-@Serializable
 @TypewriterType(
     id = "019d1f6c1d2e72499fa386964e89721d",
 )
@@ -49,7 +48,6 @@ data class LiteralMessage(
     val value: String,
 ) : SyntheticMessage
 
-@Serializable
 @TypewriterType(
     id = "019d1f6d0ac77d3e83304b0be26ed722",
 )
@@ -64,7 +62,6 @@ data class RepeatedMessage(
  * message payload to the runtime output, allowing the surrounding engine tests to observe delivery without
  * introducing external resources.
  */
-@Serializable
 @TypewriterElement(
     id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
     name = "Synthetic Entry",

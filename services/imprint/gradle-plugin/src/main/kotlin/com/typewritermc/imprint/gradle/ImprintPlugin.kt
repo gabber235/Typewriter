@@ -31,6 +31,7 @@ class ImprintPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("java-library")
         project.pluginManager.apply("com.google.devtools.ksp")
+        project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
         project.createDependencyBuckets()
 
         val typewriter =

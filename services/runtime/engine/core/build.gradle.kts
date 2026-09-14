@@ -1,7 +1,6 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
-    alias(libs.plugins.kotlin.serialize)
     `java-library`
 }
 
