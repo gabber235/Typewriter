@@ -180,7 +180,7 @@ object ElementDiscoveryContributionCodec {
 const val ELEMENT_DISCOVERY_SCHEMA = "typewriter.elements"
 
 /** Current encoded shape version for [ELEMENT_DISCOVERY_SCHEMA]. */
-const val ELEMENT_DISCOVERY_VERSION = 2
+const val ELEMENT_DISCOVERY_VERSION = 1
 
 /** Manifest producer name used to select element discovery contributions. */
 const val ELEMENT_DISCOVERY_PRODUCER = "elements"
