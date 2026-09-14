@@ -50,15 +50,7 @@ class BookIdentifier extends SelectableIdentifier {
     return AsyncData(
       BookSelection(
         resource: BookEditorResource(repository, bookId),
-        onOpen: () {
-          router.navigate(
-            BookRoute(
-              organizationId: organization.id,
-              realmId: realm.id,
-              bookId: bookId.id,
-            ),
-          );
-        },
+        onOpen: () => router.navigate(routeFor(organization, realm)),
         id: this,
         book: book,
         revision: bookValue.revision,
@@ -77,6 +69,15 @@ class BookIdentifier extends SelectableIdentifier {
 
   @override
   String toString() => "BookIdentifier(bookId: $bookId)";
+
+  /// Builds this book's editor route in the supplied organization and realm.
+  BookRoute routeFor(skir.RecordId organization, skir.RecordId realm) {
+    return BookRoute(
+      organizationId: organization.id,
+      realmId: realm.id,
+      bookId: bookId.id,
+    );
+  }
 }
 
 /// Selection model shared by library navigation and the book inspector.

@@ -1,3 +1,4 @@
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -24,6 +25,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byType(BookWidget));
+    await tester.pump(kDoubleTapTimeout);
     await tester.pumpAndSettle();
 
     expect(find.text("Direct Tags"), findsOneWidget);

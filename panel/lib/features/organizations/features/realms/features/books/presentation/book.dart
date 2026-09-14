@@ -16,9 +16,9 @@ const bookAspectRatio = bookWidth / bookHeight;
 
 /// Displays a book in the library grid.
 ///
-/// Selection and focus belong to the shared selectable system. This widget only
-/// renders their visual state and does not open or mutate the book. The caller
-/// supplies the projected book data, including already resolved tags.
+/// Selection and focus belong to the shared selectable system. Double click
+/// opens the book route. The caller supplies projected book data, including
+/// already resolved tags.
 class BookWidget extends HookConsumerWidget {
   const BookWidget({
     required this.id,
@@ -39,10 +39,17 @@ class BookWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
     final selectableId = BookIdentifier(id);
+    final organization = ref.watch(organizationIdProvider);
+    final realm = ref.watch(realmIdProvider);
 
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,
+      onDoubleTap: organization == null || realm == null
+          ? null
+          : () => ref
+                .read(appRouterProvider)
+                .navigate(selectableId.routeFor(organization, realm)),
       builder: (isSelected, isFocused, isHovered) {
         return Surface(
           color: Theme.of(context).colorScheme.surface,
