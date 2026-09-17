@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -8,36 +8,36 @@ void main() {
     final paths = _paths();
     final path = paths.encode(DataPath.root.field("value")).valueOrNull!;
 
-    final codes = <wire.DiagnosticCode>[
-      wire.DiagnosticCode.invalidTypeId,
-      wire.DiagnosticCode.invalidRevision,
-      wire.DiagnosticCode.duplicateDefinition,
-      wire.DiagnosticCode.invalidArity,
-      wire.DiagnosticCode.unsatisfiedBound,
-      wire.DiagnosticCode.invalidVariance,
-      wire.DiagnosticCode.inheritanceCycle,
-      wire.DiagnosticCode.inheritanceConflict,
-      wire.DiagnosticCode.weakenedConstraint,
-      wire.DiagnosticCode.incompatibleRepresentation,
-      wire.DiagnosticCode.invalidValue,
-      wire.DiagnosticCode.missingRequiredField,
-      wire.DiagnosticCode.unknownField,
-      wire.DiagnosticCode.invalidPath,
-      wire.DiagnosticCode.invalidConcreteType,
-      wire.DiagnosticCode.conversionNotFound,
-      wire.DiagnosticCode.conversionAmbiguous,
-      wire.DiagnosticCode.conversionFailed,
-      wire.DiagnosticCode.invalidExpression,
-      wire.DiagnosticCode.evaluationBudgetExceeded,
-      wire.DiagnosticCode.invalidPresentation,
-      wire.DiagnosticCode.mutationConflict,
-      wire.DiagnosticCode.permissionDenied,
+    final codes = <skir.DiagnosticCode>[
+      skir.DiagnosticCode.invalidTypeId,
+      skir.DiagnosticCode.invalidRevision,
+      skir.DiagnosticCode.duplicateDefinition,
+      skir.DiagnosticCode.invalidArity,
+      skir.DiagnosticCode.unsatisfiedBound,
+      skir.DiagnosticCode.invalidVariance,
+      skir.DiagnosticCode.inheritanceCycle,
+      skir.DiagnosticCode.inheritanceConflict,
+      skir.DiagnosticCode.weakenedConstraint,
+      skir.DiagnosticCode.incompatibleRepresentation,
+      skir.DiagnosticCode.invalidValue,
+      skir.DiagnosticCode.missingRequiredField,
+      skir.DiagnosticCode.unknownField,
+      skir.DiagnosticCode.invalidPath,
+      skir.DiagnosticCode.invalidConcreteType,
+      skir.DiagnosticCode.conversionNotFound,
+      skir.DiagnosticCode.conversionAmbiguous,
+      skir.DiagnosticCode.conversionFailed,
+      skir.DiagnosticCode.invalidExpression,
+      skir.DiagnosticCode.evaluationBudgetExceeded,
+      skir.DiagnosticCode.invalidPresentation,
+      skir.DiagnosticCode.mutationConflict,
+      skir.DiagnosticCode.permissionDenied,
     ];
 
     final severities = [
-      wire.DiagnosticSeverity.information,
-      wire.DiagnosticSeverity.warning,
-      wire.DiagnosticSeverity.error,
+      skir.DiagnosticSeverity.information,
+      skir.DiagnosticSeverity.warning,
+      skir.DiagnosticSeverity.error,
     ];
 
     final domainCodes = [
@@ -69,15 +69,15 @@ void main() {
     final domainSeverities = TypeDiagnosticSeverity.values;
 
     for (final entry in codes.indexed) {
-      final original = wire.TypeDiagnostic(
+      final original = skir.TypeDiagnostic(
         code: entry.$2,
         severity: severities[entry.$1 % severities.length],
         message: "Diagnostic ${entry.$1}",
         path: path,
         relatedType: "example::type@1",
         details: [
-          wire.DiagnosticDetail(key: "index", value: "${entry.$1}"),
-          wire.DiagnosticDetail(key: "source", value: "test"),
+          skir.DiagnosticDetail(key: "index", value: "${entry.$1}"),
+          skir.DiagnosticDetail(key: "source", value: "test"),
         ],
       );
 
@@ -105,9 +105,9 @@ void main() {
 
   test("preserves an absent diagnostic path", () {
     final paths = _paths();
-    final original = wire.TypeDiagnostic(
-      code: wire.DiagnosticCode.invalidPresentation,
-      severity: wire.DiagnosticSeverity.warning,
+    final original = skir.TypeDiagnostic(
+      code: skir.DiagnosticCode.invalidPresentation,
+      severity: skir.DiagnosticSeverity.warning,
       message: "No path",
       path: null,
       relatedType: null,
@@ -119,8 +119,8 @@ void main() {
 
     expect(encoded.path, isNull);
     expect(
-      wire.TypeDiagnostic.serializer.toBytes(encoded),
-      wire.TypeDiagnostic.serializer.toBytes(original),
+      skir.TypeDiagnostic.serializer.toBytes(encoded),
+      skir.TypeDiagnostic.serializer.toBytes(original),
     );
   });
 }

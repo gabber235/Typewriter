@@ -25,6 +25,7 @@ export "package:typewriter_panel/infrastructure/protocols/skir/editor_presentati
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_realm_search_codec.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_type_codec.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_value_codec.dart";
+export "package:typewriter_panel/infrastructure/protocols/skir/realm_search_query_codec.dart";
 
 /// Coordinates codecs that decode and encode the editor's typed vocabulary.
 final class SkirEditorCodec {

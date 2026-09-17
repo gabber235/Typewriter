@@ -35,7 +35,7 @@ void main() {
           organizationIdProvider.overrideWithValue(organizationId),
           realmIdProvider.overrideWithValue(realmId),
           selectedProvider.overrideWithValue(const AsyncData([])),
-          ...pageElementsProviderOverrides(overwriteElements: elements),
+          ...pageElementsProviderOverrides(elements: elements),
           decodedRealmDocumentValuesProvider.overrideWith(
             (ref, _) => ref
                 .watch(pageElementsProvider(organizationId, realmId, "page"))

@@ -10,7 +10,7 @@ part of "authoring_session.dart";
 mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   final Map<_AuthoringScope, int> _scopeCounts = {};
   final Map<_AuthoringScope, Future<void>> _scopeReadiness = {};
-  final List<wire.AuthoringChanged> _buffer = [];
+  final List<skir.AuthoringChanged> _buffer = [];
 
   NatsSubscription? _subscription;
   StreamSubscription<NatsMessage>? _messages;
@@ -58,20 +58,20 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   }
 
   void _onMessage(NatsMessage message) {
-    final change = wire.AuthoringChanged.serializer.fromBytes(message.payload);
+    final change = skir.AuthoringChanged.serializer.fromBytes(message.payload);
     _accept(change);
   }
 
   void _onCompiledMessage(NatsMessage message) {
-    final event = compiled_wire.WatchCompiledContentResponse.serializer
+    final event = skir.WatchCompiledContentResponse.serializer
         .fromBytes(message.payload);
     switch (event) {
-      case compiled_wire.WatchCompiledContentResponse_activatedWrapper() ||
-          compiled_wire.WatchCompiledContentResponse_blockedWrapper():
+      case skir.WatchCompiledContentResponse_activatedWrapper() ||
+          skir.WatchCompiledContentResponse_blockedWrapper():
         _schedulePageRefresh();
-      case compiled_wire.WatchCompiledContentResponse_initialWrapper() ||
-          compiled_wire.WatchCompiledContentResponse_internalErrorWrapper() ||
-          compiled_wire.WatchCompiledContentResponse_unknown():
+      case skir.WatchCompiledContentResponse_initialWrapper() ||
+          skir.WatchCompiledContentResponse_internalErrorWrapper() ||
+          skir.WatchCompiledContentResponse_unknown():
     }
   }
 
@@ -91,7 +91,7 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   ///
   /// Duplicate and older events are harmless. A future event is buffered and
   /// causes a snapshot refresh rather than being applied out of order.
-  void _accept(wire.AuthoringChanged change) {
+  void _accept(skir.AuthoringChanged change) {
     if (_refreshOperation != null || state.sequence == null) {
       _buffer.add(change);
       return;
@@ -153,7 +153,7 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     if (state.sequence == null) return;
 
     _buffer.sort((left, right) => left.sequence.compareTo(right.sequence));
-    final buffered = List<wire.AuthoringChanged>.of(_buffer);
+    final buffered = List<skir.AuthoringChanged>.of(_buffer);
     _buffer.clear();
 
     for (var index = 0; index < buffered.length; index++) {
@@ -170,10 +170,10 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
 
   /// Applies a contiguous event and refreshes retained pages it affects
   /// indirectly.
-  void _applyEvent(wire.AuthoringChanged event) {
+  void _applyEvent(skir.AuthoringChanged event) {
     _applyChanges(event.changes, sequence: event.sequence);
     final pages = event.indirectlyAffectedResources
-        .whereType<wire.AuthoringResourceRef_pageWrapper>()
+        .whereType<skir.AuthoringResourceRef_pageWrapper>()
         .map((resource) => resource.value)
         .where((pageId) => _scopeCounts.containsKey(_PageScope(pageId)))
         .toSet();
@@ -182,35 +182,35 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   }
 
   void _applyChanges(
-    Iterable<wire.AuthoringResourceChange> changes, {
+    Iterable<skir.AuthoringResourceChange> changes, {
     int? sequence,
   }) {
-    final books = Map<skir.RecordId, wire.Book>.of(state.books);
-    final tags = Map<skir.RecordId, wire.Tag>.of(state.tags);
-    final pages = Map<skir.RecordId, wire.Page>.of(state.pages);
-    final documents = Map<skir.RecordId, wire.PageDocument>.of(state.documents);
+    final books = Map<skir.RecordId, skir.Book>.of(state.books);
+    final tags = Map<skir.RecordId, skir.Tag>.of(state.tags);
+    final pages = Map<skir.RecordId, skir.Page>.of(state.pages);
+    final documents = Map<skir.RecordId, skir.PageDocument>.of(state.documents);
 
     for (final change in changes) {
       switch (change) {
-        case wire.AuthoringResourceChange_upsertBookWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertBookWrapper(:final value):
           books[value.id] = value;
-        case wire.AuthoringResourceChange_removeBookWrapper(:final value):
+        case skir.AuthoringResourceChange_removeBookWrapper(:final value):
           books.remove(value);
-        case wire.AuthoringResourceChange_upsertTagWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertTagWrapper(:final value):
           tags[value.id] = value;
-        case wire.AuthoringResourceChange_removeTagWrapper(:final value):
+        case skir.AuthoringResourceChange_removeTagWrapper(:final value):
           tags.remove(value);
-        case wire.AuthoringResourceChange_upsertPageWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertPageWrapper(:final value):
           pages[value.id] = value;
           final document = documents[value.id];
           if (document != null) {
             documents[value.id] = (document.toMutable()..page = value)
                 .toFrozen();
           }
-        case wire.AuthoringResourceChange_removePageWrapper(:final value):
+        case skir.AuthoringResourceChange_removePageWrapper(:final value):
           pages.remove(value);
           documents.remove(value);
-        case wire.AuthoringResourceChange_upsertElementWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertElementWrapper(:final value):
           documents.updateAll(
             (_, document) => _removeElement(document, value.id),
           );
@@ -218,9 +218,9 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
           if (document != null) {
             documents[value.page] = _upsertElement(document, value);
           }
-        case wire.AuthoringResourceChange_removeElementWrapper(:final value):
+        case skir.AuthoringResourceChange_removeElementWrapper(:final value):
           documents.updateAll((_, document) => _removeElement(document, value));
-        case wire.AuthoringResourceChange_unknown():
+        case skir.AuthoringResourceChange_unknown():
           throw ApiException.unknownResponseMessage();
       }
     }
@@ -235,9 +235,9 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     );
   }
 
-  wire.PageDocument _upsertElement(
-    wire.PageDocument document,
-    wire.PageElement element,
+  skir.PageDocument _upsertElement(
+    skir.PageDocument document,
+    skir.PageElement element,
   ) =>
       (document.toMutable()
             ..elements = [
@@ -247,8 +247,8 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
             ])
           .toFrozen();
 
-  wire.PageDocument _removeElement(
-    wire.PageDocument document,
+  skir.PageDocument _removeElement(
+    skir.PageDocument document,
     skir.RecordId elementId,
   ) =>
       (document.toMutable()

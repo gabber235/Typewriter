@@ -1,7 +1,5 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Creates the editor target for a loaded element on [pageId].
@@ -39,7 +37,7 @@ EditorTarget authoringElementTarget({
 /// remain path based. This shape lets the editor preserve placement changes and
 /// typed content changes in the same authoring commit.
 EditorSnapshot elementEditorSnapshot(
-  wire.PageElement element,
+  skir.PageElement element,
   EditorDocument value,
 ) => DocumentEditorSnapshot(
   value.copyWith(
@@ -71,15 +69,15 @@ final class ElementEditorResource extends AuthoringEditorResource {
   const ElementEditorResource(super.repository, super.id, this.pageId);
   final skir.RecordId pageId;
   @override
-  wire.AuthoringSnapshotScope get scope =>
-      wire.AuthoringSnapshotScope.createPage(pageId: pageId);
+  skir.AuthoringSnapshotScope get scope =>
+      skir.AuthoringSnapshotScope.createPage(pageId: pageId);
 
   /// Finds this element in the requested page snapshot and decodes its value.
   @override
-  Future<EditorSnapshot?> project(wire.AuthoringSnapshot snapshot) async {
-    wire.PageElement? element;
+  Future<EditorSnapshot?> project(skir.AuthoringSnapshot snapshot) async {
+    skir.PageElement? element;
     for (final slice in snapshot.slices) {
-      if (slice case wire.AuthoringSnapshotSlice_pageWrapper(:final value)) {
+      if (slice case skir.AuthoringSnapshotSlice_pageWrapper(:final value)) {
         element = value.document?.elements
             .where((value) => value.id == id)
             .firstOrNull;
@@ -98,12 +96,12 @@ final class ElementEditorResource extends AuthoringEditorResource {
   /// null asks the caller to perform the authoritative refresh fallback.
   @override
   EditorSnapshot? projectApplied(
-    wire.AuthoringChanged change,
+    skir.AuthoringChanged change,
     EditorSnapshot submitted,
   ) {
     for (final resource in change.changes) {
       switch (resource) {
-        case wire.AuthoringResourceChange_upsertElementWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertElementWrapper(:final value):
           if (value.id == id && value.page == pageId) {
             final root = ResolvedTypeRef(
               id: DeclaredTypeId(value.elementType),
@@ -124,22 +122,22 @@ final class ElementEditorResource extends AuthoringEditorResource {
               ),
             );
           }
-        case wire.AuthoringResourceChange_removeElementWrapper(:final value):
+        case skir.AuthoringResourceChange_removeElementWrapper(:final value):
           if (value == id) return null;
-        case wire.AuthoringResourceChange_unknown() ||
-            wire.AuthoringResourceChange_upsertBookWrapper() ||
-            wire.AuthoringResourceChange_removeBookWrapper() ||
-            wire.AuthoringResourceChange_upsertTagWrapper() ||
-            wire.AuthoringResourceChange_removeTagWrapper() ||
-            wire.AuthoringResourceChange_upsertPageWrapper() ||
-            wire.AuthoringResourceChange_removePageWrapper():
+        case skir.AuthoringResourceChange_unknown() ||
+            skir.AuthoringResourceChange_upsertBookWrapper() ||
+            skir.AuthoringResourceChange_removeBookWrapper() ||
+            skir.AuthoringResourceChange_upsertTagWrapper() ||
+            skir.AuthoringResourceChange_removeTagWrapper() ||
+            skir.AuthoringResourceChange_upsertPageWrapper() ||
+            skir.AuthoringResourceChange_removePageWrapper():
       }
     }
     return null;
   }
 
   Future<EditorSnapshot?> _projectElement(
-    wire.PageElement element,
+    skir.PageElement element,
     int sequence,
   ) async {
     final root = ResolvedTypeRef(
@@ -182,7 +180,7 @@ final class ElementEditorResource extends AuthoringEditorResource {
 
   /// Builds guarded value and placement mutations for this element.
   @override
-  wire.AuthoringOperation operation(
+  skir.AuthoringOperation operation(
     EditorSnapshot snapshot,
     EditorCommit commit,
   ) => elementCommitOperation(id.id, commit, snapshot.document.typeCatalog);

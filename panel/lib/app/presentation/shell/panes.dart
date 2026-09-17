@@ -489,7 +489,7 @@ class _GlobalPaneNavigatorState extends State<GlobalPaneNavigator> {
                     LogicalKeyboardKey.keyL,
                   ]),
                 ],
-                priority: -1,
+                priority: -10,
               ),
           ],
           child: widget.child,

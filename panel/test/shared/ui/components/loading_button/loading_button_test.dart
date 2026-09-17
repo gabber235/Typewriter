@@ -3,7 +3,6 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/shared/ui/components/loading_button/loading_button.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button/loading_button_controller.dart";
 
 import "loading_button_test_support.dart";
 

@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/route_access/route_access_binding.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the panel application boundary.

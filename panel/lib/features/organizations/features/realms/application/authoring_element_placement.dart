@@ -1,5 +1,5 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Paths in the editor document that map to the wire element operation.
@@ -15,26 +15,26 @@ final elementPlacementPath = DataPath.root.field("placement");
 /// Each variant exposes only its meaningful integer fields. Unknown protocol
 /// variants fail loudly because silently inventing placement would move an
 /// element to an incorrect editor location.
-RecordValue elementPlacementValue(wire.ElementPlacement placement) =>
+RecordValue elementPlacementValue(skir.ElementPlacement placement) =>
     RecordValue({
       for (final entry in switch (placement) {
-        wire.ElementPlacement_graphWrapper(:final value) => {
+        skir.ElementPlacement_graphWrapper(:final value) => {
           "x": value.x,
           "y": value.y,
           "width": value.width,
           "height": value.height,
         },
-        wire.ElementPlacement_timelineSegmentWrapper(:final value) => {
+        skir.ElementPlacement_timelineSegmentWrapper(:final value) => {
           "start": value.startFrame,
           "end": value.endFrame,
         },
-        wire.ElementPlacement_timelineKeyframeWrapper(:final value) => {
+        skir.ElementPlacement_timelineKeyframeWrapper(:final value) => {
           "frame": value.frame,
         },
-        wire.ElementPlacement_timelineEntryWrapper(:final value) => {
+        skir.ElementPlacement_timelineEntryWrapper(:final value) => {
           "track": value.trackIndex,
         },
-        wire.ElementPlacement_unknown() => throw ArgumentError(
+        skir.ElementPlacement_unknown() => throw ArgumentError(
           "Unknown element placement",
         ),
       }.entries)
@@ -42,7 +42,7 @@ RecordValue elementPlacementValue(wire.ElementPlacement placement) =>
     });
 
 /// Builds the editor type matching [elementPlacementValue].
-RecordType elementPlacementType(wire.ElementPlacement placement) => RecordType(
+RecordType elementPlacementType(skir.ElementPlacement placement) => RecordType(
   fields: {
     for (final key in elementPlacementValue(placement).fields.keys)
       key: TypeField(
@@ -57,7 +57,7 @@ RecordType elementPlacementType(wire.ElementPlacement placement) => RecordType(
 /// Dimensions must be positive, timeline ranges must be ordered and
 /// nonnegative, and frames must be nonnegative. Invalid shapes are rejected
 /// before a mutation reaches the transport boundary.
-wire.ElementPlacement encodeElementPlacement(DataValue value) {
+skir.ElementPlacement encodeElementPlacement(DataValue value) {
   if (value is! RecordValue) {
     throw ArgumentError("Element placement must be a record");
   }
@@ -65,7 +65,7 @@ wire.ElementPlacement encodeElementPlacement(DataValue value) {
   if (value.fields.containsKey("x") &&
       number("width") > 0 &&
       number("height") > 0) {
-    return wire.ElementPlacement.createGraph(
+    return skir.ElementPlacement.createGraph(
       x: number("x"),
       y: number("y"),
       width: number("width"),
@@ -75,16 +75,16 @@ wire.ElementPlacement encodeElementPlacement(DataValue value) {
   if (value.fields.containsKey("start") &&
       number("start") >= 0 &&
       number("end") >= number("start")) {
-    return wire.ElementPlacement.createTimelineSegment(
+    return skir.ElementPlacement.createTimelineSegment(
       startFrame: number("start"),
       endFrame: number("end"),
     );
   }
   if (value.fields.containsKey("frame") && number("frame") >= 0) {
-    return wire.ElementPlacement.createTimelineKeyframe(frame: number("frame"));
+    return skir.ElementPlacement.createTimelineKeyframe(frame: number("frame"));
   }
   if (value.fields.containsKey("track")) {
-    return wire.ElementPlacement.createTimelineEntry(
+    return skir.ElementPlacement.createTimelineEntry(
       trackIndex: number("track"),
     );
   }

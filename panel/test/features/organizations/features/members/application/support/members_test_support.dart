@@ -2,9 +2,7 @@ import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart"
-    as skir_id;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/organization/v1/member.dart"
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -61,7 +59,7 @@ skir.UpdateOrganizationMemberRolesResponse successfulMemberUpdate(
 );
 
 skir.RemoveOrganizationMemberResponse successfulMemberRemoval(
-  skir_id.RecordId userId,
+  skir.RecordId userId,
 ) => skir.RemoveOrganizationMemberResponse.createSuccess(
   event: skir.OrganizationMembersChanged(
     sequence: 1,

@@ -4,8 +4,6 @@ import "dart:async";
 import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class AuthoringSessionMock extends AuthoringSession {
@@ -14,7 +12,7 @@ class AuthoringSessionMock extends AuthoringSession {
     this.onApply,
   });
   final AuthoringSessionState initial;
-  final FutureOr<void> Function(List<wire.AuthoringOperation> operations)?
+  final FutureOr<void> Function(List<skir.AuthoringOperation> operations)?
   onApply;
 
   @override
@@ -24,13 +22,13 @@ class AuthoringSessionMock extends AuthoringSession {
   ) => initial;
 
   @override
-  Future<wire.ApplyAuthoringBatchResponse> apply(
-    Iterable<wire.AuthoringOperation> operations, {
+  Future<skir.ApplyAuthoringBatchResponse> apply(
+    Iterable<skir.AuthoringOperation> operations, {
     String? batchId,
   }) async {
     await onApply?.call(List.unmodifiable(operations));
     state = state.copyWith(sequence: (state.sequence ?? 0) + 1);
-    return wire.ApplyAuthoringBatchResponse.createApplied(
+    return skir.ApplyAuthoringBatchResponse.createApplied(
       sequence: state.sequence!,
       batchId: batchId ?? "fixture",
       changes: const [],
@@ -43,7 +41,7 @@ List<Override> authoringSessionMockOverrides({
   AuthoringSessionState? initial,
   Iterable<Book> books = const [],
   Iterable<Tag> tags = const [],
-  FutureOr<void> Function(List<wire.AuthoringOperation> operations)? onApply,
+  FutureOr<void> Function(List<skir.AuthoringOperation> operations)? onApply,
 }) {
   assert(
     initial == null || (books.isEmpty && tags.isEmpty),

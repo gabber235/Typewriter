@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/conversion.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -77,20 +77,20 @@ void main() {
       expect(
         encoded.safety.kind,
         entry.$1.isEven
-            ? wire.ConversionSafety_kind.losslessConst
-            : wire.ConversionSafety_kind.lossyConst,
+            ? skir.ConversionSafety_kind.losslessConst
+            : skir.ConversionSafety_kind.lossyConst,
       );
       expect(
         encoded.fallibility.kind,
         entry.$1.isOdd
-            ? wire.ConversionFallibility_kind.fallibleConst
-            : wire.ConversionFallibility_kind.infallibleConst,
+            ? skir.ConversionFallibility_kind.fallibleConst
+            : skir.ConversionFallibility_kind.infallibleConst,
       );
       expect(
         encoded.locality.kind,
         entry.$2 is RealmConversionRule
-            ? wire.ConversionLocality_kind.realmConst
-            : wire.ConversionLocality_kind.localConst,
+            ? skir.ConversionLocality_kind.realmConst
+            : skir.ConversionLocality_kind.localConst,
       );
       expect(
         decoder.decode([encoded]).valueOrNull!.single,
@@ -100,19 +100,19 @@ void main() {
   });
 }
 
-wire.ConversionRule_kind _wireKind(ConversionRule rule) => switch (rule) {
-  InputConversionRule() => wire.ConversionRule_kind.identityConst,
-  InheritanceUpcastRule() => wire.ConversionRule_kind.inheritanceUpcastConst,
-  ValidatedDowncastRule() => wire.ConversionRule_kind.validatedDowncastConst,
-  ScalarConversionRule() => wire.ConversionRule_kind.scalarCastWrapper,
+skir.ConversionRule_kind _wireKind(ConversionRule rule) => switch (rule) {
+  InputConversionRule() => skir.ConversionRule_kind.identityConst,
+  InheritanceUpcastRule() => skir.ConversionRule_kind.inheritanceUpcastConst,
+  ValidatedDowncastRule() => skir.ConversionRule_kind.validatedDowncastConst,
+  ScalarConversionRule() => skir.ConversionRule_kind.scalarCastWrapper,
   RecordProjectionConversionRule() =>
-    wire.ConversionRule_kind.recordProjectionWrapper,
+    skir.ConversionRule_kind.recordProjectionWrapper,
   RecordConstructionConversionRule() =>
-    wire.ConversionRule_kind.recordConstructionWrapper,
+    skir.ConversionRule_kind.recordConstructionWrapper,
   CollectionMappingConversionRule() =>
-    wire.ConversionRule_kind.collectionMappingWrapper,
-  ConversionCompositionIdsRule() => wire.ConversionRule_kind.compositionWrapper,
-  RealmConversionRule() => wire.ConversionRule_kind.realmWrapper,
+    skir.ConversionRule_kind.collectionMappingWrapper,
+  ConversionCompositionIdsRule() => skir.ConversionRule_kind.compositionWrapper,
+  RealmConversionRule() => skir.ConversionRule_kind.realmWrapper,
   _ => throw StateError("Unsupported conversion rule in mapping test"),
 };
 

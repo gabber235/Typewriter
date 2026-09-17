@@ -6,35 +6,35 @@ part of "authoring_session.dart";
 /// batches use a generic label because no single operation describes the whole
 /// transaction. The label is presentation metadata and does not affect routing
 /// or protocol identity.
-String _authoringLabel(Iterable<wire.AuthoringOperation> operations) {
+String _authoringLabel(Iterable<skir.AuthoringOperation> operations) {
   final labels = operations
       .map(
         (operation) => switch (operation) {
-          wire.AuthoringOperation_createBookWrapper() => "Create book",
-          wire.AuthoringOperation_patchBookWrapper() => "Edit book",
-          wire.AuthoringOperation_deleteBookWrapper() => "Delete book",
-          wire.AuthoringOperation_createTagWrapper() => "Create tag",
-          wire.AuthoringOperation_patchTagWrapper() => "Edit tag",
-          wire.AuthoringOperation_deleteTagWrapper() => "Delete tag",
-          wire.AuthoringOperation_createPageWrapper() => "Create page",
-          wire.AuthoringOperation_patchPageWrapper(:final value) =>
+          skir.AuthoringOperation_createBookWrapper() => "Create book",
+          skir.AuthoringOperation_patchBookWrapper() => "Edit book",
+          skir.AuthoringOperation_deleteBookWrapper() => "Delete book",
+          skir.AuthoringOperation_createTagWrapper() => "Create tag",
+          skir.AuthoringOperation_patchTagWrapper() => "Edit tag",
+          skir.AuthoringOperation_deleteTagWrapper() => "Delete tag",
+          skir.AuthoringOperation_createPageWrapper() => "Create page",
+          skir.AuthoringOperation_patchPageWrapper(:final value) =>
             value.name != null
                 ? "Rename page"
                 : value.chapter != null
                 ? "Move page chapter"
                 : "Change page priority",
-          wire.AuthoringOperation_deletePageWrapper() => "Delete page",
-          wire.AuthoringOperation_createElementWrapper() => "Create element",
-          wire.AuthoringOperation_patchElementWrapper(:final value) =>
+          skir.AuthoringOperation_deletePageWrapper() => "Delete page",
+          skir.AuthoringOperation_createElementWrapper() => "Create element",
+          skir.AuthoringOperation_patchElementWrapper(:final value) =>
             value.page != null
                 ? "Move element to page"
                 : value.placement != null
                 ? "Change element placement"
                 : "Edit element",
-          wire.AuthoringOperation_duplicateElementWrapper() =>
+          skir.AuthoringOperation_duplicateElementWrapper() =>
             "Duplicate element",
-          wire.AuthoringOperation_deleteElementWrapper() => "Delete element",
-          wire.AuthoringOperation_unknown() => "Save content",
+          skir.AuthoringOperation_deleteElementWrapper() => "Delete element",
+          skir.AuthoringOperation_unknown() => "Save content",
         },
       )
       .toList();

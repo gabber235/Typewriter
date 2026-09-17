@@ -16,15 +16,15 @@ abstract class Placement with _$Placement {
 
   const Placement._();
 
-  factory Placement.fromWire(wire.GraphPlacement placement) => Placement(
+  factory Placement.fromWire(skir.GraphPlacement placement) => Placement(
     x: placement.x,
     y: placement.y,
     width: placement.width,
     height: placement.height,
   );
 
-  wire.GraphPlacement toWire() =>
-      wire.GraphPlacement(x: x, y: y, width: width, height: height);
+  skir.GraphPlacement toWire() =>
+      skir.GraphPlacement(x: x, y: y, width: width, height: height);
 }
 
 /// Immutable panel model of the wire level Realm tag.
@@ -46,7 +46,7 @@ abstract class Tag with _$Tag {
 
   const Tag._();
 
-  factory Tag.fromWire(wire.Tag tag) => Tag(
+  factory Tag.fromWire(skir.Tag tag) => Tag(
     tagId: tag.id,
     name: tag.name,
     color: tag.color.toFlutterColor(),
@@ -54,7 +54,7 @@ abstract class Tag with _$Tag {
     placement: Placement.fromWire(tag.placement),
   );
 
-  wire.Tag toWire() => wire.Tag(
+  skir.Tag toWire() => skir.Tag(
     id: tagId,
     name: name,
     color: color.toSkirColor(),

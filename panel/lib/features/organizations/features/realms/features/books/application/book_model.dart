@@ -22,7 +22,7 @@ abstract class Book with _$Book {
   const Book._();
 
   /// Converts the authoring contract into the value used by providers and UI.
-  factory Book.fromWire(wire.Book book) => Book(
+  factory Book.fromWire(skir.Book book) => Book(
     bookId: book.id,
     title: book.title,
     icon: book.icon,
@@ -31,7 +31,7 @@ abstract class Book with _$Book {
   );
 
   /// Converts this immutable value into the authoring operation payload.
-  wire.Book toWire() => wire.Book(
+  skir.Book toWire() => skir.Book(
     id: this.bookId,
     title: title,
     icon: icon,

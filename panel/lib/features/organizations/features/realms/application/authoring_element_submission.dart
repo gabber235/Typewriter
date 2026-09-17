@@ -1,5 +1,5 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Converts changed element editor paths into one optimistic patch operation.
@@ -9,22 +9,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// was observed at its path in the captured base. Placement is sent separately
 /// with its complete expected and replacement variants, preserving the server's
 /// conflict boundary for concurrent edits.
-wire.AuthoringOperation elementCommitOperation(
+skir.AuthoringOperation elementCommitOperation(
   String id,
   EditorCommit commit,
   TypeCatalog catalog,
 ) {
   final codec = SkirEditorCodec(TypeRegistry(catalog));
-  final mutations = <wire.ExpectedElementValueMutation>[];
+  final mutations = <skir.ExpectedElementValueMutation>[];
   for (final path in commit.changedPaths.where(
     (path) => path.isAtOrBelow(elementValuePath),
   )) {
     final before = path.read(commit.baseValue).valueOrNull!;
     final after = path.read(commit.rootValue).valueOrNull!;
     mutations.add(
-      wire.ExpectedElementValueMutation(
+      skir.ExpectedElementValueMutation(
         expected: codec.encodeValue(before).valueOrNull!,
-        mutation: wire.ElementValueMutation.createSetValue(
+        mutation: skir.ElementValueMutation.createSetValue(
           path: codec
               .encodePath(DataPath(path.segments.skip(1).toList()))
               .valueOrNull!,
@@ -33,7 +33,7 @@ wire.AuthoringOperation elementCommitOperation(
       ),
     );
   }
-  return wire.AuthoringOperation.createPatchElement(
+  return skir.AuthoringOperation.createPatchElement(
     id: recordId("element:$id"),
     page: null,
     name: null,
@@ -41,7 +41,7 @@ wire.AuthoringOperation elementCommitOperation(
         commit.changedPaths.any(
           (path) => path.isAtOrBelow(elementPlacementPath),
         )
-        ? wire.ElementPlacementChange(
+        ? skir.ElementPlacementChange(
             expected: encodeElementPlacement(
               elementPlacementPath.read(commit.baseValue).valueOrNull!,
             ),
@@ -62,11 +62,11 @@ wire.AuthoringOperation elementCommitOperation(
 /// the editor can recover through refresh or explicit retry rather than claiming
 /// that the draft was saved.
 Future<TypedMutationResult> acceptElementCommit(
-  wire.ApplyAuthoringBatchResponse response,
+  skir.ApplyAuthoringBatchResponse response,
   EditorCommit commit,
   EditorDocument? actual,
 ) async => switch (response) {
-  wire.ApplyAuthoringBatchResponse_appliedWrapper() =>
+  skir.ApplyAuthoringBatchResponse_appliedWrapper() =>
     actual == null
         ? unavailableMutation(
             "The element no longer exists",
@@ -76,7 +76,7 @@ Future<TypedMutationResult> acceptElementCommit(
             revision: actual.revision,
             value: actual.confirmedValue,
           ),
-  wire.ApplyAuthoringBatchResponse_conflictWrapper() =>
+  skir.ApplyAuthoringBatchResponse_conflictWrapper() =>
     actual == null
         ? unavailableMutation(
             "The element no longer exists",

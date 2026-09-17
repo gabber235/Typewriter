@@ -1,10 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
-    as wire_capability;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as wire_presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as wire_type;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -51,15 +47,15 @@ void main() {
     final encodedCatalog = catalog.encodeWire().valueOrNull!;
     final encodedType = encodedCatalog.definitions.single;
 
-    expect(encodedType.typeId.kind, wire_type.TypeId_kind.qualifiedWrapper);
+    expect(encodedType.typeId.kind, skir.TypeId_kind.qualifiedWrapper);
     expect(encodedType.revision, 1);
     expect(
       encodedType.kind.kind,
-      wire_type.TypeDefinitionKind_kind.concreteConst,
+      skir.TypeDefinitionKind_kind.concreteConst,
     );
     expect(
       encodedType.representation.kind,
-      wire_type.TypeExpression_kind.recordWrapper,
+      skir.TypeExpression_kind.recordWrapper,
     );
     expect(encodedType.defaultPresentationId?.namespace, "example");
     expect(encodedType.defaultPresentationId?.name, "main");
@@ -79,12 +75,12 @@ void main() {
     expect(encodedPresentation.presentationId.name, "main");
     expect(
       encodedPresentation.inputs.single.valueType.kind,
-      wire_type.TypeExpression_kind.namedWrapper,
+      skir.TypeExpression_kind.namedWrapper,
     );
     expect(encodedPresentation.root.nodeId, "root");
     expect(
       encodedPresentation.root.element?.kind,
-      wire_presentation.PresentationElement_kind.dividerConst,
+      skir.PresentationElement_kind.dividerConst,
     );
 
     expect(
@@ -92,8 +88,8 @@ void main() {
       presentation,
     );
 
-    final capability = wire_capability.CapabilityDefinition.createComputation(
-      capabilityId: wire_type.CapabilityId(value: "capability"),
+    final capability = skir.CapabilityDefinition.createComputation(
+      capabilityId: skir.CapabilityId(value: "capability"),
       requestType: types.encodeReference(reference).valueOrNull!,
       resultType: types.encodeReference(reference).valueOrNull!,
     );
@@ -119,7 +115,7 @@ void main() {
     );
     expect(
       encodedEnvelope.rootValue.kind,
-      wire_type.TypedValue_kind.recordWrapper,
+      skir.TypedValue_kind.recordWrapper,
     );
     expect(definitions.decodeEnvelope(encodedEnvelope).valueOrNull, envelope);
   });

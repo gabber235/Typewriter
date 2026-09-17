@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/organization/v1/presence.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -26,31 +26,31 @@ void main() {
     expect(harness.nats.subscriptionSubjects, [_wildcardSubject]);
     expect(harness.nats.publications, hasLength(1));
     expect(harness.nats.publications.single.subject, _ownSubject);
-    final event = wire.PresenceEvent.serializer.fromBytes(
+    final event = skir.PresenceEvent.serializer.fromBytes(
       harness.nats.publications.single.payload,
     );
     final active = switch (event) {
-      wire.PresenceEvent_activeWrapper(:final value) => value,
+      skir.PresenceEvent_activeWrapper(:final value) => value,
       _ => throw StateError("Expected active presence"),
     };
     expect(active.sequence, 1);
 
     final page = switch (active.location) {
-      wire.PresenceLocation_pageWrapper(:final value) => value,
+      skir.PresenceLocation_pageWrapper(:final value) => value,
       _ => throw StateError("Expected page presence"),
     };
     expect(page.realmId, recordId("service:realm1"));
     expect(page.bookId, recordId("book:book1"));
     expect(page.pageId, recordId("page:page1"));
-    expect(page.activity, wire.PageActivity.overview);
+    expect(page.activity, skir.PageActivity.overview);
 
     subscription.close();
     harness.container.dispose();
     await Future<void>.delayed(Duration.zero);
-    final left = wire.PresenceEvent.serializer.fromBytes(
+    final left = skir.PresenceEvent.serializer.fromBytes(
       harness.nats.publications.last.payload,
     );
-    expect(left, isA<wire.PresenceEvent_leftWrapper>());
+    expect(left, isA<skir.PresenceEvent_leftWrapper>());
     await harness.nats.dispose();
   });
 
@@ -64,10 +64,10 @@ void main() {
 
     harness.emit(
       "remote-user",
-      wire.PresenceEvent.createActive(
+      skir.PresenceEvent.createActive(
         sessionId: "remote-session",
         sequence: 2,
-        location: wire.PresenceLocation.createServices(),
+        location: skir.PresenceLocation.createServices(),
       ),
     );
     await waitForProvider(
@@ -87,10 +87,10 @@ void main() {
 
     harness.emit(
       "remote-user",
-      wire.PresenceEvent.createActive(
+      skir.PresenceEvent.createActive(
         sessionId: "remote-session",
         sequence: 1,
-        location: wire.PresenceLocation.createMembers(),
+        location: skir.PresenceLocation.createMembers(),
       ),
     );
     await Future<void>.delayed(Duration.zero);
@@ -100,12 +100,12 @@ void main() {
     expect(retained.presence.sequence, 2);
     expect(
       retained.presence.location,
-      isA<wire.PresenceLocation_servicesWrapper>(),
+      isA<skir.PresenceLocation_servicesWrapper>(),
     );
 
     harness.emit(
       "remote-user",
-      wire.PresenceEvent.createLeft(sessionId: "remote-session"),
+      skir.PresenceEvent.createLeft(sessionId: "remote-session"),
     );
     await waitForProvider(
       harness.container,
@@ -135,10 +135,10 @@ final class _Harness {
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
 
-  void emit(String userId, wire.PresenceEvent event) {
+  void emit(String userId, skir.PresenceEvent event) {
     nats.emitMessageOnSubject(
       "typewriter.presence.organization.org1.user.$userId",
-      wire.PresenceEvent.serializer.toBytes(event),
+      skir.PresenceEvent.serializer.toBytes(event),
     );
   }
 }

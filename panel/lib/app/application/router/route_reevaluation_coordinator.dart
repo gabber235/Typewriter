@@ -2,7 +2,7 @@ import "dart:async";
 
 import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_coordinator.dart";
+import "package:typewriter_panel/app/application/router/access/access.dart";
 
 part "route_reevaluation_coordinator.freezed.dart";
 

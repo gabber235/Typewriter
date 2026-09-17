@@ -3,8 +3,6 @@ import "package:riverpod/riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "pages.freezed.dart";
@@ -30,7 +28,7 @@ abstract class Page with _$Page {
   const Page._();
 
   /// Converts the authoring contract into the panel's page read model.
-  factory Page.fromWire(wire.Page page) => Page(
+  factory Page.fromWire(skir.Page page) => Page(
     pageId: page.id,
     bookId: page.book,
     name: page.name,
@@ -180,6 +178,22 @@ AsyncValue<List<Page>> projectedBookPages(
               projected.chapter.toLowerCase().contains(query))
         projected,
   ]);
+}
+
+/// Produces all projected pages in the active realm.
+@riverpod
+AsyncValue<List<Page>> projectedPages(Ref ref) {
+  final books = ref.watch(projectedBooksProvider);
+  if (books.mapUnready<List<Page>>() case final value?) return value;
+
+  final pages = [
+    for (final book in books.requireValue)
+      ref.watch(projectedBookPagesProvider(book.bookId, "")),
+  ];
+  for (final value in pages) {
+    if (value.mapUnready<List<Page>>() case final pending?) return pending;
+  }
+  return AsyncData([for (final value in pages) ...value.requireValue]);
 }
 
 /// Produces one page with its current local metadata projection.

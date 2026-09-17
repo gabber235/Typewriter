@@ -9,6 +9,9 @@ import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
 import "package:typewriter_panel/shared/ui/components/loading_button/loading_button_controller.dart";
 import "package:typewriter_panel/shared/utilities/snackbar.dart";
 
+export "loading_button_controller.dart";
+export "loading_icon_button.dart";
+
 /// Selects the Material button treatment used by [LoadingButton].
 enum LoadingVariant { filled, text, outlined }
 

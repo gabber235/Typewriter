@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -14,7 +14,7 @@ void main() {
           path: DataPath.root.field("configuration"),
         ),
       ),
-      wire.PresentationElement_kind.commitControlsWrapper,
+      skir.PresentationElement_kind.commitControlsWrapper,
     );
   });
 
@@ -37,7 +37,7 @@ void main() {
 
     codecs.expectRoundTrip(
       element,
-      wire.PresentationElement_kind.statusWrapper,
+      skir.PresentationElement_kind.statusWrapper,
     );
   });
 
@@ -65,8 +65,8 @@ void main() {
       codecs.expectRoundTrip(
         element,
         element is DateTimeElement
-            ? wire.PresentationElement_kind.dateTimeWrapper
-            : wire.PresentationElement_kind.relativeTimeWrapper,
+            ? skir.PresentationElement_kind.dateTimeWrapper
+            : skir.PresentationElement_kind.relativeTimeWrapper,
       );
     }
   });
@@ -97,7 +97,7 @@ final class _PresentationContentCodecs {
 
   void expectRoundTrip(
     PresentationElement element,
-    wire.PresentationElement_kind kind,
+    skir.PresentationElement_kind kind,
   ) {
     final node = PresentationNode(id: "root", element: element);
     final encoded = encoder.encodeNode(node).valueOrNull!;

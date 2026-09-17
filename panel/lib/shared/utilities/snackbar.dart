@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_theme_access.dart";
+import "package:typewriter_panel/app/presentation/theme/theme.dart";
 
 /// Shows a dismissible message through the nearest [ScaffoldMessenger].
 void showSnackBar(

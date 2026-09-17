@@ -28,13 +28,13 @@ final class BookEditorSnapshot extends EditorSnapshot {
 final class BookEditorResource extends AuthoringEditorResource {
   const BookEditorResource(super.repository, super.id);
   @override
-  wire.AuthoringSnapshotScope get scope => wire.AuthoringSnapshotScope.library_;
+  skir.AuthoringSnapshotScope get scope => skir.AuthoringSnapshotScope.library_;
 
   /// Projects the matching book from a library scoped snapshot.
   @override
-  EditorSnapshot? project(wire.AuthoringSnapshot snapshot) {
+  EditorSnapshot? project(skir.AuthoringSnapshot snapshot) {
     for (final slice in snapshot.slices) {
-      if (slice case wire.AuthoringSnapshotSlice_libraryWrapper(:final value)) {
+      if (slice case skir.AuthoringSnapshotSlice_libraryWrapper(:final value)) {
         for (final book in value.books) {
           if (book.id == id) {
             return BookEditorSnapshot(Book.fromWire(book), snapshot.sequence);
@@ -48,24 +48,24 @@ final class BookEditorResource extends AuthoringEditorResource {
   /// Reconciles an applied batch with this resource's identity and revision.
   @override
   EditorSnapshot? projectApplied(
-    wire.AuthoringChanged change,
+    skir.AuthoringChanged change,
     EditorSnapshot submitted,
   ) {
     for (final resource in change.changes) {
       switch (resource) {
-        case wire.AuthoringResourceChange_upsertBookWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertBookWrapper(:final value):
           if (value.id == id) {
             return BookEditorSnapshot(Book.fromWire(value), change.sequence);
           }
-        case wire.AuthoringResourceChange_removeBookWrapper(:final value):
+        case skir.AuthoringResourceChange_removeBookWrapper(:final value):
           if (value == id) return null;
-        case wire.AuthoringResourceChange_unknown() ||
-            wire.AuthoringResourceChange_upsertTagWrapper() ||
-            wire.AuthoringResourceChange_removeTagWrapper() ||
-            wire.AuthoringResourceChange_upsertPageWrapper() ||
-            wire.AuthoringResourceChange_removePageWrapper() ||
-            wire.AuthoringResourceChange_upsertElementWrapper() ||
-            wire.AuthoringResourceChange_removeElementWrapper():
+        case skir.AuthoringResourceChange_unknown() ||
+            skir.AuthoringResourceChange_upsertTagWrapper() ||
+            skir.AuthoringResourceChange_removeTagWrapper() ||
+            skir.AuthoringResourceChange_upsertPageWrapper() ||
+            skir.AuthoringResourceChange_removePageWrapper() ||
+            skir.AuthoringResourceChange_upsertElementWrapper() ||
+            skir.AuthoringResourceChange_removeElementWrapper():
       }
     }
     return null;
@@ -73,7 +73,7 @@ final class BookEditorResource extends AuthoringEditorResource {
 
   /// Converts the editor commit into a conditional book patch.
   @override
-  wire.AuthoringOperation operation(
+  skir.AuthoringOperation operation(
     EditorSnapshot snapshot,
     EditorCommit commit,
   ) {

@@ -13,9 +13,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as wire;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/duration.dart"
     as wire_duration;
-import "package:typewriter_panel/shared/editors/domain/types/type_diagnostic.dart";
-import "package:typewriter_panel/shared/editors/domain/types/type_id.dart";
-import "package:typewriter_panel/shared/editors/domain/values/data_value.dart";
+import "package:typewriter_panel/shared/editors/domain/types/types.dart";
+import "package:typewriter_panel/shared/editors/domain/values/values.dart";
 
 /// Encodes and decodes scalar, collection, record, and polymorphic values.
 final class SkirDataValueCodec {

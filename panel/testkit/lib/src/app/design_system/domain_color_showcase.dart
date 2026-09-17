@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// A visual test fixture for colors that intentionally live outside the theme.
 ///
 /// Typewriter uses data-driven colors for concepts such as tags, blueprints,
-/// page types, and service roles. Those colors must not be replaced by design
+/// page kinds, and service roles. Those colors must not be replaced by design
 /// system semantic colors, but their surrounding layout and foreground contrast
 /// must still work in both light and dark themes.
 ///
@@ -80,9 +80,8 @@ class _DomainTile extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(color: foreground),
+        style: Theme.of(context).textTheme.titleMedium
+            ?.copyWith(color: foreground),
       ),
     );
   }

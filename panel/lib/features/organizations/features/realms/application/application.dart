@@ -12,7 +12,6 @@
 /// for durable content and catalog generation.
 library;
 
-export "../features/books/features/pages/application/page_editing.dart";
 export "authoring_element_editor.dart";
 export "authoring_element_placement.dart";
 export "authoring_element_submission.dart";

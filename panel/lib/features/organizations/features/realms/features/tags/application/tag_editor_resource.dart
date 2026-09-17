@@ -61,11 +61,11 @@ final class TagEditorSnapshot extends EditorSnapshot {
 final class TagEditorResource extends AuthoringEditorResource {
   const TagEditorResource(super.repository, super.id);
   @override
-  wire.AuthoringSnapshotScope get scope => wire.AuthoringSnapshotScope.library_;
+  skir.AuthoringSnapshotScope get scope => skir.AuthoringSnapshotScope.library_;
   @override
-  EditorSnapshot? project(wire.AuthoringSnapshot snapshot) {
+  EditorSnapshot? project(skir.AuthoringSnapshot snapshot) {
     for (final slice in snapshot.slices) {
-      if (slice case wire.AuthoringSnapshotSlice_libraryWrapper(:final value)) {
+      if (slice case skir.AuthoringSnapshotSlice_libraryWrapper(:final value)) {
         for (final tag in value.tags) {
           if (tag.id == id) {
             return TagEditorSnapshot(Tag.fromWire(tag), snapshot.sequence);
@@ -78,31 +78,31 @@ final class TagEditorResource extends AuthoringEditorResource {
 
   @override
   EditorSnapshot? projectApplied(
-    wire.AuthoringChanged change,
+    skir.AuthoringChanged change,
     EditorSnapshot submitted,
   ) {
     for (final resource in change.changes) {
       switch (resource) {
-        case wire.AuthoringResourceChange_upsertTagWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertTagWrapper(:final value):
           if (value.id == id) {
             return TagEditorSnapshot(Tag.fromWire(value), change.sequence);
           }
-        case wire.AuthoringResourceChange_removeTagWrapper(:final value):
+        case skir.AuthoringResourceChange_removeTagWrapper(:final value):
           if (value == id) return null;
-        case wire.AuthoringResourceChange_unknown() ||
-            wire.AuthoringResourceChange_upsertBookWrapper() ||
-            wire.AuthoringResourceChange_removeBookWrapper() ||
-            wire.AuthoringResourceChange_upsertPageWrapper() ||
-            wire.AuthoringResourceChange_removePageWrapper() ||
-            wire.AuthoringResourceChange_upsertElementWrapper() ||
-            wire.AuthoringResourceChange_removeElementWrapper():
+        case skir.AuthoringResourceChange_unknown() ||
+            skir.AuthoringResourceChange_upsertBookWrapper() ||
+            skir.AuthoringResourceChange_removeBookWrapper() ||
+            skir.AuthoringResourceChange_upsertPageWrapper() ||
+            skir.AuthoringResourceChange_removePageWrapper() ||
+            skir.AuthoringResourceChange_upsertElementWrapper() ||
+            skir.AuthoringResourceChange_removeElementWrapper():
       }
     }
     return null;
   }
 
   @override
-  wire.AuthoringOperation operation(
+  skir.AuthoringOperation operation(
     EditorSnapshot snapshot,
     EditorCommit commit,
   ) {

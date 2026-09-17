@@ -10,7 +10,7 @@ mixin _PageElementMutations
     on _$PageElements, _PageElementMutationContext, _PageElementValues {
   Future<void> moveAll(List<(String, int, int)> changed) => _commitPlacements(
     changed,
-    (element, x, y) => wire.ElementPlacement.createGraph(
+    (element, x, y) => skir.ElementPlacement.createGraph(
       x: x,
       y: y,
       width: _graph(element).width,
@@ -20,7 +20,7 @@ mixin _PageElementMutations
 
   Future<void> resizeAll(List<(String, int, int)> changed) => _commitPlacements(
     changed,
-    (element, width, height) => wire.ElementPlacement.createGraph(
+    (element, width, height) => skir.ElementPlacement.createGraph(
       x: _graph(element).x,
       y: _graph(element).y,
       width: width,
@@ -32,20 +32,20 @@ mixin _PageElementMutations
       _commitPlacements(
         changed,
         (element, start, end) => switch (element) {
-          wire.ElementPlacement_timelineSegmentWrapper() =>
-            wire.ElementPlacement.createTimelineSegment(
+          skir.ElementPlacement_timelineSegmentWrapper() =>
+            skir.ElementPlacement.createTimelineSegment(
               startFrame: start,
               endFrame: end,
             ),
-          wire.ElementPlacement_timelineKeyframeWrapper() =>
-            wire.ElementPlacement.createTimelineKeyframe(frame: start),
+          skir.ElementPlacement_timelineKeyframeWrapper() =>
+            skir.ElementPlacement.createTimelineKeyframe(frame: start),
           _ => throw ApiException.badRequest("The element is not a cue"),
         },
       );
 
   Future<void> _commitPlacements(
     List<(String, int, int)> changed,
-    wire.ElementPlacement Function(wire.ElementPlacement, int, int) placement,
+    skir.ElementPlacement Function(skir.ElementPlacement, int, int) placement,
   ) async {
     state.ensureReady();
     if (changed.isEmpty) return;
@@ -78,9 +78,9 @@ mixin _PageElementMutations
     }
   }
 
-  wire.GraphPlacement _graph(wire.ElementPlacement element) =>
+  skir.GraphPlacement _graph(skir.ElementPlacement element) =>
       switch (element) {
-        wire.ElementPlacement_graphWrapper(:final value) => value,
+        skir.ElementPlacement_graphWrapper(:final value) => value,
         _ => throw ApiException.badRequest("The element is not on a graph"),
       };
 
@@ -115,7 +115,7 @@ mixin _PageElementMutations
     await _submit(
       _commands.createElements([
         for (final indexed in definitions.indexed)
-          wire.PageElement(
+          skir.PageElement(
             id: recordId("element:${ids[indexed.$1]}"),
             page: _pageId,
             elementType: indexed.$2.typeId.uuid,
@@ -123,14 +123,14 @@ mixin _PageElementMutations
             name: indexed.$2.name,
             value: _initialElementValue(indexed.$2, registry, codec.codec),
             placement: switch (placementKind) {
-              EntryPlacementKind.graph => wire.ElementPlacement.createGraph(
+              EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
                 x: 0,
                 y: graphY + indexed.$1,
                 width: 4,
                 height: 1,
               ),
               EntryPlacementKind.timelineEntry =>
-                wire.ElementPlacement.createTimelineEntry(
+                skir.ElementPlacement.createTimelineEntry(
                   trackIndex: indexed.$1,
                 ),
             },

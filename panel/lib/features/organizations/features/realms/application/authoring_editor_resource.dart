@@ -11,7 +11,7 @@ abstract class AuthoringEditorResource implements EditableResource {
   const AuthoringEditorResource(this.repository, this.id);
   final AuthoringResourceRepository repository;
   final skir.RecordId id;
-  wire.AuthoringSnapshotScope get scope;
+  skir.AuthoringSnapshotScope get scope;
   @override
   EditorResourceKey get key => EditorResourceKey(
     scope: EditorResourceScope(
@@ -29,7 +29,7 @@ abstract class AuthoringEditorResource implements EditableResource {
   ///
   /// A missing resource returns null. Callers treat that result as deletion or
   /// unavailability rather than submitting a draft against stale state.
-  FutureOr<EditorSnapshot?> project(wire.AuthoringSnapshot snapshot);
+  FutureOr<EditorSnapshot?> project(skir.AuthoringSnapshot snapshot);
 
   /// Projects the complete resource returned by an applied authoring batch.
   ///
@@ -39,7 +39,7 @@ abstract class AuthoringEditorResource implements EditableResource {
   /// Returning null means the response did not contain this resource and the
   /// caller must perform one authoritative refresh.
   FutureOr<EditorSnapshot?> projectApplied(
-    wire.AuthoringChanged change,
+    skir.AuthoringChanged change,
     EditorSnapshot submitted,
   );
 
@@ -48,7 +48,7 @@ abstract class AuthoringEditorResource implements EditableResource {
   /// The commit contains the canonical base and the local result. Implementors
   /// must preserve the protocol's expected value checks so concurrent edits are
   /// reported as conflicts instead of being overwritten.
-  wire.AuthoringOperation operation(
+  skir.AuthoringOperation operation(
     EditorSnapshot snapshot,
     EditorCommit commit,
   );
@@ -71,30 +71,30 @@ abstract class AuthoringEditorResource implements EditableResource {
     void Function(TypedMutationResult) accept,
   ) =>
       CombinedMutation<
-        wire.AuthoringOperation,
-        wire.ApplyAuthoringBatchResponse
+        skir.AuthoringOperation,
+        skir.ApplyAuthoringBatchResponse
       >(
         combiner: repository.combiner,
         resources: reservations,
         prepare: () =>
             MutationContribution<
-              wire.AuthoringOperation,
-              wire.ApplyAuthoringBatchResponse
+              skir.AuthoringOperation,
+              skir.ApplyAuthoringBatchResponse
             >(
               operation: operation(snapshot, commit),
               integrate: (result) async {
                 switch (result) {
                   case SubmissionConfirmed(:final value) ||
                       SubmissionRejected(
-                        response: final wire.ApplyAuthoringBatchResponse value,
+                        response: final skir.ApplyAuthoringBatchResponse value,
                       ):
                     final actual = switch (value) {
-                      wire.ApplyAuthoringBatchResponse_appliedWrapper(
+                      skir.ApplyAuthoringBatchResponse_appliedWrapper(
                         :final value,
                       ) =>
                         await projectApplied(value, snapshot) ??
                             await refresh(),
-                      wire.ApplyAuthoringBatchResponse_conflictWrapper() =>
+                      skir.ApplyAuthoringBatchResponse_conflictWrapper() =>
                         await refresh(),
                       _ => null,
                     };

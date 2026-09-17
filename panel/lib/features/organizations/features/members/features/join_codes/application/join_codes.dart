@@ -124,6 +124,8 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
   @override
   Stream<List<OrganizationJoinCode>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
+    if (!ref.mounted) return;
+
     if (userId == null) {
       yield [];
       return;

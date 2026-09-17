@@ -7,10 +7,6 @@ import "package:riverpod/riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    show TypedValue;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "page_element_codec.dart";
@@ -46,10 +42,10 @@ PageDocumentHealth? pageDocumentHealth(
         .map((diagnostic) => diagnostic.message)
         .toList(growable: false),
     compileBlocked:
-        document.compileStatus is wire.PageCompileStatus_blockedWrapper,
+        document.compileStatus is skir.PageCompileStatus_blockedWrapper,
     activeManifestId: switch (document.compileStatus) {
-      wire.PageCompileStatus_activeWrapper(:final value) => value.manifestId,
-      wire.PageCompileStatus_blockedWrapper(:final value) =>
+      skir.PageCompileStatus_activeWrapper(:final value) => value.manifestId,
+      skir.PageCompileStatus_blockedWrapper(:final value) =>
         value.lastActiveManifestId,
       _ => null,
     },

@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -30,7 +30,7 @@ void main() {
   );
 
   test("maps every input presentation variant and its fields", () {
-    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+    final elements = <(PresentationElement, skir.PresentationElement_kind)>[
       (
         const TextInputElement(
           control: control,
@@ -44,15 +44,15 @@ void main() {
             TextInputFormat.deny("[^a-z_]"),
           ],
         ),
-        wire.PresentationElement_kind.textInputWrapper,
+        skir.PresentationElement_kind.textInputWrapper,
       ),
       (
         const NumericInputElement(control),
-        wire.PresentationElement_kind.numericInputWrapper,
+        skir.PresentationElement_kind.numericInputWrapper,
       ),
       (
         const ToggleInputElement(control),
-        wire.PresentationElement_kind.toggleInputWrapper,
+        skir.PresentationElement_kind.toggleInputWrapper,
       ),
       (
         SelectInputElement(
@@ -61,7 +61,7 @@ void main() {
           allowCustomValue: true,
           defaultValue: text,
         ),
-        wire.PresentationElement_kind.selectInputWrapper,
+        skir.PresentationElement_kind.selectInputWrapper,
       ),
       (
         SliderInputElement(
@@ -70,35 +70,35 @@ void main() {
           maximum: number,
           divisions: number,
         ),
-        wire.PresentationElement_kind.sliderInputWrapper,
+        skir.PresentationElement_kind.sliderInputWrapper,
       ),
       (
         const DateTimeInputElement(control: control),
-        wire.PresentationElement_kind.dateTimeInputWrapper,
+        skir.PresentationElement_kind.dateTimeInputWrapper,
       ),
       (
         const DurationInputElement(control),
-        wire.PresentationElement_kind.durationInputWrapper,
+        skir.PresentationElement_kind.durationInputWrapper,
       ),
       (
         const ColorInputElement(control: control),
-        wire.PresentationElement_kind.colorInputWrapper,
+        skir.PresentationElement_kind.colorInputWrapper,
       ),
       (
         const ColorInputElement(control: control, includeAlpha: true),
-        wire.PresentationElement_kind.colorInputWrapper,
+        skir.PresentationElement_kind.colorInputWrapper,
       ),
       (
         const BytesInputElement(control),
-        wire.PresentationElement_kind.bytesInputWrapper,
+        skir.PresentationElement_kind.bytesInputWrapper,
       ),
       (
         const EnumInputElement(control),
-        wire.PresentationElement_kind.enumInputWrapper,
+        skir.PresentationElement_kind.enumInputWrapper,
       ),
       (
         const NamedInputElement(control),
-        wire.PresentationElement_kind.namedInputWrapper,
+        skir.PresentationElement_kind.namedInputWrapper,
       ),
       (
         SearchInputElement(
@@ -120,7 +120,7 @@ void main() {
             ),
           ),
         ),
-        wire.PresentationElement_kind.searchInputWrapper,
+        skir.PresentationElement_kind.searchInputWrapper,
       ),
       (
         const ListInputElement(
@@ -132,7 +132,7 @@ void main() {
           itemBindingId: BindingId(2),
           indexBindingId: BindingId(5),
         ),
-        wire.PresentationElement_kind.listInputWrapper,
+        skir.PresentationElement_kind.listInputWrapper,
       ),
       (
         const MapInputElement(
@@ -144,11 +144,11 @@ void main() {
           keyBindingId: BindingId(3),
           valueBindingId: BindingId(4),
         ),
-        wire.PresentationElement_kind.mapInputWrapper,
+        skir.PresentationElement_kind.mapInputWrapper,
       ),
       (
         const RecordInputElement(control: control, fieldPresentation: leaf),
-        wire.PresentationElement_kind.recordInputWrapper,
+        skir.PresentationElement_kind.recordInputWrapper,
       ),
       (
         PolymorphicInputElement(
@@ -161,7 +161,7 @@ void main() {
             ),
           ],
         ),
-        wire.PresentationElement_kind.polymorphicInputWrapper,
+        skir.PresentationElement_kind.polymorphicInputWrapper,
       ),
     ];
 
@@ -185,9 +185,9 @@ void main() {
           .valueOrNull!;
 
       final element = encoded.element;
-      expect(element, isA<wire.PresentationElement_colorInputWrapper>());
+      expect(element, isA<skir.PresentationElement_colorInputWrapper>());
       final color =
-          (element! as wire.PresentationElement_colorInputWrapper).value;
+          (element! as skir.PresentationElement_colorInputWrapper).value;
       expect(color.includeAlpha, includeAlpha);
     }
   });
@@ -202,15 +202,15 @@ void main() {
         )
         .valueOrNull!;
     final text =
-        (encoded.element! as wire.PresentationElement_textInputWrapper).value;
-    final malformed = wire.PresentationNode(
+        (encoded.element! as skir.PresentationElement_textInputWrapper).value;
+    final malformed = skir.PresentationNode(
       nodeId: "text",
       properties: encoded.properties,
-      element: wire.PresentationElement.createTextInput(
+      element: skir.PresentationElement.createTextInput(
         control: text.control,
         multiline: false,
         placeholder: null,
-        inputFormatters: [wire.TextInputFormat.wrapAllow("[")],
+        inputFormatters: [skir.TextInputFormat.wrapAllow("[")],
       ),
       header: null,
     );
@@ -234,14 +234,14 @@ void main() {
         );
         codecs.expectMapping(
           element,
-          wire.PresentationElement_kind.dateTimeInputWrapper,
+          skir.PresentationElement_kind.dateTimeInputWrapper,
         );
 
         final encoded = codecs.encoder
             .encodeNode(PresentationNode(id: "dateTime", element: element))
             .valueOrNull!;
         final wrapper =
-            encoded.element! as wire.PresentationElement_dateTimeInputWrapper;
+            encoded.element! as skir.PresentationElement_dateTimeInputWrapper;
         expect(wrapper.value.includeDate, includeDate);
         expect(wrapper.value.includeTime, includeTime);
       }
@@ -250,10 +250,10 @@ void main() {
 
   test("maps every interaction presentation variant and its fields", () {
     const action = EditorAction.realm(ReloadRealmAction());
-    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+    final elements = <(PresentationElement, skir.PresentationElement_kind)>[
       (
         const ButtonElement(label: text, action: action),
-        wire.PresentationElement_kind.buttonWrapper,
+        skir.PresentationElement_kind.buttonWrapper,
       ),
       (
         const IconButtonElement(
@@ -261,7 +261,7 @@ void main() {
           semanticLabel: text,
           action: action,
         ),
-        wire.PresentationElement_kind.iconButtonWrapper,
+        skir.PresentationElement_kind.iconButtonWrapper,
       ),
       (
         MenuElement(
@@ -270,11 +270,11 @@ void main() {
             PresentationMenuItem(id: "reload", label: text, action: action),
           ],
         ),
-        wire.PresentationElement_kind.menuWrapper,
+        skir.PresentationElement_kind.menuWrapper,
       ),
       (
         const TooltipElement(message: text, child: leaf),
-        wire.PresentationElement_kind.tooltipWrapper,
+        skir.PresentationElement_kind.tooltipWrapper,
       ),
     ];
 
@@ -308,7 +308,7 @@ final class _PresentationCodecs {
 
   void expectMapping(
     PresentationElement element,
-    wire.PresentationElement_kind expectedKind,
+    skir.PresentationElement_kind expectedKind,
   ) {
     final node = PresentationNode(id: "root", element: element);
     final encoded = encoder.encodeNode(node).valueOrNull!;

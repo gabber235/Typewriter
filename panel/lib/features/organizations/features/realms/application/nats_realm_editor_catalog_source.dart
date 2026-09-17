@@ -1,17 +1,7 @@
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as wire_catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as wire_diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/element_catalog.dart"
-    as wire_element;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/page_catalog.dart"
-    as wire_page;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as wire_type;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/icon.dart"
-    as wire_icon;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "nats_realm_editor_catalog_source.freezed.dart";
@@ -37,18 +27,18 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
     if (encoded.valueOrNull == null) {
       return RealmEditorCatalogFetchUnavailable(encoded.diagnostics);
     }
-    final request = wire_catalog.CatalogFetchRequest(
+    final request = skir.CatalogFetchRequest(
       expectedGeneration: expectedGeneration == null
           ? null
-          : wire_type.CatalogGeneration(value: expectedGeneration.value),
+          : skir.CatalogGeneration(value: expectedGeneration.value),
       requestedTypes: encoded.valueOrNull!.$1,
       presentationIds: encoded.valueOrNull!.$2,
       subtypeQueries: encoded.valueOrNull!.$3,
     );
     final response = await ref.requestSkir(
       route.fetchSubject,
-      wire_catalog.CatalogFetchRequest.serializer.toBytes(request),
-      wire_catalog.CatalogFetchResult.serializer,
+      skir.CatalogFetchRequest.serializer.toBytes(request),
+      skir.CatalogFetchResult.serializer,
     );
     return response._decodeDomain();
   }
@@ -57,20 +47,20 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
   Stream<RealmEditorCatalogWatchEvent> watchInvalidations(
     RealmEditorCatalogRoute route,
   ) {
-    final request = wire_catalog.WatchEditorCatalogRequest();
+    final request = skir.WatchEditorCatalogRequest();
     return ref.watchRequest(
       subject: route.invalidationRequestSubject,
       listenSubject: route.invalidationSubject,
-      requestBytes: wire_catalog.WatchEditorCatalogRequest.serializer.toBytes(
+      requestBytes: skir.WatchEditorCatalogRequest.serializer.toBytes(
         request,
       ),
-      serializer: wire_catalog.CatalogWatchUpdate.serializer,
+      serializer: skir.CatalogWatchUpdate.serializer,
       transformer: (previous, response) => response._decodeDomain(),
     );
   }
 }
 
-extension on Iterable<wire_element.ElementCatalogEntry> {
+extension on Iterable<skir.ElementCatalogEntry> {
   TypeResult<Map<String, RealmElementCatalogEntry>> _decodeDomain(
     TypeCatalog catalog,
   ) {
@@ -121,7 +111,7 @@ extension on Iterable<wire_element.ElementCatalogEntry> {
   }
 }
 
-extension on Iterable<wire_page.PageCatalogEntry> {
+extension on Iterable<skir.PageCatalogEntry> {
   TypeResult<Map<PageKindRef, RealmPageDefinition>> _decodeDomain(
     TypeCatalog catalog,
   ) {
@@ -152,31 +142,31 @@ extension on Iterable<wire_page.PageCatalogEntry> {
   }
 }
 
-extension on wire_icon.Icon {
+extension on skir.Icon {
   IconValue _decodeDomain() => switch (this) {
-    wire_icon.Icon_iconifyWrapper(:final value) => IconValue.iconify(value),
-    wire_icon.Icon_svgWrapper(:final value) => IconValue.svg(value),
-    wire_icon.Icon_unknown() => throw StateError("Unknown icon"),
+    skir.Icon_iconifyWrapper(:final value) => IconValue.iconify(value),
+    skir.Icon_svgWrapper(:final value) => IconValue.svg(value),
+    skir.Icon_unknown() => throw StateError("Unknown icon"),
   };
 }
 
-extension on wire_page.PageEditorDefinition {
+extension on skir.PageEditorDefinition {
   RealmPageEditor? _decodeDomain(SkirTypeCodec codec) {
     switch (this) {
-      case wire_page.PageEditorDefinition_graphWrapper(:final value):
+      case skir.PageEditorDefinition_graphWrapper(:final value):
         final nodes = value.nodeTypes._decodeReferences(codec);
         if (nodes == null) return null;
         return RealmGraphPageEditor(
           direction: switch (value.direction) {
-            wire_page.GraphDirection.leftToRight => GraphDirection.leftToRight,
-            wire_page.GraphDirection.rightToLeft => GraphDirection.rightToLeft,
-            wire_page.GraphDirection.topToBottom => GraphDirection.topToBottom,
-            wire_page.GraphDirection.bottomToTop => GraphDirection.bottomToTop,
+            skir.GraphDirection.leftToRight => GraphDirection.leftToRight,
+            skir.GraphDirection.rightToLeft => GraphDirection.rightToLeft,
+            skir.GraphDirection.topToBottom => GraphDirection.topToBottom,
+            skir.GraphDirection.bottomToTop => GraphDirection.bottomToTop,
             _ => throw StateError("Unknown graph direction"),
           },
           nodeTypes: nodes,
         );
-      case wire_page.PageEditorDefinition_timelineWrapper(:final value):
+      case skir.PageEditorDefinition_timelineWrapper(:final value):
         final tracks = value.trackTypes._decodeReferences(codec);
         final segments = value.segmentTypes._decodeReferences(codec);
         final keyframes = value.keyframeTypes._decodeReferences(codec);
@@ -188,13 +178,13 @@ extension on wire_page.PageEditorDefinition {
           segmentTypes: segments,
           keyframeTypes: keyframes,
         );
-      case wire_page.PageEditorDefinition_unknown():
+      case skir.PageEditorDefinition_unknown():
         return null;
     }
   }
 }
 
-extension on Iterable<wire_type.ResolvedTypeRef> {
+extension on Iterable<skir.ResolvedTypeRef> {
   List<ResolvedTypeRef>? _decodeReferences(SkirTypeCodec codec) {
     final decoded = map(codec.decodeReference).toList();
     if (decoded.any((result) => result.valueOrNull == null)) return null;
@@ -202,53 +192,53 @@ extension on Iterable<wire_type.ResolvedTypeRef> {
   }
 }
 
-extension on wire_element.ElementEligibility {
+extension on skir.ElementEligibility {
   (bool, List<String>) _decodeDomain() => switch (this) {
-    wire_element.ElementEligibility_eligibleWrapper() => (true, const []),
-    wire_element.ElementEligibility_ineligibleWrapper(:final value) => (
+    skir.ElementEligibility_eligibleWrapper() => (true, const []),
+    skir.ElementEligibility_ineligibleWrapper(:final value) => (
       false,
       value.reasons.toList(),
     ),
-    wire_element.ElementEligibility_unknown() => (
+    skir.ElementEligibility_unknown() => (
       false,
       const ["Unknown eligibility"],
     ),
   };
 }
 
-extension on wire_element.AvailabilityExpression {
+extension on skir.AvailabilityExpression {
   ElementAvailability _decodeDomain() => switch (this) {
-    wire_element.AvailabilityExpression_alwaysWrapper() =>
+    skir.AvailabilityExpression_alwaysWrapper() =>
       const ElementAvailability.always(),
-    wire_element.AvailabilityExpression_factWrapper(:final value) =>
+    skir.AvailabilityExpression_factWrapper(:final value) =>
       ElementAvailability.fact(key: value.key, expected: value.expected),
-    wire_element.AvailabilityExpression_allWrapper(:final value) =>
+    skir.AvailabilityExpression_allWrapper(:final value) =>
       ElementAvailability.all(
         value.expressions.map((item) => item._decodeDomain()).toList(),
       ),
-    wire_element.AvailabilityExpression_anyWrapper(:final value) =>
+    skir.AvailabilityExpression_anyWrapper(:final value) =>
       ElementAvailability.any(
         value.expressions.map((item) => item._decodeDomain()).toList(),
       ),
-    wire_element.AvailabilityExpression_notWrapper(:final value) =>
+    skir.AvailabilityExpression_notWrapper(:final value) =>
       ElementAvailability.not(value.expression._decodeDomain()),
-    wire_element.AvailabilityExpression_unknown() => throw StateError(
+    skir.AvailabilityExpression_unknown() => throw StateError(
       "Unknown element availability",
     ),
   };
 }
 
-extension on wire_catalog.CatalogFetchResult {
+extension on skir.CatalogFetchResult {
   RealmEditorCatalogFetchResult _decodeDomain() => switch (this) {
-    wire_catalog.CatalogFetchResult_successWrapper(:final value) =>
+    skir.CatalogFetchResult_successWrapper(:final value) =>
       value._decodeDomain(),
-    wire_catalog.CatalogFetchResult_generationMismatchWrapper(:final value) =>
+    skir.CatalogFetchResult_generationMismatchWrapper(:final value) =>
       RealmEditorCatalogGenerationMismatch(
         CatalogGeneration(value.actualGeneration.value),
       ),
-    wire_catalog.CatalogFetchResult_unavailableWrapper(:final value) =>
+    skir.CatalogFetchResult_unavailableWrapper(:final value) =>
       RealmEditorCatalogFetchUnavailable(value._decodeDiagnostics()),
-    wire_catalog.CatalogFetchResult_unknown() =>
+    skir.CatalogFetchResult_unknown() =>
       RealmEditorCatalogFetchUnavailable([
         realmEditorCatalogUnavailableDiagnostic(
           "Realm returned an unknown editor catalog response",
@@ -257,7 +247,7 @@ extension on wire_catalog.CatalogFetchResult {
   };
 }
 
-extension on wire_catalog.CatalogFetchSuccess {
+extension on skir.CatalogFetchSuccess {
   RealmEditorCatalogFetchResult _decodeDomain() {
     final value = this;
     final decoded = value.typeDefinitions.decodeDefinitions();
@@ -309,13 +299,13 @@ extension on wire_catalog.CatalogFetchSuccess {
   }
 }
 
-extension on wire_catalog.CatalogWatchUpdate {
+extension on skir.CatalogWatchUpdate {
   RealmEditorCatalogWatchEvent _decodeDomain() => switch (this) {
-    wire_catalog.CatalogWatchUpdate_initialWrapper(:final value) =>
+    skir.CatalogWatchUpdate_initialWrapper(:final value) =>
       RealmEditorCatalogInvalidated(CatalogGeneration(value.value)),
-    wire_catalog.CatalogWatchUpdate_invalidatedWrapper(:final value) =>
+    skir.CatalogWatchUpdate_invalidatedWrapper(:final value) =>
       RealmEditorCatalogInvalidated(CatalogGeneration(value.generation.value)),
-    wire_catalog.CatalogWatchUpdate_unknown() =>
+    skir.CatalogWatchUpdate_unknown() =>
       RealmEditorCatalogWatchUnavailable([
         realmEditorCatalogUnavailableDiagnostic(
           "Realm returned an unknown editor catalog invalidation",
@@ -327,9 +317,9 @@ extension on wire_catalog.CatalogWatchUpdate {
 extension on RealmEditorCatalogRequest {
   TypeResult<
     (
-      List<wire_type.ResolvedTypeRef>,
-      List<wire_type.PresentationId>,
-      List<wire_catalog.SubtypeQuery>,
+      List<skir.ResolvedTypeRef>,
+      List<skir.PresentationId>,
+      List<skir.SubtypeQuery>,
     )
   >
   _encodeWire() {
@@ -347,12 +337,12 @@ extension on RealmEditorCatalogRequest {
       encodedTypes.map((result) => result.valueOrNull!).toList(),
       [
         for (final id in presentations)
-          wire_type.PresentationId(namespace: id.namespace, name: id.name),
+          skir.PresentationId(namespace: id.namespace, name: id.name),
       ],
       [
         for (final entry in subtypeQueries.indexed)
-          wire_catalog.SubtypeQuery(
-            queryId: wire_catalog.SubtypeQueryId(value: entry.$2.id),
+          skir.SubtypeQuery(
+            queryId: skir.SubtypeQueryId(value: entry.$2.id),
             target: encodedQueries[entry.$1].valueOrNull!,
           ),
       ],
@@ -360,7 +350,7 @@ extension on RealmEditorCatalogRequest {
   }
 }
 
-extension on wire_catalog.CatalogFetchSuccess {
+extension on skir.CatalogFetchSuccess {
   _DecodedCatalogParts _decodeCatalogParts(DecodedTypeCatalog catalog) {
     final value = this;
     final editor = SkirEditorCodec(catalog.registry);
@@ -467,7 +457,7 @@ abstract class _DecodedCatalogParts with _$DecodedCatalogParts {
   }) = _DecodedCatalogPartsValue;
 }
 
-extension on Iterable<wire_diagnostic.TypeDiagnostic> {
+extension on Iterable<skir.TypeDiagnostic> {
   List<TypeDiagnostic> _decodeDiagnostics({TypeRegistry? registry}) {
     final codec = SkirEditorCodec(registry ?? TypeRegistry(TypeCatalog([])));
     return [for (final value in this) value.decodeWire(codec.pathCodec)];

@@ -4,8 +4,8 @@ import "dart:typed_data";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -105,8 +105,8 @@ void main() {
       sequence = 2;
       title = "Newer event";
       harness.emit(_change(sequence, title: title));
-      return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-        wire.ApplyAuthoringBatchResponse.createConflict(conflicts: const []),
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createConflict(conflicts: const []),
       );
     });
 
@@ -115,16 +115,16 @@ void main() {
     final lease = harness.container.read(provider.notifier).acquireLibrary();
     await lease.ready;
     final response = await harness.container.read(provider.notifier).apply([
-      wire.AuthoringOperation.createPatchBook(
+      skir.AuthoringOperation.createPatchBook(
         id: _book,
-        title: wire.StringChange(expected: "Initial", value: "Local"),
+        title: skir.StringChange(expected: "Initial", value: "Local"),
         icon: null,
         color: null,
         tags: null,
       ),
     ]);
 
-    expect(response, isA<wire.ApplyAuthoringBatchResponse_conflictWrapper>());
+    expect(response, isA<skir.ApplyAuthoringBatchResponse_conflictWrapper>());
     expect(harness.container.read(provider).sequence, 2);
     expect(harness.container.read(provider).books[_book]?.title, "Newer event");
     lease.release();
@@ -156,9 +156,9 @@ void main() {
 
     await expectLater(
       harness.container.read(provider.notifier).apply([
-        wire.AuthoringOperation.createPatchBook(
+        skir.AuthoringOperation.createPatchBook(
           id: _book,
-          title: wire.StringChange(expected: "Initial", value: "Local"),
+          title: skir.StringChange(expected: "Initial", value: "Local"),
           icon: null,
           color: null,
           tags: null,
@@ -187,10 +187,10 @@ void main() {
     );
     harness.nats.registerHandler(
       _batchSubject,
-      (_) => wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-        wire.ApplyAuthoringBatchResponse.createInvalid(
+      (_) => skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createInvalid(
           diagnostics: [
-            wire.AuthoringDiagnostic(
+            skir.AuthoringDiagnostic(
               code: "invalid",
               message: "Rejected",
               resource: null,
@@ -267,22 +267,22 @@ void main() {
   test("scope acquired during refresh waits for a complete snapshot", () async {
     final harness = _Harness();
     final firstSnapshot = Completer<Uint8List>();
-    final requests = <wire.GetAuthoringSnapshotRequest>[];
+    final requests = <skir.GetAuthoringSnapshotRequest>[];
     harness.nats.registerHandler(_snapshotSubject, (payload) {
-      final request = wire.GetAuthoringSnapshotRequest.serializer.fromBytes(
+      final request = skir.GetAuthoringSnapshotRequest.serializer.fromBytes(
         payload,
       );
       requests.add(request);
       if (requests.length == 1) return firstSnapshot.future;
-      return wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-        wire.GetAuthoringSnapshotResponse.createSuccess(
+      return skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+        skir.GetAuthoringSnapshotResponse.createSuccess(
           sequence: 1,
           slices: [
-            wire.AuthoringSnapshotSlice.createLibrary(
+            skir.AuthoringSnapshotSlice.createLibrary(
               books: const [],
               tags: const [],
             ),
-            wire.AuthoringSnapshotSlice.createPage(
+            skir.AuthoringSnapshotSlice.createPage(
               pageId: _page,
               document: null,
             ),
@@ -314,8 +314,8 @@ void main() {
 
     expect(requests, hasLength(2));
     expect(requests.last.scopes.map((scope) => scope.kind), [
-      wire.AuthoringSnapshotScope_kind.libraryConst,
-      wire.AuthoringSnapshotScope_kind.pageWrapper,
+      skir.AuthoringSnapshotScope_kind.libraryConst,
+      skir.AuthoringSnapshotScope_kind.pageWrapper,
     ]);
     expect(pageReady, isTrue);
 
@@ -333,13 +333,13 @@ final _tag = recordId("tag:tag1");
 final _page = recordId("page:page1");
 
 Uint8List _snapshot(int sequence, {required String title}) =>
-    wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-      wire.GetAuthoringSnapshotResponse.createSuccess(
+    skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+      skir.GetAuthoringSnapshotResponse.createSuccess(
         sequence: sequence,
         slices: [
-          wire.AuthoringSnapshotSlice.createLibrary(
+          skir.AuthoringSnapshotSlice.createLibrary(
             books: [
-              wire.Book(
+              skir.Book(
                 id: _book,
                 title: title,
                 icon: "mdi:book",
@@ -348,12 +348,12 @@ Uint8List _snapshot(int sequence, {required String title}) =>
               ),
             ],
             tags: [
-              wire.Tag(
+              skir.Tag(
                 id: _tag,
                 name: "Initial tag",
                 color: Colors.blue.toSkirColor(),
                 parents: const [],
-                placement: wire.GraphPlacement(x: 0, y: 0, width: 4, height: 1),
+                placement: skir.GraphPlacement(x: 0, y: 0, width: 4, height: 1),
               ),
             ],
           ),
@@ -361,12 +361,12 @@ Uint8List _snapshot(int sequence, {required String title}) =>
       ),
     );
 
-wire.AuthoringChanged _change(int sequence, {required String title}) =>
-    wire.AuthoringChanged(
+skir.AuthoringChanged _change(int sequence, {required String title}) =>
+    skir.AuthoringChanged(
       sequence: sequence,
       batchId: "batch-$sequence",
       changes: [
-        wire.AuthoringResourceChange.createUpsertBook(
+        skir.AuthoringResourceChange.createUpsertBook(
           id: _book,
           title: title,
           icon: "mdi:book",
@@ -394,10 +394,10 @@ final class _Harness {
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
 
-  void emit(wire.AuthoringChanged change) {
+  void emit(skir.AuthoringChanged change) {
     nats.emitMessageOnSubject(
       _eventSubject,
-      wire.AuthoringChanged.serializer.toBytes(change),
+      skir.AuthoringChanged.serializer.toBytes(change),
     );
   }
 

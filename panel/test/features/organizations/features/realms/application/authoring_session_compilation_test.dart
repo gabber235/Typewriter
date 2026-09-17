@@ -2,10 +2,6 @@ import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/compiled_content.dart"
-    as compiled_wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -24,11 +20,11 @@ void main() {
     var snapshotSequence = 1;
     var snapshotRequests = 0;
     var pageName = "Initial";
-    final snapshotScopes = <List<wire.AuthoringSnapshotScope_kind>>[];
-    wire.PageCompileStatus compileStatus = wire.PageCompileStatus.notCompiled;
+    final snapshotScopes = <List<skir.AuthoringSnapshotScope_kind>>[];
+    skir.PageCompileStatus compileStatus = skir.PageCompileStatus.notCompiled;
 
     nats.registerHandler(_snapshotSubject, (payload) {
-      final request = wire.GetAuthoringSnapshotRequest.serializer.fromBytes(
+      final request = skir.GetAuthoringSnapshotRequest.serializer.fromBytes(
         payload,
       );
       snapshotScopes.add(request.scopes.map((scope) => scope.kind).toList());
@@ -37,12 +33,12 @@ void main() {
         pageName = "During refresh";
         nats.emitMessageOnSubject(
           _eventSubject,
-          wire.AuthoringChanged.serializer.toBytes(
-            wire.AuthoringChanged(
+          skir.AuthoringChanged.serializer.toBytes(
+            skir.AuthoringChanged(
               sequence: 3,
               batchId: "during-compile-refresh",
               changes: [
-                wire.AuthoringResourceChange.wrapUpsertPage(
+                skir.AuthoringResourceChange.wrapUpsertPage(
                   _wirePage("During refresh"),
                 ),
               ],
@@ -51,27 +47,27 @@ void main() {
           ),
         );
       }
-      return wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-        wire.GetAuthoringSnapshotResponse.createSuccess(
+      return skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+        skir.GetAuthoringSnapshotResponse.createSuccess(
           sequence: snapshotSequence,
           slices: [
             for (final scope in request.scopes)
               switch (scope) {
-                wire.AuthoringSnapshotScope.library_ =>
-                  wire.AuthoringSnapshotSlice.createLibrary(
+                skir.AuthoringSnapshotScope.library_ =>
+                  skir.AuthoringSnapshotSlice.createLibrary(
                     books: [_wireBook()],
                     tags: const [],
                   ),
-                wire.AuthoringSnapshotScope_bookWrapper() =>
-                  wire.AuthoringSnapshotSlice.createBook(
+                skir.AuthoringSnapshotScope_bookWrapper() =>
+                  skir.AuthoringSnapshotSlice.createBook(
                     bookId: _book,
                     book: _wireBook(),
                     pages: [_wirePage(pageName)],
                   ),
-                wire.AuthoringSnapshotScope_pageWrapper() =>
-                  wire.AuthoringSnapshotSlice.createPage(
+                skir.AuthoringSnapshotScope_pageWrapper() =>
+                  skir.AuthoringSnapshotSlice.createPage(
                     pageId: _page,
-                    document: wire.PageDocument(
+                    document: skir.PageDocument(
                       page: _wirePage(pageName),
                       elements: const [],
                       references: const [],
@@ -81,7 +77,7 @@ void main() {
                       compileStatus: compileStatus,
                     ),
                   ),
-                wire.AuthoringSnapshotScope_unknown() => throw StateError(
+                skir.AuthoringSnapshotScope_unknown() => throw StateError(
                   "Unknown authoring scope",
                 ),
               },
@@ -113,12 +109,12 @@ void main() {
 
     nats.emitMessageOnSubject(
       _eventSubject,
-      wire.AuthoringChanged.serializer.toBytes(
-        wire.AuthoringChanged(
+      skir.AuthoringChanged.serializer.toBytes(
+        skir.AuthoringChanged(
           sequence: 2,
           batchId: "page-update",
           changes: [
-            wire.AuthoringResourceChange.wrapUpsertPage(_wirePage("Updated")),
+            skir.AuthoringResourceChange.wrapUpsertPage(_wirePage("Updated")),
           ],
           indirectlyAffectedResources: const [],
         ),
@@ -135,14 +131,14 @@ void main() {
     expect(container.read(provider).documents[_page]?.page.name, "Updated");
 
     snapshotSequence = 4;
-    compileStatus = wire.PageCompileStatus.createBlocked(
+    compileStatus = skir.PageCompileStatus.createBlocked(
       lastActiveManifestId: null,
       diagnosticCount: 1,
     );
     nats.emitMessageOnSubject(
       _compiledSubject,
-      compiled_wire.WatchCompiledContentResponse.serializer.toBytes(
-        compiled_wire.WatchCompiledContentResponse.createBlocked(),
+      skir.WatchCompiledContentResponse.serializer.toBytes(
+        skir.WatchCompiledContentResponse.createBlocked(),
       ),
     );
 
@@ -151,7 +147,7 @@ void main() {
       provider,
       (state) =>
           state.documents[_page]?.compileStatus
-              is wire.PageCompileStatus_blockedWrapper,
+              is skir.PageCompileStatus_blockedWrapper,
       description: "blocked page compile status",
     );
 
@@ -165,15 +161,15 @@ void main() {
     expect(container.read(provider).pages[_page]?.name, "During refresh");
     expect(snapshotRequests, 4);
     expect(snapshotScopes.last, [
-      wire.AuthoringSnapshotScope_kind.libraryConst,
-      wire.AuthoringSnapshotScope_kind.bookWrapper,
-      wire.AuthoringSnapshotScope_kind.pageWrapper,
+      skir.AuthoringSnapshotScope_kind.libraryConst,
+      skir.AuthoringSnapshotScope_kind.bookWrapper,
+      skir.AuthoringSnapshotScope_kind.pageWrapper,
     ]);
 
-    final pageOnlyRequestBytes = wire.GetAuthoringSnapshotRequest.serializer
+    final pageOnlyRequestBytes = skir.GetAuthoringSnapshotRequest.serializer
         .toBytes(
-          wire.GetAuthoringSnapshotRequest(
-            scopes: [wire.AuthoringSnapshotScope.createPage(pageId: _page)],
+          skir.GetAuthoringSnapshotRequest(
+            scopes: [skir.AuthoringSnapshotScope.createPage(pageId: _page)],
           ),
         )
         .length;
@@ -198,7 +194,7 @@ final _realm = recordId("service:realm1");
 final _book = recordId("book:book1");
 final _page = recordId("page:page1");
 
-wire.Page _wirePage(String name) => wire.Page(
+skir.Page _wirePage(String name) => skir.Page(
   id: _page,
   book: _book,
   name: name,
@@ -207,7 +203,7 @@ wire.Page _wirePage(String name) => wire.Page(
   priority: 0,
 );
 
-wire.Book _wireBook() => wire.Book(
+skir.Book _wireBook() => skir.Book(
   id: _book,
   title: "Book",
   icon: "mdi:book",

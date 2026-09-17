@@ -6,8 +6,6 @@ import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -24,11 +22,11 @@ void main() {
     "duplication submits one batch with a complete identity rewrite map",
     () async {
       final harness = await _Harness.create();
-      wire.ApplyAuthoringBatchRequest? submitted;
+      skir.ApplyAuthoringBatchRequest? submitted;
       harness.nats.registerHandler(_batchSubject, (bytes) {
-        submitted = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
-        return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-          wire.ApplyAuthoringBatchResponse.createApplied(
+        submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createApplied(
             sequence: 2,
             batchId: submitted!.batchId,
             changes: const [],
@@ -37,7 +35,7 @@ void main() {
         );
       });
       final first = harness._wireElement();
-      final second = wire.PageElement(
+      final second = skir.PageElement(
         id: recordId("element:second"),
         page: first.page,
         elementType: first.elementType,
@@ -55,7 +53,7 @@ void main() {
           .read(authoringSessionProvider(_organization, _realm).notifier)
           .duplicateElements(copies);
       final operations = submitted!.operations
-          .cast<wire.AuthoringOperation_duplicateElementWrapper>()
+          .cast<skir.AuthoringOperation_duplicateElementWrapper>()
           .toList();
       expect(operations, hasLength(2));
       for (final operation in operations) {
@@ -387,11 +385,11 @@ void main() {
 
     await pumpEventQueue();
     harness.title = "Fresh";
-    wire.ApplyAuthoringBatchRequest? submitted;
+    skir.ApplyAuthoringBatchRequest? submitted;
     harness.nats.registerHandler(_batchSubject, (bytes) {
-      submitted = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
-      return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-        wire.ApplyAuthoringBatchResponse.createInvalid(diagnostics: const []),
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createInvalid(diagnostics: const []),
       );
     });
 
@@ -407,7 +405,7 @@ void main() {
 
     final operation =
         submitted!.operations.single
-            as wire.AuthoringOperation_patchElementWrapper;
+            as skir.AuthoringOperation_patchElementWrapper;
     final expected = SkirEditorCodec(
       TypeRegistry(bootstrapTypeCatalog(harness.catalog.catalog.definitions)),
     ).decodeValue(operation.value.valueMutations.single.expected).valueOrNull;
@@ -460,8 +458,8 @@ void main() {
         harness
           ..sequence = 2
           ..x = 8;
-        return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-          wire.ApplyAuthoringBatchResponse.createConflict(conflicts: const []),
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createConflict(conflicts: const []),
         );
       });
 
@@ -595,10 +593,10 @@ final class _Harness {
   void respondWithInvalid({void Function()? onRequest}) {
     nats.registerHandler(_batchSubject, (_) {
       onRequest?.call();
-      return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-        wire.ApplyAuthoringBatchResponse.createInvalid(
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createInvalid(
           diagnostics: [
-            wire.AuthoringDiagnostic(
+            skir.AuthoringDiagnostic(
               code: "invalid",
               message: "Rejected",
               resource: null,
@@ -615,12 +613,12 @@ final class _Harness {
     this.title = title;
     nats.emitMessageOnSubject(
       _eventSubject,
-      wire.AuthoringChanged.serializer.toBytes(
-        wire.AuthoringChanged(
+      skir.AuthoringChanged.serializer.toBytes(
+        skir.AuthoringChanged(
           sequence: sequence,
           batchId: "remote-$sequence",
           changes: [
-            wire.AuthoringResourceChange.wrapUpsertElement(_wireElement()),
+            skir.AuthoringResourceChange.wrapUpsertElement(_wireElement()),
           ],
           indirectlyAffectedResources: const [],
         ),
@@ -632,32 +630,32 @@ final class _Harness {
     sequence++;
     nats.emitMessageOnSubject(
       _eventSubject,
-      wire.AuthoringChanged.serializer.toBytes(
-        wire.AuthoringChanged(
+      skir.AuthoringChanged.serializer.toBytes(
+        skir.AuthoringChanged(
           sequence: sequence,
           batchId: "remove-page-$sequence",
-          changes: [wire.AuthoringResourceChange.wrapRemovePage(_page)],
+          changes: [skir.AuthoringResourceChange.wrapRemovePage(_page)],
           indirectlyAffectedResources: const [],
         ),
       ),
     );
   }
 
-  Uint8List _snapshot() => wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-    wire.GetAuthoringSnapshotResponse.createSuccess(
+  Uint8List _snapshot() => skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+    skir.GetAuthoringSnapshotResponse.createSuccess(
       sequence: sequence,
       slices: [
-        wire.AuthoringSnapshotSlice.createPage(
+        skir.AuthoringSnapshotSlice.createPage(
           pageId: _page,
           document: pageExists
-              ? wire.PageDocument(
+              ? skir.PageDocument(
                   page: _wirePage,
                   elements: [_wireElement()],
                   references: const [],
                   crossPageTargets: const [],
                   crossPageSources: const [],
                   diagnostics: const [],
-                  compileStatus: wire.PageCompileStatus.notCompiled,
+                  compileStatus: skir.PageCompileStatus.notCompiled,
                 )
               : null,
         ),
@@ -665,19 +663,19 @@ final class _Harness {
     ),
   );
 
-  wire.PageElement _wireElement() {
+  skir.PageElement _wireElement() {
     final codec = SkirEditorCodec(
       TypeRegistry(bootstrapTypeCatalog(catalog.catalog.definitions)),
     );
     final value = RecordValue({"title": StringValue(title)});
-    return wire.PageElement(
+    return skir.PageElement(
       id: _element,
       page: _page,
       elementType: _typeId,
       schemaRevision: 1,
       name: "Element",
       value: codec.encodeValue(value).valueOrNull!,
-      placement: wire.ElementPlacement.createGraph(
+      placement: skir.ElementPlacement.createGraph(
         x: x,
         y: 0,
         width: 4,
@@ -710,7 +708,7 @@ final _page = recordId("page:page1");
 final _element = recordId("element:element1");
 final _type = ResolvedTypeRef(id: DeclaredTypeId(_typeId), revision: 1);
 
-final _wirePage = wire.Page(
+final _wirePage = skir.Page(
   id: _page,
   book: _book,
   name: "Page",

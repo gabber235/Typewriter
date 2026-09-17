@@ -1,6 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "services_packed_packer.dart";
 
 /// Adapts service topology nodes and relationships to [GraphData].
 ///

@@ -2,10 +2,6 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/editor_codec_support.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
-    as wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as wire_type;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Invokes realm owned command and computation capabilities over NATS.
@@ -70,18 +66,18 @@ final class NatsRealmCapabilityTransport {
 
     final response = await ref.requestSkir(
       _address.request("editor.capability.command.invoke"),
-      wire.CapabilityInvocationRequest.serializer.toBytes(
-        wire.CapabilityInvocationRequest(
-          invocationId: wire.InvocationId(value: invocationId),
-          generation: wire_type.CatalogGeneration(value: generation.value),
-          capabilityId: wire_type.CapabilityId(
+      skir.CapabilityInvocationRequest.serializer.toBytes(
+        skir.CapabilityInvocationRequest(
+          invocationId: skir.InvocationId(value: invocationId),
+          generation: skir.CatalogGeneration(value: generation.value),
+          capabilityId: skir.CapabilityId(
             value: command.capabilityId.value,
           ),
           payload: encoded.valueOrNull!,
           expectedResultType: null,
         ),
       ),
-      wire.CommandResult.serializer,
+      skir.CommandResult.serializer,
     );
     return _decode(response, editor, invocationId);
   }
@@ -111,38 +107,38 @@ final class NatsRealmCapabilityTransport {
 
     final response = await ref.requestSkir(
       _address.request("editor.capability.computation.invoke"),
-      wire.CapabilityInvocationRequest.serializer.toBytes(
-        wire.CapabilityInvocationRequest(
-          invocationId: wire.InvocationId(value: invocationId),
-          generation: wire_type.CatalogGeneration(value: generation.value),
-          capabilityId: wire_type.CapabilityId(value: capabilityId.value),
+      skir.CapabilityInvocationRequest.serializer.toBytes(
+        skir.CapabilityInvocationRequest(
+          invocationId: skir.InvocationId(value: invocationId),
+          generation: skir.CatalogGeneration(value: generation.value),
+          capabilityId: skir.CapabilityId(value: capabilityId.value),
           payload: encodedPayload.valueOrNull!,
           expectedResultType: encodedResult.valueOrNull,
         ),
       ),
-      wire.ComputationResult.serializer,
+      skir.ComputationResult.serializer,
     );
     return _decodeComputation(response, editor, invocationId);
   }
 }
 
 RealmComputationResult _decodeComputation(
-  wire.ComputationResult result,
+  skir.ComputationResult result,
   SkirEditorCodec editor,
   String invocationId,
 ) {
   final correlated = switch (result) {
-    wire.ComputationResult_successWrapper(:final value) =>
+    skir.ComputationResult_successWrapper(:final value) =>
       value.invocationId.value,
-    wire.ComputationResult_invalidWrapper(:final value) =>
+    skir.ComputationResult_invalidWrapper(:final value) =>
       value.invocationId.value,
-    wire.ComputationResult_unavailableWrapper(:final value) =>
+    skir.ComputationResult_unavailableWrapper(:final value) =>
       value.invocationId.value,
-    wire.ComputationResult_permissionDeniedWrapper(:final value) =>
+    skir.ComputationResult_permissionDeniedWrapper(:final value) =>
       value.invocationId.value,
-    wire.ComputationResult_staleGenerationWrapper(:final value) =>
+    skir.ComputationResult_staleGenerationWrapper(:final value) =>
       value.invocationId.value,
-    wire.ComputationResult_unknown() => invocationId,
+    skir.ComputationResult_unknown() => invocationId,
   };
   if (correlated != invocationId) {
     return RealmComputationResult.unavailable([
@@ -153,32 +149,32 @@ RealmComputationResult _decodeComputation(
     ]);
   }
   return switch (result) {
-    wire.ComputationResult_successWrapper(:final value) => switch (editor
+    skir.ComputationResult_successWrapper(:final value) => switch (editor
         .decodeValue(value.value)) {
       TypeSuccess(:final value) => RealmComputationResult.success(value),
       TypeFailure(:final diagnostics) => RealmComputationResult.invalid(
         diagnostics,
       ),
     },
-    wire.ComputationResult_invalidWrapper(:final value) =>
+    skir.ComputationResult_invalidWrapper(:final value) =>
       RealmComputationResult.invalid(
         value.diagnostics
             .map((item) => item.decodeWire(editor.pathCodec))
             .toList(),
       ),
-    wire.ComputationResult_unavailableWrapper(:final value) =>
+    skir.ComputationResult_unavailableWrapper(:final value) =>
       RealmComputationResult.unavailable(
         value.diagnostics
             .map((item) => item.decodeWire(editor.pathCodec))
             .toList(),
       ),
-    wire.ComputationResult_permissionDeniedWrapper(:final value) =>
+    skir.ComputationResult_permissionDeniedWrapper(:final value) =>
       RealmComputationResult.permissionDenied(value.message),
-    wire.ComputationResult_staleGenerationWrapper(:final value) =>
+    skir.ComputationResult_staleGenerationWrapper(:final value) =>
       RealmComputationResult.staleGeneration(
         CatalogGeneration(value.actualGeneration.value),
       ),
-    wire.ComputationResult_unknown() => RealmComputationResult.unavailable([
+    skir.ComputationResult_unknown() => RealmComputationResult.unavailable([
       const TypeDiagnostic(
         code: TypeDiagnosticCode.invalidValue,
         message: "Realm returned an unknown computation result",
@@ -188,20 +184,20 @@ RealmComputationResult _decodeComputation(
 }
 
 RealmCommandResult _decode(
-  wire.CommandResult result,
+  skir.CommandResult result,
   SkirEditorCodec editor,
   String invocationId,
 ) {
   final correlated = switch (result) {
-    wire.CommandResult_successWrapper(:final value) => value.invocationId.value,
-    wire.CommandResult_invalidWrapper(:final value) => value.invocationId.value,
-    wire.CommandResult_unavailableWrapper(:final value) =>
+    skir.CommandResult_successWrapper(:final value) => value.invocationId.value,
+    skir.CommandResult_invalidWrapper(:final value) => value.invocationId.value,
+    skir.CommandResult_unavailableWrapper(:final value) =>
       value.invocationId.value,
-    wire.CommandResult_permissionDeniedWrapper(:final value) =>
+    skir.CommandResult_permissionDeniedWrapper(:final value) =>
       value.invocationId.value,
-    wire.CommandResult_staleGenerationWrapper(:final value) =>
+    skir.CommandResult_staleGenerationWrapper(:final value) =>
       value.invocationId.value,
-    wire.CommandResult_unknown() => invocationId,
+    skir.CommandResult_unknown() => invocationId,
   };
   if (correlated != invocationId) {
     return RealmCommandResult.unavailable([
@@ -212,29 +208,29 @@ RealmCommandResult _decode(
     ]);
   }
   return switch (result) {
-    wire.CommandResult_successWrapper(:final value) => _decodeInstructions(
+    skir.CommandResult_successWrapper(:final value) => _decodeInstructions(
       value.instructions.toList(),
       editor,
     ),
-    wire.CommandResult_invalidWrapper(:final value) =>
+    skir.CommandResult_invalidWrapper(:final value) =>
       RealmCommandResult.invalid(
         value.diagnostics
             .map((item) => item.decodeWire(editor.pathCodec))
             .toList(),
       ),
-    wire.CommandResult_unavailableWrapper(:final value) =>
+    skir.CommandResult_unavailableWrapper(:final value) =>
       RealmCommandResult.unavailable(
         value.diagnostics
             .map((item) => item.decodeWire(editor.pathCodec))
             .toList(),
       ),
-    wire.CommandResult_permissionDeniedWrapper(:final value) =>
+    skir.CommandResult_permissionDeniedWrapper(:final value) =>
       RealmCommandResult.permissionDenied(value.message),
-    wire.CommandResult_staleGenerationWrapper(:final value) =>
+    skir.CommandResult_staleGenerationWrapper(:final value) =>
       RealmCommandResult.staleGeneration(
         CatalogGeneration(value.actualGeneration.value),
       ),
-    wire.CommandResult_unknown() => RealmCommandResult.unavailable([
+    skir.CommandResult_unknown() => RealmCommandResult.unavailable([
       const TypeDiagnostic(
         code: TypeDiagnosticCode.invalidValue,
         message: "Realm returned an unknown command result",
@@ -244,7 +240,7 @@ RealmCommandResult _decode(
 }
 
 RealmCommandResult _decodeInstructions(
-  List<wire.PanelInstruction> values,
+  List<skir.PanelInstruction> values,
   SkirEditorCodec editor,
 ) {
   final instructions = <PanelInstruction>[];
@@ -262,32 +258,32 @@ RealmCommandResult _decodeInstructions(
 }
 
 TypeResult<PanelInstruction> _decodeInstruction(
-  wire.PanelInstruction value,
+  skir.PanelInstruction value,
   SkirEditorCodec editor,
 ) => switch (value) {
-  wire.PanelInstruction_invalidateResourceWrapper(:final value) =>
+  skir.PanelInstruction_invalidateResourceWrapper(:final value) =>
     _decodeResource(
       value.resource,
       editor,
     ).mapValue(PanelInstruction.invalidateResource),
-  wire.PanelInstruction_openResourceWrapper(:final value) => _decodeResource(
+  skir.PanelInstruction_openResourceWrapper(:final value) => _decodeResource(
     value.resource,
     editor,
   ).mapValue(PanelInstruction.openResource),
-  wire.PanelInstruction_notifyWrapper(:final value) => TypeResult.success(
+  skir.PanelInstruction_notifyWrapper(:final value) => TypeResult.success(
     PanelInstruction.notify(switch (value.severity) {
-      wire.NotificationSeverity.info => NotificationSeverity.info,
-      wire.NotificationSeverity.success => NotificationSeverity.success,
-      wire.NotificationSeverity.warning => NotificationSeverity.warning,
-      wire.NotificationSeverity.error => NotificationSeverity.error,
-      wire.NotificationSeverity_unknown() => NotificationSeverity.error,
+      skir.NotificationSeverity.info => NotificationSeverity.info,
+      skir.NotificationSeverity.success => NotificationSeverity.success,
+      skir.NotificationSeverity.warning => NotificationSeverity.warning,
+      skir.NotificationSeverity.error => NotificationSeverity.error,
+      skir.NotificationSeverity_unknown() => NotificationSeverity.error,
     }, value.message),
   ),
-  wire.PanelInstruction_unknown() => invalidWire("Unknown panel instruction"),
+  skir.PanelInstruction_unknown() => invalidWire("Unknown panel instruction"),
 };
 
 TypeResult<ResourceAddress> _decodeResource(
-  wire.ResourceAddress value,
+  skir.ResourceAddress value,
   SkirEditorCodec editor,
 ) => combineResults(
   editor.typeCodec.decodeReference(value.resourceType),

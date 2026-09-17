@@ -1,8 +1,6 @@
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Creates page metadata mutations with the current workspace dependencies.
@@ -13,9 +11,9 @@ extension PageEditingRef on WidgetRef {
   /// Applies metadata changes to one page without bypassing local draft state.
   Future<TypedMutationResult> editPage({
     required skir.RecordId id,
-    wire.StringChange? name,
-    wire.StringChange? chapter,
-    wire.Int32Change? priority,
+    skir.StringChange? name,
+    skir.StringChange? chapter,
+    skir.Int32Change? priority,
   }) => _pageEditing().edit({
     id: {
       if (name != null) DataPath.root.field("name"): name.value.asValue,
@@ -128,27 +126,27 @@ final class PageEditing {
 ///
 /// Only changed paths are emitted. Values read from [commit.baseValue] become
 /// expected values, preserving optimistic concurrency at the realm boundary.
-wire.AuthoringOperation pagePatchOperation(
+skir.AuthoringOperation pagePatchOperation(
   skir.RecordId id,
   EditorCommit commit,
 ) {
-  wire.StringChange? text(String key) {
+  skir.StringChange? text(String key) {
     final path = DataPath.root.field(key);
     if (!commit.changedPaths.contains(path)) return null;
-    return wire.StringChange(
+    return skir.StringChange(
       expected: (path.read(commit.baseValue).valueOrNull! as StringValue).value,
       value: (path.read(commit.rootValue).valueOrNull! as StringValue).value,
     );
   }
 
   final priority = DataPath.root.field("priority");
-  return wire.AuthoringOperation.createPatchPage(
+  return skir.AuthoringOperation.createPatchPage(
     id: id,
     book: null,
     name: text("name"),
     chapter: text("chapter"),
     priority: commit.changedPaths.contains(priority)
-        ? wire.Int32Change(
+        ? skir.Int32Change(
             expected:
                 (priority.read(commit.baseValue).valueOrNull! as IntegerValue)
                     .value
@@ -166,7 +164,7 @@ wire.AuthoringOperation pagePatchOperation(
 ///
 /// [sequence] identifies the canonical authoring observation, not local draft
 /// work. Element content is intentionally outside this snapshot.
-EditorSnapshot pageEditorSnapshot(wire.Page page, int sequence) =>
+EditorSnapshot pageEditorSnapshot(skir.Page page, int sequence) =>
     DocumentEditorSnapshot(
       EditorDocument(
         rootType: RecordType(
@@ -193,12 +191,12 @@ EditorSnapshot pageEditorSnapshot(wire.Page page, int sequence) =>
 final class PageEditorResource extends AuthoringEditorResource {
   const PageEditorResource(super.repository, super.id);
   @override
-  wire.AuthoringSnapshotScope get scope =>
-      wire.AuthoringSnapshotScope.createPage(pageId: id);
+  skir.AuthoringSnapshotScope get scope =>
+      skir.AuthoringSnapshotScope.createPage(pageId: id);
   @override
-  EditorSnapshot? project(wire.AuthoringSnapshot snapshot) {
+  EditorSnapshot? project(skir.AuthoringSnapshot snapshot) {
     for (final slice in snapshot.slices) {
-      if (slice case wire.AuthoringSnapshotSlice_pageWrapper(:final value)) {
+      if (slice case skir.AuthoringSnapshotSlice_pageWrapper(:final value)) {
         if (value.document case final document?) {
           return pageEditorSnapshot(document.page, snapshot.sequence);
         }
@@ -209,29 +207,29 @@ final class PageEditorResource extends AuthoringEditorResource {
 
   @override
   EditorSnapshot? projectApplied(
-    wire.AuthoringChanged change,
+    skir.AuthoringChanged change,
     EditorSnapshot submitted,
   ) {
     for (final resource in change.changes) {
       switch (resource) {
-        case wire.AuthoringResourceChange_upsertPageWrapper(:final value):
+        case skir.AuthoringResourceChange_upsertPageWrapper(:final value):
           if (value.id == id) return pageEditorSnapshot(value, change.sequence);
-        case wire.AuthoringResourceChange_removePageWrapper(:final value):
+        case skir.AuthoringResourceChange_removePageWrapper(:final value):
           if (value == id) return null;
-        case wire.AuthoringResourceChange_unknown() ||
-            wire.AuthoringResourceChange_upsertBookWrapper() ||
-            wire.AuthoringResourceChange_removeBookWrapper() ||
-            wire.AuthoringResourceChange_upsertTagWrapper() ||
-            wire.AuthoringResourceChange_removeTagWrapper() ||
-            wire.AuthoringResourceChange_upsertElementWrapper() ||
-            wire.AuthoringResourceChange_removeElementWrapper():
+        case skir.AuthoringResourceChange_unknown() ||
+            skir.AuthoringResourceChange_upsertBookWrapper() ||
+            skir.AuthoringResourceChange_removeBookWrapper() ||
+            skir.AuthoringResourceChange_upsertTagWrapper() ||
+            skir.AuthoringResourceChange_removeTagWrapper() ||
+            skir.AuthoringResourceChange_upsertElementWrapper() ||
+            skir.AuthoringResourceChange_removeElementWrapper():
       }
     }
     return null;
   }
 
   @override
-  wire.AuthoringOperation operation(
+  skir.AuthoringOperation operation(
     EditorSnapshot snapshot,
     EditorCommit commit,
   ) => pagePatchOperation(id, commit);

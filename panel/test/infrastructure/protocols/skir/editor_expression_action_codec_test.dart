@@ -1,12 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
-    as wire_action;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as wire_diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as wire_expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as wire_type;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -43,21 +37,21 @@ void main() {
   );
 
   test("maps every expression variant and its fields", () {
-    final expressions = <(TypedExpression, wire_expression.Expression_kind)>[
-      (text, wire_expression.Expression_kind.literalWrapper),
+    final expressions = <(TypedExpression, skir.Expression_kind)>[
+      (text, skir.Expression_kind.literalWrapper),
       (
         const TypedExpression(
           resultType: StringType(),
           expression: BindingExpression(binding),
         ),
-        wire_expression.Expression_kind.bindingWrapper,
+        skir.Expression_kind.bindingWrapper,
       ),
       (
         const TypedExpression(
           resultType: StringType(),
           expression: FieldAccessExpression(target: text, fieldName: "name"),
         ),
-        wire_expression.Expression_kind.fieldAccessWrapper,
+        skir.Expression_kind.fieldAccessWrapper,
       ),
       (
         TypedExpression(
@@ -67,7 +61,7 @@ void main() {
             InterpolationValue(text),
           ]),
         ),
-        wire_expression.Expression_kind.interpolationWrapper,
+        skir.Expression_kind.interpolationWrapper,
       ),
       (
         const TypedExpression(
@@ -78,7 +72,7 @@ void main() {
             right: text,
           ),
         ),
-        wire_expression.Expression_kind.comparisonWrapper,
+        skir.Expression_kind.comparisonWrapper,
       ),
       (
         TypedExpression(
@@ -88,7 +82,7 @@ void main() {
             operands: const [truth, truth],
           ),
         ),
-        wire_expression.Expression_kind.booleanOperationWrapper,
+        skir.Expression_kind.booleanOperationWrapper,
       ),
       (
         TypedExpression(
@@ -98,7 +92,7 @@ void main() {
             operands: [one, one],
           ),
         ),
-        wire_expression.Expression_kind.arithmeticWrapper,
+        skir.Expression_kind.arithmeticWrapper,
       ),
       (
         const TypedExpression(
@@ -109,7 +103,7 @@ void main() {
             whenFalse: text,
           ),
         ),
-        wire_expression.Expression_kind.conditionalWrapper,
+        skir.Expression_kind.conditionalWrapper,
       ),
       (
         TypedExpression(
@@ -130,7 +124,7 @@ void main() {
             ),
           ),
         ),
-        wire_expression.Expression_kind.collectionMapWrapper,
+        skir.Expression_kind.collectionMapWrapper,
       ),
       (
         const TypedExpression(
@@ -140,7 +134,7 @@ void main() {
             input: text,
           ),
         ),
-        wire_expression.Expression_kind.conversionWrapper,
+        skir.Expression_kind.conversionWrapper,
       ),
       (
         const TypedExpression(
@@ -150,7 +144,7 @@ void main() {
             operands: [text],
           ),
         ),
-        wire_expression.Expression_kind.stringOperationWrapper,
+        skir.Expression_kind.stringOperationWrapper,
       ),
       (
         TypedExpression(
@@ -160,7 +154,7 @@ void main() {
             operands: const [text],
           ),
         ),
-        wire_expression.Expression_kind.collectionOperationWrapper,
+        skir.Expression_kind.collectionOperationWrapper,
       ),
       (
         const TypedExpression(
@@ -172,14 +166,14 @@ void main() {
             group: 1,
           ),
         ),
-        wire_expression.Expression_kind.regexWrapper,
+        skir.Expression_kind.regexWrapper,
       ),
       (
         const TypedExpression(
           resultType: StringType(),
           expression: CoalesceExpression([text, text]),
         ),
-        wire_expression.Expression_kind.coalesceWrapper,
+        skir.Expression_kind.coalesceWrapper,
       ),
       (
         TypedExpression(
@@ -190,7 +184,7 @@ void main() {
             alpha: one,
           ),
         ),
-        wire_expression.Expression_kind.colorOperationWrapper,
+        skir.Expression_kind.colorOperationWrapper,
       ),
     ];
 
@@ -204,8 +198,8 @@ void main() {
 
   test("rejects a missing expression payload", () {
     final result = expressionDecoder.decode(
-      wire_expression.TypedExpression(
-        resultType: wire_type.TypeExpression.unit,
+      skir.TypedExpression(
+        resultType: skir.TypeExpression.unit,
         expression: null,
       ),
     );
@@ -219,45 +213,45 @@ void main() {
     final actions = <(EditorAction, Object)>[
       (
         const EditorAction.local(SetValueAction(target: binding, value: text)),
-        wire_action.LocalEditorAction_kind.setValueWrapper,
+        skir.LocalEditorAction_kind.setValueWrapper,
       ),
       (
         EditorAction.local(
           InsertListItemAction(target: binding, index: one, value: text),
         ),
-        wire_action.LocalEditorAction_kind.insertListItemWrapper,
+        skir.LocalEditorAction_kind.insertListItemWrapper,
       ),
       (
         EditorAction.local(RemoveListItemAction(target: binding, index: one)),
-        wire_action.LocalEditorAction_kind.removeListItemWrapper,
+        skir.LocalEditorAction_kind.removeListItemWrapper,
       ),
       (
         const EditorAction.local(
           AppendListItemAction(target: binding, value: text),
         ),
-        wire_action.LocalEditorAction_kind.appendListItemWrapper,
+        skir.LocalEditorAction_kind.appendListItemWrapper,
       ),
       (
         const EditorAction.local(DuplicateListItemAction(source: binding)),
-        wire_action.LocalEditorAction_kind.duplicateListItemWrapper,
+        skir.LocalEditorAction_kind.duplicateListItemWrapper,
       ),
       (
         EditorAction.local(
           ReorderListItemAction(source: binding, newIndex: one),
         ),
-        wire_action.LocalEditorAction_kind.reorderListItemWrapper,
+        skir.LocalEditorAction_kind.reorderListItemWrapper,
       ),
       (
         const EditorAction.local(
           PutMapEntryAction(target: binding, key: text, value: text),
         ),
-        wire_action.LocalEditorAction_kind.putMapEntryWrapper,
+        skir.LocalEditorAction_kind.putMapEntryWrapper,
       ),
       (
         const EditorAction.local(
           RemoveMapEntryAction(target: binding, key: text),
         ),
-        wire_action.LocalEditorAction_kind.removeMapEntryWrapper,
+        skir.LocalEditorAction_kind.removeMapEntryWrapper,
       ),
       (
         EditorAction.local(
@@ -267,11 +261,11 @@ void main() {
             initialValue: text,
           ),
         ),
-        wire_action.LocalEditorAction_kind.replaceConcreteNominalTypeWrapper,
+        skir.LocalEditorAction_kind.replaceConcreteNominalTypeWrapper,
       ),
       (
         const EditorAction.realm(ReloadRealmAction()),
-        wire_action.RealmEditorAction_kind.reloadWrapper,
+        skir.RealmEditorAction_kind.reloadWrapper,
       ),
       (
         const EditorAction.realm(
@@ -280,16 +274,16 @@ void main() {
             payload: text,
           ),
         ),
-        wire_action.RealmEditorAction_kind.commandWrapper,
+        skir.RealmEditorAction_kind.commandWrapper,
       ),
     ];
 
     for (final (action, expectedKind) in actions) {
       final encoded = actionEncoder.encode(action).valueOrNull!;
       final actualKind = switch (encoded) {
-        wire_action.EditorAction_localWrapper(:final value) => value.kind,
-        wire_action.EditorAction_realmWrapper(:final value) => value.kind,
-        wire_action.EditorAction_unknown() => null,
+        skir.EditorAction_localWrapper(:final value) => value.kind,
+        skir.EditorAction_realmWrapper(:final value) => value.kind,
+        skir.EditorAction_unknown() => null,
       };
 
       expect(actualKind, expectedKind);
@@ -298,27 +292,27 @@ void main() {
   });
 
   test("decodes every independently authored mutation result", () {
-    final diagnostic = wire_diagnostic.TypeDiagnostic(
-      code: wire_diagnostic.DiagnosticCode.invalidValue,
-      severity: wire_diagnostic.DiagnosticSeverity.error,
+    final diagnostic = skir.TypeDiagnostic(
+      code: skir.DiagnosticCode.invalidValue,
+      severity: skir.DiagnosticSeverity.error,
       message: "Invalid",
       path: null,
       relatedType: null,
       details: const [],
     );
-    final results = <wire_action.TypedMutationResult>[
-      wire_action.TypedMutationResult.createSuccess(
+    final results = <skir.TypedMutationResult>[
+      skir.TypedMutationResult.createSuccess(
         revision: 2,
-        value: wire_type.TypedValue.wrapString("saved"),
+        value: skir.TypedValue.wrapString("saved"),
       ),
-      wire_action.TypedMutationResult.createConflict(
+      skir.TypedMutationResult.createConflict(
         expectedRevision: 1,
         actualRevision: 2,
-        actualValue: wire_type.TypedValue.wrapString("actual"),
+        actualValue: skir.TypedValue.wrapString("actual"),
       ),
-      wire_action.TypedMutationResult.wrapInvalid([diagnostic]),
-      wire_action.TypedMutationResult.wrapUnavailable([diagnostic]),
-      wire_action.TypedMutationResult.createPermissionDenied(
+      skir.TypedMutationResult.wrapInvalid([diagnostic]),
+      skir.TypedMutationResult.wrapUnavailable([diagnostic]),
+      skir.TypedMutationResult.createPermissionDenied(
         message: "Denied by policy",
       ),
     ];

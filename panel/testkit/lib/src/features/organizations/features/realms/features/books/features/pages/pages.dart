@@ -6,36 +6,14 @@ import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/entries.dart";
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/testing/graph_layout.dart";
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/scene.dart";
-import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
+import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/editor.dart";
+import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
-enum PageType {
-  sequence("019d3a87001070008000000000000010"),
-  static("019d3a87001170008000000000000011"),
-  scene("019d3a87001270008000000000000012"),
-  manifest("019d3a87001370008000000000000013");
+export "features/features.dart";
 
-  const PageType(this.id);
+const fixturePageKind = PageKindRef(id: "fixture.page", revision: 1);
 
-  final String id;
-
-  PageKindRef get kind => PageKindRef(id: id, revision: 1);
-
-  String get displayName => name;
-
-  static PageType fromKind(PageKindRef kind) =>
-      values.firstWhere((value) => value.kind == kind);
-}
-
-extension PageFixtureType on Page {
-  PageType get type => PageType.fromKind(kind);
-}
-
-Page generateRandomPage([PageType? pageType]) {
-  final pageTypes = PageType.values.toList();
-  final type = pageType ?? pageTypes.randomOrNull()!;
+Page generateRandomPage([PageKindRef pageKind = fixturePageKind]) {
   final pageName = faker.lorem
       .words(faker.randomGenerator.integer(3, min: 1))
       .join("_")
@@ -53,7 +31,7 @@ Page generateRandomPage([PageType? pageType]) {
     pageId: recordId("page:${faker.guid.guid()}"),
     bookId: recordId("book:${faker.guid.guid()}"),
     name: pageName,
-    kind: type.kind,
+    kind: pageKind,
     chapter: chapters.randomOrNull() ?? "",
     priority: faker.randomGenerator.integer(100, min: -10),
   );
@@ -75,10 +53,10 @@ class BookPagesMock extends CanonicalBookPages {
 }
 
 class PagesMock extends CanonicalPage {
-  PagesMock({this.page, this.pageType});
+  PagesMock({this.page, this.pageKind});
 
   final Page? page;
-  final PageType? pageType;
+  final PageKindRef? pageKind;
 
   @override
   Future<Page> build(skir.RecordId pageId) async {
@@ -86,23 +64,16 @@ class PagesMock extends CanonicalPage {
     if (page != null) {
       return page!;
     }
-    final randomPage = generateRandomPage(pageType);
+    final randomPage = generateRandomPage(pageKind ?? fixturePageKind);
     return randomPage.copyWith(pageId: pageId);
   }
 }
 
 class PageElementsMock extends PageElements {
-  PageElementsMock({
-    required this.displayState,
-    this.direction,
-    this.pageType,
-    this.overwriteElements,
-  });
+  PageElementsMock({required this.displayState, this.elements});
 
   final DisplayState displayState;
-  final GraphDirection? direction;
-  final PageType? pageType;
-  final List<PageElement>? overwriteElements;
+  final List<PageElement>? elements;
 
   @override
   Future<List<PageElement>> build(
@@ -111,23 +82,19 @@ class PageElementsMock extends PageElements {
     String pageId,
   ) async {
     await Future<void>.delayed(100.ms);
-    if (overwriteElements != null) return overwriteElements!;
-    if (pageType == PageType.scene) {
-      return displayState.generateBatch(generateRandomScenePageElements);
-    }
-
-    final definitions = await displayState.generate(
-      generateRandomEntryDefinition,
-    );
-
-    final entries = generateDynamicGraphLayout(definitions, direction);
-
-    return entries
-        .map(
-          (def) =>
-              PageElement.entry(entry: PageEntry.definition(definition: def)),
-        )
-        .toList();
+    return displayState.generateBatch((count) {
+      if (elements case final elements?) return elements;
+      final entries = layoutGraphEntries(
+        List.generate(count, (_) => generateRandomEntryDefinition()),
+        direction: GraphDirection.leftToRight,
+      );
+      return [
+        for (final definition in entries)
+          PageElement.entry(
+            entry: PageEntry.definition(definition: definition),
+          ),
+      ];
+    });
   }
 
   @override
@@ -210,25 +177,18 @@ List<Override> bookPagesProviderOverrides({
   ),
 ];
 
-List<Override> pagesProviderOverrides({Page? page, PageType? pageType}) => [
+List<Override> pagesProviderOverrides({Page? page, PageKindRef? pageKind}) => [
   canonicalPageProvider.overrideWith2(
-    (_) => PagesMock(page: page, pageType: pageType),
+    (_) => PagesMock(page: page, pageKind: pageKind),
   ),
 ];
 
 List<Override> pageElementsProviderOverrides({
   DisplayState state = DisplayState.loading,
-  PageType? pageType,
-  GraphDirection? direction,
-  List<PageElement>? overwriteElements,
+  List<PageElement>? elements,
 }) => [
   pageElementsProvider.overrideWith2(
-    (_) => PageElementsMock(
-      displayState: state,
-      direction: direction,
-      pageType: pageType,
-      overwriteElements: overwriteElements,
-    ),
+    (_) => PageElementsMock(displayState: state, elements: elements),
   ),
 ];
 

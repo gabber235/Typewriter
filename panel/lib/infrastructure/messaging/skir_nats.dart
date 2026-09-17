@@ -5,7 +5,7 @@ import "package:riverpod/riverpod.dart";
 import "package:skir_client/skir_client.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats_client.dart";
 import "package:typewriter_panel/infrastructure/messaging/nats_provider.dart";
-import "package:typewriter_panel/infrastructure/observability/telemetry.dart";
+import "package:typewriter_panel/infrastructure/observability/observability.dart";
 
 const _requestTimeout = Duration(seconds: 10);
 const _membershipStream = "TYPEWRITER_MEMBERSHIP";

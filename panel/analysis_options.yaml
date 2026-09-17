@@ -88,8 +88,6 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
-    - testkit/**
-    - widgetbook/**
   errors:
     invalid_annotation_target: ignore
     always_use_package_imports: error

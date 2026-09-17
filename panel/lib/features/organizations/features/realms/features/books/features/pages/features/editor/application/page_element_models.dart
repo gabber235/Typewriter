@@ -115,14 +115,14 @@ extension PageElementId on PageElement {
       RecordValue({
         "value": definition.data,
         "placement": elementPlacementValue(switch (definition.placement.kind) {
-          EntryPlacementKind.graph => wire.ElementPlacement.createGraph(
+          EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
             x: definition.placement.x,
             y: definition.placement.y,
             width: definition.placement.width,
             height: definition.placement.height,
           ),
           EntryPlacementKind.timelineEntry =>
-            wire.ElementPlacement.createTimelineEntry(
+            skir.ElementPlacement.createTimelineEntry(
               trackIndex: definition.placement.x,
             ),
         }),
@@ -130,7 +130,7 @@ extension PageElementId on PageElement {
     PageElementCue(:final cue) when cue is Segment => RecordValue({
       "value": cue.data,
       "placement": elementPlacementValue(
-        wire.ElementPlacement.createTimelineSegment(
+        skir.ElementPlacement.createTimelineSegment(
           startFrame: cue.startFrame,
           endFrame: cue.endFrame,
         ),
@@ -139,7 +139,7 @@ extension PageElementId on PageElement {
     PageElementCue(:final cue) when cue is Keyframe => RecordValue({
       "value": cue.data,
       "placement": elementPlacementValue(
-        wire.ElementPlacement.createTimelineKeyframe(frame: cue.frame),
+        skir.ElementPlacement.createTimelineKeyframe(frame: cue.frame),
       ),
     }),
     _ => null,
@@ -171,13 +171,13 @@ extension PageElementId on PageElement {
     };
     try {
       return switch (encodeElementPlacement(placement)) {
-        wire.ElementPlacement_graphWrapper(:final value) =>
+        skir.ElementPlacement_graphWrapper(:final value) =>
           withData.moveTo(value.x, value.y).resizeTo(value.width, value.height),
-        wire.ElementPlacement_timelineEntryWrapper(:final value) =>
+        skir.ElementPlacement_timelineEntryWrapper(:final value) =>
           withData.moveTo(value.trackIndex, 0),
-        wire.ElementPlacement_timelineSegmentWrapper(:final value) =>
+        skir.ElementPlacement_timelineSegmentWrapper(:final value) =>
           withData.updateCueTo(value.startFrame, value.endFrame),
-        wire.ElementPlacement_timelineKeyframeWrapper(:final value) =>
+        skir.ElementPlacement_timelineKeyframeWrapper(:final value) =>
           withData.updateCueTo(value.frame, value.frame),
         _ => withData,
       };

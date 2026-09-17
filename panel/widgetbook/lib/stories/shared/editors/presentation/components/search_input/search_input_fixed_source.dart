@@ -13,22 +13,18 @@ final class FixedStorySearchSource implements SearchSource {
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
   );
-  final _selectors = StreamController<List<QuerySelectorDefinition>>.broadcast(
-    sync: true,
-  );
   var _disposed = false;
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors => _selectors.stream;
+  List<QuerySelectorDefinition> get selectors => sourceSelectors;
 
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     scheduleMicrotask(() {
       if (_disposed) return;
-      _selectors.add(sourceSelectors);
       _snapshots.add(snapshot);
     });
   }
@@ -50,6 +46,5 @@ final class FixedStorySearchSource implements SearchSource {
     if (_disposed) return;
     _disposed = true;
     unawaited(_snapshots.close());
-    unawaited(_selectors.close());
   }
 }

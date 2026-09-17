@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -30,7 +30,7 @@ void main() {
   const leaf = PresentationNode(id: "leaf", element: DividerElement());
 
   test("maps every layout presentation variant and its fields", () {
-    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+    final elements = <(PresentationElement, skir.PresentationElement_kind)>[
       (
         ColumnElement(
           children: const [leaf],
@@ -38,19 +38,19 @@ void main() {
           mainAxisAlignment: PresentationMainAxisAlignment.spaceBetween,
           crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
         ),
-        wire.PresentationElement_kind.childrenWrapper,
+        skir.PresentationElement_kind.childrenWrapper,
       ),
       (
         RowElement(children: const [leaf], spacing: 3),
-        wire.PresentationElement_kind.childrenWrapper,
+        skir.PresentationElement_kind.childrenWrapper,
       ),
       (
         WrapElement(children: const [leaf], spacing: 4, runSpacing: 6),
-        wire.PresentationElement_kind.childrenWrapper,
+        skir.PresentationElement_kind.childrenWrapper,
       ),
       (
         StackElement(children: const [leaf]),
-        wire.PresentationElement_kind.childrenWrapper,
+        skir.PresentationElement_kind.childrenWrapper,
       ),
       (
         GridElement(
@@ -59,7 +59,7 @@ void main() {
           horizontalSpacing: 3,
           verticalSpacing: 4,
         ),
-        wire.PresentationElement_kind.childrenWrapper,
+        skir.PresentationElement_kind.childrenWrapper,
       ),
       (
         SectionElement(
@@ -70,7 +70,7 @@ void main() {
             bottom: const PresentationBorderSide(width: 2),
           ),
         ),
-        wire.PresentationElement_kind.sectionWrapper,
+        skir.PresentationElement_kind.sectionWrapper,
       ),
       (
         ContainerElement(
@@ -81,7 +81,7 @@ void main() {
           backgroundColor: color,
           radius: PresentationRadius.custom(number),
         ),
-        wire.PresentationElement_kind.containerWrapper,
+        skir.PresentationElement_kind.containerWrapper,
       ),
       (
         PresentationAnchorElement(
@@ -97,7 +97,7 @@ void main() {
             ),
           ],
         ),
-        wire.PresentationElement_kind.anchorWrapper,
+        skir.PresentationElement_kind.anchorWrapper,
       ),
       (
         ConnectionLayerElement(
@@ -127,15 +127,15 @@ void main() {
             ),
           ],
         ),
-        wire.PresentationElement_kind.connectionLayerWrapper,
+        skir.PresentationElement_kind.connectionLayerWrapper,
       ),
       (
         const PaddingElement(child: leaf, top: 1, start: 2, end: 3, bottom: 4),
-        wire.PresentationElement_kind.paddingWrapper,
+        skir.PresentationElement_kind.paddingWrapper,
       ),
       (
         const PresentationSlotElement(slotId: "children"),
-        wire.PresentationElement_kind.slotWrapper,
+        skir.PresentationElement_kind.slotWrapper,
       ),
       (
         SectionElement(
@@ -144,19 +144,19 @@ void main() {
             PresentationBorderSide(color: color, width: 3),
           ),
         ),
-        wire.PresentationElement_kind.sectionWrapper,
+        skir.PresentationElement_kind.sectionWrapper,
       ),
       (
         TabsElement(
           tabs: const [TabItem(id: "main", label: text, child: leaf)],
           initiallySelectedTabId: "main",
         ),
-        wire.PresentationElement_kind.tabsWrapper,
+        skir.PresentationElement_kind.tabsWrapper,
       ),
-      (const DividerElement(), wire.PresentationElement_kind.dividerConst),
+      (const DividerElement(), skir.PresentationElement_kind.dividerConst),
       (
         SpacerElement(width: number, height: number),
-        wire.PresentationElement_kind.spacerWrapper,
+        skir.PresentationElement_kind.spacerWrapper,
       ),
     ];
 
@@ -235,19 +235,19 @@ void main() {
     final encodedHeader = encoded.header!;
 
     expect(encoded.nodeId, "header");
-    expect(encoded.element?.kind, wire.PresentationElement_kind.dividerConst);
+    expect(encoded.element?.kind, skir.PresentationElement_kind.dividerConst);
     expect(encodedHeader.items, hasLength(3));
     expect(encodedHeader.items.map((item) => item.kind), [
-      wire.HeaderItem_kind.reorderHandleWrapper,
-      wire.HeaderItem_kind.booleanToggleWrapper,
-      wire.HeaderItem_kind.buttonWrapper,
+      skir.HeaderItem_kind.reorderHandleWrapper,
+      skir.HeaderItem_kind.booleanToggleWrapper,
+      skir.HeaderItem_kind.buttonWrapper,
     ]);
     expect(
       encodedHeader.headerPadding?.kind,
-      wire.PresentationInsets_kind.onlyWrapper,
+      skir.PresentationInsets_kind.onlyWrapper,
     );
     final encodedHeaderPadding =
-        (encodedHeader.headerPadding! as wire.PresentationInsets_onlyWrapper)
+        (encodedHeader.headerPadding! as skir.PresentationInsets_onlyWrapper)
             .value;
 
     expect(encodedHeaderPadding.top, 1);
@@ -256,7 +256,7 @@ void main() {
     expect(encodedHeaderPadding.bottom, 4);
     expect(
       encodedHeader.contentPadding?.kind,
-      wire.PresentationInsets_kind.symmetricWrapper,
+      skir.PresentationInsets_kind.symmetricWrapper,
     );
     final decoded = codecs.decoder.decodeNode(encoded);
 
@@ -302,15 +302,15 @@ void main() {
 
   test("rejects invalid section border widths", () {
     final decoded = codecs.decoder.decodeNode(
-      wire.PresentationNode(
+      skir.PresentationNode(
         nodeId: "invalid.border.width",
-        properties: wire.PresentationProperties(
+        properties: skir.PresentationProperties(
           enabledIf: null,
           readOnly: false,
         ),
-        element: wire.PresentationElement.createSection(
+        element: skir.PresentationElement.createSection(
           child: codecs.encoder.encodeNode(leaf).valueOrNull!,
-          border: wire.PresentationBorder.createAll(color: null, width: 0),
+          border: skir.PresentationBorder.createAll(color: null, width: 0),
         ),
         header: null,
       ),
@@ -321,15 +321,15 @@ void main() {
 
   test("rejects section borders without sides", () {
     final decoded = codecs.decoder.decodeNode(
-      wire.PresentationNode(
+      skir.PresentationNode(
         nodeId: "invalid.border.sides",
-        properties: wire.PresentationProperties(
+        properties: skir.PresentationProperties(
           enabledIf: null,
           readOnly: false,
         ),
-        element: wire.PresentationElement.createSection(
+        element: skir.PresentationElement.createSection(
           child: codecs.encoder.encodeNode(leaf).valueOrNull!,
-          border: wire.PresentationBorder.createSides(
+          border: skir.PresentationBorder.createSides(
             top: null,
             start: null,
             end: null,
@@ -345,13 +345,13 @@ void main() {
 
   test("rejects invalid directional padding", () {
     final decoded = codecs.decoder.decodeNode(
-      wire.PresentationNode(
+      skir.PresentationNode(
         nodeId: "invalid.padding",
-        properties: wire.PresentationProperties(
+        properties: skir.PresentationProperties(
           enabledIf: null,
           readOnly: false,
         ),
-        element: wire.PresentationElement.createPadding(
+        element: skir.PresentationElement.createPadding(
           child: codecs.encoder.encodeNode(leaf).valueOrNull!,
           top: 0,
           start: -1,
@@ -366,23 +366,23 @@ void main() {
   });
 
   final invalidHeaderInsets = {
-    "negative all": wire.PresentationInsets.wrapAll(-1),
-    "nonfinite all": wire.PresentationInsets.wrapAll(double.nan),
-    "negative symmetric": wire.PresentationInsets.createSymmetric(
+    "negative all": skir.PresentationInsets.wrapAll(-1),
+    "nonfinite all": skir.PresentationInsets.wrapAll(double.nan),
+    "negative symmetric": skir.PresentationInsets.createSymmetric(
       horizontal: -1,
       vertical: 0,
     ),
-    "nonfinite symmetric": wire.PresentationInsets.createSymmetric(
+    "nonfinite symmetric": skir.PresentationInsets.createSymmetric(
       horizontal: 0,
       vertical: double.infinity,
     ),
-    "negative only": wire.PresentationInsets.createOnly(
+    "negative only": skir.PresentationInsets.createOnly(
       top: 0,
       left: -1,
       right: 0,
       bottom: 0,
     ),
-    "nonfinite only": wire.PresentationInsets.createOnly(
+    "nonfinite only": skir.PresentationInsets.createOnly(
       top: 0,
       left: 0,
       right: double.negativeInfinity,
@@ -413,13 +413,13 @@ void main() {
 
   test("rejects an empty presentation slot identifier", () {
     final decoded = codecs.decoder.decodeNode(
-      wire.PresentationNode(
+      skir.PresentationNode(
         nodeId: "invalid.slot",
-        properties: wire.PresentationProperties(
+        properties: skir.PresentationProperties(
           enabledIf: null,
           readOnly: false,
         ),
-        element: wire.PresentationElement.createSlot(slotId: ""),
+        element: skir.PresentationElement.createSlot(slotId: ""),
         header: null,
       ),
     );
@@ -445,7 +445,7 @@ void main() {
     final encoded = codecs.encoder.encodeNode(node).valueOrNull!;
     final mutable = encoded.toMutable()
       ..header = (encoded.header!.toMutable()
-        ..items = const [wire.HeaderItem.unknown]);
+        ..items = const [skir.HeaderItem.unknown]);
 
     final decoded = codecs.decoder.decodeNode(mutable.toFrozen());
     final item = decoded.header!.items.single as HeaderButtonItem;
@@ -455,7 +455,7 @@ void main() {
   });
 
   test("maps every content presentation variant and its fields", () {
-    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+    final elements = <(PresentationElement, skir.PresentationElement_kind)>[
       (
         TextElement(
           text,
@@ -472,11 +472,11 @@ void main() {
           decoration: text,
           semanticLabel: text,
         ),
-        wire.PresentationElement_kind.textWrapper,
+        skir.PresentationElement_kind.textWrapper,
       ),
       (
         MarkdownElement(text, color: color),
-        wire.PresentationElement_kind.markdownWrapper,
+        skir.PresentationElement_kind.markdownWrapper,
       ),
       (
         IconElement(
@@ -485,23 +485,23 @@ void main() {
           color: color,
           size: number,
         ),
-        wire.PresentationElement_kind.iconWrapper,
+        skir.PresentationElement_kind.iconWrapper,
       ),
       (
         const ImageElement(source: text, semanticLabel: text),
-        wire.PresentationElement_kind.imageWrapper,
+        skir.PresentationElement_kind.imageWrapper,
       ),
       (
         const BadgeElement(label: text, tone: "positive"),
-        wire.PresentationElement_kind.badgeWrapper,
+        skir.PresentationElement_kind.badgeWrapper,
       ),
       (
         ChipElement(label: text, color: color),
-        wire.PresentationElement_kind.chipWrapper,
+        skir.PresentationElement_kind.chipWrapper,
       ),
       (
         ProgressElement(value: number, maximum: number, label: text),
-        wire.PresentationElement_kind.progressWrapper,
+        skir.PresentationElement_kind.progressWrapper,
       ),
     ];
 
@@ -511,13 +511,13 @@ void main() {
   });
 
   test("maps every data presentation variant and its fields", () {
-    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+    final elements = <(PresentationElement, skir.PresentationElement_kind)>[
       (
         const DefaultPresentationElement(
           binding: binding,
           presentationId: PresentationId(namespace: "example", name: "main"),
         ),
-        wire.PresentationElement_kind.defaultPresentationWrapper,
+        skir.PresentationElement_kind.defaultPresentationWrapper,
       ),
       (
         DiagnosticElement([
@@ -526,7 +526,7 @@ void main() {
             message: "invalid",
           ),
         ]),
-        wire.PresentationElement_kind.textWrapper,
+        skir.PresentationElement_kind.textWrapper,
       ),
       (
         const TypedFieldElement(
@@ -534,7 +534,7 @@ void main() {
           expectedType: StringType(),
           presentation: leaf,
         ),
-        wire.PresentationElement_kind.typedFieldWrapper,
+        skir.PresentationElement_kind.typedFieldWrapper,
       ),
       (
         const ConditionalElement(
@@ -542,7 +542,7 @@ void main() {
           whenTrue: leaf,
           whenFalse: leaf,
         ),
-        wire.PresentationElement_kind.conditionalWrapper,
+        skir.PresentationElement_kind.conditionalWrapper,
       ),
       (
         TypedExpression(
@@ -562,7 +562,7 @@ void main() {
             ),
           ),
         ),
-        wire.PresentationElement_kind.repeatedWrapper,
+        skir.PresentationElement_kind.repeatedWrapper,
       ),
       (
         RepeatedElement(
@@ -599,7 +599,7 @@ void main() {
             ),
           ),
         ),
-        wire.PresentationElement_kind.repeatedWrapper,
+        skir.PresentationElement_kind.repeatedWrapper,
       ),
       (
         const ScopedBindingElement(
@@ -607,7 +607,7 @@ void main() {
           scopeBindingId: BindingId(3),
           child: leaf,
         ),
-        wire.PresentationElement_kind.scopedBindingWrapper,
+        skir.PresentationElement_kind.scopedBindingWrapper,
       ),
       (
         PolymorphicMatchElement(
@@ -616,7 +616,7 @@ void main() {
           cases: [PolymorphicMatchCase(type: concreteType, child: leaf)],
           fallback: leaf,
         ),
-        wire.PresentationElement_kind.polymorphicMatchWrapper,
+        skir.PresentationElement_kind.polymorphicMatchWrapper,
       ),
       (
         const CollectionGraphElement(
@@ -644,7 +644,7 @@ void main() {
             ),
           ),
         ),
-        wire.PresentationElement_kind.collectionGraphWrapper,
+        skir.PresentationElement_kind.collectionGraphWrapper,
       ),
     ];
 
@@ -665,9 +665,9 @@ void main() {
 
   test("localizes a missing presentation element", () {
     final decoded = codecs.decoder.decodeNode(
-      wire.PresentationNode(
+      skir.PresentationNode(
         nodeId: "missing",
-        properties: wire.PresentationProperties(
+        properties: skir.PresentationProperties(
           enabledIf: null,
           readOnly: false,
         ),
@@ -705,7 +705,7 @@ final class _PresentationCodecs {
 
   void expectMapping(
     PresentationElement element,
-    wire.PresentationElement_kind expectedKind,
+    skir.PresentationElement_kind expectedKind,
   ) {
     final node = PresentationNode(
       id: "root",

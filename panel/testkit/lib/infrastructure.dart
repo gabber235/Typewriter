@@ -1,3 +1,3 @@
 library;
 
-export "src/infrastructure/messaging/nats.dart";
+export "src/infrastructure/infrastructure.dart";

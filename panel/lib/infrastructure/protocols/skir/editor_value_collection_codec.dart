@@ -7,8 +7,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/editor_codec_supp
 import "package:typewriter_panel/infrastructure/protocols/skir/editor_value_codec.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
     as wire;
-import "package:typewriter_panel/shared/editors/domain/types/type_diagnostic.dart";
-import "package:typewriter_panel/shared/editors/domain/values/data_value.dart";
+import "package:typewriter_panel/shared/editors/domain/types/types.dart";
+import "package:typewriter_panel/shared/editors/domain/values/values.dart";
 
 /// Handles list, map, and record value payloads.
 final class SkirDataValueCollectionCodec {

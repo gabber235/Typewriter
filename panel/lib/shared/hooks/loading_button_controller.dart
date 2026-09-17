@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button/loading_button_controller.dart";
+import "package:typewriter_panel/shared/ui/components/loading_button/loading_button.dart";
 
 /// Creates a [LoadingButtonController] owned by the current widget.
 ///

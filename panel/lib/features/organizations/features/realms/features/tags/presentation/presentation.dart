@@ -5,6 +5,7 @@
 /// changes; those responsibilities belong to the application layer.
 library;
 
+export "rejected_tag_drop_target.dart";
 export "route.dart";
 export "tag_graph.dart";
 export "tag_node.dart";

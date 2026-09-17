@@ -1,6 +1,11 @@
 import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+export "anchored_overlay_config.dart";
+export "anchored_overlay_positioned.dart";
+export "anchored_overlay_scope.dart";
+export "placement_engine.dart";
+
 /// Renders an overlay whose position and size are resolved from its child anchor.
 ///
 /// The overlay is shown after layout when [visible] is true. Placement starts at

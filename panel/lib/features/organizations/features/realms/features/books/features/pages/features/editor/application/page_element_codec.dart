@@ -3,7 +3,7 @@ part of "page_elements.dart";
 // New elements are initialized from the resolved catalog schema, then encoded
 // into the wire value expected by the authoring service. Diagnostics stay at the
 // boundary so callers can report why creation cannot proceed.
-TypedValue _initialElementValue(
+skir.TypedValue _initialElementValue(
   ElementDefinition definition,
   TypeRegistry registry,
   SkirEditorCodec codec,
@@ -15,6 +15,7 @@ TypedValue _initialElementValue(
     throw ApiException.badRequest(initial.diagnostics.join("; "));
   }
   final encoded = codec.encodeValue(value);
+  print(encoded);
   return encoded.valueOrNull ??
       (throw ApiException.badRequest(encoded.diagnostics.join("; ")));
 }
@@ -23,7 +24,7 @@ TypedValue _initialElementValue(
 // catalog definition or invalid value must remain visible to the editor rather
 // than silently disappearing from the page projection.
 List<PageElement> _decodePageElements(
-  wire.PageDocument document,
+  skir.PageDocument document,
   RealmEditorCatalogSnapshot snapshot,
 ) {
   final codec = SkirEditorCodec(
@@ -56,7 +57,7 @@ List<PageElement> _decodePageElements(
     ];
 
     final placement = element.placement;
-    if (placement case wire.ElementPlacement_timelineSegmentWrapper(
+    if (placement case skir.ElementPlacement_timelineSegmentWrapper(
       value: final timing,
     )) {
       if (definition != null && data != null) {
@@ -76,7 +77,7 @@ List<PageElement> _decodePageElements(
       }
       continue;
     }
-    if (placement case wire.ElementPlacement_timelineKeyframeWrapper(
+    if (placement case skir.ElementPlacement_timelineKeyframeWrapper(
       value: final timing,
     )) {
       if (definition != null && data != null) {
@@ -95,13 +96,13 @@ List<PageElement> _decodePageElements(
       continue;
     }
     final entryPlacement = switch (placement) {
-      wire.ElementPlacement_graphWrapper(:final value) => EntryPlacement(
+      skir.ElementPlacement_graphWrapper(:final value) => EntryPlacement(
         x: value.x,
         y: value.y,
         width: value.width,
         height: value.height,
       ),
-      wire.ElementPlacement_timelineEntryWrapper(:final value) =>
+      skir.ElementPlacement_timelineEntryWrapper(:final value) =>
         EntryPlacement(
           kind: EntryPlacementKind.timelineEntry,
           x: value.trackIndex,

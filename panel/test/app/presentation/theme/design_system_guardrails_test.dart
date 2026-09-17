@@ -85,7 +85,7 @@ final exemptions = <Exemption>[
     "established entry-node focus treatment over arbitrary elementDefinition colors",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",
+    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/entry_timeline_editor.dart",
     RegExp(r"Colors\.white"),
     "computed contrast and custom canvas geometry",
   ),
@@ -116,7 +116,7 @@ final exemptions = <Exemption>[
     "lib/shared/editors/presentation/header.dart",
     "lib/shared/graph/presentation/resizable_element.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",
+    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/entry_timeline_editor.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector_popup.dart",
     "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",

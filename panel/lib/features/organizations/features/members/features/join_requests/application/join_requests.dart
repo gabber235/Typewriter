@@ -80,6 +80,8 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
   @override
   Stream<List<OrganizationJoinRequest>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
+    if (!ref.mounted) return;
+
     if (userId == null) {
       yield [];
       return;

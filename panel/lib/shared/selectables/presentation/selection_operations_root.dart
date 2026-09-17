@@ -19,7 +19,9 @@ class SelectionOperationsRoot extends InheritedWidget {
   static List<SelectionOperation> of(BuildContext context) {
     final root = context
         .dependOnInheritedWidgetOfExactType<SelectionOperationsRoot>();
-    assert(root != null, "No SelectionOperationsRoot found in context");
+    assert(root != null, () {
+      throw FlutterError("No SelectionOperationsRoot found in context");
+    }());
     return root!.operations;
   }
 

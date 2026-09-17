@@ -41,7 +41,7 @@ class NormalMode extends InteractionMode
             label: "Move Focus ${direction.name.titleCase()}",
             description: "Move focus ${direction.name}",
             activators: [SingleActivator(key)],
-            priority: 0,
+            priority: -10,
             show: false,
             onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
           ),
@@ -67,7 +67,7 @@ class NormalMode extends InteractionMode
           SingleActivator(LogicalKeyboardKey.tab),
           SingleActivator(LogicalKeyboardKey.tab, shift: true),
         ],
-        priority: -1,
+        priority: -11,
       ),
 
       ActionShortcut.intent(
@@ -75,7 +75,7 @@ class NormalMode extends InteractionMode
         label: "Unselect Selection",
         description: "Unselect the currently selected item",
         intent: DismissIntent,
-        priority: -1,
+        priority: -11,
         show: false,
         onInvoke: (ref) {
           final focused = SelectableScope.primaryFocusedId();

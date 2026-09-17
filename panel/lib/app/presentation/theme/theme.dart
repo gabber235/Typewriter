@@ -6,11 +6,14 @@ import "package:typewriter_panel/app/presentation/theme/typewriter_spacing.dart"
 import "package:typewriter_panel/app/presentation/theme/typewriter_state_tokens.dart";
 import "package:typewriter_panel/app/presentation/theme/typography.dart";
 
+export "package:typewriter_panel/app/presentation/theme/color_scheme.dart";
+export "package:typewriter_panel/app/presentation/theme/component_themes.dart";
 export "package:typewriter_panel/app/presentation/theme/typewriter_colors.dart";
 export "package:typewriter_panel/app/presentation/theme/typewriter_shapes.dart";
 export "package:typewriter_panel/app/presentation/theme/typewriter_spacing.dart";
 export "package:typewriter_panel/app/presentation/theme/typewriter_state_tokens.dart";
 export "package:typewriter_panel/app/presentation/theme/typewriter_theme_access.dart";
+export "package:typewriter_panel/app/presentation/theme/typography.dart";
 
 /// Builds the panel theme for [brightness].
 ///

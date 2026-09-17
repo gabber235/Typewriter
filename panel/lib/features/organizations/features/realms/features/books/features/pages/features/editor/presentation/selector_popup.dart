@@ -109,9 +109,12 @@ class _SelectorButton<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AnchoredPopup(
-    popupBuilder: (context, close) => GlobalModeShortcut(
-      child: GlobalOperationShortcuts(
-        child: contentBuilder(items, selected, (_) => close()),
+    popupBuilder: (ctx, close) => SelectionOperationsRoot(
+      operations: SelectionOperationsRoot.of(context),
+      child: GlobalModeShortcut(
+        child: GlobalOperationShortcuts(
+          child: contentBuilder(items, selected, (_) => close()),
+        ),
       ),
     ),
     builder: (context, show) => Material(

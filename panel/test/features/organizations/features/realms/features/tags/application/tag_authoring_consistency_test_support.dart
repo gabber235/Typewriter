@@ -100,11 +100,11 @@ final class _Harness {
     return harness;
   }
 
-  Uint8List snapshot() => wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-    wire.GetAuthoringSnapshotResponse.createSuccess(
+  Uint8List snapshot() => skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+    skir.GetAuthoringSnapshotResponse.createSuccess(
       sequence: sequence,
       slices: [
-        wire.AuthoringSnapshotSlice.createLibrary(
+        skir.AuthoringSnapshotSlice.createLibrary(
           books: const [],
           tags: [tag.toWire()],
         ),
@@ -113,11 +113,11 @@ final class _Harness {
   );
 
   Uint8List appliedResponse(String batchId) =>
-      wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-        wire.ApplyAuthoringBatchResponse.createApplied(
+      skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
           sequence: sequence,
           batchId: batchId,
-          changes: [wire.AuthoringResourceChange.wrapUpsertTag(tag.toWire())],
+          changes: [skir.AuthoringResourceChange.wrapUpsertTag(tag.toWire())],
           indirectlyAffectedResources: const [],
         ),
       );
@@ -125,11 +125,11 @@ final class _Harness {
   void emitEvent(String batchId) {
     nats.emitMessageOnSubject(
       _eventSubject,
-      wire.AuthoringChanged.serializer.toBytes(
-        wire.AuthoringChanged(
+      skir.AuthoringChanged.serializer.toBytes(
+        skir.AuthoringChanged(
           sequence: sequence,
           batchId: batchId,
-          changes: [wire.AuthoringResourceChange.wrapUpsertTag(tag.toWire())],
+          changes: [skir.AuthoringResourceChange.wrapUpsertTag(tag.toWire())],
           indirectlyAffectedResources: const [],
         ),
       ),

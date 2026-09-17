@@ -4,8 +4,8 @@ import "dart:typed_data";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -32,12 +32,12 @@ void main() {
       });
 
       harness.nats.registerHandler(_batchSubject, (bytes) async {
-        final request = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(
+        final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
           bytes,
         );
         final patch =
             request.operations.single
-                as wire.AuthoringOperation_patchTagWrapper;
+                as skir.AuthoringOperation_patchTagWrapper;
         expect(patch.value.color?.expected, Colors.blue.toSkirColor());
         expect(patch.value.color?.value, Colors.red.toSkirColor());
 
@@ -88,12 +88,12 @@ void main() {
       final source = harness.openDirectEditor();
 
       harness.nats.registerHandler(_batchSubject, (bytes) async {
-        final request = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(
+        final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
           bytes,
         );
         final patch =
             request.operations.single
-                as wire.AuthoringOperation_patchTagWrapper;
+                as skir.AuthoringOperation_patchTagWrapper;
         expect(patch.value.name, isNull);
         expect(patch.value.color?.expected, Colors.blue.toSkirColor());
         expect(patch.value.color?.value, Colors.red.toSkirColor());
@@ -127,7 +127,7 @@ void main() {
     final source = harness.openDirectEditor();
 
     harness.nats.registerHandler(_batchSubject, (bytes) async {
-      final request = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(
+      final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
         bytes,
       );
       expect(
@@ -139,8 +139,8 @@ void main() {
       harness
         ..sequence = 2
         ..tag = _tag(name: "remote_name", color: Colors.red);
-      return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-        wire.ApplyAuthoringBatchResponse.createApplied(
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
           sequence: 2,
           batchId: request.batchId,
           changes: const [],

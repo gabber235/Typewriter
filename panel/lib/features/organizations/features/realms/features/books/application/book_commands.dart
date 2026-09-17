@@ -1,8 +1,6 @@
 import "package:collection/collection.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Book mutations expressed in the shared authoring session boundary.
@@ -11,10 +9,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// wire operation, validates its application, and later publishes the
 /// confirmed resource change to its listeners.
 extension BookCommands on AuthoringSession {
-  Future<wire.ApplyAuthoringBatchResponse> createBook(wire.Book book) =>
-      apply([wire.AuthoringOperation.createCreateBook(book: book)]);
+  Future<skir.ApplyAuthoringBatchResponse> createBook(skir.Book book) =>
+      apply([skir.AuthoringOperation.createCreateBook(book: book)]);
 
-  Future<wire.ApplyAuthoringBatchResponse> patchBook(
+  Future<skir.ApplyAuthoringBatchResponse> patchBook(
     Book book, {
     required Book expected,
   }) {
@@ -27,27 +25,27 @@ extension BookCommands on AuthoringSession {
 /// Null patch fields mean no requested change. Non null fields carry the
 /// expected old value, allowing the authoring boundary to detect stale editor
 /// state and reject the write instead of overwriting a concurrent update.
-wire.AuthoringOperation bookPatchOperation(
+skir.AuthoringOperation bookPatchOperation(
   Book book, {
   required Book expected,
 }) {
   final before = expected;
-  return wire.AuthoringOperation.createPatchBook(
+  return skir.AuthoringOperation.createPatchBook(
     id: book.bookId,
     title: before.title == book.title
         ? null
-        : wire.StringChange(expected: before.title, value: book.title),
+        : skir.StringChange(expected: before.title, value: book.title),
     icon: before.icon == book.icon
         ? null
-        : wire.StringChange(expected: before.icon, value: book.icon),
+        : skir.StringChange(expected: before.icon, value: book.icon),
     color: before.color == book.color
         ? null
-        : wire.ColorChange(
+        : skir.ColorChange(
             expected: before.color.toSkirColor(),
             value: book.color.toSkirColor(),
           ),
     tags: const ListEquality<skir.RecordId>().equals(before.tagIds, book.tagIds)
         ? null
-        : wire.RecordIdListChange(expected: before.tagIds, value: book.tagIds),
+        : skir.RecordIdListChange(expected: before.tagIds, value: book.tagIds),
   );
 }

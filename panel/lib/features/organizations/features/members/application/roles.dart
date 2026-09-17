@@ -57,6 +57,8 @@ class OrganizationRoles extends _$OrganizationRoles {
   @override
   Stream<List<OrganizationRole>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
+    if (!ref.mounted) return;
+
     if (userId == null) {
       yield [];
       return;

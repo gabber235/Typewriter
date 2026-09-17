@@ -26,16 +26,16 @@ abstract class AuthoringSessionState with _$AuthoringSessionState {
     int? sequence,
 
     /// Canonical books retained by active scopes.
-    @Default({}) Map<skir.RecordId, wire.Book> books,
+    @Default({}) Map<skir.RecordId, skir.Book> books,
 
     /// Canonical tags retained by the library scope.
-    @Default({}) Map<skir.RecordId, wire.Tag> tags,
+    @Default({}) Map<skir.RecordId, skir.Tag> tags,
 
     /// Canonical page metadata retained by active book or page scopes.
-    @Default({}) Map<skir.RecordId, wire.Page> pages,
+    @Default({}) Map<skir.RecordId, skir.Page> pages,
 
     /// Canonical page documents retained by active page scopes.
-    @Default({}) Map<skir.RecordId, wire.PageDocument> documents,
+    @Default({}) Map<skir.RecordId, skir.PageDocument> documents,
 
     /// Whether an authoritative refresh is currently reconciling the model.
     @Default(false) bool refreshing,
@@ -50,12 +50,12 @@ sealed class _AuthoringScope with _$AuthoringScope {
   const factory _AuthoringScope.book(skir.RecordId bookId) = _BookScope;
   const factory _AuthoringScope.page(skir.RecordId pageId) = _PageScope;
 
-  wire.AuthoringSnapshotScope get wireValue => switch (this) {
-    _LibraryScope() => wire.AuthoringSnapshotScope.library_,
-    _BookScope(:final bookId) => wire.AuthoringSnapshotScope.createBook(
+  skir.AuthoringSnapshotScope get wireValue => switch (this) {
+    _LibraryScope() => skir.AuthoringSnapshotScope.library_,
+    _BookScope(:final bookId) => skir.AuthoringSnapshotScope.createBook(
       bookId: bookId,
     ),
-    _PageScope(:final pageId) => wire.AuthoringSnapshotScope.createPage(
+    _PageScope(:final pageId) => skir.AuthoringSnapshotScope.createPage(
       pageId: pageId,
     ),
   };

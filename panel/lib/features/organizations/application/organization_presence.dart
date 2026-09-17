@@ -2,8 +2,8 @@ import "dart:async";
 
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/organization/v1/presence.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "organization_presence.freezed.dart";
@@ -30,7 +30,7 @@ abstract class PresenceSessionKey with _$PresenceSessionKey {
 abstract class ActivePanelPresence with _$ActivePanelPresence {
   const factory ActivePanelPresence({
     required String userId,
-    required wire.PanelPresence presence,
+    required skir.PanelPresence presence,
     required DateTime observedAt,
   }) = _ActivePanelPresence;
 }
@@ -46,7 +46,7 @@ abstract class ActivePanelPresence with _$ActivePanelPresence {
 class OrganizationPresence extends _$OrganizationPresence {
   final _sessionId = uuid.v4();
   var _sequence = 0;
-  wire.PageActivity _activity = wire.PageActivity.overview;
+  skir.PageActivity _activity = skir.PageActivity.overview;
   Timer? _heartbeat;
   Timer? _expiry;
   NatsSubscription? _subscription;
@@ -72,7 +72,7 @@ class OrganizationPresence extends _$OrganizationPresence {
     _messages = _subscription!.messages.listen(_onMessage);
 
     ref.listen(currentRouteProvider, (_, _) {
-      _activity = wire.PageActivity.overview;
+      _activity = skir.PageActivity.overview;
       unawaited(_publishActive());
     });
     _heartbeat = Timer.periodic(
@@ -97,7 +97,7 @@ class OrganizationPresence extends _$OrganizationPresence {
   ///
   /// The current route remains the location authority. Repeating the same mode
   /// does not publish a redundant heartbeat.
-  void setPageActivity(wire.PageActivity activity) {
+  void setPageActivity(skir.PageActivity activity) {
     if (_activity == activity) return;
     _activity = activity;
     unawaited(_publishActive());
@@ -105,7 +105,7 @@ class OrganizationPresence extends _$OrganizationPresence {
 
   Future<void> _publishActive() async {
     if (!ref.mounted) return;
-    final event = wire.PresenceEvent.createActive(
+    final event = skir.PresenceEvent.createActive(
       sessionId: _sessionId,
       sequence: ++_sequence,
       location: _location(ref.read(currentRouteProvider)),
@@ -114,13 +114,13 @@ class OrganizationPresence extends _$OrganizationPresence {
   }
 
   Future<void> _publishLeft() =>
-      _publish(wire.PresenceEvent.createLeft(sessionId: _sessionId));
+      _publish(skir.PresenceEvent.createLeft(sessionId: _sessionId));
 
-  Future<void> _publish(wire.PresenceEvent event) async {
+  Future<void> _publish(skir.PresenceEvent event) async {
     try {
       await _client.publish(
         _subject,
-        wire.PresenceEvent.serializer.toBytes(event),
+        skir.PresenceEvent.serializer.toBytes(event),
       );
     } on Object {
       // Presence is deliberately best effort.
@@ -131,9 +131,9 @@ class OrganizationPresence extends _$OrganizationPresence {
     if (!state.hasValue) return;
     final userId = _trustedUserId(message.subject);
     if (userId == null) return;
-    final event = wire.PresenceEvent.serializer.fromBytes(message.payload);
+    final event = skir.PresenceEvent.serializer.fromBytes(message.payload);
     switch (event) {
-      case wire.PresenceEvent_activeWrapper(:final value):
+      case skir.PresenceEvent_activeWrapper(:final value):
         if (userId == _userId && value.sessionId == _sessionId) return;
         final key = PresenceSessionKey(userId, value.sessionId);
         final current = state.requireValue[key];
@@ -148,10 +148,10 @@ class OrganizationPresence extends _$OrganizationPresence {
             observedAt: DateTime.now(),
           ),
         });
-      case wire.PresenceEvent_leftWrapper(:final value):
+      case skir.PresenceEvent_leftWrapper(:final value):
         final key = PresenceSessionKey(userId, value.sessionId);
         state = AsyncData(Map.of(state.requireValue)..remove(key));
-      case wire.PresenceEvent_unknown():
+      case skir.PresenceEvent_unknown():
     }
   }
 
@@ -176,7 +176,7 @@ class OrganizationPresence extends _$OrganizationPresence {
     return tokens[5];
   }
 
-  wire.PresenceLocation _location(String path) {
+  skir.PresenceLocation _location(String path) {
     final segments = path
         .split("/")
         .where((value) => value.isNotEmpty)
@@ -192,7 +192,7 @@ class OrganizationPresence extends _$OrganizationPresence {
     final book = after("book");
     final page = after("page");
     if (realm != null && book != null && page != null) {
-      return wire.PresenceLocation.createPage(
+      return skir.PresenceLocation.createPage(
         realmId: recordId("service:$realm"),
         bookId: recordId("book:$book"),
         pageId: recordId("page:$page"),
@@ -200,33 +200,33 @@ class OrganizationPresence extends _$OrganizationPresence {
       );
     }
     if (realm != null && book != null) {
-      return wire.PresenceLocation.createBook(
+      return skir.PresenceLocation.createBook(
         realmId: recordId("service:$realm"),
         bookId: recordId("book:$book"),
       );
     }
     if (realm != null && segments.contains("tags")) {
-      return wire.PresenceLocation.createRealmTags(
+      return skir.PresenceLocation.createRealmTags(
         realmId: recordId("service:$realm"),
       );
     }
 
     if (realm != null && segments.contains("library")) {
-      return wire.PresenceLocation.createRealmLibrary(
+      return skir.PresenceLocation.createRealmLibrary(
         realmId: recordId("service:$realm"),
       );
     }
     if (realm != null) {
-      return wire.PresenceLocation.createRealm(
+      return skir.PresenceLocation.createRealm(
         realmId: recordId("service:$realm"),
       );
     }
     if (segments.contains("members")) {
-      return wire.PresenceLocation.createMembers();
+      return skir.PresenceLocation.createMembers();
     }
     if (segments.contains("services")) {
-      return wire.PresenceLocation.createServices();
+      return skir.PresenceLocation.createServices();
     }
-    return wire.PresenceLocation.createOrganization();
+    return skir.PresenceLocation.createOrganization();
   }
 }

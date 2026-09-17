@@ -1,10 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/app/application/router/access/authentication_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/organization_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_coordinator.dart";
-import "package:typewriter_panel/app/application/router/route_reevaluation_coordinator.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "app_router.g.dart";

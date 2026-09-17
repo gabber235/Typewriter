@@ -11,7 +11,7 @@ mixin _PageElementMutationContext on _$PageElements {
 
   AuthoringSession get _commands => ref.read(_sessionProvider.notifier);
 
-  Future<void> _submit(Future<wire.ApplyAuthoringBatchResponse> pending) async {
+  Future<void> _submit(Future<skir.ApplyAuthoringBatchResponse> pending) async {
     final response = await pending;
     response.requireApplied(
       conflictMessage: "The page changed while it was being edited",
@@ -29,7 +29,7 @@ mixin _PageElementMutationContext on _$PageElements {
     return (registry: registry, codec: SkirEditorCodec(registry));
   }
 
-  wire.PageDocument get _document {
+  skir.PageDocument get _document {
     final document = ref.read(_sessionProvider).documents[_pageId];
     if (document == null) throw ApiException.notFound("Page");
     return document;

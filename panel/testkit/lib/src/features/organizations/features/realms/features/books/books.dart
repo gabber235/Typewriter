@@ -8,8 +8,10 @@ import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
-import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
+import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/editor.dart";
+import "package:typewriter_testkit/src/shared/testing/testing.dart";
+
+export "features/features.dart";
 
 Book Function() generateRandomBook(List<Tag> tags) {
   return () {

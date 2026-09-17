@@ -23,10 +23,6 @@ import "package:hooks_riverpod/hooks_riverpod.dart" show WidgetRef;
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/compiled_content.dart"
-    as compiled_wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authoring_session.freezed.dart";
@@ -132,36 +128,36 @@ class AuthoringSession extends _$AuthoringSession
   /// advances canonical state from the applied event and refreshes after a
   /// conflict. The caller must submit the returned commit through
   /// [LocalWorkCommands], not send it directly.
-  PreparedCommit<wire.ApplyAuthoringBatchResponse> prepare(
-    Iterable<wire.AuthoringOperation> operations, {
+  PreparedCommit<skir.ApplyAuthoringBatchResponse> prepare(
+    Iterable<skir.AuthoringOperation> operations, {
     String? batchId,
   }) {
-    final request = wire.ApplyAuthoringBatchRequest(
+    final request = skir.ApplyAuthoringBatchRequest(
       batchId: batchId ?? uuid.v4(),
       operations: operations,
     );
     return ref.prepareSkir(
       _address.request("library.authoring.batch.apply"),
-      wire.ApplyAuthoringBatchRequest.serializer.toBytes(request),
-      wire.ApplyAuthoringBatchResponse.serializer,
+      skir.ApplyAuthoringBatchRequest.serializer.toBytes(request),
+      skir.ApplyAuthoringBatchResponse.serializer,
       label: _authoringLabel(request.operations),
       classify: (response) => switch (response) {
-        wire.ApplyAuthoringBatchResponse_appliedWrapper() =>
+        skir.ApplyAuthoringBatchResponse_appliedWrapper() =>
           MutationResponseDisposition.confirmed,
-        wire.ApplyAuthoringBatchResponse_unknown() ||
-        wire.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
+        skir.ApplyAuthoringBatchResponse_unknown() ||
+        skir.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
           MutationResponseDisposition.uncertain,
         _ => MutationResponseDisposition.rejected,
       },
       onResponse: (response) async {
         switch (response) {
-          case wire.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
+          case skir.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
             _accept(value);
-          case wire.ApplyAuthoringBatchResponse_conflictWrapper():
+          case skir.ApplyAuthoringBatchResponse_conflictWrapper():
             await _refresh();
-          case wire.ApplyAuthoringBatchResponse_invalidWrapper() ||
-              wire.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-              wire.ApplyAuthoringBatchResponse_unknown():
+          case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
+              skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
+              skir.ApplyAuthoringBatchResponse_unknown():
         }
       },
       submissionId: request.batchId,
@@ -180,8 +176,8 @@ class AuthoringSession extends _$AuthoringSession
   /// authoring protocol. On success, the applied change is integrated into
   /// canonical state. A conflict triggers authoritative refresh before the
   /// failure returns to the caller.
-  Future<wire.ApplyAuthoringBatchResponse> apply(
-    Iterable<wire.AuthoringOperation> operations, {
+  Future<skir.ApplyAuthoringBatchResponse> apply(
+    Iterable<skir.AuthoringOperation> operations, {
     String? batchId,
   }) async {
     final commit = prepare(operations, batchId: batchId);
@@ -265,7 +261,7 @@ extension AuthoringSessionWidgetRef on WidgetRef {
 }
 
 /// Converts authoring validation diagnostics into the panel's API error type.
-extension AuthoringInvalidFailure on wire.AuthoringInvalid {
+extension AuthoringInvalidFailure on skir.AuthoringInvalid {
   String get message =>
       diagnostics.map((diagnostic) => diagnostic.message).join("; ");
 
@@ -273,36 +269,36 @@ extension AuthoringInvalidFailure on wire.AuthoringInvalid {
 }
 
 /// Converts non applied authoring batch responses into caller visible errors.
-extension AuthoringBatchFailure on wire.ApplyAuthoringBatchResponse {
+extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
   void requireApplied({required String conflictMessage}) {
     switch (this) {
-      case wire.ApplyAuthoringBatchResponse_appliedWrapper():
+      case skir.ApplyAuthoringBatchResponse_appliedWrapper():
         return;
-      case wire.ApplyAuthoringBatchResponse_conflictWrapper():
+      case skir.ApplyAuthoringBatchResponse_conflictWrapper():
         throw ApiException.conflict(conflictMessage);
-      case wire.ApplyAuthoringBatchResponse_invalidWrapper() ||
-          wire.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-          wire.ApplyAuthoringBatchResponse_unknown():
+      case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
+          skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
+          skir.ApplyAuthoringBatchResponse_unknown():
         throw toApiException();
     }
   }
 
   ApiException toApiException() => switch (this) {
-    wire.ApplyAuthoringBatchResponse_invalidWrapper(:final value) =>
+    skir.ApplyAuthoringBatchResponse_invalidWrapper(:final value) =>
       value.toApiException(),
-    wire.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
+    skir.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
       ApiException.internalServerError(),
-    wire.ApplyAuthoringBatchResponse_unknown() =>
+    skir.ApplyAuthoringBatchResponse_unknown() =>
       ApiException.unknownResponseMessage(),
     _ => throw StateError("The authoring response is not a failure"),
   };
 
   TypedMutationResult toMutationFailure({required String unavailableMessage}) =>
       switch (this) {
-        wire.ApplyAuthoringBatchResponse_invalidWrapper(:final value) =>
+        skir.ApplyAuthoringBatchResponse_invalidWrapper(:final value) =>
           invalidMutation(value.message),
-        wire.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-        wire.ApplyAuthoringBatchResponse_unknown() => unavailableMutation(
+        skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
+        skir.ApplyAuthoringBatchResponse_unknown() => unavailableMutation(
           unavailableMessage,
         ),
         _ => throw StateError(
