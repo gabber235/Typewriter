@@ -160,7 +160,7 @@ class ServicesGraph extends ConsumerWidget {
     title: service.displayName,
     badge: "${service.role.label.formatted} service",
     status: connected ? "Connected" : "Offline",
-    tone: connected ? _StatusTone.active : _StatusTone.offline,
+    tone: connected ? TopologyStatusTone.active : TopologyStatusTone.offline,
     color: service.color,
     icon: service.icon,
     available: connected,
@@ -180,7 +180,9 @@ class ServicesGraph extends ConsumerWidget {
       title: service?.displayName ?? _recordLabel(host.hostId),
       badge: host.entrypoint == "PAPER" ? "Paper host" : "Standalone host",
       status: status,
-      tone: connected ? _hostTone(host.state.status) : _StatusTone.offline,
+      tone: connected
+          ? topologyHostStatusTone(host.state.status)
+          : TopologyStatusTone.offline,
       color: service?.color ?? standaloneServiceColor,
       icon: host.entrypoint == "PAPER"
           ? Icons.sports_esports_outlined
@@ -206,7 +208,9 @@ class ServicesGraph extends ConsumerWidget {
       status: connected
           ? childRuntimeStatusLabel(realm.state.status)
           : "Host offline",
-      tone: connected ? _childTone(realm.state.status) : _StatusTone.offline,
+      tone: connected
+          ? topologyChildRuntimeStatusTone(realm.state.status)
+          : TopologyStatusTone.offline,
       color: realmServiceRoleColor,
       icon: Icons.cloud_outlined,
       available: connected,
@@ -233,7 +237,9 @@ class ServicesGraph extends ConsumerWidget {
       status: connected
           ? childRuntimeStatusLabel(engine.state.status)
           : "Host offline",
-      tone: connected ? _childTone(engine.state.status) : _StatusTone.offline,
+      tone: connected
+          ? topologyChildRuntimeStatusTone(engine.state.status)
+          : TopologyStatusTone.offline,
       color: engineServiceRoleColor,
       icon: Icons.memory_outlined,
       available: connected,
@@ -281,7 +287,12 @@ class _ServiceGraphNode extends HookWidget {
               isHovered: isHovered,
               badgeLabel: item.badge,
               header: Icon(item.icon, size: 30),
-              footer: _NodeStatus(item: item, isSelected: isSelected),
+              footer: TopologyStatusIndicator(
+                label: item.status,
+                tone: item.tone,
+                color: item.color,
+                highlighted: isSelected,
+              ),
               width: _nodeWidth * servicesGraphCellSize,
               height: _nodeHeight * servicesGraphCellSize,
             ),
@@ -292,22 +303,25 @@ class _ServiceGraphNode extends HookWidget {
   }
 }
 
-/// Displays the semantic status tone and label for a graph item.
-class _NodeStatus extends StatelessWidget {
-  const _NodeStatus({required this.item, required this.isSelected});
+/// Displays a topology status label with the shared status tone treatment.
+class TopologyStatusIndicator extends StatelessWidget {
+  const TopologyStatusIndicator({
+    required this.label,
+    required this.tone,
+    required this.color,
+    this.highlighted = false,
+    super.key,
+  });
 
-  final _ServiceGraphItem item;
-  final bool isSelected;
+  final String label;
+  final TopologyStatusTone tone;
+  final Color color;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isSelected ? item.color.on(context) : null;
-    final toneColor = switch (item.tone) {
-      _StatusTone.active => context.colors.online,
-      _StatusTone.warning => context.colors.warning,
-      _StatusTone.error => Theme.of(context).colorScheme.error,
-      _StatusTone.offline => context.colors.offline,
-    };
+    final foreground = highlighted ? color.on(context) : null;
+    final toneColor = topologyStatusToneColor(context, tone);
     return Row(
       children: [
         Container(
@@ -321,7 +335,7 @@ class _NodeStatus extends StatelessWidget {
         SizedBox(width: context.spacing.space1),
         Expanded(
           child: Text(
-            item.status,
+            label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelSmall
@@ -365,7 +379,7 @@ class _ServiceGraphItem {
   final String title;
   final String badge;
   final String status;
-  final _StatusTone tone;
+  final TopologyStatusTone tone;
   final Color color;
   final IconData icon;
   final bool available;
@@ -375,27 +389,38 @@ class _ServiceGraphItem {
 }
 
 /// Maps operational host states to the limited visual vocabulary of the graph.
-enum _StatusTone { active, warning, error, offline }
+enum TopologyStatusTone { active, warning, error, offline }
 
-_StatusTone _hostTone(TopologyHostStatus status) => switch (status) {
-  TopologyHostStatus.active => _StatusTone.active,
-  TopologyHostStatus.reconciling ||
-  TopologyHostStatus.drifted => _StatusTone.warning,
-  TopologyHostStatus.failed => _StatusTone.error,
-  TopologyHostStatus.offline ||
-  TopologyHostStatus.unknown => _StatusTone.offline,
-};
+TopologyStatusTone topologyHostStatusTone(TopologyHostStatus status) =>
+    switch (status) {
+      TopologyHostStatus.active => TopologyStatusTone.active,
+      TopologyHostStatus.reconciling ||
+      TopologyHostStatus.drifted => TopologyStatusTone.warning,
+      TopologyHostStatus.failed => TopologyStatusTone.error,
+      TopologyHostStatus.offline ||
+      TopologyHostStatus.unknown => TopologyStatusTone.offline,
+    };
 
-_StatusTone _childTone(TopologyRuntimeStatus status) => switch (status) {
-  TopologyRuntimeStatus.active => _StatusTone.active,
+TopologyStatusTone topologyChildRuntimeStatusTone(
+  TopologyRuntimeStatus status,
+) => switch (status) {
+  TopologyRuntimeStatus.active => TopologyStatusTone.active,
   TopologyRuntimeStatus.staging ||
   TopologyRuntimeStatus.quiescing ||
-  TopologyRuntimeStatus.drifted => _StatusTone.warning,
-  TopologyRuntimeStatus.failed => _StatusTone.error,
+  TopologyRuntimeStatus.drifted => TopologyStatusTone.warning,
+  TopologyRuntimeStatus.failed => TopologyStatusTone.error,
   TopologyRuntimeStatus.absent ||
   TopologyRuntimeStatus.rolledBack ||
-  TopologyRuntimeStatus.unknown => _StatusTone.offline,
+  TopologyRuntimeStatus.unknown => TopologyStatusTone.offline,
 };
+
+Color topologyStatusToneColor(BuildContext context, TopologyStatusTone tone) =>
+    switch (tone) {
+      TopologyStatusTone.active => context.colors.online,
+      TopologyStatusTone.warning => context.colors.warning,
+      TopologyStatusTone.error => Theme.of(context).colorScheme.error,
+      TopologyStatusTone.offline => context.colors.offline,
+    };
 
 String _recordLabel(skir.RecordId id) {
   final value = id.id.split(":").last.replaceAll("`", "");
