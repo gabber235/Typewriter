@@ -82,7 +82,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -225,7 +225,7 @@ return $default(_that.type,_that.edges,_that.visited,_that.cost);case _:
 
 class _ConversionPathValue implements _ConversionPath {
   const _ConversionPathValue({required this.type, required  List<ConversionDefinition> edges, required  Set<ResolvedTypeRef> visited, required this.cost}): _edges = edges,_visited = visited;
-
+  
 
 @override final  ResolvedTypeRef type;
  final  List<ConversionDefinition> _edges;
@@ -308,7 +308,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });

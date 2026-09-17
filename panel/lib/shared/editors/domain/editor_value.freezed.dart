@@ -189,7 +189,7 @@ return ready(_that.value);case _:
 
 class LoadingEditorValue extends EditorValue {
   const LoadingEditorValue(): super._();
-
+  
 
 
 
@@ -221,7 +221,7 @@ String toString() {
 
 class MixedEditorValue extends EditorValue {
   const MixedEditorValue(): super._();
-
+  
 
 
 
@@ -253,7 +253,7 @@ String toString() {
 
 class InvalidEditorValue extends EditorValue {
   const InvalidEditorValue( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics,super._();
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -327,7 +327,7 @@ as List<TypeDiagnostic>,
 
 class ReadyEditorValue extends EditorValue {
   const ReadyEditorValue(this.value): super._();
-
+  
 
  final  DataValue value;
 
@@ -392,7 +392,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -570,7 +570,7 @@ return invalid(_that.diagnostics);case _:
 
 class AppliedEditorMutation extends EditorMutationResult {
   const AppliedEditorMutation(this.value): super._();
-
+  
 
  final  DataValue value;
 
@@ -635,7 +635,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -647,7 +647,7 @@ $DataValueCopyWith<$Res> get value {
 
 class ConflictingEditorMutation extends EditorMutationResult {
   const ConflictingEditorMutation(): super._();
-
+  
 
 
 
@@ -679,7 +679,7 @@ String toString() {
 
 class InvalidEditorMutation extends EditorMutationResult {
   const InvalidEditorMutation( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics,super._();
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

@@ -8,9 +8,20 @@ part of 'telemetry.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Initializes the process wide tracing exporter and exposes the panel tracer.
+///
+/// Disabled tracing returns [NoopPanelTelemetry] without validating or opening
+/// an exporter. Enabled tracing requires an absolute endpoint because an
+/// exporter cannot deliver spans to a relative browser or server path.
 
 @ProviderFor(panelTelemetry)
 final panelTelemetryProvider = PanelTelemetryProvider._();
+
+/// Initializes the process wide tracing exporter and exposes the panel tracer.
+///
+/// Disabled tracing returns [NoopPanelTelemetry] without validating or opening
+/// an exporter. Enabled tracing requires an absolute endpoint because an
+/// exporter cannot deliver spans to a relative browser or server path.
 
 final class PanelTelemetryProvider
     extends
@@ -20,6 +31,11 @@ final class PanelTelemetryProvider
           FutureOr<PanelTelemetry>
         >
     with $FutureModifier<PanelTelemetry>, $FutureProvider<PanelTelemetry> {
+  /// Initializes the process wide tracing exporter and exposes the panel tracer.
+  ///
+  /// Disabled tracing returns [NoopPanelTelemetry] without validating or opening
+  /// an exporter. Enabled tracing requires an absolute endpoint because an
+  /// exporter cannot deliver spans to a relative browser or server path.
   PanelTelemetryProvider._()
     : super(
         from: null,

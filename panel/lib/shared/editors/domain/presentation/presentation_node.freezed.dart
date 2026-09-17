@@ -82,7 +82,7 @@ as PresentationHeader?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationElementCopyWith<$Res> get element {
-
+  
   return $PresentationElementCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -91,7 +91,7 @@ $PresentationElementCopyWith<$Res> get element {
 @override
 @pragma('vm:prefer-inline')
 $PresentationPropertiesCopyWith<$Res> get properties {
-
+  
   return $PresentationPropertiesCopyWith<$Res>(_self.properties, (value) {
     return _then(_self.copyWith(properties: value));
   });
@@ -246,7 +246,7 @@ return $default(_that.id,_that.element,_that.properties,_that.header);case _:
 
 class _PresentationNode implements PresentationNode {
   const _PresentationNode({required this.id, required this.element, this.properties = const PresentationProperties(), this.header}): assert(id != "", 'Presentation node ID must not be empty.');
-
+  
 
 @override final  String id;
 @override final  PresentationElement element;
@@ -317,7 +317,7 @@ as PresentationHeader?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationElementCopyWith<$Res> get element {
-
+  
   return $PresentationElementCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -326,7 +326,7 @@ $PresentationElementCopyWith<$Res> get element {
 @override
 @pragma('vm:prefer-inline')
 $PresentationPropertiesCopyWith<$Res> get properties {
-
+  
   return $PresentationPropertiesCopyWith<$Res>(_self.properties, (value) {
     return _then(_self.copyWith(properties: value));
   });
@@ -559,7 +559,7 @@ return $default(_that.enabledIf,_that.readOnly);case _:
 
 class _PresentationProperties implements PresentationProperties {
   const _PresentationProperties({this.enabledIf, this.readOnly = false});
-
+  
 
 @override final  TypedExpression? enabledIf;
 @override@JsonKey() final  bool readOnly;

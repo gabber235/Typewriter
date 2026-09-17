@@ -86,7 +86,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $ConversionIdCopyWith<$Res> get id {
-
+  
   return $ConversionIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -95,7 +95,7 @@ $ConversionIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get source {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -104,7 +104,7 @@ $ResolvedTypeRefCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get target {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -113,7 +113,7 @@ $ResolvedTypeRefCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $ConversionRuleCopyWith<$Res> get rule {
-
+  
   return $ConversionRuleCopyWith<$Res>(_self.rule, (value) {
     return _then(_self.copyWith(rule: value));
   });
@@ -256,7 +256,7 @@ return $default(_that.id,_that.source,_that.target,_that.rule,_that.safety,_that
 
 class _ConversionDefinition implements ConversionDefinition {
   const _ConversionDefinition({required this.id, required this.source, required this.target, required this.rule, this.safety = ConversionSafety.lossless, this.fallible = false, this.locality = ConversionLocality.local, this.cost = 1}): assert(cost >= 0, 'Cost must not be negative.');
-
+  
 
 @override final  ConversionId id;
 @override final  ResolvedTypeRef source;
@@ -335,7 +335,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $ConversionIdCopyWith<$Res> get id {
-
+  
   return $ConversionIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -344,7 +344,7 @@ $ConversionIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get source {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -353,7 +353,7 @@ $ResolvedTypeRefCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get target {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -362,7 +362,7 @@ $ResolvedTypeRefCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $ConversionRuleCopyWith<$Res> get rule {
-
+  
   return $ConversionRuleCopyWith<$Res>(_self.rule, (value) {
     return _then(_self.copyWith(rule: value));
   });

@@ -183,7 +183,7 @@ return mapValue();case _:
 
 class TypeFieldQuerySegment implements TypeQuerySegment {
   const TypeFieldQuerySegment(this.name);
-
+  
 
  final  String name;
 
@@ -251,7 +251,7 @@ as String,
 
 class TypeListElementQuerySegment implements TypeQuerySegment {
   const TypeListElementQuerySegment();
-
+  
 
 
 
@@ -283,7 +283,7 @@ String toString() {
 
 class TypeMapValueQuerySegment implements TypeQuerySegment {
   const TypeMapValueQuerySegment();
-
+  
 
 
 
@@ -512,7 +512,7 @@ return $default(_that.path,_that.type);case _:
 
 class _TypeReferenceLocation extends TypeReferenceLocation {
   const _TypeReferenceLocation({required  List<TypeQuerySegment> path, required this.type}): _path = path,super._();
-
+  
 
  final  List<TypeQuerySegment> _path;
 @override List<TypeQuerySegment> get path {

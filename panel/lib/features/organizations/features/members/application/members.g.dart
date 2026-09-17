@@ -8,13 +8,31 @@ part of 'members.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the current organization's member projection and its mutations.
+///
+/// The provider starts with a snapshot, applies later sequenced changes, and
+/// invalidates itself when a sequence gap or failed mutation makes the local
+/// projection unsafe to trust. A successful mutation applies the returned
+/// event, so consumers observe the same change stream as remote updates.
 
 @ProviderFor(OrganizationMembers)
 final organizationMembersProvider = OrganizationMembersProvider._();
 
+/// Owns the current organization's member projection and its mutations.
+///
+/// The provider starts with a snapshot, applies later sequenced changes, and
+/// invalidates itself when a sequence gap or failed mutation makes the local
+/// projection unsafe to trust. A successful mutation applies the returned
+/// event, so consumers observe the same change stream as remote updates.
 final class OrganizationMembersProvider
     extends
         $StreamNotifierProvider<OrganizationMembers, List<OrganizationMember>> {
+  /// Owns the current organization's member projection and its mutations.
+  ///
+  /// The provider starts with a snapshot, applies later sequenced changes, and
+  /// invalidates itself when a sequence gap or failed mutation makes the local
+  /// projection unsafe to trust. A successful mutation applies the returned
+  /// event, so consumers observe the same change stream as remote updates.
   OrganizationMembersProvider._()
     : super(
         from: null,
@@ -35,7 +53,14 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'7b4ab97b785ccd782417f81f0bc317accf1cac97';
+    r'b11320b61873c77c35dfde83c55eef8ef609b4f4';
+
+/// Owns the current organization's member projection and its mutations.
+///
+/// The provider starts with a snapshot, applies later sequenced changes, and
+/// invalidates itself when a sequence gap or failed mutation makes the local
+/// projection unsafe to trust. A successful mutation applies the returned
+/// event, so consumers observe the same change stream as remote updates.
 
 abstract class _$OrganizationMembers
     extends $StreamNotifier<List<OrganizationMember>> {

@@ -218,7 +218,7 @@ return $default(_that.userId,_that.roles,_that.joinedAt,_that.name,_that.email,_
 
 class _OrganizationMember extends OrganizationMember {
   const _OrganizationMember({required this.userId, required  List<OrganizationRole> roles, required this.joinedAt, this.name, this.email, this.avatarUrl}): _roles = roles,super._();
-
+  
 
 @override final  skir.RecordId userId;
  final  List<OrganizationRole> _roles;

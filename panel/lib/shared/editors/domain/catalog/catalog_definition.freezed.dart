@@ -82,7 +82,7 @@ as BindingId?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-
+  
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -91,7 +91,7 @@ $PresentationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -246,7 +246,7 @@ return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
 
 class _PresentationDefinition extends PresentationDefinition {
   const _PresentationDefinition({required this.id, required  List<PresentationInputParameter> inputs, required this.root, this.primaryInput}): _inputs = inputs,super._();
-
+  
 
 @override final  PresentationId id;
  final  List<PresentationInputParameter> _inputs;
@@ -323,7 +323,7 @@ as BindingId?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-
+  
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -332,7 +332,7 @@ $PresentationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -421,7 +421,7 @@ as PresentationInputAccess,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get id {
-
+  
   return $BindingIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -430,7 +430,7 @@ $BindingIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -573,7 +573,7 @@ return $default(_that.id,_that.name,_that.type,_that.access);case _:
 
 class _PresentationInputParameter implements PresentationInputParameter {
   const _PresentationInputParameter({required this.id, required this.name, required this.type, this.access = PresentationInputAccess.read});
-
+  
 
 @override final  BindingId id;
 @override final  String name;
@@ -644,7 +644,7 @@ as PresentationInputAccess,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get id {
-
+  
   return $BindingIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -653,7 +653,7 @@ $BindingIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -728,7 +728,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get id {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -737,7 +737,7 @@ $CapabilityIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get requestType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
     return _then(_self.copyWith(requestType: value));
   });
@@ -886,7 +886,7 @@ return command(_that.id,_that.requestType);case _:
 
 class SearchCapabilityDefinition implements CapabilityDefinition {
   const SearchCapabilityDefinition({required this.id, required this.requestType, required this.resultType});
-
+  
 
 @override final  CapabilityId id;
 @override final  ResolvedTypeRef requestType;
@@ -955,7 +955,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get id {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -964,7 +964,7 @@ $CapabilityIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get requestType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
     return _then(_self.copyWith(requestType: value));
   });
@@ -973,7 +973,7 @@ $ResolvedTypeRefCopyWith<$Res> get requestType {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get resultType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -985,7 +985,7 @@ $ResolvedTypeRefCopyWith<$Res> get resultType {
 
 class ComputationCapabilityDefinition implements CapabilityDefinition {
   const ComputationCapabilityDefinition({required this.id, required this.requestType, required this.resultType});
-
+  
 
 @override final  CapabilityId id;
 @override final  ResolvedTypeRef requestType;
@@ -1054,7 +1054,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get id {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1063,7 +1063,7 @@ $CapabilityIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get requestType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
     return _then(_self.copyWith(requestType: value));
   });
@@ -1072,7 +1072,7 @@ $ResolvedTypeRefCopyWith<$Res> get requestType {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get resultType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -1084,7 +1084,7 @@ $ResolvedTypeRefCopyWith<$Res> get resultType {
 
 class CommandCapabilityDefinition implements CapabilityDefinition {
   const CommandCapabilityDefinition({required this.id, required this.requestType});
-
+  
 
 @override final  CapabilityId id;
 @override final  ResolvedTypeRef requestType;
@@ -1151,7 +1151,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get id {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1160,7 +1160,7 @@ $CapabilityIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get requestType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.requestType, (value) {
     return _then(_self.copyWith(requestType: value));
   });
@@ -1235,7 +1235,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get rootType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.rootType, (value) {
     return _then(_self.copyWith(rootType: value));
   });
@@ -1244,7 +1244,7 @@ $ResolvedTypeRefCopyWith<$Res> get rootType {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get rootValue {
-
+  
   return $DataValueCopyWith<$Res>(_self.rootValue, (value) {
     return _then(_self.copyWith(rootValue: value));
   });
@@ -1387,7 +1387,7 @@ return $default(_that.rootType,_that.rootValue);case _:
 
 class _TypedValueEnvelope implements TypedValueEnvelope {
   const _TypedValueEnvelope({required this.rootType, required this.rootValue});
-
+  
 
 @override final  ResolvedTypeRef rootType;
 @override final  DataValue rootValue;
@@ -1454,7 +1454,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get rootType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.rootType, (value) {
     return _then(_self.copyWith(rootType: value));
   });
@@ -1463,7 +1463,7 @@ $ResolvedTypeRefCopyWith<$Res> get rootType {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get rootValue {
-
+  
   return $DataValueCopyWith<$Res>(_self.rootValue, (value) {
     return _then(_self.copyWith(rootValue: value));
   });

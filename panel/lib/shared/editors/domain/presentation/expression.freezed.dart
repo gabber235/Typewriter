@@ -80,7 +80,7 @@ as Expression,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -89,7 +89,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionCopyWith<$Res> get expression {
-
+  
   return $ExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -232,7 +232,7 @@ return $default(_that.resultType,_that.expression);case _:
 
 class _TypedExpression implements TypedExpression {
   const _TypedExpression({required this.resultType, required this.expression});
-
+  
 
 @override final  TypeExpression resultType;
 @override final  Expression expression;
@@ -299,7 +299,7 @@ as Expression,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -308,7 +308,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionCopyWith<$Res> get expression {
-
+  
   return $ExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -624,7 +624,7 @@ return colorOperation(_that.operation,_that.color,_that.alpha);case _:
 
 class LiteralExpression implements Expression {
   const LiteralExpression(this.value);
-
+  
 
  final  DataValue value;
 
@@ -689,7 +689,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -701,7 +701,7 @@ $DataValueCopyWith<$Res> get value {
 
 class BindingExpression implements Expression {
   const BindingExpression(this.binding);
-
+  
 
  final  BindingReference binding;
 
@@ -766,7 +766,7 @@ as BindingReference,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -778,7 +778,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 
 class FieldAccessExpression implements Expression {
   const FieldAccessExpression({required this.target, required this.fieldName}): assert(fieldName != "", 'Field name must not be empty.');
-
+  
 
  final  TypedExpression target;
  final  String fieldName;
@@ -845,7 +845,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get target {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -857,7 +857,7 @@ $TypedExpressionCopyWith<$Res> get target {
 
 class InterpolationExpression implements Expression {
   const InterpolationExpression( List<InterpolationPart> parts): _parts = parts;
-
+  
 
  final  List<InterpolationPart> _parts;
  List<InterpolationPart> get parts {
@@ -931,7 +931,7 @@ as List<InterpolationPart>,
 
 class ComparisonExpression implements Expression {
   const ComparisonExpression({required this.operator, required this.left, required this.right});
-
+  
 
  final  ComparisonOperator operator;
  final  TypedExpression left;
@@ -1000,7 +1000,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get left {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.left, (value) {
     return _then(_self.copyWith(left: value));
   });
@@ -1009,7 +1009,7 @@ $TypedExpressionCopyWith<$Res> get left {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get right {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.right, (value) {
     return _then(_self.copyWith(right: value));
   });
@@ -1021,7 +1021,7 @@ $TypedExpressionCopyWith<$Res> get right {
 
 class BooleanExpression implements Expression {
   const BooleanExpression({required this.operator, required  List<TypedExpression> operands}): _operands = operands;
-
+  
 
  final  BooleanOperator operator;
  final  List<TypedExpression> _operands;
@@ -1097,7 +1097,7 @@ as List<TypedExpression>,
 
 class ArithmeticExpression implements Expression {
   const ArithmeticExpression({required this.operator, required  List<TypedExpression> operands}): _operands = operands;
-
+  
 
  final  ArithmeticOperator operator;
  final  List<TypedExpression> _operands;
@@ -1173,7 +1173,7 @@ as List<TypedExpression>,
 
 class ConditionalExpression implements Expression {
   const ConditionalExpression({required this.condition, required this.whenTrue, required this.whenFalse});
-
+  
 
  final  TypedExpression condition;
  final  TypedExpression whenTrue;
@@ -1242,7 +1242,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get condition {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
     return _then(_self.copyWith(condition: value));
   });
@@ -1251,7 +1251,7 @@ $TypedExpressionCopyWith<$Res> get condition {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get whenTrue {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.whenTrue, (value) {
     return _then(_self.copyWith(whenTrue: value));
   });
@@ -1260,7 +1260,7 @@ $TypedExpressionCopyWith<$Res> get whenTrue {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get whenFalse {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.whenFalse, (value) {
     return _then(_self.copyWith(whenFalse: value));
   });
@@ -1272,7 +1272,7 @@ $TypedExpressionCopyWith<$Res> get whenFalse {
 
 class CollectionMapExpression implements Expression {
   const CollectionMapExpression({required this.source, required this.itemBindingId, required this.transform});
-
+  
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1341,7 +1341,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1350,7 +1350,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1359,7 +1359,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get transform {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.transform, (value) {
     return _then(_self.copyWith(transform: value));
   });
@@ -1371,7 +1371,7 @@ $TypedExpressionCopyWith<$Res> get transform {
 
 class CollectionFilterExpression implements Expression {
   const CollectionFilterExpression({required this.source, required this.itemBindingId, required this.predicate});
-
+  
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1440,7 +1440,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1449,7 +1449,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1458,7 +1458,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1470,7 +1470,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionQuantifierExpression implements Expression {
   const CollectionQuantifierExpression({required this.source, required this.quantifier, required this.itemBindingId, required this.predicate});
-
+  
 
  final  TypedExpression source;
  final  CollectionQuantifier quantifier;
@@ -1541,7 +1541,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1550,7 +1550,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1559,7 +1559,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1571,7 +1571,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionFindExpression implements Expression {
   const CollectionFindExpression({required this.source, required this.selection, required this.itemBindingId, required this.predicate});
-
+  
 
  final  TypedExpression source;
  final  CollectionSelection selection;
@@ -1642,7 +1642,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1651,7 +1651,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1660,7 +1660,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1672,7 +1672,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionCountExpression implements Expression {
   const CollectionCountExpression({required this.source, required this.itemBindingId, required this.predicate});
-
+  
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1741,7 +1741,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1750,7 +1750,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1759,7 +1759,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1771,7 +1771,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionDistinctExpression implements Expression {
   const CollectionDistinctExpression({required this.source, this.key, this.itemBindingId});
-
+  
 
  final  TypedExpression source;
  final  TypedExpression? key;
@@ -1840,7 +1840,7 @@ as BindingId?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1876,7 +1876,7 @@ $BindingIdCopyWith<$Res>? get itemBindingId {
 
 class CollectionSortExpression implements Expression {
   const CollectionSortExpression({required this.source, required this.key, required this.itemBindingId, required this.direction, this.comparator});
-
+  
 
  final  TypedExpression source;
  final  TypedExpression key;
@@ -1949,7 +1949,7 @@ as CollectionComparator?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1958,7 +1958,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1967,7 +1967,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1991,7 +1991,7 @@ $CollectionComparatorCopyWith<$Res>? get comparator {
 
 class CollectionGroupExpression implements Expression {
   const CollectionGroupExpression({required this.source, required this.key, required this.itemBindingId, this.value});
-
+  
 
  final  TypedExpression source;
  final  TypedExpression key;
@@ -2062,7 +2062,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2071,7 +2071,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -2080,7 +2080,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -2104,7 +2104,7 @@ $TypedExpressionCopyWith<$Res>? get value {
 
 class CollectionReduceExpression implements Expression {
   const CollectionReduceExpression({required this.source, required this.accumulatorBindingId, required this.itemBindingId, required this.reduction});
-
+  
 
  final  TypedExpression source;
  final  BindingId accumulatorBindingId;
@@ -2175,7 +2175,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2184,7 +2184,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get accumulatorBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.accumulatorBindingId, (value) {
     return _then(_self.copyWith(accumulatorBindingId: value));
   });
@@ -2193,7 +2193,7 @@ $BindingIdCopyWith<$Res> get accumulatorBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -2202,7 +2202,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get reduction {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.reduction, (value) {
     return _then(_self.copyWith(reduction: value));
   });
@@ -2214,7 +2214,7 @@ $TypedExpressionCopyWith<$Res> get reduction {
 
 class CollectionFoldExpression implements Expression {
   const CollectionFoldExpression({required this.source, required this.initial, required this.accumulatorBindingId, required this.itemBindingId, required this.reduction});
-
+  
 
  final  TypedExpression source;
  final  TypedExpression initial;
@@ -2287,7 +2287,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2296,7 +2296,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get initial {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.initial, (value) {
     return _then(_self.copyWith(initial: value));
   });
@@ -2305,7 +2305,7 @@ $TypedExpressionCopyWith<$Res> get initial {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get accumulatorBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.accumulatorBindingId, (value) {
     return _then(_self.copyWith(accumulatorBindingId: value));
   });
@@ -2314,7 +2314,7 @@ $BindingIdCopyWith<$Res> get accumulatorBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -2323,7 +2323,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get reduction {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.reduction, (value) {
     return _then(_self.copyWith(reduction: value));
   });
@@ -2335,7 +2335,7 @@ $TypedExpressionCopyWith<$Res> get reduction {
 
 class CollectionTransformExpression implements Expression {
   const CollectionTransformExpression({required this.source, required this.operation, this.transform, this.itemBindingId, this.count});
-
+  
 
  final  TypedExpression source;
  final  CollectionTransformOperation operation;
@@ -2408,7 +2408,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2456,7 +2456,7 @@ $TypedExpressionCopyWith<$Res>? get count {
 
 class IsTypeExpression implements Expression {
   const IsTypeExpression({required this.source, required this.type});
-
+  
 
  final  TypedExpression source;
  final  TypeExpression type;
@@ -2523,7 +2523,7 @@ as TypeExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2532,7 +2532,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2544,7 +2544,7 @@ $TypeExpressionCopyWith<$Res> get type {
 
 class ConversionExpression implements Expression {
   const ConversionExpression({required this.conversionId, required this.input});
-
+  
 
  final  ConversionId conversionId;
  final  TypedExpression input;
@@ -2611,7 +2611,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $ConversionIdCopyWith<$Res> get conversionId {
-
+  
   return $ConversionIdCopyWith<$Res>(_self.conversionId, (value) {
     return _then(_self.copyWith(conversionId: value));
   });
@@ -2620,7 +2620,7 @@ $ConversionIdCopyWith<$Res> get conversionId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get input {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.input, (value) {
     return _then(_self.copyWith(input: value));
   });
@@ -2632,7 +2632,7 @@ $TypedExpressionCopyWith<$Res> get input {
 
 class StringOperationExpression implements Expression {
   const StringOperationExpression({required this.operation, required  List<TypedExpression> operands}): _operands = operands;
-
+  
 
  final  StringOperation operation;
  final  List<TypedExpression> _operands;
@@ -2708,7 +2708,7 @@ as List<TypedExpression>,
 
 class CollectionOperationExpression implements Expression {
   const CollectionOperationExpression({required this.operation, required  List<TypedExpression> operands}): _operands = operands;
-
+  
 
  final  CollectionOperation operation;
  final  List<TypedExpression> _operands;
@@ -2784,7 +2784,7 @@ as List<TypedExpression>,
 
 class RegexExpression implements Expression {
   const RegexExpression({required this.operation, required this.source, required this.pattern, this.group, this.replacement});
-
+  
 
  final  RegexOperation operation;
  final  TypedExpression source;
@@ -2857,7 +2857,7 @@ as String?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2869,7 +2869,7 @@ $TypedExpressionCopyWith<$Res> get source {
 
 class CoalesceExpression implements Expression {
   const CoalesceExpression( List<TypedExpression> operands): _operands = operands;
-
+  
 
  final  List<TypedExpression> _operands;
  List<TypedExpression> get operands {
@@ -2943,7 +2943,7 @@ as List<TypedExpression>,
 
 class ColorOperationExpression implements Expression {
   const ColorOperationExpression({required this.operation, required this.color, required this.alpha});
-
+  
 
  final  ColorOperation operation;
  final  TypedExpression color;
@@ -3012,7 +3012,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get color {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
     return _then(_self.copyWith(color: value));
   });
@@ -3021,7 +3021,7 @@ $TypedExpressionCopyWith<$Res> get color {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get alpha {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.alpha, (value) {
     return _then(_self.copyWith(alpha: value));
   });
@@ -3097,7 +3097,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get leftBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.leftBindingId, (value) {
     return _then(_self.copyWith(leftBindingId: value));
   });
@@ -3106,7 +3106,7 @@ $BindingIdCopyWith<$Res> get leftBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rightBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.rightBindingId, (value) {
     return _then(_self.copyWith(rightBindingId: value));
   });
@@ -3115,7 +3115,7 @@ $BindingIdCopyWith<$Res> get rightBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get comparison {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.comparison, (value) {
     return _then(_self.copyWith(comparison: value));
   });
@@ -3258,7 +3258,7 @@ return $default(_that.leftBindingId,_that.rightBindingId,_that.comparison);case 
 
 class _CollectionComparator implements CollectionComparator {
   const _CollectionComparator({required this.leftBindingId, required this.rightBindingId, required this.comparison});
-
+  
 
 @override final  BindingId leftBindingId;
 @override final  BindingId rightBindingId;
@@ -3327,7 +3327,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get leftBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.leftBindingId, (value) {
     return _then(_self.copyWith(leftBindingId: value));
   });
@@ -3336,7 +3336,7 @@ $BindingIdCopyWith<$Res> get leftBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rightBindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.rightBindingId, (value) {
     return _then(_self.copyWith(rightBindingId: value));
   });
@@ -3345,7 +3345,7 @@ $BindingIdCopyWith<$Res> get rightBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get comparison {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.comparison, (value) {
     return _then(_self.copyWith(comparison: value));
   });
@@ -3522,7 +3522,7 @@ return value(_that.value);case _:
 
 class InterpolationText implements InterpolationPart {
   const InterpolationText(this.value);
-
+  
 
 @override final  String value;
 
@@ -3590,7 +3590,7 @@ as String,
 
 class InterpolationValue implements InterpolationPart {
   const InterpolationValue(this.value);
-
+  
 
 @override final  TypedExpression value;
 
@@ -3655,7 +3655,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -3865,7 +3865,7 @@ return $default(_that.maximumDepth,_that.maximumNodes,_that.maximumEvaluations);
 
 class _ExpressionBudget implements ExpressionBudget {
   const _ExpressionBudget({this.maximumDepth = 32, this.maximumNodes = 512, this.maximumEvaluations = 4096}): assert(maximumDepth > 0, 'Maximum depth must be positive.'),assert(maximumNodes > 0, 'Maximum node count must be positive.'),assert(maximumEvaluations > 0, 'Maximum evaluations must be positive.');
-
+  
 
 @override@JsonKey() final  int maximumDepth;
 @override@JsonKey() final  int maximumNodes;

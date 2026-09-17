@@ -8,12 +8,27 @@ part of 'roles.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Streams the role catalog for the selected organization.
+///
+/// The initial list and later add, update, and remove messages are folded into
+/// one provider value. Membership editors consume this catalog to render both
+/// available choices and the protected roles that must remain visible.
 
 @ProviderFor(OrganizationRoles)
 final organizationRolesProvider = OrganizationRolesProvider._();
 
+/// Streams the role catalog for the selected organization.
+///
+/// The initial list and later add, update, and remove messages are folded into
+/// one provider value. Membership editors consume this catalog to render both
+/// available choices and the protected roles that must remain visible.
 final class OrganizationRolesProvider
     extends $StreamNotifierProvider<OrganizationRoles, List<OrganizationRole>> {
+  /// Streams the role catalog for the selected organization.
+  ///
+  /// The initial list and later add, update, and remove messages are folded into
+  /// one provider value. Membership editors consume this catalog to render both
+  /// available choices and the protected roles that must remain visible.
   OrganizationRolesProvider._()
     : super(
         from: null,
@@ -33,7 +48,13 @@ final class OrganizationRolesProvider
   OrganizationRoles create() => OrganizationRoles();
 }
 
-String _$organizationRolesHash() => r'4c3942855503b8cbe063448ba83002086d65623d';
+String _$organizationRolesHash() => r'8c03f7f4ee0c061dd4a7cfae15d5e929f9215028';
+
+/// Streams the role catalog for the selected organization.
+///
+/// The initial list and later add, update, and remove messages are folded into
+/// one provider value. Membership editors consume this catalog to render both
+/// available choices and the protected roles that must remain visible.
 
 abstract class _$OrganizationRoles
     extends $StreamNotifier<List<OrganizationRole>> {

@@ -8,12 +8,27 @@ part of 'appearance.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Stores the panel's theme preference and exposes it to the application shell.
+///
+/// The preference is read from browser or platform storage when the provider is
+/// first built. [mode] updates both storage and the provider state so the shell
+/// changes theme immediately and keeps the choice for the next launch.
 
 @ProviderFor(Appearance)
 final appearanceProvider = AppearanceProvider._();
 
+/// Stores the panel's theme preference and exposes it to the application shell.
+///
+/// The preference is read from browser or platform storage when the provider is
+/// first built. [mode] updates both storage and the provider state so the shell
+/// changes theme immediately and keeps the choice for the next launch.
 final class AppearanceProvider
     extends $NotifierProvider<Appearance, ThemeMode> {
+  /// Stores the panel's theme preference and exposes it to the application shell.
+  ///
+  /// The preference is read from browser or platform storage when the provider is
+  /// first built. [mode] updates both storage and the provider state so the shell
+  /// changes theme immediately and keeps the choice for the next launch.
   AppearanceProvider._()
     : super(
         from: null,
@@ -42,6 +57,12 @@ final class AppearanceProvider
 }
 
 String _$appearanceHash() => r'4395b770b6349e3dbcb7aeaf51bbbf4380085be8';
+
+/// Stores the panel's theme preference and exposes it to the application shell.
+///
+/// The preference is read from browser or platform storage when the provider is
+/// first built. [mode] updates both storage and the provider state so the shell
+/// changes theme immediately and keeps the choice for the next launch.
 
 abstract class _$Appearance extends $Notifier<ThemeMode> {
   ThemeMode build();

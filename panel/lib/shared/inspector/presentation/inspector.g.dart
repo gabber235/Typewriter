@@ -8,12 +8,24 @@ part of 'inspector.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the inspector width used by desktop layout and keyboard resizing.
+///
+/// The provider clamps requested sizes to [kInspectorMinSize]. It does not own
+/// inspector visibility, selection, or the resize gesture itself.
 
 @ProviderFor(InspectorSize)
 final inspectorSizeProvider = InspectorSizeProvider._();
 
+/// Owns the inspector width used by desktop layout and keyboard resizing.
+///
+/// The provider clamps requested sizes to [kInspectorMinSize]. It does not own
+/// inspector visibility, selection, or the resize gesture itself.
 final class InspectorSizeProvider
     extends $NotifierProvider<InspectorSize, double> {
+  /// Owns the inspector width used by desktop layout and keyboard resizing.
+  ///
+  /// The provider clamps requested sizes to [kInspectorMinSize]. It does not own
+  /// inspector visibility, selection, or the resize gesture itself.
   InspectorSizeProvider._()
     : super(
         from: null,
@@ -42,6 +54,11 @@ final class InspectorSizeProvider
 }
 
 String _$inspectorSizeHash() => r'bdbec34c18631cd20a79204c6038b93ebb5d4a82';
+
+/// Owns the inspector width used by desktop layout and keyboard resizing.
+///
+/// The provider clamps requested sizes to [kInspectorMinSize]. It does not own
+/// inspector visibility, selection, or the resize gesture itself.
 
 abstract class _$InspectorSize extends $Notifier<double> {
   double build();

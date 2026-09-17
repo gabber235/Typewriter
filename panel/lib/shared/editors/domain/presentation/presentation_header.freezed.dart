@@ -214,7 +214,7 @@ return $default(_that.namespace,_that.name);case _:
 
 class _HeaderItemId extends HeaderItemId {
   const _HeaderItemId({required this.namespace, required this.name}): assert(namespace != "", 'Header item namespace must not be empty.'),assert(name != "", 'Header item name must not be empty.'),super._();
-
+  
 
 @override final  String namespace;
 @override final  String name;
@@ -347,7 +347,7 @@ as HeaderItemCommand,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get itemId {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.itemId, (value) {
     return _then(_self.copyWith(itemId: value));
   });
@@ -490,7 +490,7 @@ return $default(_that.itemId,_that.command);case _:
 
 class _HeaderItemCommandId implements HeaderItemCommandId {
   const _HeaderItemCommandId({required this.itemId, required this.command});
-
+  
 
 @override final  HeaderItemId itemId;
 @override final  HeaderItemCommand command;
@@ -557,7 +557,7 @@ as HeaderItemCommand,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get itemId {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.itemId, (value) {
     return _then(_self.copyWith(itemId: value));
   });
@@ -729,7 +729,7 @@ return presentation(_that.node);case _:
 
 class PresentationHeaderTextTitle implements PresentationHeaderTitle {
   const PresentationHeaderTextTitle(this.value);
-
+  
 
  final  TypedExpression value;
 
@@ -794,7 +794,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -806,7 +806,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class PresentationHeaderNodeTitle implements PresentationHeaderTitle {
   const PresentationHeaderNodeTitle(this.node);
-
+  
 
  final  PresentationNode node;
 
@@ -871,7 +871,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -1049,7 +1049,7 @@ return only(_that.top,_that.left,_that.right,_that.bottom);case _:
 
 class PresentationInsetsAll implements PresentationInsets {
   const PresentationInsetsAll(this.value): assert(value >= 0 && value < double.infinity, 'Inset must be finite and nonnegative.');
-
+  
 
  final  double value;
 
@@ -1117,7 +1117,7 @@ as double,
 
 class PresentationInsetsSymmetric implements PresentationInsets {
   const PresentationInsetsSymmetric({this.horizontal = 0, this.vertical = 0}): assert(horizontal >= 0 && horizontal < double.infinity, 'Horizontal inset must be finite and nonnegative.'),assert(vertical >= 0 && vertical < double.infinity, 'Vertical inset must be finite and nonnegative.');
-
+  
 
 @JsonKey() final  double horizontal;
 @JsonKey() final  double vertical;
@@ -1187,7 +1187,7 @@ as double,
 
 class PresentationInsetsOnly implements PresentationInsets {
   const PresentationInsetsOnly({this.top = 0, this.left = 0, this.right = 0, this.bottom = 0}): assert(top >= 0 && top < double.infinity, 'Top inset must be finite and nonnegative.'),assert(left >= 0 && left < double.infinity, 'Left inset must be finite and nonnegative.'),assert(right >= 0 && right < double.infinity, 'Right inset must be finite and nonnegative.'),assert(bottom >= 0 && bottom < double.infinity, 'Bottom inset must be finite and nonnegative.');
-
+  
 
 @JsonKey() final  double top;
 @JsonKey() final  double left;
@@ -1325,7 +1325,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get title {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.title, (value) {
     return _then(_self.copyWith(title: value));
   });
@@ -1334,7 +1334,7 @@ $TypedExpressionCopyWith<$Res> get title {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get message {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.message, (value) {
     return _then(_self.copyWith(message: value));
   });
@@ -1343,7 +1343,7 @@ $TypedExpressionCopyWith<$Res> get message {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get confirmationLabel {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.confirmationLabel, (value) {
     return _then(_self.copyWith(confirmationLabel: value));
   });
@@ -1486,7 +1486,7 @@ return $default(_that.title,_that.message,_that.confirmationLabel);case _:
 
 class _HeaderActionConfirmation implements HeaderActionConfirmation {
   const _HeaderActionConfirmation({required this.title, required this.message, required this.confirmationLabel});
-
+  
 
 @override final  TypedExpression title;
 @override final  TypedExpression message;
@@ -1555,7 +1555,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get title {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.title, (value) {
     return _then(_self.copyWith(title: value));
   });
@@ -1564,7 +1564,7 @@ $TypedExpressionCopyWith<$Res> get title {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get message {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.message, (value) {
     return _then(_self.copyWith(message: value));
   });
@@ -1573,7 +1573,7 @@ $TypedExpressionCopyWith<$Res> get message {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get confirmationLabel {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.confirmationLabel, (value) {
     return _then(_self.copyWith(confirmationLabel: value));
   });
@@ -1651,7 +1651,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1660,7 +1660,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1845,7 +1845,7 @@ return reorderHandle(_that.id,_that.label,_that.source,_that.tooltip,_that.visib
 
 class HeaderButtonItem implements HeaderItem {
   const HeaderButtonItem({required this.id, required this.icon, required this.label, required this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.tone = HeaderActionTone.neutral, this.confirmation});
-
+  
 
 @override final  HeaderItemId id;
  final  TypedExpression icon;
@@ -1930,7 +1930,7 @@ as HeaderActionConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1939,7 +1939,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get icon {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -1948,7 +1948,7 @@ $TypedExpressionCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1957,7 +1957,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -2029,7 +2029,7 @@ $HeaderActionConfirmationCopyWith<$Res>? get confirmation {
 
 class HeaderBooleanToggleItem implements HeaderItem {
   const HeaderBooleanToggleItem({required this.id, required this.label, required this.checked, required this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.confirmation});
-
+  
 
 @override final  HeaderItemId id;
 @override final  TypedExpression label;
@@ -2112,7 +2112,7 @@ as HeaderActionConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -2121,7 +2121,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -2130,7 +2130,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get checked {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.checked, (value) {
     return _then(_self.copyWith(checked: value));
   });
@@ -2139,7 +2139,7 @@ $TypedExpressionCopyWith<$Res> get checked {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -2211,7 +2211,7 @@ $HeaderActionConfirmationCopyWith<$Res>? get confirmation {
 
 class HeaderReorderHandleItem implements HeaderItem {
   const HeaderReorderHandleItem({required this.id, required this.label, required this.source, this.tooltip, this.visibleIf, this.enabledIf});
-
+  
 
 @override final  HeaderItemId id;
 @override final  TypedExpression label;
@@ -2286,7 +2286,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -2295,7 +2295,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -2304,7 +2304,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2614,7 +2614,7 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 
 class _PresentationHeader implements PresentationHeader {
   const _PresentationHeader({this.binding, this.title, this.description, this.initiallyExpanded,  List<HeaderItem> items = const [], this.headerPadding, this.contentPadding}): _items = items;
-
+  
 
 @override final  BindingReference? binding;
 @override final  PresentationHeaderTitle? title;

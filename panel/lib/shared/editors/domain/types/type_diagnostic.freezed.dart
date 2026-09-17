@@ -214,7 +214,7 @@ return $default(_that.key,_that.value);case _:
 
 class _TypeDiagnosticDetail implements TypeDiagnosticDetail {
   const _TypeDiagnosticDetail({required this.key, required this.value});
-
+  
 
 @override final  String key;
 @override final  String value;
@@ -348,7 +348,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -503,7 +503,7 @@ return $default(_that.code,_that.message,_that.path,_that.type,_that.severity,_t
 
 class _TypeDiagnostic extends TypeDiagnostic {
   const _TypeDiagnostic({required this.code, required this.message, this.path = DataPath.root, this.type, this.severity = TypeDiagnosticSeverity.error, this.relatedType,  List<TypeDiagnosticDetail> details = const [], this.pathPresent = true}): _details = details,super._();
-
+  
 
 @override final  TypeDiagnosticCode code;
 @override final  String message;
@@ -584,7 +584,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -768,7 +768,7 @@ return failure(_that.diagnostics);case _:
 
 class TypeSuccess<T> extends TypeResult<T> {
   const TypeSuccess(this.value): super._();
-
+  
 
  final  T value;
 
@@ -836,7 +836,7 @@ as T,
 
 class TypeFailure<T> extends TypeResult<T> {
    TypeFailure( List<TypeDiagnostic> diagnostics): assert(diagnostics.length > 0, 'Diagnostics must not be empty.'),_diagnostics = diagnostics,super._();
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

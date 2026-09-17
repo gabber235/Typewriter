@@ -80,7 +80,7 @@ as AuthoringSessionState,
 @override
 @pragma('vm:prefer-inline')
 $AuthoringSessionStateCopyWith<$Res> get state {
-
+  
   return $AuthoringSessionStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -223,7 +223,7 @@ return $default(_that.notifier,_that.state);case _:
 
 class _AuthoringSessionAccess implements AuthoringSessionAccess {
   const _AuthoringSessionAccess({required this.notifier, required this.state});
-
+  
 
 @override final  AuthoringSession notifier;
 @override final  AuthoringSessionState state;
@@ -290,7 +290,7 @@ as AuthoringSessionState,
 @override
 @pragma('vm:prefer-inline')
 $AuthoringSessionStateCopyWith<$Res> get state {
-
+  
   return $AuthoringSessionStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -499,7 +499,7 @@ return $default(_that.value,_that.revision);case _:
 
 class _AuthoringValue<T> implements AuthoringValue<T> {
   const _AuthoringValue({required this.value, required this.revision});
-
+  
 
 @override final  T value;
 @override final  int revision;
@@ -567,7 +567,13 @@ as int,
 /// @nodoc
 mixin _$AuthoringSessionState {
 
- int? get sequence; Map<skir.RecordId, skir.Book> get books; Map<skir.RecordId, skir.Tag> get tags; Map<skir.RecordId, skir.Page> get pages; Map<skir.RecordId, skir.PageDocument> get documents; bool get refreshing;
+/// The server sequence represented by all canonical collections.
+ int? get sequence;/// Canonical books retained by active scopes.
+ Map<skir.RecordId, skir.Book> get books;/// Canonical tags retained by the library scope.
+ Map<skir.RecordId, skir.Tag> get tags;/// Canonical page metadata retained by active book or page scopes.
+ Map<skir.RecordId, skir.Page> get pages;/// Canonical page documents retained by active page scopes.
+ Map<skir.RecordId, skir.PageDocument> get documents;/// Whether an authoritative refresh is currently reconciling the model.
+ bool get refreshing;
 /// Create a copy of AuthoringSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -770,37 +776,47 @@ return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.document
 
 class _AuthoringSessionState implements AuthoringSessionState {
   const _AuthoringSessionState({this.sequence,  Map<skir.RecordId, skir.Book> books = const {},  Map<skir.RecordId, skir.Tag> tags = const {},  Map<skir.RecordId, skir.Page> pages = const {},  Map<skir.RecordId, skir.PageDocument> documents = const {}, this.refreshing = false}): _books = books,_tags = tags,_pages = pages,_documents = documents;
+  
 
-
+/// The server sequence represented by all canonical collections.
 @override final  int? sequence;
+/// Canonical books retained by active scopes.
  final  Map<skir.RecordId, skir.Book> _books;
+/// Canonical books retained by active scopes.
 @override@JsonKey() Map<skir.RecordId, skir.Book> get books {
   if (_books is EqualUnmodifiableMapView) return _books;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_books);
 }
 
+/// Canonical tags retained by the library scope.
  final  Map<skir.RecordId, skir.Tag> _tags;
+/// Canonical tags retained by the library scope.
 @override@JsonKey() Map<skir.RecordId, skir.Tag> get tags {
   if (_tags is EqualUnmodifiableMapView) return _tags;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_tags);
 }
 
+/// Canonical page metadata retained by active book or page scopes.
  final  Map<skir.RecordId, skir.Page> _pages;
+/// Canonical page metadata retained by active book or page scopes.
 @override@JsonKey() Map<skir.RecordId, skir.Page> get pages {
   if (_pages is EqualUnmodifiableMapView) return _pages;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_pages);
 }
 
+/// Canonical page documents retained by active page scopes.
  final  Map<skir.RecordId, skir.PageDocument> _documents;
+/// Canonical page documents retained by active page scopes.
 @override@JsonKey() Map<skir.RecordId, skir.PageDocument> get documents {
   if (_documents is EqualUnmodifiableMapView) return _documents;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_documents);
 }
 
+/// Whether an authoritative refresh is currently reconciling the model.
 @override@JsonKey() final  bool refreshing;
 
 /// Create a copy of AuthoringSessionState
@@ -1038,7 +1054,7 @@ return page(_that.pageId);case _:
 
 class _LibraryScope extends _AuthoringScope {
   const _LibraryScope(): super._();
-
+  
 
 
 
@@ -1070,7 +1086,7 @@ String toString() {
 
 class _BookScope extends _AuthoringScope {
   const _BookScope(this.bookId): super._();
-
+  
 
  final  skir.RecordId bookId;
 
@@ -1138,7 +1154,7 @@ as skir.RecordId,
 
 class _PageScope extends _AuthoringScope {
   const _PageScope(this.pageId): super._();
-
+  
 
  final  skir.RecordId pageId;
 

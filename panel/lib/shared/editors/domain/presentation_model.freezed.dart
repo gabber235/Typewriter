@@ -177,7 +177,7 @@ return edit(_that.owner,_that.path);case _:
 
 class PresentationValueInput implements PresentationInput {
   const PresentationValueInput({required this.type, required this.value});
-
+  
 
  final  TypeExpression type;
  final  EditorValue value;
@@ -244,7 +244,7 @@ as EditorValue,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -253,7 +253,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $EditorValueCopyWith<$Res> get value {
-
+  
   return $EditorValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -265,7 +265,7 @@ $EditorValueCopyWith<$Res> get value {
 
 class PresentationEditInput implements PresentationInput {
   const PresentationEditInput(this.owner, {this.path = DataPath.root});
-
+  
 
  final  EditOwner owner;
 @JsonKey() final  DataPath path;
@@ -332,7 +332,7 @@ as DataPath,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -412,7 +412,7 @@ as List<TypeDiagnostic>,
 @override
 @pragma('vm:prefer-inline')
 $TypeCatalogCopyWith<$Res> get catalog {
-
+  
   return $TypeCatalogCopyWith<$Res>(_self.catalog, (value) {
     return _then(_self.copyWith(catalog: value));
   });
@@ -421,7 +421,7 @@ $TypeCatalogCopyWith<$Res> get catalog {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -564,7 +564,7 @@ return $default(_that.catalog,_that.inputs,_that.root,_that.ownerLabels,_that.pr
 
 class _PresentationModel extends PresentationModel {
   const _PresentationModel({required this.catalog, required  Map<BindingId, PresentationInput> inputs, required this.root,  Map<EditOwner, String> ownerLabels = const {},  List<PresentationDefinition> presentations = const [], this.collections = const PresentationCollections.empty(),  List<TypeDiagnostic> diagnostics = const []}): _inputs = inputs,_ownerLabels = ownerLabels,_presentations = presentations,_diagnostics = diagnostics,super._();
-
+  
 
 @override final  TypeCatalog catalog;
  final  Map<BindingId, PresentationInput> _inputs;
@@ -665,7 +665,7 @@ as List<TypeDiagnostic>,
 @override
 @pragma('vm:prefer-inline')
 $TypeCatalogCopyWith<$Res> get catalog {
-
+  
   return $TypeCatalogCopyWith<$Res>(_self.catalog, (value) {
     return _then(_self.copyWith(catalog: value));
   });
@@ -674,7 +674,7 @@ $TypeCatalogCopyWith<$Res> get catalog {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });

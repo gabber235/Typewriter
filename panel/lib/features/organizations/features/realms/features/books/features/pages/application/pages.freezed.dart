@@ -84,7 +84,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $PageKindRefCopyWith<$Res> get kind {
-
+  
   return $PageKindRefCopyWith<$Res>(_self.kind, (value) {
     return _then(_self.copyWith(kind: value));
   });
@@ -227,7 +227,7 @@ return $default(_that.pageId,_that.bookId,_that.name,_that.kind,_that.chapter,_t
 
 class _Page extends Page {
   const _Page({required this.pageId, required this.bookId, required this.name, required this.kind, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
-
+  
 
 @override final  skir.RecordId pageId;
 @override final  skir.RecordId bookId;
@@ -302,7 +302,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $PageKindRefCopyWith<$Res> get kind {
-
+  
   return $PageKindRefCopyWith<$Res>(_self.kind, (value) {
     return _then(_self.copyWith(kind: value));
   });

@@ -201,7 +201,7 @@ return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inward
 
 class DefinitionPageEntry with DiagnosticableTreeMixin implements PageEntry {
   const DefinitionPageEntry({required this.definition});
-
+  
 
  final  EntryDefinition definition;
 
@@ -272,7 +272,7 @@ as EntryDefinition,
 @override
 @pragma('vm:prefer-inline')
 $EntryDefinitionCopyWith<$Res> get definition {
-
+  
   return $EntryDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });
@@ -284,7 +284,7 @@ $EntryDefinitionCopyWith<$Res> get definition {
 
 class ReferencePageEntry with DiagnosticableTreeMixin implements PageEntry {
   const ReferencePageEntry({required this.id, required this.name, required this.elementDefinition, required this.pageId,  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),assert(pageId != "", 'Page ID must not be empty.'),_metadata = metadata;
-
+  
 
  final  String id;
  final  String name;
@@ -369,7 +369,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $ElementDefinitionCopyWith<$Res> get elementDefinition {
-
+  
   return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
     return _then(_self.copyWith(elementDefinition: value));
   });
@@ -381,7 +381,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 
 class NonexistentPageEntry with DiagnosticableTreeMixin implements PageEntry {
   const NonexistentPageEntry({required this.id}): assert(id != "", 'ID must not be empty.');
-
+  
 
  final  String id;
 
@@ -455,7 +455,7 @@ as String,
 
 class MissingElementDefinitionPageEntry with DiagnosticableTreeMixin implements PageEntry {
   const MissingElementDefinitionPageEntry({required this.id, required this.name, required this.placement, required  List<ElementLink> inwardLinks, required  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata;
-
+  
 
  final  String id;
  final  String name;
@@ -554,7 +554,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-
+  
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -642,7 +642,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $ElementDefinitionCopyWith<$Res> get elementDefinition {
-
+  
   return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
     return _then(_self.copyWith(elementDefinition: value));
   });
@@ -651,7 +651,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-
+  
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -794,7 +794,7 @@ return $default(_that.id,_that.name,_that.elementDefinition,_that.placement,_tha
 
 class _EntryDefinition with DiagnosticableTreeMixin implements EntryDefinition {
   const _EntryDefinition({required this.id, required this.name, required this.elementDefinition, required this.placement, required this.data, required  List<ElementLink> inwardEdges, required  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardEdges = inwardEdges,_outwardEdges = outwardEdges,_metadata = metadata;
-
+  
 
 @override final  String id;
 @override final  String name;
@@ -897,7 +897,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $ElementDefinitionCopyWith<$Res> get elementDefinition {
-
+  
   return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
     return _then(_self.copyWith(elementDefinition: value));
   });
@@ -906,7 +906,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-
+  
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });

@@ -261,7 +261,7 @@ return parameter(_that.name);case _:
 
 class AnyType extends TypeExpression {
   const AnyType(): super._();
-
+  
 
 
 
@@ -293,7 +293,7 @@ String toString() {
 
 class UnitType extends TypeExpression {
   const UnitType(): super._();
-
+  
 
 
 
@@ -325,7 +325,7 @@ String toString() {
 
 class BooleanType extends TypeExpression {
   const BooleanType(): super._();
-
+  
 
 
 
@@ -357,7 +357,7 @@ String toString() {
 
 class StringType extends TypeExpression {
   const StringType({this.minimumLength, this.maximumLength,  List<String> patterns = const []}): _patterns = patterns,super._();
-
+  
 
  final  int? minimumLength;
  final  int? maximumLength;
@@ -435,7 +435,7 @@ as List<String>,
 
 class BytesType extends TypeExpression {
   const BytesType({this.minimumLength, this.maximumLength}): super._();
-
+  
 
  final  int? minimumLength;
  final  int? maximumLength;
@@ -505,7 +505,7 @@ as int?,
 
 class IntegerType extends TypeExpression {
   const IntegerType({required this.width, this.minimum, this.maximum}): super._();
-
+  
 
  final  IntegerWidth width;
  final  BigInt? minimum;
@@ -577,7 +577,7 @@ as BigInt?,
 
 class FloatType extends TypeExpression {
   const FloatType({required this.width, this.minimum, this.maximum}): super._();
-
+  
 
  final  FloatWidth width;
  final  double? minimum;
@@ -649,7 +649,7 @@ as double?,
 
 class DecimalType extends TypeExpression {
   const DecimalType({this.minimum, this.maximum, this.scale}): super._();
-
+  
 
  final  String? minimum;
  final  String? maximum;
@@ -721,7 +721,7 @@ as int?,
 
 class TimestampType extends TypeExpression {
   const TimestampType({this.minimum, this.maximum}): super._();
-
+  
 
  final  DateTime? minimum;
  final  DateTime? maximum;
@@ -791,7 +791,7 @@ as DateTime?,
 
 class DurationType extends TypeExpression {
   const DurationType({this.minimum, this.maximum}): super._();
-
+  
 
  final  Duration? minimum;
  final  Duration? maximum;
@@ -861,7 +861,7 @@ as Duration?,
 
 class EnumType extends TypeExpression {
   const EnumType({required this.valueType, required  List<DataValue> values}): _values = values,super._();
-
+  
 
  final  TypeExpression valueType;
  final  List<DataValue> _values;
@@ -934,7 +934,7 @@ as List<DataValue>,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get valueType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.valueType, (value) {
     return _then(_self.copyWith(valueType: value));
   });
@@ -946,7 +946,7 @@ $TypeExpressionCopyWith<$Res> get valueType {
 
 class ListType extends TypeExpression {
   const ListType({required this.element, this.minimumLength, this.maximumLength, this.unique = false}): super._();
-
+  
 
  final  TypeExpression element;
  final  int? minimumLength;
@@ -1017,7 +1017,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get element {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -1029,7 +1029,7 @@ $TypeExpressionCopyWith<$Res> get element {
 
 class MapType extends TypeExpression {
   const MapType({required this.key, required this.value, this.minimumLength, this.maximumLength}): super._();
-
+  
 
  final  TypeExpression key;
  final  TypeExpression value;
@@ -1100,7 +1100,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get key {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1109,7 +1109,7 @@ $TypeExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get value {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1121,7 +1121,7 @@ $TypeExpressionCopyWith<$Res> get value {
 
 class RecordType extends TypeExpression {
   const RecordType({required  Map<String, TypeField> fields, this.closed = true}): _fields = fields,super._();
-
+  
 
  final  Map<String, TypeField> _fields;
  Map<String, TypeField> get fields {
@@ -1197,7 +1197,7 @@ as bool,
 
 class NamedType extends TypeExpression {
   const NamedType(this.reference): super._();
-
+  
 
  final  ResolvedTypeRef reference;
 
@@ -1262,7 +1262,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get reference {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1274,7 +1274,7 @@ $ResolvedTypeRefCopyWith<$Res> get reference {
 
 class ParameterType extends TypeExpression {
   const ParameterType(this.name): assert(name != "", 'Parameter name must not be empty.'),super._();
-
+  
 
  final  String name;
 
@@ -1406,7 +1406,7 @@ as DataValue?,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -1561,7 +1561,7 @@ return $default(_that.name,_that.type,_that.initialValue);case _:
 
 class _TypeField implements TypeField {
   const _TypeField({required this.name, required this.type, this.initialValue});
-
+  
 
 @override final  String name;
 @override final  TypeExpression type;
@@ -1630,7 +1630,7 @@ as DataValue?,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });

@@ -8,9 +8,12 @@ part of 'nats_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the concrete NATS owner factory used after authentication.
 
 @ProviderFor(natsClientFactory)
 final natsClientFactoryProvider = NatsClientFactoryProvider._();
+
+/// Provides the concrete NATS owner factory used after authentication.
 
 final class NatsClientFactoryProvider
     extends
@@ -20,6 +23,7 @@ final class NatsClientFactoryProvider
           NatsClientFactory
         >
     with $Provider<NatsClientFactory> {
+  /// Provides the concrete NATS owner factory used after authentication.
   NatsClientFactoryProvider._()
     : super(
         from: null,
@@ -56,12 +60,17 @@ final class NatsClientFactoryProvider
 
 String _$natsClientFactoryHash() => r'1c0582e7a874e091f3f55ad289b386b471ca7651';
 
+/// Owns the HTTP client used by panel infrastructure requests.
+
 @ProviderFor(panelHttpClient)
 final panelHttpClientProvider = PanelHttpClientProvider._();
+
+/// Owns the HTTP client used by panel infrastructure requests.
 
 final class PanelHttpClientProvider
     extends $FunctionalProvider<http.Client, http.Client, http.Client>
     with $Provider<http.Client> {
+  /// Owns the HTTP client used by panel infrastructure requests.
   PanelHttpClientProvider._()
     : super(
         from: null,
@@ -97,8 +106,18 @@ final class PanelHttpClientProvider
 
 String _$panelHttpClientHash() => r'7135e3872b268ca83f0cf2cb03ecc737f66a43d1';
 
+/// Fetches the short lived credentials required to open the user's NATS session.
+///
+/// HTTP status and unknown Skir variants are translated here, at the boundary
+/// that still understands both the HTTP response and the generated contract.
+
 @ProviderFor(sentinelCredentials)
 final sentinelCredentialsProvider = SentinelCredentialsProvider._();
+
+/// Fetches the short lived credentials required to open the user's NATS session.
+///
+/// HTTP status and unknown Skir variants are translated here, at the boundary
+/// that still understands both the HTTP response and the generated contract.
 
 final class SentinelCredentialsProvider
     extends
@@ -110,6 +129,10 @@ final class SentinelCredentialsProvider
     with
         $FutureModifier<skir.GetSentinelCredentialsResponse_Success>,
         $FutureProvider<skir.GetSentinelCredentialsResponse_Success> {
+  /// Fetches the short lived credentials required to open the user's NATS session.
+  ///
+  /// HTTP status and unknown Skir variants are translated here, at the boundary
+  /// that still understands both the HTTP response and the generated contract.
   SentinelCredentialsProvider._()
     : super(
         from: null,
@@ -138,10 +161,29 @@ final class SentinelCredentialsProvider
 String _$sentinelCredentialsHash() =>
     r'd9ee71cee1fde6104af98ba3f2095b6144815fd6';
 
+/// Owns the authenticated NATS client for the current user and organization.
+///
+/// Credential providers and the organization qualifier are read when this
+/// owner is built. Invalidating it closes the old client before a fresh
+/// connection is created, which makes retry an ownership operation rather than
+/// a second connection layered over the first.
+
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
 
+/// Owns the authenticated NATS client for the current user and organization.
+///
+/// Credential providers and the organization qualifier are read when this
+/// owner is built. Invalidating it closes the old client before a fresh
+/// connection is created, which makes retry an ownership operation rather than
+/// a second connection layered over the first.
 final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
+  /// Owns the authenticated NATS client for the current user and organization.
+  ///
+  /// Credential providers and the organization qualifier are read when this
+  /// owner is built. Invalidating it closes the old client before a fresh
+  /// connection is created, which makes retry an ownership operation rather than
+  /// a second connection layered over the first.
   NatsProvider._()
     : super(
         from: null,
@@ -171,6 +213,13 @@ final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
 
 String _$natsHash() => r'4ba08fe612ce973633013ce67e9af3211661997e';
 
+/// Owns the authenticated NATS client for the current user and organization.
+///
+/// Credential providers and the organization qualifier are read when this
+/// owner is built. Invalidating it closes the old client before a fresh
+/// connection is created, which makes retry an ownership operation rather than
+/// a second connection layered over the first.
+
 abstract class _$Nats extends $Notifier<NatsClient> {
   NatsClient build();
   @$mustCallSuper
@@ -189,11 +238,27 @@ abstract class _$Nats extends $Notifier<NatsClient> {
   }
 }
 
+/// Projects transport lifecycle into Riverpod for connection status UI.
+///
+/// The synchronous client state is emitted first, then later transport events
+/// update the provider. This provider observes lifecycle only and does not own
+/// the client or decide whether a failure is recoverable.
+
 @ProviderFor(NatsLifecycle)
 final natsLifecycleProvider = NatsLifecycleProvider._();
 
+/// Projects transport lifecycle into Riverpod for connection status UI.
+///
+/// The synchronous client state is emitted first, then later transport events
+/// update the provider. This provider observes lifecycle only and does not own
+/// the client or decide whether a failure is recoverable.
 final class NatsLifecycleProvider
     extends $NotifierProvider<NatsLifecycle, NatsConnectionState> {
+  /// Projects transport lifecycle into Riverpod for connection status UI.
+  ///
+  /// The synchronous client state is emitted first, then later transport events
+  /// update the provider. This provider observes lifecycle only and does not own
+  /// the client or decide whether a failure is recoverable.
   NatsLifecycleProvider._()
     : super(
         from: null,
@@ -222,6 +287,12 @@ final class NatsLifecycleProvider
 }
 
 String _$natsLifecycleHash() => r'ebd1432b5da4db9d6ddf3c83acbd23bf33b8f31f';
+
+/// Projects transport lifecycle into Riverpod for connection status UI.
+///
+/// The synchronous client state is emitted first, then later transport events
+/// update the provider. This provider observes lifecycle only and does not own
+/// the client or decide whether a failure is recoverable.
 
 abstract class _$NatsLifecycle extends $Notifier<NatsConnectionState> {
   NatsConnectionState build();

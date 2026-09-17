@@ -216,7 +216,7 @@ return $default(_that.x,_that.y,_that.width,_that.height);case _:
 
 class _Placement extends Placement {
   const _Placement({required this.x, required this.y, required this.width, required this.height}): super._();
-
+  
 
 @override final  int x;
 @override final  int y;
@@ -356,7 +356,7 @@ as Placement,
 @override
 @pragma('vm:prefer-inline')
 $PlacementCopyWith<$Res> get placement {
-
+  
   return $PlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -499,7 +499,7 @@ return $default(_that.tagId,_that.name,_that.color,_that.parentIds,_that.placeme
 
 class _Tag extends Tag {
   const _Tag({required this.tagId, required this.name, required this.color, required  List<skir.RecordId> parentIds, required this.placement}): assert(name != "", 'Name must not be empty.'),_parentIds = parentIds,super._();
-
+  
 
 @override final  skir.RecordId tagId;
 @override final  String name;
@@ -578,7 +578,7 @@ as Placement,
 @override
 @pragma('vm:prefer-inline')
 $PlacementCopyWith<$Res> get placement {
-
+  
   return $PlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });

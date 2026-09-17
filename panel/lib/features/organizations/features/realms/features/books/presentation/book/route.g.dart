@@ -8,11 +8,23 @@ part of 'route.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Search text local to the current book sidebar.
+///
+/// It is intentionally separate from canonical page state. The derived page
+/// provider combines this query with canonical pages and local editor work.
 
 @ProviderFor(_PageSearch)
 final _pageSearchProvider = _PageSearchProvider._();
 
+/// Search text local to the current book sidebar.
+///
+/// It is intentionally separate from canonical page state. The derived page
+/// provider combines this query with canonical pages and local editor work.
 final class _PageSearchProvider extends $NotifierProvider<_PageSearch, String> {
+  /// Search text local to the current book sidebar.
+  ///
+  /// It is intentionally separate from canonical page state. The derived page
+  /// provider combines this query with canonical pages and local editor work.
   _PageSearchProvider._()
     : super(
         from: null,
@@ -42,6 +54,11 @@ final class _PageSearchProvider extends $NotifierProvider<_PageSearch, String> {
 
 String _$_pageSearchHash() => r'd35888cd68dcb69748549e6cf1cdc6d5eb6326f2';
 
+/// Search text local to the current book sidebar.
+///
+/// It is intentionally separate from canonical page state. The derived page
+/// provider combines this query with canonical pages and local editor work.
+
 abstract class _$PageSearch extends $Notifier<String> {
   String build();
   @$mustCallSuper
@@ -60,8 +77,20 @@ abstract class _$PageSearch extends $Notifier<String> {
   }
 }
 
+/// Supplies the sidebar projection, preserving local edits while searching.
+///
+/// A projected result is used immediately when available. Otherwise the
+/// canonical provider is awaited once, then the projection is read again so
+/// the sidebar does not display stale canonical values over an active draft.
+
 @ProviderFor(_viewingPages)
 final _viewingPagesProvider = _ViewingPagesProvider._();
+
+/// Supplies the sidebar projection, preserving local edits while searching.
+///
+/// A projected result is used immediately when available. Otherwise the
+/// canonical provider is awaited once, then the projection is read again so
+/// the sidebar does not display stale canonical values over an active draft.
 
 final class _ViewingPagesProvider
     extends
@@ -71,6 +100,11 @@ final class _ViewingPagesProvider
           FutureOr<List<Page>>
         >
     with $FutureModifier<List<Page>>, $FutureProvider<List<Page>> {
+  /// Supplies the sidebar projection, preserving local edits while searching.
+  ///
+  /// A projected result is used immediately when available. Otherwise the
+  /// canonical provider is awaited once, then the projection is read again so
+  /// the sidebar does not display stale canonical values over an active draft.
   _ViewingPagesProvider._()
     : super(
         from: null,

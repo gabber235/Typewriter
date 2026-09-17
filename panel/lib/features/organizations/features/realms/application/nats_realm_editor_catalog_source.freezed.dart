@@ -217,7 +217,7 @@ return $default(_that.presentations,_that.conversions,_that.capabilities,_that.s
 
 class _DecodedCatalogPartsValue implements _DecodedCatalogParts {
   const _DecodedCatalogPartsValue({required  Map<PresentationId, PresentationDefinition> presentations, required  Map<ConversionId, ConversionDefinition> conversions, required  Map<CapabilityId, CapabilityDefinition> capabilities, required  Map<String, RealmEditorSubtypeResult> subtypeResults, required  List<TypeDiagnostic> diagnostics}): _presentations = presentations,_conversions = conversions,_capabilities = capabilities,_subtypeResults = subtypeResults,_diagnostics = diagnostics;
-
+  
 
  final  Map<PresentationId, PresentationDefinition> _presentations;
 @override Map<PresentationId, PresentationDefinition> get presentations {

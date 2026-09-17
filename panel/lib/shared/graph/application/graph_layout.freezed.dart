@@ -227,7 +227,7 @@ return $default(_that.movingIds,_that.moveDelta,_that.resize);case _:
 
 class _GraphInteractionPreview implements GraphInteractionPreview {
   const _GraphInteractionPreview({ Set<GraphIdentifier> movingIds = const <GraphIdentifier>{}, this.moveDelta = const (0, 0), this.resize}): _movingIds = movingIds;
-
+  
 
  final  Set<GraphIdentifier> _movingIds;
 @override@JsonKey() Set<GraphIdentifier> get movingIds {
@@ -515,7 +515,7 @@ return $default(_that.id,_that.width,_that.height);case _:
 
 class _GraphResizePreview implements GraphResizePreview {
   const _GraphResizePreview({required this.id, required this.width, required this.height});
-
+  
 
 @override final  GraphIdentifier id;
 @override final  int width;
@@ -650,7 +650,7 @@ as Rect,
 @override
 @pragma('vm:prefer-inline')
 $GraphElementCopyWith<$Res> get element {
-
+  
   return $GraphElementCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -793,7 +793,7 @@ return $default(_that.element,_that.bounds);case _:
 
 class _GraphPlacedElement extends GraphPlacedElement {
   const _GraphPlacedElement({required this.element, required this.bounds}): super._();
-
+  
 
 @override final  GraphElement element;
 @override final  Rect bounds;
@@ -860,7 +860,7 @@ as Rect,
 @override
 @pragma('vm:prefer-inline')
 $GraphElementCopyWith<$Res> get element {
-
+  
   return $GraphElementCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -938,7 +938,7 @@ as Offset,
 @override
 @pragma('vm:prefer-inline')
 $GraphEdgeCopyWith<$Res> get edge {
-
+  
   return $GraphEdgeCopyWith<$Res>(_self.edge, (value) {
     return _then(_self.copyWith(edge: value));
   });
@@ -947,7 +947,7 @@ $GraphEdgeCopyWith<$Res> get edge {
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get source {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -956,7 +956,7 @@ $GraphPlacedElementCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get target {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1099,7 +1099,7 @@ return $default(_that.edge,_that.source,_that.target,_that.sourcePoint,_that.tar
 
 class _GraphPlacedEdge implements GraphPlacedEdge {
   const _GraphPlacedEdge({required this.edge, required this.source, required this.target, required this.sourcePoint, required this.targetPoint});
-
+  
 
 @override final  GraphEdge edge;
 @override final  GraphPlacedElement source;
@@ -1172,7 +1172,7 @@ as Offset,
 @override
 @pragma('vm:prefer-inline')
 $GraphEdgeCopyWith<$Res> get edge {
-
+  
   return $GraphEdgeCopyWith<$Res>(_self.edge, (value) {
     return _then(_self.copyWith(edge: value));
   });
@@ -1181,7 +1181,7 @@ $GraphEdgeCopyWith<$Res> get edge {
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get source {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1190,7 +1190,7 @@ $GraphPlacedElementCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get target {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });

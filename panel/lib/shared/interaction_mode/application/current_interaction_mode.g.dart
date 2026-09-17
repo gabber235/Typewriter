@@ -8,33 +8,30 @@ part of 'current_interaction_mode.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Riverpod notifier that manages the current active interaction mode.
+/// Owns the panel's single current interaction mode.
 ///
-/// This notifier provides centralized state management for the modal interface
-/// system, allowing components throughout the app to:
-/// - Watch the current active mode
-/// - Transition between modes
-/// - Access mode-specific functionality in a type-safe manner
+/// The provider starts in [NormalMode]. Consumers watch its state to adapt
+/// focus, shortcuts, and presentation. Callers request transitions through the
+/// notifier; they do not mutate a mode instance. Replacing the state is
+/// synchronous, and Riverpod notifies all current watchers of the new mode.
 
 @ProviderFor(CurrentInteractionMode)
 final currentInteractionModeProvider = CurrentInteractionModeProvider._();
 
-/// Riverpod notifier that manages the current active interaction mode.
+/// Owns the panel's single current interaction mode.
 ///
-/// This notifier provides centralized state management for the modal interface
-/// system, allowing components throughout the app to:
-/// - Watch the current active mode
-/// - Transition between modes
-/// - Access mode-specific functionality in a type-safe manner
+/// The provider starts in [NormalMode]. Consumers watch its state to adapt
+/// focus, shortcuts, and presentation. Callers request transitions through the
+/// notifier; they do not mutate a mode instance. Replacing the state is
+/// synchronous, and Riverpod notifies all current watchers of the new mode.
 final class CurrentInteractionModeProvider
     extends $NotifierProvider<CurrentInteractionMode, InteractionMode> {
-  /// Riverpod notifier that manages the current active interaction mode.
+  /// Owns the panel's single current interaction mode.
   ///
-  /// This notifier provides centralized state management for the modal interface
-  /// system, allowing components throughout the app to:
-  /// - Watch the current active mode
-  /// - Transition between modes
-  /// - Access mode-specific functionality in a type-safe manner
+  /// The provider starts in [NormalMode]. Consumers watch its state to adapt
+  /// focus, shortcuts, and presentation. Callers request transitions through the
+  /// notifier; they do not mutate a mode instance. Replacing the state is
+  /// synchronous, and Riverpod notifies all current watchers of the new mode.
   CurrentInteractionModeProvider._()
     : super(
         from: null,
@@ -65,13 +62,12 @@ final class CurrentInteractionModeProvider
 String _$currentInteractionModeHash() =>
     r'a428df52265c6d3154956f72c2e4cb6dbb4fe6b8';
 
-/// Riverpod notifier that manages the current active interaction mode.
+/// Owns the panel's single current interaction mode.
 ///
-/// This notifier provides centralized state management for the modal interface
-/// system, allowing components throughout the app to:
-/// - Watch the current active mode
-/// - Transition between modes
-/// - Access mode-specific functionality in a type-safe manner
+/// The provider starts in [NormalMode]. Consumers watch its state to adapt
+/// focus, shortcuts, and presentation. Callers request transitions through the
+/// notifier; they do not mutate a mode instance. Replacing the state is
+/// synchronous, and Riverpod notifies all current watchers of the new mode.
 
 abstract class _$CurrentInteractionMode extends $Notifier<InteractionMode> {
   InteractionMode build();

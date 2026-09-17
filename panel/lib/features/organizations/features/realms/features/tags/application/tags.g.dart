@@ -8,12 +8,33 @@ part of 'tags.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the current Realm tag projection and its authoring mutations.
+///
+/// The provider waits for the library scope before reading the session, then
+/// follows session revisions through [ref.listen]. Creation and deletion use
+/// direct guarded operations. Editing is delegated to the shared editor owner
+/// so drafts, validation, and response reconciliation follow the same path as
+/// other Realm resources.
 
 @ProviderFor(CanonicalTags)
 final canonicalTagsProvider = CanonicalTagsProvider._();
 
+/// Owns the current Realm tag projection and its authoring mutations.
+///
+/// The provider waits for the library scope before reading the session, then
+/// follows session revisions through [ref.listen]. Creation and deletion use
+/// direct guarded operations. Editing is delegated to the shared editor owner
+/// so drafts, validation, and response reconciliation follow the same path as
+/// other Realm resources.
 final class CanonicalTagsProvider
     extends $AsyncNotifierProvider<CanonicalTags, List<Tag>> {
+  /// Owns the current Realm tag projection and its authoring mutations.
+  ///
+  /// The provider waits for the library scope before reading the session, then
+  /// follows session revisions through [ref.listen]. Creation and deletion use
+  /// direct guarded operations. Editing is delegated to the shared editor owner
+  /// so drafts, validation, and response reconciliation follow the same path as
+  /// other Realm resources.
   CanonicalTagsProvider._()
     : super(
         from: null,
@@ -35,6 +56,14 @@ final class CanonicalTagsProvider
 
 String _$canonicalTagsHash() => r'30b0ff811890a895024d4e222b62190da2904898';
 
+/// Owns the current Realm tag projection and its authoring mutations.
+///
+/// The provider waits for the library scope before reading the session, then
+/// follows session revisions through [ref.listen]. Creation and deletion use
+/// direct guarded operations. Editing is delegated to the shared editor owner
+/// so drafts, validation, and response reconciliation follow the same path as
+/// other Realm resources.
+
 abstract class _$CanonicalTags extends $AsyncNotifier<List<Tag>> {
   FutureOr<List<Tag>> build();
   @$mustCallSuper
@@ -53,12 +82,17 @@ abstract class _$CanonicalTags extends $AsyncNotifier<List<Tag>> {
   }
 }
 
+/// Reads one tag from the canonical Realm projection.
+
 @ProviderFor(canonicalTag)
 final canonicalTagProvider = CanonicalTagFamily._();
+
+/// Reads one tag from the canonical Realm projection.
 
 final class CanonicalTagProvider
     extends $FunctionalProvider<AsyncValue<Tag?>, Tag?, FutureOr<Tag?>>
     with $FutureModifier<Tag?>, $FutureProvider<Tag?> {
+  /// Reads one tag from the canonical Realm projection.
   CanonicalTagProvider._({
     required CanonicalTagFamily super.from,
     required skir.RecordId super.argument,
@@ -104,6 +138,8 @@ final class CanonicalTagProvider
 
 String _$canonicalTagHash() => r'251f8d7c86935b1b7a105035ae211efe5aa7dea3';
 
+/// Reads one tag from the canonical Realm projection.
+
 final class CanonicalTagFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Tag?>, skir.RecordId> {
   CanonicalTagFamily._()
@@ -115,6 +151,8 @@ final class CanonicalTagFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Reads one tag from the canonical Realm projection.
+
   CanonicalTagProvider call(skir.RecordId tagId) =>
       CanonicalTagProvider._(argument: tagId, from: this);
 
@@ -122,8 +160,20 @@ final class CanonicalTagFamily extends $Family
   String toString() => r'canonicalTagProvider';
 }
 
+/// Combines canonical tags with local editor values for UI consumers.
+///
+/// Canonical state remains the authority. A local value is only a temporary
+/// projection keyed by organization, realm, and tag identity, and disappears
+/// when the shared editor owner releases it or canonical state catches up.
+
 @ProviderFor(projectedTags)
 final projectedTagsProvider = ProjectedTagsProvider._();
+
+/// Combines canonical tags with local editor values for UI consumers.
+///
+/// Canonical state remains the authority. A local value is only a temporary
+/// projection keyed by organization, realm, and tag identity, and disappears
+/// when the shared editor owner releases it or canonical state catches up.
 
 final class ProjectedTagsProvider
     extends
@@ -133,6 +183,11 @@ final class ProjectedTagsProvider
           AsyncValue<List<Tag>>
         >
     with $Provider<AsyncValue<List<Tag>>> {
+  /// Combines canonical tags with local editor values for UI consumers.
+  ///
+  /// Canonical state remains the authority. A local value is only a temporary
+  /// projection keyed by organization, realm, and tag identity, and disappears
+  /// when the shared editor owner releases it or canonical state catches up.
   ProjectedTagsProvider._()
     : super(
         from: null,
@@ -169,8 +224,12 @@ final class ProjectedTagsProvider
 
 String _$projectedTagsHash() => r'e025a4a4a186a9194d8b0bf3661cbe47813a147a';
 
+/// Projects one tag for graph nodes that rebuild independently.
+
 @ProviderFor(projectedTag)
 final projectedTagProvider = ProjectedTagFamily._();
+
+/// Projects one tag for graph nodes that rebuild independently.
 
 final class ProjectedTagProvider
     extends
@@ -180,6 +239,7 @@ final class ProjectedTagProvider
           AsyncValue<Tag?>
         >
     with $Provider<AsyncValue<Tag?>> {
+  /// Projects one tag for graph nodes that rebuild independently.
   ProjectedTagProvider._({
     required ProjectedTagFamily super.from,
     required skir.RecordId super.argument,
@@ -233,6 +293,8 @@ final class ProjectedTagProvider
 
 String _$projectedTagHash() => r'ca2bfc58e82b7ac33d57319167c3f17d3d6ac200';
 
+/// Projects one tag for graph nodes that rebuild independently.
+
 final class ProjectedTagFamily extends $Family
     with $FunctionalFamilyOverride<AsyncValue<Tag?>, skir.RecordId> {
   ProjectedTagFamily._()
@@ -243,6 +305,8 @@ final class ProjectedTagFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Projects one tag for graph nodes that rebuild independently.
 
   ProjectedTagProvider call(skir.RecordId tagId) =>
       ProjectedTagProvider._(argument: tagId, from: this);

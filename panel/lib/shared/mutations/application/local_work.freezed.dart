@@ -221,7 +221,7 @@ return $default(_that.userId,_that.organizationId);case _:
 
 class _LocalWorkScope with DiagnosticableTreeMixin implements LocalWorkScope {
   const _LocalWorkScope({required this.userId, required this.organizationId});
-
+  
 
 @override final  String? userId;
 @override final  skir.RecordId? organizationId;
@@ -501,7 +501,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 
 class _EditorResourceScope with DiagnosticableTreeMixin implements EditorResourceScope {
   const _EditorResourceScope({required this.organizationId, this.realmId});
-
+  
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId? realmId;
@@ -779,7 +779,7 @@ return $default(_that.scope,_that.identity);case _:
 
 class _EditorResourceKey with DiagnosticableTreeMixin implements EditorResourceKey {
   const _EditorResourceKey({required this.scope, required this.identity});
-
+  
 
 @override final  Object? scope;
 @override final  Object identity;

@@ -217,7 +217,7 @@ return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);ca
 
 class _Book extends Book {
   const _Book({required this.bookId, required this.title, required this.icon, required this.color, required  List<skir.RecordId> tagIds}): assert(title != "", 'Title must not be empty.'),assert(icon != "", 'Icon must not be empty.'),_tagIds = tagIds,super._();
-
+  
 
 @override final  skir.RecordId bookId;
 @override final  String title;

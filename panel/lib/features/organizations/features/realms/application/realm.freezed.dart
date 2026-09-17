@@ -213,7 +213,7 @@ return $default(_that.connectionState);case _:
 
 class _RealmInteractionState extends RealmInteractionState {
   const _RealmInteractionState({required this.connectionState}): super._();
-
+  
 
 @override final  RealmConnectionState connectionState;
 

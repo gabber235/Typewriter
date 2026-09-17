@@ -217,7 +217,7 @@ return $default(_that.id,_that.width,_that.height,_that.builder,_that.priority);
 
 class _ServicesPackedNode implements ServicesPackedNode {
   const _ServicesPackedNode({required this.id, required this.width, required this.height, required this.builder, this.priority = 0});
-
+  
 
 @override final  GraphIdentifier id;
 @override final  int width;
@@ -492,7 +492,7 @@ return $default(_that.id,_that.source,_that.target,_that.color);case _:
 
 class _ServicesPackedConnection implements ServicesPackedConnection {
   const _ServicesPackedConnection({required this.id, required this.source, required this.target, required this.color});
-
+  
 
 @override final  String id;
 @override final  GraphIdentifier source;
@@ -765,7 +765,7 @@ return $default(_that.id,_that.width,_that.height,_that.placements);case _:
 
 class _ServicesPackedComponentPlacement implements ServicesPackedComponentPlacement {
   const _ServicesPackedComponentPlacement({required this.id, required this.width, required this.height, required  Map<GraphIdentifier, ServicesPackedGridPlacement> placements}): _placements = placements;
-
+  
 
 @override final  String id;
 @override final  int width;
@@ -1044,7 +1044,7 @@ return $default(_that.x,_that.y,_that.width,_that.height);case _:
 
 class _ServicesPackedGridPlacement extends ServicesPackedGridPlacement {
   const _ServicesPackedGridPlacement({required this.x, required this.y, required this.width, required this.height}): super._();
-
+  
 
 @override final  int x;
 @override final  int y;

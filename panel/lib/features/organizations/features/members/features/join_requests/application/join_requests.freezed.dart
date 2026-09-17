@@ -219,7 +219,7 @@ return $default(_that.requestId,_that.userId,_that.requestedAt,_that.expiresAt,_
 
 class _OrganizationJoinRequest extends OrganizationJoinRequest {
   const _OrganizationJoinRequest({required this.requestId, required this.userId, required this.requestedAt, required this.expiresAt, this.userName, this.userEmail, this.userAvatarUrl}): super._();
-
+  
 
 @override final  skir.RecordId requestId;
 @override final  skir.RecordId userId;

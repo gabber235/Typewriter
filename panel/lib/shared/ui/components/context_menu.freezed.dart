@@ -201,7 +201,7 @@ return divider();case _:
 
 class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
   const _MenuItem({required this.label, this.icon, this.color, this.onPressed,  List<ShortcutActivator> shortcuts = const []}): assert(label != "", 'Label must not be empty.'),_shortcuts = shortcuts;
-
+  
 
  final  String label;
  final  Widget? icon;
@@ -289,7 +289,7 @@ as List<ShortcutActivator>,
 
 class MenuItemSubmenu with DiagnosticableTreeMixin implements MenuItem {
   const MenuItemSubmenu({required this.label, required  List<MenuItem> items, this.icon, this.color}): assert(label != "", 'Label must not be empty.'),assert(items.length > 0, 'Items must not be empty.'),_items = items;
-
+  
 
  final  String label;
  final  List<MenuItem> _items;
@@ -375,7 +375,7 @@ as Color?,
 
 class MenuItemSection with DiagnosticableTreeMixin implements MenuItem {
   const MenuItemSection({required  List<MenuItem> items, this.label, this.icon, this.color}): assert(items.length > 0, 'Items must not be empty.'),assert(label == null || label != "", 'Label must be null or nonempty.'),_items = items;
-
+  
 
  final  List<MenuItem> _items;
  List<MenuItem> get items {
@@ -461,7 +461,7 @@ as Color?,
 
 class MenuItemDivider with DiagnosticableTreeMixin implements MenuItem {
   const MenuItemDivider();
-
+  
 
 
 

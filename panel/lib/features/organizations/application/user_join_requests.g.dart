@@ -8,12 +8,33 @@ part of 'user_join_requests.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the authenticated user's pending join request projection.
+///
+/// Snapshot and change events are reconciled by the user scoped sequence. A gap
+/// invalidates the provider for a fresh snapshot. Mutations use operation
+/// identities and classify uncertain responses through the shared mutation layer.
+/// Cancellation is optimistic, but any failure restores the previous list and
+/// invalidates the stream so recovery uses server state.
 
 @ProviderFor(UserJoinRequests)
 final userJoinRequestsProvider = UserJoinRequestsProvider._();
 
+/// Owns the authenticated user's pending join request projection.
+///
+/// Snapshot and change events are reconciled by the user scoped sequence. A gap
+/// invalidates the provider for a fresh snapshot. Mutations use operation
+/// identities and classify uncertain responses through the shared mutation layer.
+/// Cancellation is optimistic, but any failure restores the previous list and
+/// invalidates the stream so recovery uses server state.
 final class UserJoinRequestsProvider
     extends $StreamNotifierProvider<UserJoinRequests, List<UserJoinRequest>> {
+  /// Owns the authenticated user's pending join request projection.
+  ///
+  /// Snapshot and change events are reconciled by the user scoped sequence. A gap
+  /// invalidates the provider for a fresh snapshot. Mutations use operation
+  /// identities and classify uncertain responses through the shared mutation layer.
+  /// Cancellation is optimistic, but any failure restores the previous list and
+  /// invalidates the stream so recovery uses server state.
   UserJoinRequestsProvider._()
     : super(
         from: null,
@@ -33,7 +54,15 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'a9e2c1462e3a698b5fc57916f94f18ac31a9e3b2';
+String _$userJoinRequestsHash() => r'953d4a3b7a2aa42ad32991f1756f2f9659668cd8';
+
+/// Owns the authenticated user's pending join request projection.
+///
+/// Snapshot and change events are reconciled by the user scoped sequence. A gap
+/// invalidates the provider for a fresh snapshot. Mutations use operation
+/// identities and classify uncertain responses through the shared mutation layer.
+/// Cancellation is optimistic, but any failure restores the previous list and
+/// invalidates the stream so recovery uses server state.
 
 abstract class _$UserJoinRequests
     extends $StreamNotifier<List<UserJoinRequest>> {

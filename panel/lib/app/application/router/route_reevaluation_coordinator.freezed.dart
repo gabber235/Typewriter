@@ -189,7 +189,7 @@ return disposed();case _:
 
 class RouteReevaluationIdle with DiagnosticableTreeMixin implements RouteReevaluationState {
   const RouteReevaluationIdle();
-
+  
 
 
 
@@ -227,7 +227,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class RouteReevaluationRunning with DiagnosticableTreeMixin implements RouteReevaluationState {
   const RouteReevaluationRunning({this.followUpRequested = false});
-
+  
 
 @JsonKey() final  bool followUpRequested;
 
@@ -301,7 +301,7 @@ as bool,
 
 class RouteReevaluationDisposed with DiagnosticableTreeMixin implements RouteReevaluationState {
   const RouteReevaluationDisposed();
-
+  
 
 
 

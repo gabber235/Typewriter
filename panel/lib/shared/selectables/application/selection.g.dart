@@ -8,12 +8,30 @@ part of 'selection.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the canonical ordered list of selected identifiers.
+///
+/// Selection is independent from keyboard focus. Focus identifies the item
+/// receiving keyboard input, while this provider represents the items acted on
+/// by the inspector and batch operations. Widgets mutate this state through
+/// the methods below; resolved selectable objects are derived by [Selected].
 
 @ProviderFor(Selection)
 final selectionProvider = SelectionProvider._();
 
+/// Owns the canonical ordered list of selected identifiers.
+///
+/// Selection is independent from keyboard focus. Focus identifies the item
+/// receiving keyboard input, while this provider represents the items acted on
+/// by the inspector and batch operations. Widgets mutate this state through
+/// the methods below; resolved selectable objects are derived by [Selected].
 final class SelectionProvider
     extends $NotifierProvider<Selection, List<SelectableIdentifier>> {
+  /// Owns the canonical ordered list of selected identifiers.
+  ///
+  /// Selection is independent from keyboard focus. Focus identifies the item
+  /// receiving keyboard input, while this provider represents the items acted on
+  /// by the inspector and batch operations. Widgets mutate this state through
+  /// the methods below; resolved selectable objects are derived by [Selected].
   SelectionProvider._()
     : super(
         from: null,
@@ -43,6 +61,13 @@ final class SelectionProvider
 
 String _$selectionHash() => r'd645c1a9fdfbbd8d448744b7dfec3cdd70631878';
 
+/// Owns the canonical ordered list of selected identifiers.
+///
+/// Selection is independent from keyboard focus. Focus identifies the item
+/// receiving keyboard input, while this provider represents the items acted on
+/// by the inspector and batch operations. Widgets mutate this state through
+/// the methods below; resolved selectable objects are derived by [Selected].
+
 abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   List<SelectableIdentifier> build();
   @$mustCallSuper
@@ -66,11 +91,16 @@ abstract class _$Selection extends $Notifier<List<SelectableIdentifier>> {
   }
 }
 
+/// Whether at least one identifier is selected.
+
 @ProviderFor(hasSelection)
 final hasSelectionProvider = HasSelectionProvider._();
 
+/// Whether at least one identifier is selected.
+
 final class HasSelectionProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
+  /// Whether at least one identifier is selected.
   HasSelectionProvider._()
     : super(
         from: null,
@@ -106,11 +136,16 @@ final class HasSelectionProvider extends $FunctionalProvider<bool, bool, bool>
 
 String _$hasSelectionHash() => r'7cdf141b65386b5998eafaac1335fa4d897f6223';
 
+/// Whether [selectable] is in the canonical selection.
+
 @ProviderFor(isSelected)
 final isSelectedProvider = IsSelectedFamily._();
 
+/// Whether [selectable] is in the canonical selection.
+
 final class IsSelectedProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
+  /// Whether [selectable] is in the canonical selection.
   IsSelectedProvider._({
     required IsSelectedFamily super.from,
     required SelectableIdentifier super.argument,
@@ -164,6 +199,8 @@ final class IsSelectedProvider extends $FunctionalProvider<bool, bool, bool>
 
 String _$isSelectedHash() => r'12ed0fbd15b765b16a5b9e3afdb645cd81ea914d';
 
+/// Whether [selectable] is in the canonical selection.
+
 final class IsSelectedFamily extends $Family
     with $FunctionalFamilyOverride<bool, SelectableIdentifier> {
   IsSelectedFamily._()
@@ -175,6 +212,8 @@ final class IsSelectedFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Whether [selectable] is in the canonical selection.
+
   IsSelectedProvider call(SelectableIdentifier selectable) =>
       IsSelectedProvider._(argument: selectable, from: this);
 
@@ -182,15 +221,34 @@ final class IsSelectedFamily extends $Family
   String toString() => r'isSelectedProvider';
 }
 
+/// Resolves the canonical identifier selection into current selectable objects.
+///
+/// This provider is the boundary between selection state and resource state.
+/// It preserves the order of [selectionProvider], returns loading or error
+/// state when any identifier cannot resolve, and publishes a complete list
+/// only after every identifier has resolved.
+
 @ProviderFor(Selected)
 final selectedProvider = SelectedProvider._();
 
+/// Resolves the canonical identifier selection into current selectable objects.
+///
+/// This provider is the boundary between selection state and resource state.
+/// It preserves the order of [selectionProvider], returns loading or error
+/// state when any identifier cannot resolve, and publishes a complete list
+/// only after every identifier has resolved.
 final class SelectedProvider
     extends
         $NotifierProvider<
           Selected,
           AsyncValue<List<Selectable<SelectableIdentifier>>>
         > {
+  /// Resolves the canonical identifier selection into current selectable objects.
+  ///
+  /// This provider is the boundary between selection state and resource state.
+  /// It preserves the order of [selectionProvider], returns loading or error
+  /// state when any identifier cannot resolve, and publishes a complete list
+  /// only after every identifier has resolved.
   SelectedProvider._()
     : super(
         from: null,
@@ -224,6 +282,13 @@ final class SelectedProvider
 }
 
 String _$selectedHash() => r'22bff495d8332e0320ef87ba235ee6eb400d9c38';
+
+/// Resolves the canonical identifier selection into current selectable objects.
+///
+/// This provider is the boundary between selection state and resource state.
+/// It preserves the order of [selectionProvider], returns loading or error
+/// state when any identifier cannot resolve, and publishes a complete list
+/// only after every identifier has resolved.
 
 abstract class _$Selected
     extends $Notifier<AsyncValue<List<Selectable<SelectableIdentifier>>>> {

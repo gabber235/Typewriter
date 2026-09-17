@@ -8,12 +8,30 @@ part of 'auth.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the panel's identity provider session for the application lifetime.
+///
+/// Construction selects the redirect flow required by the current platform,
+/// initializes the OIDC manager, and restores any persisted session. Sign in and
+/// sign out invalidate this provider so all consumers observe the new session
+/// through Riverpod rather than retaining their own authentication state.
 
 @ProviderFor(Auth)
 final authProvider = AuthProvider._();
 
+/// Owns the panel's identity provider session for the application lifetime.
+///
+/// Construction selects the redirect flow required by the current platform,
+/// initializes the OIDC manager, and restores any persisted session. Sign in and
+/// sign out invalidate this provider so all consumers observe the new session
+/// through Riverpod rather than retaining their own authentication state.
 final class AuthProvider
     extends $AsyncNotifierProvider<Auth, OidcUserManager?> {
+  /// Owns the panel's identity provider session for the application lifetime.
+  ///
+  /// Construction selects the redirect flow required by the current platform,
+  /// initializes the OIDC manager, and restores any persisted session. Sign in and
+  /// sign out invalidate this provider so all consumers observe the new session
+  /// through Riverpod rather than retaining their own authentication state.
   AuthProvider._()
     : super(
         from: null,
@@ -35,6 +53,13 @@ final class AuthProvider
 
 String _$authHash() => r'f5fcbb5a594b66fa9d89b04dd12a6855f610eaa0';
 
+/// Owns the panel's identity provider session for the application lifetime.
+///
+/// Construction selects the redirect flow required by the current platform,
+/// initializes the OIDC manager, and restores any persisted session. Sign in and
+/// sign out invalidate this provider so all consumers observe the new session
+/// through Riverpod rather than retaining their own authentication state.
+
 abstract class _$Auth extends $AsyncNotifier<OidcUserManager?> {
   FutureOr<OidcUserManager?> build();
   @$mustCallSuper
@@ -54,12 +79,26 @@ abstract class _$Auth extends $AsyncNotifier<OidcUserManager?> {
   }
 }
 
+/// Reports whether the initialized identity provider has a current user.
+///
+/// Initialization failure remains an async provider failure. A missing manager or
+/// user produces false so route guards can keep unauthenticated users on sign in.
+
 @ProviderFor(isAuthenticated)
 final isAuthenticatedProvider = IsAuthenticatedProvider._();
+
+/// Reports whether the initialized identity provider has a current user.
+///
+/// Initialization failure remains an async provider failure. A missing manager or
+/// user produces false so route guards can keep unauthenticated users on sign in.
 
 final class IsAuthenticatedProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// Reports whether the initialized identity provider has a current user.
+  ///
+  /// Initialization failure remains an async provider failure. A missing manager or
+  /// user produces false so route guards can keep unauthenticated users on sign in.
   IsAuthenticatedProvider._()
     : super(
         from: null,
@@ -87,12 +126,26 @@ final class IsAuthenticatedProvider
 
 String _$isAuthenticatedHash() => r'01f00b31ef3086bf1de4f7f7c4bdc8967f4fa199';
 
+/// Returns the authenticated provider subject used for user scoped backend calls.
+///
+/// Returns null when no session exists. This keeps unauthenticated consumers from
+/// constructing subjects with an invented identity.
+
 @ProviderFor(userId)
 final userIdProvider = UserIdProvider._();
+
+/// Returns the authenticated provider subject used for user scoped backend calls.
+///
+/// Returns null when no session exists. This keeps unauthenticated consumers from
+/// constructing subjects with an invented identity.
 
 final class UserIdProvider
     extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
+  /// Returns the authenticated provider subject used for user scoped backend calls.
+  ///
+  /// Returns null when no session exists. This keeps unauthenticated consumers from
+  /// constructing subjects with an invented identity.
   UserIdProvider._()
     : super(
         from: null,
@@ -120,8 +173,20 @@ final class UserIdProvider
 
 String _$userIdHash() => r'6655b62760fa3487a0f1aa8c80604428f5d78ce6';
 
+/// Projects the current provider token for transport adapters.
+///
+/// Returns null when the manager, user, or access token is unavailable. Expiry is
+/// derived from the provider token timestamps and is absent when the provider
+/// does not supply a lifetime.
+
 @ProviderFor(accessToken)
 final accessTokenProvider = AccessTokenProvider._();
+
+/// Projects the current provider token for transport adapters.
+///
+/// Returns null when the manager, user, or access token is unavailable. Expiry is
+/// derived from the provider token timestamps and is absent when the provider
+/// does not supply a lifetime.
 
 final class AccessTokenProvider
     extends
@@ -131,6 +196,11 @@ final class AccessTokenProvider
           FutureOr<AccessToken?>
         >
     with $FutureModifier<AccessToken?>, $FutureProvider<AccessToken?> {
+  /// Projects the current provider token for transport adapters.
+  ///
+  /// Returns null when the manager, user, or access token is unavailable. Expiry is
+  /// derived from the provider token timestamps and is absent when the provider
+  /// does not supply a lifetime.
   AccessTokenProvider._()
     : super(
         from: null,
@@ -159,13 +229,30 @@ final class AccessTokenProvider
 
 String _$accessTokenHash() => r'2e8a4fc614c401c2dbb3bee3fc6fb6444afcd016';
 
+/// Normalizes provider claims into the account model consumed by the panel.
+///
+/// This provider is intentionally strict about session presence. Callers that can
+/// render signed out state should use [isAuthenticatedProvider] first; callers
+/// that need identity setup should surface its failure instead of guessing claims.
+
 @ProviderFor(authUserInfo)
 final authUserInfoProvider = AuthUserInfoProvider._();
+
+/// Normalizes provider claims into the account model consumed by the panel.
+///
+/// This provider is intentionally strict about session presence. Callers that can
+/// render signed out state should use [isAuthenticatedProvider] first; callers
+/// that need identity setup should surface its failure instead of guessing claims.
 
 final class AuthUserInfoProvider
     extends
         $FunctionalProvider<AsyncValue<UserInfo>, UserInfo, FutureOr<UserInfo>>
     with $FutureModifier<UserInfo>, $FutureProvider<UserInfo> {
+  /// Normalizes provider claims into the account model consumed by the panel.
+  ///
+  /// This provider is intentionally strict about session presence. Callers that can
+  /// render signed out state should use [isAuthenticatedProvider] first; callers
+  /// that need identity setup should surface its failure instead of guessing claims.
   AuthUserInfoProvider._()
     : super(
         from: null,

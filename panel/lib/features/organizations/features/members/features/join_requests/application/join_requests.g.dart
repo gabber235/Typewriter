@@ -8,16 +8,43 @@ part of 'join_requests.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the current organization moderation projection and its mutations.
+///
+/// The authenticated user and selected organization determine the stream
+/// subjects. Approval is one server transaction for all selected requests and
+/// roles, while decline removes one request optimistically. Both mutations use
+/// operation identities and classify uncertain delivery through the shared
+/// mutation layer. Failed mutations invalidate the provider so the next
+/// snapshot resolves concurrent server decisions; decline also restores its
+/// prior local projection before that refresh.
 
 @ProviderFor(OrganizationJoinRequests)
 final organizationJoinRequestsProvider = OrganizationJoinRequestsProvider._();
 
+/// Owns the current organization moderation projection and its mutations.
+///
+/// The authenticated user and selected organization determine the stream
+/// subjects. Approval is one server transaction for all selected requests and
+/// roles, while decline removes one request optimistically. Both mutations use
+/// operation identities and classify uncertain delivery through the shared
+/// mutation layer. Failed mutations invalidate the provider so the next
+/// snapshot resolves concurrent server decisions; decline also restores its
+/// prior local projection before that refresh.
 final class OrganizationJoinRequestsProvider
     extends
         $StreamNotifierProvider<
           OrganizationJoinRequests,
           List<OrganizationJoinRequest>
         > {
+  /// Owns the current organization moderation projection and its mutations.
+  ///
+  /// The authenticated user and selected organization determine the stream
+  /// subjects. Approval is one server transaction for all selected requests and
+  /// roles, while decline removes one request optimistically. Both mutations use
+  /// operation identities and classify uncertain delivery through the shared
+  /// mutation layer. Failed mutations invalidate the provider so the next
+  /// snapshot resolves concurrent server decisions; decline also restores its
+  /// prior local projection before that refresh.
   OrganizationJoinRequestsProvider._()
     : super(
         from: null,
@@ -38,7 +65,17 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'a69d3713503d665e2290b563f9372f2439650b30';
+    r'edebe69476a0ea2be6bf35ee068f82d44ab287c7';
+
+/// Owns the current organization moderation projection and its mutations.
+///
+/// The authenticated user and selected organization determine the stream
+/// subjects. Approval is one server transaction for all selected requests and
+/// roles, while decline removes one request optimistically. Both mutations use
+/// operation identities and classify uncertain delivery through the shared
+/// mutation layer. Failed mutations invalidate the provider so the next
+/// snapshot resolves concurrent server decisions; decline also restores its
+/// prior local projection before that refresh.
 
 abstract class _$OrganizationJoinRequests
     extends $StreamNotifier<List<OrganizationJoinRequest>> {
@@ -67,16 +104,25 @@ abstract class _$OrganizationJoinRequests
   }
 }
 
-/// Provider for the count of pending join requests.
+/// Counts unexpired requests in the current moderation projection.
+///
+/// Loading and error states report zero because the sidebar badge cannot claim
+/// a pending count until the projection is available.
 
 @ProviderFor(joinRequestCount)
 final joinRequestCountProvider = JoinRequestCountProvider._();
 
-/// Provider for the count of pending join requests.
+/// Counts unexpired requests in the current moderation projection.
+///
+/// Loading and error states report zero because the sidebar badge cannot claim
+/// a pending count until the projection is available.
 
 final class JoinRequestCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
-  /// Provider for the count of pending join requests.
+  /// Counts unexpired requests in the current moderation projection.
+  ///
+  /// Loading and error states report zero because the sidebar badge cannot claim
+  /// a pending count until the projection is available.
   JoinRequestCountProvider._()
     : super(
         from: null,

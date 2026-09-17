@@ -80,7 +80,7 @@ as Map<ConversionId, ConversionDefinition>,
 @override
 @pragma('vm:prefer-inline')
 $BindingEnvironmentCopyWith<$Res> get bindings {
-
+  
   return $BindingEnvironmentCopyWith<$Res>(_self.bindings, (value) {
     return _then(_self.copyWith(bindings: value));
   });
@@ -223,7 +223,7 @@ return $default(_that.bindings,_that.conversions);case _:
 
 class _ExpressionContext extends ExpressionContext {
   const _ExpressionContext({required this.bindings,  Map<ConversionId, ConversionDefinition> conversions = const {}}): _conversions = conversions,super._();
-
+  
 
 @override final  BindingEnvironment bindings;
  final  Map<ConversionId, ConversionDefinition> _conversions;
@@ -296,7 +296,7 @@ as Map<ConversionId, ConversionDefinition>,
 @override
 @pragma('vm:prefer-inline')
 $BindingEnvironmentCopyWith<$Res> get bindings {
-
+  
   return $BindingEnvironmentCopyWith<$Res>(_self.bindings, (value) {
     return _then(_self.copyWith(bindings: value));
   });

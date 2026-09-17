@@ -8,19 +8,40 @@ part of 'join_codes.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provider for the join codes in the current organization.
+/// Owns the panel's live read model of invitation codes for the selected organization.
+///
+/// The provider waits for authentication and organization selection, then
+/// watches the service for one snapshot followed by sequenced add and remove
+/// changes. Duplicate changes are ignored. A sequence gap invalidates the
+/// provider so the next subscription can recover from a fresh snapshot.
+/// Mutations use this same owner to reconcile successful events and to roll
+/// back an optimistic revoke when the request fails.
 
 @ProviderFor(OrganizationJoinCodes)
 final organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
 
-/// Provider for the join codes in the current organization.
+/// Owns the panel's live read model of invitation codes for the selected organization.
+///
+/// The provider waits for authentication and organization selection, then
+/// watches the service for one snapshot followed by sequenced add and remove
+/// changes. Duplicate changes are ignored. A sequence gap invalidates the
+/// provider so the next subscription can recover from a fresh snapshot.
+/// Mutations use this same owner to reconcile successful events and to roll
+/// back an optimistic revoke when the request fails.
 final class OrganizationJoinCodesProvider
     extends
         $StreamNotifierProvider<
           OrganizationJoinCodes,
           List<OrganizationJoinCode>
         > {
-  /// Provider for the join codes in the current organization.
+  /// Owns the panel's live read model of invitation codes for the selected organization.
+  ///
+  /// The provider waits for authentication and organization selection, then
+  /// watches the service for one snapshot followed by sequenced add and remove
+  /// changes. Duplicate changes are ignored. A sequence gap invalidates the
+  /// provider so the next subscription can recover from a fresh snapshot.
+  /// Mutations use this same owner to reconcile successful events and to roll
+  /// back an optimistic revoke when the request fails.
   OrganizationJoinCodesProvider._()
     : super(
         from: null,
@@ -41,9 +62,16 @@ final class OrganizationJoinCodesProvider
 }
 
 String _$organizationJoinCodesHash() =>
-    r'7e83c097bae355deb3be2f1ccfff472750b40640';
+    r'0139bb87120daaf6a0b821c1e20dbaf9db8d7dc8';
 
-/// Provider for the join codes in the current organization.
+/// Owns the panel's live read model of invitation codes for the selected organization.
+///
+/// The provider waits for authentication and organization selection, then
+/// watches the service for one snapshot followed by sequenced add and remove
+/// changes. Duplicate changes are ignored. A sequence gap invalidates the
+/// provider so the next subscription can recover from a fresh snapshot.
+/// Mutations use this same owner to reconcile successful events and to roll
+/// back an optimistic revoke when the request fails.
 
 abstract class _$OrganizationJoinCodes
     extends $StreamNotifier<List<OrganizationJoinCode>> {
@@ -72,16 +100,31 @@ abstract class _$OrganizationJoinCodes
   }
 }
 
-/// Provider for the count of active join codes.
+/// Derives the number of currently usable codes from the live projection.
+///
+/// Loading and error states intentionally report zero because this value is a
+/// navigation badge, not an authority for whether generation or revocation is
+/// allowed. Expired codes remain in the projection until the visible countdown
+/// removes them locally or a service change replaces the snapshot.
 
 @ProviderFor(joinCodeCount)
 final joinCodeCountProvider = JoinCodeCountProvider._();
 
-/// Provider for the count of active join codes.
+/// Derives the number of currently usable codes from the live projection.
+///
+/// Loading and error states intentionally report zero because this value is a
+/// navigation badge, not an authority for whether generation or revocation is
+/// allowed. Expired codes remain in the projection until the visible countdown
+/// removes them locally or a service change replaces the snapshot.
 
 final class JoinCodeCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
-  /// Provider for the count of active join codes.
+  /// Derives the number of currently usable codes from the live projection.
+  ///
+  /// Loading and error states intentionally report zero because this value is a
+  /// navigation badge, not an authority for whether generation or revocation is
+  /// allowed. Expired codes remain in the projection until the visible countdown
+  /// removes them locally or a service change replaces the snapshot.
   JoinCodeCountProvider._()
     : super(
         from: null,

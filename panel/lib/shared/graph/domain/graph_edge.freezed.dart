@@ -218,7 +218,7 @@ return $default(_that.id,_that.source,_that.target,_that.color,_that.sourceSide,
 
 class _GraphEdge extends GraphEdge {
   const _GraphEdge({required this.id, required this.source, required this.target, required this.color, this.sourceSide = EdgeSide.right, this.targetSide = EdgeSide.left}): super._();
-
+  
 
 @override final  String id;
 @override final  GraphIdentifier source;

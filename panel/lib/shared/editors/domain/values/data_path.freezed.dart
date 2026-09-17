@@ -208,7 +208,7 @@ return $default(_that.segments);case _:
 
 class _DataPath extends DataPath {
   const _DataPath( List<DataPathSegment> segments): _segments = segments,super._();
-
+  
 
  final  List<DataPathSegment> _segments;
 @override List<DataPathSegment> get segments {
@@ -440,7 +440,7 @@ return mapKey(_that.key);case _:
 
 class FieldPathSegment extends DataPathSegment {
   const FieldPathSegment(this.name): assert(name != "", 'Field name must not be empty.'),super._();
-
+  
 
  final  String name;
 
@@ -504,7 +504,7 @@ as String,
 
 class IndexPathSegment extends DataPathSegment {
   const IndexPathSegment(this.index): assert(index >= 0, 'List index must not be negative.'),super._();
-
+  
 
  final  int index;
 
@@ -568,7 +568,7 @@ as int,
 
 class MapKeyPathSegment extends DataPathSegment {
   const MapKeyPathSegment(this.key): super._();
-
+  
 
  final  DataValue key;
 
@@ -629,7 +629,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-
+  
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });

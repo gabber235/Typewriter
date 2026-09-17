@@ -225,7 +225,7 @@ return $default(_that.requestId,_that.organizationId,_that.organizationName,_tha
 
 class _UserJoinRequest extends UserJoinRequest with DiagnosticableTreeMixin {
   const _UserJoinRequest({required this.requestId, required this.organizationId, required this.organizationName, required this.organizationLogoUrl, required this.requestedAt, required this.expiresAt}): super._();
-
+  
 
 @override final  skir.RecordId requestId;
 @override final  skir.RecordId organizationId;

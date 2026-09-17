@@ -215,7 +215,7 @@ return $default(_that.resources,_that.editorValues,_that.submissions);case _:
 
 class _LocalWorkState implements LocalWorkState {
   const _LocalWorkState({ Map<EditorResourceKey, LocalWorkResourceState> resources = const {},  Map<EditorResourceKey, LocalEditorValue> editorValues = const {},  List<LocalWorkSubmissionState> submissions = const []}): _resources = resources,_editorValues = editorValues,_submissions = submissions;
-
+  
 
  final  Map<EditorResourceKey, LocalWorkResourceState> _resources;
 @override@JsonKey() Map<EditorResourceKey, LocalWorkResourceState> get resources {
@@ -373,7 +373,7 @@ as LocalWorkDestinationState,
 @override
 @pragma('vm:prefer-inline')
 $EditorResourceKeyCopyWith<$Res> get key {
-
+  
   return $EditorResourceKeyCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -516,7 +516,7 @@ return $default(_that.key,_that.label,_that.commitPolicy,_that.savePhase,_that.r
 
 class _LocalWorkResourceState implements LocalWorkResourceState {
   const _LocalWorkResourceState({required this.key, required this.label, required this.commitPolicy, required this.savePhase, required this.readOnly, required this.hasDiagnostics, required this.destination});
-
+  
 
 @override final  EditorResourceKey key;
 @override final  String label;
@@ -593,7 +593,7 @@ as LocalWorkDestinationState,
 @override
 @pragma('vm:prefer-inline')
 $EditorResourceKeyCopyWith<$Res> get key {
-
+  
   return $EditorResourceKeyCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -806,7 +806,7 @@ return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integra
 
 class _LocalWorkSubmissionState implements LocalWorkSubmissionState {
   const _LocalWorkSubmissionState({required this.id, required this.label, required this.sending, required this.canReplay, required this.integrationFailed, required this.result, this.message});
-
+  
 
 @override final  Object id;
 @override final  String label;

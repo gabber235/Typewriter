@@ -226,7 +226,7 @@ return $default(_that.header,_that.suppressed);case _:
 
 class _ResolvedHeaderChain implements ResolvedHeaderChain {
   const _ResolvedHeaderChain({required this.header, required  Set<(String, BindingReference?,)> suppressed}): _suppressed = suppressed;
-
+  
 
 @override final  PresentationHeader? header;
  final  Set<(String, BindingReference?,)> _suppressed;

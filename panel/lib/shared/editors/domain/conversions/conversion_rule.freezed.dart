@@ -255,7 +255,7 @@ return compositionIds(_that.steps);case _:
 
 class InputConversionRule implements ConversionRule {
   const InputConversionRule();
-
+  
 
 
 
@@ -287,7 +287,7 @@ String toString() {
 
 class InheritanceUpcastRule implements ConversionRule {
   const InheritanceUpcastRule();
-
+  
 
 
 
@@ -319,7 +319,7 @@ String toString() {
 
 class ValidatedDowncastRule implements ConversionRule {
   const ValidatedDowncastRule();
-
+  
 
 
 
@@ -351,7 +351,7 @@ String toString() {
 
 class ScalarConversionRule implements ConversionRule {
   const ScalarConversionRule(this.conversion);
-
+  
 
  final  ScalarConversion conversion;
 
@@ -419,7 +419,7 @@ as ScalarConversion,
 
 class FieldConversionRule implements ConversionRule {
   const FieldConversionRule({required this.name, required this.rule}): assert(name != "", 'Field name must not be empty.');
-
+  
 
  final  String name;
  final  ConversionRule rule;
@@ -486,7 +486,7 @@ as ConversionRule,
 @override
 @pragma('vm:prefer-inline')
 $ConversionRuleCopyWith<$Res> get rule {
-
+  
   return $ConversionRuleCopyWith<$Res>(_self.rule, (value) {
     return _then(_self.copyWith(rule: value));
   });
@@ -498,7 +498,7 @@ $ConversionRuleCopyWith<$Res> get rule {
 
 class RecordConversionRule implements ConversionRule {
   const RecordConversionRule( Map<String, ConversionRule> fields): _fields = fields;
-
+  
 
  final  Map<String, ConversionRule> _fields;
  Map<String, ConversionRule> get fields {
@@ -572,7 +572,7 @@ as Map<String, ConversionRule>,
 
 class ListConversionRule implements ConversionRule {
   const ListConversionRule(this.element);
-
+  
 
  final  ConversionRule element;
 
@@ -637,7 +637,7 @@ as ConversionRule,
 @override
 @pragma('vm:prefer-inline')
 $ConversionRuleCopyWith<$Res> get element {
-
+  
   return $ConversionRuleCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -649,7 +649,7 @@ $ConversionRuleCopyWith<$Res> get element {
 
 class PolymorphicConversionRule implements ConversionRule {
   const PolymorphicConversionRule( List<ConversionPolymorphicCase> cases): _cases = cases;
-
+  
 
  final  List<ConversionPolymorphicCase> _cases;
  List<ConversionPolymorphicCase> get cases {
@@ -723,7 +723,7 @@ as List<ConversionPolymorphicCase>,
 
 class ComposedConversionRule implements ConversionRule {
   const ComposedConversionRule( List<ConversionRule> rules): _rules = rules;
-
+  
 
  final  List<ConversionRule> _rules;
  List<ConversionRule> get rules {
@@ -797,7 +797,7 @@ as List<ConversionRule>,
 
 class RealmConversionRule implements ConversionRule {
   const RealmConversionRule();
-
+  
 
 
 
@@ -829,7 +829,7 @@ String toString() {
 
 class RecordProjectionConversionRule implements ConversionRule {
   const RecordProjectionConversionRule( List<ConversionProjectionField> fields): _fields = fields;
-
+  
 
  final  List<ConversionProjectionField> _fields;
  List<ConversionProjectionField> get fields {
@@ -903,7 +903,7 @@ as List<ConversionProjectionField>,
 
 class RecordConstructionConversionRule implements ConversionRule {
   const RecordConstructionConversionRule( List<ConversionConstructionField> fields): _fields = fields;
-
+  
 
  final  List<ConversionConstructionField> _fields;
  List<ConversionConstructionField> get fields {
@@ -977,7 +977,7 @@ as List<ConversionConstructionField>,
 
 class CollectionMappingConversionRule implements ConversionRule {
   const CollectionMappingConversionRule(this.elementConversionId);
-
+  
 
  final  ConversionId elementConversionId;
 
@@ -1042,7 +1042,7 @@ as ConversionId,
 @override
 @pragma('vm:prefer-inline')
 $ConversionIdCopyWith<$Res> get elementConversionId {
-
+  
   return $ConversionIdCopyWith<$Res>(_self.elementConversionId, (value) {
     return _then(_self.copyWith(elementConversionId: value));
   });
@@ -1054,7 +1054,7 @@ $ConversionIdCopyWith<$Res> get elementConversionId {
 
 class PolymorphicMatchingConversionRule implements ConversionRule {
   const PolymorphicMatchingConversionRule( List<ConversionPolymorphicMatch> cases): _cases = cases;
-
+  
 
  final  List<ConversionPolymorphicMatch> _cases;
  List<ConversionPolymorphicMatch> get cases {
@@ -1128,7 +1128,7 @@ as List<ConversionPolymorphicMatch>,
 
 class ConversionCompositionIdsRule implements ConversionRule {
   const ConversionCompositionIdsRule( List<ConversionId> steps): _steps = steps;
-
+  
 
  final  List<ConversionId> _steps;
  List<ConversionId> get steps {
@@ -1266,7 +1266,7 @@ as ConversionRule,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get sourceType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.sourceType, (value) {
     return _then(_self.copyWith(sourceType: value));
   });
@@ -1275,7 +1275,7 @@ $ResolvedTypeRefCopyWith<$Res> get sourceType {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get targetType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.targetType, (value) {
     return _then(_self.copyWith(targetType: value));
   });
@@ -1284,7 +1284,7 @@ $ResolvedTypeRefCopyWith<$Res> get targetType {
 @override
 @pragma('vm:prefer-inline')
 $ConversionRuleCopyWith<$Res> get rule {
-
+  
   return $ConversionRuleCopyWith<$Res>(_self.rule, (value) {
     return _then(_self.copyWith(rule: value));
   });
@@ -1427,7 +1427,7 @@ return $default(_that.sourceType,_that.targetType,_that.rule);case _:
 
 class _ConversionPolymorphicCase implements ConversionPolymorphicCase {
   const _ConversionPolymorphicCase({required this.sourceType, required this.targetType, required this.rule});
-
+  
 
 @override final  ResolvedTypeRef sourceType;
 @override final  ResolvedTypeRef targetType;
@@ -1496,7 +1496,7 @@ as ConversionRule,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get sourceType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.sourceType, (value) {
     return _then(_self.copyWith(sourceType: value));
   });
@@ -1505,7 +1505,7 @@ $ResolvedTypeRefCopyWith<$Res> get sourceType {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get targetType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.targetType, (value) {
     return _then(_self.copyWith(targetType: value));
   });
@@ -1514,7 +1514,7 @@ $ResolvedTypeRefCopyWith<$Res> get targetType {
 @override
 @pragma('vm:prefer-inline')
 $ConversionRuleCopyWith<$Res> get rule {
-
+  
   return $ConversionRuleCopyWith<$Res>(_self.rule, (value) {
     return _then(_self.copyWith(rule: value));
   });
@@ -1590,7 +1590,7 @@ as ConversionId?,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get source {
-
+  
   return $DataPathCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1599,7 +1599,7 @@ $DataPathCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get target {
-
+  
   return $DataPathCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1754,7 +1754,7 @@ return $default(_that.source,_that.target,_that.conversionId);case _:
 
 class _ConversionProjectionField implements ConversionProjectionField {
   const _ConversionProjectionField({required this.source, required this.target, this.conversionId});
-
+  
 
 @override final  DataPath source;
 @override final  DataPath target;
@@ -1823,7 +1823,7 @@ as ConversionId?,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get source {
-
+  
   return $DataPathCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1832,7 +1832,7 @@ $DataPathCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get target {
-
+  
   return $DataPathCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1920,7 +1920,7 @@ as ConversionId?,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get source {
-
+  
   return $DataPathCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2075,7 +2075,7 @@ return $default(_that.targetField,_that.source,_that.conversionId);case _:
 
 class _ConversionConstructionField implements ConversionConstructionField {
   const _ConversionConstructionField({required this.targetField, required this.source, this.conversionId});
-
+  
 
 @override final  String targetField;
 @override final  DataPath source;
@@ -2144,7 +2144,7 @@ as ConversionId?,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get source {
-
+  
   return $DataPathCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2232,7 +2232,7 @@ as ConversionId?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get sourceType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.sourceType, (value) {
     return _then(_self.copyWith(sourceType: value));
   });
@@ -2241,7 +2241,7 @@ $ResolvedTypeRefCopyWith<$Res> get sourceType {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get targetType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.targetType, (value) {
     return _then(_self.copyWith(targetType: value));
   });
@@ -2396,7 +2396,7 @@ return $default(_that.sourceType,_that.targetType,_that.conversionId);case _:
 
 class _ConversionPolymorphicMatch implements ConversionPolymorphicMatch {
   const _ConversionPolymorphicMatch({required this.sourceType, required this.targetType, this.conversionId});
-
+  
 
 @override final  ResolvedTypeRef sourceType;
 @override final  ResolvedTypeRef targetType;
@@ -2465,7 +2465,7 @@ as ConversionId?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get sourceType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.sourceType, (value) {
     return _then(_self.copyWith(sourceType: value));
   });
@@ -2474,7 +2474,7 @@ $ResolvedTypeRefCopyWith<$Res> get sourceType {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get targetType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.targetType, (value) {
     return _then(_self.copyWith(targetType: value));
   });

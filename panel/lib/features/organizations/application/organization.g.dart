@@ -8,12 +8,33 @@ part of 'organization.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the current user's organization list projection.
+///
+/// The provider combines an initial snapshot with ordered change events. A
+/// duplicate event is ignored, an ordered event updates the projection, and a
+/// sequence gap invalidates the stream so the server snapshot can re establish
+/// authority. Mutations apply their returned event immediately, avoiding a
+/// second request while preserving the same sequence rules.
 
 @ProviderFor(Organizations)
 final organizationsProvider = OrganizationsProvider._();
 
+/// Owns the current user's organization list projection.
+///
+/// The provider combines an initial snapshot with ordered change events. A
+/// duplicate event is ignored, an ordered event updates the projection, and a
+/// sequence gap invalidates the stream so the server snapshot can re establish
+/// authority. Mutations apply their returned event immediately, avoiding a
+/// second request while preserving the same sequence rules.
 final class OrganizationsProvider
     extends $StreamNotifierProvider<Organizations, List<OrganizationData>> {
+  /// Owns the current user's organization list projection.
+  ///
+  /// The provider combines an initial snapshot with ordered change events. A
+  /// duplicate event is ignored, an ordered event updates the projection, and a
+  /// sequence gap invalidates the stream so the server snapshot can re establish
+  /// authority. Mutations apply their returned event immediately, avoiding a
+  /// second request while preserving the same sequence rules.
   OrganizationsProvider._()
     : super(
         from: null,
@@ -33,7 +54,15 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'8b84312287b074e43bd8627f586b812e80c6f2be';
+String _$organizationsHash() => r'cee411b116915b0b6e4da21ef292d6a4b640f7ec';
+
+/// Owns the current user's organization list projection.
+///
+/// The provider combines an initial snapshot with ordered change events. A
+/// duplicate event is ignored, an ordered event updates the projection, and a
+/// sequence gap invalidates the stream so the server snapshot can re establish
+/// authority. Mutations apply their returned event immediately, avoiding a
+/// second request while preserving the same sequence rules.
 
 abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
   Stream<List<OrganizationData>> build();
@@ -58,12 +87,29 @@ abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
   }
 }
 
+/// Resolves the organization route parameter into the typed record identity.
+///
+/// A missing route parameter yields null. No provider fabricates an organization
+/// identity, so nested organization consumers can distinguish an absent route
+/// from a missing membership projection.
+
 @ProviderFor(organizationId)
 final organizationIdProvider = OrganizationIdProvider._();
+
+/// Resolves the organization route parameter into the typed record identity.
+///
+/// A missing route parameter yields null. No provider fabricates an organization
+/// identity, so nested organization consumers can distinguish an absent route
+/// from a missing membership projection.
 
 final class OrganizationIdProvider
     extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
     with $Provider<skir.RecordId?> {
+  /// Resolves the organization route parameter into the typed record identity.
+  ///
+  /// A missing route parameter yields null. No provider fabricates an organization
+  /// identity, so nested organization consumers can distinguish an absent route
+  /// from a missing membership projection.
   OrganizationIdProvider._()
     : super(
         from: null,
@@ -99,11 +145,27 @@ final class OrganizationIdProvider
 
 String _$organizationIdHash() => r'9902444ecead9e5ebb83f436a847d913ff97d987';
 
+/// Selects the routed organization from the user's canonical organization list.
+///
+/// This is a read projection, not a second organization cache. It stays null
+/// until the route has an identity or the membership stream contains that
+/// identity, which prevents nested pages from using stale organization data.
+
 @ProviderFor(Organization)
 final organizationProvider = OrganizationProvider._();
 
+/// Selects the routed organization from the user's canonical organization list.
+///
+/// This is a read projection, not a second organization cache. It stays null
+/// until the route has an identity or the membership stream contains that
+/// identity, which prevents nested pages from using stale organization data.
 final class OrganizationProvider
     extends $AsyncNotifierProvider<Organization, OrganizationData?> {
+  /// Selects the routed organization from the user's canonical organization list.
+  ///
+  /// This is a read projection, not a second organization cache. It stays null
+  /// until the route has an identity or the membership stream contains that
+  /// identity, which prevents nested pages from using stale organization data.
   OrganizationProvider._()
     : super(
         from: null,
@@ -124,6 +186,12 @@ final class OrganizationProvider
 }
 
 String _$organizationHash() => r'45b1ea19bda17c75a1327fff03857ac4732f2038';
+
+/// Selects the routed organization from the user's canonical organization list.
+///
+/// This is a read projection, not a second organization cache. It stays null
+/// until the route has an identity or the membership stream contains that
+/// identity, which prevents nested pages from using stale organization data.
 
 abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
   FutureOr<OrganizationData?> build();

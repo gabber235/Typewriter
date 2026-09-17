@@ -84,7 +84,7 @@ as ElementDeprecation?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get rootType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.rootType, (value) {
     return _then(_self.copyWith(rootType: value));
   });
@@ -93,7 +93,7 @@ $ResolvedTypeRefCopyWith<$Res> get rootType {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-
+  
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -248,7 +248,7 @@ return $default(_that.rootType,_that.name,_that.description,_that.icon,_that.col
 
 class _ElementDefinition implements ElementDefinition {
   const _ElementDefinition({required this.rootType, required this.name, required this.description, required this.icon, this.color = Colors.grey, this.deprecation}): assert(name != "", 'Name must not be empty.');
-
+  
 
 @override final  ResolvedTypeRef rootType;
 @override final  String name;
@@ -323,7 +323,7 @@ as ElementDeprecation?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get rootType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.rootType, (value) {
     return _then(_self.copyWith(rootType: value));
   });
@@ -332,7 +332,7 @@ $ResolvedTypeRefCopyWith<$Res> get rootType {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-
+  
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -552,7 +552,7 @@ return $default(_that.reason);case _:
 
 class _ElementDeprecation implements ElementDeprecation {
   const _ElementDeprecation({this.reason = ""});
-
+  
 
 @override@JsonKey() final  String reason;
 

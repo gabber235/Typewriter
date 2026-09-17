@@ -82,7 +82,7 @@ as BindingReference?,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -91,7 +91,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -246,7 +246,7 @@ return $default(_that.type,_that.value,_that.revision,_that.canonical);case _:
 
 class _RepeatedItemValue implements _RepeatedItem {
   const _RepeatedItemValue({required this.type, required this.value, required this.revision, required this.canonical});
-
+  
 
 @override final  TypeExpression type;
 @override final  DataValue value;
@@ -317,7 +317,7 @@ as BindingReference?,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -326,7 +326,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });

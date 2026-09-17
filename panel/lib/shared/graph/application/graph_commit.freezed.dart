@@ -215,7 +215,7 @@ return $default(_that.id,_that.x,_that.y);case _:
 
 class _GraphMoveCommitPayload implements GraphMoveCommitPayload {
   const _GraphMoveCommitPayload({required this.id, required this.x, required this.y});
-
+  
 
 @override final  GraphIdentifier id;
 @override final  int x;
@@ -485,7 +485,7 @@ return $default(_that.id,_that.width,_that.height);case _:
 
 class _GraphResizeCommitPayload implements GraphResizeCommitPayload {
   const _GraphResizeCommitPayload({required this.id, required this.width, required this.height});
-
+  
 
 @override final  GraphIdentifier id;
 @override final  int width;

@@ -213,7 +213,7 @@ return $default(_that.value);case _:
 
 class _BindingId implements BindingId {
   const _BindingId(this.value): assert(value >= 0, 'Binding ID must not be negative.');
-
+  
 
 @override final  int value;
 
@@ -344,7 +344,7 @@ as DataPath,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -353,7 +353,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -496,7 +496,7 @@ return $default(_that.bindingId,_that.path);case _:
 
 class _BindingReference extends BindingReference {
   const _BindingReference({required this.bindingId, this.path = DataPath.root}): super._();
-
+  
 
 @override final  BindingId bindingId;
 @override@JsonKey() final  DataPath path;
@@ -563,7 +563,7 @@ as DataPath,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -572,7 +572,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -649,7 +649,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -658,7 +658,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -801,7 +801,7 @@ return $default(_that.type,_that.value,_that.revision,_that.writable);case _:
 
 class _BindingSnapshot extends BindingSnapshot {
   const _BindingSnapshot({required this.type, required this.value, required this.revision, this.writable = true}): assert(revision >= 0, 'Binding revision must not be negative.'),super._();
-
+  
 
 @override final  TypeExpression type;
 @override final  DataValue value;
@@ -872,7 +872,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -881,7 +881,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -956,7 +956,7 @@ as EditorValue,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -965,7 +965,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $EditorValueCopyWith<$Res> get value {
-
+  
   return $EditorValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1108,7 +1108,7 @@ return $default(_that.type,_that.value);case _:
 
 class _BindingSourceState implements BindingSourceState {
   const _BindingSourceState({required this.type, required this.value});
-
+  
 
 @override final  TypeExpression type;
 @override final  EditorValue value;
@@ -1175,7 +1175,7 @@ as EditorValue,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -1184,7 +1184,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $EditorValueCopyWith<$Res> get value {
-
+  
   return $EditorValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1262,7 +1262,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get reference {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1271,7 +1271,7 @@ $BindingReferenceCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -1280,7 +1280,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $EditorValueCopyWith<$Res> get value {
-
+  
   return $EditorValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1423,7 +1423,7 @@ return $default(_that.reference,_that.type,_that.value,_that.revision,_that.writ
 
 class _InspectedBinding implements InspectedBinding {
   const _InspectedBinding({required this.reference, required this.type, required this.value, required this.revision, required this.writable});
-
+  
 
 @override final  BindingReference reference;
 @override final  TypeExpression type;
@@ -1496,7 +1496,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get reference {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1505,7 +1505,7 @@ $BindingReferenceCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -1514,7 +1514,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $EditorValueCopyWith<$Res> get value {
-
+  
   return $EditorValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1592,7 +1592,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get reference {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1601,7 +1601,7 @@ $BindingReferenceCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -1610,7 +1610,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1753,7 +1753,7 @@ return $default(_that.reference,_that.type,_that.value,_that.revision,_that.writ
 
 class _ResolvedBinding implements ResolvedBinding {
   const _ResolvedBinding({required this.reference, required this.type, required this.value, required this.revision, required this.writable});
-
+  
 
 @override final  BindingReference reference;
 @override final  TypeExpression type;
@@ -1826,7 +1826,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get reference {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1835,7 +1835,7 @@ $BindingReferenceCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -1844,7 +1844,7 @@ $TypeExpressionCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -2052,7 +2052,7 @@ return $default(_that.bindings);case _:
 
 class _BindingEnvironment extends BindingEnvironment {
   const _BindingEnvironment( Map<BindingId, BindingSource> bindings): _bindings = bindings,super._();
-
+  
 
  final  Map<BindingId, BindingSource> _bindings;
 @override Map<BindingId, BindingSource> get bindings {

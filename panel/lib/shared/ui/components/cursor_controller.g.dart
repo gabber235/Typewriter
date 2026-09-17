@@ -8,12 +8,27 @@ part of 'cursor_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the application cursor override used by pointer driven interactions.
+///
+/// The provider state is the cursor applied by [GlobalCursorController]. Call
+/// [cursor] while an interaction is active and [reset] when it releases the
+/// pointer.
 
 @ProviderFor(CursorController)
 final cursorControllerProvider = CursorControllerProvider._();
 
+/// Owns the application cursor override used by pointer driven interactions.
+///
+/// The provider state is the cursor applied by [GlobalCursorController]. Call
+/// [cursor] while an interaction is active and [reset] when it releases the
+/// pointer.
 final class CursorControllerProvider
     extends $NotifierProvider<CursorController, MouseCursor> {
+  /// Owns the application cursor override used by pointer driven interactions.
+  ///
+  /// The provider state is the cursor applied by [GlobalCursorController]. Call
+  /// [cursor] while an interaction is active and [reset] when it releases the
+  /// pointer.
   CursorControllerProvider._()
     : super(
         from: null,
@@ -42,6 +57,12 @@ final class CursorControllerProvider
 }
 
 String _$cursorControllerHash() => r'577c9578298737af12511c355955b665038646ea';
+
+/// Owns the application cursor override used by pointer driven interactions.
+///
+/// The provider state is the cursor applied by [GlobalCursorController]. Call
+/// [cursor] while an interaction is active and [reset] when it releases the
+/// pointer.
 
 abstract class _$CursorController extends $Notifier<MouseCursor> {
   MouseCursor build();

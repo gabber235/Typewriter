@@ -183,7 +183,7 @@ return unavailable(_that.diagnostics,_that.previous);case _:
 
 class RealmEditorCatalogLoading extends RealmEditorCatalogState {
   const RealmEditorCatalogLoading([this.previous]): super._();
-
+  
 
  final  RealmEditorCatalogSnapshot? previous;
 
@@ -263,7 +263,7 @@ $RealmEditorCatalogSnapshotCopyWith<$Res>? get previous {
 
 class RealmEditorCatalogReady extends RealmEditorCatalogState {
   const RealmEditorCatalogReady(this.value): super._();
-
+  
 
  final  RealmEditorCatalogSnapshot value;
 
@@ -328,7 +328,7 @@ as RealmEditorCatalogSnapshot,
 @override
 @pragma('vm:prefer-inline')
 $RealmEditorCatalogSnapshotCopyWith<$Res> get value {
-
+  
   return $RealmEditorCatalogSnapshotCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -340,7 +340,7 @@ $RealmEditorCatalogSnapshotCopyWith<$Res> get value {
 
 class RealmEditorCatalogUnavailable extends RealmEditorCatalogState {
   const RealmEditorCatalogUnavailable( List<TypeDiagnostic> diagnostics, {this.previous}): _diagnostics = diagnostics,super._();
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

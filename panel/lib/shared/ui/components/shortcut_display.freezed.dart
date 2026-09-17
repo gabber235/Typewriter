@@ -213,7 +213,7 @@ return outline(_that.foregroundColor,_that.borderColor);case _:
 
 class SolidKeyStyle implements KeyStyle {
   const SolidKeyStyle({this.backgroundColor, this.foregroundColor, this.shadowColor});
-
+  
 
  final  Color? backgroundColor;
 @override final  Color? foregroundColor;
@@ -285,7 +285,7 @@ as Color?,
 
 class OutlineKeyStyle implements KeyStyle {
   const OutlineKeyStyle({this.foregroundColor, this.borderColor});
-
+  
 
 @override final  Color? foregroundColor;
  final  Color? borderColor;

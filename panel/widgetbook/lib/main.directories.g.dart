@@ -28,8 +28,6 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/mem
     as _widgetbook_workspace_stories_features_organizations_features_members_features_join_requests_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/presentation/member_list_route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_members_presentation_member_list_route_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_items.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/dropdown.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_dropdown_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/entry.stories.dart'
@@ -44,6 +42,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/library/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_library_route_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_result_items.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_graph.stories.dart'
@@ -114,6 +114,8 @@ import 'package:widgetbook_workspace/stories/shared/inspector/presentation/inspe
     as _widgetbook_workspace_stories_shared_inspector_presentation_inspector_stories;
 import 'package:widgetbook_workspace/stories/shared/interaction_mode/presentation/mode_display_chip.stories.dart'
     as _widgetbook_workspace_stories_shared_interaction_mode_presentation_mode_display_chip_stories;
+import 'package:widgetbook_workspace/stories/shared/search/presentation/primary_search.stories.dart'
+    as _widgetbook_workspace_stories_shared_search_presentation_primary_search_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_frame.stories.dart'
     as _widgetbook_workspace_stories_shared_search_presentation_search_frame_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_modal.stories.dart'
@@ -233,6 +235,17 @@ final directories = <_widgetbook.WidgetbookNode>[
       _widgetbook.WidgetbookFolder(
         name: 'presentation',
         children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'PrimarySearchButton',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'App bar trigger',
+                builder:
+                    _widgetbook_workspace_stories_shared_search_presentation_primary_search_stories
+                        .primarySearchButtonUseCase,
+              ),
+            ],
+          ),
           _widgetbook.WidgetbookFolder(
             name: 'shortcuts',
             children: [
@@ -352,92 +365,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                         name: 'editor',
                                         children: [
                                           _widgetbook.WidgetbookFolder(
-                                            name: 'features',
-                                            children: [
-                                              _widgetbook.WidgetbookFolder(
-                                                name: 'search',
-                                                children: [
-                                                  _widgetbook.WidgetbookFolder(
-                                                    name: 'presentation',
-                                                    children: [
-                                                      _widgetbook.WidgetbookFolder(
-                                                        name: 'result_item',
-                                                        children: [
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'BookSearchResultItem',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories
-                                                                        .bookSearchResultItemUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'ElementDefinitionSearchResultItem',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories
-                                                                        .elementDefinitionSearchResultItemUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'EntrySearchResultItem',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories
-                                                                        .entrySearchResultItemUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'PageSearchResultItem',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories
-                                                                        .pageSearchResultItemUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'SearchResultCard',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Catalog',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories
-                                                                        .searchResultItemCatalogUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'TagSearchResultItem',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_result_item_search_result_items_stories
-                                                                        .tagSearchResultItemUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                          _widgetbook.WidgetbookFolder(
                                             name: 'presentation',
                                             children: [
                                               _widgetbook.WidgetbookComponent(
@@ -535,28 +462,16 @@ final directories = <_widgetbook.WidgetbookNode>[
                                         name: 'PagePage',
                                         useCases: [
                                           _widgetbook.WidgetbookUseCase(
-                                            name: 'Manifest',
+                                            name: 'Graph',
                                             builder:
                                                 _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
-                                                    .pagePageManifestUseCase,
+                                                    .pagePageGraphUseCase,
                                           ),
                                           _widgetbook.WidgetbookUseCase(
-                                            name: 'Scene',
+                                            name: 'Timeline',
                                             builder:
                                                 _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
-                                                    .pagePageSceneUseCase,
-                                          ),
-                                          _widgetbook.WidgetbookUseCase(
-                                            name: 'Sequence',
-                                            builder:
-                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
-                                                    .pagePageSequenceUseCase,
-                                          ),
-                                          _widgetbook.WidgetbookUseCase(
-                                            name: 'Static',
-                                            builder:
-                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
-                                                    .pagePageStaticUseCase,
+                                                    .pagePageTimelineUseCase,
                                           ),
                                         ],
                                       ),
@@ -615,6 +530,60 @@ final directories = <_widgetbook.WidgetbookNode>[
                                                 .libraryPageUseCase,
                                       ),
                                     ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookFolder(
+                        name: 'search',
+                        children: [
+                          _widgetbook.WidgetbookFolder(
+                            name: 'presentation',
+                            children: [
+                              _widgetbook.WidgetbookComponent(
+                                name: 'AuthoringBookSearchResultItem',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Book result',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories
+                                            .authoringBookSearchResultItemUseCase,
+                                  ),
+                                ],
+                              ),
+                              _widgetbook.WidgetbookComponent(
+                                name: 'AuthoringElementSearchResultItem',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Element result',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories
+                                            .authoringElementSearchResultItemUseCase,
+                                  ),
+                                ],
+                              ),
+                              _widgetbook.WidgetbookComponent(
+                                name: 'AuthoringPageSearchResultItem',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Page result',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories
+                                            .authoringPageSearchResultItemUseCase,
+                                  ),
+                                ],
+                              ),
+                              _widgetbook.WidgetbookComponent(
+                                name: 'AuthoringTagSearchResultItem',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Tag result',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories
+                                            .authoringTagSearchResultItemUseCase,
                                   ),
                                 ],
                               ),

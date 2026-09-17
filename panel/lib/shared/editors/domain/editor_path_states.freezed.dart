@@ -226,7 +226,7 @@ return $default(_that.progress,_that.gate);case _:
 
 class _EditorPathRecord extends EditorPathRecord {
   const _EditorPathRecord({this.progress, this.gate}): super._();
-
+  
 
 @override final  EditorPathProgress? progress;
 @override final  EditorInteractionSession? gate;
@@ -492,7 +492,7 @@ return settled(_that.phase);case _:
 
 class PendingPathProgress implements EditorPathProgress {
   const PendingPathProgress();
-
+  
 
 
 
@@ -524,7 +524,7 @@ String toString() {
 
 class SavingPathProgress implements EditorPathProgress {
   const SavingPathProgress();
-
+  
 
 
 
@@ -556,7 +556,7 @@ String toString() {
 
 class FailedPathProgress implements EditorPathProgress {
   const FailedPathProgress( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -630,7 +630,7 @@ as List<TypeDiagnostic>,
 
 class ContendedPathProgress implements EditorPathProgress {
   const ContendedPathProgress();
-
+  
 
 
 
@@ -662,7 +662,7 @@ String toString() {
 
 class ConflictedPathProgress implements EditorPathProgress {
   const ConflictedPathProgress(this.conflict);
-
+  
 
  final  EditorPathConflict conflict;
 
@@ -730,7 +730,7 @@ as EditorPathConflict,
 
 class SettledPathProgress implements EditorPathProgress {
   const SettledPathProgress(this.phase): assert(phase == EditorSavePhase.saved, 'A settled path has been saved.');
-
+  
 
  final  EditorSavePhase phase;
 

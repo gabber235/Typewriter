@@ -83,7 +83,7 @@ as JoinCodeAutoAccept,
 @override
 @pragma('vm:prefer-inline')
 $JoinCodeAutoAcceptCopyWith<$Res> get autoAccept {
-
+  
   return $JoinCodeAutoAcceptCopyWith<$Res>(_self.autoAccept, (value) {
     return _then(_self.copyWith(autoAccept: value));
   });
@@ -226,7 +226,7 @@ return $default(_that.code,_that.createdAt,_that.expiresAt,_that.singleUse,_that
 
 class _OrganizationJoinCode extends OrganizationJoinCode {
   const _OrganizationJoinCode({required this.code, required this.createdAt, this.expiresAt, this.singleUse = true, this.autoAccept = const JoinCodeAutoAccept()}): super._();
-
+  
 
 @override final  skir.RecordId code;
 @override final  DateTime createdAt;
@@ -299,7 +299,7 @@ as JoinCodeAutoAccept,
 @override
 @pragma('vm:prefer-inline')
 $JoinCodeAutoAcceptCopyWith<$Res> get autoAccept {
-
+  
   return $JoinCodeAutoAcceptCopyWith<$Res>(_self.autoAccept, (value) {
     return _then(_self.copyWith(autoAccept: value));
   });
@@ -507,7 +507,7 @@ return $default(_that.roleIds);case _:
 
 class _JoinCodeAutoAccept extends JoinCodeAutoAccept {
   const _JoinCodeAutoAccept({ List<skir.RecordId> roleIds = const []}): _roleIds = roleIds,super._();
-
+  
 
  final  List<skir.RecordId> _roleIds;
 @override@JsonKey() List<skir.RecordId> get roleIds {
@@ -741,7 +741,7 @@ return duration(_that.duration);case _:
 
 class JoinCodeExpirationNever implements JoinCodeExpiration {
   const JoinCodeExpirationNever();
-
+  
 
 
 
@@ -773,7 +773,7 @@ String toString() {
 
 class JoinCodeExpirationDuration implements JoinCodeExpiration {
   const JoinCodeExpirationDuration(this.duration);
-
+  
 
  final  Duration duration;
 
@@ -905,7 +905,7 @@ as List<skir.RecordId>,
 @override
 @pragma('vm:prefer-inline')
 $JoinCodeExpirationCopyWith<$Res> get expiration {
-
+  
   return $JoinCodeExpirationCopyWith<$Res>(_self.expiration, (value) {
     return _then(_self.copyWith(expiration: value));
   });
@@ -1048,7 +1048,7 @@ return $default(_that.singleUse,_that.expiration,_that.autoAcceptRoleIds);case _
 
 class _JoinCodeOptions implements JoinCodeOptions {
   const _JoinCodeOptions({this.singleUse = true, this.expiration = const JoinCodeExpiration.duration(Duration(days: 7)),  List<skir.RecordId> autoAcceptRoleIds = const []}): _autoAcceptRoleIds = autoAcceptRoleIds;
-
+  
 
 @override@JsonKey() final  bool singleUse;
 @override@JsonKey() final  JoinCodeExpiration expiration;
@@ -1123,7 +1123,7 @@ as List<skir.RecordId>,
 @override
 @pragma('vm:prefer-inline')
 $JoinCodeExpirationCopyWith<$Res> get expiration {
-
+  
   return $JoinCodeExpirationCopyWith<$Res>(_self.expiration, (value) {
     return _then(_self.copyWith(expiration: value));
   });

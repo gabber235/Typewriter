@@ -214,7 +214,7 @@ return $default(_that.principal,_that.membership);case _:
 
 class __OrganizationAccessSnapshot implements _OrganizationAccessSnapshot {
   const __OrganizationAccessSnapshot({required this.principal, required this.membership});
-
+  
 
 @override final  AsyncValue<String?> principal;
 @override final  AsyncValue<List<OrganizationData>> membership;

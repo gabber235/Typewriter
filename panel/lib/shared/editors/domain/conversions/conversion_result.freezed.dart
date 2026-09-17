@@ -183,7 +183,7 @@ return unavailable(_that.diagnostics);case _:
 
 class ConversionSuccess implements ConversionResult {
   const ConversionSuccess(this.value);
-
+  
 
  final  DataValue value;
 
@@ -248,7 +248,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -260,7 +260,7 @@ $DataValueCopyWith<$Res> get value {
 
 class ConversionFailure implements ConversionResult {
    ConversionFailure( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -334,7 +334,7 @@ as List<TypeDiagnostic>,
 
 class ConversionUnavailable implements ConversionResult {
    ConversionUnavailable( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

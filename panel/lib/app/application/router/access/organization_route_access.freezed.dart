@@ -189,7 +189,7 @@ return available(_that.principalId,_that.organizationIds);case _:
 
 class OrganizationRouteAccessLoading with DiagnosticableTreeMixin implements OrganizationRouteAccessState {
   const OrganizationRouteAccessLoading();
-
+  
 
 
 
@@ -227,7 +227,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class OrganizationRouteAccessUnavailable with DiagnosticableTreeMixin implements OrganizationRouteAccessState {
   const OrganizationRouteAccessUnavailable();
-
+  
 
 
 
@@ -265,7 +265,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class OrganizationRouteAccessAvailable with DiagnosticableTreeMixin implements OrganizationRouteAccessState {
   const OrganizationRouteAccessAvailable({required this.principalId, required  Set<String> organizationIds}): _organizationIds = organizationIds;
-
+  
 
  final  String? principalId;
  final  Set<String> _organizationIds;

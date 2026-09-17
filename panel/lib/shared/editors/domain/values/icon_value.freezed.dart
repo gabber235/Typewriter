@@ -177,7 +177,7 @@ return svg(_that.source);case _:
 
 class IconifyIconValue implements IconValue {
   const IconifyIconValue(this.value): assert(value != "", 'Iconify value must not be empty.');
-
+  
 
  final  String value;
 
@@ -245,7 +245,7 @@ as String,
 
 class SvgIconValue implements IconValue {
   const SvgIconValue(this.source): assert(source != "", 'SVG source must not be empty.');
-
+  
 
  final  String source;
 

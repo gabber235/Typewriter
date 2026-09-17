@@ -222,7 +222,7 @@ return $default(_that.organizationId,_that.name,_that.logoUrl);case _:
 
 class _OrganizationData extends OrganizationData with DiagnosticableTreeMixin {
   const _OrganizationData({required this.organizationId, required this.name, required this.logoUrl}): assert(name != "", 'Name must not be empty.'),super._();
-
+  
 
 @override final  skir.RecordId organizationId;
 @override final  String name;

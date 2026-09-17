@@ -8,9 +8,22 @@ part of 'inspection.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Adapts the global selectable selection to resources supported by the
+/// inspector.
+///
+/// [selectedProvider] remains the source of truth for identifiers and focus is
+/// not consulted. A selection containing an unsupported selectable produces an
+/// empty inspection rather than a partial editor.
 
 @ProviderFor(inspectedSelection)
 final inspectedSelectionProvider = InspectedSelectionProvider._();
+
+/// Adapts the global selectable selection to resources supported by the
+/// inspector.
+///
+/// [selectedProvider] remains the source of truth for identifiers and focus is
+/// not consulted. A selection containing an unsupported selectable produces an
+/// empty inspection rather than a partial editor.
 
 final class InspectedSelectionProvider
     extends
@@ -23,6 +36,12 @@ final class InspectedSelectionProvider
         $Provider<
           AsyncValue<List<InspectableSelectable<SelectableIdentifier>>>
         > {
+  /// Adapts the global selectable selection to resources supported by the
+  /// inspector.
+  ///
+  /// [selectedProvider] remains the source of truth for identifiers and focus is
+  /// not consulted. A selection containing an unsupported selectable produces an
+  /// empty inspection rather than a partial editor.
   InspectedSelectionProvider._()
     : super(
         from: null,
@@ -68,12 +87,26 @@ final class InspectedSelectionProvider
 String _$inspectedSelectionHash() =>
     r'fdba8a3d317c067c0afab2040f701d5c23ebca8d';
 
+/// Whether the inspector should occupy space for the current selection.
+///
+/// Loading and error states intentionally remain visible. The session replaces
+/// the graph with an unavailable state while selected resources refresh.
+
 @ProviderFor(hasInspectableSelection)
 final hasInspectableSelectionProvider = HasInspectableSelectionProvider._();
+
+/// Whether the inspector should occupy space for the current selection.
+///
+/// Loading and error states intentionally remain visible. The session replaces
+/// the graph with an unavailable state while selected resources refresh.
 
 final class HasInspectableSelectionProvider
     extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
+  /// Whether the inspector should occupy space for the current selection.
+  ///
+  /// Loading and error states intentionally remain visible. The session replaces
+  /// the graph with an unavailable state while selected resources refresh.
   HasInspectableSelectionProvider._()
     : super(
         from: null,
@@ -110,8 +143,18 @@ final class HasInspectableSelectionProvider
 String _$hasInspectableSelectionHash() =>
     r'7cbf8deaf3235756f3140f855bf5bd9bf7d40ccb';
 
+/// Owns the inspection graph and its temporary composite editor lifetime.
+///
+/// The provider is scoped to local work, because resource owners and drafts are
+/// scoped to the same workspace session.
+
 @ProviderFor(inspectionSession)
 final inspectionSessionProvider = InspectionSessionProvider._();
+
+/// Owns the inspection graph and its temporary composite editor lifetime.
+///
+/// The provider is scoped to local work, because resource owners and drafts are
+/// scoped to the same workspace session.
 
 final class InspectionSessionProvider
     extends
@@ -121,6 +164,10 @@ final class InspectionSessionProvider
           InspectionSession
         >
     with $Provider<InspectionSession> {
+  /// Owns the inspection graph and its temporary composite editor lifetime.
+  ///
+  /// The provider is scoped to local work, because resource owners and drafts are
+  /// scoped to the same workspace session.
   InspectionSessionProvider._()
     : super(
         from: null,

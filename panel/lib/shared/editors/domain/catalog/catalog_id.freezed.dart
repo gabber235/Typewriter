@@ -214,7 +214,7 @@ return $default(_that.namespace,_that.name);case _:
 
 class _PresentationId implements PresentationId {
   const _PresentationId({required this.namespace, required this.name}): assert(namespace != "", 'Namespace must not be empty.'),assert(name != "", 'Name must not be empty.');
-
+  
 
 @override final  String namespace;
 @override final  String name;
@@ -481,7 +481,7 @@ return $default(_that.namespace,_that.name);case _:
 
 class _ConversionId implements ConversionId {
   const _ConversionId({required this.namespace, required this.name}): assert(namespace != "", 'Namespace must not be empty.'),assert(name != "", 'Name must not be empty.');
-
+  
 
 @override final  String namespace;
 @override final  String name;
@@ -747,7 +747,7 @@ return $default(_that.value);case _:
 
 class _CapabilityId implements CapabilityId {
   const _CapabilityId(this.value): assert(value != "", 'Capability ID must not be empty.');
-
+  
 
 @override final  String value;
 
@@ -1011,7 +1011,7 @@ return $default(_that.value);case _:
 
 class _CatalogGeneration implements CatalogGeneration {
   const _CatalogGeneration(this.value): assert(value != "", 'Generation must not be empty.');
-
+  
 
 @override final  String value;
 

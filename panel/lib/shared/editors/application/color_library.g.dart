@@ -57,11 +57,15 @@ final class ColorLibraryStorageProvider
 String _$colorLibraryStorageHash() =>
     r'0408e37522c083a862c009f22f413fedd7abe992';
 
+/// Keeps color picker preferences alive across editor widget lifecycles.
+
 @ProviderFor(ColorLibrary)
 final colorLibraryProvider = ColorLibraryProvider._();
 
+/// Keeps color picker preferences alive across editor widget lifecycles.
 final class ColorLibraryProvider
     extends $NotifierProvider<ColorLibrary, ColorLibraryState> {
+  /// Keeps color picker preferences alive across editor widget lifecycles.
   ColorLibraryProvider._()
     : super(
         from: null,
@@ -90,6 +94,8 @@ final class ColorLibraryProvider
 }
 
 String _$colorLibraryHash() => r'8788e37ab37d27b64e7b8c4e9077661191d69777';
+
+/// Keeps color picker preferences alive across editor widget lifecycles.
 
 abstract class _$ColorLibrary extends $Notifier<ColorLibraryState> {
   ColorLibraryState build();

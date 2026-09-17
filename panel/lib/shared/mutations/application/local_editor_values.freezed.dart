@@ -80,7 +80,7 @@ as Set<DataPath>,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -223,7 +223,7 @@ return $default(_that.value,_that.editedPaths);case _:
 
 class _LocalEditorValue extends LocalEditorValue {
   const _LocalEditorValue({required this.value, required  Set<DataPath> editedPaths}): _editedPaths = editedPaths,super._();
-
+  
 
 @override final  DataValue value;
  final  Set<DataPath> _editedPaths;
@@ -296,7 +296,7 @@ as Set<DataPath>,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });

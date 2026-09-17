@@ -195,7 +195,7 @@ return deny(_that.pattern);case _:
 
 class LowercaseTextInputFormat implements TextInputFormat {
   const LowercaseTextInputFormat();
-
+  
 
 
 
@@ -227,7 +227,7 @@ String toString() {
 
 class UppercaseTextInputFormat implements TextInputFormat {
   const UppercaseTextInputFormat();
-
+  
 
 
 
@@ -259,7 +259,7 @@ String toString() {
 
 class ReplaceTextInputFormat implements TextInputFormat {
   const ReplaceTextInputFormat({required this.pattern, required this.replacement});
-
+  
 
  final  String pattern;
  final  String replacement;
@@ -329,7 +329,7 @@ as String,
 
 class AllowTextInputFormat implements TextInputFormat {
   const AllowTextInputFormat(this.pattern);
-
+  
 
  final  String pattern;
 
@@ -397,7 +397,7 @@ as String,
 
 class DenyTextInputFormat implements TextInputFormat {
   const DenyTextInputFormat(this.pattern);
-
+  
 
  final  String pattern;
 

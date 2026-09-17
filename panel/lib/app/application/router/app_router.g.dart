@@ -8,13 +8,29 @@ part of 'app_router.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Creates the process wide router and its route access owners.
+///
+/// The provider keeps one router for the application lifetime. Its disposal
+/// order releases reevaluation first, then the access coordinator and its
+/// modules, preventing callbacks from reaching disposed route state.
 
 @ProviderFor(appRouter)
 final appRouterProvider = AppRouterProvider._();
 
+/// Creates the process wide router and its route access owners.
+///
+/// The provider keeps one router for the application lifetime. Its disposal
+/// order releases reevaluation first, then the access coordinator and its
+/// modules, preventing callbacks from reaching disposed route state.
+
 final class AppRouterProvider
     extends $FunctionalProvider<Raw<AppRouter>, Raw<AppRouter>, Raw<AppRouter>>
     with $Provider<Raw<AppRouter>> {
+  /// Creates the process wide router and its route access owners.
+  ///
+  /// The provider keeps one router for the application lifetime. Its disposal
+  /// order releases reevaluation first, then the access coordinator and its
+  /// modules, preventing callbacks from reaching disposed route state.
   AppRouterProvider._()
     : super(
         from: null,
@@ -50,11 +66,15 @@ final class AppRouterProvider
 
 String _$appRouterHash() => r'dcba6f0b62eea76b19a03b6a9a3d3a97e2cb8b06';
 
+/// Exposes the router's current path as reactive application state.
+
 @ProviderFor(CurrentRoute)
 final currentRouteProvider = CurrentRouteProvider._();
 
+/// Exposes the router's current path as reactive application state.
 final class CurrentRouteProvider
     extends $NotifierProvider<CurrentRoute, String> {
+  /// Exposes the router's current path as reactive application state.
   CurrentRouteProvider._()
     : super(
         from: null,
@@ -84,6 +104,8 @@ final class CurrentRouteProvider
 
 String _$currentRouteHash() => r'4d674e4c2628483be0c07103bd68ab85d47f7c82';
 
+/// Exposes the router's current path as reactive application state.
+
 abstract class _$CurrentRoute extends $Notifier<String> {
   String build();
   @$mustCallSuper
@@ -102,12 +124,29 @@ abstract class _$CurrentRoute extends $Notifier<String> {
   }
 }
 
+/// Reads an inherited path parameter from the router's active top route.
+///
+/// A missing parameter returns null. Consumers use this provider for route
+/// scoped resource lookup and should handle that absence before constructing an
+/// identifier.
+
 @ProviderFor(routeParam)
 final routeParamProvider = RouteParamFamily._();
+
+/// Reads an inherited path parameter from the router's active top route.
+///
+/// A missing parameter returns null. Consumers use this provider for route
+/// scoped resource lookup and should handle that absence before constructing an
+/// identifier.
 
 final class RouteParamProvider
     extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
+  /// Reads an inherited path parameter from the router's active top route.
+  ///
+  /// A missing parameter returns null. Consumers use this provider for route
+  /// scoped resource lookup and should handle that absence before constructing an
+  /// identifier.
   RouteParamProvider._({
     required RouteParamFamily super.from,
     required String super.argument,
@@ -161,6 +200,12 @@ final class RouteParamProvider
 
 String _$routeParamHash() => r'8c4dfa29f3ca899f30f1b754f79b73a38dbb6f3f';
 
+/// Reads an inherited path parameter from the router's active top route.
+///
+/// A missing parameter returns null. Consumers use this provider for route
+/// scoped resource lookup and should handle that absence before constructing an
+/// identifier.
+
 final class RouteParamFamily extends $Family
     with $FunctionalFamilyOverride<String?, String> {
   RouteParamFamily._()
@@ -171,6 +216,12 @@ final class RouteParamFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Reads an inherited path parameter from the router's active top route.
+  ///
+  /// A missing parameter returns null. Consumers use this provider for route
+  /// scoped resource lookup and should handle that absence before constructing an
+  /// identifier.
 
   RouteParamProvider call(String id) =>
       RouteParamProvider._(argument: id, from: this);

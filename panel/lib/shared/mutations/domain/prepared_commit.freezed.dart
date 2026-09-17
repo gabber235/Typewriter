@@ -218,7 +218,7 @@ return $default(_that.id,_that.label,_that.send,_that.integrate,_that.dispose,_t
 
 class _PreparedCommit<T> implements PreparedCommit<T> {
   const _PreparedCommit({required this.id, required this.label, required this.send, this.integrate, this.dispose,  Set<Object> resources = const {}, this.replay = SubmissionReplay.unsupported}): _resources = resources;
-
+  
 
 @override final  Object id;
 @override final  String label;

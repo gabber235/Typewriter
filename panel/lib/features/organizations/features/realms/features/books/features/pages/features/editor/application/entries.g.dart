@@ -44,12 +44,30 @@ Map<String, dynamic> _$CustomEntryMetadataToJson(
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Loads one entry definition from the realm entry index and coordinates entry
+/// edits with the page element owner.
+///
+/// The index is the current location authority. Mutations recheck that
+/// location before submission, so a stale inspector cannot write to a page
+/// after the entry has moved or the selected realm has changed.
 
 @ProviderFor(Entry)
 final entryProvider = EntryFamily._();
 
+/// Loads one entry definition from the realm entry index and coordinates entry
+/// edits with the page element owner.
+///
+/// The index is the current location authority. Mutations recheck that
+/// location before submission, so a stale inspector cannot write to a page
+/// after the entry has moved or the selected realm has changed.
 final class EntryProvider
     extends $AsyncNotifierProvider<Entry, EntryDefinition?> {
+  /// Loads one entry definition from the realm entry index and coordinates entry
+  /// edits with the page element owner.
+  ///
+  /// The index is the current location authority. Mutations recheck that
+  /// location before submission, so a stale inspector cannot write to a page
+  /// after the entry has moved or the selected realm has changed.
   EntryProvider._({
     required EntryFamily super.from,
     required String super.argument,
@@ -88,6 +106,13 @@ final class EntryProvider
 
 String _$entryHash() => r'cf714024b8c810f2e32bfc90dd6d11683ae2b6db';
 
+/// Loads one entry definition from the realm entry index and coordinates entry
+/// edits with the page element owner.
+///
+/// The index is the current location authority. Mutations recheck that
+/// location before submission, so a stale inspector cannot write to a page
+/// after the entry has moved or the selected realm has changed.
+
 final class EntryFamily extends $Family
     with
         $ClassFamilyOverride<
@@ -106,12 +131,26 @@ final class EntryFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Loads one entry definition from the realm entry index and coordinates entry
+  /// edits with the page element owner.
+  ///
+  /// The index is the current location authority. Mutations recheck that
+  /// location before submission, so a stale inspector cannot write to a page
+  /// after the entry has moved or the selected realm has changed.
+
   EntryProvider call(String entryId) =>
       EntryProvider._(argument: entryId, from: this);
 
   @override
   String toString() => r'entryProvider';
 }
+
+/// Loads one entry definition from the realm entry index and coordinates entry
+/// edits with the page element owner.
+///
+/// The index is the current location authority. Mutations recheck that
+/// location before submission, so a stale inspector cannot write to a page
+/// after the entry has moved or the selected realm has changed.
 
 abstract class _$Entry extends $AsyncNotifier<EntryDefinition?> {
   late final _$args = ref.$arg as String;

@@ -214,7 +214,7 @@ return $default(_that.userId,_that.sessionId);case _:
 
 class _PresenceSessionKey implements PresenceSessionKey {
   const _PresenceSessionKey(this.userId, this.sessionId);
-
+  
 
 @override final  String userId;
 @override final  String sessionId;
@@ -282,7 +282,7 @@ as String,
 /// @nodoc
 mixin _$ActivePanelPresence {
 
- String get userId; wire.PanelPresence get presence; DateTime get observedAt;
+ String get userId; skir.PanelPresence get presence; DateTime get observedAt;
 /// Create a copy of ActivePanelPresence
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -318,7 +318,7 @@ abstract mixin class $ActivePanelPresenceCopyWith<$Res>  {
   factory $ActivePanelPresenceCopyWith(ActivePanelPresence value, $Res Function(ActivePanelPresence) _then) = _$ActivePanelPresenceCopyWithImpl;
 @useResult
 $Res call({
- String userId, wire.PanelPresence presence, DateTime observedAt
+ String userId, skir.PanelPresence presence, DateTime observedAt
 });
 
 
@@ -339,7 +339,7 @@ class _$ActivePanelPresenceCopyWithImpl<$Res>
   return _then(ActivePanelPresence(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,presence: null == presence ? _self.presence : presence // ignore: cast_nullable_to_non_nullable
-as wire.PanelPresence,observedAt: null == observedAt ? _self.observedAt : observedAt // ignore: cast_nullable_to_non_nullable
+as skir.PanelPresence,observedAt: null == observedAt ? _self.observedAt : observedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }
@@ -425,7 +425,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String userId,  wire.PanelPresence presence,  DateTime observedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String userId,  skir.PanelPresence presence,  DateTime observedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ActivePanelPresence() when $default != null:
 return $default(_that.userId,_that.presence,_that.observedAt);case _:
@@ -446,7 +446,7 @@ return $default(_that.userId,_that.presence,_that.observedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String userId,  wire.PanelPresence presence,  DateTime observedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String userId,  skir.PanelPresence presence,  DateTime observedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ActivePanelPresence():
 return $default(_that.userId,_that.presence,_that.observedAt);case _:
@@ -466,7 +466,7 @@ return $default(_that.userId,_that.presence,_that.observedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String userId,  wire.PanelPresence presence,  DateTime observedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String userId,  skir.PanelPresence presence,  DateTime observedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ActivePanelPresence() when $default != null:
 return $default(_that.userId,_that.presence,_that.observedAt);case _:
@@ -482,10 +482,10 @@ return $default(_that.userId,_that.presence,_that.observedAt);case _:
 
 class _ActivePanelPresence implements ActivePanelPresence {
   const _ActivePanelPresence({required this.userId, required this.presence, required this.observedAt});
-
+  
 
 @override final  String userId;
-@override final  wire.PanelPresence presence;
+@override final  skir.PanelPresence presence;
 @override final  DateTime observedAt;
 
 /// Create a copy of ActivePanelPresence
@@ -520,7 +520,7 @@ abstract mixin class _$ActivePanelPresenceCopyWith<$Res> implements $ActivePanel
   factory _$ActivePanelPresenceCopyWith(_ActivePanelPresence value, $Res Function(_ActivePanelPresence) _then) = __$ActivePanelPresenceCopyWithImpl;
 @override @useResult
 $Res call({
- String userId, wire.PanelPresence presence, DateTime observedAt
+ String userId, skir.PanelPresence presence, DateTime observedAt
 });
 
 
@@ -541,7 +541,7 @@ class __$ActivePanelPresenceCopyWithImpl<$Res>
   return _then(_ActivePanelPresence(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,presence: null == presence ? _self.presence : presence // ignore: cast_nullable_to_non_nullable
-as wire.PanelPresence,observedAt: null == observedAt ? _self.observedAt : observedAt // ignore: cast_nullable_to_non_nullable
+as skir.PanelPresence,observedAt: null == observedAt ? _self.observedAt : observedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }

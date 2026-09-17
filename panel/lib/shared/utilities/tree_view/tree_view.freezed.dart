@@ -189,7 +189,7 @@ return leaf(_that.value);case _:
 
 class RootTreeNode<T> implements TreeNode<T> {
   const RootTreeNode({required  List<TreeNode<T>> children}): _children = children;
-
+  
 
  final  List<TreeNode<T>> _children;
  List<TreeNode<T>> get children {
@@ -263,7 +263,7 @@ as List<TreeNode<T>>,
 
 class InnerTreeNode<T> implements TreeNode<T> {
   const InnerTreeNode({required this.name, required this.path, required  List<TreeNode<T>> children}): assert(name != "", 'Name must not be empty.'),assert(path != "", 'Path must not be empty.'),_children = children;
-
+  
 
  final  String name;
  final  String path;
@@ -341,7 +341,7 @@ as List<TreeNode<T>>,
 
 class LeafTreeNode<T> implements TreeNode<T> {
   const LeafTreeNode({required this.value});
-
+  
 
  final  T value;
 
@@ -581,7 +581,7 @@ return remove(_that.path);case _:
 
 class _TreeAdd<T> implements _TreeModification<T> {
   const _TreeAdd({required this.node});
-
+  
 
  final  TreeNode<T> node;
 
@@ -646,7 +646,7 @@ as TreeNode<T>,
 @override
 @pragma('vm:prefer-inline')
 $TreeNodeCopyWith<T, $Res> get node {
-
+  
   return $TreeNodeCopyWith<T, $Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -658,7 +658,7 @@ $TreeNodeCopyWith<T, $Res> get node {
 
 class _TreeUpdate<T> implements _TreeModification<T> {
   const _TreeUpdate({required this.path, required this.node}): assert(path != "", 'Path must not be empty.');
-
+  
 
  final  String path;
  final  TreeNode<T> node;
@@ -725,7 +725,7 @@ as TreeNode<T>,
 @override
 @pragma('vm:prefer-inline')
 $TreeNodeCopyWith<T, $Res> get node {
-
+  
   return $TreeNodeCopyWith<T, $Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -737,7 +737,7 @@ $TreeNodeCopyWith<T, $Res> get node {
 
 class _TreeRemove<T> implements _TreeModification<T> {
   const _TreeRemove({required this.path}): assert(path != "", 'Path must not be empty.');
-
+  
 
  final  String path;
 

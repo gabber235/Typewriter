@@ -195,7 +195,7 @@ return unavailable();case _:
 
 class RouteAuthenticationLoading with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
   const RouteAuthenticationLoading();
-
+  
 
 
 
@@ -233,7 +233,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class RouteAuthenticationAuthenticated with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
   const RouteAuthenticationAuthenticated();
-
+  
 
 
 
@@ -271,7 +271,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class RouteAuthenticationUnauthenticated with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
   const RouteAuthenticationUnauthenticated();
-
+  
 
 
 
@@ -309,7 +309,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class RouteAuthenticationUnavailable with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
   const RouteAuthenticationUnavailable();
-
+  
 
 
 

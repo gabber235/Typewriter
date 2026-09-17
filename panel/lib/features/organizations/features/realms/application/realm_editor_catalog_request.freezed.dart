@@ -80,7 +80,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get target {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -223,7 +223,7 @@ return $default(_that.id,_that.target);case _:
 
 class _RealmEditorSubtypeQuery implements RealmEditorSubtypeQuery {
   const _RealmEditorSubtypeQuery({required this.id, required this.target}): assert(id != "", 'Query ID must not be empty.');
-
+  
 
 @override final  String id;
 @override final  ResolvedTypeRef target;
@@ -290,7 +290,7 @@ as ResolvedTypeRef,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get target {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -500,7 +500,7 @@ return $default(_that.types,_that.presentations,_that.subtypeQueries);case _:
 
 class _RealmEditorCatalogRequest extends RealmEditorCatalogRequest {
   const _RealmEditorCatalogRequest({ Set<ResolvedTypeRef> types = const {},  Set<PresentationId> presentations = const {},  Set<RealmEditorSubtypeQuery> subtypeQueries = const {}}): _types = types,_presentations = presentations,_subtypeQueries = subtypeQueries,super._();
-
+  
 
  final  Set<ResolvedTypeRef> _types;
 @override@JsonKey() Set<ResolvedTypeRef> get types {
@@ -787,7 +787,7 @@ return $default(_that.queryId,_that.matches);case _:
 
 class _RealmEditorSubtypeResult implements RealmEditorSubtypeResult {
   const _RealmEditorSubtypeResult({required this.queryId, required  List<ResolvedTypeRef> matches}): assert(queryId != "", 'Query ID must not be empty.'),_matches = matches;
-
+  
 
 @override final  String queryId;
  final  List<ResolvedTypeRef> _matches;

@@ -182,7 +182,7 @@ return realm(_that.action);case _:
 
 class LocalEditorAction implements EditorAction {
   const LocalEditorAction(this.action);
-
+  
 
 @override final  LocalAction action;
 
@@ -247,7 +247,7 @@ as LocalAction,
 @override
 @pragma('vm:prefer-inline')
 $LocalActionCopyWith<$Res> get action {
-
+  
   return $LocalActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -259,7 +259,7 @@ $LocalActionCopyWith<$Res> get action {
 
 class RealmEditorAction implements EditorAction {
   const RealmEditorAction(this.action);
-
+  
 
 @override final  RealmAction action;
 
@@ -324,7 +324,7 @@ as RealmAction,
 @override
 @pragma('vm:prefer-inline')
 $RealmActionCopyWith<$Res> get action {
-
+  
   return $RealmActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -538,7 +538,7 @@ return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);c
 
 class SetValueAction implements LocalAction {
   const SetValueAction({required this.target, required this.value});
-
+  
 
  final  BindingReference target;
  final  TypedExpression value;
@@ -605,7 +605,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -614,7 +614,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -626,7 +626,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class InsertListItemAction implements LocalAction {
   const InsertListItemAction({required this.target, required this.index, required this.value});
-
+  
 
  final  BindingReference target;
  final  TypedExpression index;
@@ -695,7 +695,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -704,7 +704,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get index {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.index, (value) {
     return _then(_self.copyWith(index: value));
   });
@@ -713,7 +713,7 @@ $TypedExpressionCopyWith<$Res> get index {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -725,7 +725,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class RemoveListItemAction implements LocalAction {
   const RemoveListItemAction({required this.target, required this.index});
-
+  
 
  final  BindingReference target;
  final  TypedExpression index;
@@ -792,7 +792,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -801,7 +801,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get index {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.index, (value) {
     return _then(_self.copyWith(index: value));
   });
@@ -813,7 +813,7 @@ $TypedExpressionCopyWith<$Res> get index {
 
 class AppendListItemAction implements LocalAction {
   const AppendListItemAction({required this.target, required this.value});
-
+  
 
  final  BindingReference target;
  final  TypedExpression value;
@@ -880,7 +880,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -889,7 +889,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -901,7 +901,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class DuplicateListItemAction implements LocalAction {
   const DuplicateListItemAction({required this.source});
-
+  
 
  final  BindingReference source;
 
@@ -966,7 +966,7 @@ as BindingReference,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -978,7 +978,7 @@ $BindingReferenceCopyWith<$Res> get source {
 
 class ReorderListItemAction implements LocalAction {
   const ReorderListItemAction({required this.source, required this.newIndex});
-
+  
 
  final  BindingReference source;
  final  TypedExpression newIndex;
@@ -1045,7 +1045,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1054,7 +1054,7 @@ $BindingReferenceCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get newIndex {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.newIndex, (value) {
     return _then(_self.copyWith(newIndex: value));
   });
@@ -1066,7 +1066,7 @@ $TypedExpressionCopyWith<$Res> get newIndex {
 
 class PutMapEntryAction implements LocalAction {
   const PutMapEntryAction({required this.target, required this.key, required this.value});
-
+  
 
  final  BindingReference target;
  final  TypedExpression key;
@@ -1135,7 +1135,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1144,7 +1144,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1153,7 +1153,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1165,7 +1165,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class RemoveMapEntryAction implements LocalAction {
   const RemoveMapEntryAction({required this.target, required this.key});
-
+  
 
  final  BindingReference target;
  final  TypedExpression key;
@@ -1232,7 +1232,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1241,7 +1241,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1253,7 +1253,7 @@ $TypedExpressionCopyWith<$Res> get key {
 
 class ReplaceConcreteTypeAction implements LocalAction {
   const ReplaceConcreteTypeAction({required this.target, required this.concreteType, required this.initialValue});
-
+  
 
  final  BindingReference target;
  final  ResolvedTypeRef concreteType;
@@ -1322,7 +1322,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1331,7 +1331,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get concreteType {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.concreteType, (value) {
     return _then(_self.copyWith(concreteType: value));
   });
@@ -1340,7 +1340,7 @@ $ResolvedTypeRefCopyWith<$Res> get concreteType {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get initialValue {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.initialValue, (value) {
     return _then(_self.copyWith(initialValue: value));
   });
@@ -1512,7 +1512,7 @@ return invokeCommand(_that.capabilityId,_that.payload);case _:
 
 class ReloadRealmAction implements RealmAction {
   const ReloadRealmAction();
-
+  
 
 
 
@@ -1544,7 +1544,7 @@ String toString() {
 
 class InvokeRealmCommandAction implements RealmAction {
   const InvokeRealmCommandAction({required this.capabilityId, required this.payload});
-
+  
 
  final  CapabilityId capabilityId;
  final  TypedExpression payload;
@@ -1611,7 +1611,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get capabilityId {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
     return _then(_self.copyWith(capabilityId: value));
   });
@@ -1620,7 +1620,7 @@ $CapabilityIdCopyWith<$Res> get capabilityId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get payload {
-
+  
   return $TypedExpressionCopyWith<$Res>(_self.payload, (value) {
     return _then(_self.copyWith(payload: value));
   });
@@ -1816,7 +1816,7 @@ return unavailable(_that.diagnostics);case _:
 
 class MutationSuccess implements TypedMutationResult {
   const MutationSuccess({required this.revision, required this.value}): assert(revision >= 0, 'Revision must not be negative.');
-
+  
 
  final  int revision;
  final  DataValue value;
@@ -1883,7 +1883,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1895,7 +1895,7 @@ $DataValueCopyWith<$Res> get value {
 
 class MutationConflict implements TypedMutationResult {
   const MutationConflict({required this.expectedRevision, required this.actualRevision, required this.actualValue});
-
+  
 
  final  int expectedRevision;
  final  int actualRevision;
@@ -1964,7 +1964,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get actualValue {
-
+  
   return $DataValueCopyWith<$Res>(_self.actualValue, (value) {
     return _then(_self.copyWith(actualValue: value));
   });
@@ -1976,7 +1976,7 @@ $DataValueCopyWith<$Res> get actualValue {
 
 class MutationInvalid implements TypedMutationResult {
    MutationInvalid( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -2050,7 +2050,7 @@ as List<TypeDiagnostic>,
 
 class MutationPermissionDenied implements TypedMutationResult {
   const MutationPermissionDenied(this.message);
-
+  
 
  final  String message;
 
@@ -2118,7 +2118,7 @@ as String,
 
 class MutationUncertain implements TypedMutationResult {
   const MutationUncertain({required this.message, required this.cause, required this.stackTrace, this.replay, this.submissionId});
-
+  
 
  final  String message;
  final  Object cause;
@@ -2192,7 +2192,7 @@ as Future<TypedMutationResult> Function()?,submissionId: freezed == submissionId
 
 class MutationUnavailable implements TypedMutationResult {
    MutationUnavailable( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -2426,7 +2426,7 @@ return invalid(_that.diagnostics);case _:
 
 class LocalMutationApplied implements LocalMutationResult {
   const LocalMutationApplied({required this.bindingId, required this.value});
-
+  
 
  final  BindingId bindingId;
  final  DataValue value;
@@ -2493,7 +2493,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-
+  
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -2502,7 +2502,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-
+  
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -2514,7 +2514,7 @@ $DataValueCopyWith<$Res> get value {
 
 class LocalMutationInvalid implements LocalMutationResult {
   const LocalMutationInvalid( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-
+  
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

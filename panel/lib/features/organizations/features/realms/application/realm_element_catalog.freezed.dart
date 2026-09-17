@@ -195,7 +195,7 @@ return not(_that.expression);case _:
 
 class ElementAlwaysAvailable implements ElementAvailability {
   const ElementAlwaysAvailable();
-
+  
 
 
 
@@ -227,7 +227,7 @@ String toString() {
 
 class ElementFactAvailability implements ElementAvailability {
   const ElementFactAvailability({required this.key, required this.expected});
-
+  
 
  final  String key;
  final  String expected;
@@ -297,7 +297,7 @@ as String,
 
 class ElementAllAvailability implements ElementAvailability {
   const ElementAllAvailability( List<ElementAvailability> expressions): _expressions = expressions;
-
+  
 
  final  List<ElementAvailability> _expressions;
  List<ElementAvailability> get expressions {
@@ -371,7 +371,7 @@ as List<ElementAvailability>,
 
 class ElementAnyAvailability implements ElementAvailability {
   const ElementAnyAvailability( List<ElementAvailability> expressions): _expressions = expressions;
-
+  
 
  final  List<ElementAvailability> _expressions;
  List<ElementAvailability> get expressions {
@@ -445,7 +445,7 @@ as List<ElementAvailability>,
 
 class ElementNotAvailability implements ElementAvailability {
   const ElementNotAvailability(this.expression);
-
+  
 
  final  ElementAvailability expression;
 
@@ -510,7 +510,7 @@ as ElementAvailability,
 @override
 @pragma('vm:prefer-inline')
 $ElementAvailabilityCopyWith<$Res> get expression {
-
+  
   return $ElementAvailabilityCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -590,7 +590,7 @@ as ElementAvailability,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -599,7 +599,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-
+  
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -608,7 +608,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $ElementAvailabilityCopyWith<$Res> get availability {
-
+  
   return $ElementAvailabilityCopyWith<$Res>(_self.availability, (value) {
     return _then(_self.copyWith(availability: value));
   });
@@ -751,7 +751,7 @@ return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_tha
 
 class _DiscoveredElementDefinition implements DiscoveredElementDefinition {
   const _DiscoveredElementDefinition({required this.id, required this.type, required this.name, required this.description, required this.icon, required this.color, required this.availability});
-
+  
 
 @override final  String id;
 @override final  ResolvedTypeRef type;
@@ -828,7 +828,7 @@ as ElementAvailability,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -837,7 +837,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-
+  
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -846,7 +846,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $ElementAvailabilityCopyWith<$Res> get availability {
-
+  
   return $ElementAvailabilityCopyWith<$Res>(_self.availability, (value) {
     return _then(_self.copyWith(availability: value));
   });
@@ -925,7 +925,7 @@ as List<String>,
 @override
 @pragma('vm:prefer-inline')
 $DiscoveredElementDefinitionCopyWith<$Res> get definition {
-
+  
   return $DiscoveredElementDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });
@@ -1068,7 +1068,7 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 
 class _RealmElementCatalogEntry implements RealmElementCatalogEntry {
   const _RealmElementCatalogEntry({required this.originArtifactId, required this.sourcePart, required this.definition, required this.eligible, required this.available,  List<String> ineligibilityReasons = const []}): _ineligibilityReasons = ineligibilityReasons;
-
+  
 
 @override final  String originArtifactId;
 @override final  String sourcePart;
@@ -1149,7 +1149,7 @@ as List<String>,
 @override
 @pragma('vm:prefer-inline')
 $DiscoveredElementDefinitionCopyWith<$Res> get definition {
-
+  
   return $DiscoveredElementDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });

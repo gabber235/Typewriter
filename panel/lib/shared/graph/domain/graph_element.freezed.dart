@@ -203,7 +203,7 @@ return $default(_that.id,_that.x,_that.y,_that.width,_that.height,_that.builder,
 
 class _GraphElement extends GraphElement {
   const _GraphElement({required this.id, required this.x, required this.y, required this.width, required this.height, required this.builder, this.priority = 0}): super._();
-
+  
 
 @override final  GraphIdentifier id;
 @override final  int x;

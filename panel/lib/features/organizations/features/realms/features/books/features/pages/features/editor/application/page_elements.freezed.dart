@@ -183,7 +183,7 @@ return cue(_that.cue);case _:
 
 class PageElementEntry implements PageElement {
   const PageElementEntry({required this.entry});
-
+  
 
  final  PageEntry entry;
 
@@ -248,7 +248,7 @@ as PageEntry,
 @override
 @pragma('vm:prefer-inline')
 $PageEntryCopyWith<$Res> get entry {
-
+  
   return $PageEntryCopyWith<$Res>(_self.entry, (value) {
     return _then(_self.copyWith(entry: value));
   });
@@ -260,7 +260,7 @@ $PageEntryCopyWith<$Res> get entry {
 
 class PageElementCue implements PageElement {
   const PageElementCue({required this.cue});
-
+  
 
  final  Cue cue;
 
@@ -325,7 +325,7 @@ as Cue,
 @override
 @pragma('vm:prefer-inline')
 $CueCopyWith<$Res> get cue {
-
+  
   return $CueCopyWith<$Res>(_self.cue, (value) {
     return _then(_self.copyWith(cue: value));
   });

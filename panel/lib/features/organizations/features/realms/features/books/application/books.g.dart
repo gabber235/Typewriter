@@ -8,12 +8,33 @@ part of 'books.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns the confirmed book collection for the selected organization and realm.
+///
+/// The realm authoring session remains the source of truth. This provider waits
+/// for the library scope to become ready, then projects session records into
+/// immutable [Book] values and listens for later session sequences. Consumers
+/// that render or edit immediately should choose [projectedBooksProvider] or
+/// [projectedBookProvider] when local editor values must be visible.
 
 @ProviderFor(CanonicalBooks)
 final canonicalBooksProvider = CanonicalBooksProvider._();
 
+/// Owns the confirmed book collection for the selected organization and realm.
+///
+/// The realm authoring session remains the source of truth. This provider waits
+/// for the library scope to become ready, then projects session records into
+/// immutable [Book] values and listens for later session sequences. Consumers
+/// that render or edit immediately should choose [projectedBooksProvider] or
+/// [projectedBookProvider] when local editor values must be visible.
 final class CanonicalBooksProvider
     extends $AsyncNotifierProvider<CanonicalBooks, List<Book>> {
+  /// Owns the confirmed book collection for the selected organization and realm.
+  ///
+  /// The realm authoring session remains the source of truth. This provider waits
+  /// for the library scope to become ready, then projects session records into
+  /// immutable [Book] values and listens for later session sequences. Consumers
+  /// that render or edit immediately should choose [projectedBooksProvider] or
+  /// [projectedBookProvider] when local editor values must be visible.
   CanonicalBooksProvider._()
     : super(
         from: null,
@@ -35,6 +56,14 @@ final class CanonicalBooksProvider
 
 String _$canonicalBooksHash() => r'd95efa451697da113c10971a7585b60cc27cd470';
 
+/// Owns the confirmed book collection for the selected organization and realm.
+///
+/// The realm authoring session remains the source of truth. This provider waits
+/// for the library scope to become ready, then projects session records into
+/// immutable [Book] values and listens for later session sequences. Consumers
+/// that render or edit immediately should choose [projectedBooksProvider] or
+/// [projectedBookProvider] when local editor values must be visible.
+
 abstract class _$CanonicalBooks extends $AsyncNotifier<List<Book>> {
   FutureOr<List<Book>> build();
   @$mustCallSuper
@@ -53,8 +82,20 @@ abstract class _$CanonicalBooks extends $AsyncNotifier<List<Book>> {
   }
 }
 
+/// Filters confirmed or locally projected books for the library search.
+///
+/// Title and resolved tag names are matched case insensitively. An empty query
+/// avoids loading tags because every book is already a match. Loading and
+/// failure states from either dependency are returned unchanged to the UI.
+
 @ProviderFor(filteredBooks)
 final filteredBooksProvider = FilteredBooksFamily._();
+
+/// Filters confirmed or locally projected books for the library search.
+///
+/// Title and resolved tag names are matched case insensitively. An empty query
+/// avoids loading tags because every book is already a match. Loading and
+/// failure states from either dependency are returned unchanged to the UI.
 
 final class FilteredBooksProvider
     extends
@@ -64,6 +105,11 @@ final class FilteredBooksProvider
           AsyncValue<List<Book>>
         >
     with $Provider<AsyncValue<List<Book>>> {
+  /// Filters confirmed or locally projected books for the library search.
+  ///
+  /// Title and resolved tag names are matched case insensitively. An empty query
+  /// avoids loading tags because every book is already a match. Loading and
+  /// failure states from either dependency are returned unchanged to the UI.
   FilteredBooksProvider._({
     required FilteredBooksFamily super.from,
     required String super.argument,
@@ -118,6 +164,12 @@ final class FilteredBooksProvider
 
 String _$filteredBooksHash() => r'0e92e57f11f3e60af7c06e43862d13346de4854b';
 
+/// Filters confirmed or locally projected books for the library search.
+///
+/// Title and resolved tag names are matched case insensitively. An empty query
+/// avoids loading tags because every book is already a match. Loading and
+/// failure states from either dependency are returned unchanged to the UI.
+
 final class FilteredBooksFamily extends $Family
     with $FunctionalFamilyOverride<AsyncValue<List<Book>>, String> {
   FilteredBooksFamily._()
@@ -129,6 +181,12 @@ final class FilteredBooksFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Filters confirmed or locally projected books for the library search.
+  ///
+  /// Title and resolved tag names are matched case insensitively. An empty query
+  /// avoids loading tags because every book is already a match. Loading and
+  /// failure states from either dependency are returned unchanged to the UI.
+
   FilteredBooksProvider call(String query) =>
       FilteredBooksProvider._(argument: query, from: this);
 
@@ -136,12 +194,17 @@ final class FilteredBooksFamily extends $Family
   String toString() => r'filteredBooksProvider';
 }
 
+/// Resolves the current route parameter into the typed book record identity.
+
 @ProviderFor(bookId)
 final bookIdProvider = BookIdProvider._();
+
+/// Resolves the current route parameter into the typed book record identity.
 
 final class BookIdProvider
     extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
     with $Provider<skir.RecordId?> {
+  /// Resolves the current route parameter into the typed book record identity.
   BookIdProvider._()
     : super(
         from: null,
@@ -177,12 +240,17 @@ final class BookIdProvider
 
 String _$bookIdHash() => r'167ce138e263f44eb212912668031e5954892725';
 
+/// Finds one confirmed book in the authoritative realm session.
+
 @ProviderFor(canonicalBook)
 final canonicalBookProvider = CanonicalBookFamily._();
+
+/// Finds one confirmed book in the authoritative realm session.
 
 final class CanonicalBookProvider
     extends $FunctionalProvider<AsyncValue<Book?>, Book?, FutureOr<Book?>>
     with $FutureModifier<Book?>, $FutureProvider<Book?> {
+  /// Finds one confirmed book in the authoritative realm session.
   CanonicalBookProvider._({
     required CanonicalBookFamily super.from,
     required skir.RecordId super.argument,
@@ -228,6 +296,8 @@ final class CanonicalBookProvider
 
 String _$canonicalBookHash() => r'4792d2e5ec03050b83447ee8f7f590c7e94ee241';
 
+/// Finds one confirmed book in the authoritative realm session.
+
 final class CanonicalBookFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Book?>, skir.RecordId> {
   CanonicalBookFamily._()
@@ -239,6 +309,8 @@ final class CanonicalBookFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Finds one confirmed book in the authoritative realm session.
+
   CanonicalBookProvider call(skir.RecordId bookId) =>
       CanonicalBookProvider._(argument: bookId, from: this);
 
@@ -246,8 +318,20 @@ final class CanonicalBookFamily extends $Family
   String toString() => r'canonicalBookProvider';
 }
 
+/// Overlays local editor values on the confirmed book collection.
+///
+/// The authoring session remains canonical. Local values belong to the
+/// resource key for the current organization and realm. An invalid projection
+/// is ignored, leaving the confirmed value visible to this view.
+
 @ProviderFor(projectedBooks)
 final projectedBooksProvider = ProjectedBooksProvider._();
+
+/// Overlays local editor values on the confirmed book collection.
+///
+/// The authoring session remains canonical. Local values belong to the
+/// resource key for the current organization and realm. An invalid projection
+/// is ignored, leaving the confirmed value visible to this view.
 
 final class ProjectedBooksProvider
     extends
@@ -257,6 +341,11 @@ final class ProjectedBooksProvider
           AsyncValue<List<Book>>
         >
     with $Provider<AsyncValue<List<Book>>> {
+  /// Overlays local editor values on the confirmed book collection.
+  ///
+  /// The authoring session remains canonical. Local values belong to the
+  /// resource key for the current organization and realm. An invalid projection
+  /// is ignored, leaving the confirmed value visible to this view.
   ProjectedBooksProvider._()
     : super(
         from: null,
@@ -293,8 +382,20 @@ final class ProjectedBooksProvider
 
 String _$projectedBooksHash() => r'e54b3aacde4ddc90b0a34b08879e9bf735e80152';
 
+/// Returns one book with its local editor projection, if present.
+///
+/// This is the read model for consumers that need edits before confirmation.
+/// It retains the canonical loading or missing value state until the local
+/// overlay can be applied.
+
 @ProviderFor(projectedBook)
 final projectedBookProvider = ProjectedBookFamily._();
+
+/// Returns one book with its local editor projection, if present.
+///
+/// This is the read model for consumers that need edits before confirmation.
+/// It retains the canonical loading or missing value state until the local
+/// overlay can be applied.
 
 final class ProjectedBookProvider
     extends
@@ -304,6 +405,11 @@ final class ProjectedBookProvider
           AsyncValue<Book?>
         >
     with $Provider<AsyncValue<Book?>> {
+  /// Returns one book with its local editor projection, if present.
+  ///
+  /// This is the read model for consumers that need edits before confirmation.
+  /// It retains the canonical loading or missing value state until the local
+  /// overlay can be applied.
   ProjectedBookProvider._({
     required ProjectedBookFamily super.from,
     required skir.RecordId super.argument,
@@ -358,6 +464,12 @@ final class ProjectedBookProvider
 
 String _$projectedBookHash() => r'a9305728db6040d2333f7f9b751fbea6584ddf01';
 
+/// Returns one book with its local editor projection, if present.
+///
+/// This is the read model for consumers that need edits before confirmation.
+/// It retains the canonical loading or missing value state until the local
+/// overlay can be applied.
+
 final class ProjectedBookFamily extends $Family
     with $FunctionalFamilyOverride<AsyncValue<Book?>, skir.RecordId> {
   ProjectedBookFamily._()
@@ -368,6 +480,12 @@ final class ProjectedBookFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Returns one book with its local editor projection, if present.
+  ///
+  /// This is the read model for consumers that need edits before confirmation.
+  /// It retains the canonical loading or missing value state until the local
+  /// overlay can be applied.
 
   ProjectedBookProvider call(skir.RecordId bookId) =>
       ProjectedBookProvider._(argument: bookId, from: this);

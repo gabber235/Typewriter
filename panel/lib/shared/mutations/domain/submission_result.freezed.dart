@@ -189,7 +189,7 @@ return uncertain(_that.message,_that.cause,_that.stackTrace);case _:
 
 class SubmissionConfirmed<T> implements SubmissionResult<T> {
   const SubmissionConfirmed(this.value);
-
+  
 
  final  T value;
 
@@ -257,7 +257,7 @@ as T,
 
 class SubmissionRejected<T> implements SubmissionResult<T> {
   const SubmissionRejected({required this.message, this.cause, this.response});
-
+  
 
  final  String message;
  final  Object? cause;
@@ -328,7 +328,7 @@ as T?,
 
 class SubmissionNotSubmitted<T> implements SubmissionResult<T> {
   const SubmissionNotSubmitted({required this.message, this.cause});
-
+  
 
  final  String message;
  final  Object? cause;
@@ -397,7 +397,7 @@ as String,cause: freezed == cause ? _self.cause : cause ,
 
 class SubmissionUncertain<T> implements SubmissionResult<T> {
   const SubmissionUncertain({required this.message, required this.cause, required this.stackTrace});
-
+  
 
  final  String message;
  final  Object cause;

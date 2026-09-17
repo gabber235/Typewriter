@@ -80,7 +80,7 @@ as TypeRegistry,
 @override
 @pragma('vm:prefer-inline')
 $TypeCatalogCopyWith<$Res> get catalog {
-
+  
   return $TypeCatalogCopyWith<$Res>(_self.catalog, (value) {
     return _then(_self.copyWith(catalog: value));
   });
@@ -223,7 +223,7 @@ return $default(_that.catalog,_that.registry);case _:
 
 class _DecodedTypeCatalog implements DecodedTypeCatalog {
   const _DecodedTypeCatalog(this.catalog, this.registry);
-
+  
 
 @override final  TypeCatalog catalog;
 @override final  TypeRegistry registry;
@@ -290,7 +290,7 @@ as TypeRegistry,
 @override
 @pragma('vm:prefer-inline')
 $TypeCatalogCopyWith<$Res> get catalog {
-
+  
   return $TypeCatalogCopyWith<$Res>(_self.catalog, (value) {
     return _then(_self.copyWith(catalog: value));
   });

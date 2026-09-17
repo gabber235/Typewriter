@@ -191,7 +191,7 @@ return qualified(_that.namespace,_that.name);case _:
 
 class OptionTypeId extends TypeId {
   const OptionTypeId(): super._();
-
+  
 
 
 
@@ -219,7 +219,7 @@ int get hashCode => runtimeType.hashCode;
 
 class SomeTypeId extends TypeId {
   const SomeTypeId(): super._();
-
+  
 
 
 
@@ -247,7 +247,7 @@ int get hashCode => runtimeType.hashCode;
 
 class NoneTypeId extends TypeId {
   const NoneTypeId(): super._();
-
+  
 
 
 
@@ -275,7 +275,7 @@ int get hashCode => runtimeType.hashCode;
 
 class DeclaredTypeId extends TypeId {
    DeclaredTypeId(this.uuid): assert(RegExp(r"^[0-9a-fA-F]{32}$").hasMatch(uuid), 'Declared type UUIDs must contain 32 hexadecimal characters.'),super._();
-
+  
 
  final  String uuid;
 
@@ -339,7 +339,7 @@ as String,
 
 class QualifiedTypeId extends TypeId {
   const QualifiedTypeId({required this.namespace, required this.name}): assert(namespace != "", 'Namespace must not be empty.'),assert(name != "", 'Name must not be empty.'),super._();
-
+  
 
  final  String namespace;
  final  String name;
@@ -464,7 +464,7 @@ as List<TypeExpression>,
 @override
 @pragma('vm:prefer-inline')
 $TypeIdCopyWith<$Res> get id {
-
+  
   return $TypeIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -607,7 +607,7 @@ return $default(_that.id,_that.revision,_that.arguments);case _:
 
 class _ResolvedTypeRef extends ResolvedTypeRef {
   const _ResolvedTypeRef({required this.id, required this.revision,  List<TypeExpression> arguments = const []}): assert(revision > 0, 'Revision must be positive.'),_arguments = arguments,super._();
-
+  
 
 @override final  TypeId id;
 @override final  int revision;
@@ -678,7 +678,7 @@ as List<TypeExpression>,
 @override
 @pragma('vm:prefer-inline')
 $TypeIdCopyWith<$Res> get id {
-
+  
   return $TypeIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
