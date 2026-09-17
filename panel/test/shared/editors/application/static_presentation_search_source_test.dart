@@ -67,7 +67,7 @@ void main() {
       );
       final source = _source(provider, registry);
       addTearDown(source.dispose);
-      final selectors = await source.selectors.first;
+      final selector = source.selectors.first;
       final terminal = source.snapshots.firstWhere(
         (snapshot) => snapshot.status == SearchSourceStatus.ready,
       );
@@ -86,8 +86,8 @@ void main() {
       );
       final snapshot = await terminal;
 
-      expect(selectors.single, isA<KeyValueSelectorDefinition>());
-      final definition = selectors.single as KeyValueSelectorDefinition;
+      expect(selector, isA<KeyValueSelectorDefinition>());
+      final definition = selector as KeyValueSelectorDefinition;
       expect(definition.key, "category:");
       expect(definition.multiplicity, QueryMultiplicity.single);
       expect(

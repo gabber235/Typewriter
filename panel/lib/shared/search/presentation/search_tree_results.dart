@@ -176,30 +176,25 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     final result = row.result;
     final activator = searchResultShortcutActivator(row.shortcutNumber);
 
-    final actions = controller.actionsFor(result);
-    final primaryAction = actions.firstOrNull;
-
-    final actionState = controller.actionState;
-    final actionsBusy = actionState is SearchActionRunning;
-    final actionResults = switch (actionState) {
-      SearchActionIdle() => null,
-      SearchActionRunning(:final resultIds) => resultIds,
-      SearchActionCompleted(:final resultIds) => resultIds,
-      SearchActionFailed(:final resultIds) => resultIds,
+    final commands = controller.commandsFor(result);
+    final commandState = controller.commandState;
+    final commandsBusy = commandState is SearchCommandRunning;
+    final commandResults = switch (commandState) {
+      SearchCommandIdle() => null,
+      SearchCommandRunning(:final resultIds) => resultIds,
+      SearchCommandCompleted(:final resultIds) => resultIds,
+      SearchCommandFailed(:final resultIds) => resultIds,
     };
-    final actionConcersThis = actionResults?.contains(result.id) ?? false;
+    final commandConcernsThis = commandResults?.contains(result.id) ?? false;
 
     final rowContext = SearchResultRowContext(
       result: result,
       selected: controller.isSelected(result.id),
       focused: focused.value || controller.currentPreview?.id == result.id,
-      loading: actionsBusy && actionConcersThis,
+      loading: commandsBusy && commandConcernsThis,
       onTap: () {
-        if (controller.selectionMode == .single && actions.isNotEmpty) {
-          controller.executeAction(
-            actions.first.runtimeType,
-            resultId: result.id,
-          );
+        if (controller.selectionMode == .single) {
+          controller.activate(result);
           return;
         }
         controller.toggleSelected(result.id);
@@ -211,14 +206,14 @@ class _SearchTreeResultRow extends HookConsumerWidget {
         rowRenderers[result.type.rowRendererId]?.call(rowContext) ??
         MissingSearchResultRendererRow(result: result);
 
-    void execute(Type actionType) {
-      controller.executeAction(actionType, resultId: result.id);
+    void execute(SearchCommandId commandId) {
+      controller.executeCommand(commandId, resultId: result.id);
     }
 
-    Widget? actionIcon(SearchAction action) {
-      if (actionConcersThis &&
-          actionsBusy &&
-          actionState.action == action.runtimeType) {
+    Widget? commandIcon(SearchCommand command) {
+      if (commandConcernsThis &&
+          commandsBusy &&
+          commandState.command == command.id) {
         return Builder(
           builder: (context) {
             final iconTheme = IconTheme.of(context);
@@ -236,30 +231,30 @@ class _SearchTreeResultRow extends HookConsumerWidget {
           },
         );
       }
-      if (action.icon != null) {
-        return Icones(action.icon);
+      if (command.presentation.icon != null) {
+        return Icones(command.presentation.icon);
       }
       return null;
     }
 
-    final resultActionIndex =
-        actionResults?.indexed
+    final resultCommandIndex =
+        commandResults?.indexed
             .firstWhereOrNull((element) => element.$2 == result.id)
             ?.$1 ??
         -1;
 
-    final delay = resultActionIndex < 0
+    final delay = resultCommandIndex < 0
         ? 0.ms
-        : 50.ms * (resultActionIndex + 1);
+        : 50.ms * (resultCommandIndex + 1);
 
     final errorAnimation = useForwardAnimation(
-      play: actionConcersThis && actionState is SearchActionFailed,
+      play: commandConcernsThis && commandState is SearchCommandFailed,
       delay: delay,
       vsync: vsync,
     );
 
     final runningAnimation = useForwardAnimation(
-      play: actionConcersThis && actionsBusy,
+      play: commandConcernsThis && commandsBusy,
       delay: delay,
       vsync: vsync,
     );
@@ -287,39 +282,37 @@ class _SearchTreeResultRow extends HookConsumerWidget {
         scale: scale,
         child: ContextMenuRegion(
           items: [
-            for (final (index, action) in actions.indexed)
+            for (final resolved in commands)
               MenuItem(
-                label: action.label,
-                icon: ElasticSwitcher(child: actionIcon(action)),
-                color: action.color,
-                onPressed: actionsBusy
+                label: resolved.command.presentation.label,
+                icon: ElasticSwitcher(child: commandIcon(resolved.command)),
+                color: resolved.command.presentation.color,
+                onPressed:
+                    commandsBusy || resolved.state is! SearchCommandEnabled
                     ? null
-                    : () => execute(action.runtimeType),
-                shortcuts: [
-                  ?action.shortcut,
-                  if (index == 0) ...[
-                    SingleActivator(LogicalKeyboardKey.enter),
-                    SingleActivator(LogicalKeyboardKey.numpadEnter),
-                    ?activator,
-                  ],
-                ],
+                    : () => execute(resolved.command.id),
+                shortcuts: [?resolved.command.presentation.shortcut],
               ),
           ],
           child: ManagedActionSet(
             shortcuts: [
-              if (primaryAction != null)
-                ActionShortcut(
-                  id: "search_tree_results_primary_action",
-                  label: "",
-                  description: "",
-                  activators: [
-                    SingleActivator(LogicalKeyboardKey.enter),
-                    SingleActivator(LogicalKeyboardKey.numpadEnter),
-                  ],
-                  priority: 0,
-                  show: false,
-                  onInvoke: (_) => execute(primaryAction.runtimeType),
-                ),
+              ActionShortcut(
+                id: "search_tree_results_activate",
+                label: "",
+                description: "",
+                activators: [
+                  SingleActivator(LogicalKeyboardKey.enter),
+                  SingleActivator(LogicalKeyboardKey.numpadEnter),
+                ],
+                priority: 0,
+                show: false,
+                onInvoke:
+                    controller.isBusy ||
+                        controller.activationState(result)
+                            is! SearchActivationEnabled
+                    ? null
+                    : (_) => controller.activate(result),
+              ),
             ],
             child: Focus(
               skipTraversal: true,

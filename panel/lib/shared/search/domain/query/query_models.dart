@@ -158,6 +158,21 @@ class QueryParseResult {
     cursorContext: null,
   );
 
+  QueryParseResult withAdditionalIssues(Iterable<QueryParseIssue> additional) {
+    if (additional.isEmpty) return this;
+    return QueryParseResult(
+      query: query,
+      queryBefore: queryBefore,
+      queryAfter: queryAfter,
+      raw: raw,
+      expression: expression,
+      tokens: tokens,
+      selectors: selectors,
+      issues: [...issues, ...additional],
+      cursorContext: cursorContext,
+    );
+  }
+
   /// Non selector text remainder, normalized from queryBefore and queryAfter.
   final String query;
 

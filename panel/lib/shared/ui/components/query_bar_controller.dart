@@ -6,6 +6,7 @@ class _QueryBarController {
     required this.textController,
     required this.parseResult,
     required this.suggestions,
+    required this.completionWarning,
     required this.activeSuggestionIndex,
     required this.helperVisible,
     required this.helperBadges,
@@ -22,6 +23,7 @@ class _QueryBarController {
   final _QueryBarTextEditingController textController;
   final QueryParseResult parseResult;
   final List<QuerySuggestion> suggestions;
+  final String? completionWarning;
   final int? activeSuggestionIndex;
   final bool helperVisible;
   final _HelperBadgeData helperBadges;
@@ -40,7 +42,6 @@ _QueryBarController _useQueryBarController(QueryBar bar) {
       text: bar.query,
       selectors: bar.selectors,
     ),
-    [bar.selectors],
   );
   final defaultInputFieldController = useInputFieldController(
     inputDebugLabel: "QueryBar",
@@ -53,6 +54,11 @@ _QueryBarController _useQueryBarController(QueryBar bar) {
   useEffect(() => textController.dispose, [textController]);
   useListenable(textController);
   useListenable(focusNode);
+
+  useEffect(() {
+    textController.updateSelectors(bar.selectors);
+    return null;
+  }, [textController, bar.selectors]);
 
   useEffect(() {
     if (!focusNode.hasFocus && textController.text != bar.query) {
@@ -69,6 +75,15 @@ _QueryBarController _useQueryBarController(QueryBar bar) {
     () => QuerySuggestionEngine(bar.selectors),
     [bar.selectors],
   );
+  final suggestionSession = useMemoized(
+    () => QuerySuggestionSession(completeSelector: bar.completeSelector),
+    [bar.completeSelector],
+  );
+  useEffect(() => suggestionSession.dispose, [suggestionSession]);
+  final completion = useStream(
+    suggestionSession.results,
+    initialData: suggestionSession.value,
+  ).data!;
   final cursorOffset =
       textController.selection.isCollapsed && focusNode.hasPrimaryFocus
       ? textController.selection.extentOffset
@@ -78,9 +93,21 @@ _QueryBarController _useQueryBarController(QueryBar bar) {
     [queryEngine, textController.text, cursorOffset],
   );
   final suggestions = useMemoized(
-    () => suggestionEngine.suggest(parseResult, maxItems: 100),
-    [suggestionEngine, parseResult],
+    () => suggestionEngine.suggest(
+      parseResult,
+      maxItems: 100,
+      dynamicValues: completion.values,
+    ),
+    [suggestionEngine, parseResult, completion],
   );
+  final completionRequest = parseResult.completionRequest(bar.selectors);
+
+  useEffect(() {
+    suggestionSession.update(completionRequest);
+    return null;
+  }, [suggestionSession, completionRequest]);
+
+  final completionWarning = completion.warning;
 
   final activeSuggestionIndex = useState<int?>(null);
 
@@ -92,15 +119,17 @@ _QueryBarController _useQueryBarController(QueryBar bar) {
 
   final helperBadges = _helperBadgeData(suggestions, maxItems: 20);
   final popupSuggestionsVisible =
-      suggestions.isNotEmpty &&
+      (suggestions.isNotEmpty || completionWarning != null) &&
       !helperVisible &&
       dismissedSignature.value != currentSignature;
   final popupVisible = focusNode.hasFocus && popupSuggestionsVisible;
 
   useEffect(() {
-    textController.updateParseResult(parseResult);
+    textController.updateParseResult(
+      parseResult.withAdditionalIssues(bar.validationIssues),
+    );
     return null;
-  }, [textController, parseResult]);
+  }, [textController, parseResult, bar.validationIssues]);
 
   useEffect(() {
     final activeIndex = activeSuggestionIndex.value;
@@ -185,6 +214,7 @@ _QueryBarController _useQueryBarController(QueryBar bar) {
     textController: textController,
     parseResult: parseResult,
     suggestions: suggestions,
+    completionWarning: completionWarning,
     activeSuggestionIndex: activeSuggestionIndex.value,
     helperVisible: helperVisible,
     helperBadges: helperBadges,

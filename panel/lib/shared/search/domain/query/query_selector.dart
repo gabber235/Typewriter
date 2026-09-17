@@ -187,17 +187,19 @@ final class KeyValueSelectorDefinition extends QuerySelectorDefinition {
 
   @override
   QuerySelectorDefinition merge(QuerySelectorDefinition other) {
-    assert(id == other.id, "Can only merge selectors with same id");
-    if (other is! KeyValueSelectorDefinition) {
-      return this;
+    if (other is! KeyValueSelectorDefinition ||
+        id != other.id ||
+        key != other.key ||
+        caseSensitive != other.caseSensitive ||
+        multiplicity != other.multiplicity ||
+        value.runtimeType != other.value.runtimeType) {
+      throw StateError("Conflicting definitions for selector $id");
     }
     return KeyValueSelectorDefinition(
       id: id,
       key: key,
-      caseSensitive: caseSensitive || other.caseSensitive,
-      multiplicity: multiplicity == .single || other.multiplicity == .single
-          ? .single
-          : .multiple,
+      caseSensitive: caseSensitive,
+      multiplicity: multiplicity,
       color: color,
       value: value.merge(other.value),
     );
@@ -232,30 +234,35 @@ sealed class QuerySelectorValue with _$QuerySelectorValue {
   const factory QuerySelectorValue.enumValue(List<String> possibleValues) =
       EnumSelectorValue;
 
+  const factory QuerySelectorValue.sourceBacked() = SourceBackedSelectorValue;
+
   const QuerySelectorValue._();
 
   /// Whether [value] is accepted by this policy.
   bool isValid(String value) => switch (this) {
     FreeTextSelectorValue() => true,
     EnumSelectorValue(:final possibleValues) => possibleValues.contains(value),
+    SourceBackedSelectorValue() => true,
   };
 
   /// Returns candidate values. Free text deliberately has no candidates.
   List<String> suggestions(String partial) => switch (this) {
     FreeTextSelectorValue() => const [],
     EnumSelectorValue(:final possibleValues) => possibleValues,
+    SourceBackedSelectorValue() => const [],
   };
 
   /// Combines value policies, with free text taking precedence.
   QuerySelectorValue merge(QuerySelectorValue other) {
     return switch ((this, other)) {
-      (FreeTextSelectorValue(), _) => this,
-      (_, FreeTextSelectorValue()) => other,
+      (FreeTextSelectorValue(), FreeTextSelectorValue()) => this,
+      (SourceBackedSelectorValue(), SourceBackedSelectorValue()) => this,
       (
         EnumSelectorValue(possibleValues: final values),
         EnumSelectorValue(possibleValues: final otherValues),
       ) =>
         QuerySelectorValue.enumValue({...values, ...otherValues}.toList()),
+      _ => throw StateError("Cannot merge incompatible selector values"),
     };
   }
 }

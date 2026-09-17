@@ -108,6 +108,46 @@ void main() {
       expect(contexts["item1"]!.shortcutActivator, isNotNull);
       expect(contexts["item10"]!.shortcutActivator, isNull);
     });
+
+    testWidgets("shows progress while the initial result set loads", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+
+      await tester.pumpTestApp(
+        settle: false,
+        child: _TestSearchBody(source: source),
+      );
+
+      await source.emitSnapshotAndPump(tester, SearchSourceSnapshot.loading());
+
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets("keeps stale results without showing initial load progress", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+
+      await tester.pumpTestApp(
+        settle: false,
+        child: _TestSearchBody(source: source),
+      );
+
+      await source.emitSnapshotAndPump(
+        tester,
+        SearchSourceSnapshot.loading(
+          nodes: [
+            SearchNode.result(
+              result: searchResult("alpha").copyWith(isStale: true),
+            ),
+          ],
+        ),
+      );
+
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(find.text("Missing renderer test-row"), findsOneWidget);
+    });
   });
 }
 
@@ -121,7 +161,7 @@ class _TestSearchBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return SearchRoot(
       create: (ref) => SearchController(
-        source: source,
+        session: testSearchSession(source),
         baseSelectors: const [KeyValueSelectorDefinition(id: "tag", key: "#")],
       ),
       child: SearchModalBody(searchHint: "Search", rowRenderers: rowRenderers),

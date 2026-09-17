@@ -1,8 +1,6 @@
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Transports one realm presentation search stream over NATS.
@@ -55,21 +53,21 @@ final class NatsRealmPresentationSearchTransport {
       yield* ref.watchRequest(
         subject: _requestSubject,
         listenSubject: _updateSubject,
-        requestBytes: wire.RealmPresentationSearchRequest.serializer.toBytes(
+        requestBytes: skir.RealmPresentationSearchRequest.serializer.toBytes(
           encoded.valueOrNull!,
         ),
-        serializer: wire.RealmPresentationSearchUpdate.serializer,
+        serializer: skir.RealmPresentationSearchUpdate.serializer,
         transformer: (_, update) => codec.decodeUpdate(update),
       );
     } finally {
       await ref.requestSkir(
         _cancelSubject,
-        wire.CancelRealmPresentationSearchRequest.serializer.toBytes(
-          wire.CancelRealmPresentationSearchRequest(
+        skir.CancelRealmPresentationSearchRequest.serializer.toBytes(
+          skir.CancelRealmPresentationSearchRequest(
             subscriptionId: request.subscriptionId,
           ),
         ),
-        wire.CancelRealmPresentationSearchResult.serializer,
+        skir.CancelRealmPresentationSearchResult.serializer,
       );
     }
   }

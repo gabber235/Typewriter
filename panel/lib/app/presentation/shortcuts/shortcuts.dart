@@ -2,6 +2,8 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+export "action_shortcuts.dart";
+
 /// The panel wide keyboard map used by `MaterialApp.router` and action sets.
 ///
 /// Entries may use [AdaptiveSingleActivator] so control on one platform maps
@@ -29,9 +31,8 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   AdaptiveSingleActivator(LogicalKeyboardKey.escape, control: true):
       CancelIntent(),
 
-  AdaptiveSingleActivator(LogicalKeyboardKey.keyN, control: true):
-      NextFocusIntent(),
-  AdaptiveSingleActivator(LogicalKeyboardKey.keyP, control: true):
+  SingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
+  SingleActivator(LogicalKeyboardKey.keyP, control: true):
       PreviousFocusIntent(),
 
   SingleActivator(LogicalKeyboardKey.home): FirstItemIntent(),
@@ -63,9 +64,8 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyJ, control: true): NavigatePaneIntent(
     AxisDirection.down,
   ),
-  SingleActivator(LogicalKeyboardKey.keyK, control: true): NavigatePaneIntent(
-    AxisDirection.up,
-  ),
+  AdaptiveSingleActivator(LogicalKeyboardKey.keyK, control: true):
+      OpenSearchIntent(),
   SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
       NavigatePaneIntent(AxisDirection.left),
   SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
@@ -124,6 +124,11 @@ class LastItemIntent extends Intent {
 /// Invokes the primary action for the focused surface.
 class PrimaryActionIntent extends Intent {
   const PrimaryActionIntent();
+}
+
+/// Opens the application primary search surface.
+class OpenSearchIntent extends Intent {
+  const OpenSearchIntent();
 }
 
 /// Returns activators whose mapped intent has exactly [intent].

@@ -31,7 +31,7 @@ void main() {
       final subscription = source.snapshots.listen(snapshots.add);
       addTearDown(subscription.cancel);
 
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
       await flushEvents();
       source.search(queryContext(""));
       inner.emitSnapshot(SearchSourceSnapshot.idle());
@@ -47,7 +47,7 @@ void main() {
     test("records committed child results with newest first", () async {
       final harness = HistoryHarness(capacity: 2);
       addTearDown(harness.dispose);
-      harness.source.initialize();
+      harness.source.initialize(SearchQueryContext.empty);
       await flushEvents();
       harness.source.search(queryContext("query"));
       final one = searchResult("one");
@@ -77,7 +77,7 @@ void main() {
     test("ignores committed results that do not belong to its child", () async {
       final harness = HistoryHarness();
       addTearDown(harness.dispose);
-      harness.source.initialize();
+      harness.source.initialize(SearchQueryContext.empty);
       await flushEvents();
       harness.source.search(queryContext("query"));
       harness.inner.emitSnapshot(readySnapshot(nodes: [resultNode("owned")]));
@@ -103,7 +103,7 @@ void main() {
       addTearDown(source.dispose);
 
       addTearDown(selections.close);
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
       source.search(queryContext("query"));
       final selected = searchResult("selected");
       inner.emitSnapshot(
@@ -135,7 +135,7 @@ void main() {
       final snapshots = <SearchSourceSnapshot>[];
       final subscription = source.snapshots.listen(snapshots.add);
       addTearDown(subscription.cancel);
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
       await flushEvents();
 
       source.search(queryContext(""));
@@ -162,7 +162,7 @@ void main() {
       final subscription = source.snapshots.listen(snapshots.add);
       addTearDown(subscription.cancel);
       addTearDown(selections.close);
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
 
       source.dispose();
       source.dispose();

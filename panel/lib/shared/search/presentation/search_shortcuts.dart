@@ -3,11 +3,10 @@ import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Adds keyboard actions for the current search preview and visible results.
+/// Adds keyboard commands for the current search preview and visible results.
 ///
-/// Preview actions are exposed while a result is active. Control plus digit
-/// shortcuts target the first nine visible results, and action execution is
-/// disabled while the controller reports a running action.
+/// Preview commands are exposed while a result is active. Control plus digit
+/// shortcuts activate the first nine visible results.
 class SearchShortcuts extends HookConsumerWidget {
   const SearchShortcuts({required this.child, super.key});
 
@@ -18,31 +17,31 @@ class SearchShortcuts extends HookConsumerWidget {
     final controller = ref.watch(searchProvider)!;
     final currentPreview = controller.currentPreview;
 
-    final actionState = controller.actionState;
-    final actionsBusy = actionState is SearchActionRunning;
+    final commandState = controller.commandState;
+    final commandsBusy = commandState is SearchCommandRunning;
 
     final List<ActionShortcut> shortcuts;
     if (currentPreview == null) {
       shortcuts = [];
     } else {
-      final actions = controller.actionsFor(currentPreview);
-      final actionResults = switch (actionState) {
-        SearchActionIdle() => null,
-        SearchActionRunning(:final resultIds) => resultIds,
-        SearchActionCompleted(:final resultIds) => resultIds,
-        SearchActionFailed(:final resultIds) => resultIds,
+      final commands = controller.commandsFor(currentPreview);
+      final commandResults = switch (commandState) {
+        SearchCommandIdle() => null,
+        SearchCommandRunning(:final resultIds) => resultIds,
+        SearchCommandCompleted(:final resultIds) => resultIds,
+        SearchCommandFailed(:final resultIds) => resultIds,
       };
-      final actionConcersThis =
-          actionResults?.contains(currentPreview.id) ?? false;
+      final commandConcernsThis =
+          commandResults?.contains(currentPreview.id) ?? false;
 
-      void execute(Type actionType) {
-        controller.executeAction(actionType, resultId: currentPreview.id);
+      void execute(SearchCommandId commandId) {
+        controller.executeCommand(commandId, resultId: currentPreview.id);
       }
 
-      Widget? actionIcon(SearchAction action) {
-        if (actionConcersThis &&
-            actionsBusy &&
-            actionState.action == action.runtimeType) {
+      Widget? commandIcon(SearchCommand command) {
+        if (commandConcernsThis &&
+            commandsBusy &&
+            commandState.command == command.id) {
           return Builder(
             builder: (context) {
               final iconTheme = IconTheme.of(context);
@@ -60,36 +59,35 @@ class SearchShortcuts extends HookConsumerWidget {
             },
           );
         }
-        if (action.icon != null) {
-          return Icones(action.icon);
+        if (command.presentation.icon != null) {
+          return Icones(command.presentation.icon);
         }
         return null;
       }
 
       shortcuts = [
-        for (final action in actions) ...[
+        for (final resolved in commands)
           ActionShortcut(
-            id: "search_result_${currentPreview.id}_${action.runtimeType}",
-            label: action.label,
-            icon: ElasticSwitcher(child: actionIcon(action)),
+            id: "search_result_${currentPreview.id}_${resolved.command.id.value}",
+            label: resolved.command.presentation.label,
+            icon: ElasticSwitcher(child: commandIcon(resolved.command)),
             description: "",
-            activators: [?action.shortcut],
-            priority: action.priority,
-            onInvoke: actionsBusy ? null : (_) => execute(action.runtimeType),
+            activators: [?resolved.command.presentation.shortcut],
+            priority: resolved.command.presentation.priority,
+            onInvoke: commandsBusy || resolved.state is! SearchCommandEnabled
+                ? null
+                : (_) => execute(resolved.command.id),
           ),
-
-          // Selection
-          ActionShortcut(
-            id: "search_result_${currentPreview.id}_select",
-            label: controller.isSelected(currentPreview.id)
-                ? "Deselect"
-                : "Select",
-            description: "Toggle selection for this result",
-            activators: [SingleActivator(LogicalKeyboardKey.space)],
-            priority: 0,
-            onInvoke: (_) => controller.toggleSelected(currentPreview.id),
-          ),
-        ],
+        ActionShortcut(
+          id: "search_result_${currentPreview.id}_select",
+          label: controller.isSelected(currentPreview.id)
+              ? "Deselect"
+              : "Select",
+          description: "Toggle selection for this result",
+          activators: [SingleActivator(LogicalKeyboardKey.space)],
+          priority: 0,
+          onInvoke: (_) => controller.toggleSelected(currentPreview.id),
+        ),
       ];
     }
 
@@ -101,13 +99,12 @@ class SearchShortcuts extends HookConsumerWidget {
         .indexed
         .map((e) {
           final (index, result) = e;
-          final primaryActionType = result.actions.firstOrNull;
-          if (primaryActionType == null) return null;
-          final primaryAction = controller.snapshot.actions[primaryActionType];
-          if (primaryAction == null) return null;
+          if (controller.activationState(result) is! SearchActivationEnabled) {
+            return null;
+          }
           return ActionShortcut(
-            id: "search_result_${result.id}_$primaryActionType",
-            label: primaryAction.label,
+            id: "search_result_${result.id}_activate",
+            label: "Open ${result.title ?? result.type.label}",
             description: "",
             activators: [
               AdaptiveSingleActivator(
@@ -119,14 +116,11 @@ class SearchShortcuts extends HookConsumerWidget {
                 control: true,
               ),
             ],
-            priority: primaryAction.priority,
+            priority: 0,
             show: false,
-            onInvoke: actionsBusy
+            onInvoke: controller.isBusy
                 ? null
-                : (_) => controller.executeAction(
-                    primaryActionType,
-                    resultId: result.id,
-                  ),
+                : (_) => controller.activate(result),
           );
         })
         .nonNulls

@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:convert";
 
+import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
 import "package:json_path/json_path.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -25,7 +26,7 @@ final class HttpJsonPresentationSearchSource implements SearchSource {
   });
 
   final HttpJsonSearchProvider provider;
-  final http.Client client;
+  final ValueListenable<http.Client> client;
   final ExpressionContext expressions;
   final TypeRegistry registry;
   final ExpressionBudget budget;
@@ -42,11 +43,11 @@ final class HttpJsonPresentationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors =>
-      Stream.value(presentationQuerySelectors(provider.selectors));
+  List<QuerySelectorDefinition> get selectors =>
+      presentationQuerySelectors(provider.selectors);
 
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     scheduleMicrotask(() {
       if (!_disposed) _snapshots.add(SearchSourceSnapshot.idle());
     });
@@ -69,7 +70,7 @@ final class HttpJsonPresentationSearchSource implements SearchSource {
         selectors: provider.selectors,
       );
       final uri = _uri(context);
-      final response = await client
+      final response = await client.value
           .get(uri, headers: const {"Accept": "application/json"})
           .timeout(provider.timeout);
       final responseUri = response.request?.url ?? uri;

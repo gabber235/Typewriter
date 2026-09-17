@@ -17,9 +17,10 @@ Widget searchModalDirectUseCase(BuildContext context) {
     child: SizedBox.expand(
       child: Center(
         child: SearchModal(
-          source: _sourceFromConfig(config),
-          baseSelectors: const [],
-          initialQuery: initialQuery,
+          contributionBuilder: (ref, context) => SearchContribution(
+            session: mockSearchSession(_sourceFromConfig(config))
+                .copyWith(initialQuery: initialQuery),
+          ),
           searchHint: "Search entries, pages, books, organizations",
           rowRenderers: _mockRowRenderers,
           previewRenderers: _mockPreviewRenderers,
@@ -57,9 +58,10 @@ Widget searchModalRouteUseCase(BuildContext context) {
               return FilledButton.icon(
                 onPressed: () => showSearchModal(
                   context,
-                  _sourceFromConfig(config),
-                  baseSelectors: const [],
-                  initialQuery: initialQuery,
+                  (ref, context) => SearchContribution(
+                    session: mockSearchSession(_sourceFromConfig(config))
+                        .copyWith(initialQuery: initialQuery),
+                  ),
                   searchHint: "Search entries, pages, books, organizations",
                   rowRenderers: _mockRowRenderers,
                   previewRenderers: _mockPreviewRenderers,
@@ -111,11 +113,11 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
 }
 
 final _mockRowRenderers = <String, SearchResultRowBuilder>{
-  "mockPageRow": _mockPageResultRow,
-  "mockEntryRow": _mockEntryResultRow,
+  "mockPageRow": _mockResultRow,
+  "mockEntryRow": _mockResultRow,
   "mockElementDefinitionRow": _mockElementDefinitionResultRow,
-  "mockBookRow": _mockBookResultRow,
-  "mockTagRow": _mockTagResultRow,
+  "mockBookRow": _mockResultRow,
+  "mockTagRow": _mockResultRow,
 };
 
 final _mockPreviewRenderers = <String, SearchResultPreviewBuilder>{
@@ -126,41 +128,28 @@ Widget _mockElementDefinitionPreview(SearchResultPreviewContext context) {
   return ElementDefinitionSearchPreview(context: context);
 }
 
-Widget _mockPageResultRow(SearchResultRowContext context) {
-  final payload = context.result.payload;
-  if (payload is! MockPageRecord) {
-    return MissingSearchResultRendererRow(result: context.result);
-  }
+Widget _mockResultRow(SearchResultRowContext context) =>
+    _MockResultRow(searchContext: context);
 
-  return PageSearchResultItem.fromPage(
-    page: payload.page,
-    bookName: payload.book.title,
-    color: payload.book.color,
-    icon: payload.book.icon,
-    selected: context.selected,
-    focused: context.focused,
-    loading: context.loading,
-    onTap: context.onTap,
-    shortcutActivator: context.shortcutActivator,
-  );
-}
+class _MockResultRow extends StatelessWidget {
+  const _MockResultRow({required this.searchContext});
 
-Widget _mockEntryResultRow(SearchResultRowContext context) {
-  final payload = context.result.payload;
-  if (payload is! MockEntryRecord) {
-    return MissingSearchResultRendererRow(result: context.result);
-  }
+  final SearchResultRowContext searchContext;
 
-  return EntrySearchResultItem.fromEntry(
-    entry: payload.entry,
-    pageTitle: payload.page.page.name,
-    chapter: payload.page.page.chapter,
-    bookTitle: payload.page.book.title,
-    selected: context.selected,
-    focused: context.focused,
-    loading: context.loading,
-    onTap: context.onTap,
-    shortcutActivator: context.shortcutActivator,
+  @override
+  Widget build(BuildContext context) => SearchResultCard(
+    color: Theme.of(context).colorScheme.primary,
+    selected: searchContext.selected,
+    focused: searchContext.focused,
+    onTap: searchContext.onTap,
+    content: SearchResultTitle(
+      title: searchContext.result.title ?? searchContext.result.id,
+    ),
+    suffix: SearchResultSuffix(
+      label: searchContext.result.type.label ?? "result",
+      shortcutActivator: searchContext.shortcutActivator,
+      selected: searchContext.selected,
+    ),
   );
 }
 
@@ -172,41 +161,6 @@ Widget _mockElementDefinitionResultRow(SearchResultRowContext context) {
 
   return ElementDefinitionSearchResultItem.fromDefinition(
     elementDefinition: payload,
-    selected: context.selected,
-    focused: context.focused,
-    loading: context.loading,
-    onTap: context.onTap,
-    shortcutActivator: context.shortcutActivator,
-  );
-}
-
-Widget _mockBookResultRow(SearchResultRowContext context) {
-  final payload = context.result.payload;
-  if (payload is! MockBookRecord) {
-    return MissingSearchResultRendererRow(result: context.result);
-  }
-
-  return BookSearchResultItem(
-    name: payload.book.title,
-    color: payload.book.color,
-    icon: payload.book.icon,
-    tags: payload.tags,
-    selected: context.selected,
-    focused: context.focused,
-    loading: context.loading,
-    onTap: context.onTap,
-    shortcutActivator: context.shortcutActivator,
-  );
-}
-
-Widget _mockTagResultRow(SearchResultRowContext context) {
-  final payload = context.result.payload;
-  if (payload is! Tag) {
-    return MissingSearchResultRendererRow(result: context.result);
-  }
-
-  return TagSearchResultItem.fromTag(
-    tag: payload,
     selected: context.selected,
     focused: context.focused,
     loading: context.loading,

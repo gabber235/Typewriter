@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:http/testing.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -10,8 +11,8 @@ void main() {
     final first = _Harness(persistence);
     addTearDown(first.dispose);
 
-    first.source.initialize();
-    first.source.search(_emptyQuery);
+    first.source.initialize(SearchQueryContext.empty);
+    first.source.search(SearchQueryContext.empty);
     await _settle();
     final selected = first.snapshots.last.nodes
         .walk()
@@ -36,8 +37,8 @@ void main() {
 
     final second = _Harness(persistence);
     addTearDown(second.dispose);
-    second.source.initialize();
-    second.source.search(_emptyQuery);
+    second.source.initialize(SearchQueryContext.empty);
+    second.source.search(SearchQueryContext.empty);
     await _settle();
 
     final section = second.snapshots.last.nodes.first as SearchSectionNode;
@@ -62,8 +63,8 @@ void main() {
     final persistence = MemoryPresentationSearchHistoryPersistence();
     final first = _Harness(persistence);
     addTearDown(first.dispose);
-    first.source.initialize();
-    first.source.search(_emptyQuery);
+    first.source.initialize(SearchQueryContext.empty);
+    first.source.search(SearchQueryContext.empty);
     await _settle();
 
     final selected = first.snapshots.last.nodes
@@ -94,7 +95,6 @@ void main() {
 
 const _queryBindingId = BindingId(1);
 const _resultBindingId = BindingId(2);
-const _emptyQuery = SearchQueryContext(normalizedQuery: "", selectors: []);
 const _expressions = ExpressionContext(bindings: BindingEnvironment({}));
 final _registry = TypeRegistry(const TypeCatalog([]));
 
@@ -107,7 +107,9 @@ final class _Harness {
         persistence: persistence,
       ) {
     source = PresentationSearchSourceFactory(
-      client: MockClient((_) async => throw UnimplementedError()),
+      client: ValueNotifier(
+        MockClient((_) async => throw UnimplementedError()),
+      ),
       expressions: _expressions,
       registry: _registry,
       budget: const ExpressionBudget(),

@@ -15,7 +15,10 @@ void main() {
       await tester.pumpTestApp(
         child: SearchRoot(
           create: (ref) {
-            return SearchController(source: source, baseSelectors: const []);
+            return SearchController(
+              session: testSearchSession(source),
+              baseSelectors: const [],
+            );
           },
           child: Consumer(
             builder: (context, ref, child) {
@@ -38,7 +41,7 @@ void main() {
       await tester.pumpTestApp(
         child: SearchRoot(
           create: (ref) => controller = SearchController(
-            source: source,
+            session: testSearchSession(source),
             baseSelectors: const [],
           ),
           child: Consumer(
@@ -65,8 +68,10 @@ void main() {
 
       await tester.pumpTestApp(
         child: SearchRoot(
-          create: (ref) =>
-              SearchController(source: source, baseSelectors: const []),
+          create: (ref) => SearchController(
+            session: testSearchSession(source),
+            baseSelectors: const [],
+          ),
           child: Consumer(
             builder: (context, ref, child) {
               final controller = ref.watch(searchProvider)!;
@@ -95,7 +100,7 @@ void main() {
       await tester.pumpTestApp(
         child: SearchRoot(
           create: (ref) => controller = SearchController(
-            source: source,
+            session: testSearchSession(source),
             baseSelectors: const [],
           ),
           child: const _NestedSearchStatus(),
@@ -120,7 +125,7 @@ void main() {
       await tester.pumpTestApp(
         child: _SearchRootChildSwapHost(
           createController: () => controller = SearchController(
-            source: source,
+            session: testSearchSession(source),
             baseSelectors: const [],
           ),
           onReady: (replace) => replaceChild = replace,

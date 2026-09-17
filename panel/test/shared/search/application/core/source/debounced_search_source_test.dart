@@ -12,7 +12,7 @@ void main() {
       final source = inner.debounced(const Duration(milliseconds: 100));
       addTearDown(source.dispose);
 
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
 
       expect(inner.initializeCount, 1);
     });
@@ -132,18 +132,12 @@ void main() {
     });
 
     test("forwards selectors from the inner source", () {
-      final inner = FakeSearchSource();
+      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
+      final inner = FakeSearchSource(selectors: emitted);
       final source = inner.debounced(const Duration(milliseconds: 100));
       addTearDown(source.dispose);
-      final selectors = <List<QuerySelectorDefinition>>[];
-      final subscription = source.selectors.listen(selectors.add);
-      addTearDown(subscription.cancel);
 
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
-
-      inner.emitSelectors(emitted);
-
-      expect(selectors, [emitted]);
+      expect(source.selectors, emitted);
     });
 
     testWidgets("debounces preview and resolves after duration", (

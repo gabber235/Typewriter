@@ -8,9 +8,9 @@ import "package:iconify_flutter_plus/icons/ic.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/books.dart";
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/entries.dart";
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/pages.dart";
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/tags/tags.dart";
+
+export "query.dart";
 
 const mockPageSearchResultType = SearchResultType(
   id: "page",
@@ -71,7 +71,6 @@ final class MockSearchSource implements SearchSource {
     this.state = MockSearchDisplayState.ready,
     this.sourceSelectors = const [],
     this.nodes = const [],
-    this.actions = const {},
     this.guidance = const [],
     this.errorSummaries = const [],
     this.previewResults = const {},
@@ -81,7 +80,6 @@ final class MockSearchSource implements SearchSource {
   final MockSearchDisplayState state;
   final List<QuerySelectorDefinition> sourceSelectors;
   final List<SearchNode> nodes;
-  final Map<Type, SearchAction> actions;
   final List<SearchGuidance> guidance;
   final List<SearchErrorSummary> errorSummaries;
   final Map<String, SearchPreviewRequestResult> previewResults;
@@ -90,10 +88,6 @@ final class MockSearchSource implements SearchSource {
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
   );
-  final _selectors = StreamController<List<QuerySelectorDefinition>>.broadcast(
-    sync: true,
-  );
-
   Timer? _searchTimer;
   var initializeCount = 0;
   var disposeCount = 0;
@@ -104,14 +98,13 @@ final class MockSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors => _selectors.stream;
+  List<QuerySelectorDefinition> get selectors => sourceSelectors;
 
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     initializeCount++;
     scheduleMicrotask(() {
-      if (_selectors.isClosed || _snapshots.isClosed) return;
-      _selectors.add(sourceSelectors);
+      if (_snapshots.isClosed) return;
       _snapshots.add(_snapshotForState(nodes));
     });
   }
@@ -125,11 +118,7 @@ final class MockSearchSource implements SearchSource {
       return;
     }
     _snapshots.add(
-      SearchSourceSnapshot.loading(
-        nodes: nodes,
-        actions: actions,
-        guidance: guidance,
-      ),
+      SearchSourceSnapshot.loading(nodes: nodes, guidance: guidance),
     );
     _searchTimer = Timer(searchDelay, () => _emitSearchResult(context));
   }
@@ -143,17 +132,14 @@ final class MockSearchSource implements SearchSource {
     return switch (state) {
       MockSearchDisplayState.ready => SearchSourceSnapshot.ready(
         nodes: nextNodes,
-        actions: actions,
         guidance: guidance,
       ),
       MockSearchDisplayState.loading => SearchSourceSnapshot.loading(
         nodes: nextNodes,
-        actions: actions,
         guidance: guidance,
       ),
       MockSearchDisplayState.error => SearchSourceSnapshot.error(
         nodes: nextNodes,
-        actions: actions,
         guidance: guidance,
         errorSummaries: errorSummaries.isEmpty
             ? const [
@@ -317,7 +303,6 @@ final class MockSearchSource implements SearchSource {
     disposeCount++;
     _searchTimer?.cancel();
     unawaited(_snapshots.close());
-    unawaited(_selectors.close());
   }
 }
 
@@ -343,7 +328,7 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield page.pageId.id;
       yield page.name;
       yield page.chapter;
-      yield _pageTypeLabel(page.type);
+      yield _pageKindLabel(page.kind);
       yield book.bookId.id;
       yield book.title;
       yield* book.tagIds.map((tagId) => tagId.id);
@@ -397,15 +382,15 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
       final book = payload.book;
       switch (selectorId) {
         case "tag":
-          yield _pageTypeLabel(page.type);
+          yield _pageKindLabel(page.kind);
           yield* book.tagIds.map((tagId) => tagId.id);
         case "book":
           yield book.title;
           yield book.bookId.id;
         case "chapter":
           yield page.chapter;
-        case "pageType":
-          yield _pageTypeLabel(page.type);
+        case "pageKind":
+          yield _pageKindLabel(page.kind);
         case "type":
           yield "page";
       }
@@ -469,7 +454,7 @@ Map<String, String> _previewFieldsForPayload(Object payload) {
       "book": payload.book.title,
       "bookId": payload.book.bookId.id,
       "chapter": payload.page.chapter,
-      "pageType": _pageTypeLabel(payload.page.type),
+      "pageKind": _pageKindLabel(payload.page.kind),
     },
     MockEntryRecord() => {
       "id": payload.entry.id,
@@ -506,13 +491,11 @@ SearchResult mockSearchResult({
   required String title,
   String? subtitle,
   Object? payload,
-  List<Type> actions = const [],
 }) {
   return SearchResult(
     id: id,
     type: type,
     payload: payload ?? title,
-    actions: actions,
     title: title,
     subtitle: subtitle,
   );
@@ -524,7 +507,6 @@ SearchNode mockSearchResultNode({
   required String title,
   String? subtitle,
   Object? payload,
-  List<Type> actions = const [],
 }) {
   return SearchNode.result(
     result: mockSearchResult(
@@ -533,7 +515,6 @@ SearchNode mockSearchResultNode({
       title: title,
       subtitle: subtitle,
       payload: payload,
-      actions: actions,
     ),
   );
 }
@@ -552,114 +533,122 @@ SearchNode mockSearchSection({
   );
 }
 
-final class MockCloseSearchAction extends SingleSearchAction {
-  MockCloseSearchAction();
+const mockCloseSearchCommandId = SearchCommandId("mock.close");
+const mockRefreshSearchCommandId = SearchCommandId("mock.refresh");
+const mockUpdateQuerySearchCommandId = SearchCommandId("mock.related");
+const mockFailSearchCommandId = SearchCommandId("mock.fail");
 
-  @override
-  String get label => "Open";
+List<SearchCommand> mockSearchCommands() => [
+  _mockCommand(
+    id: mockCloseSearchCommandId,
+    presentation: const SearchCommandPresentation(
+      label: "Open",
+      priority: 100,
+      icon: MaterialSymbols.open_in_new_rounded,
+    ),
+    applies: (result) => {
+      mockBookSearchResultType,
+      mockPageSearchResultType,
+      mockEntrySearchResultType,
+    }.contains(result.type),
+    execute: (target) async {
+      await Future<void>.delayed(250.ms);
+      return const SearchCommandResult.completed();
+    },
+  ),
+  _mockCommand(
+    id: mockRefreshSearchCommandId,
+    presentation: const SearchCommandPresentation(
+      label: "Refresh",
+      priority: 20,
+      icon: MaterialSymbols.refresh_rounded,
+      shortcut: SingleActivator(LogicalKeyboardKey.keyR),
+    ),
+    applies: (result) => result.type != mockBookSearchResultType,
+    execute: (target) async {
+      await Future<void>.delayed(300.ms);
+      return const SearchCommandResult.completed(
+        surfaceEffect: SearchSurfaceEffect.refresh(),
+      );
+    },
+  ),
+  _mockCommand(
+    id: mockUpdateQuerySearchCommandId,
+    presentation: const SearchCommandPresentation(
+      label: "Related",
+      priority: 10,
+      icon: Fa6Solid.link,
+      shortcut: SingleActivator(LogicalKeyboardKey.keyU),
+    ),
+    applies: (result) => result.type != mockEntrySearchResultType,
+    execute: (target) async {
+      await Future<void>.delayed(4.seconds);
+      final result = target.primary;
+      return SearchCommandResult.completed(
+        surfaceEffect: SearchSurfaceEffect.updateQuery(
+          updateQuery: result.type.label ?? result.title ?? "",
+        ),
+      );
+    },
+  ),
+  _mockCommand(
+    id: mockFailSearchCommandId,
+    presentation: const SearchCommandPresentation(
+      label: "Fail",
+      color: Colors.red,
+      icon: Ic.round_dangerous,
+      shortcut: SingleActivator(LogicalKeyboardKey.keyX),
+    ),
+    applies: (result) => result.type == mockBookSearchResultType,
+    execute: (target) async {
+      await Future<void>.delayed(4.seconds);
+      return SearchCommandResult.failed(
+        message:
+            "Could not process ${target.primary.title ?? target.primary.id}",
+      );
+    },
+  ),
+];
 
-  @override
-  int get priority => 100;
+SearchCommand _mockCommand({
+  required SearchCommandId id,
+  required SearchCommandPresentation presentation,
+  required bool Function(SearchResult result) applies,
+  required Future<SearchCommandResult> Function(SearchCommandTarget target)
+  execute,
+}) => SearchCommand.custom(
+  id: id,
+  presentation: presentation,
+  evaluate: (target) => target.selection.every(applies)
+      ? const SearchCommandState.enabled()
+      : const SearchCommandState.hidden(),
+  execute: (context, target) => execute(target),
+);
 
-  @override
-  String? get icon => MaterialSymbols.open_in_new_rounded;
+SearchCommandId? mockSearchActivationCommandId(SearchResult result) =>
+    switch (result.type) {
+      mockBookSearchResultType ||
+      mockPageSearchResultType ||
+      mockEntrySearchResultType => mockCloseSearchCommandId,
+      mockElementDefinitionSearchResultType ||
+      mockTagSearchResultType => mockUpdateQuerySearchCommandId,
+      _ => null,
+    };
 
-  @override
-  Future<SearchActionResult> execute(SearchResult result) async {
-    await Future<void>.delayed(250.ms);
-    return const SearchActionResult.completed();
-  }
-}
-
-final class MockRefreshSearchAction extends BatchSearchAction {
-  MockRefreshSearchAction();
-
-  @override
-  String get label => "Refresh";
-
-  @override
-  int get priority => 20;
-
-  @override
-  String? get icon => MaterialSymbols.refresh_rounded;
-
-  @override
-  ShortcutActivator? get shortcut => SingleActivator(LogicalKeyboardKey.keyR);
-
-  @override
-  Future<SearchActionResult> executeBatch(List<SearchResult> results) async {
-    await Future<void>.delayed(300.ms);
-    return const SearchActionResult.completed(
-      effect: SearchActionEffect.refresh(),
-    );
-  }
-}
-
-final class MockUpdateQuerySearchAction extends SingleSearchAction {
-  MockUpdateQuerySearchAction();
-
-  @override
-  String get label => "Related";
-
-  @override
-  int get priority => 10;
-
-  @override
-  String? get icon => Fa6Solid.link;
-
-  @override
-  ShortcutActivator? get shortcut => SingleActivator(LogicalKeyboardKey.keyU);
-
-  @override
-  Future<SearchActionResult> execute(SearchResult result) async {
-    await Future<void>.delayed(4.seconds);
-    return SearchActionResult.completed(
-      effect: SearchActionEffect.updateQuery(
-        updateQuery: result.type.label ?? result.title ?? "",
-      ),
-    );
-  }
-}
-
-final class MockFailSearchAction extends RepeatedSearchAction {
-  MockFailSearchAction();
-
-  @override
-  String get label => "Fail";
-
-  @override
-  int get priority => 0;
-
-  @override
-  Color? get color => Colors.red;
-
-  @override
-  String? get icon => Ic.round_dangerous;
-
-  @override
-  ShortcutActivator? get shortcut => SingleActivator(LogicalKeyboardKey.keyX);
-
-  @override
-  Future<SearchActionResult> execute(SearchResult result) async {
-    await Future<void>.delayed(4.seconds);
-    return SearchActionResult.failed(
-      message: "Could not process ${result.title ?? result.id}",
-    );
-  }
-}
-
-Map<Type, SearchAction> mockSearchActions() {
-  final close = MockCloseSearchAction();
-  final refresh = MockRefreshSearchAction();
-  final updateQuery = MockUpdateQuerySearchAction();
-  final fail = MockFailSearchAction();
-  return {
-    MockCloseSearchAction: close,
-    MockRefreshSearchAction: refresh,
-    MockUpdateQuerySearchAction: updateQuery,
-    MockFailSearchAction: fail,
-  };
-}
+SearchSession<void> mockSearchSession(
+  SearchSource source, {
+  SearchSelectionMode selectionMode = SearchSelectionMode.multiple,
+}) => SearchSession(
+  source: source,
+  interaction: SearchInteraction(
+    activation: SearchActivation.command(
+      resolve: mockSearchActivationCommandId,
+      dependencies: const [],
+    ),
+    selectionMode: selectionMode,
+    commands: mockSearchCommands(),
+  ),
+);
 
 final class MockSearchIndex {
   const MockSearchIndex({
@@ -755,8 +744,8 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       .map((record) => record.page.name)
       .toSet()
       .toList();
-  final pageTypes = index.pages
-      .map((record) => _pageTypeLabel(record.page.type))
+  final pageKinds = index.pages
+      .map((record) => _pageKindLabel(record.page.kind))
       .toSet()
       .toList();
   final entryTypes = index.elementDefinitions
@@ -802,9 +791,9 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       color: safeColors[3],
     ),
     KeyValueSelectorDefinition(
-      id: "pageType",
-      key: "pageType:",
-      value: QuerySelectorValue.enumValue(pageTypes),
+      id: "pageKind",
+      key: "pageKind:",
+      value: QuerySelectorValue.enumValue(pageKinds),
       color: safeColors[4],
     ),
     KeyValueSelectorDefinition(
@@ -885,31 +874,21 @@ SearchNode _bookSearchNode(Book book, MockSearchIndex index) {
     title: book.title.formatted,
     subtitle: "Book / ${tags.join(", ")}",
     payload: MockBookRecord(book: book, tags: tags),
-    actions: const [
-      MockCloseSearchAction,
-      MockUpdateQuerySearchAction,
-      MockFailSearchAction,
-    ],
   );
 }
 
 SearchNode _pageSearchNode(MockPageRecord record, MockSearchIndex index) {
   final page = record.page;
   final book = record.book;
-  final pageType = _pageTypeLabel(page.type);
+  final pageKind = _pageKindLabel(page.kind);
   final tags = _tagNames(book.tagIds.map((tagId) => tagId.id), index);
   return mockSearchResultNode(
     id: "page.${page.pageId.id}",
     type: mockPageSearchResultType,
     title: page.name.formatted,
     subtitle:
-        "${book.title.formatted} / ${page.chapter.formatted} / $pageType / ${tags.join(", ")}",
+        "${book.title.formatted} / ${page.chapter.formatted} / $pageKind / ${tags.join(", ")}",
     payload: record,
-    actions: const [
-      MockCloseSearchAction,
-      MockUpdateQuerySearchAction,
-      MockRefreshSearchAction,
-    ],
   );
 }
 
@@ -926,7 +905,6 @@ SearchNode _entrySearchNode(MockEntryRecord record, MockSearchIndex index) {
     subtitle:
         "${elementDefinition.name} / ${page.name.formatted} / ${tags.join(", ")}",
     payload: record,
-    actions: const [MockCloseSearchAction, MockRefreshSearchAction],
   );
 }
 
@@ -937,7 +915,6 @@ SearchNode _elementDefinitionSearchNode(ElementDefinition elementDefinition) {
     title: elementDefinition.name,
     subtitle: elementDefinition.namespace,
     payload: elementDefinition,
-    actions: const [MockUpdateQuerySearchAction, MockRefreshSearchAction],
   );
 }
 
@@ -948,7 +925,6 @@ SearchNode _tagSearchNode(Tag tag) {
     title: tag.name.formatted,
     subtitle: "Tag / ${tag.parentIds.length} parents",
     payload: tag,
-    actions: const [MockUpdateQuerySearchAction, MockRefreshSearchAction],
   );
 }
 
@@ -957,13 +933,7 @@ List<String> _tagNames(Iterable<String> tagIds, MockSearchIndex index) {
   return tagIds.map((id) => names[id] ?? id).toList();
 }
 
-String _pageTypeLabel(PageType type) {
-  try {
-    return type.displayName;
-  } on UnsupportedError {
-    return type.name.toLowerCase();
-  }
-}
+String _pageKindLabel(PageKindRef kind) => kind.id;
 
 Map<String, SearchPreviewRequestResult> mockSearchPreviewResults(
   MockSearchIndex index,
@@ -990,8 +960,7 @@ List<SearchGuidance> mockSearchGuidance() {
     SearchGuidance(
       id: "selectors",
       title: "Use selectors to narrow results",
-      description:
-          "Try #quest, book:main, chapter:intro, page:spawn, pageType:sequence, entryType:dialogue, extension:basic, or type:book OR type:page.",
+      description: "Try #quest, book:main, chapter:intro, page:spawn, pageKind:fixture.page, entryType:dialogue, extension:basic, or type:book OR type:page.",
       visibility: SearchGuidanceVisibility.always,
       priority: 0,
     ),
@@ -1042,7 +1011,6 @@ SearchSource mockMixedGlobalSearchSource({
     state: state,
     sourceSelectors: searchSelectors,
     nodes: mockMixedGlobalSearchNodes(index),
-    actions: mockSearchActions(),
     guidance: includeGuidance ? mockSearchGuidance() : const [],
     errorSummaries: state == MockSearchDisplayState.error
         ? mockSearchErrors()

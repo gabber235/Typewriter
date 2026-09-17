@@ -11,65 +11,69 @@ const testResultType = SearchResultType(
   label: "Test result",
 );
 
-SearchResult searchResult(
-  String id, {
-  List<Type> actions = const [],
-  String? title,
-  Object? payload,
-}) {
+SearchResult searchResult(String id, {String? title, Object? payload}) {
   return SearchResult(
     id: id,
     type: testResultType,
     payload: payload ?? id,
-    actions: actions,
     title: title ?? id,
   );
 }
 
-SearchNode resultNode(
-  String id, {
-  List<Type> actions = const [],
-  String? title,
-}) {
-  return SearchNode.result(
-    result: searchResult(id, actions: actions, title: title),
-  );
+SearchNode resultNode(String id, {String? title}) {
+  return SearchNode.result(result: searchResult(id, title: title));
 }
 
 SearchNode sectionNode(String id, List<SearchNode> children) {
   return SearchNode.section(id: id, title: id, children: children);
 }
 
-SearchSourceSnapshot readySnapshot({
-  required List<SearchNode> nodes,
-  Map<Type, SearchAction> actions = const {},
-}) {
-  return SearchSourceSnapshot.ready(nodes: nodes, actions: actions);
+SearchSourceSnapshot readySnapshot({required List<SearchNode> nodes}) {
+  return SearchSourceSnapshot.ready(nodes: nodes);
 }
 
-final class FakeSearchSource implements SearchSource {
+SearchSession<void> testSearchSession(
+  SearchSource source, {
+  SearchSelectionMode selectionMode = SearchSelectionMode.multiple,
+}) => SearchSession(
+  source: source,
+  interaction: SearchInteraction(
+    activation: SearchActivation.custom(
+      dependencies: const [],
+      evaluate: (context, result) => const SearchActivationState.hidden(),
+      activate: (context, result) async =>
+          const SearchActivationResult.keepOpen(),
+    ),
+    selectionMode: selectionMode,
+  ),
+);
+
+final class FakeSearchSource
+    implements SearchSource, SearchSelectorCompletionSource {
+  FakeSearchSource({this.selectors = const []});
+
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
   );
-  final _selectors = StreamController<List<QuerySelectorDefinition>>.broadcast(
-    sync: true,
-  );
+  @override
+  final List<QuerySelectorDefinition> selectors;
 
   int initializeCount = 0;
   int disposeCount = 0;
   final searches = <SearchQueryContext>[];
   final previewRequests = <SearchPreviewRequest>[];
+  final completionRequests = <SearchSelectorCompletionRequest>[];
   SearchPreviewRequestResult previewResult =
       const SearchPreviewRequestResult.data(data: "preview");
+  SearchSelectorCompletionResult completionResult =
+      const SearchSelectorCompletionResult();
+  Object? completionError;
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors => _selectors.stream;
-
-  @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     initializeCount++;
   }
 
@@ -84,6 +88,16 @@ final class FakeSearchSource implements SearchSource {
   ) async {
     previewRequests.add(request);
     return previewResult;
+  }
+
+  @override
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) async {
+    completionRequests.add(request);
+    final error = completionError;
+    if (error != null) Error.throwWithStackTrace(error, StackTrace.current);
+    return completionResult;
   }
 
   void emitSnapshot(SearchSourceSnapshot snapshot) {
@@ -105,10 +119,6 @@ final class FakeSearchSource implements SearchSource {
     await tester.pump(Duration.zero);
   }
 
-  void emitSelectors(List<QuerySelectorDefinition> selectors) {
-    _selectors.add(selectors);
-  }
-
   SearchQueryContext get lastSearchContext {
     expect(searches, isNotEmpty);
     return searches.last;
@@ -127,7 +137,6 @@ final class FakeSearchSource implements SearchSource {
   void dispose() {
     disposeCount++;
     unawaited(_snapshots.close());
-    unawaited(_selectors.close());
   }
 }
 
@@ -164,76 +173,4 @@ final class NotificationLog {
 
 NotificationLog recordNotifications(ChangeNotifier notifier) {
   return NotificationLog(notifier);
-}
-
-final class TestSingleAction extends SingleSearchAction {
-  TestSingleAction({this.result, this.onExecute, this.throwError = false});
-
-  final SearchActionResult? result;
-  final Future<SearchActionResult> Function(SearchResult result)? onExecute;
-  final bool throwError;
-  final executedResults = <SearchResult>[];
-  final completer = Completer<SearchActionResult>();
-
-  @override
-  String get label => "Single";
-
-  @override
-  int get priority => 0;
-
-  @override
-  Future<SearchActionResult> execute(SearchResult result) async {
-    executedResults.add(result);
-    if (throwError) {
-      throw StateError("boom");
-    }
-    final callback = onExecute;
-    if (callback != null) {
-      return callback(result);
-    }
-    final immediate = this.result;
-    if (immediate != null) {
-      return immediate;
-    }
-
-    return completer.future;
-  }
-}
-
-final class TestRepeatedAction extends RepeatedSearchAction {
-  TestRepeatedAction({this.onExecute});
-
-  final Future<SearchActionResult> Function(SearchResult result)? onExecute;
-  final executedResults = <SearchResult>[];
-
-  @override
-  String get label => "Repeated";
-
-  @override
-  int get priority => 0;
-
-  @override
-  Future<SearchActionResult> execute(SearchResult result) async {
-    executedResults.add(result);
-    return onExecute?.call(result) ?? const SearchActionResult.completed();
-  }
-}
-
-final class TestBatchAction extends BatchSearchAction {
-  TestBatchAction({this.result = const SearchActionResult.completed()});
-
-  final SearchActionResult result;
-  final batches = <List<SearchResult>>[];
-
-  @override
-  String get label => "Batch";
-
-  @override
-  int get priority => 0;
-
-  @override
-  Future<SearchActionResult> executeBatch(List<SearchResult> results) async {
-    batches.add(List.unmodifiable(results));
-    return result;
-  }
 }

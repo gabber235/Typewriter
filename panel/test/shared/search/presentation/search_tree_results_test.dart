@@ -33,9 +33,8 @@ void main() {
       expect(find.text("Books"), findsOneWidget);
       expect(find.text("Result alpha"), findsOneWidget);
       final count = tester.widget<Text>(find.text("(2)"));
-      final colorScheme = Theme.of(
-        tester.element(find.text("(2)")),
-      ).colorScheme;
+      final colorScheme = Theme.of(tester.element(find.text("(2)")))
+          .colorScheme;
       expect(count.style!.color, colorScheme.onSurfaceVariant);
     });
 
@@ -545,7 +544,7 @@ class _TestSearchTree extends StatelessWidget {
       height: 500,
       child: SearchRoot(
         create: (ref) => SearchController(
-          source: source,
+          session: testSearchSession(source),
           baseSelectors: const [
             KeyValueSelectorDefinition(id: "tag", key: "#"),
           ],

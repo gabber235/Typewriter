@@ -1,5 +1,7 @@
-// ignore_for_file: cascade_invocations
+import "dart:async";
 
+import "package:collection/collection.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -9,100 +11,80 @@ void main() {
   const selectors = [KeyValueSelectorDefinition(id: "tag", key: "#")];
 
   group("SearchController", () {
-    test(
-      "selection and section collapse toggles notify and expose immutable lists",
-      () {
-        final source = FakeSearchSource();
-        final controller = SearchController(
-          source: source,
-          baseSelectors: selectors,
-        );
-        addTearDown(controller.dispose);
-        final notifications = recordNotifications(controller);
-        addTearDown(notifications.dispose);
-
-        controller.toggleSelected("a", isMultiSelect: false);
-        controller.toggleSection("section");
-
-        expect(controller.isSelected("a"), isTrue);
-        expect(controller.selectedIds, ["a"]);
-        expect(() => controller.selectedIds.add("b"), throwsUnsupportedError);
-        expect(controller.isCollapsed("section"), isTrue);
-        expect(controller.collapsedSectionIds, ["section"]);
-        expect(
-          () => controller.collapsedSectionIds.add("other"),
-          throwsUnsupportedError,
-        );
-
-        expect(notifications.count, 2);
-      },
-    );
-
-    test(
-      "cleans selected ids when snapshots remove results, including nested sections",
-      () {
-        final source = FakeSearchSource();
-        final controller = SearchController(
-          source: source,
-          baseSelectors: selectors,
-        );
-        addTearDown(controller.dispose);
-
-        source.emitSnapshot(
-          readySnapshot(
-            nodes: [
-              sectionNode("section", [
-                resultNode("a"),
-                sectionNode("nested", [resultNode("b")]),
-              ]),
-            ],
-          ),
-        );
-        controller.toggleSelected("a", isMultiSelect: false);
-        controller.toggleSelected("b", isMultiSelect: false);
-
-        source.emitSnapshot(
-          readySnapshot(
-            nodes: [
-              sectionNode("section", [
-                sectionNode("nested", [resultNode("b")]),
-              ]),
-            ],
-          ),
-        );
-
-        expect(controller.selectedIds, ["b"]);
-      },
-    );
-
-    test("queues query updates while an action is running", () async {
+    test("projects scope changes without rerunning the source", () {
       final source = FakeSearchSource();
-      final action = TestSingleAction();
-      final controller = SearchController(
-        source: source,
+      final visible = ValueNotifier(false);
+      final controller = _controller(
+        source,
+        scope: PredicateSearchScope(
+          dependencies: [visible],
+          evaluate: (result, query) => visible.value
+              ? const SearchResultVisibility.visible()
+              : const SearchResultVisibility.hidden(),
+        ),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(visible.dispose);
+      source.emitSnapshot(readySnapshot(nodes: [resultNode("a")]));
+
+      expect(controller.snapshot.nodes, isEmpty);
+      visible.value = true;
+
+      expect(controller.snapshot.nodes.findResults({"a"}), hasLength(1));
+      expect(source.searches, isEmpty);
+    });
+
+    test("command applicability reacts without recreating source", () {
+      final source = FakeSearchSource();
+      final enabled = ValueNotifier(false);
+      final command = SearchCommand.single<String>(
+        id: const SearchCommandId("test.open"),
+        presentation: const SearchCommandPresentation(label: "Open"),
+        matcher: const SearchResultMatcher(testResultType),
+        dependencies: [enabled],
+        evaluate: (value, target) => enabled.value
+            ? const SearchCommandState.enabled()
+            : const SearchCommandState.hidden(),
+        execute: (context, value, target) async =>
+            const SearchCommandResult.completed(),
+      );
+      final controller = _controller(source, commands: [command]);
+      addTearDown(controller.dispose);
+      addTearDown(enabled.dispose);
+      source.emitSnapshot(readySnapshot(nodes: [resultNode("a")]));
+      final result = controller.snapshot.nodes.firstResult!;
+
+      expect(controller.commandsFor(result), isEmpty);
+      enabled.value = true;
+
+      expect(controller.commandsFor(result).single.command.id, command.id);
+      expect(source.searches, isEmpty);
+    });
+
+    test("queues query updates while a command runs", () async {
+      final source = FakeSearchSource();
+      final completer = Completer<SearchCommandResult>();
+      final command = _command(
+        execute: (context, value, target) => completer.future,
+      );
+      final controller = _controller(
+        source,
+        commands: [command],
         baseSelectors: selectors,
       );
       addTearDown(controller.dispose);
-      source.emitSnapshot(
-        readySnapshot(
-          nodes: [
-            resultNode("a", actions: [TestSingleAction]),
-          ],
-          actions: {TestSingleAction: action},
-        ),
-      );
-      controller.toggleSelected("a", isMultiSelect: false);
+      source.emitSnapshot(readySnapshot(nodes: [resultNode("a")]));
 
       expect(
-        controller.executeAction(TestSingleAction),
-        SearchActionSubmitResult.submitted,
+        controller.executeCommand(command.id, resultId: "a"),
+        SearchCommandSubmitResult.submitted,
       );
       controller.updateQuery("queued #tag");
       expect(source.searches, isEmpty);
 
-      action.completer.complete(
-        const SearchActionResult.completed(
-          effect: SearchActionEffect.refresh(),
+      completer.complete(
+        const SearchCommandResult.completed(
+          surfaceEffect: SearchSurfaceEffect.refresh(),
         ),
       );
       await Future<void>.delayed(Duration.zero);
@@ -115,155 +97,77 @@ void main() {
       );
     });
 
-    test("action update query effect searches immediately", () async {
+    test("activation completes with a typed value", () async {
       final source = FakeSearchSource();
-      final action = TestSingleAction(
-        result: const SearchActionResult.completed(
-          effect: SearchActionEffect.updateQuery(updateQuery: "effect #tag"),
-        ),
-      );
-      final controller = SearchController(
-        source: source,
-        baseSelectors: selectors,
-      );
-      addTearDown(controller.dispose);
-      source.emitSnapshot(
-        readySnapshot(
-          nodes: [
-            resultNode("a", actions: [TestSingleAction]),
-          ],
-          actions: {TestSingleAction: action},
-        ),
-      );
-      controller.toggleSelected("a", isMultiSelect: false);
-
-      controller.executeAction(TestSingleAction);
-      await Future<void>.delayed(Duration.zero);
-
-      source.expectLastSearchContext(
-        normalizedQuery: "effect",
-        selectors: const [
-          SearchParsedSelector(selectorId: "tag", key: "#", value: "tag"),
-        ],
-      );
-    });
-
-    test(
-      "refresh effect repeats the current search and close effect invokes callback",
-      () async {
-        var closeCount = 0;
-        final source = FakeSearchSource();
-        final refreshAction = TestSingleAction(
-          result: const SearchActionResult.completed(
-            effect: SearchActionEffect.refresh(),
-          ),
-        );
-        final closeAction = TestBatchAction(
-          result: const SearchActionResult.completed(
-            effect: SearchActionEffect.close(),
-          ),
-        );
-        final controller = SearchController(
+      String? completed;
+      final controller = SearchController<String>(
+        session: SearchSession(
           source: source,
-          baseSelectors: selectors,
-          onCloseRequested: () => closeCount++,
-        );
-        addTearDown(controller.dispose);
-
-        source.emitSnapshot(
-          readySnapshot(
-            nodes: [
-              resultNode("a", actions: [TestSingleAction, TestBatchAction]),
-            ],
-            actions: {
-              TestSingleAction: refreshAction,
-              TestBatchAction: closeAction,
-            },
-          ),
-        );
-        controller.updateQuery("current #tag");
-        final firstContext = source.lastSearchContext;
-        controller.toggleSelected("a", isMultiSelect: false);
-
-        controller.executeAction(TestSingleAction);
-        await Future<void>.delayed(Duration.zero);
-        expect(source.searches.last, firstContext);
-
-        controller.executeAction(TestBatchAction);
-        await Future<void>.delayed(Duration.zero);
-        expect(closeCount, 1);
-      },
-    );
-
-    test("user-pending query wins over an action updateQuery effect", () async {
-      final source = FakeSearchSource();
-      final action = TestSingleAction();
-      final controller = SearchController(
-        source: source,
-        baseSelectors: selectors,
-      );
-      addTearDown(controller.dispose);
-      source.emitSnapshot(
-        readySnapshot(
-          nodes: [
-            resultNode("a", actions: [TestSingleAction]),
-          ],
-          actions: {TestSingleAction: action},
-        ),
-      );
-      controller.toggleSelected("a", isMultiSelect: false);
-
-      controller.executeAction(TestSingleAction);
-      controller.updateQuery("user #wins");
-      action.completer.complete(
-        const SearchActionResult.completed(
-          effect: SearchActionEffect.updateQuery(
-            updateQuery: "effect #ignored",
+          interaction: SearchInteraction(
+            activation: SearchActivation.custom(
+              dependencies: const [],
+              evaluate: (context, result) =>
+                  const SearchActivationState.enabled(),
+              activate: (context, result) async =>
+                  SearchActivationResult.complete(result.id),
+            ),
+            selectionMode: SearchSelectionMode.single,
           ),
         ),
-      );
-      await Future<void>.delayed(Duration.zero);
-
-      source.expectLastSearchContext(
-        normalizedQuery: "user",
-        selectors: const [
-          SearchParsedSelector(selectorId: "tag", key: "#", value: "wins"),
-        ],
-      );
-    });
-
-    test("refresh repeats the current query", () {
-      final source = FakeSearchSource();
-      final controller = SearchController(
-        source: source,
-        baseSelectors: selectors,
-      );
-      addTearDown(controller.dispose);
-      controller.updateQuery("current #tag");
-      final first = source.lastSearchContext;
-
-      controller.refresh();
-
-      expect(source.searches.last, first);
-      expect(source.searches, hasLength(2));
-    });
-
-    test("keeps the current preview when a refreshed result still exists", () {
-      final source = FakeSearchSource();
-      final controller = SearchController(
-        source: source,
-        baseSelectors: selectors,
+        baseSelectors: const [],
+        onCompleted: (value) => completed = value,
       );
       addTearDown(controller.dispose);
       source.emitSnapshot(readySnapshot(nodes: [resultNode("a")]));
-      controller.preview(controller.snapshot.nodes.findResults({"a"}).single);
 
+      await controller.activate(controller.snapshot.nodes.firstResult!);
+
+      expect(completed, "a");
+    });
+
+    test("selection cleanup follows projected snapshots", () {
+      final source = FakeSearchSource();
+      final controller = _controller(source);
+      addTearDown(controller.dispose);
       source.emitSnapshot(
-        readySnapshot(nodes: [resultNode("a", title: "Updated")]),
+        readySnapshot(nodes: [resultNode("a"), resultNode("b")]),
       );
+      controller
+        ..toggleSelected("a", isMultiSelect: true)
+        ..toggleSelected("b", isMultiSelect: true);
 
-      expect(controller.currentPreview?.id, "a");
-      expect(controller.currentPreview?.title, "Updated");
+      source.emitSnapshot(readySnapshot(nodes: [resultNode("b")]));
+
+      expect(controller.selectedIds, ["b"]);
     });
   });
 }
+
+SearchController<void> _controller(
+  FakeSearchSource source, {
+  SearchScope scope = const AllSearchScope(),
+  List<SearchCommand> commands = const [],
+  List<QuerySelectorDefinition> baseSelectors = const [],
+}) => SearchController(
+  session: SearchSession(
+    source: source,
+    scope: scope,
+    interaction: SearchInteraction(
+      activation: SearchActivation.command(
+        resolve: (_) => commands.firstOrNull?.id,
+        dependencies: const [],
+      ),
+      selectionMode: SearchSelectionMode.multiple,
+      commands: commands,
+    ),
+  ),
+  baseSelectors: baseSelectors,
+);
+
+SearchCommand _command({required SearchCommandExecutor<String> execute}) =>
+    SearchCommand.single<String>(
+      id: const SearchCommandId("test.command"),
+      presentation: const SearchCommandPresentation(label: "Command"),
+      matcher: const SearchResultMatcher(testResultType),
+      execute: execute,
+    );

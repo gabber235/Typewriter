@@ -71,45 +71,7 @@ final class SkirRealmPresentationSearchCodec {
   };
 
   wire.RealmSearchQuery _encodeQuery(SearchQueryContext query) =>
-      wire.RealmSearchQuery(
-        normalizedQuery: query.normalizedQuery,
-        selectors: query.selectors.map(_encodeSelector),
-        selectorExpression: query.selectorExpression == null
-            ? null
-            : _encodeSelectorExpression(query.selectorExpression!),
-      );
-
-  wire.RealmSearchSelector _encodeSelector(SearchParsedSelector selector) =>
-      wire.RealmSearchSelector(
-        selectorId: selector.selectorId,
-        key: selector.key,
-        value: selector.value,
-      );
-
-  wire.RealmSearchSelectorExpression _encodeSelectorExpression(
-    SearchSelectorExpression expression,
-  ) => switch (expression) {
-    SearchSelectorLeafExpression(:final selector) =>
-      wire.RealmSearchSelectorExpression.wrapSelector(
-        _encodeSelector(selector),
-      ),
-    SearchSelectorBinaryExpression(
-      :final operator,
-      :final left,
-      :final right,
-    ) =>
-      wire.RealmSearchSelectorExpression.createBinary(
-        operator_: operator == SearchSelectorOperator.and
-            ? wire.RealmSearchSelectorOperator.and
-            : wire.RealmSearchSelectorOperator.or,
-        left: _encodeSelectorExpression(left),
-        right: _encodeSelectorExpression(right),
-      ),
-    SearchSelectorNotExpression(:final expression) =>
-      wire.RealmSearchSelectorExpression.createNot(
-        expression: _encodeSelectorExpression(expression),
-      ),
-  };
+      encodeRealmSearchQuery(query);
 
   RealmPresentationSearchUpdate _decodeSnapshot(
     wire.RealmPresentationSearchSnapshot snapshot,

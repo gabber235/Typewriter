@@ -4,17 +4,11 @@ part of "route.dart";
 ///
 /// Adding a page uses the same dialog as the sidebar, so creation and initial
 /// navigation follow one command path.
-class EmptyBookPage extends StatelessWidget {
+class EmptyBookPage extends ConsumerWidget {
   const EmptyBookPage({super.key});
 
-  Future<String?> _showAddPageDialog(BuildContext context) async =>
-      showAdvancedDialog(
-        context: context,
-        builder: (context) => const AddPageDialogue(),
-      );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Pane(
       id: "empty_book_page",
       primary: true,
@@ -29,7 +23,7 @@ class EmptyBookPage extends StatelessWidget {
         child: EmptyScreen(
           title: "Select a page to edit or",
           buttonText: "Add Page",
-          onPressed: () => _showAddPageDialog(context),
+          onPressed: () => promptAndCreatePage(context: context, ref: ref),
         ),
       ),
     );
@@ -56,59 +50,67 @@ class BookScaffold extends HookConsumerWidget {
     void retryConnection() =>
         ref.invalidate(organizationTopologyStreamProvider);
 
-    return SimpleScaffold(
-      appBar: CustomAppBar(
-        leading: [
-          if (organizationId != null) ...[
-            const OrganizationSelector(),
-            if (realmId != null) ...[
-              Icones(
-                MaterialSymbols.chevron_right,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const RealmSelector(),
+    return PrimarySearchShortcut(
+      child: SimpleScaffold(
+        appBar: CustomAppBar(
+          leading: [
+            if (organizationId != null) ...[
+              const OrganizationSelector(),
+              if (realmId != null) ...[
+                Icones(
+                  MaterialSymbols.chevron_right,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const RealmSelector(),
+                Icones(
+                  MaterialSymbols.chevron_right,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const BookSelector(),
+              ],
             ],
           ],
-        ],
-        trailing: !context.isMobile
-            ? RealmSuspensionInline(
-                suspended: interaction.suspended,
-                child: const ModeDisplayWidget(),
-              )
-            : null,
-        sidebar: RealmSuspensionBarrier(
+          trailing: RealmSuspensionInline(
+            suspended: interaction.suspended,
+            child: const ModeDisplayWidget(),
+          ),
+          sidebar: RealmSuspensionBarrier(
+            interaction: interaction,
+            realm: selectedRealm,
+            onRetry: retryConnection,
+            child: const BookSidebarContent(),
+          ),
+        ),
+        child: RealmSuspensionBarrier(
           interaction: interaction,
           realm: selectedRealm,
           onRetry: retryConnection,
-          child: const BookSidebarContent(),
-        ),
-      ),
-      child: RealmSuspensionBarrier(
-        interaction: interaction,
-        realm: selectedRealm,
-        onRetry: retryConnection,
-        child: Row(
-          children: [
-            if (!context.isMobile) const Sidebar(child: BookSidebarContent()),
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: InspectorScaffold(
-                      realmRuntime: ref.watch(activeRealmEditorRuntimeProvider),
-                      margin: EdgeInsets.only(
-                        top: context.spacing.space2,
-                        right: context.spacing.space2,
+          child: Row(
+            children: [
+              if (!context.isMobile) const Sidebar(child: BookSidebarContent()),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: InspectorScaffold(
+                        realmRuntime: ref.watch(
+                          activeRealmEditorRuntimeProvider,
+                        ),
+                        margin: EdgeInsets.only(
+                          top: context.spacing.space2,
+                          right: context.spacing.space2,
+                        ),
+                        child: child,
                       ),
-                      child: child,
                     ),
-                  ),
-                  ActionRow(),
-                ],
+                    ActionRow(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

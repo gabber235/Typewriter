@@ -15,7 +15,11 @@ class QuerySuggestionEngine {
   /// Returns at most [maxItems] completions for the parse cursor context.
   ///
   /// Without cursor context, the result is empty.
-  List<QuerySuggestion> suggest(QueryParseResult result, {int maxItems = 8}) {
+  List<QuerySuggestion> suggest(
+    QueryParseResult result, {
+    int maxItems = 8,
+    Iterable<String> dynamicValues = const [],
+  }) {
     final context = result.cursorContext;
     if (context == null) {
       return const <QuerySuggestion>[];
@@ -23,7 +27,11 @@ class QuerySuggestionEngine {
 
     final items = switch (context) {
       SelectorKeyCursorContext() => _suggestSelectorKeys(result, context),
-      SelectorValueCursorContext() => _suggestSelectorValues(result, context),
+      SelectorValueCursorContext() => _suggestSelectorValues(
+        result,
+        context,
+        dynamicValues,
+      ),
       OperatorCursorContext() => _suggestOperators(result, context),
       UnknownCursorContext() => _suggestUnknown(result, context),
     };
@@ -79,6 +87,7 @@ class QuerySuggestionEngine {
   List<QuerySuggestion> _suggestSelectorValues(
     QueryParseResult result,
     SelectorValueCursorContext context,
+    Iterable<String> dynamicValues,
   ) {
     final selector = selectors
         .whereType<KeyValueSelectorDefinition>()
@@ -90,7 +99,16 @@ class QuerySuggestionEngine {
     final value = selector.value;
     final partialValue = context.partialValue.toLowerCase();
 
-    final candidates = value.suggestions(context.partialValue);
+    final seen = <String>{};
+    final candidates =
+        [...value.suggestions(context.partialValue), ...dynamicValues].where((
+          candidate,
+        ) {
+          final key = selector.caseSensitive
+              ? candidate
+              : candidate.toLowerCase();
+          return seen.add(key);
+        });
     return candidates
         .where((candidate) {
           final candidateValue = candidate.toLowerCase();

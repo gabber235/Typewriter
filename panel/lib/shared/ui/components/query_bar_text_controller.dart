@@ -1,12 +1,24 @@
 part of "query_bar.dart";
 
 class _QueryBarTextEditingController extends TextEditingController {
-  _QueryBarTextEditingController({required this.selectors, super.text})
-    : _selectorsById = Map.fromEntries(selectors.map((e) => MapEntry(e.id, e)));
+  _QueryBarTextEditingController({
+    required List<QuerySelectorDefinition> selectors,
+    super.text,
+  }) : _selectorsById = Map.fromEntries(
+         selectors.map((e) => MapEntry(e.id, e)),
+       );
 
-  final List<QuerySelectorDefinition> selectors;
   final Map<String, QuerySelectorDefinition> _selectorsById;
   QueryParseResult _parseResult = QueryParseResult.empty();
+
+  void updateSelectors(List<QuerySelectorDefinition> selectors) {
+    _selectorsById
+      ..clear()
+      ..addEntries(
+        selectors.map((selector) => MapEntry(selector.id, selector)),
+      );
+    notifyListeners();
+  }
 
   void updateParseResult(QueryParseResult result) {
     _parseResult = result;

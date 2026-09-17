@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -25,6 +27,8 @@ class QueryBar extends HookWidget {
     required this.query,
     required this.onQueryChanged,
     required this.selectors,
+    this.completeSelector,
+    this.validationIssues = const [],
     this.inputFieldController,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
     this.autofocus = EditorTextFieldAutoFocus.none,
@@ -50,6 +54,11 @@ class QueryBar extends HookWidget {
   /// Receives every edited query, including text inserted from a suggestion.
   final void Function(String) onQueryChanged;
   final List<QuerySelectorDefinition> selectors;
+  final Future<SearchSelectorCompletionResult> Function(
+    SearchSelectorCompletionRequest request,
+  )?
+  completeSelector;
+  final List<QueryParseIssue> validationIssues;
   final InputDecoration inputDecoration;
   final EditorTextFieldAutoFocus autofocus;
 

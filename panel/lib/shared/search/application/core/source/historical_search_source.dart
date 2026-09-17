@@ -20,7 +20,8 @@ abstract interface class SearchHistoryStorage {
 /// History is loaded asynchronously. Selections received before loading are
 /// held and applied afterward. Nonempty queries pass through unchanged, while
 /// empty queries receive a history section before the child tree.
-final class HistoricalSearchSource implements SearchSource {
+final class HistoricalSearchSource
+    implements SearchSource, SearchSelectorCompletionSource {
   HistoricalSearchSource({
     required this.source,
     required this.key,
@@ -50,7 +51,7 @@ final class HistoricalSearchSource implements SearchSource {
   final Map<String, SearchResult> _knownResults = {};
   final List<SearchResult> _pendingSelections = [];
   List<SearchResult> _recent = const [];
-  SearchQueryContext _activeContext = _emptySearchQuery;
+  SearchQueryContext _activeContext = SearchQueryContext.empty;
   SearchSourceSnapshot? _lastChildSnapshot;
   Future<void> _writeChain = Future.value();
   bool _initialized = false;
@@ -61,14 +62,15 @@ final class HistoricalSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
+  List<QuerySelectorDefinition> get selectors => source.selectors;
 
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     if (_initialized) return;
     _initialized = true;
+    _activeContext = context;
     unawaited(_load());
-    source.initialize();
+    source.initialize(context);
   }
 
   @override
@@ -83,6 +85,17 @@ final class HistoricalSearchSource implements SearchSource {
   @override
   Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
     return source.preview(request);
+  }
+
+  @override
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) {
+    final child = source;
+    if (child is! SearchSelectorCompletionSource) {
+      return Future.value(const SearchSelectorCompletionResult());
+    }
+    return (child as SearchSelectorCompletionSource).completeSelector(request);
   }
 
   @override
@@ -204,11 +217,6 @@ final class HistoricalSearchSource implements SearchSource {
 
   bool get _isEmptyQuery => _activeContext.normalizedQuery.isEmpty;
 }
-
-const _emptySearchQuery = SearchQueryContext(
-  normalizedQuery: "",
-  selectors: [],
-);
 
 /// Adds persisted recent results to a source's empty query.
 extension HistoricalSearchSourceX on SearchSource {

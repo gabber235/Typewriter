@@ -64,10 +64,10 @@ class ElementDefinitionSearchResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return SearchResultCard(
       color: color,
-      prefix: SearchResultIconTile.value(
+      prefix: SearchResultIconTile(
         color: color,
         onColor: color.onBrightness(Brightness.dark),
-        icon: icon,
+        icon: Icones.value(icon),
         focused: focused,
         loading: loading,
       ),

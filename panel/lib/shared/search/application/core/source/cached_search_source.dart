@@ -28,8 +28,16 @@ final class CachedSearchSource extends DelegatingSearchSource {
       _queryCache[context] = cached;
       _cachedReadySnapshot = cached;
       emit(cached);
-    } else {
-      _cachedReadySnapshot = null;
+    } else if (retainStaleResults && _cachedReadySnapshot != null) {
+      final previous = _cachedReadySnapshot!;
+      emit(
+        SearchSourceSnapshot.loading(
+          nodes: _markNodesStale(previous.nodes),
+          guidance: previous.guidance,
+          errorSummaries: previous.errorSummaries,
+          selectorValidations: previous.selectorValidations,
+        ),
+      );
     }
     source.search(context);
   }
@@ -65,12 +73,7 @@ final class CachedSearchSource extends DelegatingSearchSource {
 
     switch (snapshot.status) {
       case SearchSourceStatus.loading || SearchSourceStatus.error:
-        emit(
-          snapshot.copyWith(
-            nodes: _markNodesStale(cachedSnapshot.nodes),
-            actions: cachedSnapshot.actions,
-          ),
-        );
+        emit(snapshot.copyWith(nodes: _markNodesStale(cachedSnapshot.nodes)));
       case SearchSourceStatus.idle:
         emit(snapshot);
       case SearchSourceStatus.ready:

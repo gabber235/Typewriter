@@ -37,7 +37,7 @@ void main() {
       expect(value.possibleValues, ["open", "closed", "draft"]);
     });
 
-    test("free-text dynamic value widens an enum base value", () {
+    test("rejects incompatible value policies", () {
       const base = KeyValueSelectorDefinition(
         id: "status",
         key: "status:",
@@ -45,15 +45,10 @@ void main() {
       );
       const dynamic = KeyValueSelectorDefinition(id: "status", key: "status:");
 
-      final merged = [base].merge([dynamic]).single;
-
-      expect(
-        (merged as KeyValueSelectorDefinition).value,
-        isA<FreeTextSelectorValue>(),
-      );
+      expect(() => [base].merge([dynamic]), throwsA(isA<StateError>()));
     });
 
-    test("merges case sensitivity and multiplicity conservatively", () {
+    test("rejects incompatible syntax policy", () {
       const base = KeyValueSelectorDefinition(
         id: "id",
         key: "id:",
@@ -66,11 +61,7 @@ void main() {
         multiplicity: QueryMultiplicity.single,
       );
 
-      final merged = [base].merge([dynamic]).single;
-
-      final selector = merged as KeyValueSelectorDefinition;
-      expect(selector.caseSensitive, isTrue);
-      expect(selector.multiplicity, QueryMultiplicity.single);
+      expect(() => [base].merge([dynamic]), throwsA(isA<StateError>()));
     });
   });
 }

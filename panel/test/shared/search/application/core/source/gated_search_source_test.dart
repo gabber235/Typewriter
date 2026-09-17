@@ -12,7 +12,7 @@ void main() {
       final source = inner.gated((context) => true);
       addTearDown(source.dispose);
 
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
 
       expect(inner.initializeCount, 1);
     });
@@ -27,19 +27,14 @@ void main() {
     });
 
     test("forwards selectors while open or closed", () {
-      final inner = FakeSearchSource();
+      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
+      final inner = FakeSearchSource(selectors: emitted);
       final source = inner.gated((context) => false);
       addTearDown(source.dispose);
-      final selectors = <List<QuerySelectorDefinition>>[];
-      final subscription = source.selectors.listen(selectors.add);
-      addTearDown(subscription.cancel);
-
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
 
       source.search(queryContext("alpha"));
-      inner.emitSelectors(emitted);
 
-      expect(selectors, [emitted]);
+      expect(source.selectors, emitted);
     });
 
     test("open gate forwards search with same context", () {

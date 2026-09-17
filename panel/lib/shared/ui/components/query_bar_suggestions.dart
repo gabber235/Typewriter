@@ -3,6 +3,7 @@ part of "query_bar.dart";
 Widget _buildSuggestionPanel({
   required BuildContext context,
   required List<QuerySuggestion> suggestions,
+  required String? warning,
   required int? activeSuggestionIndex,
   required ValueChanged<QuerySuggestion> onTapSuggestion,
   required ValueChanged<int> onHoverIndex,
@@ -36,8 +37,19 @@ Widget _buildSuggestionPanel({
         key: const ValueKey("query_bar_suggestions"),
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: suggestions.length,
+          itemCount: suggestions.length + (warning == null ? 0 : 1),
           itemBuilder: (context, index) {
+            if (warning != null && index == suggestions.length) {
+              return Padding(
+                padding: EdgeInsets.all(context.spacing.space2),
+                child: Text(
+                  warning,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.tertiary,
+                  ),
+                ),
+              );
+            }
             final suggestion = suggestions[index];
             final isActive = activeSuggestionIndex == index;
 

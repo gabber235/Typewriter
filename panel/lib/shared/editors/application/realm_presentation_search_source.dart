@@ -62,11 +62,11 @@ final class RealmPresentationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors =>
-      Stream.value(presentationQuerySelectors(provider.selectors));
+  List<QuerySelectorDefinition> get selectors =>
+      presentationQuerySelectors(provider.selectors);
 
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     scheduleMicrotask(() {
       if (!_disposed) {
         _snapshots.add(SearchSourceSnapshot.idle());
@@ -264,11 +264,11 @@ final class UnavailableRealmPresentationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors =>
-      Stream.value(presentationQuerySelectors(provider.selectors));
+  List<QuerySelectorDefinition> get selectors =>
+      presentationQuerySelectors(provider.selectors);
 
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     scheduleMicrotask(() {
       if (!_disposed) {
         _snapshots.add(SearchSourceSnapshot.idle());

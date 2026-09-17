@@ -35,15 +35,15 @@ final class StaticPresentationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors =>
-      Stream.value(presentationQuerySelectors(provider.selectors));
+  List<QuerySelectorDefinition> get selectors =>
+      presentationQuerySelectors(provider.selectors);
 
   /// Runs the initial search after the source has been attached to listeners.
   @override
-  void initialize() {
+  void initialize(SearchQueryContext context) {
     scheduleMicrotask(() {
       if (!_disposed) {
-        search(const SearchQueryContext(normalizedQuery: "", selectors: []));
+        search(SearchQueryContext.empty);
       }
     });
   }

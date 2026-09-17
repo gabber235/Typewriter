@@ -15,18 +15,16 @@ class _SearchInputResults extends StatelessWidget {
     required this.maximumExtent,
     required this.controller,
     required this.isSelected,
-    required this.onSelect,
     required this.onSelectionPointerDown,
     required this.onSelectionPointerEnd,
   });
 
   final bool visible;
-  final SearchController searchController;
+  final SearchController<dynamic> searchController;
   final PresentationRenderScope scope;
   final double maximumExtent;
   final ScrollController controller;
   final bool Function(SearchResult result) isSelected;
-  final ValueChanged<SearchResult> onSelect;
   final VoidCallback onSelectionPointerDown;
   final VoidCallback onSelectionPointerEnd;
 
@@ -91,7 +89,8 @@ class _SearchInputResults extends StatelessWidget {
                                 context: row,
                                 scope: scope,
                                 selected: isSelected(row.result),
-                                onSelect: () => onSelect(row.result),
+                                onSelect: () =>
+                                    searchController.activate(row.result),
                                 onPointerDown: onSelectionPointerDown,
                                 onPointerEnd: onSelectionPointerEnd,
                               ),
@@ -154,7 +153,7 @@ class _SearchInputMessage extends StatelessWidget {
 class _SearchInputStatus extends StatelessWidget {
   const _SearchInputStatus({required this.controller});
 
-  final SearchController controller;
+  final SearchController<dynamic> controller;
 
   @override
   Widget build(BuildContext context) => switch (controller.snapshot.status) {

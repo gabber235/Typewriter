@@ -82,7 +82,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get selectedValue {
-
+  
   return $DataValueCopyWith<$Res>(_self.selectedValue, (value) {
     return _then(_self.copyWith(selectedValue: value));
   });
@@ -91,7 +91,7 @@ $DataValueCopyWith<$Res> get selectedValue {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get presentation {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -100,7 +100,7 @@ $PresentationNodeCopyWith<$Res> get presentation {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionContextCopyWith<$Res> get expressions {
-
+  
   return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
     return _then(_self.copyWith(expressions: value));
   });
@@ -243,7 +243,7 @@ return $default(_that.selectedValue,_that.presentation,_that.expressions,_that.p
 
 class _PresentationSearchResultPayload implements PresentationSearchResultPayload {
   const _PresentationSearchResultPayload({required this.selectedValue, required this.presentation, required this.expressions, required this.providerKey});
-
+  
 
 @override final  DataValue selectedValue;
 @override final  PresentationNode presentation;
@@ -314,7 +314,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get selectedValue {
-
+  
   return $DataValueCopyWith<$Res>(_self.selectedValue, (value) {
     return _then(_self.copyWith(selectedValue: value));
   });
@@ -323,7 +323,7 @@ $DataValueCopyWith<$Res> get selectedValue {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get presentation {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -332,7 +332,7 @@ $PresentationNodeCopyWith<$Res> get presentation {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionContextCopyWith<$Res> get expressions {
-
+  
   return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
     return _then(_self.copyWith(expressions: value));
   });
@@ -407,7 +407,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -550,7 +550,7 @@ return $default(_that.result,_that.historyNamespace);case _:
 
 class _PresentationSearchSelectionEvent implements PresentationSearchSelectionEvent {
   const _PresentationSearchSelectionEvent({required this.result, required this.historyNamespace});
-
+  
 
 @override final  SearchResult result;
 @override final  String historyNamespace;
@@ -617,7 +617,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });

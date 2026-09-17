@@ -11,28 +11,20 @@ class SearchResultIconTile extends StatelessWidget {
   const SearchResultIconTile({
     required this.color,
     required this.onColor,
-    required String icon,
-    this.focused = false,
-    this.loading = false,
-    super.key,
-  }) : iconify = icon,
-       icon = null;
-
-  const SearchResultIconTile.value({
-    required this.color,
-    required this.onColor,
     required this.icon,
     this.focused = false,
     this.loading = false,
+    this.padding,
     super.key,
-  }) : iconify = null;
+  });
 
   final Color color;
   final Color onColor;
-  final IconValue? icon;
-  final String? iconify;
+  final Widget icon;
   final bool focused;
   final bool loading;
+
+  final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +47,16 @@ class SearchResultIconTile extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.all(context.spacing.space2),
+      padding: padding ?? EdgeInsets.all(context.spacing.space2),
       child: ElasticSwitcher(
         child: loading
             ? CircularProgressIndicator(
                 color: focused ? color : onColor,
                 padding: EdgeInsets.all(context.spacing.space1),
               )
-            : Icones.value(
-                icon ?? IconValue.iconify(iconify!),
-                color: focused ? color : onColor,
+            : IconTheme(
+                data: IconThemeData(color: focused ? color : onColor),
+                child: icon,
               ),
       ),
     );
@@ -183,6 +175,7 @@ class SearchResultTags extends StatelessWidget {
     required this.selected,
     required this.focused,
     required this.color,
+    this.seperatorBuilder,
     super.key,
   });
 
@@ -190,11 +183,10 @@ class SearchResultTags extends StatelessWidget {
   final bool selected;
   final bool focused;
   final Color color;
+  final Widget Function()? seperatorBuilder;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
     final surfaceColor = Surface.colorOf(context);
     final surfaceBrightness = ThemeData.estimateBrightnessForColor(
       surfaceColor,
@@ -233,18 +225,14 @@ class SearchResultTags extends StatelessWidget {
         child: Row(
           spacing: context.spacing.space1,
           children: [
-            Text(
-              "•",
-              style: textTheme.labelSmall?.copyWith(
-                color: onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-            for (final tag in tags)
+            for (var i = 0; i < tags.length; i++) ...[
+              if (i > 0 && seperatorBuilder != null) seperatorBuilder!(),
               SearchResultSoftChip(
-                label: tag.formatted,
+                label: tags[i].formatted,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
               ),
+            ],
           ],
         ),
       ),

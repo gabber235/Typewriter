@@ -208,4 +208,5 @@ String _expressionLabel(SearchSelectorExpression expression) =>
 String _selectorValueLabel(QuerySelectorValue value) => switch (value) {
   FreeTextSelectorValue() => "freeText",
   EnumSelectorValue() => "enum",
+  SourceBackedSelectorValue() => "sourceBacked",
 };

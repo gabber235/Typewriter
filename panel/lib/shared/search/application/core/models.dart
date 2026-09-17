@@ -1,8 +1,9 @@
 import "dart:async";
 
+import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
-import "package:flutter/widgets.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "models.freezed.dart";
 
@@ -10,7 +11,7 @@ part "models.freezed.dart";
 ///
 /// Sources publish a [SearchSourceSnapshot] containing a hierarchical
 /// [SearchNode] tree. Controllers turn raw input into [SearchQueryContext] and
-/// coordinate actions against result IDs still present in that tree.
+/// coordinate interactions against result IDs still present in that tree.
 
 /// A selector extracted from the normalized query.
 @freezed
@@ -22,6 +23,57 @@ abstract class SearchParsedSelector with _$SearchParsedSelector {
     required String key,
     String? value,
   }) = _SearchParsedSelector;
+}
+
+enum SearchSelectorValidationStatus { accepted, rejected, unresolved }
+
+@immutable
+class SearchSelectorValidation {
+  const SearchSelectorValidation({
+    required this.selectorId,
+    required this.value,
+    required this.status,
+  });
+
+  final String selectorId;
+  final String value;
+  final SearchSelectorValidationStatus status;
+}
+
+@immutable
+class SearchSelectorCompletionRequest {
+  const SearchSelectorCompletionRequest({
+    required this.selectorId,
+    required this.partial,
+    this.scope,
+  });
+
+  final String selectorId;
+  final String partial;
+  final SearchSelectorExpression? scope;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SearchSelectorCompletionRequest &&
+      other.selectorId == selectorId &&
+      other.partial == partial &&
+      other.scope == scope;
+
+  @override
+  int get hashCode => Object.hash(selectorId, partial, scope);
+}
+
+@immutable
+class SearchSelectorCompletionResult {
+  const SearchSelectorCompletionResult({
+    this.values = const [],
+    this.exhaustive = false,
+    this.warning,
+  });
+
+  final List<String> values;
+  final bool exhaustive;
+  final String? warning;
 }
 
 /// Boolean operators preserved in the parsed selector expression.
@@ -50,8 +102,16 @@ abstract class SearchQueryContext with _$SearchQueryContext {
   const factory SearchQueryContext({
     required String normalizedQuery,
     required List<SearchParsedSelector> selectors,
+    @Default(<String>[]) List<String> terms,
     SearchSelectorExpression? selectorExpression,
   }) = _SearchQueryContext;
+
+  static const SearchQueryContext empty = SearchQueryContext(
+    normalizedQuery: "",
+    terms: [],
+    selectors: [],
+    selectorExpression: null,
+  );
 }
 
 /// Controls whether guidance remains visible with results.
@@ -93,60 +153,61 @@ enum SearchSourceStatus { idle, loading, ready, error }
 
 /// Immutable source projection consumed by search widgets.
 ///
-/// Nodes and actions may remain available while [status] is loading or error,
-/// allowing decorators to retain stale results while exposing current feedback.
+/// Nodes may remain available while [status] is loading or error, allowing
+/// decorators to retain stale results while exposing current feedback.
 @freezed
 abstract class SearchSourceSnapshot with _$SearchSourceSnapshot {
   const factory SearchSourceSnapshot({
     required SearchSourceStatus status,
     required List<SearchNode> nodes,
-    @Default({}) Map<Type, SearchAction> actions,
     @Default(<SearchGuidance>[]) List<SearchGuidance> guidance,
     @Default(<SearchErrorSummary>[]) List<SearchErrorSummary> errorSummaries,
+    @Default(<SearchSelectorValidation>[])
+    List<SearchSelectorValidation> selectorValidations,
   }) = _SearchSourceSnapshot;
 
   factory SearchSourceSnapshot.idle({
     List<SearchNode> nodes = const [],
-    Map<Type, SearchAction> actions = const {},
     List<SearchGuidance> guidance = const [],
+    List<SearchSelectorValidation> selectorValidations = const [],
   }) => SearchSourceSnapshot(
     status: SearchSourceStatus.idle,
     nodes: nodes,
-    actions: actions,
     guidance: guidance,
+    selectorValidations: selectorValidations,
   );
 
   factory SearchSourceSnapshot.loading({
     List<SearchNode> nodes = const [],
-    Map<Type, SearchAction> actions = const {},
     List<SearchGuidance> guidance = const [],
     List<SearchErrorSummary> errorSummaries = const [],
+    List<SearchSelectorValidation> selectorValidations = const [],
   }) => SearchSourceSnapshot(
     status: SearchSourceStatus.loading,
     nodes: nodes,
-    actions: actions,
     guidance: guidance,
     errorSummaries: errorSummaries,
+    selectorValidations: selectorValidations,
   );
 
   factory SearchSourceSnapshot.ready({
     required List<SearchNode> nodes,
-    Map<Type, SearchAction> actions = const {},
     List<SearchGuidance> guidance = const [],
     List<SearchErrorSummary> errorSummaries = const [],
+    List<SearchSelectorValidation> selectorValidations = const [],
   }) => SearchSourceSnapshot(
     status: SearchSourceStatus.ready,
     nodes: nodes,
-    actions: actions,
     guidance: guidance,
     errorSummaries: errorSummaries,
+    selectorValidations: selectorValidations,
   );
 
   factory SearchSourceSnapshot.error({
     required List<SearchErrorSummary> errorSummaries,
     List<SearchNode> nodes = const [],
-    Map<Type, SearchAction> actions = const {},
     List<SearchGuidance> guidance = const [],
+    List<SearchSelectorValidation> selectorValidations = const [],
   }) {
     assert(
       errorSummaries.any((s) => s.severity == SearchErrorSeverity.error),
@@ -155,9 +216,9 @@ abstract class SearchSourceSnapshot with _$SearchSourceSnapshot {
     return SearchSourceSnapshot(
       status: SearchSourceStatus.error,
       nodes: nodes,
-      actions: actions,
       guidance: guidance,
       errorSummaries: errorSummaries,
+      selectorValidations: selectorValidations,
     );
   }
 }
@@ -231,6 +292,13 @@ extension SearchNodes on List<SearchNode> {
       }
     }
   }
+
+  SearchResult? get firstResult {
+    return walk()
+        .whereType<SearchResultNode>()
+        .map((node) => node.result)
+        .firstOrNull;
+  }
 }
 
 /// Rendering identity for a [SearchResult].
@@ -258,153 +326,48 @@ abstract class SearchResult with _$SearchResult {
     required String id,
     required SearchResultType type,
     required Object payload,
-    @Default([]) List<Type> actions,
     String? title,
     String? subtitle,
     @Default(false) bool isStale,
   }) = _SearchResult;
 }
 
-/// Execution strategy represented by the action base class selected at runtime.
-enum SearchActionBatchMode { none, aggregate, repeated }
-
-/// A user operation exposed by one or more search results.
-///
-/// Actions are registered in a snapshot by runtime type. [priority] controls
-/// presentation order, while optional icon, color, and shortcut customize UI.
-abstract class SearchAction {
-  const SearchAction();
-
-  String get label;
-  int get priority;
-  String? get icon => null;
-  Color? get color => null;
-  ShortcutActivator? get shortcut => null;
-}
-
-/// Executes once for exactly one result.
-abstract class SingleSearchAction extends SearchAction {
-  Future<SearchActionResult> execute(SearchResult result);
-}
-
-/// Executes independently for each selected result.
-abstract class RepeatedSearchAction extends SearchAction {
-  Future<SearchActionResult> execute(SearchResult result);
-}
-
-/// Executes once with all selected results.
-abstract class BatchSearchAction extends SearchAction {
-  Future<SearchActionResult> executeBatch(List<SearchResult> results);
-}
-
-/// Outcome and requested UI effect of an action execution.
+/// Controller instruction emitted after a command completes.
 @freezed
-abstract class SearchActionResult with _$SearchActionResult {
-  const factory SearchActionResult.completed({
-    @Default(SearchActionEffect.close()) SearchActionEffect effect,
-  }) = SearchActionResultCompleted;
+abstract class SearchSurfaceEffect with _$SearchSurfaceEffect {
+  const factory SearchSurfaceEffect.updateQuery({required String updateQuery}) =
+      SearchSurfaceUpdateQuery;
 
-  @Assert("message != \"\"", "Message must not be empty.")
-  const factory SearchActionResult.failed({
-    required String message,
-    @Default(SearchActionEffect.refresh()) SearchActionEffect effect,
-  }) = SearchActionResultFailed;
-}
+  const factory SearchSurfaceEffect.refresh() = SearchSurfaceRefresh;
 
-/// Combines repeated action outcomes into one user visible result.
-extension SearchActionResults on List<SearchActionResult> {
-  SearchActionResult merge() {
-    if (isEmpty) {
-      return SearchActionResult.completed();
-    }
-
-    final effects = map((r) => r.effect).toSet();
-    final messages = whereType<SearchActionResultFailed>()
-        .map((r) => r.message)
-        .toSet();
-
-    final effect = effects.merge();
-
-    if (messages.isEmpty) {
-      return SearchActionResult.completed(effect: effect);
-    }
-
-    final message = messages.length == 1
-        ? messages.first
-        : "Search failed: ${messages.join(", ")}";
-
-    return SearchActionResult.failed(message: message, effect: effect);
-  }
-}
-
-/// Controller instruction emitted after an action completes.
-@freezed
-abstract class SearchActionEffect with _$SearchActionEffect {
-  const factory SearchActionEffect.updateQuery({required String updateQuery}) =
-      SearchActionUpdateQuery;
-
-  const factory SearchActionEffect.refresh() = SearchActionRefresh;
-
-  const factory SearchActionEffect.close() = SearchActionClose;
+  const factory SearchSurfaceEffect.close() = SearchSurfaceClose;
 }
 
 /// Resolves multiple controller effects into one deterministic instruction.
 ///
 /// Query updates take precedence over refresh, refresh takes precedence over
 /// close, and an empty set closes the search surface.
-extension SearchActionEffects on Set<SearchActionEffect> {
-  SearchActionEffect merge() {
+extension SearchSurfaceEffects on Set<SearchSurfaceEffect> {
+  SearchSurfaceEffect merge() {
     if (isEmpty) {
-      return SearchActionEffect.close();
+      return SearchSurfaceEffect.close();
     }
 
-    final updates = whereType<SearchActionUpdateQuery>().toList();
+    final updates = whereType<SearchSurfaceUpdateQuery>().toList();
     if (updates.isNotEmpty) {
       return updates.first;
     }
 
-    final refreshes = any((e) => e is SearchActionRefresh);
+    final refreshes = any((e) => e is SearchSurfaceRefresh);
     if (refreshes) {
-      return SearchActionEffect.refresh();
+      return SearchSurfaceEffect.refresh();
     }
 
-    return SearchActionEffect.close();
+    return SearchSurfaceEffect.close();
   }
 }
 
-/// Immediate result of attempting to submit an action.
-enum SearchActionSubmitResult {
-  submitted,
-  busy,
-  invalidSelection,
-  actionNotFound,
-}
-
-/// Observable lifecycle of the currently submitted action.
-@freezed
-sealed class SearchActionState with _$SearchActionState {
-  const factory SearchActionState.idle() = SearchActionIdle;
-
-  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
-  const factory SearchActionState.running({
-    required Type action,
-    required Set<String> resultIds,
-  }) = SearchActionRunning;
-
-  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
-  const factory SearchActionState.completed({
-    required Type action,
-    required Set<String> resultIds,
-  }) = SearchActionCompleted;
-
-  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
-  @Assert("message != \"\"", "Message must not be empty.")
-  const factory SearchActionState.failed({
-    required Type action,
-    required Set<String> resultIds,
-    required String message,
-  }) = SearchActionFailed;
-}
+abstract interface class SearchHostEffect {}
 
 /// Identifies a result whose detail should be loaded.
 @freezed
@@ -429,3 +392,13 @@ abstract class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
 
 /// Selection behavior supported by the actions in the current snapshot.
 enum SearchSelectionMode { single, multiple }
+
+class SearchHostEffectExecutor<E extends SearchHostEffect>(
+  final FutureOr<void> Function(E) onCall,
+) {
+  Type get effectType => E;
+
+  bool accepts(SearchHostEffect effect) => effect is E;
+
+  FutureOr<void> call(SearchHostEffect effect) => onCall(effect as E);
+}

@@ -13,17 +13,15 @@ class SourceController extends ChangeNotifier {
     required this.source,
     required this.baseSelectors,
     String initialQuery = "",
-  }) : _mergedSelectors = List.unmodifiable(baseSelectors) {
+  }) : _mergedSelectors = List.unmodifiable(
+         baseSelectors.merge(source.selectors),
+       ) {
     _lastRawQuery = initialQuery;
-    _lastSearchedContext = SearchQueryContext(
-      normalizedQuery: initialQuery,
-      selectors: [],
-    );
+    _lastSearchedContext = _parseContext(initialQuery);
 
-    source.initialize();
+    source.initialize(_lastSearchedContext);
 
     _sourceSubscription = source.snapshots.listen(_onSourceSnapshot);
-    _selectorSubscription = source.selectors.listen(_onSelectors);
   }
 
   final SearchSource source;
@@ -32,35 +30,55 @@ class SourceController extends ChangeNotifier {
   SearchSourceSnapshot _snapshot = SearchSourceSnapshot.idle();
   SearchSourceSnapshot get snapshot => _snapshot;
 
-  List<QuerySelectorDefinition> _mergedSelectors;
+  final List<QuerySelectorDefinition> _mergedSelectors;
   List<QuerySelectorDefinition> get selectors => _mergedSelectors;
 
   late String _lastRawQuery;
   late SearchQueryContext _lastSearchedContext;
   String get query => _lastRawQuery;
   SearchQueryContext get queryContext => _lastSearchedContext;
+  QueryParseResult _lastParseResult = QueryParseResult.empty();
+
+  List<QueryParseIssue> get validationIssues {
+    final rejected = snapshot.selectorValidations
+        .where((item) => item.status == SearchSelectorValidationStatus.rejected)
+        .toList();
+    if (rejected.isEmpty) return const [];
+
+    return _lastParseResult.selectors
+        .whereType<QueryLexerKeyValueSelectorToken>()
+        .map((token) {
+          final value = token.value;
+          if (value == null) return null;
+          final definition = selectors
+              .whereType<KeyValueSelectorDefinition>()
+              .firstWhere((item) => item.id == token.selectorId);
+          final matches = rejected.any(
+            (item) =>
+                item.selectorId == token.selectorId &&
+                (definition.caseSensitive
+                    ? item.value == value
+                    : item.value.toLowerCase() == value.toLowerCase()),
+          );
+          if (!matches) return null;
+          return QueryParseIssue(
+            code: QueryIssueCode.invalidSelectorValue,
+            severity: QuerySeverity.error,
+            message: "Unknown value $value for selector ${token.selectorId}",
+            range: token.valueRange,
+          );
+        })
+        .nonNulls
+        .toList(growable: false);
+  }
 
   late StreamSubscription<SearchSourceSnapshot> _sourceSubscription;
-  late StreamSubscription<List<QuerySelectorDefinition>> _selectorSubscription;
 
   /// Parses [rawQuery], updates the authoritative query context, and searches
   /// when the parsed context differs from the previous search.
   void updateQuery(String rawQuery) {
     _lastRawQuery = rawQuery;
-
-    final selectorsById = {for (final s in selectors) s.id: s};
-    final query = Query(selectors);
-    final result = query.parse(rawQuery);
-    final parsedSelectors = result.selectors.map((s) {
-      assert(selectorsById.containsKey(s.selectorId), "Unknown selector");
-      return _parsedSelector(s, selectorsById);
-    }).toList();
-
-    final newContext = SearchQueryContext(
-      normalizedQuery: result.query,
-      selectors: parsedSelectors,
-      selectorExpression: _selectorExpression(result.expression, selectorsById),
-    );
+    final newContext = _parseContext(rawQuery);
 
     if (newContext == _lastSearchedContext) {
       return;
@@ -70,9 +88,43 @@ class SourceController extends ChangeNotifier {
     triggerQuery();
   }
 
+  SearchQueryContext _parseContext(String rawQuery) {
+    final selectorsById = {
+      for (final selector in selectors) selector.id: selector,
+    };
+    final result = Query(selectors).parse(rawQuery);
+    _lastParseResult = result;
+    final parsedSelectors = result.selectors.map((selector) {
+      assert(
+        selectorsById.containsKey(selector.selectorId),
+        "Unknown selector",
+      );
+      return _parsedSelector(selector, selectorsById);
+    }).toList();
+
+    return SearchQueryContext(
+      normalizedQuery: result.query,
+      terms: _searchTerms(result.query),
+      selectors: parsedSelectors,
+      selectorExpression: _selectorExpression(result.expression, selectorsById),
+    );
+  }
+
   /// Reissues the last parsed context without reparsing the raw query.
   void triggerQuery() {
     source.search(_lastSearchedContext);
+  }
+
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) {
+    final completer = source;
+    if (completer is! SearchSelectorCompletionSource) {
+      return Future.value(const SearchSelectorCompletionResult());
+    }
+    return (completer as SearchSelectorCompletionSource).completeSelector(
+      request,
+    );
   }
 
   SearchParsedSelector _parsedSelector(
@@ -125,18 +177,21 @@ class SourceController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _onSelectors(List<QuerySelectorDefinition> selectors) {
-    _mergedSelectors = baseSelectors.merge(selectors);
-    updateQuery(_lastRawQuery);
-  }
-
   /// Cancels subscriptions and transfers disposal to the owned source.
   @override
   void dispose() {
     super.dispose();
 
     _sourceSubscription.cancel();
-    _selectorSubscription.cancel();
     source.dispose();
   }
 }
+
+final _searchTermPattern = RegExp(r"[\p{L}\p{N}_]+", unicode: true);
+
+List<String> _searchTerms(String query) => _searchTermPattern
+    .allMatches(query.toLowerCase())
+    .map((match) => match.group(0)!)
+    .take(12)
+    .toSet()
+    .toList(growable: false);

@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:convert";
 
+import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
@@ -120,7 +121,7 @@ HttpJsonPresentationSearchSource _source(
   TypeRegistry registry,
 ) => HttpJsonPresentationSearchSource(
   provider: provider,
-  client: client,
+  client: ValueNotifier(client),
   expressions: const ExpressionContext(bindings: BindingEnvironment({})),
   registry: registry,
   budget: const ExpressionBudget(),

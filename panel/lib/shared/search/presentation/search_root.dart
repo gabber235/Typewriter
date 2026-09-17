@@ -1,5 +1,4 @@
 import "package:flutter/material.dart" hide SearchController;
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hooks_riverpod/legacy.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -8,7 +7,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The nullable default allows the provider to exist as a dependency anchor;
 /// [SearchRoot] supplies the actual controller for its subtree.
-final searchProvider = ChangeNotifierProvider<SearchController?>(
+final searchProvider = ChangeNotifierProvider<SearchController<dynamic>?>(
   (ref) => null,
   dependencies: [],
 );
@@ -18,21 +17,16 @@ final searchProvider = ChangeNotifierProvider<SearchController?>(
 /// The [create] callback remains current without forcing provider recreation on
 /// every rebuild. The provider owns the controller for this scope, and
 /// Riverpod disposes the controller and its source when the scope is removed.
-class SearchRoot extends HookConsumerWidget {
+class SearchRoot extends StatelessWidget {
   const SearchRoot({required this.create, required this.child, super.key});
 
   final Widget child;
-  final SearchController Function(Ref ref) create;
+  final SearchController<dynamic> Function(Ref ref) create;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final latestCreate = useRef(create)..value = create;
-    final stableCreate = useMemoized(
-      () =>
-          (providerRef) => latestCreate.value(providerRef),
-    );
+  Widget build(BuildContext context) {
     return ProviderScope(
-      overrides: [searchProvider.overrideWith(stableCreate)],
+      overrides: [searchProvider.overrideWith(create)],
       child: child,
     );
   }

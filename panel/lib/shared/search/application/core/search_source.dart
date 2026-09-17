@@ -13,11 +13,11 @@ abstract interface class SearchSource {
   /// Emits source state changes, including loading, ready, idle, and error state.
   Stream<SearchSourceSnapshot> get snapshots;
 
-  /// Emits selector definitions that can be used in [SearchQueryContext].
-  Stream<List<QuerySelectorDefinition>> get selectors;
+  /// Static query syntax and selector ownership exposed by this source.
+  List<QuerySelectorDefinition> get selectors;
 
   /// Starts source owned initialization.
-  void initialize();
+  void initialize(SearchQueryContext context);
 
   /// Starts or replaces the search for [context].
   void search(SearchQueryContext context);
@@ -27,4 +27,11 @@ abstract interface class SearchSource {
 
   /// Releases source resources and prevents further output.
   void dispose();
+}
+
+/// Optional capability for sources whose selector values come from live data.
+abstract interface class SearchSelectorCompletionSource {
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  );
 }

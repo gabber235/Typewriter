@@ -58,9 +58,8 @@ QueryCheck checkQuery(
   List<QuerySelectorDefinition>? selectors,
   int? cursorOffset,
 }) {
-  final result = QueryEngine(
-    selectors ?? selectorsLexerDefaults(),
-  ).parse(input, cursorOffset: cursorOffset);
+  final result = QueryEngine(selectors ?? selectorsLexerDefaults())
+      .parse(input, cursorOffset: cursorOffset);
   return QueryCheck._(result);
 }
 

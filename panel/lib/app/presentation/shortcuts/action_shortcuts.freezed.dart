@@ -234,7 +234,7 @@ return intent(_that.id,_that.label,_that.description,_that.intent,_that.priority
 
 class ActivatorActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
   const ActivatorActionShortcut({required this.id, required this.label, required this.description, required  List<ShortcutActivator> activators, required this.priority, this.icon, this.onInvoke, this.show = true, this.registerShortcut = true, this.owner}): assert(id != "", 'ID must not be empty.'),_activators = activators,super._();
-
+  
 
 @override final  String id;
 @override final  String label;
@@ -332,7 +332,7 @@ as GlobalKey<State<StatefulWidget>>?,
 
 class IntentActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
   const IntentActionShortcut({required this.id, required this.label, required this.description, required this.intent, required this.priority, this.icon, this.onInvoke, this.show = true, this.registerShortcut = true, this.owner}): assert(id != "", 'ID must not be empty.'),super._();
-
+  
 
 @override final  String id;
 @override final  String label;

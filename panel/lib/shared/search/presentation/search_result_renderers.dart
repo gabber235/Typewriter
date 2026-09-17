@@ -8,9 +8,9 @@ part "search_result_renderers.freezed.dart";
 /// Context passed to a result row renderer.
 ///
 /// [selected] reflects controller selection. [focused] includes both keyboard
-/// focus and the active preview result. [loading] is true when an action
+/// focus and the active preview result. [loading] is true when a command
 /// currently affects this result. [onTap] applies the presentation's selection
-/// or single selection action behavior.
+/// or single selection activation behavior.
 @freezed
 abstract class SearchResultRowContext with _$SearchResultRowContext {
   const factory SearchResultRowContext({

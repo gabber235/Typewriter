@@ -39,11 +39,11 @@ final class CollectionPresentationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors =>
-      Stream.value(presentationQuerySelectors(provider.selectors));
+  List<QuerySelectorDefinition> get selectors =>
+      presentationQuerySelectors(provider.selectors);
 
   @override
-  void initialize() => search(_emptyQuery);
+  void initialize(SearchQueryContext context) => search(context);
 
   @override
   void search(SearchQueryContext query) {
@@ -182,11 +182,11 @@ final class UnavailableCollectionPresentationSearchSource
   );
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors =>
-      Stream.value(presentationQuerySelectors(provider.selectors));
+  List<QuerySelectorDefinition> get selectors =>
+      presentationQuerySelectors(provider.selectors);
 
   @override
-  void initialize() {}
+  void initialize(SearchQueryContext context) {}
 
   @override
   void search(SearchQueryContext query) {}
@@ -201,5 +201,3 @@ final class UnavailableCollectionPresentationSearchSource
   @override
   void dispose() {}
 }
-
-const _emptyQuery = SearchQueryContext(normalizedQuery: "", selectors: []);

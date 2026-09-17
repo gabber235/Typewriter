@@ -31,8 +31,13 @@ class _QueryBarView extends StatelessWidget {
                 controller: controller.textController,
                 autofocus: bar.autofocus,
                 decoration: bar.inputDecoration.copyWith(
-                  errorText: controller.parseResult.issues.isNotEmpty
-                      ? controller.parseResult.issues.first.message
+                  errorText:
+                      controller.parseResult.issues.isNotEmpty ||
+                          bar.validationIssues.isNotEmpty
+                      ? [
+                          ...controller.parseResult.issues,
+                          ...bar.validationIssues,
+                        ].first.message
                       : null,
                   contentPadding: EdgeInsets.symmetric(
                     vertical: context.spacing.space3,
@@ -61,6 +66,7 @@ class _QueryBarView extends StatelessWidget {
               overlayBuilder: (context, _) => _buildSuggestionPanel(
                 context: context,
                 suggestions: controller.suggestions,
+                warning: controller.completionWarning,
                 activeSuggestionIndex: controller.activeSuggestionIndex,
                 onTapSuggestion: controller.applySuggestion,
                 onHoverIndex: controller.onHoverIndex,

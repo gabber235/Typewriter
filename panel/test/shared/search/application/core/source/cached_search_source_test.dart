@@ -12,7 +12,7 @@ void main() {
       final source = inner.cached();
       addTearDown(source.dispose);
 
-      source.initialize();
+      source.initialize(SearchQueryContext.empty);
 
       expect(inner.initializeCount, 1);
     });
@@ -58,6 +58,25 @@ void main() {
       expect(inner.searches, [alpha, beta, alpha]);
     });
 
+    test("retains the previous result while a new query starts", () {
+      final inner = FakeSearchSource();
+      final source = inner.cached();
+      addTearDown(source.dispose);
+      final snapshots = <SearchSourceSnapshot>[];
+      final subscription = source.snapshots.listen(snapshots.add);
+      addTearDown(subscription.cancel);
+
+      source.search(queryContext("alpha"));
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
+
+      source.search(queryContext("beta"));
+
+      expect(snapshots.last.status, SearchSourceStatus.loading);
+      expect(resultIds(snapshots.last), ["alpha"]);
+      expect(resultStaleStates(snapshots.last), [true]);
+      expect(inner.searches, [queryContext("alpha"), queryContext("beta")]);
+    });
+
     test("evicts the least recently used parsed query", () {
       final inner = FakeSearchSource();
       final source = inner.cached(capacity: 1);
@@ -73,10 +92,11 @@ void main() {
       inner.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
       source.search(beta);
       inner.emitSnapshot(readySnapshot(nodes: [resultNode("beta")]));
-      final countBeforeSearch = snapshots.length;
       source.search(alpha);
 
-      expect(snapshots, hasLength(countBeforeSearch));
+      expect(snapshots.last.status, SearchSourceStatus.loading);
+      expect(resultIds(snapshots.last), ["beta"]);
+      expect(resultStaleStates(snapshots.last), [true]);
     });
 
     test("can refresh without retaining stale results", () {
@@ -98,18 +118,12 @@ void main() {
     });
 
     test("forwards selectors unchanged", () {
-      final inner = FakeSearchSource();
+      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
+      final inner = FakeSearchSource(selectors: emitted);
       final source = inner.cached();
       addTearDown(source.dispose);
-      final selectors = <List<QuerySelectorDefinition>>[];
-      final subscription = source.selectors.listen(selectors.add);
-      addTearDown(subscription.cancel);
 
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
-
-      inner.emitSelectors(emitted);
-
-      expect(selectors, [emitted]);
+      expect(source.selectors, emitted);
     });
 
     test("caches successful preview results by resultId", () async {
@@ -449,29 +463,7 @@ void main() {
       expect(resultStaleStates(snapshots.last), [true]);
     });
 
-    test("cached actions are included during loading", () {
-      final inner = FakeSearchSource();
-      final source = inner.cached();
-      addTearDown(source.dispose);
-      final snapshots = <SearchSourceSnapshot>[];
-      final subscription = source.snapshots.listen(snapshots.add);
-      addTearDown(subscription.cancel);
-
-      final action = TestSingleAction();
-      final ready = readySnapshot(
-        nodes: [
-          resultNode("alpha", actions: [TestSingleAction]),
-        ],
-        actions: {TestSingleAction: action},
-      );
-
-      inner.emitSnapshot(ready);
-      inner.emitSnapshot(SearchSourceSnapshot.loading(actions: const {}));
-
-      expect(snapshots.last.actions, {TestSingleAction: action});
-    });
-
-    test("loading uses current guidance with cached nodes and actions", () {
+    test("loading uses current guidance with cached nodes", () {
       final inner = FakeSearchSource();
       final source = inner.cached();
       addTearDown(source.dispose);
@@ -563,9 +555,9 @@ List<String> resultIds(SearchSourceSnapshot snapshot) {
 }
 
 List<bool> resultStaleStates(SearchSourceSnapshot snapshot) {
-  return resultNodes(
-    snapshot.nodes,
-  ).map((node) => node.result.isStale).toList();
+  return resultNodes(snapshot.nodes)
+      .map((node) => node.result.isStale)
+      .toList();
 }
 
 List<SearchResultNode> resultNodes(List<SearchNode> nodes) {
@@ -579,17 +571,4 @@ List<SearchResultNode> resultNodes(List<SearchNode> nodes) {
     }
   }
   return results;
-}
-
-final class TestSingleAction extends SingleSearchAction {
-  @override
-  String get label => "Test";
-
-  @override
-  int get priority => 0;
-
-  @override
-  Future<SearchActionResult> execute(SearchResult result) async {
-    return SearchActionResult.completed();
-  }
 }

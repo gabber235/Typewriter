@@ -56,12 +56,13 @@ extension QuerySelectorValuePatterns on QuerySelectorValue {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( FreeTextSelectorValue value)?  freeText,TResult Function( EnumSelectorValue value)?  enumValue,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( FreeTextSelectorValue value)?  freeText,TResult Function( EnumSelectorValue value)?  enumValue,TResult Function( SourceBackedSelectorValue value)?  sourceBacked,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case FreeTextSelectorValue() when freeText != null:
 return freeText(_that);case EnumSelectorValue() when enumValue != null:
-return enumValue(_that);case _:
+return enumValue(_that);case SourceBackedSelectorValue() when sourceBacked != null:
+return sourceBacked(_that);case _:
   return orElse();
 
 }
@@ -79,12 +80,13 @@ return enumValue(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( FreeTextSelectorValue value)  freeText,required TResult Function( EnumSelectorValue value)  enumValue,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( FreeTextSelectorValue value)  freeText,required TResult Function( EnumSelectorValue value)  enumValue,required TResult Function( SourceBackedSelectorValue value)  sourceBacked,}){
 final _that = this;
 switch (_that) {
 case FreeTextSelectorValue():
 return freeText(_that);case EnumSelectorValue():
-return enumValue(_that);}
+return enumValue(_that);case SourceBackedSelectorValue():
+return sourceBacked(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -98,12 +100,13 @@ return enumValue(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( FreeTextSelectorValue value)?  freeText,TResult? Function( EnumSelectorValue value)?  enumValue,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( FreeTextSelectorValue value)?  freeText,TResult? Function( EnumSelectorValue value)?  enumValue,TResult? Function( SourceBackedSelectorValue value)?  sourceBacked,}){
 final _that = this;
 switch (_that) {
 case FreeTextSelectorValue() when freeText != null:
 return freeText(_that);case EnumSelectorValue() when enumValue != null:
-return enumValue(_that);case _:
+return enumValue(_that);case SourceBackedSelectorValue() when sourceBacked != null:
+return sourceBacked(_that);case _:
   return null;
 
 }
@@ -120,11 +123,12 @@ return enumValue(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  freeText,TResult Function( List<String> possibleValues)?  enumValue,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  freeText,TResult Function( List<String> possibleValues)?  enumValue,TResult Function()?  sourceBacked,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case FreeTextSelectorValue() when freeText != null:
 return freeText();case EnumSelectorValue() when enumValue != null:
-return enumValue(_that.possibleValues);case _:
+return enumValue(_that.possibleValues);case SourceBackedSelectorValue() when sourceBacked != null:
+return sourceBacked();case _:
   return orElse();
 
 }
@@ -142,11 +146,12 @@ return enumValue(_that.possibleValues);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  freeText,required TResult Function( List<String> possibleValues)  enumValue,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  freeText,required TResult Function( List<String> possibleValues)  enumValue,required TResult Function()  sourceBacked,}) {final _that = this;
 switch (_that) {
 case FreeTextSelectorValue():
 return freeText();case EnumSelectorValue():
-return enumValue(_that.possibleValues);}
+return enumValue(_that.possibleValues);case SourceBackedSelectorValue():
+return sourceBacked();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -160,11 +165,12 @@ return enumValue(_that.possibleValues);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  freeText,TResult? Function( List<String> possibleValues)?  enumValue,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  freeText,TResult? Function( List<String> possibleValues)?  enumValue,TResult? Function()?  sourceBacked,}) {final _that = this;
 switch (_that) {
 case FreeTextSelectorValue() when freeText != null:
 return freeText();case EnumSelectorValue() when enumValue != null:
-return enumValue(_that.possibleValues);case _:
+return enumValue(_that.possibleValues);case SourceBackedSelectorValue() when sourceBacked != null:
+return sourceBacked();case _:
   return null;
 
 }
@@ -177,7 +183,7 @@ return enumValue(_that.possibleValues);case _:
 
 class FreeTextSelectorValue extends QuerySelectorValue {
   const FreeTextSelectorValue(): super._();
-
+  
 
 
 
@@ -209,7 +215,7 @@ String toString() {
 
 class EnumSelectorValue extends QuerySelectorValue {
   const EnumSelectorValue( List<String> possibleValues): _possibleValues = possibleValues,super._();
-
+  
 
  final  List<String> _possibleValues;
  List<String> get possibleValues {
@@ -277,5 +283,37 @@ as List<String>,
 
 
 }
+
+/// @nodoc
+
+
+class SourceBackedSelectorValue extends QuerySelectorValue {
+  const SourceBackedSelectorValue(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SourceBackedSelectorValue);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'QuerySelectorValue.sourceBacked()';
+}
+
+
+}
+
+
+
 
 // dart format on

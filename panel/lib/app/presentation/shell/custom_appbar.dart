@@ -1,13 +1,13 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/app/presentation/shell/custom_appbar_layout.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Provides the shared route app bar for desktop and mobile layouts.
 ///
-/// [leading] stays horizontally scrollable when space is constrained. The
-/// optional [trailing] content is hidden below the desktop width threshold.
-/// On mobile, [sidebar] is exposed through a modal bottom sheet instead of a
-/// persistent side pane. The bar also reserves space for mutation activity.
+/// [leading] stays horizontally scrollable when space is constrained. Measured
+/// child widths select the full search and trailing content or compact search
+/// and sidebar controls. The bar also reserves space for mutation activity.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
   const CustomAppBar({
     required this.leading,
@@ -56,55 +56,72 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
             borderRadius: context.shapes.mediumBorderRadius,
             child: Surface(
               color: color,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final showTrailing =
-                      trailing != null && constraints.maxWidth >= 600;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                    ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                ),
+                child: CustomAppBarLayout(
+                  spacing: context.spacing.space2,
+                  leading: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       spacing: context.spacing.space2,
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              spacing: context.spacing.space2,
-                              children: leading,
-                            ),
-                          ),
-                        ),
-                        const MutationActivityButton(),
-                        if (showTrailing) trailing!,
-                        if (context.isMobile)
-                          IconButton(
-                            icon: const Icon(Icons.menu),
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (ctx) => UncontrolledProviderScope(
-                                  container: ProviderScope.containerOf(context),
-                                  child: _MobileSidebarMenu(child: sidebar),
-                                ),
-                              );
-                            },
-                          ),
-                        if (context.debugShowCheckedModeBanner)
-                          const SizedBox(width: 40),
-                      ],
+                      children: leading,
                     ),
-                  );
-                },
+                  ),
+                  search: const PrimarySearchButton(),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: context.spacing.space2,
+                    children: [
+                      const MutationActivityButton(),
+                      ?trailing,
+                      if (context.debugShowCheckedModeBanner)
+                        const SizedBox(width: 40),
+                    ],
+                  ),
+                  compactSearch: const PrimarySearchButton(compact: true),
+                  compactTrailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: context.spacing.space2,
+                    children: [
+                      const MutationActivityButton(),
+                      _MobileSidebarButton(sidebar: sidebar),
+                      if (context.debugShowCheckedModeBanner)
+                        const SizedBox(width: 40),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MobileSidebarButton extends StatelessWidget {
+  const _MobileSidebarButton({required this.sidebar});
+
+  final Widget sidebar;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.menu),
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => UncontrolledProviderScope(
+            container: ProviderScope.containerOf(context),
+            child: _MobileSidebarMenu(child: sidebar),
+          ),
+        );
+      },
     );
   }
 }

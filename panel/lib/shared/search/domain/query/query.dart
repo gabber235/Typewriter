@@ -2,6 +2,7 @@ import "package:collection/collection.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 export "query_cursor.dart";
+export "query_expression.dart";
 export "query_lexer.dart";
 export "query_models.dart";
 export "query_selector.dart";
@@ -53,7 +54,8 @@ class QueryEngine {
 
     final result = lexer.tokenize(input);
     final tokens = result.expression?.flatten() ?? <QueryLexerToken>[];
-    final issues = tokens.expand((token) => token.issues).toList();
+    final issues = tokens.expand((token) => token.issues).toList()
+      ..addAll(_booleanFreeTextIssues(input, result, this.selectors));
     final selectors = tokens.whereType<QueryLexerSelectorToken>().toList();
 
     final cursorContext = clamped != null
@@ -83,6 +85,73 @@ class QueryEngine {
       cursorContext: cursorContext,
     );
   }
+}
+
+List<QueryParseIssue> _booleanFreeTextIssues(
+  String input,
+  QueryLexerResult result,
+  List<QuerySelectorDefinition> selectors,
+) {
+  if (result.expression == null) return const [];
+  final issues = <QueryParseIssue>[];
+  final trailing = RegExp(
+    r"^(?:AND\b|OR\b|&&|\|\|)\s+(.+)$",
+    caseSensitive: false,
+  ).firstMatch(result.queryAfter);
+  if (trailing != null &&
+      !_couldBecomeSelectorOperand(trailing.group(1)!, selectors)) {
+    final start = input.lastIndexOf(result.queryAfter);
+    issues.add(
+      QueryParseIssue(
+        code: QueryIssueCode.unexpectedToken,
+        severity: QuerySeverity.error,
+        message: "Boolean operators can only combine selectors",
+        range: QueryRange(start, start + trailing.end),
+      ),
+    );
+  }
+
+  final leading = RegExp(
+    r"^(.+?)\s+(?:AND\b|OR\b|&&|\|\|)$",
+    caseSensitive: false,
+  ).firstMatch(result.queryBefore);
+  if (leading != null &&
+      !_couldBecomeSelectorOperand(leading.group(1)!, selectors)) {
+    final start = input.indexOf(result.queryBefore) + leading.start;
+    issues.add(
+      QueryParseIssue(
+        code: QueryIssueCode.unexpectedToken,
+        severity: QuerySeverity.error,
+        message: "Boolean operators can only combine selectors",
+        range: QueryRange(start, start + leading.group(0)!.length),
+      ),
+    );
+  }
+  return issues;
+}
+
+bool _couldBecomeSelectorOperand(
+  String input,
+  List<QuerySelectorDefinition> selectors,
+) {
+  var candidate = input.trimLeft();
+  while (true) {
+    final prefix = RegExp(
+      r"^(?:(?:NOT\b|!)\s*|\(\s*)",
+      caseSensitive: false,
+    ).firstMatch(candidate);
+    if (prefix == null) break;
+    candidate = candidate.substring(prefix.end);
+  }
+  if (candidate.isEmpty) return true;
+  return selectors.any((selector) {
+    final key = switch (selector) {
+      KeyValueSelectorDefinition(:final key) => key,
+    };
+    return selector.caseSensitive
+        ? key.startsWith(candidate)
+        : key.toLowerCase().startsWith(candidate.toLowerCase());
+  });
 }
 
 /// Small facade for parsing queries without exposing the lexer lifecycle.

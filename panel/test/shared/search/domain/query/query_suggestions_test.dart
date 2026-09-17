@@ -43,32 +43,46 @@ void main() {
     },
   );
 
-  test(
-    "selector value context returns selector value suggestions and replacement range",
-    () {
-      final result =
-          checkQuery("role:ad", selectors: selectors, cursorOffset: 7)
-              .expectIssues([QueryIssueCode.invalidSelectorValue])
-              .expectExpression(
-                (token) => token.isSelector(id: "role", value: "ad"),
-              )
-              .expectNoQuery()
-              .done();
+  test("selector value context returns selector value suggestions and replacement range", () {
+    final result = checkQuery("role:ad", selectors: selectors, cursorOffset: 7)
+        .expectIssues([QueryIssueCode.invalidSelectorValue])
+        .expectExpression((token) => token.isSelector(id: "role", value: "ad"))
+        .expectNoQuery()
+        .done();
 
-      final suggestions = engine.suggest(result);
-      final valueSuggestions = suggestions
-          .whereType<SelectorValueSuggestion>()
-          .toList();
-      final adminSuggestion = valueSuggestions.firstWhere(
-        (suggestion) => suggestion.value == "admin",
-      );
+    final suggestions = engine.suggest(result);
+    final valueSuggestions = suggestions
+        .whereType<SelectorValueSuggestion>()
+        .toList();
+    final adminSuggestion = valueSuggestions.firstWhere(
+      (suggestion) => suggestion.value == "admin",
+    );
 
-      expect(valueSuggestions, isNotEmpty);
-      expect(adminSuggestion.label, "admin");
-      expect(adminSuggestion.selectorId, "role");
-      expect(adminSuggestion.replaceRange, const QueryRange(5, 7));
-    },
-  );
+    expect(valueSuggestions, isNotEmpty);
+    expect(adminSuggestion.label, "admin");
+    expect(adminSuggestion.selectorId, "role");
+    expect(adminSuggestion.replaceRange, const QueryRange(5, 7));
+  });
+
+  test("selector value context merges dynamic candidates", () {
+    final result = checkQuery("title:ma", selectors: selectors, cursorOffset: 8)
+        .expectNoIssues()
+        .expectExpression((token) => token.isSelector(id: "title", value: "ma"))
+        .expectNoQuery()
+        .done();
+
+    final suggestions = engine.suggest(
+      result,
+      dynamicValues: const ["main quest", "side quest"],
+    );
+
+    expect(
+      suggestions.whereType<SelectorValueSuggestion>().map(
+        (item) => item.value,
+      ),
+      ["main quest"],
+    );
+  });
 
   test("operator context returns operator suggestions", () {
     final result =
@@ -429,25 +443,21 @@ void main() {
     expect(operatorSuggestions.first.operatorToken, "OR");
   });
 
-  test(
-    "with query, selector key suggestions are not returned when in middle of query",
-    () {
-      final result =
-          checkQuery("some ro text", selectors: selectors, cursorOffset: 7)
-              .expectNoIssues()
-              .expectQuery("some ro text")
-              .expectNoExpression()
-              .done();
+  test("with query, selector key suggestions are not returned when in middle of query", () {
+    final result = checkQuery(
+      "some ro text",
+      selectors: selectors,
+      cursorOffset: 7,
+    ).expectNoIssues().expectQuery("some ro text").expectNoExpression().done();
 
-      final engine = QuerySuggestionEngine(selectors);
-      final suggestions = engine.suggest(result);
+    final engine = QuerySuggestionEngine(selectors);
+    final suggestions = engine.suggest(result);
 
-      final keySuggestions = suggestions
-          .whereType<SelectorKeySuggestion>()
-          .toList();
-      expect(keySuggestions, isEmpty);
-    },
-  );
+    final keySuggestions = suggestions
+        .whereType<SelectorKeySuggestion>()
+        .toList();
+    expect(keySuggestions, isEmpty);
+  });
 
   test(
     "with query, operator suggestions are not returned when in middle of query",
@@ -569,26 +579,22 @@ void main() {
     );
   });
 
-  test(
-    "returns no suggestions for single multiplicity selector which is already present",
-    () {
-      final result =
-          checkQuery("id:1 id", selectors: selectors, cursorOffset: 7)
-              .expectNoIssues()
-              .expectExpression((token) {
-                token.isSelector(id: "id", value: "1");
-              })
-              .expectQuery("id")
-              .done();
+  test("returns no suggestions for single multiplicity selector which is already present", () {
+    final result = checkQuery("id:1 id", selectors: selectors, cursorOffset: 7)
+        .expectNoIssues()
+        .expectExpression((token) {
+          token.isSelector(id: "id", value: "1");
+        })
+        .expectQuery("id")
+        .done();
 
-      final suggestions = engine.suggest(result);
-      final keySuggestions = suggestions
-          .whereType<SelectorKeySuggestion>()
-          .toList();
-      final ids = keySuggestions.map((suggestion) => suggestion.selectorId);
-      expect(ids, isNot(contains("id")));
-    },
-  );
+    final suggestions = engine.suggest(result);
+    final keySuggestions = suggestions
+        .whereType<SelectorKeySuggestion>()
+        .toList();
+    final ids = keySuggestions.map((suggestion) => suggestion.selectorId);
+    expect(ids, isNot(contains("id")));
+  });
 
   test("QuerySuggestionListX.key folds labels", () {
     final suggestions = [

@@ -52,6 +52,8 @@ class SearchModalBody extends HookConsumerWidget {
                       query: controller.query,
                       onQueryChanged: controller.updateQuery,
                       selectors: controller.selectors,
+                      completeSelector: controller.completeSelector,
+                      validationIssues: controller.validationIssues,
                       autofocus: EditorTextFieldAutoFocus.textField,
                       inputDecoration: InputDecoration(
                         prefixIcon: Padding(
@@ -69,15 +71,28 @@ class SearchModalBody extends HookConsumerWidget {
                               )
                             : null,
                       ),
+                      onSubmitted: (_) {
+                        var primaryResult = controller.currentPreview;
+                        primaryResult ??=
+                            controller.selectedResults.firstOrNull;
+                        primaryResult ??= controller.snapshot.nodes.firstResult;
+
+                        if (primaryResult == null) {
+                          return;
+                        }
+
+                        controller.activate(primaryResult);
+                      },
                     ),
-                    if (controller.snapshot.status == .loading)
+                    if (controller.snapshot.status == .loading &&
+                        controller.snapshot.nodes.isEmpty)
                       LinearProgressIndicator(
                         backgroundColor: Colors.transparent,
                       ),
                   ],
                 ),
               ),
-              const SearchActionInfo(),
+              const SearchCommandInfo(),
             ],
           ),
           searchResults: Actions(

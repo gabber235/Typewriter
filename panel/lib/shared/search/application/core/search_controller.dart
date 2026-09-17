@@ -1,128 +1,207 @@
+// ignore_for_file: prefer_initializing_formals
+
+import "dart:async";
+
 import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
+import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Coordinates the search source with selection, preview, and action state.
-///
-/// [SourceController] is authoritative for query and source snapshots. This
-/// controller owns transient UI state such as selected result IDs, collapsed
-/// sections, and the current preview. It is created for one search surface and
-/// must be disposed with that surface.
-class SearchController extends ChangeNotifier {
+/// Coordinates one source, scope, interaction, and search surface lifecycle.
+class SearchController<T> extends ChangeNotifier
+    implements SearchCommandDispatcher {
   SearchController({
-    required SearchSource source,
+    required SearchSession<T> session,
     required List<QuerySelectorDefinition> baseSelectors,
-    String initialQuery = "",
-    this._onCloseRequested,
-  }) {
+    SearchPromptHost prompts = const UnsupportedSearchPromptHost(),
+    List<SearchHostEffectExecutor<SearchHostEffect>> hostEffectExecutors =
+        const [],
+    FutureOr<void> Function()? onCloseRequested,
+    FutureOr<void> Function(T value)? onCompleted,
+  }) : _session = session,
+       _prompts = prompts,
+       _onCloseRequested = onCloseRequested,
+       _onCompleted = onCompleted {
+    _commands = _indexCommands(session.interaction.commands);
     _sourceController = SourceController(
-      source: source,
+      source: session.source,
       baseSelectors: baseSelectors,
-      initialQuery: initialQuery,
+      initialQuery: session.initialQuery,
     );
-    _actionController = ActionController(effectCallback: _onActionEffect);
+    _commandController = CommandController(
+      effectCallback: _onCommandEffect,
+      prompts: prompts,
+      hostEffectExecutors: hostEffectExecutors,
+    );
 
+    _dependencies = {
+      ...session.scope.dependencies,
+      ...session.interaction.activation.dependencies,
+      for (final command in session.interaction.commands)
+        ...command.dependencies,
+    };
+    for (final dependency in _dependencies) {
+      dependency.addListener(_onInteractionChange);
+    }
     _sourceController.addListener(_onSourceChange);
-    _actionController.addListener(_onActionChange);
+    _commandController.addListener(_onCommandChange);
+    _projectSourceSnapshot();
   }
 
+  final SearchSession<T> _session;
+  final SearchPromptHost _prompts;
+  final FutureOr<void> Function()? _onCloseRequested;
+  final FutureOr<void> Function(T value)? _onCompleted;
+
   late final SourceController _sourceController;
-  late final ActionController _actionController;
+  late final CommandController _commandController;
+  late final Map<SearchCommandId, SearchCommand> _commands;
+  late final Set<Listenable> _dependencies;
 
-  final VoidCallback? _onCloseRequested;
-
-  /// Requests that the host close the search surface, when a callback exists.
-  void close() => _onCloseRequested?.call();
-  bool get canClose => _onCloseRequested != null;
-
-  SearchSourceSnapshot get snapshot => _sourceController.snapshot;
+  SearchSourceSnapshot _snapshot = SearchSourceSnapshot.idle();
+  SearchSourceSnapshot get snapshot => _snapshot;
   List<QuerySelectorDefinition> get selectors => _sourceController.selectors;
   String get query => _sourceController.query;
   SearchQueryContext get queryContext => _sourceController.queryContext;
+  List<QueryParseIssue> get validationIssues =>
+      _sourceController.validationIssues;
+  SearchSelectionMode get selectionMode => _session.interaction.selectionMode;
+  SearchCommandExecutionState get commandState => _commandController.state;
+  bool get activationRunning => _activationRunning;
+  bool get isBusy => activationRunning || commandState is SearchCommandRunning;
 
-  List<SearchResult> _selectedResult = List.unmodifiable([]);
-  List<SearchResult> get selectedResults => _selectedResult;
+  SearchCommand? command(SearchCommandId id) => _commands[id];
 
-  SearchActionState get actionState => _actionController.state;
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) => _sourceController.completeSelector(request);
 
-  SearchSelectionMode get selectionMode =>
-      snapshot.actions.values.any(
-        (a) => a is RepeatedSearchAction || a is BatchSearchAction,
-      )
-      ? SearchSelectionMode.multiple
-      : SearchSelectionMode.single;
-
-  /// Returns actions available for [result], ordered by descending priority.
-  ///
-  /// When [result] belongs to a multi selection, only actions shared by every
-  /// selected result and supporting repeated execution or batching are returned.
-  List<SearchAction> actionsFor(SearchResult result) {
-    if (_selectedIds.length > 1 && _selectedIds.contains(result.id)) {
-      return actionsForSelected(result);
-    }
-
-    final actions = result.actions;
-    return actions
-        .map((action) => snapshot.actions[action])
-        .nonNulls
-        .sorted((a, b) => b.priority.compareTo(a.priority));
-  }
-
-  List<SearchAction> _actionsFor(List<Type> actions) {
-    return actions
-        .map((action) => snapshot.actions[action])
-        .nonNulls
-        .sorted((a, b) => b.priority.compareTo(a.priority));
-  }
-
-  List<SearchAction> actionsForSelected(SearchResult primaryResult) {
-    assert(_selectedIds.length > 1 && _selectedIds.contains(primaryResult.id));
-
-    final results = selectedResults;
-
-    final actions = results.fold(primaryResult.actions.toSet(), (
-      actions,
-      result,
-    ) {
-      return actions.intersection(result.actions.toSet());
-    }).toList();
-
-    return _actionsFor(actions)
-        .where(
-          (action) =>
-              action is RepeatedSearchAction || action is BatchSearchAction,
-        )
-        .toList();
-  }
-
-  /// Starts [actionType] for [resultId], or for the current selection when it
-  /// is omitted. User selection wins if [resultId] is already selected.
-  SearchActionSubmitResult executeAction(Type actionType, {String? resultId}) {
-    final Set<String> resultIds;
-    if (resultId != null) {
-      resultIds = selectedIds.contains(resultId)
-          ? _selectedIds.toSet()
-          : {resultId};
-    } else {
-      resultIds = _selectedIds.toSet();
-    }
-    return _actionController.execute(actionType, resultIds, snapshot);
-  }
-
-  String? _queryPending;
-  var _userPendingQueryAppliedAfterAction = false;
+  List<SearchResult> _selectedResults = const [];
+  List<SearchResult> get selectedResults => _selectedResults;
 
   final Set<String> _selectedIds = {};
   List<String> get selectedIds => List.unmodifiable(_selectedIds);
+  int get selectedCount => _selectedIds.length;
 
   bool isSelected(String id) => _selectedIds.contains(id);
 
-  /// Toggles [id], using shift based multi selection unless explicitly set.
+  List<ResolvedSearchCommand> commandsFor(SearchResult result) {
+    final target = _targetFor(result);
+    return _session.interaction.commands
+        .map(
+          (command) => ResolvedSearchCommand(
+            command: command,
+            state: command.evaluate(target),
+          ),
+        )
+        .where((resolved) => resolved.state is! SearchCommandHidden)
+        .sorted(
+          (left, right) => right.command.presentation.priority.compareTo(
+            left.command.presentation.priority,
+          ),
+        );
+  }
+
+  SearchActivationState activationState(SearchResult result) {
+    return _session.interaction.activation.evaluate(
+      SearchActivationEvaluationContext(query: queryContext, commands: this),
+      result,
+    );
+  }
+
+  var _activationRunning = false;
+
+  Future<void> activate(SearchResult result) async {
+    if (isBusy || activationState(result) is! SearchActivationEnabled) return;
+    _activationRunning = true;
+    notifyListeners();
+    try {
+      final outcome = await _session.interaction.activation.activate(
+        SearchActivationContext(
+          prompts: _prompts,
+          commands: this,
+          query: queryContext,
+        ),
+        result,
+      );
+      switch (outcome) {
+        case SearchActivationComplete(:final value):
+          await _onCompleted?.call(value);
+        case SearchActivationCommand(:final id):
+          executeCommand(id, resultId: result.id);
+        case SearchActivationKeepOpen() || SearchActivationCancelled():
+      }
+    } on Object catch (error, stackTrace) {
+      debugPrint(error.toString());
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      _activationRunning = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  @override
+  ResolvedSearchCommand? resolveCommand(
+    SearchCommandId id,
+    SearchResult result,
+  ) {
+    final command = _commands[id];
+    if (command == null) return null;
+    return ResolvedSearchCommand(
+      command: command,
+      state: command.evaluate(_targetFor(result)),
+    );
+  }
+
+  @override
+  SearchCommandSubmitResult executeCommand(
+    SearchCommandId id, {
+    String? resultId,
+  }) {
+    final command = _commands[id];
+    if (command == null) return SearchCommandSubmitResult.commandNotFound;
+    final target = _currentTarget(resultId);
+    if (target == null) return SearchCommandSubmitResult.invalidSelection;
+    return _commandController.execute(command, target);
+  }
+
+  SearchCommandTarget _targetFor(SearchResult primary) {
+    final selection =
+        _selectedIds.length > 1 && _selectedIds.contains(primary.id)
+        ? _selectedResults
+        : [primary];
+    return SearchCommandTarget(
+      primary: primary,
+      selection: selection,
+      query: queryContext,
+    );
+  }
+
+  SearchCommandTarget? _currentTarget(String? resultId) {
+    final ids = resultId == null
+        ? _selectedIds.toSet()
+        : _selectedIds.contains(resultId)
+        ? _selectedIds.toSet()
+        : {resultId};
+    if (ids.isEmpty) return null;
+    final results = snapshot.nodes.findResults(ids);
+    if (results.length != ids.length) return null;
+    final primary = resultId == null
+        ? results.first
+        : results.firstWhereOrNull((result) => result.id == resultId);
+    if (primary == null) return null;
+    return SearchCommandTarget(
+      primary: primary,
+      selection: results,
+      query: queryContext,
+    );
+  }
+
   void toggleSelected(String id, {bool? isMultiSelect}) {
     final selected = isSelected(id);
     final multiSelect =
-        isMultiSelect ?? HardwareKeyboard.instance.isShiftPressed;
+        selectionMode == SearchSelectionMode.multiple &&
+        (isMultiSelect ?? HardwareKeyboard.instance.isShiftPressed);
     switch ((selected, multiSelect)) {
       case (true, true):
         _selectedIds.remove(id);
@@ -141,10 +220,9 @@ class SearchController extends ChangeNotifier {
           ..clear()
           ..add(id);
     }
+    _syncSelectedResults();
     notifyListeners();
   }
-
-  int get selectedCount => _selectedIds.length;
 
   final Set<String> _collapsedSectionIds = {};
   List<String> get collapsedSectionIds =>
@@ -152,11 +230,8 @@ class SearchController extends ChangeNotifier {
 
   bool isCollapsed(String id) => _collapsedSectionIds.contains(id);
 
-  /// Toggles visibility of the result section identified by [id].
   void toggleSection(String id) {
-    if (isCollapsed(id)) {
-      _collapsedSectionIds.remove(id);
-    } else {
+    if (!_collapsedSectionIds.remove(id)) {
       _collapsedSectionIds.add(id);
     }
     notifyListeners();
@@ -165,104 +240,156 @@ class SearchController extends ChangeNotifier {
   SearchResult? _currentPreview;
   SearchResult? get currentPreview => _currentPreview;
 
-  /// Sets the result whose preview and keyboard actions are currently active.
   void preview(SearchResult? result) {
     if (_currentPreview?.id == result?.id && _currentPreview == result) return;
     _currentPreview = result;
     notifyListeners();
   }
 
-  /// Reissues the current query to the source.
   void refresh() => _sourceController.triggerQuery();
 
-  /// Resolves preview data through the source that owns [request].
   Future<SearchPreviewRequestResult> requestPreview(
     SearchPreviewRequest request,
-  ) {
-    return _sourceController.source.preview(request);
-  }
+  ) => _sourceController.source.preview(request);
 
-  /// Updates the query, deferring it until a running action finishes.
+  String? _queryPending;
+  var _userPendingQueryAppliedAfterCommand = false;
+
   void updateQuery(String query) {
-    if (actionState is SearchActionRunning) {
+    if (commandState is SearchCommandRunning) {
       _queryPending = query;
       return;
     }
     _sourceController.updateQuery(query);
+    _projectSourceSnapshot();
   }
 
+  void close() => unawaited(Future.sync(() => _onCloseRequested?.call()));
+  bool get canClose => _onCloseRequested != null;
+
   void _onSourceChange() {
+    _projectSourceSnapshot();
+    notifyListeners();
+  }
+
+  void _onInteractionChange() {
+    _projectSourceSnapshot();
+    notifyListeners();
+  }
+
+  void _projectSourceSnapshot() {
+    final sourceSnapshot = _sourceController.snapshot;
+    _snapshot = sourceSnapshot.copyWith(
+      nodes: _projectNodes(sourceSnapshot.nodes),
+    );
     _cleanupState();
-    _selectedResult = List.unmodifiable(
+    _syncSelectedResults();
+  }
+
+  List<SearchNode> _projectNodes(List<SearchNode> nodes) {
+    final projected = <SearchNode>[];
+    for (final node in nodes) {
+      switch (node) {
+        case SearchResultNode(:final result):
+          if (_session.scope.evaluate(result, queryContext)
+              case SearchResultVisible()) {
+            projected.add(node);
+          }
+        case SearchSectionNode():
+          final children = _projectNodes(node.children);
+          if (children.isNotEmpty || node.children.isEmpty) {
+            projected.add(node.copyWith(children: children));
+          }
+      }
+    }
+    return List.unmodifiable(projected);
+  }
+
+  void _syncSelectedResults() {
+    _selectedResults = List.unmodifiable(
       snapshot.nodes.findResults(_selectedIds),
     );
-    notifyListeners();
   }
 
   void _cleanupState() {
     final oldPreviewId = _currentPreview?.id;
     _currentPreview = null;
+    final remainingSelectedIds = _selectedIds.toSet();
 
-    final leftOverSelectedIds = _selectedIds.toSet();
-
-    final stack = <SearchNode>[];
-    for (var i = snapshot.nodes.length - 1; i >= 0; i--) {
-      stack.add(snapshot.nodes[i]);
-    }
-
-    while (stack.isNotEmpty &&
-        (leftOverSelectedIds.isNotEmpty || oldPreviewId != null)) {
-      final node = stack.removeLast();
-      switch (node) {
-        case SearchSectionNode(:final children):
-          for (var i = children.length - 1; i >= 0; i--) {
-            stack.add(children[i]);
-          }
-        case SearchResultNode(:final result):
-          leftOverSelectedIds.remove(result.id);
-          if (result.id == oldPreviewId) {
-            _currentPreview = result;
-          }
+    for (final node in snapshot.nodes.walk()) {
+      if (node case SearchResultNode(:final result)) {
+        remainingSelectedIds.remove(result.id);
+        if (result.id == oldPreviewId) _currentPreview = result;
       }
     }
-
-    _selectedIds.removeAll(leftOverSelectedIds);
+    _selectedIds.removeAll(remainingSelectedIds);
   }
 
-  void _onActionChange() {
-    if (_queryPending != null && actionState is! SearchActionRunning) {
+  void _onCommandChange() {
+    if (_queryPending != null && commandState is! SearchCommandRunning) {
       final pendingQuery = _queryPending!;
       _queryPending = null;
-      _userPendingQueryAppliedAfterAction = true;
+      _userPendingQueryAppliedAfterCommand = true;
       updateQuery(pendingQuery);
     }
     notifyListeners();
   }
 
-  void _onActionEffect(SearchActionEffect effect) {
+  Future<void> _onCommandEffect(SearchSurfaceEffect effect) async {
     switch (effect) {
-      case SearchActionUpdateQuery(:final updateQuery):
-        // If the user did something while performing the action, we give that priority.
-        if (_queryPending != null || _userPendingQueryAppliedAfterAction) {
-          _userPendingQueryAppliedAfterAction = false;
+      case SearchSurfaceUpdateQuery(:final updateQuery):
+        if (_queryPending != null || _userPendingQueryAppliedAfterCommand) {
+          _userPendingQueryAppliedAfterCommand = false;
           return;
         }
-        // We want to bypass the updateQuery call here, so it always goes through.
         _sourceController.updateQuery(updateQuery);
-      case SearchActionRefresh():
-        _userPendingQueryAppliedAfterAction = false;
+      case SearchSurfaceRefresh():
+        _userPendingQueryAppliedAfterCommand = false;
         _sourceController.triggerQuery();
-      case SearchActionClose():
-        _userPendingQueryAppliedAfterAction = false;
-        _onCloseRequested?.call();
+      case SearchSurfaceClose():
+        _userPendingQueryAppliedAfterCommand = false;
+        await _onCloseRequested?.call();
     }
   }
 
-  /// Disposes query and action owners together with this surface.
   @override
   void dispose() {
-    super.dispose();
+    _disposed = true;
+    for (final dependency in _dependencies) {
+      dependency.removeListener(_onInteractionChange);
+    }
+    _sourceController.removeListener(_onSourceChange);
+    _commandController.removeListener(_onCommandChange);
     _sourceController.dispose();
-    _actionController.dispose();
+    _commandController.dispose();
+    super.dispose();
   }
+
+  var _disposed = false;
+}
+
+Map<SearchCommandId, SearchCommand> _indexCommands(
+  List<SearchCommand> commands,
+) {
+  final indexed = <SearchCommandId, SearchCommand>{};
+  final shortcuts = <ShortcutActivator>{};
+  for (final command in commands) {
+    if (indexed.containsKey(command.id)) {
+      throw ArgumentError.value(
+        commands,
+        "commands",
+        "Duplicate search command ID ${command.id.value}.",
+      );
+    }
+    final shortcut = command.presentation.shortcut;
+    if (shortcut != null && !shortcuts.add(shortcut)) {
+      throw ArgumentError.value(
+        commands,
+        "commands",
+        "Duplicate search command shortcut $shortcut.",
+      );
+    }
+    indexed[command.id] = command;
+  }
+  return Map.unmodifiable(indexed);
 }

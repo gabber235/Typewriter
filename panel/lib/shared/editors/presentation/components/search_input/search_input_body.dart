@@ -19,7 +19,6 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
     required this.validationMessage,
     required this.onStartEditing,
     required this.onPreview,
-    required this.onSelect,
     required this.onSelectionPointerDown,
     required this.onSelectionPointerEnd,
     required this.onSubmit,
@@ -36,16 +35,18 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
   final bool editing;
   final InputFieldController inputController;
   final String? validationMessage;
-  final ValueChanged<SearchController> onStartEditing;
+  final ValueChanged<SearchController<dynamic>> onStartEditing;
   final ValueChanged<SearchResult> onPreview;
-  final ValueChanged<SearchResult> onSelect;
   final VoidCallback onSelectionPointerDown;
   final VoidCallback onSelectionPointerEnd;
-  final ValueChanged<SearchController> onSubmit;
+  final ValueChanged<SearchController<dynamic>> onSubmit;
   final VoidCallback onDismiss;
   final VoidCallback onCancel;
-  final ValueChanged<SearchController> onDone;
-  final void Function(SearchController controller, {required bool backwards})
+  final ValueChanged<SearchController<dynamic>> onDone;
+  final void Function(
+    SearchController<dynamic> controller, {
+    required bool backwards,
+  })
   onAcceptTraversal;
 
   @override
@@ -152,7 +153,6 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
             maximumExtent: maximumExtent,
             controller: scrollController,
             isSelected: (result) => _isSelected(binding.value, result),
-            onSelect: onSelect,
             onSelectionPointerDown: onSelectionPointerDown,
             onSelectionPointerEnd: onSelectionPointerEnd,
           ),

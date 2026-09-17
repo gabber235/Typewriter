@@ -10,11 +10,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// and disposed when that controller is disposed. Renderer maps translate
 /// source result and preview type identifiers into widgets. The returned
 /// future completes when the route is removed.
-Future<void> showSearchModal(
+Future<T?> showSearchModal<T>(
   BuildContext context,
-  SearchSource source, {
-  List<QuerySelectorDefinition> baseSelectors = const [],
-  String initialQuery = "",
+  SearchContributionBuilder<T> contributionBuilder, {
   String searchHint = "Search",
   Map<String, SearchResultRowBuilder> rowRenderers = const {},
   Map<String, SearchResultPreviewBuilder> previewRenderers = const {},
@@ -32,15 +30,16 @@ Future<void> showSearchModal(
       traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
       child: UncontrolledProviderScope(
         container: ProviderScope.containerOf(context),
-        child: GlobalModeShortcut(
-          child: GlobalOperationShortcuts(
-            child: SearchModal(
-              source: source,
-              baseSelectors: baseSelectors,
-              initialQuery: initialQuery,
-              searchHint: searchHint,
-              rowRenderers: rowRenderers,
-              previewRenderers: previewRenderers,
+        child: SelectionOperationsRoot(
+          operations: SelectionOperationsRoot.of(context),
+          child: GlobalModeShortcut(
+            child: GlobalOperationShortcuts(
+              child: SearchModal(
+                contributionBuilder: contributionBuilder,
+                searchHint: searchHint,
+                rowRenderers: rowRenderers,
+                previewRenderers: previewRenderers,
+              ),
             ),
           ),
         ),
@@ -53,21 +52,17 @@ Future<void> showSearchModal(
 ///
 /// [SearchModalBody] and its descendants read that controller through
 /// [searchProvider]. The controller owns query, selection, preview, section,
-/// and action state for this modal instance.
-class SearchModal extends HookWidget {
+/// and command state for this modal instance.
+class SearchModal<T> extends HookWidget {
   const SearchModal({
-    required this.source,
-    this.baseSelectors = const [],
-    this.initialQuery = "",
+    required this.contributionBuilder,
     this.searchHint = "Search",
     this.rowRenderers = const {},
     this.previewRenderers = const {},
     super.key,
   });
 
-  final SearchSource source;
-  final List<QuerySelectorDefinition> baseSelectors;
-  final String initialQuery;
+  final SearchContributionBuilder<T> contributionBuilder;
   final String searchHint;
   final Map<String, SearchResultRowBuilder> rowRenderers;
   final Map<String, SearchResultPreviewBuilder> previewRenderers;
@@ -76,11 +71,21 @@ class SearchModal extends HookWidget {
   Widget build(BuildContext context) {
     return SearchRoot(
       create: (ref) {
+        final SearchContribution(
+          :session,
+          :baseSelectors,
+          :hostEffectExecutors,
+        ) = contributionBuilder(
+          ref,
+          context,
+        );
         return SearchController(
-          source: source,
+          session: session,
           baseSelectors: baseSelectors,
-          initialQuery: initialQuery,
+          prompts: _BuildContextSearchPromptHost(context),
+          hostEffectExecutors: hostEffectExecutors,
           onCloseRequested: () => Navigator.of(context).maybePop(),
+          onCompleted: (value) => Navigator.of(context).pop(value),
         );
       },
       child: SearchModalBody(
@@ -92,7 +97,19 @@ class SearchModal extends HookWidget {
   }
 }
 
-class _PopupRoute extends PopupRoute<void> {
+final class _BuildContextSearchPromptHost implements SearchPromptHost {
+  const _BuildContextSearchPromptHost(this.context);
+
+  final BuildContext context;
+
+  @override
+  Future<R?> show<R>(SearchPrompt<R> prompt) {
+    if (!context.mounted) return Future.value();
+    return prompt(context);
+  }
+}
+
+class _PopupRoute<T> extends PopupRoute<T> {
   _PopupRoute({
     required this.child,
     required this.themes,

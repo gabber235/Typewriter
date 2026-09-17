@@ -153,7 +153,7 @@ Future<void> _pumpTree(WidgetTester tester, FakeSearchSource source) async {
       height: 500,
       child: SearchRoot(
         create: (ref) => SearchController(
-          source: source,
+          session: testSearchSession(source),
           baseSelectors: const [
             KeyValueSelectorDefinition(id: "tag", key: "#"),
           ],

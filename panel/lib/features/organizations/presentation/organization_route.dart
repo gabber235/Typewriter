@@ -46,60 +46,62 @@ class OrganizationScaffold extends HookConsumerWidget {
     void retryConnection() =>
         ref.invalidate(organizationTopologyStreamProvider);
 
-    return SimpleScaffold(
-      appBar: CustomAppBar(
-        leading: [
-          if (organizationId != null) ...[
-            const OrganizationSelector(),
-            if (realmId != null) ...[
-              Icones(
-                MaterialSymbols.chevron_right,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const RealmSelector(),
+    return PrimarySearchShortcut(
+      child: SimpleScaffold(
+        appBar: CustomAppBar(
+          leading: [
+            if (organizationId != null) ...[
+              const OrganizationSelector(),
+              if (realmId != null) ...[
+                Icones(
+                  MaterialSymbols.chevron_right,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const RealmSelector(),
+              ],
             ],
           ],
-        ],
-        trailing: !context.isMobile
-            ? RealmSuspensionInline(
-                suspended: interaction.suspended,
-                child: const ModeDisplayWidget(),
-              )
-            : null,
-        sidebar: OrganizationSidebarContent(suspended: interaction.suspended),
-      ),
-      child: Row(
-        children: [
-          if (!context.isMobile)
-            Sidebar(
-              child: OrganizationSidebarContent(
-                suspended: interaction.suspended,
-              ),
-            ),
-          Expanded(
-            child: RealmSuspensionBarrier(
-              interaction: interaction,
-              realm: selectedRealm,
-              onRetry: retryConnection,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: InspectorScaffold(
-                      realmRuntime: ref.watch(activeRealmEditorRuntimeProvider),
-                      margin: EdgeInsets.only(
-                        top: context.spacing.space2,
-                        right: context.spacing.space2,
-                      ),
-                      child: child,
-                    ),
-                  ),
-                  ActionRow(),
-                ],
-              ),
-            ),
+          trailing: RealmSuspensionInline(
+            suspended: interaction.suspended,
+            child: const ModeDisplayWidget(),
           ),
-        ],
+          sidebar: OrganizationSidebarContent(suspended: interaction.suspended),
+        ),
+        child: Row(
+          children: [
+            if (!context.isMobile)
+              Sidebar(
+                child: OrganizationSidebarContent(
+                  suspended: interaction.suspended,
+                ),
+              ),
+            Expanded(
+              child: RealmSuspensionBarrier(
+                interaction: interaction,
+                realm: selectedRealm,
+                onRetry: retryConnection,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: InspectorScaffold(
+                        realmRuntime: ref.watch(
+                          activeRealmEditorRuntimeProvider,
+                        ),
+                        margin: EdgeInsets.only(
+                          top: context.spacing.space2,
+                          right: context.spacing.space2,
+                        ),
+                        child: child,
+                      ),
+                    ),
+                    ActionRow(),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

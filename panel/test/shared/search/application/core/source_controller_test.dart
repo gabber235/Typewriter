@@ -25,6 +25,30 @@ void main() {
       },
     );
 
+    test("parses the initial query before initializing the source", () {
+      final source = FakeSearchSource();
+      final controller = SourceController(
+        source: source,
+        baseSelectors: baseSelectors,
+        initialQuery: "hello #dart",
+      );
+      addTearDown(controller.dispose);
+
+      expect(
+        controller.queryContext,
+        const SearchQueryContext(
+          normalizedQuery: "hello",
+          terms: ["hello"],
+          selectors: [
+            SearchParsedSelector(selectorId: "tag", key: "#", value: "dart"),
+          ],
+          selectorExpression: SearchSelectorExpression.leaf(
+            SearchParsedSelector(selectorId: "tag", key: "#", value: "dart"),
+          ),
+        ),
+      );
+    });
+
     test("snapshot stream updates snapshot and notifies listeners", () {
       final source = FakeSearchSource();
       final controller = SourceController(
@@ -58,6 +82,7 @@ void main() {
           SearchParsedSelector(selectorId: "tag", key: "#", value: "dart"),
         ],
       );
+      expect(source.searches.last.terms, ["hello"]);
     });
 
     test("equivalent parsed query does not trigger duplicate searches", () {
@@ -74,40 +99,35 @@ void main() {
       expect(source.searches, hasLength(1));
     });
 
-    test(
-      "dynamic selectors merge with base selectors and re-run last raw query",
-      () {
-        final source = FakeSearchSource();
-        final controller = SourceController(
-          source: source,
-          baseSelectors: baseSelectors,
-        );
-        addTearDown(controller.dispose);
-
-        controller.updateQuery("status:open");
-        expect(source.searches.single.normalizedQuery, "status:open");
-
-        source.emitSelectors(const [
+    test("source selectors merge with base selectors", () {
+      final source = FakeSearchSource(
+        selectors: const [
           KeyValueSelectorDefinition(
             id: "status",
             key: "status:",
             value: QuerySelectorValue.enumValue(["open"]),
           ),
-        ]);
+        ],
+      );
+      final controller = SourceController(
+        source: source,
+        baseSelectors: baseSelectors,
+      );
+      addTearDown(controller.dispose);
 
-        expect(controller.selectors.map((s) => s.id), ["tag", "status"]);
-        source.expectLastSearchContext(
-          normalizedQuery: "",
-          selectors: const [
-            SearchParsedSelector(
-              selectorId: "status",
-              key: "status:",
-              value: "open",
-            ),
-          ],
-        );
-      },
-    );
+      expect(controller.selectors.map((s) => s.id), ["tag", "status"]);
+      controller.updateQuery("status:open");
+      source.expectLastSearchContext(
+        normalizedQuery: "",
+        selectors: const [
+          SearchParsedSelector(
+            selectorId: "status",
+            key: "status:",
+            value: "open",
+          ),
+        ],
+      );
+    });
 
     test("triggerQuery repeats the last searched context", () {
       final source = FakeSearchSource();
@@ -122,6 +142,44 @@ void main() {
 
       expect(source.searches, hasLength(2));
       expect(source.searches.last, source.searches.first);
+    });
+
+    test("maps rejected source validation to the selector value", () {
+      final source = FakeSearchSource(
+        selectors: const [
+          KeyValueSelectorDefinition(
+            id: "book",
+            key: "book:",
+            value: QuerySelectorValue.sourceBacked(),
+          ),
+        ],
+      );
+      final controller = SourceController(
+        source: source,
+        baseSelectors: baseSelectors,
+      );
+      addTearDown(controller.dispose);
+      controller.updateQuery("book:Missing");
+
+      source.emitSnapshot(
+        SearchSourceSnapshot.ready(
+          nodes: const [],
+          selectorValidations: const [
+            SearchSelectorValidation(
+              selectorId: "book",
+              value: "missing",
+              status: SearchSelectorValidationStatus.rejected,
+            ),
+          ],
+        ),
+      );
+
+      expect(controller.validationIssues, hasLength(1));
+      expect(
+        controller.validationIssues.single.code,
+        QueryIssueCode.invalidSelectorValue,
+      );
+      expect(controller.validationIssues.single.range, const QueryRange(5, 12));
     });
 
     test("dispose disposes the source", () {

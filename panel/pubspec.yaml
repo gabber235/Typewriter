@@ -61,6 +61,8 @@ dependencies:
   vector_math: ^2.2.0
   flutter_markdown_plus: ^1.0.12
   clock: ^1.1.0
+  rxdart: ^0.28.0
+  searchlight: ^0.2.3
 
 dev_dependencies:
   flutter_test:

@@ -167,7 +167,7 @@ class PresentationSearchInput extends HookConsumerWidget {
       );
     }
 
-    bool acceptCustom(SearchController controller) {
+    bool acceptCustom(SearchController<dynamic> controller) {
       final custom = element.customValue;
       if (custom == null) return false;
       final expressions = presentationSearchContext(
@@ -211,13 +211,12 @@ class PresentationSearchInput extends HookConsumerWidget {
       return "";
     }
 
-    final buildSource = sourceBuilder;
     return SearchRoot(
       create: (searchRef) {
         final source =
-            buildSource?.call(searchRef, selections.stream) ??
+            sourceBuilder?.call(searchRef, selections.stream) ??
             PresentationSearchSourceFactory(
-              client: searchRef.read(panelHttpClientProvider),
+              client: searchRef.valued(panelHttpClientProvider),
               expressions: scope.expressions,
               registry: scope.registry,
               budget: scope.budget,
@@ -228,7 +227,23 @@ class PresentationSearchInput extends HookConsumerWidget {
               realmSourceBuilder: scope.realmSearchSourceBuilder,
             ).build(element.provider);
         return SearchController(
-          source: source,
+          session: SearchSession<void>(
+            source: source,
+            interaction: SearchInteraction<void>(
+              activation: SearchActivation.custom(
+                dependencies: const [],
+                evaluate: (context, result) =>
+                    result.payload is PresentationSearchResultPayload
+                    ? const SearchActivationState.enabled()
+                    : const SearchActivationState.hidden(),
+                activate: (context, result) async {
+                  selectResult(result, commit: true);
+                  return const SearchActivationResult.keepOpen();
+                },
+              ),
+              selectionMode: element.selectionMode,
+            ),
+          ),
           baseSelectors: const [],
           onCloseRequested: finish,
         );
@@ -265,7 +280,6 @@ class PresentationSearchInput extends HookConsumerWidget {
             selectResult(result, commit: false);
           }
         },
-        onSelect: (result) => selectResult(result, commit: true),
         onSelectionPointerDown: () {
           selectingWithPointer.value = true;
         },
@@ -285,7 +299,7 @@ class PresentationSearchInput extends HookConsumerWidget {
                   .firstOrNull
                   ?.result;
           if (result != null) {
-            selectResult(result, commit: true);
+            controller.activate(result);
             return;
           }
           acceptCustom(controller);

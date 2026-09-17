@@ -247,6 +247,8 @@ final _intentActionFactories =
           CallbackAction<LastItemIntent>(onInvoke: (_) => onInvoke(ref)),
       PrimaryActionIntent: (onInvoke, ref) =>
           CallbackAction<PrimaryActionIntent>(onInvoke: (_) => onInvoke(ref)),
+      OpenSearchIntent: (onInvoke, ref) =>
+          CallbackAction<OpenSearchIntent>(onInvoke: (_) => onInvoke(ref)),
     };
 
 extension on IntentActionShortcut {

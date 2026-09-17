@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -25,7 +26,7 @@ final class PresentationSearchSourceFactory {
     this.realmSourceBuilder,
   });
 
-  final http.Client client;
+  final ValueListenable<http.Client> client;
   final ExpressionContext expressions;
   final TypeRegistry registry;
   final ExpressionBudget budget;
@@ -96,7 +97,7 @@ final class PresentationSearchSourceFactory {
         ) =>
           build(child, path: "$path.history").withHistory(
             key: key,
-            label: _text(label, _emptyQuery, child),
+            label: _text(label, SearchQueryContext.empty, child),
             capacity: capacity,
             storage: historyStorage,
             committedSelections: selections
@@ -105,10 +106,11 @@ final class PresentationSearchSourceFactory {
                 )
                 .map((event) => event.result),
           ),
-        SectionSearchProvider(:final id, :final label, :final child) => build(
-          child,
-          path: "$path.section",
-        ).inSection(id: id, title: _text(label, _emptyQuery, child)),
+        SectionSearchProvider(:final id, :final label, :final child) =>
+          build(child, path: "$path.section").inSection(
+            id: id,
+            title: _text(label, SearchQueryContext.empty, child),
+          ),
         MergedSearchProvider(:final children) =>
           children.indexed
               .map((entry) => build(entry.$2, path: "$path.${entry.$1}"))
@@ -242,8 +244,6 @@ final class PresentationSearchSourceFactory {
         ?.expressionDisplayText;
   }
 }
-
-const _emptyQuery = SearchQueryContext(normalizedQuery: "", selectors: []);
 
 extension SearchProviderSelectors on SearchProvider {
   List<SearchSelectorDefinition> get searchSelectors => switch (this) {

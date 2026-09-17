@@ -4,7 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Base for decorators that transform child snapshots while preserving source
 /// initialization, query, selector, preview, and disposal ownership.
-abstract base class DelegatingSearchSource implements SearchSource {
+abstract base class DelegatingSearchSource
+    implements SearchSource, SearchSelectorCompletionSource {
   DelegatingSearchSource({required this.source}) {
     _snapshotSubscription = source.snapshots.listen(onSnapshot);
   }
@@ -21,10 +22,21 @@ abstract base class DelegatingSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
+  List<QuerySelectorDefinition> get selectors => source.selectors;
 
   @override
-  void initialize() => source.initialize();
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) {
+    final child = source;
+    if (child is! SearchSelectorCompletionSource) {
+      return Future.value(const SearchSelectorCompletionResult());
+    }
+    return (child as SearchSelectorCompletionSource).completeSelector(request);
+  }
+
+  @override
+  void initialize(SearchQueryContext context) => source.initialize(context);
 
   @override
   void search(SearchQueryContext context) => source.search(context);

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -10,6 +12,14 @@ const _duplicateQuerySelectors = <QuerySelectorDefinition>[
   KeyValueSelectorDefinition(id: "status_1", key: "status"),
   KeyValueSelectorDefinition(id: "status_2", key: "status"),
   KeyValueSelectorDefinition(id: "type", key: "type"),
+];
+
+const _sourceBackedSelectors = <QuerySelectorDefinition>[
+  KeyValueSelectorDefinition(
+    id: "page",
+    key: "page:",
+    value: QuerySelectorValue.sourceBacked(),
+  ),
 ];
 
 void main() {
@@ -62,6 +72,103 @@ void main() {
       expect(_suggestions(), findsOneWidget);
       expect(find.text("active"), findsOneWidget);
       expect(find.text("archived"), findsOneWidget);
+    });
+
+    testWidgets("debounces source backed completion", (tester) async {
+      final requests = <SearchSelectorCompletionRequest>[];
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: _sourceBackedSelectors,
+          completeSelector: (request) async {
+            requests.add(request);
+            return const SearchSelectorCompletionResult(values: ["arrival"]);
+          },
+          onQueryChanged: (_) {},
+        ),
+      );
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "page:a");
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.enterText(find.byType(TextField), "page:ar");
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 149));
+
+      expect(requests, isEmpty);
+
+      await tester.pump(const Duration(milliseconds: 2));
+      await tester.pump();
+
+      expect(requests.map((request) => request.partial), ["ar"]);
+      expect(find.text("arrival"), findsOneWidget);
+    });
+
+    testWidgets("ignores stale source backed completion", (tester) async {
+      final completions = <Completer<SearchSelectorCompletionResult>>[];
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: _sourceBackedSelectors,
+          completeSelector: (_) {
+            final completion = Completer<SearchSelectorCompletionResult>();
+            completions.add(completion);
+            return completion.future;
+          },
+          onQueryChanged: (_) {},
+        ),
+      );
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "page:a");
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 151));
+      await tester.enterText(find.byType(TextField), "page:b");
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 151));
+      expect(completions, hasLength(2));
+
+      completions.first.complete(
+        const SearchSelectorCompletionResult(values: ["arrival"]),
+      );
+      await tester.pump();
+      expect(find.text("arrival"), findsNothing);
+
+      completions.last.complete(
+        const SearchSelectorCompletionResult(values: ["bravo"]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text("bravo"), findsOneWidget);
+    });
+
+    testWidgets("reuses exhaustive completion for a narrower partial", (
+      tester,
+    ) async {
+      var requestCount = 0;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: _sourceBackedSelectors,
+          completeSelector: (_) async {
+            requestCount++;
+            return const SearchSelectorCompletionResult(
+              values: ["arrival"],
+              exhaustive: true,
+            );
+          },
+          onQueryChanged: (_) {},
+        ),
+      );
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "page:a");
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 151));
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), "page:ar");
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(requestCount, 1);
+      expect(find.text("arrival"), findsOneWidget);
     });
 
     testWidgets("switches from helper mode to popup mode", (tester) async {
@@ -399,6 +506,55 @@ void main() {
 
       final editable = tester.widget<EditableText>(find.byType(EditableText));
       expect(editable.controller.text, "");
+    });
+  });
+
+  group("QueryBar lifecycle", () {
+    testWidgets("preserves editing value when selectors change", (
+      tester,
+    ) async {
+      var query = "";
+      var selectors = mockQuerySelectors;
+      late StateSetter updateState;
+
+      await tester.pumpTestApp(
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            updateState = setState;
+            return QueryBar(
+              query: query,
+              selectors: selectors,
+              onQueryChanged: (value) {
+                setState(() => query = value);
+              },
+            );
+          },
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "main");
+      await tester.pump();
+
+      final before = tester
+          .widget<EditableText>(find.byType(EditableText))
+          .controller
+          .value;
+      expect(before.selection, const TextSelection.collapsed(offset: 4));
+
+      updateState(() {
+        selectors = [
+          ...mockQuerySelectors,
+          const KeyValueSelectorDefinition(id: "book", key: "book:"),
+        ];
+      });
+      await tester.pump();
+
+      final after = tester
+          .widget<EditableText>(find.byType(EditableText))
+          .controller
+          .value;
+      expect(after, before);
     });
   });
 

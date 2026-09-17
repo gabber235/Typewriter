@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -22,6 +22,7 @@ void main() {
     const query = SearchQueryContext(
       normalizedQuery: "speed",
       selectors: [category, world],
+      terms: ["speed"],
       selectorExpression: SearchSelectorBinaryExpression(
         operator: SearchSelectorOperator.and,
         left: SearchSelectorLeafExpression(category),
@@ -38,10 +39,10 @@ void main() {
     );
 
     final encoded = codec.encodeRequest(request).valueOrNull!;
-    final bytes = wire.RealmPresentationSearchRequest.serializer.toBytes(
+    final bytes = skir.RealmPresentationSearchRequest.serializer.toBytes(
       encoded,
     );
-    final decoded = wire.RealmPresentationSearchRequest.serializer.fromBytes(
+    final decoded = skir.RealmPresentationSearchRequest.serializer.fromBytes(
       bytes,
     );
 
@@ -49,25 +50,26 @@ void main() {
     expect(decoded.generation.value, "generation");
     expect(decoded.capabilityId.value, "capability");
     expect(decoded.query.normalizedQuery, "speed");
+    expect(decoded.query.terms, ["speed"]);
     expect(decoded.query.selectors, hasLength(2));
     expect(decoded.query.selectors.first.selectorId, "category");
 
     final expression = decoded.query.selectorExpression;
-    expect(expression, isA<wire.RealmSearchSelectorExpression_binaryWrapper>());
+    expect(expression, isA<skir.RealmSearchSelectorExpression_binaryWrapper>());
     final binary =
-        (expression! as wire.RealmSearchSelectorExpression_binaryWrapper).value;
+        (expression! as skir.RealmSearchSelectorExpression_binaryWrapper).value;
 
-    expect(binary.operator_, wire.RealmSearchSelectorOperator.and);
+    expect(binary.operator_, skir.RealmSearchSelectorOperator.and);
     expect(
       binary.left,
-      isA<wire.RealmSearchSelectorExpression_selectorWrapper>(),
+      isA<skir.RealmSearchSelectorExpression_selectorWrapper>(),
     );
-    expect(binary.right, isA<wire.RealmSearchSelectorExpression_notWrapper>());
+    expect(binary.right, isA<skir.RealmSearchSelectorExpression_notWrapper>());
   });
 
   test("decodes explicit unavailable updates", () {
     final update = codec.decodeUpdate(
-      wire.RealmPresentationSearchUpdate.createUnavailable(
+      skir.RealmPresentationSearchUpdate.createUnavailable(
         subscriptionId: "search:2",
         diagnostics: [
           const TypeDiagnostic(

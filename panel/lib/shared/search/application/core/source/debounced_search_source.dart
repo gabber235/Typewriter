@@ -6,7 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// A newer request supersedes a pending preview with an explicit error result.
 /// Disposal cancels timers and completes any pending preview request.
-final class DebouncedSearchSource implements SearchSource {
+final class DebouncedSearchSource
+    implements SearchSource, SearchSelectorCompletionSource {
   DebouncedSearchSource({required this.source, required this.duration});
 
   final SearchSource source;
@@ -24,11 +25,11 @@ final class DebouncedSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => source.snapshots;
 
   @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
+  List<QuerySelectorDefinition> get selectors => source.selectors;
 
   @override
-  void initialize() {
-    source.initialize();
+  void initialize(SearchQueryContext context) {
+    source.initialize(context);
   }
 
   @override
@@ -81,6 +82,17 @@ final class DebouncedSearchSource implements SearchSource {
     });
 
     return completer.future;
+  }
+
+  @override
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) {
+    final child = source;
+    if (child is! SearchSelectorCompletionSource) {
+      return Future.value(const SearchSelectorCompletionResult());
+    }
+    return (child as SearchSelectorCompletionSource).completeSelector(request);
   }
 
   @override

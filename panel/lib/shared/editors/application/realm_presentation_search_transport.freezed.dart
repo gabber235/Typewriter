@@ -84,7 +84,7 @@ as SearchQueryContext,
 @override
 @pragma('vm:prefer-inline')
 $CatalogGenerationCopyWith<$Res> get generation {
-
+  
   return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
     return _then(_self.copyWith(generation: value));
   });
@@ -93,7 +93,7 @@ $CatalogGenerationCopyWith<$Res> get generation {
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get capabilityId {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
     return _then(_self.copyWith(capabilityId: value));
   });
@@ -102,7 +102,7 @@ $CapabilityIdCopyWith<$Res> get capabilityId {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get payload {
-
+  
   return $DataValueCopyWith<$Res>(_self.payload, (value) {
     return _then(_self.copyWith(payload: value));
   });
@@ -111,7 +111,7 @@ $DataValueCopyWith<$Res> get payload {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -120,7 +120,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
-
+  
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
   });
@@ -263,7 +263,7 @@ return $default(_that.subscriptionId,_that.generation,_that.capabilityId,_that.p
 
 class _RealmPresentationSearchRequest implements RealmPresentationSearchRequest {
   const _RealmPresentationSearchRequest({required this.subscriptionId, required this.generation, required this.capabilityId, required this.payload, required this.resultType, required this.query});
-
+  
 
 @override final  String subscriptionId;
 @override final  CatalogGeneration generation;
@@ -338,7 +338,7 @@ as SearchQueryContext,
 @override
 @pragma('vm:prefer-inline')
 $CatalogGenerationCopyWith<$Res> get generation {
-
+  
   return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
     return _then(_self.copyWith(generation: value));
   });
@@ -347,7 +347,7 @@ $CatalogGenerationCopyWith<$Res> get generation {
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get capabilityId {
-
+  
   return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
     return _then(_self.copyWith(capabilityId: value));
   });
@@ -356,7 +356,7 @@ $CapabilityIdCopyWith<$Res> get capabilityId {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get payload {
-
+  
   return $DataValueCopyWith<$Res>(_self.payload, (value) {
     return _then(_self.copyWith(payload: value));
   });
@@ -365,7 +365,7 @@ $DataValueCopyWith<$Res> get payload {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -374,7 +374,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
-
+  
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
   });
@@ -583,7 +583,7 @@ return unavailable(_that.subscriptionId,_that.diagnostics);case _:
 
 class RealmPresentationSearchSnapshotUpdate implements RealmPresentationSearchUpdate {
   const RealmPresentationSearchSnapshotUpdate({required this.subscriptionId, required this.status, required  List<DataValue> values,  List<String> guidance = const [],  List<TypeDiagnostic> diagnostics = const []}): _values = values,_guidance = guidance,_diagnostics = diagnostics;
-
+  
 
 @override final  String subscriptionId;
  final  SearchSourceStatus status;
@@ -677,7 +677,7 @@ as List<TypeDiagnostic>,
 
 class RealmPresentationSearchUnavailableUpdate implements RealmPresentationSearchUpdate {
   const RealmPresentationSearchUnavailableUpdate({required this.subscriptionId, required  List<TypeDiagnostic> diagnostics}): _diagnostics = diagnostics;
-
+  
 
 @override final  String subscriptionId;
  final  List<TypeDiagnostic> _diagnostics;

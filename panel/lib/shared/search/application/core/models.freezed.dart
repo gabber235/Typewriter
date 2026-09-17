@@ -222,7 +222,7 @@ return $default(_that.selectorId,_that.key,_that.value);case _:
 
 class _SearchParsedSelector with DiagnosticableTreeMixin implements SearchParsedSelector {
   const _SearchParsedSelector({required this.selectorId, required this.key, this.value}): assert(selectorId != "", 'Selector ID must not be empty.'),assert(key != "", 'Key must not be empty.');
-
+  
 
 @override final  String selectorId;
 @override final  String key;
@@ -472,7 +472,7 @@ return not(_that.expression);case _:
 
 class SearchSelectorLeafExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
   const SearchSelectorLeafExpression(this.selector);
-
+  
 
  final  SearchParsedSelector selector;
 
@@ -543,7 +543,7 @@ as SearchParsedSelector,
 @override
 @pragma('vm:prefer-inline')
 $SearchParsedSelectorCopyWith<$Res> get selector {
-
+  
   return $SearchParsedSelectorCopyWith<$Res>(_self.selector, (value) {
     return _then(_self.copyWith(selector: value));
   });
@@ -555,7 +555,7 @@ $SearchParsedSelectorCopyWith<$Res> get selector {
 
 class SearchSelectorBinaryExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
   const SearchSelectorBinaryExpression({required this.operator, required this.left, required this.right});
-
+  
 
  final  SearchSelectorOperator operator;
  final  SearchSelectorExpression left;
@@ -630,7 +630,7 @@ as SearchSelectorExpression,
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res> get left {
-
+  
   return $SearchSelectorExpressionCopyWith<$Res>(_self.left, (value) {
     return _then(_self.copyWith(left: value));
   });
@@ -639,7 +639,7 @@ $SearchSelectorExpressionCopyWith<$Res> get left {
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res> get right {
-
+  
   return $SearchSelectorExpressionCopyWith<$Res>(_self.right, (value) {
     return _then(_self.copyWith(right: value));
   });
@@ -651,7 +651,7 @@ $SearchSelectorExpressionCopyWith<$Res> get right {
 
 class SearchSelectorNotExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
   const SearchSelectorNotExpression(this.expression);
-
+  
 
  final  SearchSelectorExpression expression;
 
@@ -722,7 +722,7 @@ as SearchSelectorExpression,
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res> get expression {
-
+  
   return $SearchSelectorExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -732,7 +732,7 @@ $SearchSelectorExpressionCopyWith<$Res> get expression {
 /// @nodoc
 mixin _$SearchQueryContext implements DiagnosticableTreeMixin {
 
- String get normalizedQuery; List<SearchParsedSelector> get selectors; SearchSelectorExpression? get selectorExpression;
+ String get normalizedQuery; List<SearchParsedSelector> get selectors; List<String> get terms; SearchSelectorExpression? get selectorExpression;
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -745,26 +745,26 @@ void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   final _this = this as SearchQueryContext;
   properties
     ..add(DiagnosticsProperty('type', 'SearchQueryContext'))
-    ..add(DiagnosticsProperty('normalizedQuery', _this.normalizedQuery))..add(DiagnosticsProperty('selectors', _this.selectors))..add(DiagnosticsProperty('selectorExpression', _this.selectorExpression));
+    ..add(DiagnosticsProperty('normalizedQuery', _this.normalizedQuery))..add(DiagnosticsProperty('selectors', _this.selectors))..add(DiagnosticsProperty('terms', _this.terms))..add(DiagnosticsProperty('selectorExpression', _this.selectorExpression));
 }
 
 @override
 bool operator ==(Object other) {
   final _this = this as SearchQueryContext;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchQueryContext&&(identical(other.normalizedQuery, _this.normalizedQuery) || other.normalizedQuery == _this.normalizedQuery)&&const DeepCollectionEquality().equals(other.selectors, _this.selectors)&&(identical(other.selectorExpression, _this.selectorExpression) || other.selectorExpression == _this.selectorExpression));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchQueryContext&&(identical(other.normalizedQuery, _this.normalizedQuery) || other.normalizedQuery == _this.normalizedQuery)&&const DeepCollectionEquality().equals(other.selectors, _this.selectors)&&const DeepCollectionEquality().equals(other.terms, _this.terms)&&(identical(other.selectorExpression, _this.selectorExpression) || other.selectorExpression == _this.selectorExpression));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SearchQueryContext;
-  return Object.hash(runtimeType,_this.normalizedQuery,const DeepCollectionEquality().hash(_this.selectors),_this.selectorExpression);
+  return Object.hash(runtimeType,_this.normalizedQuery,const DeepCollectionEquality().hash(_this.selectors),const DeepCollectionEquality().hash(_this.terms),_this.selectorExpression);
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   final _this = this as SearchQueryContext;
-  return 'SearchQueryContext(normalizedQuery: ${_this.normalizedQuery}, selectors: ${_this.selectors}, selectorExpression: ${_this.selectorExpression})';
+  return 'SearchQueryContext(normalizedQuery: ${_this.normalizedQuery}, selectors: ${_this.selectors}, terms: ${_this.terms}, selectorExpression: ${_this.selectorExpression})';
 }
 
 
@@ -775,7 +775,7 @@ abstract mixin class $SearchQueryContextCopyWith<$Res>  {
   factory $SearchQueryContextCopyWith(SearchQueryContext value, $Res Function(SearchQueryContext) _then) = _$SearchQueryContextCopyWithImpl;
 @useResult
 $Res call({
- String normalizedQuery, List<SearchParsedSelector> selectors, SearchSelectorExpression? selectorExpression
+ String normalizedQuery, List<SearchParsedSelector> selectors, List<String> terms, SearchSelectorExpression? selectorExpression
 });
 
 
@@ -792,11 +792,12 @@ class _$SearchQueryContextCopyWithImpl<$Res>
 
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? selectorExpression = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? terms = null,Object? selectorExpression = freezed,}) {
   return _then(SearchQueryContext(
 normalizedQuery: null == normalizedQuery ? _self.normalizedQuery : normalizedQuery // ignore: cast_nullable_to_non_nullable
 as String,selectors: null == selectors ? _self.selectors : selectors // ignore: cast_nullable_to_non_nullable
-as List<SearchParsedSelector>,selectorExpression: freezed == selectorExpression ? _self.selectorExpression : selectorExpression // ignore: cast_nullable_to_non_nullable
+as List<SearchParsedSelector>,terms: null == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
+as List<String>,selectorExpression: freezed == selectorExpression ? _self.selectorExpression : selectorExpression // ignore: cast_nullable_to_non_nullable
 as SearchSelectorExpression?,
   ));
 }
@@ -894,10 +895,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  SearchSelectorExpression? selectorExpression)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  List<String> terms,  SearchSelectorExpression? selectorExpression)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchQueryContext() when $default != null:
-return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);case _:
+return $default(_that.normalizedQuery,_that.selectors,_that.terms,_that.selectorExpression);case _:
   return orElse();
 
 }
@@ -915,10 +916,10 @@ return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  SearchSelectorExpression? selectorExpression)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  List<String> terms,  SearchSelectorExpression? selectorExpression)  $default,) {final _that = this;
 switch (_that) {
 case _SearchQueryContext():
-return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);case _:
+return $default(_that.normalizedQuery,_that.selectors,_that.terms,_that.selectorExpression);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -935,10 +936,10 @@ return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  SearchSelectorExpression? selectorExpression)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String normalizedQuery,  List<SearchParsedSelector> selectors,  List<String> terms,  SearchSelectorExpression? selectorExpression)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchQueryContext() when $default != null:
-return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);case _:
+return $default(_that.normalizedQuery,_that.selectors,_that.terms,_that.selectorExpression);case _:
   return null;
 
 }
@@ -950,8 +951,8 @@ return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);
 
 
 class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryContext {
-  const _SearchQueryContext({required this.normalizedQuery, required  List<SearchParsedSelector> selectors, this.selectorExpression}): _selectors = selectors;
-
+  const _SearchQueryContext({required this.normalizedQuery, required  List<SearchParsedSelector> selectors,  List<String> terms = const <String>[], this.selectorExpression}): _selectors = selectors,_terms = terms;
+  
 
 @override final  String normalizedQuery;
  final  List<SearchParsedSelector> _selectors;
@@ -959,6 +960,13 @@ class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryCon
   if (_selectors is EqualUnmodifiableListView) return _selectors;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_selectors);
+}
+
+ final  List<String> _terms;
+@override@JsonKey() List<String> get terms {
+  if (_terms is EqualUnmodifiableListView) return _terms;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_terms);
 }
 
 @override final  SearchSelectorExpression? selectorExpression;
@@ -974,23 +982,23 @@ _$SearchQueryContextCopyWith<_SearchQueryContext> get copyWith => __$SearchQuery
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
     ..add(DiagnosticsProperty('type', 'SearchQueryContext'))
-    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors))..add(DiagnosticsProperty('selectorExpression', selectorExpression));
+    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors))..add(DiagnosticsProperty('terms', terms))..add(DiagnosticsProperty('selectorExpression', selectorExpression));
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchQueryContext&&(identical(other.normalizedQuery, normalizedQuery) || other.normalizedQuery == normalizedQuery)&&const DeepCollectionEquality().equals(other.selectors, _selectors)&&(identical(other.selectorExpression, selectorExpression) || other.selectorExpression == selectorExpression));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchQueryContext&&(identical(other.normalizedQuery, normalizedQuery) || other.normalizedQuery == normalizedQuery)&&const DeepCollectionEquality().equals(other.selectors, _selectors)&&const DeepCollectionEquality().equals(other.terms, _terms)&&(identical(other.selectorExpression, selectorExpression) || other.selectorExpression == selectorExpression));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,normalizedQuery,const DeepCollectionEquality().hash(_selectors),selectorExpression);
+    return Object.hash(runtimeType,normalizedQuery,const DeepCollectionEquality().hash(_selectors),const DeepCollectionEquality().hash(_terms),selectorExpression);
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors, selectorExpression: $selectorExpression)';
+    return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors, terms: $terms, selectorExpression: $selectorExpression)';
 }
 
 
@@ -1001,7 +1009,7 @@ abstract mixin class _$SearchQueryContextCopyWith<$Res> implements $SearchQueryC
   factory _$SearchQueryContextCopyWith(_SearchQueryContext value, $Res Function(_SearchQueryContext) _then) = __$SearchQueryContextCopyWithImpl;
 @override @useResult
 $Res call({
- String normalizedQuery, List<SearchParsedSelector> selectors, SearchSelectorExpression? selectorExpression
+ String normalizedQuery, List<SearchParsedSelector> selectors, List<String> terms, SearchSelectorExpression? selectorExpression
 });
 
 
@@ -1018,11 +1026,12 @@ class __$SearchQueryContextCopyWithImpl<$Res>
 
 /// Create a copy of SearchQueryContext
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? selectorExpression = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? terms = null,Object? selectorExpression = freezed,}) {
   return _then(_SearchQueryContext(
 normalizedQuery: null == normalizedQuery ? _self.normalizedQuery : normalizedQuery // ignore: cast_nullable_to_non_nullable
 as String,selectors: null == selectors ? _self._selectors : selectors // ignore: cast_nullable_to_non_nullable
-as List<SearchParsedSelector>,selectorExpression: freezed == selectorExpression ? _self.selectorExpression : selectorExpression // ignore: cast_nullable_to_non_nullable
+as List<SearchParsedSelector>,terms: null == terms ? _self._terms : terms // ignore: cast_nullable_to_non_nullable
+as List<String>,selectorExpression: freezed == selectorExpression ? _self.selectorExpression : selectorExpression // ignore: cast_nullable_to_non_nullable
 as SearchSelectorExpression?,
   ));
 }
@@ -1254,7 +1263,7 @@ return $default(_that.id,_that.title,_that.description,_that.visibility,_that.pr
 
 class _SearchGuidance with DiagnosticableTreeMixin implements SearchGuidance {
   const _SearchGuidance({required this.id, required this.title, this.description, this.visibility = SearchGuidanceVisibility.emptyOnly, this.priority = 0}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.');
-
+  
 
 @override final  String id;
 @override final  String title;
@@ -1542,7 +1551,7 @@ return $default(_that.id,_that.message,_that.severity,_that.sourceLabel);case _:
 
 class _SearchErrorSummary with DiagnosticableTreeMixin implements SearchErrorSummary {
   const _SearchErrorSummary({required this.id, required this.message, required this.severity, this.sourceLabel}): assert(id != "", 'ID must not be empty.'),assert(message != "", 'Message must not be empty.');
-
+  
 
 @override final  String id;
 @override final  String message;
@@ -1620,7 +1629,7 @@ as String?,
 /// @nodoc
 mixin _$SearchSourceSnapshot implements DiagnosticableTreeMixin {
 
- SearchSourceStatus get status; List<SearchNode> get nodes; Map<Type, SearchAction> get actions; List<SearchGuidance> get guidance; List<SearchErrorSummary> get errorSummaries;
+ SearchSourceStatus get status; List<SearchNode> get nodes; List<SearchGuidance> get guidance; List<SearchErrorSummary> get errorSummaries; List<SearchSelectorValidation> get selectorValidations;
 /// Create a copy of SearchSourceSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1633,26 +1642,26 @@ void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   final _this = this as SearchSourceSnapshot;
   properties
     ..add(DiagnosticsProperty('type', 'SearchSourceSnapshot'))
-    ..add(DiagnosticsProperty('status', _this.status))..add(DiagnosticsProperty('nodes', _this.nodes))..add(DiagnosticsProperty('actions', _this.actions))..add(DiagnosticsProperty('guidance', _this.guidance))..add(DiagnosticsProperty('errorSummaries', _this.errorSummaries));
+    ..add(DiagnosticsProperty('status', _this.status))..add(DiagnosticsProperty('nodes', _this.nodes))..add(DiagnosticsProperty('guidance', _this.guidance))..add(DiagnosticsProperty('errorSummaries', _this.errorSummaries))..add(DiagnosticsProperty('selectorValidations', _this.selectorValidations));
 }
 
 @override
 bool operator ==(Object other) {
   final _this = this as SearchSourceSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSourceSnapshot&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.nodes, _this.nodes)&&const DeepCollectionEquality().equals(other.actions, _this.actions)&&const DeepCollectionEquality().equals(other.guidance, _this.guidance)&&const DeepCollectionEquality().equals(other.errorSummaries, _this.errorSummaries));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSourceSnapshot&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.nodes, _this.nodes)&&const DeepCollectionEquality().equals(other.guidance, _this.guidance)&&const DeepCollectionEquality().equals(other.errorSummaries, _this.errorSummaries)&&const DeepCollectionEquality().equals(other.selectorValidations, _this.selectorValidations));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SearchSourceSnapshot;
-  return Object.hash(runtimeType,_this.status,const DeepCollectionEquality().hash(_this.nodes),const DeepCollectionEquality().hash(_this.actions),const DeepCollectionEquality().hash(_this.guidance),const DeepCollectionEquality().hash(_this.errorSummaries));
+  return Object.hash(runtimeType,_this.status,const DeepCollectionEquality().hash(_this.nodes),const DeepCollectionEquality().hash(_this.guidance),const DeepCollectionEquality().hash(_this.errorSummaries),const DeepCollectionEquality().hash(_this.selectorValidations));
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   final _this = this as SearchSourceSnapshot;
-  return 'SearchSourceSnapshot(status: ${_this.status}, nodes: ${_this.nodes}, actions: ${_this.actions}, guidance: ${_this.guidance}, errorSummaries: ${_this.errorSummaries})';
+  return 'SearchSourceSnapshot(status: ${_this.status}, nodes: ${_this.nodes}, guidance: ${_this.guidance}, errorSummaries: ${_this.errorSummaries}, selectorValidations: ${_this.selectorValidations})';
 }
 
 
@@ -1663,7 +1672,7 @@ abstract mixin class $SearchSourceSnapshotCopyWith<$Res>  {
   factory $SearchSourceSnapshotCopyWith(SearchSourceSnapshot value, $Res Function(SearchSourceSnapshot) _then) = _$SearchSourceSnapshotCopyWithImpl;
 @useResult
 $Res call({
- SearchSourceStatus status, List<SearchNode> nodes, Map<Type, SearchAction> actions, List<SearchGuidance> guidance, List<SearchErrorSummary> errorSummaries
+ SearchSourceStatus status, List<SearchNode> nodes, List<SearchGuidance> guidance, List<SearchErrorSummary> errorSummaries, List<SearchSelectorValidation> selectorValidations
 });
 
 
@@ -1680,14 +1689,14 @@ class _$SearchSourceSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of SearchSourceSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? nodes = null,Object? actions = null,Object? guidance = null,Object? errorSummaries = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? nodes = null,Object? guidance = null,Object? errorSummaries = null,Object? selectorValidations = null,}) {
   return _then(SearchSourceSnapshot(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as SearchSourceStatus,nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
-as List<SearchNode>,actions: null == actions ? _self.actions : actions // ignore: cast_nullable_to_non_nullable
-as Map<Type, SearchAction>,guidance: null == guidance ? _self.guidance : guidance // ignore: cast_nullable_to_non_nullable
+as List<SearchNode>,guidance: null == guidance ? _self.guidance : guidance // ignore: cast_nullable_to_non_nullable
 as List<SearchGuidance>,errorSummaries: null == errorSummaries ? _self.errorSummaries : errorSummaries // ignore: cast_nullable_to_non_nullable
-as List<SearchErrorSummary>,
+as List<SearchErrorSummary>,selectorValidations: null == selectorValidations ? _self.selectorValidations : selectorValidations // ignore: cast_nullable_to_non_nullable
+as List<SearchSelectorValidation>,
   ));
 }
 
@@ -1772,10 +1781,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SearchSourceStatus status,  List<SearchNode> nodes,  Map<Type, SearchAction> actions,  List<SearchGuidance> guidance,  List<SearchErrorSummary> errorSummaries)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SearchSourceStatus status,  List<SearchNode> nodes,  List<SearchGuidance> guidance,  List<SearchErrorSummary> errorSummaries,  List<SearchSelectorValidation> selectorValidations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchSourceSnapshot() when $default != null:
-return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.errorSummaries);case _:
+return $default(_that.status,_that.nodes,_that.guidance,_that.errorSummaries,_that.selectorValidations);case _:
   return orElse();
 
 }
@@ -1793,10 +1802,10 @@ return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.erro
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SearchSourceStatus status,  List<SearchNode> nodes,  Map<Type, SearchAction> actions,  List<SearchGuidance> guidance,  List<SearchErrorSummary> errorSummaries)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SearchSourceStatus status,  List<SearchNode> nodes,  List<SearchGuidance> guidance,  List<SearchErrorSummary> errorSummaries,  List<SearchSelectorValidation> selectorValidations)  $default,) {final _that = this;
 switch (_that) {
 case _SearchSourceSnapshot():
-return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.errorSummaries);case _:
+return $default(_that.status,_that.nodes,_that.guidance,_that.errorSummaries,_that.selectorValidations);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1813,10 +1822,10 @@ return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.erro
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SearchSourceStatus status,  List<SearchNode> nodes,  Map<Type, SearchAction> actions,  List<SearchGuidance> guidance,  List<SearchErrorSummary> errorSummaries)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SearchSourceStatus status,  List<SearchNode> nodes,  List<SearchGuidance> guidance,  List<SearchErrorSummary> errorSummaries,  List<SearchSelectorValidation> selectorValidations)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchSourceSnapshot() when $default != null:
-return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.errorSummaries);case _:
+return $default(_that.status,_that.nodes,_that.guidance,_that.errorSummaries,_that.selectorValidations);case _:
   return null;
 
 }
@@ -1828,8 +1837,8 @@ return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.erro
 
 
 class _SearchSourceSnapshot with DiagnosticableTreeMixin implements SearchSourceSnapshot {
-  const _SearchSourceSnapshot({required this.status, required  List<SearchNode> nodes,  Map<Type, SearchAction> actions = const {},  List<SearchGuidance> guidance = const <SearchGuidance>[],  List<SearchErrorSummary> errorSummaries = const <SearchErrorSummary>[]}): _nodes = nodes,_actions = actions,_guidance = guidance,_errorSummaries = errorSummaries;
-
+  const _SearchSourceSnapshot({required this.status, required  List<SearchNode> nodes,  List<SearchGuidance> guidance = const <SearchGuidance>[],  List<SearchErrorSummary> errorSummaries = const <SearchErrorSummary>[],  List<SearchSelectorValidation> selectorValidations = const <SearchSelectorValidation>[]}): _nodes = nodes,_guidance = guidance,_errorSummaries = errorSummaries,_selectorValidations = selectorValidations;
+  
 
 @override final  SearchSourceStatus status;
  final  List<SearchNode> _nodes;
@@ -1837,13 +1846,6 @@ class _SearchSourceSnapshot with DiagnosticableTreeMixin implements SearchSource
   if (_nodes is EqualUnmodifiableListView) return _nodes;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_nodes);
-}
-
- final  Map<Type, SearchAction> _actions;
-@override@JsonKey() Map<Type, SearchAction> get actions {
-  if (_actions is EqualUnmodifiableMapView) return _actions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_actions);
 }
 
  final  List<SearchGuidance> _guidance;
@@ -1860,6 +1862,13 @@ class _SearchSourceSnapshot with DiagnosticableTreeMixin implements SearchSource
   return EqualUnmodifiableListView(_errorSummaries);
 }
 
+ final  List<SearchSelectorValidation> _selectorValidations;
+@override@JsonKey() List<SearchSelectorValidation> get selectorValidations {
+  if (_selectorValidations is EqualUnmodifiableListView) return _selectorValidations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_selectorValidations);
+}
+
 
 /// Create a copy of SearchSourceSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -1872,23 +1881,23 @@ _$SearchSourceSnapshotCopyWith<_SearchSourceSnapshot> get copyWith => __$SearchS
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
     ..add(DiagnosticsProperty('type', 'SearchSourceSnapshot'))
-    ..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('nodes', nodes))..add(DiagnosticsProperty('actions', actions))..add(DiagnosticsProperty('guidance', guidance))..add(DiagnosticsProperty('errorSummaries', errorSummaries));
+    ..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('nodes', nodes))..add(DiagnosticsProperty('guidance', guidance))..add(DiagnosticsProperty('errorSummaries', errorSummaries))..add(DiagnosticsProperty('selectorValidations', selectorValidations));
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchSourceSnapshot&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.nodes, _nodes)&&const DeepCollectionEquality().equals(other.actions, _actions)&&const DeepCollectionEquality().equals(other.guidance, _guidance)&&const DeepCollectionEquality().equals(other.errorSummaries, _errorSummaries));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchSourceSnapshot&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.nodes, _nodes)&&const DeepCollectionEquality().equals(other.guidance, _guidance)&&const DeepCollectionEquality().equals(other.errorSummaries, _errorSummaries)&&const DeepCollectionEquality().equals(other.selectorValidations, _selectorValidations));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_nodes),const DeepCollectionEquality().hash(_actions),const DeepCollectionEquality().hash(_guidance),const DeepCollectionEquality().hash(_errorSummaries));
+    return Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_nodes),const DeepCollectionEquality().hash(_guidance),const DeepCollectionEquality().hash(_errorSummaries),const DeepCollectionEquality().hash(_selectorValidations));
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchSourceSnapshot(status: $status, nodes: $nodes, actions: $actions, guidance: $guidance, errorSummaries: $errorSummaries)';
+    return 'SearchSourceSnapshot(status: $status, nodes: $nodes, guidance: $guidance, errorSummaries: $errorSummaries, selectorValidations: $selectorValidations)';
 }
 
 
@@ -1899,7 +1908,7 @@ abstract mixin class _$SearchSourceSnapshotCopyWith<$Res> implements $SearchSour
   factory _$SearchSourceSnapshotCopyWith(_SearchSourceSnapshot value, $Res Function(_SearchSourceSnapshot) _then) = __$SearchSourceSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- SearchSourceStatus status, List<SearchNode> nodes, Map<Type, SearchAction> actions, List<SearchGuidance> guidance, List<SearchErrorSummary> errorSummaries
+ SearchSourceStatus status, List<SearchNode> nodes, List<SearchGuidance> guidance, List<SearchErrorSummary> errorSummaries, List<SearchSelectorValidation> selectorValidations
 });
 
 
@@ -1916,14 +1925,14 @@ class __$SearchSourceSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of SearchSourceSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? nodes = null,Object? actions = null,Object? guidance = null,Object? errorSummaries = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? nodes = null,Object? guidance = null,Object? errorSummaries = null,Object? selectorValidations = null,}) {
   return _then(_SearchSourceSnapshot(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as SearchSourceStatus,nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
-as List<SearchNode>,actions: null == actions ? _self._actions : actions // ignore: cast_nullable_to_non_nullable
-as Map<Type, SearchAction>,guidance: null == guidance ? _self._guidance : guidance // ignore: cast_nullable_to_non_nullable
+as List<SearchNode>,guidance: null == guidance ? _self._guidance : guidance // ignore: cast_nullable_to_non_nullable
 as List<SearchGuidance>,errorSummaries: null == errorSummaries ? _self._errorSummaries : errorSummaries // ignore: cast_nullable_to_non_nullable
-as List<SearchErrorSummary>,
+as List<SearchErrorSummary>,selectorValidations: null == selectorValidations ? _self._selectorValidations : selectorValidations // ignore: cast_nullable_to_non_nullable
+as List<SearchSelectorValidation>,
   ));
 }
 
@@ -2101,7 +2110,7 @@ return result(_that.result);case _:
 
 class SearchSectionNode with DiagnosticableTreeMixin implements SearchNode {
   const SearchSectionNode({required this.id, required this.title, this.subtitle,  List<SearchNode> children = const <SearchNode>[]}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.'),_children = children;
-
+  
 
  final  String id;
  final  String title;
@@ -2187,7 +2196,7 @@ as List<SearchNode>,
 
 class SearchResultNode with DiagnosticableTreeMixin implements SearchNode {
   const SearchResultNode({required this.result});
-
+  
 
  final  SearchResult result;
 
@@ -2258,7 +2267,7 @@ as SearchResult,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -2476,7 +2485,7 @@ return $default(_that.id,_that.rowRendererId,_that.previewRendererId,_that.label
 
 class _SearchResultType with DiagnosticableTreeMixin implements SearchResultType {
   const _SearchResultType({required this.id, required this.rowRendererId, this.previewRendererId, this.label}): assert(id != "", 'ID must not be empty.'),assert(rowRendererId != "", 'Row renderer ID must not be empty.'),assert(previewRendererId == null || previewRendererId != "", 'Preview renderer ID must be null or nonempty.');
-
+  
 
 @override final  String id;
 @override final  String rowRendererId;
@@ -2554,7 +2563,7 @@ as String?,
 /// @nodoc
 mixin _$SearchResult implements DiagnosticableTreeMixin {
 
- String get id; SearchResultType get type; Object get payload; List<Type> get actions; String? get title; String? get subtitle; bool get isStale;
+ String get id; SearchResultType get type; Object get payload; String? get title; String? get subtitle; bool get isStale;
 /// Create a copy of SearchResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2567,26 +2576,26 @@ void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   final _this = this as SearchResult;
   properties
     ..add(DiagnosticsProperty('type', 'SearchResult'))
-    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('type', _this.type))..add(DiagnosticsProperty('payload', _this.payload))..add(DiagnosticsProperty('actions', _this.actions))..add(DiagnosticsProperty('title', _this.title))..add(DiagnosticsProperty('subtitle', _this.subtitle))..add(DiagnosticsProperty('isStale', _this.isStale));
+    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('type', _this.type))..add(DiagnosticsProperty('payload', _this.payload))..add(DiagnosticsProperty('title', _this.title))..add(DiagnosticsProperty('subtitle', _this.subtitle))..add(DiagnosticsProperty('isStale', _this.isStale));
 }
 
 @override
 bool operator ==(Object other) {
   final _this = this as SearchResult;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchResult&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&const DeepCollectionEquality().equals(other.payload, _this.payload)&&const DeepCollectionEquality().equals(other.actions, _this.actions)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.subtitle, _this.subtitle) || other.subtitle == _this.subtitle)&&(identical(other.isStale, _this.isStale) || other.isStale == _this.isStale));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchResult&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&const DeepCollectionEquality().equals(other.payload, _this.payload)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.subtitle, _this.subtitle) || other.subtitle == _this.subtitle)&&(identical(other.isStale, _this.isStale) || other.isStale == _this.isStale));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SearchResult;
-  return Object.hash(runtimeType,_this.id,_this.type,const DeepCollectionEquality().hash(_this.payload),const DeepCollectionEquality().hash(_this.actions),_this.title,_this.subtitle,_this.isStale);
+  return Object.hash(runtimeType,_this.id,_this.type,const DeepCollectionEquality().hash(_this.payload),_this.title,_this.subtitle,_this.isStale);
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   final _this = this as SearchResult;
-  return 'SearchResult(id: ${_this.id}, type: ${_this.type}, payload: ${_this.payload}, actions: ${_this.actions}, title: ${_this.title}, subtitle: ${_this.subtitle}, isStale: ${_this.isStale})';
+  return 'SearchResult(id: ${_this.id}, type: ${_this.type}, payload: ${_this.payload}, title: ${_this.title}, subtitle: ${_this.subtitle}, isStale: ${_this.isStale})';
 }
 
 
@@ -2597,7 +2606,7 @@ abstract mixin class $SearchResultCopyWith<$Res>  {
   factory $SearchResultCopyWith(SearchResult value, $Res Function(SearchResult) _then) = _$SearchResultCopyWithImpl;
 @useResult
 $Res call({
- String id, SearchResultType type, Object payload, List<Type> actions, String? title, String? subtitle, bool isStale
+ String id, SearchResultType type, Object payload, String? title, String? subtitle, bool isStale
 });
 
 
@@ -2614,12 +2623,11 @@ class _$SearchResultCopyWithImpl<$Res>
 
 /// Create a copy of SearchResult
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? payload = null,Object? actions = null,Object? title = freezed,Object? subtitle = freezed,Object? isStale = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? payload = null,Object? title = freezed,Object? subtitle = freezed,Object? isStale = null,}) {
   return _then(SearchResult(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as SearchResultType,payload: null == payload ? _self.payload : payload ,actions: null == actions ? _self.actions : actions // ignore: cast_nullable_to_non_nullable
-as List<Type>,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as SearchResultType,payload: null == payload ? _self.payload : payload ,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,subtitle: freezed == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String?,isStale: null == isStale ? _self.isStale : isStale // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -2630,7 +2638,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<$Res> get type {
-
+  
   return $SearchResultTypeCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2716,10 +2724,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SearchResultType type,  Object payload,  List<Type> actions,  String? title,  String? subtitle,  bool isStale)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SearchResultType type,  Object payload,  String? title,  String? subtitle,  bool isStale)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchResult() when $default != null:
-return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_that.subtitle,_that.isStale);case _:
+return $default(_that.id,_that.type,_that.payload,_that.title,_that.subtitle,_that.isStale);case _:
   return orElse();
 
 }
@@ -2737,10 +2745,10 @@ return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SearchResultType type,  Object payload,  List<Type> actions,  String? title,  String? subtitle,  bool isStale)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SearchResultType type,  Object payload,  String? title,  String? subtitle,  bool isStale)  $default,) {final _that = this;
 switch (_that) {
 case _SearchResult():
-return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_that.subtitle,_that.isStale);case _:
+return $default(_that.id,_that.type,_that.payload,_that.title,_that.subtitle,_that.isStale);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2757,10 +2765,10 @@ return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SearchResultType type,  Object payload,  List<Type> actions,  String? title,  String? subtitle,  bool isStale)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SearchResultType type,  Object payload,  String? title,  String? subtitle,  bool isStale)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchResult() when $default != null:
-return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_that.subtitle,_that.isStale);case _:
+return $default(_that.id,_that.type,_that.payload,_that.title,_that.subtitle,_that.isStale);case _:
   return null;
 
 }
@@ -2772,19 +2780,12 @@ return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_tha
 
 
 class _SearchResult with DiagnosticableTreeMixin implements SearchResult {
-  const _SearchResult({required this.id, required this.type, required this.payload,  List<Type> actions = const [], this.title, this.subtitle, this.isStale = false}): assert(id != "", 'ID must not be empty.'),_actions = actions;
-
+  const _SearchResult({required this.id, required this.type, required this.payload, this.title, this.subtitle, this.isStale = false}): assert(id != "", 'ID must not be empty.');
+  
 
 @override final  String id;
 @override final  SearchResultType type;
 @override final  Object payload;
- final  List<Type> _actions;
-@override@JsonKey() List<Type> get actions {
-  if (_actions is EqualUnmodifiableListView) return _actions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_actions);
-}
-
 @override final  String? title;
 @override final  String? subtitle;
 @override@JsonKey() final  bool isStale;
@@ -2800,23 +2801,23 @@ _$SearchResultCopyWith<_SearchResult> get copyWith => __$SearchResultCopyWithImp
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
     ..add(DiagnosticsProperty('type', 'SearchResult'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('type', type))..add(DiagnosticsProperty('payload', payload))..add(DiagnosticsProperty('actions', actions))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('subtitle', subtitle))..add(DiagnosticsProperty('isStale', isStale));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('type', type))..add(DiagnosticsProperty('payload', payload))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('subtitle', subtitle))..add(DiagnosticsProperty('isStale', isStale));
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchResult&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.payload, payload)&&const DeepCollectionEquality().equals(other.actions, _actions)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.isStale, isStale) || other.isStale == isStale));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchResult&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.isStale, isStale) || other.isStale == isStale));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,type,const DeepCollectionEquality().hash(payload),const DeepCollectionEquality().hash(_actions),title,subtitle,isStale);
+    return Object.hash(runtimeType,id,type,const DeepCollectionEquality().hash(payload),title,subtitle,isStale);
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchResult(id: $id, type: $type, payload: $payload, actions: $actions, title: $title, subtitle: $subtitle, isStale: $isStale)';
+    return 'SearchResult(id: $id, type: $type, payload: $payload, title: $title, subtitle: $subtitle, isStale: $isStale)';
 }
 
 
@@ -2827,7 +2828,7 @@ abstract mixin class _$SearchResultCopyWith<$Res> implements $SearchResultCopyWi
   factory _$SearchResultCopyWith(_SearchResult value, $Res Function(_SearchResult) _then) = __$SearchResultCopyWithImpl;
 @override @useResult
 $Res call({
- String id, SearchResultType type, Object payload, List<Type> actions, String? title, String? subtitle, bool isStale
+ String id, SearchResultType type, Object payload, String? title, String? subtitle, bool isStale
 });
 
 
@@ -2844,12 +2845,11 @@ class __$SearchResultCopyWithImpl<$Res>
 
 /// Create a copy of SearchResult
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? payload = null,Object? actions = null,Object? title = freezed,Object? subtitle = freezed,Object? isStale = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? payload = null,Object? title = freezed,Object? subtitle = freezed,Object? isStale = null,}) {
   return _then(_SearchResult(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as SearchResultType,payload: null == payload ? _self.payload : payload ,actions: null == actions ? _self._actions : actions // ignore: cast_nullable_to_non_nullable
-as List<Type>,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as SearchResultType,payload: null == payload ? _self.payload : payload ,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,subtitle: freezed == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String?,isStale: null == isStale ? _self.isStale : isStale // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -2861,7 +2861,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<$Res> get type {
-
+  
   return $SearchResultTypeCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2869,407 +2869,21 @@ $SearchResultTypeCopyWith<$Res> get type {
 }
 
 /// @nodoc
-mixin _$SearchActionResult implements DiagnosticableTreeMixin {
-
- SearchActionEffect get effect;
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SearchActionResultCopyWith<SearchActionResult> get copyWith => _$SearchActionResultCopyWithImpl<SearchActionResult>(this as SearchActionResult, _$identity);
+mixin _$SearchSurfaceEffect implements DiagnosticableTreeMixin {
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchActionResult;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchActionResult'))
-    ..add(DiagnosticsProperty('effect', _this.effect));
-}
-
-@override
-bool operator ==(Object other) {
-  final _this = this as SearchActionResult;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionResult&&(identical(other.effect, _this.effect) || other.effect == _this.effect));
-}
-
-
-@override
-int get hashCode {
-  final _this = this as SearchActionResult;
-  return Object.hash(runtimeType,_this.effect);
-}
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  final _this = this as SearchActionResult;
-  return 'SearchActionResult(effect: ${_this.effect})';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SearchActionResultCopyWith<$Res>  {
-  factory $SearchActionResultCopyWith(SearchActionResult value, $Res Function(SearchActionResult) _then) = _$SearchActionResultCopyWithImpl;
-@useResult
-$Res call({
- SearchActionEffect effect
-});
-
-
-$SearchActionEffectCopyWith<$Res> get effect;
-
-}
-/// @nodoc
-class _$SearchActionResultCopyWithImpl<$Res>
-    implements $SearchActionResultCopyWith<$Res> {
-  _$SearchActionResultCopyWithImpl(this._self, this._then);
-
-  final SearchActionResult _self;
-  final $Res Function(SearchActionResult) _then;
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? effect = null,}) {
-  return _then(_self.copyWith(
-effect: null == effect ? _self.effect : effect // ignore: cast_nullable_to_non_nullable
-as SearchActionEffect,
-  ));
-}
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$SearchActionEffectCopyWith<$Res> get effect {
-
-  return $SearchActionEffectCopyWith<$Res>(_self.effect, (value) {
-    return _then(_self.copyWith(effect: value));
-  });
-}
-}
-
-
-/// Adds pattern-matching-related methods to [SearchActionResult].
-extension SearchActionResultPatterns on SearchActionResult {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchActionResultCompleted value)?  completed,TResult Function( SearchActionResultFailed value)?  failed,required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case SearchActionResultCompleted() when completed != null:
-return completed(_that);case SearchActionResultFailed() when failed != null:
-return failed(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchActionResultCompleted value)  completed,required TResult Function( SearchActionResultFailed value)  failed,}){
-final _that = this;
-switch (_that) {
-case SearchActionResultCompleted():
-return completed(_that);case SearchActionResultFailed():
-return failed(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchActionResultCompleted value)?  completed,TResult? Function( SearchActionResultFailed value)?  failed,}){
-final _that = this;
-switch (_that) {
-case SearchActionResultCompleted() when completed != null:
-return completed(_that);case SearchActionResultFailed() when failed != null:
-return failed(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( SearchActionEffect effect)?  completed,TResult Function( String message,  SearchActionEffect effect)?  failed,required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case SearchActionResultCompleted() when completed != null:
-return completed(_that.effect);case SearchActionResultFailed() when failed != null:
-return failed(_that.message,_that.effect);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( SearchActionEffect effect)  completed,required TResult Function( String message,  SearchActionEffect effect)  failed,}) {final _that = this;
-switch (_that) {
-case SearchActionResultCompleted():
-return completed(_that.effect);case SearchActionResultFailed():
-return failed(_that.message,_that.effect);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( SearchActionEffect effect)?  completed,TResult? Function( String message,  SearchActionEffect effect)?  failed,}) {final _that = this;
-switch (_that) {
-case SearchActionResultCompleted() when completed != null:
-return completed(_that.effect);case SearchActionResultFailed() when failed != null:
-return failed(_that.message,_that.effect);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class SearchActionResultCompleted with DiagnosticableTreeMixin implements SearchActionResult {
-  const SearchActionResultCompleted({this.effect = const SearchActionEffect.close()});
-
-
-@override@JsonKey() final  SearchActionEffect effect;
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SearchActionResultCompletedCopyWith<SearchActionResultCompleted> get copyWith => _$SearchActionResultCompletedCopyWithImpl<SearchActionResultCompleted>(this, _$identity);
 
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
-    ..add(DiagnosticsProperty('type', 'SearchActionResult.completed'))
-    ..add(DiagnosticsProperty('effect', effect));
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionResultCompleted&&(identical(other.effect, effect) || other.effect == effect));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,effect);
-}
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionResult.completed(effect: $effect)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SearchActionResultCompletedCopyWith<$Res> implements $SearchActionResultCopyWith<$Res> {
-  factory $SearchActionResultCompletedCopyWith(SearchActionResultCompleted value, $Res Function(SearchActionResultCompleted) _then) = _$SearchActionResultCompletedCopyWithImpl;
-@override @useResult
-$Res call({
- SearchActionEffect effect
-});
-
-
-@override $SearchActionEffectCopyWith<$Res> get effect;
-
-}
-/// @nodoc
-class _$SearchActionResultCompletedCopyWithImpl<$Res>
-    implements $SearchActionResultCompletedCopyWith<$Res> {
-  _$SearchActionResultCompletedCopyWithImpl(this._self, this._then);
-
-  final SearchActionResultCompleted _self;
-  final $Res Function(SearchActionResultCompleted) _then;
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? effect = null,}) {
-  return _then(SearchActionResultCompleted(
-effect: null == effect ? _self.effect : effect // ignore: cast_nullable_to_non_nullable
-as SearchActionEffect,
-  ));
-}
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$SearchActionEffectCopyWith<$Res> get effect {
-
-  return $SearchActionEffectCopyWith<$Res>(_self.effect, (value) {
-    return _then(_self.copyWith(effect: value));
-  });
-}
-}
-
-/// @nodoc
-
-
-class SearchActionResultFailed with DiagnosticableTreeMixin implements SearchActionResult {
-  const SearchActionResultFailed({required this.message, this.effect = const SearchActionEffect.refresh()}): assert(message != "", 'Message must not be empty.');
-
-
- final  String message;
-@override@JsonKey() final  SearchActionEffect effect;
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SearchActionResultFailedCopyWith<SearchActionResultFailed> get copyWith => _$SearchActionResultFailedCopyWithImpl<SearchActionResultFailed>(this, _$identity);
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionResult.failed'))
-    ..add(DiagnosticsProperty('message', message))..add(DiagnosticsProperty('effect', effect));
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionResultFailed&&(identical(other.message, message) || other.message == message)&&(identical(other.effect, effect) || other.effect == effect));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,message,effect);
-}
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionResult.failed(message: $message, effect: $effect)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SearchActionResultFailedCopyWith<$Res> implements $SearchActionResultCopyWith<$Res> {
-  factory $SearchActionResultFailedCopyWith(SearchActionResultFailed value, $Res Function(SearchActionResultFailed) _then) = _$SearchActionResultFailedCopyWithImpl;
-@override @useResult
-$Res call({
- String message, SearchActionEffect effect
-});
-
-
-@override $SearchActionEffectCopyWith<$Res> get effect;
-
-}
-/// @nodoc
-class _$SearchActionResultFailedCopyWithImpl<$Res>
-    implements $SearchActionResultFailedCopyWith<$Res> {
-  _$SearchActionResultFailedCopyWithImpl(this._self, this._then);
-
-  final SearchActionResultFailed _self;
-  final $Res Function(SearchActionResultFailed) _then;
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? effect = null,}) {
-  return _then(SearchActionResultFailed(
-message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,effect: null == effect ? _self.effect : effect // ignore: cast_nullable_to_non_nullable
-as SearchActionEffect,
-  ));
-}
-
-/// Create a copy of SearchActionResult
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$SearchActionEffectCopyWith<$Res> get effect {
-
-  return $SearchActionEffectCopyWith<$Res>(_self.effect, (value) {
-    return _then(_self.copyWith(effect: value));
-  });
-}
-}
-
-/// @nodoc
-mixin _$SearchActionEffect implements DiagnosticableTreeMixin {
-
-
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionEffect'))
+    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect'))
     ;
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionEffect);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSurfaceEffect);
 }
 
 
@@ -3278,20 +2892,20 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionEffect()';
+    return 'SearchSurfaceEffect()';
 }
 
 
 }
 
 /// @nodoc
-class $SearchActionEffectCopyWith<$Res>  {
-$SearchActionEffectCopyWith(SearchActionEffect _, $Res Function(SearchActionEffect) __);
+class $SearchSurfaceEffectCopyWith<$Res>  {
+$SearchSurfaceEffectCopyWith(SearchSurfaceEffect _, $Res Function(SearchSurfaceEffect) __);
 }
 
 
-/// Adds pattern-matching-related methods to [SearchActionEffect].
-extension SearchActionEffectPatterns on SearchActionEffect {
+/// Adds pattern-matching-related methods to [SearchSurfaceEffect].
+extension SearchSurfaceEffectPatterns on SearchSurfaceEffect {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -3304,12 +2918,12 @@ extension SearchActionEffectPatterns on SearchActionEffect {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchActionUpdateQuery value)?  updateQuery,TResult Function( SearchActionRefresh value)?  refresh,TResult Function( SearchActionClose value)?  close,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchSurfaceUpdateQuery value)?  updateQuery,TResult Function( SearchSurfaceRefresh value)?  refresh,TResult Function( SearchSurfaceClose value)?  close,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case SearchActionUpdateQuery() when updateQuery != null:
-return updateQuery(_that);case SearchActionRefresh() when refresh != null:
-return refresh(_that);case SearchActionClose() when close != null:
+case SearchSurfaceUpdateQuery() when updateQuery != null:
+return updateQuery(_that);case SearchSurfaceRefresh() when refresh != null:
+return refresh(_that);case SearchSurfaceClose() when close != null:
 return close(_that);case _:
   return orElse();
 
@@ -3328,12 +2942,12 @@ return close(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchActionUpdateQuery value)  updateQuery,required TResult Function( SearchActionRefresh value)  refresh,required TResult Function( SearchActionClose value)  close,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchSurfaceUpdateQuery value)  updateQuery,required TResult Function( SearchSurfaceRefresh value)  refresh,required TResult Function( SearchSurfaceClose value)  close,}){
 final _that = this;
 switch (_that) {
-case SearchActionUpdateQuery():
-return updateQuery(_that);case SearchActionRefresh():
-return refresh(_that);case SearchActionClose():
+case SearchSurfaceUpdateQuery():
+return updateQuery(_that);case SearchSurfaceRefresh():
+return refresh(_that);case SearchSurfaceClose():
 return close(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -3351,12 +2965,12 @@ return close(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchActionUpdateQuery value)?  updateQuery,TResult? Function( SearchActionRefresh value)?  refresh,TResult? Function( SearchActionClose value)?  close,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchSurfaceUpdateQuery value)?  updateQuery,TResult? Function( SearchSurfaceRefresh value)?  refresh,TResult? Function( SearchSurfaceClose value)?  close,}){
 final _that = this;
 switch (_that) {
-case SearchActionUpdateQuery() when updateQuery != null:
-return updateQuery(_that);case SearchActionRefresh() when refresh != null:
-return refresh(_that);case SearchActionClose() when close != null:
+case SearchSurfaceUpdateQuery() when updateQuery != null:
+return updateQuery(_that);case SearchSurfaceRefresh() when refresh != null:
+return refresh(_that);case SearchSurfaceClose() when close != null:
 return close(_that);case _:
   return null;
 
@@ -3376,9 +2990,9 @@ return close(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String updateQuery)?  updateQuery,TResult Function()?  refresh,TResult Function()?  close,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case SearchActionUpdateQuery() when updateQuery != null:
-return updateQuery(_that.updateQuery);case SearchActionRefresh() when refresh != null:
-return refresh();case SearchActionClose() when close != null:
+case SearchSurfaceUpdateQuery() when updateQuery != null:
+return updateQuery(_that.updateQuery);case SearchSurfaceRefresh() when refresh != null:
+return refresh();case SearchSurfaceClose() when close != null:
 return close();case _:
   return orElse();
 
@@ -3399,9 +3013,9 @@ return close();case _:
 
 @optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String updateQuery)  updateQuery,required TResult Function()  refresh,required TResult Function()  close,}) {final _that = this;
 switch (_that) {
-case SearchActionUpdateQuery():
-return updateQuery(_that.updateQuery);case SearchActionRefresh():
-return refresh();case SearchActionClose():
+case SearchSurfaceUpdateQuery():
+return updateQuery(_that.updateQuery);case SearchSurfaceRefresh():
+return refresh();case SearchSurfaceClose():
 return close();case _:
   throw StateError('Unexpected subclass');
 
@@ -3421,9 +3035,9 @@ return close();case _:
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String updateQuery)?  updateQuery,TResult? Function()?  refresh,TResult? Function()?  close,}) {final _that = this;
 switch (_that) {
-case SearchActionUpdateQuery() when updateQuery != null:
-return updateQuery(_that.updateQuery);case SearchActionRefresh() when refresh != null:
-return refresh();case SearchActionClose() when close != null:
+case SearchSurfaceUpdateQuery() when updateQuery != null:
+return updateQuery(_that.updateQuery);case SearchSurfaceRefresh() when refresh != null:
+return refresh();case SearchSurfaceClose() when close != null:
 return close();case _:
   return null;
 
@@ -3435,29 +3049,29 @@ return close();case _:
 /// @nodoc
 
 
-class SearchActionUpdateQuery with DiagnosticableTreeMixin implements SearchActionEffect {
-  const SearchActionUpdateQuery({required this.updateQuery});
-
+class SearchSurfaceUpdateQuery with DiagnosticableTreeMixin implements SearchSurfaceEffect {
+  const SearchSurfaceUpdateQuery({required this.updateQuery});
+  
 
  final  String updateQuery;
 
-/// Create a copy of SearchActionEffect
+/// Create a copy of SearchSurfaceEffect
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$SearchActionUpdateQueryCopyWith<SearchActionUpdateQuery> get copyWith => _$SearchActionUpdateQueryCopyWithImpl<SearchActionUpdateQuery>(this, _$identity);
+$SearchSurfaceUpdateQueryCopyWith<SearchSurfaceUpdateQuery> get copyWith => _$SearchSurfaceUpdateQueryCopyWithImpl<SearchSurfaceUpdateQuery>(this, _$identity);
 
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
-    ..add(DiagnosticsProperty('type', 'SearchActionEffect.updateQuery'))
+    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect.updateQuery'))
     ..add(DiagnosticsProperty('updateQuery', updateQuery));
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionUpdateQuery&&(identical(other.updateQuery, updateQuery) || other.updateQuery == updateQuery));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSurfaceUpdateQuery&&(identical(other.updateQuery, updateQuery) || other.updateQuery == updateQuery));
 }
 
 
@@ -3468,15 +3082,15 @@ int get hashCode {
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionEffect.updateQuery(updateQuery: $updateQuery)';
+    return 'SearchSurfaceEffect.updateQuery(updateQuery: $updateQuery)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $SearchActionUpdateQueryCopyWith<$Res> implements $SearchActionEffectCopyWith<$Res> {
-  factory $SearchActionUpdateQueryCopyWith(SearchActionUpdateQuery value, $Res Function(SearchActionUpdateQuery) _then) = _$SearchActionUpdateQueryCopyWithImpl;
+abstract mixin class $SearchSurfaceUpdateQueryCopyWith<$Res> implements $SearchSurfaceEffectCopyWith<$Res> {
+  factory $SearchSurfaceUpdateQueryCopyWith(SearchSurfaceUpdateQuery value, $Res Function(SearchSurfaceUpdateQuery) _then) = _$SearchSurfaceUpdateQueryCopyWithImpl;
 @useResult
 $Res call({
  String updateQuery
@@ -3487,17 +3101,17 @@ $Res call({
 
 }
 /// @nodoc
-class _$SearchActionUpdateQueryCopyWithImpl<$Res>
-    implements $SearchActionUpdateQueryCopyWith<$Res> {
-  _$SearchActionUpdateQueryCopyWithImpl(this._self, this._then);
+class _$SearchSurfaceUpdateQueryCopyWithImpl<$Res>
+    implements $SearchSurfaceUpdateQueryCopyWith<$Res> {
+  _$SearchSurfaceUpdateQueryCopyWithImpl(this._self, this._then);
 
-  final SearchActionUpdateQuery _self;
-  final $Res Function(SearchActionUpdateQuery) _then;
+  final SearchSurfaceUpdateQuery _self;
+  final $Res Function(SearchSurfaceUpdateQuery) _then;
 
-/// Create a copy of SearchActionEffect
+/// Create a copy of SearchSurfaceEffect
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? updateQuery = null,}) {
-  return _then(SearchActionUpdateQuery(
+  return _then(SearchSurfaceUpdateQuery(
 updateQuery: null == updateQuery ? _self.updateQuery : updateQuery // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -3509,9 +3123,9 @@ as String,
 /// @nodoc
 
 
-class SearchActionRefresh with DiagnosticableTreeMixin implements SearchActionEffect {
-  const SearchActionRefresh();
-
+class SearchSurfaceRefresh with DiagnosticableTreeMixin implements SearchSurfaceEffect {
+  const SearchSurfaceRefresh();
+  
 
 
 
@@ -3520,13 +3134,13 @@ class SearchActionRefresh with DiagnosticableTreeMixin implements SearchActionEf
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
-    ..add(DiagnosticsProperty('type', 'SearchActionEffect.refresh'))
+    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect.refresh'))
     ;
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionRefresh);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSurfaceRefresh);
 }
 
 
@@ -3535,7 +3149,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionEffect.refresh()';
+    return 'SearchSurfaceEffect.refresh()';
 }
 
 
@@ -3547,9 +3161,9 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchActionClose with DiagnosticableTreeMixin implements SearchActionEffect {
-  const SearchActionClose();
-
+class SearchSurfaceClose with DiagnosticableTreeMixin implements SearchSurfaceEffect {
+  const SearchSurfaceClose();
+  
 
 
 
@@ -3558,13 +3172,13 @@ class SearchActionClose with DiagnosticableTreeMixin implements SearchActionEffe
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
-    ..add(DiagnosticsProperty('type', 'SearchActionEffect.close'))
+    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect.close'))
     ;
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionClose);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSurfaceClose);
 }
 
 
@@ -3573,7 +3187,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionEffect.close()';
+    return 'SearchSurfaceEffect.close()';
 }
 
 
@@ -3581,470 +3195,6 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 
-
-/// @nodoc
-mixin _$SearchActionState implements DiagnosticableTreeMixin {
-
-
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionState'))
-    ;
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionState);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionState()';
-}
-
-
-}
-
-/// @nodoc
-class $SearchActionStateCopyWith<$Res>  {
-$SearchActionStateCopyWith(SearchActionState _, $Res Function(SearchActionState) __);
-}
-
-
-/// Adds pattern-matching-related methods to [SearchActionState].
-extension SearchActionStatePatterns on SearchActionState {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchActionIdle value)?  idle,TResult Function( SearchActionRunning value)?  running,TResult Function( SearchActionCompleted value)?  completed,TResult Function( SearchActionFailed value)?  failed,required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case SearchActionIdle() when idle != null:
-return idle(_that);case SearchActionRunning() when running != null:
-return running(_that);case SearchActionCompleted() when completed != null:
-return completed(_that);case SearchActionFailed() when failed != null:
-return failed(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchActionIdle value)  idle,required TResult Function( SearchActionRunning value)  running,required TResult Function( SearchActionCompleted value)  completed,required TResult Function( SearchActionFailed value)  failed,}){
-final _that = this;
-switch (_that) {
-case SearchActionIdle():
-return idle(_that);case SearchActionRunning():
-return running(_that);case SearchActionCompleted():
-return completed(_that);case SearchActionFailed():
-return failed(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchActionIdle value)?  idle,TResult? Function( SearchActionRunning value)?  running,TResult? Function( SearchActionCompleted value)?  completed,TResult? Function( SearchActionFailed value)?  failed,}){
-final _that = this;
-switch (_that) {
-case SearchActionIdle() when idle != null:
-return idle(_that);case SearchActionRunning() when running != null:
-return running(_that);case SearchActionCompleted() when completed != null:
-return completed(_that);case SearchActionFailed() when failed != null:
-return failed(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function( Type action,  Set<String> resultIds)?  running,TResult Function( Type action,  Set<String> resultIds)?  completed,TResult Function( Type action,  Set<String> resultIds,  String message)?  failed,required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case SearchActionIdle() when idle != null:
-return idle();case SearchActionRunning() when running != null:
-return running(_that.action,_that.resultIds);case SearchActionCompleted() when completed != null:
-return completed(_that.action,_that.resultIds);case SearchActionFailed() when failed != null:
-return failed(_that.action,_that.resultIds,_that.message);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function( Type action,  Set<String> resultIds)  running,required TResult Function( Type action,  Set<String> resultIds)  completed,required TResult Function( Type action,  Set<String> resultIds,  String message)  failed,}) {final _that = this;
-switch (_that) {
-case SearchActionIdle():
-return idle();case SearchActionRunning():
-return running(_that.action,_that.resultIds);case SearchActionCompleted():
-return completed(_that.action,_that.resultIds);case SearchActionFailed():
-return failed(_that.action,_that.resultIds,_that.message);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function( Type action,  Set<String> resultIds)?  running,TResult? Function( Type action,  Set<String> resultIds)?  completed,TResult? Function( Type action,  Set<String> resultIds,  String message)?  failed,}) {final _that = this;
-switch (_that) {
-case SearchActionIdle() when idle != null:
-return idle();case SearchActionRunning() when running != null:
-return running(_that.action,_that.resultIds);case SearchActionCompleted() when completed != null:
-return completed(_that.action,_that.resultIds);case SearchActionFailed() when failed != null:
-return failed(_that.action,_that.resultIds,_that.message);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class SearchActionIdle with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionIdle();
-
-
-
-
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionState.idle'))
-    ;
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionIdle);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionState.idle()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class SearchActionRunning with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionRunning({required this.action, required  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
-
-
- final  Type action;
- final  Set<String> _resultIds;
- Set<String> get resultIds {
-  if (_resultIds is EqualUnmodifiableSetView) return _resultIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_resultIds);
-}
-
-
-/// Create a copy of SearchActionState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SearchActionRunningCopyWith<SearchActionRunning> get copyWith => _$SearchActionRunningCopyWithImpl<SearchActionRunning>(this, _$identity);
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionState.running'))
-    ..add(DiagnosticsProperty('action', action))..add(DiagnosticsProperty('resultIds', resultIds));
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionRunning&&(identical(other.action, action) || other.action == action)&&const DeepCollectionEquality().equals(other.resultIds, _resultIds));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,action,const DeepCollectionEquality().hash(_resultIds));
-}
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionState.running(action: $action, resultIds: $resultIds)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SearchActionRunningCopyWith<$Res> implements $SearchActionStateCopyWith<$Res> {
-  factory $SearchActionRunningCopyWith(SearchActionRunning value, $Res Function(SearchActionRunning) _then) = _$SearchActionRunningCopyWithImpl;
-@useResult
-$Res call({
- Type action, Set<String> resultIds
-});
-
-
-
-
-}
-/// @nodoc
-class _$SearchActionRunningCopyWithImpl<$Res>
-    implements $SearchActionRunningCopyWith<$Res> {
-  _$SearchActionRunningCopyWithImpl(this._self, this._then);
-
-  final SearchActionRunning _self;
-  final $Res Function(SearchActionRunning) _then;
-
-/// Create a copy of SearchActionState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? action = null,Object? resultIds = null,}) {
-  return _then(SearchActionRunning(
-action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as Type,resultIds: null == resultIds ? _self._resultIds : resultIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class SearchActionCompleted with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionCompleted({required this.action, required  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
-
-
- final  Type action;
- final  Set<String> _resultIds;
- Set<String> get resultIds {
-  if (_resultIds is EqualUnmodifiableSetView) return _resultIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_resultIds);
-}
-
-
-/// Create a copy of SearchActionState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SearchActionCompletedCopyWith<SearchActionCompleted> get copyWith => _$SearchActionCompletedCopyWithImpl<SearchActionCompleted>(this, _$identity);
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionState.completed'))
-    ..add(DiagnosticsProperty('action', action))..add(DiagnosticsProperty('resultIds', resultIds));
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionCompleted&&(identical(other.action, action) || other.action == action)&&const DeepCollectionEquality().equals(other.resultIds, _resultIds));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,action,const DeepCollectionEquality().hash(_resultIds));
-}
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionState.completed(action: $action, resultIds: $resultIds)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SearchActionCompletedCopyWith<$Res> implements $SearchActionStateCopyWith<$Res> {
-  factory $SearchActionCompletedCopyWith(SearchActionCompleted value, $Res Function(SearchActionCompleted) _then) = _$SearchActionCompletedCopyWithImpl;
-@useResult
-$Res call({
- Type action, Set<String> resultIds
-});
-
-
-
-
-}
-/// @nodoc
-class _$SearchActionCompletedCopyWithImpl<$Res>
-    implements $SearchActionCompletedCopyWith<$Res> {
-  _$SearchActionCompletedCopyWithImpl(this._self, this._then);
-
-  final SearchActionCompleted _self;
-  final $Res Function(SearchActionCompleted) _then;
-
-/// Create a copy of SearchActionState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? action = null,Object? resultIds = null,}) {
-  return _then(SearchActionCompleted(
-action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as Type,resultIds: null == resultIds ? _self._resultIds : resultIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class SearchActionFailed with DiagnosticableTreeMixin implements SearchActionState {
-  const SearchActionFailed({required this.action, required  Set<String> resultIds, required this.message}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),assert(message != "", 'Message must not be empty.'),_resultIds = resultIds;
-
-
- final  Type action;
- final  Set<String> _resultIds;
- Set<String> get resultIds {
-  if (_resultIds is EqualUnmodifiableSetView) return _resultIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_resultIds);
-}
-
- final  String message;
-
-/// Create a copy of SearchActionState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SearchActionFailedCopyWith<SearchActionFailed> get copyWith => _$SearchActionFailedCopyWithImpl<SearchActionFailed>(this, _$identity);
-
-
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActionState.failed'))
-    ..add(DiagnosticsProperty('action', action))..add(DiagnosticsProperty('resultIds', resultIds))..add(DiagnosticsProperty('message', message));
-}
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchActionFailed&&(identical(other.action, action) || other.action == action)&&const DeepCollectionEquality().equals(other.resultIds, _resultIds)&&(identical(other.message, message) || other.message == message));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,action,const DeepCollectionEquality().hash(_resultIds),message);
-}
-
-@override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'SearchActionState.failed(action: $action, resultIds: $resultIds, message: $message)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SearchActionFailedCopyWith<$Res> implements $SearchActionStateCopyWith<$Res> {
-  factory $SearchActionFailedCopyWith(SearchActionFailed value, $Res Function(SearchActionFailed) _then) = _$SearchActionFailedCopyWithImpl;
-@useResult
-$Res call({
- Type action, Set<String> resultIds, String message
-});
-
-
-
-
-}
-/// @nodoc
-class _$SearchActionFailedCopyWithImpl<$Res>
-    implements $SearchActionFailedCopyWith<$Res> {
-  _$SearchActionFailedCopyWithImpl(this._self, this._then);
-
-  final SearchActionFailed _self;
-  final $Res Function(SearchActionFailed) _then;
-
-/// Create a copy of SearchActionState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? action = null,Object? resultIds = null,Object? message = null,}) {
-  return _then(SearchActionFailed(
-action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as Type,resultIds: null == resultIds ? _self._resultIds : resultIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
 
 /// @nodoc
 mixin _$SearchPreviewRequest implements DiagnosticableTreeMixin {
@@ -4267,7 +3417,7 @@ return $default(_that.resultId,_that.queryContext);case _:
 
 class _SearchPreviewRequest with DiagnosticableTreeMixin implements SearchPreviewRequest {
   const _SearchPreviewRequest({required this.resultId, this.queryContext}): assert(resultId != "", 'Result ID must not be empty.');
-
+  
 
 @override final  String resultId;
 @override final  SearchQueryContext? queryContext;
@@ -4527,7 +3677,7 @@ return error(_that.message);case _:
 
 class SearchPreviewRequestResultData with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
   const SearchPreviewRequestResultData({required this.data});
-
+  
 
  final  Object data;
 
@@ -4600,7 +3750,7 @@ data: null == data ? _self.data : data ,
 
 class SearchPreviewRequestResultError with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
   const SearchPreviewRequestResultError({required this.message}): assert(message != "", 'Message must not be empty.');
-
+  
 
  final  String message;
 

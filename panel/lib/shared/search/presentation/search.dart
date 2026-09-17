@@ -1,10 +1,10 @@
-/// Widgets that render search state, results, previews, and actions.
+/// Widgets that render search state, results, previews, and commands.
 ///
 /// These widgets observe application controllers. They do not own query or
-/// selection state, and they keep source and action policy outside presentation.
+/// selection state, and they keep source and command policy outside presentation.
 library;
 
-export "search_action_info.dart";
+export "search_command_info.dart";
 export "search_frame.dart";
 export "search_modal.dart";
 export "search_modal_body.dart";
