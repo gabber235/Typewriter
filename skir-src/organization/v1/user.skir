@@ -8,9 +8,9 @@ import {
 import { RecordId } from "kernel/v1/record_id.skir";
 import {
   AutoAcceptedMember,
+  UserJoinRequest,
   UserJoinRequestsChanged,
   UserJoinRequestsSnapshot,
-  UserJoinRequest,
 } from "organization/v1/join_request.skir";
 import {
   UserOrganizationsChanged,
