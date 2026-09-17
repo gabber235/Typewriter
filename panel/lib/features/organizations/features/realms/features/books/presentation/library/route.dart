@@ -105,6 +105,7 @@ class LibraryPage extends HookConsumerWidget {
                             vertical: context.spacing.space4,
                           ),
                           child: ResponsiveGridView.builder(
+                            primary: true,
                             gridDelegate: ResponsiveGridDelegate(
                               crossAxisExtent: bookWidth,
                               mainAxisSpacing: context.spacing.space4,
