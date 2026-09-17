@@ -5,6 +5,7 @@
 library;
 
 export "graph_commit.dart";
+export "graph_incremental_placer.dart";
 export "graph_interaction_controller.dart";
 export "graph_layout.dart";
 export "graph_modes.dart";

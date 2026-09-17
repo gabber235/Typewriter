@@ -51,39 +51,45 @@ extension ElementCommands on AuthoringSession {
       ),
   ]);
 
+  /// Moves each element and its calculated placement in one guarded patch.
   Future<skir.ApplyAuthoringBatchResponse> moveElementsToPage(
-    Iterable<skir.PageElement> elements,
+    Iterable<(skir.PageElement, skir.ElementPlacement)> elements,
     skir.RecordId targetPage,
   ) => apply([
-    for (final element in elements)
+    for (final (element, placement) in elements)
       skir.AuthoringOperation.createPatchElement(
         id: element.id,
         page: skir.RecordIdChange(expected: element.page, value: targetPage),
         name: null,
-        placement: null,
+        placement: skir.ElementPlacementChange(
+          expected: element.placement,
+          value: placement,
+        ),
         valueMutations: const [],
       ),
   ]);
 
-  /// Rewrites links within the duplicated set; external targets remain unchanged.
   /// Duplicates elements and rewrites links whose targets are also duplicated.
-  /// Links to elements outside [copies] retain their original target.
+  ///
+  /// Each copy carries its already calculated placement. Links outside the
+  /// copied set retain their original target.
   Future<skir.ApplyAuthoringBatchResponse> duplicateElements(
-    Map<skir.PageElement, skir.RecordId> copies,
+    Map<skir.PageElement, ({skir.RecordId id, skir.ElementPlacement placement})>
+    copies,
   ) {
     final rewrites = [
       for (final copy in copies.entries)
-        skir.ReferenceRewrite(source: copy.key.id, target: copy.value),
+        skir.ReferenceRewrite(source: copy.key.id, target: copy.value.id),
     ];
     return apply([
       for (final copy in copies.entries)
         skir.AuthoringOperation.createDuplicateElement(
           sourceId: copy.key.id,
           expectedValue: copy.key.value,
-          newId: copy.value,
+          newId: copy.value.id,
           page: copy.key.page,
           name: "${copy.key.name} Copy",
-          placement: copy.key.placement,
+          placement: copy.value.placement,
           referenceRewrites: rewrites,
         ),
     ]);

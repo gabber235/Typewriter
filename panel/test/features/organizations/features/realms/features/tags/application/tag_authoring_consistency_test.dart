@@ -16,6 +16,27 @@ part "tag_authoring_consistency_test_support.dart";
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test("tag creation uses the supplied graph anchor", () async {
+    final harness = await _Harness.create();
+    skir.ApplyAuthoringBatchRequest? submitted;
+    harness.nats.registerHandler(_batchSubject, (bytes) {
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return harness.appliedResponse(submitted!.batchId);
+    });
+
+    final created = await harness.container
+        .read(canonicalTagsProvider.notifier)
+        .createTag(name: "created", preferredGraphAnchor: const Offset(2, 0.5));
+
+    final operation =
+        submitted!.operations.single
+            as skir.AuthoringOperation_createTagWrapper;
+    expect(created.placement, const Placement(x: 0, y: 2, width: 4, height: 1));
+    expect(operation.value.tag.placement.x, 0);
+    expect(operation.value.tag.placement.y, 2);
+    await harness.dispose();
+  });
+
   test(
     "applied color save never installs stale tag content at the new revision",
     () async {

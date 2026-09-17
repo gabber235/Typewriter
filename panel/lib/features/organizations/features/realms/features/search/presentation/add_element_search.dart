@@ -9,6 +9,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 Future<void> showAddElementSearch(
   BuildContext context, {
   required String pageId,
+  Offset? preferredGraphAnchor,
 }) => showSearchModal<void>(
   context,
   (ref, promptContext) {
@@ -44,6 +45,7 @@ Future<void> showAddElementSearch(
               realmId: realmId,
               pageId: targetPageId,
               policy: policy,
+              preferredGraphAnchor: preferredGraphAnchor,
             ),
           ],
         ),

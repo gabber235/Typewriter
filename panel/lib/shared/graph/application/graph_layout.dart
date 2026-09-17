@@ -124,19 +124,19 @@ class GraphLayoutResult {
   }
 
   Offset get centerOfMass {
-    if (placementsById.isEmpty) return Offset.zero;
-
-    var totalMass = 0.0;
-    var weightedX = 0.0;
-    var weightedY = 0.0;
-    for (final placed in placementsById.values) {
-      final area = placed.bounds.width * placed.bounds.height;
-      final mass = 1.0 + area * 0.001;
-      totalMass += mass;
-      weightedX += placed.bounds.center.dx * mass;
-      weightedY += placed.bounds.center.dy * mass;
-    }
-    return Offset(weightedX / totalMass, weightedY / totalMass);
+    final center = graphCenterOfMass(
+      placementsById.values.map((placed) {
+        final bounds = placed.bounds;
+        return GraphGridRect(
+          x: (bounds.left / data.cellSize).round(),
+          y: (bounds.top / data.cellSize).round(),
+          width: (bounds.width / data.cellSize).round(),
+          height: (bounds.height / data.cellSize).round(),
+        );
+      }),
+      cellSize: data.cellSize,
+    );
+    return center == null ? Offset.zero : center * data.cellSize;
   }
 
   static Offset _connectionPoint(Rect bounds, EdgeSide side) {

@@ -45,8 +45,14 @@ void main() {
         placement: first.placement,
       );
       final copies = {
-        first: newResourceId(AuthoringResource.element),
-        second: newResourceId(AuthoringResource.element),
+        first: (
+          id: newResourceId(AuthoringResource.element),
+          placement: first.placement,
+        ),
+        second: (
+          id: newResourceId(AuthoringResource.element),
+          placement: second.placement,
+        ),
       };
 
       await harness.container
@@ -63,13 +69,186 @@ void main() {
         );
         expect(
           operation.value.referenceRewrites.map((rewrite) => rewrite.target),
-          copies.values,
+          copies.values.map((copy) => copy.id),
         );
         expect(operation.value.newId.id, matches(RegExp(r"^[a-z0-9]{20}$")));
       }
       await harness.dispose();
     },
   );
+
+  test(
+    "graph creation uses the supplied anchor and clears existing entries",
+    () async {
+      final harness = await _Harness.create();
+      skir.ApplyAuthoringBatchRequest? submitted;
+      harness.nats.registerHandler(_batchSubject, (bytes) {
+        submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createApplied(
+            sequence: 2,
+            batchId: submitted!.batchId,
+            changes: const [],
+            indirectlyAffectedResources: const [],
+          ),
+        );
+      });
+
+      await harness.notifier.createEntries(
+        [harness.elementDefinition],
+        EntryPlacementKind.graph,
+        preferredGraphAnchor: const Offset(10, 10),
+      );
+
+      final operation =
+          submitted!.operations.single
+              as skir.AuthoringOperation_createElementWrapper;
+      final placement = switch (operation.value.element.placement) {
+        skir.ElementPlacement_graphWrapper(:final value) => value,
+        _ => fail("Created element did not use graph placement"),
+      };
+      expect(
+        (placement.x, placement.y, placement.width, placement.height),
+        (8, 10, 4, 1),
+      );
+      await harness.dispose();
+    },
+  );
+
+  test(
+    "graph batch creation preserves one empty cell between entries",
+    () async {
+      final harness = await _Harness.create();
+      skir.ApplyAuthoringBatchRequest? submitted;
+      harness.nats.registerHandler(_batchSubject, (bytes) {
+        submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createApplied(
+            sequence: 2,
+            batchId: submitted!.batchId,
+            changes: const [],
+            indirectlyAffectedResources: const [],
+          ),
+        );
+      });
+
+      await harness.notifier.createEntries(
+        [harness.elementDefinition, harness.elementDefinition],
+        EntryPlacementKind.graph,
+        preferredGraphAnchor: const Offset(10, 10),
+      );
+
+      final placements = [
+        for (final operation
+            in submitted!.operations
+                .cast<skir.AuthoringOperation_createElementWrapper>())
+          switch (operation.value.element.placement) {
+            skir.ElementPlacement_graphWrapper(:final value) => value,
+            _ => fail("Created element did not use graph placement"),
+          },
+      ];
+      expect(placements[1].y, placements[0].y + placements[0].height + 1);
+      await harness.dispose();
+    },
+  );
+
+  test("graph duplication places the copy beside its source", () async {
+    final harness = await _Harness.create();
+    skir.ApplyAuthoringBatchRequest? submitted;
+    harness.nats.registerHandler(_batchSubject, (bytes) {
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
+          sequence: 2,
+          batchId: submitted!.batchId,
+          changes: const [],
+          indirectlyAffectedResources: const [],
+        ),
+      );
+    });
+
+    await harness.notifier.duplicateAll([_element.id]);
+
+    final operation =
+        submitted!.operations.single
+            as skir.AuthoringOperation_duplicateElementWrapper;
+    final placement = switch (operation.value.placement) {
+      skir.ElementPlacement_graphWrapper(:final value) => value,
+      _ => fail("Duplicated element did not use graph placement"),
+    };
+    expect(
+      (placement.x, placement.y, placement.width, placement.height),
+      (5, 0, 4, 1),
+    );
+    await harness.dispose();
+  });
+
+  test("page movement patches page and placement atomically", () async {
+    final harness = await _Harness.create();
+    skir.ApplyAuthoringBatchRequest? submitted;
+    harness.nats.registerHandler(_batchSubject, (bytes) {
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
+          sequence: 2,
+          batchId: submitted!.batchId,
+          changes: const [],
+          indirectlyAffectedResources: const [],
+        ),
+      );
+    });
+    final element = harness._wireElement();
+    final target = recordId("page:target");
+    final placement = skir.ElementPlacement.createGraph(
+      x: 7,
+      y: 8,
+      width: 4,
+      height: 1,
+    );
+
+    await harness.container
+        .read(authoringSessionProvider(_organization, _realm).notifier)
+        .moveElementsToPage([(element, placement)], target);
+
+    final operation =
+        submitted!.operations.single
+            as skir.AuthoringOperation_patchElementWrapper;
+    expect(operation.value.page?.expected, element.page);
+    expect(operation.value.page?.value, target);
+    expect(operation.value.placement?.expected, element.placement);
+    expect(operation.value.placement?.value, placement);
+    await harness.dispose();
+  });
+
+  test("cross page movement clears target graph content", () async {
+    final harness = await _Harness.create()
+      ..targetPageExists = true;
+    skir.ApplyAuthoringBatchRequest? submitted;
+    harness.nats.registerHandler(_batchSubject, (bytes) {
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
+          sequence: 2,
+          batchId: submitted!.batchId,
+          changes: const [],
+          indirectlyAffectedResources: const [],
+        ),
+      );
+    });
+
+    await harness.notifier.moveEntriesToPage([_element.id], _targetPage.id);
+
+    final operation =
+        submitted!.operations.single
+            as skir.AuthoringOperation_patchElementWrapper;
+    final placement = switch (operation.value.placement?.value) {
+      skir.ElementPlacement_graphWrapper(:final value) => value,
+      _ => fail("Moved element did not use graph placement"),
+    };
+    expect(operation.value.page?.value, _targetPage);
+    expect((placement.x, placement.y), (0, 2));
+    await harness.dispose();
+  });
 
   test("invalid element update restores the session value", () async {
     final harness = await _Harness.create();
@@ -542,6 +721,7 @@ final class _Harness {
   bool _pageElementsClosed = false;
   int sequence = 1;
   bool pageExists = true;
+  bool targetPageExists = false;
   String title = "Initial";
   int x = 0;
 
@@ -659,6 +839,19 @@ final class _Harness {
                 )
               : null,
         ),
+        if (targetPageExists)
+          skir.AuthoringSnapshotSlice.createPage(
+            pageId: _targetPage,
+            document: skir.PageDocument(
+              page: _wireTargetPage,
+              elements: [_wireTargetElement()],
+              references: const [],
+              crossPageTargets: const [],
+              crossPageSources: const [],
+              diagnostics: const [],
+              compileStatus: skir.PageCompileStatus.notCompiled,
+            ),
+          ),
       ],
     ),
   );
@@ -677,6 +870,24 @@ final class _Harness {
       value: codec.encodeValue(value).valueOrNull!,
       placement: skir.ElementPlacement.createGraph(
         x: x,
+        y: 0,
+        width: 4,
+        height: 1,
+      ),
+    );
+  }
+
+  skir.PageElement _wireTargetElement() {
+    final source = _wireElement();
+    return skir.PageElement(
+      id: recordId("element:target"),
+      page: _targetPage,
+      elementType: source.elementType,
+      schemaRevision: source.schemaRevision,
+      name: "Target Element",
+      value: source.value,
+      placement: skir.ElementPlacement.createGraph(
+        x: 0,
         y: 0,
         width: 4,
         height: 1,
@@ -705,6 +916,7 @@ final _realm = recordId("service:realm1");
 final _secondRealm = recordId("service:realm2");
 final _book = recordId("book:book1");
 final _page = recordId("page:page1");
+final _targetPage = recordId("page:target");
 final _element = recordId("element:element1");
 final _type = ResolvedTypeRef(id: DeclaredTypeId(_typeId), revision: 1);
 
@@ -715,6 +927,15 @@ final _wirePage = skir.Page(
   kind: skir.PageKindRef(id: skir.PageKindId(value: "test"), revision: 1),
   chapter: "",
   priority: 0,
+);
+
+final _wireTargetPage = skir.Page(
+  id: _targetPage,
+  book: _book,
+  name: "Target Page",
+  kind: skir.PageKindRef(id: skir.PageKindId(value: "test"), revision: 1),
+  chapter: "",
+  priority: 1,
 );
 
 RealmEditorCatalogSnapshot _catalog({String elementName = "Element"}) =>

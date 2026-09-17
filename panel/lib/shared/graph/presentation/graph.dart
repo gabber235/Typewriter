@@ -18,6 +18,7 @@ typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 class Graph extends HookConsumerWidget {
   const Graph({
     required this.data,
+    this.onViewportCenterChanged,
     this.onElementsMoved,
     this.onElementsResized,
     super.key,
@@ -25,6 +26,13 @@ class Graph extends HookConsumerWidget {
 
   /// Current canonical graph snapshot. Replacing it reconciles layout state.
   final GraphData data;
+
+  /// Receives the visible scene center in grid coordinates after each change.
+  ///
+  /// Delivery occurs after the current frame and duplicate centers are
+  /// suppressed. Disposal reports null. Callers may use this as an optional
+  /// placement hint, but remain responsible for persistence and fallback.
+  final ValueChanged<Offset?>? onViewportCenterChanged;
 
   /// Receives completed move changes. Null disables moving.
   final GraphMoveCommit? onElementsMoved;
@@ -119,6 +127,44 @@ class Graph extends HookConsumerWidget {
 
             final interactionController = useGraphInteractionController();
 
+            final viewportCenterCallback = useRef(onViewportCenterChanged)
+              ..value = onViewportCenterChanged;
+            final reportedViewportCenter = useRef<Offset?>(null);
+            final pendingViewportCenter = useRef<Offset?>(null);
+            final viewportReportScheduled = useRef(false);
+
+            bool sameViewportCenter(Offset? left, Offset right) =>
+                left != null && (left - right).distanceSquared < 1e-12;
+
+            void reportViewportCenter(Rect viewport) {
+              if (viewportCenterCallback.value == null) return;
+              final center = viewport.center / data.cellSize;
+              if (!center.dx.isFinite || !center.dy.isFinite) return;
+              if (sameViewportCenter(reportedViewportCenter.value, center) ||
+                  sameViewportCenter(pendingViewportCenter.value, center)) {
+                return;
+              }
+              pendingViewportCenter.value = center;
+              if (viewportReportScheduled.value) return;
+              viewportReportScheduled.value = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                viewportReportScheduled.value = false;
+                final next = pendingViewportCenter.value;
+                pendingViewportCenter.value = null;
+                if (!context.mounted ||
+                    next == null ||
+                    sameViewportCenter(reportedViewportCenter.value, next)) {
+                  return;
+                }
+                reportedViewportCenter.value = next;
+                viewportCenterCallback.value?.call(next);
+              });
+            }
+
+            useEffect(() {
+              return () => viewportCenterCallback.value?.call(null);
+            }, const []);
+
             final preview = interactionController.preview(data.cellSize);
             final layout = useMemoized(
               () =>
@@ -212,6 +258,7 @@ class Graph extends HookConsumerWidget {
                 transformationController: viewportController.transformation,
                 builder: (context, viewport) {
                   final viewportRect = _quadToRect(viewport);
+                  reportViewportCenter(viewportRect);
                   final focusedId = SelectableScope.primaryFocusedId()?.id;
                   final visibleElements = layout
                       .visibleElements(

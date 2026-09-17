@@ -1,4 +1,6 @@
-import "package:flutter/foundation.dart";
+import "dart:ui" show Offset;
+
+import "package:flutter/foundation.dart" show ValueListenable;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
@@ -129,6 +131,7 @@ SearchCommand createElementCommand({
       pageId: targetPageId,
       definition: definition,
       policy: policy,
+      preferredGraphAnchor: null,
     );
     return SearchCommandResult.completed(
       hostEffects: [
@@ -157,6 +160,7 @@ SearchCommand createElementOnPageCommand({
   required skir.RecordId realmId,
   required skir.RecordId pageId,
   required ValueListenable<AsyncValue<PageEntryCreationPolicy>> policy,
+  Offset? preferredGraphAnchor,
 }) => SearchCommand.single<ElementDefinition>(
   id: createElementOnPageCommandId,
   presentation: const SearchCommandPresentation(
@@ -216,6 +220,7 @@ SearchCommand createElementOnPageCommand({
       pageId: pageId,
       definition: definition,
       policy: livePolicy,
+      preferredGraphAnchor: preferredGraphAnchor,
     );
     return SearchCommandResult.completed(
       hostEffects: [
@@ -233,6 +238,7 @@ Future<String> _createElementOnPage({
   required skir.RecordId pageId,
   required ElementDefinition definition,
   required PageEntryCreationPolicy policy,
+  Offset? preferredGraphAnchor,
 }) async {
   final elementIds = await ref.withReadyPageElements(
     pageId.id,
@@ -243,6 +249,7 @@ Future<String> _createElementOnPage({
         PageEntryCreationPlacement.timelineTrack =>
           EntryPlacementKind.timelineEntry,
       },
+      preferredGraphAnchor: preferredGraphAnchor,
     ),
   );
   return elementIds.single;

@@ -2,8 +2,6 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-const tagGraphCellSize = 50.0;
-
 /// Renders projected tags as an editable graph.
 ///
 /// Node placement and direct parent IDs become graph elements and edges. Move
@@ -12,7 +10,9 @@ const tagGraphCellSize = 50.0;
 /// omitted from edges, so malformed references do not block the rest of the
 /// graph.
 class TagGraph extends HookConsumerWidget {
-  const TagGraph({super.key});
+  const TagGraph({this.onViewportCenterChanged, super.key});
+
+  final ValueChanged<Offset?>? onViewportCenterChanged;
 
   GraphElement _elementFromTag(Tag tag) {
     return GraphElement(
@@ -82,6 +82,7 @@ class TagGraph extends HookConsumerWidget {
 
         return Graph(
           data: _graphFromTags(context, tagList),
+          onViewportCenterChanged: onViewportCenterChanged,
           onElementsMoved: (changes) {
             final tagsById = {for (final tag in tagList) tag.tagId: tag};
             for (final change in changes) {

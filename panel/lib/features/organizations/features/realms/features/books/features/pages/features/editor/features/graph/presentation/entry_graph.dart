@@ -1,13 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-/// The scene scale used when converting entry placement cells to graph space.
-///
-/// Entry placement dimensions remain integer grid values in the authoring
-/// model. The shared graph interprets this value as the logical size of one
-/// such cell when laying out, painting, and interacting with the scene.
-const entryGraphCellSize = 50.0;
 
 /// Renders the graph view for one page and routes committed layout changes
 /// back to that page's element coordinator.
@@ -158,17 +152,25 @@ class EntryGraph extends HookConsumerWidget {
     );
     final elements = ref.watch(provider);
     final commands = pageElementsProvider(organizationId, realmId, pageId);
+    final viewportCenter = useRef<Offset?>(null);
 
     return elements(
       name: "elements",
       builder: (elements) {
         return FloatingButton(
           icon: const Icon(Icons.add),
-          onPressed: () => showAddElementSearch(context, pageId: pageId),
+          onPressed: () => showAddElementSearch(
+            context,
+            pageId: pageId,
+            preferredGraphAnchor: viewportCenter.value,
+          ),
           child: Stack(
             children: [
               Graph(
                 data: _graphFromElements(elements),
+                onViewportCenterChanged: (center) {
+                  viewportCenter.value = center;
+                },
                 onElementsMoved: (changes) {
                   final changed = changes
                       .map((entry) => (entry.id.id, entry.x, entry.y))

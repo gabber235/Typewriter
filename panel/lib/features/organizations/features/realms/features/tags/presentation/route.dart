@@ -21,13 +21,14 @@ class TagsPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(projectedTagsProvider);
+    final viewportCenter = useRef<Offset?>(null);
 
     Future<void> handleCreateTag() async {
       final name = await _showTagNameDialog(context);
       if (name == null || name.isEmpty) return;
       final newTag = await ref
           .read(canonicalTagsProvider.notifier)
-          .createTag(name: name);
+          .createTag(name: name, preferredGraphAnchor: viewportCenter.value);
       ref.read(selectionProvider.notifier).select(TagIdentifier(newTag.tagId));
     }
 
@@ -79,7 +80,11 @@ class TagsPage extends HookConsumerWidget {
                           onPressed: handleCreateTag,
                         );
                       }
-                      return const TagGraph();
+                      return TagGraph(
+                        onViewportCenterChanged: (center) {
+                          viewportCenter.value = center;
+                        },
+                      );
                     },
                   ),
                 ),

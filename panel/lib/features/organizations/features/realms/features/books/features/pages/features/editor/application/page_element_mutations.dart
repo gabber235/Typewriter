@@ -96,8 +96,9 @@ mixin _PageElementMutations
 
   Future<List<String>> createEntries(
     List<ElementDefinition> definitions,
-    EntryPlacementKind placementKind,
-  ) async {
+    EntryPlacementKind placementKind, {
+    Offset? preferredGraphAnchor,
+  }) async {
     state.ensureReady();
     if (definitions.isEmpty) return const [];
     final codec = _codec();
@@ -105,12 +106,13 @@ mixin _PageElementMutations
     final ids = [
       for (final _ in definitions) newResourceId(AuthoringResource.element).id,
     ];
-    final graphY = state.requireValue
-        .whereType<PageElementEntry>()
-        .map((element) => element.entry)
-        .whereType<DefinitionPageEntry>()
-        .map((entry) => entry.definition.placement.y + 1)
-        .fold(0, (maximum, value) => value > maximum ? value : maximum);
+    final graphPlacements = switch (placementKind) {
+      EntryPlacementKind.graph => _placeCreatedGraphEntries(
+        definitions.length,
+        preferredGraphAnchor,
+      ),
+      EntryPlacementKind.timelineEntry => const <GraphGridRect>[],
+    };
 
     await _submit(
       _commands.createElements([
@@ -124,10 +126,10 @@ mixin _PageElementMutations
             value: _initialElementValue(indexed.$2, registry, codec.codec),
             placement: switch (placementKind) {
               EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
-                x: 0,
-                y: graphY + indexed.$1,
-                width: 4,
-                height: 1,
+                x: graphPlacements[indexed.$1].x,
+                y: graphPlacements[indexed.$1].y,
+                width: graphPlacements[indexed.$1].width,
+                height: graphPlacements[indexed.$1].height,
               ),
               EntryPlacementKind.timelineEntry =>
                 skir.ElementPlacement.createTimelineEntry(
@@ -140,6 +142,24 @@ mixin _PageElementMutations
     return ids;
   }
 
+  List<GraphGridRect> _placeCreatedGraphEntries(
+    int count,
+    Offset? preferredGraphAnchor,
+  ) {
+    final obstacles = _document.elements.graphRects;
+    return const GraphIncrementalPlacer().placeGroup(
+      obstacles: obstacles,
+      group: [
+        for (var index = 0; index < count; index++)
+          GraphGridRect(x: 0, y: index * 2, width: 4, height: 1),
+      ],
+      anchor:
+          preferredGraphAnchor ??
+          graphCenterOfMass(obstacles, cellSize: entryGraphCellSize) ??
+          Offset.zero,
+    );
+  }
+
   Future<List<String>> duplicateAll(List<String> elementIds) async {
     state.ensureReady();
     if (elementIds.isEmpty) return const [];
@@ -147,9 +167,33 @@ mixin _PageElementMutations
     final ids = {
       for (final id in elementIds) id: newResourceId(AuthoringResource.element),
     };
+    final selected = [for (final id in elementIds) elements[id]!];
+    final graphElements = selected
+        .where((element) => element.placement.graphRect != null)
+        .toList(growable: false);
+    final graphPlacements = <String, skir.ElementPlacement>{};
+    if (graphElements.isNotEmpty) {
+      final sourceBounds = graphElements
+          .map((element) => element.placement.graphRect!)
+          .graphBounds!;
+      graphPlacements.addAll(
+        _placeGraphElements(
+          elements: graphElements,
+          obstacles: _document.elements.graphRects,
+          anchor: Offset(
+            sourceBounds.right + 1 + sourceBounds.width / 2,
+            sourceBounds.center.dy,
+          ),
+        ),
+      );
+    }
     await _submit(
       _commands.duplicateElements({
-        for (final id in elementIds) elements[id]!: ids[id]!,
+        for (final element in selected)
+          element: (
+            id: ids[element.id.id]!,
+            placement: graphPlacements[element.id.id] ?? element.placement,
+          ),
       }),
     );
     return [for (final id in elementIds) ids[id]!.id];
@@ -159,12 +203,94 @@ mixin _PageElementMutations
     List<String> elementIds,
     String targetPageId,
   ) async {
+    state.ensureReady();
     if (elementIds.isEmpty || targetPageId == _pageId.id) return;
     final elements = {for (final item in _document.elements) item.id.id: item};
-    await _submit(
-      _commands.moveElementsToPage([
-        for (final id in elementIds) elements[id]!,
-      ], recordId("page:$targetPageId")),
-    );
+    final selected = [for (final id in elementIds) elements[id]!];
+    await ref.withReadyPageElements(targetPageId, (target) async {
+      final graphElements = selected
+          .where((element) => element.placement.graphRect != null)
+          .toList(growable: false);
+      final graphPlacements = <String, skir.ElementPlacement>{};
+      if (graphElements.isNotEmpty) {
+        final obstacles = target._document.elements.graphRects;
+        graphPlacements.addAll(
+          _placeGraphElements(
+            elements: graphElements,
+            obstacles: obstacles,
+            anchor:
+                graphCenterOfMass(obstacles, cellSize: entryGraphCellSize) ??
+                Offset.zero,
+          ),
+        );
+      }
+      await _submit(
+        _commands.moveElementsToPage([
+          for (final element in selected)
+            (element, graphPlacements[element.id.id] ?? element.placement),
+        ], recordId("page:$targetPageId")),
+      );
+    });
   }
+
+  Map<String, skir.ElementPlacement> _placeGraphElements({
+    required List<skir.PageElement> elements,
+    required List<GraphGridRect> obstacles,
+    required Offset anchor,
+  }) {
+    final sourceRects = [
+      for (final element in elements) element.placement.graphRect!,
+    ];
+    final sourceBounds = sourceRects.graphBounds!;
+    final localRects = [
+      for (final rect in sourceRects)
+        rect.translate(-sourceBounds.x, -sourceBounds.y),
+    ];
+    final placed = const GraphIncrementalPlacer().placeGroup(
+      obstacles: obstacles,
+      group: localRects,
+      anchor: anchor,
+    );
+    return {
+      for (final indexed in elements.indexed)
+        indexed.$2.id.id: placed[indexed.$1].elementPlacement,
+    };
+  }
+}
+
+extension on Iterable<skir.PageElement> {
+  List<GraphGridRect> get graphRects => [
+    for (final element in this)
+      if (element.placement case skir.ElementPlacement_graphWrapper(
+        :final value,
+      ))
+        GraphGridRect(
+          x: value.x,
+          y: value.y,
+          width: value.width,
+          height: value.height,
+        ),
+  ];
+}
+
+extension on skir.ElementPlacement {
+  GraphGridRect? get graphRect => switch (this) {
+    skir.ElementPlacement_graphWrapper(:final value) => GraphGridRect(
+      x: value.x,
+      y: value.y,
+      width: value.width,
+      height: value.height,
+    ),
+    _ => null,
+  };
+}
+
+extension on GraphGridRect {
+  skir.ElementPlacement get elementPlacement =>
+      skir.ElementPlacement.createGraph(
+        x: x,
+        y: y,
+        width: width,
+        height: height,
+      );
 }

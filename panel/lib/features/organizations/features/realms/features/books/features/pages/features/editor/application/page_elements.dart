@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/widgets.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart"
     show ProviderScope, WidgetRef;
@@ -18,6 +19,9 @@ part "page_element_projections.dart";
 part "page_element_values.dart";
 part "page_elements.freezed.dart";
 part "page_elements.g.dart";
+
+/// Logical pixels represented by one persisted page graph cell.
+const entryGraphCellSize = 50.0;
 
 /// Projects compile diagnostics for the selected page without hiding the last
 /// active manifest when a new document is blocked.

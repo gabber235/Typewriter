@@ -14,6 +14,8 @@ part "tag_collection.dart";
 part "tag_inspector_presentation.dart";
 part "tag_inheritance_presentation.dart";
 
+const tagGraphCellSize = 50.0;
+
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
 /// The provider waits for the library scope before reading the session, then
@@ -51,18 +53,49 @@ class CanonicalTags extends _$CanonicalTags {
     required String name,
     Color? color,
     List<skir.RecordId> parentIds = const [],
-    int x = 0,
-    int y = 0,
-    int width = 4,
-    int height = 1,
+    Offset? preferredGraphAnchor,
   }) async {
     state.ensureReady();
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    final existingTags = organizationId == null || realmId == null
+        ? state.requireValue
+        : _projectTagValues(
+            state.requireValue,
+            ref.read(localWorkProvider).editorValues,
+            organizationId,
+            realmId,
+          );
+    final obstacles = [
+      for (final tag in existingTags)
+        GraphGridRect(
+          x: tag.placement.x,
+          y: tag.placement.y,
+          width: tag.placement.width,
+          height: tag.placement.height,
+        ),
+    ];
+    final placement = const GraphIncrementalPlacer()
+        .placeGroup(
+          obstacles: obstacles,
+          group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
+          anchor:
+              preferredGraphAnchor ??
+              graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
+              Offset.zero,
+        )
+        .single;
     final tag = Tag(
       tagId: newResourceId(AuthoringResource.tag),
       name: name,
       color: color ?? Colors.grey,
       parentIds: parentIds,
-      placement: Placement(x: x, y: y, width: width, height: height),
+      placement: Placement(
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
+      ),
     );
     final response = await ref.readAuthoringSession().notifier.createTag(
       tag.toWire(),
@@ -190,19 +223,33 @@ AsyncValue<List<Tag>> projectedTags(Ref ref) {
   if (organizationId == null || realmId == null) {
     return AsyncData(canonicalTags.requireValue);
   }
-  return AsyncData([
-    for (final tag in canonicalTags.requireValue)
-      tag.projected(
-        local[EditorResourceKey(
-          scope: EditorResourceScope(
-            organizationId: organizationId,
-            realmId: realmId,
-          ),
-          identity: tag.tagId,
-        )],
-      ),
-  ]);
+  return AsyncData(
+    _projectTagValues(
+      canonicalTags.requireValue,
+      local,
+      organizationId,
+      realmId,
+    ),
+  );
 }
+
+List<Tag> _projectTagValues(
+  Iterable<Tag> canonical,
+  Map<EditorResourceKey, LocalEditorValue> local,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+) => [
+  for (final tag in canonical)
+    tag.projected(
+      local[EditorResourceKey(
+        scope: EditorResourceScope(
+          organizationId: organizationId,
+          realmId: realmId,
+        ),
+        identity: tag.tagId,
+      )],
+    ),
+];
 
 /// Projects one tag for graph nodes that rebuild independently.
 @riverpod

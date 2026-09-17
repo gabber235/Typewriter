@@ -39,12 +39,12 @@ class ServicesPackedPacker {
   Map<GraphIdentifier, ServicesPackedGridPlacement> pack(
     List<ServicesPackedComponentPlacement> components,
   ) {
-    final packed = <_PackedComponent>[];
+    final packed = <GraphGridRect>[];
     final placements = <GraphIdentifier, ServicesPackedGridPlacement>{};
     for (final component in components) {
       final origin = _bestOrigin(component, packed);
       packed.add(
-        _PackedComponent(
+        GraphGridRect(
           x: origin.x,
           y: origin.y,
           width: component.width,
@@ -207,7 +207,7 @@ class ServicesPackedPacker {
 
   Point<int> _bestOrigin(
     ServicesPackedComponentPlacement component,
-    List<_PackedComponent> packed,
+    List<GraphGridRect> packed,
   ) {
     if (packed.isEmpty) return const Point(0, 0);
     final xs = <int>{0};
@@ -221,13 +221,15 @@ class ServicesPackedPacker {
 
     for (final y in ys.toList()..sort()) {
       for (final x in xs.toList()..sort()) {
-        final candidate = _PackedComponent(
+        final candidate = GraphGridRect(
           x: x,
           y: y,
           width: component.width,
           height: component.height,
         );
-        if (packed.any((other) => candidate.overlaps(other, gap))) continue;
+        if (packed.any((other) => candidate.overlaps(other, gap: gap))) {
+          continue;
+        }
         final score = _score(candidate, packed);
         if (bestScore == null || _compareScores(score, bestScore) < 0) {
           best = Point(x, y);
@@ -238,10 +240,7 @@ class ServicesPackedPacker {
     return best!;
   }
 
-  _PlacementScore _score(
-    _PackedComponent candidate,
-    List<_PackedComponent> packed,
-  ) {
+  _PlacementScore _score(GraphGridRect candidate, List<GraphGridRect> packed) {
     final width = [
       candidate.x + candidate.width,
       for (final placement in packed) placement.x + placement.width,
@@ -296,26 +295,6 @@ class ServicesPackedPacker {
 
   static int compareNodes(ServicesPackedNode left, ServicesPackedNode right) =>
       left.id.id.compareTo(right.id.id);
-}
-
-class _PackedComponent {
-  const _PackedComponent({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-  });
-
-  final int x;
-  final int y;
-  final int width;
-  final int height;
-
-  bool overlaps(_PackedComponent other, int gap) =>
-      x - gap < other.x + other.width &&
-      x + width + gap > other.x &&
-      y - gap < other.y + other.height &&
-      y + height + gap > other.y;
 }
 
 typedef _PlacementScore = ({

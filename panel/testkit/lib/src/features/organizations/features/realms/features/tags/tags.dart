@@ -109,19 +109,41 @@ class TagsMock extends CanonicalTags {
     required String name,
     Color? color,
     List<skir.RecordId> parentIds = const [],
-    int x = 0,
-    int y = 0,
-    int width = 4,
-    int height = 1,
+    Offset? preferredGraphAnchor,
   }) async {
     final tags = await future;
+
+    final obstacles = [
+      for (final tag in tags)
+        GraphGridRect(
+          x: tag.placement.x,
+          y: tag.placement.y,
+          width: tag.placement.width,
+          height: tag.placement.height,
+        ),
+    ];
+    final placement = const GraphIncrementalPlacer()
+        .placeGroup(
+          obstacles: obstacles,
+          group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
+          anchor:
+              preferredGraphAnchor ??
+              graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
+              Offset.zero,
+        )
+        .single;
 
     final newTag = Tag(
       tagId: recordId("tag:${faker.guid.guid()}"),
       name: name,
       color: color ?? safeColors.randomElement(),
       parentIds: parentIds,
-      placement: Placement(x: x, y: y, width: width, height: height),
+      placement: Placement(
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
+      ),
     );
 
     state = AsyncData([...tags, newTag]);
