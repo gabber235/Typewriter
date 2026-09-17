@@ -15,7 +15,6 @@ skir.TypedValue _initialElementValue(
     throw ApiException.badRequest(initial.diagnostics.join("; "));
   }
   final encoded = codec.encodeValue(value);
-  print(encoded);
   return encoded.valueOrNull ??
       (throw ApiException.badRequest(encoded.diagnostics.join("; ")));
 }
