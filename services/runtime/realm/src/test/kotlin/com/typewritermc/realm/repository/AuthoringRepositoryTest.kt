@@ -3,6 +3,9 @@ package com.typewritermc.realm.repository
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementPlacement
 import com.typewritermc.elements.ElementTypeId
+import com.typewritermc.elements.ElementValueMutation
+import com.typewritermc.elements.ElementValuePath
+import com.typewritermc.elements.ElementValuePathSegment
 import com.typewritermc.library.BookId
 import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.GridPlacement
@@ -17,8 +20,11 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.Icon
+import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeGraph
+import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -76,6 +82,146 @@ val AuthoringRepositoryTest by testSuite {
                         fixture.authoring.apply(batch) shouldBe result
                     }
                 }
+            }
+        }
+    }
+
+    test("element creation, polymorphic editing, and duplication preserve valid values") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                val elementType =
+                    ElementTypeId(
+                        DeclaredTypeId.parse("40000000000000000000000000000002"),
+                    )
+                val graph =
+                    TypeGraph(
+                        TypeExpression.Record(
+                            listOf(
+                                TypeField("id", TypeExpression.StringType()),
+                                TypeField("message", TypeExpression.Any),
+                            ),
+                        ),
+                        emptyList(),
+                    )
+                fixture.registerElementType(elementType, graph)
+                fixture.authoring.apply(mixedCreateBatch("identity"))
+                val sourceId = ElementInstanceId("kd9pn4fa2s7m8q3v6x0z")
+                val duplicateId = ElementInstanceId("nx9pn4fa2s7m8q3v6x0z")
+                val message =
+                    DataValue.Polymorphic(
+                        ResolvedTypeRef(TypeId.Qualified("test", "LiteralMessage"), 1),
+                        DataValue.Record(mapOf("value" to DataValue.StringValue(""))),
+                    )
+                val submitted =
+                    DataValue.Record(
+                        mapOf(
+                            "id" to DataValue.StringValue(""),
+                            "message" to message,
+                        ),
+                    )
+
+                fixture.authoring
+                    .apply(
+                        AuthoringBatch(
+                            BatchId("create-identity-element"),
+                            listOf(
+                                AuthoringOperation.CreateElement(
+                                    AuthoringElement(
+                                        id = sourceId,
+                                        page = PageId("identity_page").ref(),
+                                        elementType = elementType,
+                                        schemaRevision = 1,
+                                        name = "Synthetic Entry",
+                                        value = submitted,
+                                        placement = ElementPlacement.Graph(0, 0, 4, 1),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ).shouldBeInstanceOf<AuthoringBatchResult.Applied>()
+                val created =
+                    requireNotNull(fixture.pageDocuments.getPageDocument(PageId("identity_page")))
+                        .elements
+                        .single()
+                        .value
+                created shouldBe
+                    DataValue.Record(
+                        mapOf(
+                            "id" to DataValue.StringValue(sourceId.value),
+                            "message" to message,
+                        ),
+                    )
+
+                val editedMessage =
+                    message.copy(
+                        value = DataValue.Record(mapOf("value" to DataValue.StringValue("Edited"))),
+                    )
+                fixture.authoring
+                    .apply(
+                        AuthoringBatch(
+                            BatchId("edit-polymorphic-message"),
+                            listOf(
+                                AuthoringOperation.PatchElement(
+                                    id = sourceId,
+                                    valueMutations =
+                                        listOf(
+                                            ExpectedElementValueMutation(
+                                                expected = message,
+                                                mutation =
+                                                    ElementValueMutation.SetValue(
+                                                        path =
+                                                            ElementValuePath(
+                                                                listOf(ElementValuePathSegment.Field("message")),
+                                                            ),
+                                                        value = editedMessage,
+                                                    ),
+                                            ),
+                                        ),
+                                ),
+                            ),
+                        ),
+                    ).shouldBeInstanceOf<AuthoringBatchResult.Applied>()
+                val edited =
+                    requireNotNull(fixture.pageDocuments.getPageDocument(PageId("identity_page")))
+                        .elements
+                        .single()
+                        .value
+                edited shouldBe
+                    DataValue.Record(
+                        mapOf(
+                            "id" to DataValue.StringValue(sourceId.value),
+                            "message" to editedMessage,
+                        ),
+                    )
+
+                fixture.authoring
+                    .apply(
+                        AuthoringBatch(
+                            BatchId("duplicate-identity-element"),
+                            listOf(
+                                AuthoringOperation.DuplicateElement(
+                                    sourceId = sourceId,
+                                    expectedValue = edited,
+                                    newId = duplicateId,
+                                    page = PageId("identity_page").ref(),
+                                    name = "Synthetic Entry Copy",
+                                    placement = ElementPlacement.Graph(0, 1, 4, 1),
+                                ),
+                            ),
+                        ),
+                    ).shouldBeInstanceOf<AuthoringBatchResult.Applied>()
+                val duplicated =
+                    requireNotNull(fixture.pageDocuments.getPageDocument(PageId("identity_page")))
+                        .elements
+                        .single { it.id == duplicateId }
+                        .value
+                duplicated shouldBe
+                    DataValue.Record(
+                        mapOf(
+                            "id" to DataValue.StringValue(duplicateId.value),
+                            "message" to editedMessage,
+                        ),
+                    )
             }
         }
     }

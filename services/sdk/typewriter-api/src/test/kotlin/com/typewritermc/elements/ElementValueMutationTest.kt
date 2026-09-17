@@ -2,7 +2,9 @@ package com.typewritermc.elements
 
 import com.typewritermc.types.DataMapEntry
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeGraph
@@ -12,6 +14,54 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 
 val ElementValueMutationTest by testSuite {
+    test("set value preserves an abstract target expression") {
+        val messageType = ResolvedTypeRef(TypeId.Qualified("test", "Message"), 1)
+        val literalType = ResolvedTypeRef(TypeId.Qualified("test", "LiteralMessage"), 1)
+        val graph =
+            TypeGraph(
+                TypeExpression.Record(
+                    listOf(TypeField("message", TypeExpression.Named(messageType))),
+                ),
+                listOf(
+                    TypeDefinition(messageType, NominalTypeKind.SEALED_ABSTRACT),
+                    TypeDefinition(
+                        id = literalType,
+                        kind = NominalTypeKind.CONCRETE,
+                        representation =
+                            TypeExpression.Record(
+                                listOf(TypeField("value", TypeExpression.StringType())),
+                            ),
+                        parents = listOf(messageType),
+                    ),
+                ),
+            )
+        val initialMessage = literalMessage(literalType, "")
+        val stored =
+            decomposer().decompose(
+                graph,
+                DataValue.Record(mapOf("message" to initialMessage)),
+            )
+        val replacement = literalMessage(literalType, "Edited")
+
+        val result =
+            mutator()
+                .apply(
+                    graph,
+                    stored,
+                    listOf(
+                        ElementValueMutation.SetValue(
+                            ElementValuePath(listOf(ElementValuePathSegment.Field("message"))),
+                            replacement,
+                        ),
+                    ),
+                ).success()
+
+        ReferenceAssembler().assemble(graph, result) shouldBe
+            ReferenceAssemblyResult.Success(
+                DataValue.Record(mapOf("message" to replacement)),
+            )
+    }
+
     test("list reorder preserves reference slots") {
         val graph = TypeGraph(TypeExpression.ListType(refTo(elementType)), emptyList())
         val stored = decomposer().decompose(graph, references("element:first", "element:second"))
@@ -131,6 +181,15 @@ val ElementValueMutationTest by testSuite {
 private fun ElementValueMutationResult.success(): StoredElementValue = (this as ElementValueMutationResult.Success).value
 
 private fun references(vararg targets: String): DataValue.ListValue = DataValue.ListValue(targets.map(DataValue::StringValue))
+
+private fun literalMessage(
+    type: ResolvedTypeRef,
+    value: String,
+): DataValue.Polymorphic =
+    DataValue.Polymorphic(
+        concreteType = type,
+        value = DataValue.Record(mapOf("value" to DataValue.StringValue(value))),
+    )
 
 private fun mutator(): ElementValueMutator = ElementValueMutator(decomposer())
 

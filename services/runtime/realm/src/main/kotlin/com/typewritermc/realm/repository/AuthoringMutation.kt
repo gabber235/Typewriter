@@ -415,7 +415,7 @@ internal class AuthoringMutation(
                 elementType = element.elementType,
                 schemaRevision = element.schemaRevision,
                 name = element.name,
-                value = decomposer.decompose(graph, element.value),
+                value = decomposer.decompose(graph, element.value.withElementId(element.id)),
                 placement = element.placement,
             )
         transaction.createElement(element.page.pageId(), stored)
@@ -532,12 +532,14 @@ internal class AuthoringMutation(
         }
         requireRecords(listOf(operation.page.id), "page-not-found", operation.resource)
         val value =
-            source.value.copy(
-                references =
-                    source.value.references.map { reference ->
-                        reference.copy(target = operation.referenceRewrites[reference.target] ?: reference.target)
-                    },
-            )
+            decomposer
+                .decompose(graph, logical.withElementId(operation.newId))
+                .copy(
+                    references =
+                        source.value.references.map { reference ->
+                            reference.copy(target = operation.referenceRewrites[reference.target] ?: reference.target)
+                        },
+                )
         transaction.createElement(
             operation.page.pageId(),
             source.copy(
@@ -711,6 +713,21 @@ private fun StoredElement.logicalValue(graph: TypeGraph): DataValue =
     ReferenceAssembler()
         .assemble(graph, value)
         .value
+
+private fun DataValue.withElementId(id: ElementInstanceId): DataValue =
+    when (this) {
+        is DataValue.Record -> {
+            if ("id" in fields) {
+                copy(fields = fields + ("id" to DataValue.StringValue(id.value)))
+            } else {
+                this
+            }
+        }
+
+        else -> {
+            this
+        }
+    }
 
 private fun Transaction.createElement(
     pageId: PageId,

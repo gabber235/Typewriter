@@ -403,7 +403,7 @@ private data class ValueTarget(
                     }
                 }
             }
-            return ValueTarget(expression.materialize(graph, logical), logical, stored, replace)
+            return ValueTarget(expression, logical, stored, replace)
         }
     }
 }
