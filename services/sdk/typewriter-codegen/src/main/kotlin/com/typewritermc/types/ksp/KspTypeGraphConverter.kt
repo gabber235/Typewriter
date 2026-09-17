@@ -53,6 +53,9 @@ class KspTypeGraphConverter(
                     root = root,
                     definitions = context.definitions.values.sortedBy { it.id.sortKey },
                 ),
+                context.serializedProperties.sortedWith(
+                    compareBy<KspSerializedProperty> { it.ownerType.sortKey }.thenBy(KspSerializedProperty::serializedName),
+                ),
             )
         }
     }
@@ -66,12 +69,20 @@ class KspTypeGraphConverter(
 sealed interface KspTypeConversionResult {
     data class Success(
         val graph: TypeGraph,
+        val serializedProperties: List<KspSerializedProperty>,
     ) : KspTypeConversionResult
 
     data class Failure(
         val diagnostics: List<KspTypeDiagnostic>,
     ) : KspTypeConversionResult
 }
+
+/** Connects one structural record field back to the Kotlin property that supplied its serialization metadata. */
+data class KspSerializedProperty(
+    val ownerType: ResolvedTypeRef,
+    val serializedName: String,
+    val declaration: KSPropertyDeclaration,
+)
 
 /**
  * Unsupported compiler type or declaration encountered during graph traversal. The path records the route from the
@@ -113,6 +124,7 @@ private class ConversionContext(
 ) {
     val definitions = linkedMapOf<ResolvedTypeRef, TypeDefinition>()
     val diagnostics = mutableListOf<KspTypeDiagnostic>()
+    val serializedProperties = mutableListOf<KspSerializedProperty>()
     private val visiting = mutableSetOf<ResolvedTypeRef>()
 
     fun expression(
@@ -278,7 +290,7 @@ private class ConversionContext(
             when (declaration.classKind) {
                 ClassKind.ENUM_CLASS -> enumRepresentation(declaration, definitionPath)
                 ClassKind.ENUM_ENTRY -> TypeExpression.Unit
-                else -> recordRepresentation(declaration, definitionPath)
+                else -> recordRepresentation(declaration, identity, definitionPath)
             }
         definitions[identity] =
             TypeDefinition(
@@ -326,6 +338,7 @@ private class ConversionContext(
 
     private fun recordRepresentation(
         declaration: KSClassDeclaration,
+        identity: ResolvedTypeRef,
         path: List<String>,
     ): TypeExpression {
         val fields =
@@ -334,7 +347,10 @@ private class ConversionContext(
                 .filter(KSPropertyDeclaration::isSerializedProperty)
                 .mapNotNull { property ->
                     val name = property.serialName ?: property.simpleName.asString()
-                    expression(property.type.resolve(), path + name)?.let { TypeField(name, it) }
+                    expression(property.type.resolve(), path + name)?.let {
+                        serializedProperties += KspSerializedProperty(identity, name, property)
+                        TypeField(name, it)
+                    }
                 }.sortedBy(TypeField::name)
                 .toList()
         return if (declaration.classKind == ClassKind.OBJECT && fields.isEmpty()) {

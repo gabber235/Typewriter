@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.compiler.CompiledContentRepository
 import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.repository.search.AuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -14,8 +15,9 @@ import com.typewritermc.services.libs.communicator.router.communicatorRoutes
  * compiled event publication to the supplied communicator; the caller owns starting and stopping the resulting
  * router.
  */
-class RealmRouteFactory(
+internal class RealmRouteFactory(
     private val authoring: AuthoringRepository,
+    private val authoringSearch: AuthoringSearchRepository,
     private val compiledContent: CompiledContentRepository,
     private val editorCatalog: RealmEditorCatalogSource,
     private val presentationSearch: RealmPresentationSearchSource,
@@ -36,12 +38,14 @@ class RealmRouteFactory(
         val contracts = LibraryContracts(address)
         compiledContentEvents?.configure(contracts, address, communicator)
         val authoringRoutes = AuthoringRoutes(authoring, communicator, contracts, address, onCompilationInvalidated)
+        val authoringSearchRoutes = AuthoringSearchRoutes(authoringSearch, contracts)
         val compiledContentRoutes = CompiledContentRoutes(compiledContent, contracts)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, contracts, address)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         val capabilityInvocationRoutes = capabilityInvocations?.let { RealmCapabilityInvocationRoutes(it, contracts) }
         return communicatorRoutes {
             authoringRoutes.register(this)
+            authoringSearchRoutes.register(this)
             compiledContentRoutes.register(this)
             editorCatalogRoutes.register(this)
             presentationSearchRoutes.register(this)

@@ -3,6 +3,10 @@ package com.typewritermc.realm.routes
 import com.typewritermc.elements.AvailabilityExpression
 import com.typewritermc.elements.ElementCatalogEntry
 import com.typewritermc.elements.ElementDescriptor
+import com.typewritermc.elements.ElementSearchDefinition
+import com.typewritermc.elements.ElementSearchMode
+import com.typewritermc.elements.ElementSearchPolicy
+import com.typewritermc.elements.ElementSearchPropertyOverride
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageCatalogEntry
 import com.typewritermc.pages.PageDescriptor
@@ -20,6 +24,10 @@ import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.element_catalog.AvailabilityExpression as SkirAvailabilityExpression
 import skirout.editor.v1.element_catalog.ElementCatalogEntry as SkirElementCatalogEntry
 import skirout.editor.v1.element_catalog.ElementDescriptor as SkirElementDescriptor
+import skirout.editor.v1.element_catalog.ElementSearchDefinition as SkirElementSearchDefinition
+import skirout.editor.v1.element_catalog.ElementSearchMode as SkirElementSearchMode
+import skirout.editor.v1.element_catalog.ElementSearchPolicy as SkirElementSearchPolicy
+import skirout.editor.v1.element_catalog.ElementSearchPropertyOverride as SkirElementSearchPropertyOverride
 import skirout.editor.v1.page_catalog.GraphDirection as SkirGraphDirection
 import skirout.editor.v1.page_catalog.PageCatalogEntry as SkirPageCatalogEntry
 import skirout.editor.v1.page_catalog.PageDescriptor as SkirPageDescriptor
@@ -54,7 +62,35 @@ private fun ElementDescriptor.toSkir(): SkirElementDescriptor =
         icon = icon.toSkir(),
         color = color.toSkir(),
         availability = availability.toSkir(),
+        searchDefinition = searchDefinition?.toSkir(),
     )
+
+private fun ElementSearchDefinition.toSkir(): SkirElementSearchDefinition =
+    SkirElementSearchDefinition(
+        policy = policy.toSkir(),
+        propertyOverrides = propertyOverrides.map(ElementSearchPropertyOverride::toSkir),
+        revisionFingerprintInputs = revisionFingerprintInputs.map { it.toSkir().getOrThrow() },
+    )
+
+private fun ElementSearchPropertyOverride.toSkir(): SkirElementSearchPropertyOverride =
+    SkirElementSearchPropertyOverride(
+        ownerType = ownerType.toSkir().getOrThrow(),
+        field = field,
+        mode = mode.toSkir(),
+    )
+
+private fun ElementSearchPolicy.toSkir(): SkirElementSearchPolicy =
+    when (this) {
+        ElementSearchPolicy.ORDINARY_TEXT -> SkirElementSearchPolicy.createOrdinaryText()
+    }
+
+private fun ElementSearchMode.toSkir(): SkirElementSearchMode =
+    when (this) {
+        ElementSearchMode.SUMMARY -> SkirElementSearchMode.createSummary()
+        ElementSearchMode.BODY -> SkirElementSearchMode.createBody()
+        ElementSearchMode.KEYWORD -> SkirElementSearchMode.createKeyword()
+        ElementSearchMode.NONE -> SkirElementSearchMode.createNone()
+    }
 
 private fun AvailabilityExpression.toSkir(): SkirAvailabilityExpression =
     when (this) {

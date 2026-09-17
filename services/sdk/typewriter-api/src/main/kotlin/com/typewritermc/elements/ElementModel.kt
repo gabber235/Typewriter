@@ -97,6 +97,78 @@ annotation class TypewriterElement(
 )
 
 /**
+ * Overrides automatic search projection for one serialized property subtree.
+ *
+ * The generated definition addresses the property by its serialized name. Explicit text modes include logical
+ * string leaves, while reference leaves remain structural identities and are never projected as text.
+ */
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.BINARY)
+annotation class ElementSearch(
+    val mode: ElementSearchMode,
+)
+
+/** Controls how text leaves in an authored property subtree enter the search document. */
+@Serializable
+enum class ElementSearchMode {
+    SUMMARY,
+    BODY,
+    KEYWORD,
+    NONE,
+}
+
+/** Identifies the automatic projection algorithm understood by a search consumer. */
+@Serializable
+enum class ElementSearchPolicy {
+    ORDINARY_TEXT,
+}
+
+/**
+ * Overrides the automatic policy for a property declared by [ownerType].
+ *
+ * [field] is the serialized property name. The mode applies recursively unless a nested property supplies a more
+ * specific override.
+ */
+@Serializable
+data class ElementSearchPropertyOverride(
+    val ownerType: ResolvedTypeRef,
+    val field: String,
+    val mode: ElementSearchMode,
+) {
+    init {
+        require(ownerType.arguments.isEmpty()) { "Search override owner types must not contain arguments." }
+        require(field.isNotBlank()) { "Search override field names must not be blank." }
+    }
+}
+
+/**
+ * Generated instructions for projecting dynamic element values into a search document.
+ *
+ * [ElementSearchPolicy.ORDINARY_TEXT] traverses records, collections, named values, and polymorphic concrete types.
+ * Plain string leaves default to [ElementSearchMode.BODY]. Logical strings require an explicit text mode. References
+ * remain excluded. [revisionFingerprintInputs] contains every reachable nominal definition so a catalog revision
+ * change invalidates projections that depend on its structure or subtype set.
+ */
+@Serializable
+data class ElementSearchDefinition(
+    val policy: ElementSearchPolicy,
+    val propertyOverrides: List<ElementSearchPropertyOverride>,
+    val revisionFingerprintInputs: List<ResolvedTypeRef>,
+) {
+    init {
+        require(revisionFingerprintInputs.all { it.arguments.isEmpty() }) {
+            "Search revision fingerprint inputs must not contain arguments."
+        }
+        require(revisionFingerprintInputs.distinct().size == revisionFingerprintInputs.size) {
+            "Search revision fingerprint inputs must be unique."
+        }
+        require(propertyOverrides.distinctBy { it.ownerType to it.field }.size == propertyOverrides.size) {
+            "Search property overrides must be unique per owner and field."
+        }
+    }
+}
+
+/**
  * Associates an execution runtime facet with an element type.
  *
  * A facet supplies behavior separately from the serializable element model. Code generation exposes it only through
@@ -178,6 +250,7 @@ data class ElementDescriptor(
     val icon: Icon,
     val color: Color,
     val availability: AvailabilityExpression,
+    val searchDefinition: ElementSearchDefinition? = null,
 ) {
     init {
         require(type.id == TypeId.Declared(id.value)) { "Element and structural type identities must match." }

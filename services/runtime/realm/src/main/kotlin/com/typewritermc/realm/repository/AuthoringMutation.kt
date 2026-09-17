@@ -62,6 +62,10 @@ internal class AuthoringMutation(
         private set
 
     private val affectedPages = linkedSetOf<PageId>()
+    private val dirtyElements = linkedSetOf<ElementInstanceId>()
+
+    val dirtyElementIds: Set<ElementInstanceId>
+        get() = dirtyElements
 
     /**
      * Applies one operation to the open transaction and records its observable effects.
@@ -188,6 +192,7 @@ internal class AuthoringMutation(
                     elements.map(ElementInstanceId::surrealId),
             )
         transaction.deleteElements(elements)
+        elements.forEach(::markElementRemoved)
         transaction
             .query(
                 "DELETE page WHERE id INSIDE \$pages; DELETE ONLY \$book;",
@@ -390,6 +395,7 @@ internal class AuthoringMutation(
                 listOf(operation.id.surrealId()) + elements.map(ElementInstanceId::surrealId),
             )
         transaction.deleteElements(elements)
+        elements.forEach(::markElementRemoved)
         transaction.query("DELETE ONLY \$page;", mapOf("page" to operation.id.surrealId())).take(0)
         changes += elements.map(AuthoringResourceChange::RemoveElement)
         changes += AuthoringResourceChange.RemovePage(operation.id)
@@ -413,6 +419,7 @@ internal class AuthoringMutation(
                 placement = element.placement,
             )
         transaction.createElement(element.page.pageId(), stored)
+        markElementDirty(element.id)
         changes += AuthoringResourceChange.UpsertElement(transaction.authoringElement(element.id, typeGraphs))
         affectedPages += element.page.pageId()
         affectedPages += transaction.referringPages(listOf(element.id.surrealId()))
@@ -485,6 +492,7 @@ internal class AuthoringMutation(
             ).take(0)
         transaction.replaceElementReferences(operation.id, projectedValue.references)
         changes += AuthoringResourceChange.UpsertElement(transaction.authoringElement(operation.id, typeGraphs))
+        markElementDirty(operation.id)
         affectedPages += currentPage.pageId()
         affectedPages += nextPage.pageId()
         affectedPages += transaction.referringPages(listOf(operation.id.surrealId()))
@@ -539,6 +547,7 @@ internal class AuthoringMutation(
                 placement = operation.placement,
             ),
         )
+        markElementDirty(operation.newId)
         changes += AuthoringResourceChange.UpsertElement(transaction.authoringElement(operation.newId, typeGraphs))
         affectedPages += operation.page.pageId()
         affectedPages += transaction.referringPages(listOf(operation.newId.surrealId()))
@@ -550,8 +559,17 @@ internal class AuthoringMutation(
         affectedPages += current.pages.values.map(RecordId::toPageId)
         affectedPages += transaction.referringPages(listOf(operation.id.surrealId()))
         transaction.deleteElements(listOf(operation.id))
+        markElementRemoved(operation.id)
         changes += AuthoringResourceChange.RemoveElement(operation.id)
         affectsCompilation = true
+    }
+
+    private fun markElementDirty(id: ElementInstanceId) {
+        dirtyElements += id
+    }
+
+    private fun markElementRemoved(id: ElementInstanceId) {
+        dirtyElements -= id
     }
 
     private fun validateTagGraph(resource: AuthoringResourceRef) {

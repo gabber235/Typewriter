@@ -840,6 +840,7 @@ sealed interface RealmSearchQuery_OrMutable {
     val normalizedQuery: kotlin.String;
     val selectors: kotlin.collections.List<skirout.editor.v1.search.RealmSearchSelector_OrMutable>;
     val selectorExpression: skirout.editor.v1.search.RealmSearchSelectorExpression?;
+    val terms: kotlin.collections.List<kotlin.String>;
 
     fun toFrozen(): skirout.editor.v1.search.RealmSearchQuery;
 }
@@ -850,6 +851,7 @@ class RealmSearchQuery private constructor(
     override val normalizedQuery: kotlin.String,
     override val selectors: kotlin.collections.List<skirout.editor.v1.search.RealmSearchSelector>,
     override val selectorExpression: skirout.editor.v1.search.RealmSearchSelectorExpression?,
+    override val terms: kotlin.collections.List<kotlin.String>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmSearchQuery>? =
         null,
 ): skirout.editor.v1.search.RealmSearchQuery_OrMutable {
@@ -859,12 +861,14 @@ class RealmSearchQuery private constructor(
         normalizedQuery: kotlin.String,
         selectors: kotlin.collections.Iterable<skirout.editor.v1.search.RealmSearchSelector_OrMutable>,
         selectorExpression: skirout.editor.v1.search.RealmSearchSelectorExpression?,
+        terms: kotlin.collections.Iterable<kotlin.String>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmSearchQuery>? =
             null,
     ): this(
         normalizedQuery,
         build.skir.internal.toFrozenList(selectors, { it.toFrozen() }),
         selectorExpression,
+        build.skir.internal.toFrozenList(terms),
         _unrecognizedFields,
     ) {}
 
@@ -876,6 +880,7 @@ class RealmSearchQuery private constructor(
         normalizedQuery = this.normalizedQuery,
         selectors = this.selectors,
         selectorExpression = this.selectorExpression,
+        terms = this.terms,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -888,10 +893,13 @@ class RealmSearchQuery private constructor(
             this.selectors,
         selectorExpression: skirout.editor.v1.search.RealmSearchSelectorExpression? =
             this.selectorExpression,
+        terms: kotlin.collections.Iterable<kotlin.String> =
+            this.terms,
     ) = skirout.editor.v1.search.RealmSearchQuery(
         normalizedQuery,
         build.skir.internal.toFrozenList(selectors, { it.toFrozen() }),
         selectorExpression,
+        build.skir.internal.toFrozenList(terms),
         this._unrecognizedFields,
     );
 
@@ -899,11 +907,11 @@ class RealmSearchQuery private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.search.RealmSearchQuery && this.normalizedQuery == other.normalizedQuery && this.selectors == other.selectors && this.selectorExpression == other.selectorExpression);
+        return this === other || (other is skirout.editor.v1.search.RealmSearchQuery && this.normalizedQuery == other.normalizedQuery && this.selectors == other.selectors && this.selectorExpression == other.selectorExpression && this.terms == other.terms);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.normalizedQuery, this.selectors, this.selectorExpression).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.normalizedQuery, this.selectors, this.selectorExpression, this.terms).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -923,6 +931,8 @@ class RealmSearchQuery private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.search.RealmSearchSelector>(),
         override var selectorExpression: skirout.editor.v1.search.RealmSearchSelectorExpression? =
             null,
+        override var terms: kotlin.collections.List<kotlin.String> =
+            build.skir.internal.emptyFrozenList<kotlin.String>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmSearchQuery>? =
             null,
     ): skirout.editor.v1.search.RealmSearchQuery_OrMutable {
@@ -931,6 +941,7 @@ class RealmSearchQuery private constructor(
             normalizedQuery = this.normalizedQuery,
             selectors = this.selectors,
             selectorExpression = this.selectorExpression,
+            terms = this.terms,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -949,6 +960,22 @@ class RealmSearchQuery private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [terms] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [terms] and returns it.
+         */
+        val mutableTerms: kotlin.collections.MutableList<kotlin.String> get() {
+            var value = this.terms;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.terms = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
@@ -957,6 +984,7 @@ class RealmSearchQuery private constructor(
                 "",
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.search.RealmSearchSelector>(),
                 null,
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -976,10 +1004,13 @@ class RealmSearchQuery private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.search.RealmSearchSelector>(),
             selectorExpression: skirout.editor.v1.search.RealmSearchSelectorExpression? =
                 null,
+            terms: kotlin.collections.Iterable<kotlin.String> =
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
         ) = skirout.editor.v1.search.RealmSearchQuery(
             normalizedQuery = normalizedQuery,
             selectors = selectors,
             selectorExpression = selectorExpression,
+            terms = terms,
             _unrecognizedFields = null,
         );
 
@@ -1030,6 +1061,17 @@ class RealmSearchQuery private constructor(
                 "",
                 { it.selectorExpression },
                 { mut, v -> mut.selectorExpression = v },
+            );
+            serializerImpl.addField(
+                "terms",
+                "terms",
+                3,
+                build.skir.Serializers.list(
+                    build.skir.Serializers.string,
+                ),
+                "",
+                { it.terms },
+                { mut, v -> mut.terms = v },
             );
             serializerImpl.finalizeStruct();
         }

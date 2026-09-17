@@ -35,6 +35,10 @@ import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
 import skirout.library.v1.authoring.AuthoringChanged
 import skirout.library.v1.authoring.GetAuthoringSnapshot
 import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
+import skirout.library.v1.authoring.SearchAuthoringContent
+import skirout.library.v1.authoring.SearchAuthoringContentResponse
+import skirout.library.v1.authoring.SuggestAuthoringSelectorValues
+import skirout.library.v1.authoring.SuggestAuthoringSelectorValuesResponse
 import skirout.library.v1.compiled_content.WatchCompiledContent
 import skirout.library.v1.compiled_content.WatchCompiledContentResponse
 
@@ -97,13 +101,25 @@ internal class LibraryContracts(
         unary(
             GetAuthoringSnapshot,
             "library.authoring.snapshot.get",
-            GetAuthoringSnapshotResponse.createInternalError(message = "Authoring snapshot failed"),
+            GetAuthoringSnapshotResponse.createInternalError(),
         )
     val applyAuthoringBatch =
         unary(
             ApplyAuthoringBatch,
             "library.authoring.batch.apply",
-            ApplyAuthoringBatchResponse.createInternalError(message = "Authoring batch failed"),
+            ApplyAuthoringBatchResponse.createInternalError(),
+        )
+    val searchAuthoringContent =
+        unary(
+            SearchAuthoringContent,
+            "library.authoring.content.search",
+            SearchAuthoringContentResponse.createInternalError(),
+        )
+    val suggestAuthoringSelectorValues =
+        unary(
+            SuggestAuthoringSelectorValues,
+            "library.authoring.selector.suggest",
+            SuggestAuthoringSelectorValuesResponse.createInternalError(),
         )
     val authoringChanged =
         EventContract(
@@ -117,7 +133,7 @@ internal class LibraryContracts(
             WatchCompiledContent,
             WatchCompiledContentResponse.serializer,
             "compiled.content.watch",
-            WatchCompiledContentResponse.createInternalError(message = "Compiled content watch failed"),
+            WatchCompiledContentResponse.createInternalError(),
         )
     val compiledContentChanged =
         EventContract(

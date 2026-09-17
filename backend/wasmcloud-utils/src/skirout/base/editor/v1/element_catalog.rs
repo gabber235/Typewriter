@@ -328,6 +328,357 @@ impl AvailabilityExpression {
 }
 
 // ==============================================================================
+// struct ElementSearchMode.Summary
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchMode_Summary {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_Summary>>,
+}
+
+impl ElementSearchMode_Summary {
+    pub fn default_ref() -> &'static ElementSearchMode_Summary {
+        static D: std::sync::LazyLock<ElementSearchMode_Summary> = std::sync::LazyLock::new(ElementSearchMode_Summary::default);
+        &D
+    }
+}
+
+impl ElementSearchMode_Summary {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_Summary> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_Summary>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchMode.Summary",
+                    "",
+                    |x: &ElementSearchMode_Summary| &x._unrecognized,
+                    |x: &mut ElementSearchMode_Summary, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_Summary> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Summary::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ElementSearchMode.Body
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchMode_Body {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_Body>>,
+}
+
+impl ElementSearchMode_Body {
+    pub fn default_ref() -> &'static ElementSearchMode_Body {
+        static D: std::sync::LazyLock<ElementSearchMode_Body> = std::sync::LazyLock::new(ElementSearchMode_Body::default);
+        &D
+    }
+}
+
+impl ElementSearchMode_Body {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_Body> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_Body>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchMode.Body",
+                    "",
+                    |x: &ElementSearchMode_Body| &x._unrecognized,
+                    |x: &mut ElementSearchMode_Body, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_Body> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Body::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ElementSearchMode.Keyword
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchMode_Keyword {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_Keyword>>,
+}
+
+impl ElementSearchMode_Keyword {
+    pub fn default_ref() -> &'static ElementSearchMode_Keyword {
+        static D: std::sync::LazyLock<ElementSearchMode_Keyword> = std::sync::LazyLock::new(ElementSearchMode_Keyword::default);
+        &D
+    }
+}
+
+impl ElementSearchMode_Keyword {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_Keyword> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_Keyword>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchMode.Keyword",
+                    "",
+                    |x: &ElementSearchMode_Keyword| &x._unrecognized,
+                    |x: &mut ElementSearchMode_Keyword, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_Keyword> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Keyword::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ElementSearchMode.None
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchMode_None {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_None>>,
+}
+
+impl ElementSearchMode_None {
+    pub fn default_ref() -> &'static ElementSearchMode_None {
+        static D: std::sync::LazyLock<ElementSearchMode_None> = std::sync::LazyLock::new(ElementSearchMode_None::default);
+        &D
+    }
+}
+
+impl ElementSearchMode_None {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_None> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_None>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchMode.None",
+                    "",
+                    |x: &ElementSearchMode_None| &x._unrecognized,
+                    |x: &mut ElementSearchMode_None, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_None> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_None::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum ElementSearchMode
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ElementSearchMode {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementSearchMode>>),
+    Summary(Box<ElementSearchMode_Summary>),
+    Body(Box<ElementSearchMode_Body>),
+    Keyword(Box<ElementSearchMode_Keyword>),
+    None(Box<ElementSearchMode_None>),
+}
+
+impl Default for ElementSearchMode {
+    fn default() -> Self {
+        ElementSearchMode::Unknown(None)
+    }
+}
+
+impl ElementSearchMode {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementSearchMode> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementSearchMode>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &ElementSearchMode| match x {
+                        ElementSearchMode::Unknown(_) => 0,
+                        ElementSearchMode::Summary(_) => 1,
+                        ElementSearchMode::Body(_) => 2,
+                        ElementSearchMode::Keyword(_) => 3,
+                        ElementSearchMode::None(_) => 4,
+                    },
+                    |u| ElementSearchMode::Unknown(Some(u)),
+                    |x: &ElementSearchMode| match x { ElementSearchMode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchMode",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ElementSearchMode::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ElementSearchPolicy.OrdinaryText
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchPolicy_OrdinaryText {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchPolicy_OrdinaryText>>,
+}
+
+impl ElementSearchPolicy_OrdinaryText {
+    pub fn default_ref() -> &'static ElementSearchPolicy_OrdinaryText {
+        static D: std::sync::LazyLock<ElementSearchPolicy_OrdinaryText> = std::sync::LazyLock::new(ElementSearchPolicy_OrdinaryText::default);
+        &D
+    }
+}
+
+impl ElementSearchPolicy_OrdinaryText {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchPolicy_OrdinaryText> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchPolicy_OrdinaryText>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchPolicy.OrdinaryText",
+                    "",
+                    |x: &ElementSearchPolicy_OrdinaryText| &x._unrecognized,
+                    |x: &mut ElementSearchPolicy_OrdinaryText, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchPolicy_OrdinaryText> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchPolicy_OrdinaryText::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum ElementSearchPolicy
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ElementSearchPolicy {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementSearchPolicy>>),
+    OrdinaryText(Box<ElementSearchPolicy_OrdinaryText>),
+}
+
+impl Default for ElementSearchPolicy {
+    fn default() -> Self {
+        ElementSearchPolicy::Unknown(None)
+    }
+}
+
+impl ElementSearchPolicy {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementSearchPolicy> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementSearchPolicy>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &ElementSearchPolicy| match x {
+                        ElementSearchPolicy::Unknown(_) => 0,
+                        ElementSearchPolicy::OrdinaryText(_) => 1,
+                    },
+                    |u| ElementSearchPolicy::Unknown(Some(u)),
+                    |x: &ElementSearchPolicy| match x { ElementSearchPolicy::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchPolicy",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchPolicy> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ElementSearchPolicy::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ElementSearchPropertyOverride
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchPropertyOverride {
+    pub owner_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub field: String,
+    pub mode: ElementSearchMode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchPropertyOverride>>,
+}
+
+impl ElementSearchPropertyOverride {
+    pub fn default_ref() -> &'static ElementSearchPropertyOverride {
+        static D: std::sync::LazyLock<ElementSearchPropertyOverride> = std::sync::LazyLock::new(ElementSearchPropertyOverride::default);
+        &D
+    }
+}
+
+impl ElementSearchPropertyOverride {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchPropertyOverride> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchPropertyOverride>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchPropertyOverride",
+                    "",
+                    |x: &ElementSearchPropertyOverride| &x._unrecognized,
+                    |x: &mut ElementSearchPropertyOverride, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchPropertyOverride> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchPropertyOverride::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ElementSearchDefinition
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementSearchDefinition {
+    pub policy: ElementSearchPolicy,
+    pub property_overrides: Vec<ElementSearchPropertyOverride>,
+    pub revision_fingerprint_inputs: Vec<crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchDefinition>>,
+}
+
+impl ElementSearchDefinition {
+    pub fn default_ref() -> &'static ElementSearchDefinition {
+        static D: std::sync::LazyLock<ElementSearchDefinition> = std::sync::LazyLock::new(ElementSearchDefinition::default);
+        &D
+    }
+}
+
+impl ElementSearchDefinition {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchDefinition> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchDefinition>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ElementSearchDefinition",
+                    "",
+                    |x: &ElementSearchDefinition| &x._unrecognized,
+                    |x: &mut ElementSearchDefinition, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchDefinition> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementSearchDefinition::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct ElementDescriptor
 // ==============================================================================
 
@@ -340,6 +691,7 @@ pub struct ElementDescriptor {
     pub icon: crate::skirout::base::kernel::v1::icon::Icon,
     pub color: crate::skirout::base::kernel::v1::color::Color,
     pub availability: AvailabilityExpression,
+    pub search_definition: Option<ElementSearchDefinition>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementDescriptor>>,
 }
@@ -582,6 +934,53 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_Summary> = ElementSearchMode_Summary::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_Body> = ElementSearchMode_Body::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_Keyword> = ElementSearchMode_Keyword::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_None> = ElementSearchMode_None::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<ElementSearchMode> = ElementSearchMode::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("summary", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Summary::_adapter()), "", |v| ElementSearchMode::Summary(Box::new(v)), |x| match x { ElementSearchMode::Summary(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("body", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Body::_adapter()), "", |v| ElementSearchMode::Body(Box::new(v)), |x| match x { ElementSearchMode::Body(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("keyword", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Keyword::_adapter()), "", |v| ElementSearchMode::Keyword(Box::new(v)), |x| match x { ElementSearchMode::Keyword(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("none", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_None::_adapter()), "", |v| ElementSearchMode::None(Box::new(v)), |x| match x { ElementSearchMode::None(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchPolicy_OrdinaryText> = ElementSearchPolicy_OrdinaryText::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<ElementSearchPolicy> = ElementSearchPolicy::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("ordinary_text", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementSearchPolicy_OrdinaryText::_adapter()), "", |v| ElementSearchPolicy::OrdinaryText(Box::new(v)), |x| match x { ElementSearchPolicy::OrdinaryText(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchPropertyOverride> = ElementSearchPropertyOverride::_adapter() as *const _ as *mut _;
+                (*a).add_field("owner_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ElementSearchPropertyOverride| &x.owner_type, |x: &mut ElementSearchPropertyOverride, v| x.owner_type = v);
+                (*a).add_field("field", 1, crate::skir_client::Serializer::string(), "", |x: &ElementSearchPropertyOverride| &x.field, |x: &mut ElementSearchPropertyOverride, v| x.field = v);
+                (*a).add_field("mode", 2, crate::skir_client::internal::enum_serializer_from_static(ElementSearchMode::_adapter()), "", |x: &ElementSearchPropertyOverride| &x.mode, |x: &mut ElementSearchPropertyOverride, v| x.mode = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchDefinition> = ElementSearchDefinition::_adapter() as *const _ as *mut _;
+                (*a).add_field("policy", 0, crate::skir_client::internal::enum_serializer_from_static(ElementSearchPolicy::_adapter()), "", |x: &ElementSearchDefinition| &x.policy, |x: &mut ElementSearchDefinition, v| x.policy = v);
+                (*a).add_field("property_overrides", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ElementSearchPropertyOverride::_adapter())), "", |x: &ElementSearchDefinition| &x.property_overrides, |x: &mut ElementSearchDefinition, v| x.property_overrides = v);
+                (*a).add_field("revision_fingerprint_inputs", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &ElementSearchDefinition| &x.revision_fingerprint_inputs, |x: &mut ElementSearchDefinition, v| x.revision_fingerprint_inputs = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ElementDescriptor> = ElementDescriptor::_adapter() as *const _ as *mut _;
                 (*a).add_field("element_type_id", 0, crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter()), "", |x: &ElementDescriptor| &x.element_type_id, |x: &mut ElementDescriptor, v| x.element_type_id = v);
                 (*a).add_field("type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ElementDescriptor| &x.type_, |x: &mut ElementDescriptor, v| x.type_ = v);
@@ -590,6 +989,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("icon", 4, crate::skirout::base::kernel::v1::icon::Icon::serializer(), "", |x: &ElementDescriptor| &x.icon, |x: &mut ElementDescriptor, v| x.icon = v);
                 (*a).add_field("color", 5, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &ElementDescriptor| &x.color, |x: &mut ElementDescriptor, v| x.color = v);
                 (*a).add_field("availability", 6, crate::skir_client::internal::enum_serializer_from_static(AvailabilityExpression::_adapter()), "", |x: &ElementDescriptor| &x.availability, |x: &mut ElementDescriptor, v| x.availability = v);
+                (*a).add_field("search_definition", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ElementSearchDefinition::_adapter())), "", |x: &ElementDescriptor| &x.search_definition, |x: &mut ElementDescriptor, v| x.search_definition = v);
                 (*a).finalize();
             }
             unsafe {

@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Variance
@@ -84,6 +85,24 @@ val KspTypeGraphConverterTest by testSuite {
 
         (definition.representation as TypeExpression.Record).fields.map(TypeField::name) shouldBe
             listOf("inheritedValue", "privateValue")
+    }
+
+    test("serialized property metadata retains the wire name") {
+        val declaration = classDeclaration("example.NamedRecord")
+        every { declaration.getAllProperties() } returns
+            sequenceOf(
+                property(
+                    "kotlinName",
+                    classType("kotlin.String"),
+                    annotations = listOf(annotation("kotlinx.serialization.SerialName", "wire_name")),
+                ),
+            )
+
+        val result = KspTypeGraphConverter().convert(type(declaration)) as KspTypeConversionResult.Success
+
+        result.serializedProperties.single().serializedName shouldBe "wire_name"
+        val definition = result.graph.definitions.single()
+        (definition.representation as TypeExpression.Record).fields.single().name shouldBe "wire_name"
     }
 
     test("function types return a diagnostic instead of throwing") {
@@ -162,9 +181,26 @@ private fun classDeclaration(
     }
 }
 
-private fun annotation(qualifiedName: String): KSAnnotation {
+private fun annotation(
+    qualifiedName: String,
+    value: Any? = null,
+): KSAnnotation {
     val reference = mockk<KSTypeReference> { every { resolve() } returns type(classDeclaration(qualifiedName)) }
-    return mockk { every { annotationType } returns reference }
+    val arguments =
+        if (value == null) {
+            emptyList()
+        } else {
+            listOf(
+                mockk<KSValueArgument> {
+                    every { name } returns name("value")
+                    every { this@mockk.value } returns value
+                },
+            )
+        }
+    return mockk {
+        every { annotationType } returns reference
+        every { this@mockk.arguments } returns arguments
+    }
 }
 
 private fun property(
@@ -173,6 +209,7 @@ private fun property(
     modifiers: Set<Modifier> = emptySet(),
     hasBackingField: Boolean = true,
     delegated: Boolean = false,
+    annotations: List<KSAnnotation> = emptyList(),
 ): KSPropertyDeclaration {
     val reference = mockk<KSTypeReference> { every { resolve() } returns propertyType }
     return mockk {
@@ -182,7 +219,7 @@ private fun property(
         every { this@mockk.hasBackingField } returns hasBackingField
         every { isDelegated() } returns delegated
         every { this@mockk.modifiers } returns modifiers
-        every { annotations } returns emptySequence()
+        every { this@mockk.annotations } answers { annotations.asSequence() }
     }
 }
 

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.elements.ElementSearchDefinition
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookId
@@ -10,6 +11,8 @@ import com.typewritermc.library.Page
 import com.typewritermc.library.PageId
 import com.typewritermc.library.PageKindRef
 import com.typewritermc.library.ref
+import com.typewritermc.realm.repository.search.ElementSearchCatalogEntry
+import com.typewritermc.realm.repository.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.schema.SchemaMigrator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanBlocking
@@ -28,9 +31,14 @@ internal class RepositoryFixture : AutoCloseable {
             useNs("realm_repository_test").useDb("realm_repository_test")
         }
     private val graphs = linkedMapOf(TEST_ELEMENT_TYPE to TypeGraph(TypeExpression.Any, emptyList()))
+    private val searchCatalog =
+        linkedMapOf(
+            TEST_ELEMENT_TYPE to ElementSearchCatalogEntry(graphs.getValue(TEST_ELEMENT_TYPE), null, "Test element"),
+        )
     val elementTypeGraphs = { graphs.toMap() }
     val pageDocuments = SurrealPageDocumentRepository(database) { null }
-    val authoring = SurrealAuthoringRepository(database, pageDocuments, elementTypeGraphs)
+    val search = SurrealAuthoringSearchRepository(database, catalog = { searchCatalog.toMap() })
+    val authoring = SurrealAuthoringRepository(database, pageDocuments, elementTypeGraphs, search)
 
     init {
         telemetry.telemetry.mainSpanBlocking(
@@ -68,6 +76,7 @@ internal class RepositoryFixture : AutoCloseable {
         book: BookId,
         kind: PageKindRef,
         name: String = id,
+        chapter: ChapterPath = ChapterPath.Root,
     ): Page {
         val result =
             authoring.apply(
@@ -80,7 +89,7 @@ internal class RepositoryFixture : AutoCloseable {
                                 book = book.ref(),
                                 name = LibraryName(name),
                                 kind = kind,
-                                chapter = ChapterPath.parse(""),
+                                chapter = chapter,
                                 priority = 0,
                             ),
                         ),
@@ -93,8 +102,11 @@ internal class RepositoryFixture : AutoCloseable {
     fun registerElementType(
         type: ElementTypeId,
         graph: TypeGraph,
+        searchDefinition: ElementSearchDefinition? = null,
+        displayName: String = "Test element",
     ) {
         graphs[type] = graph
+        searchCatalog[type] = ElementSearchCatalogEntry(graph, searchDefinition, displayName)
     }
 
     override fun close() {

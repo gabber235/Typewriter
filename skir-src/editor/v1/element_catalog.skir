@@ -38,6 +38,29 @@ enum AvailabilityExpression(811100007) {
   not: AvailabilityNot = 5;
 }
 
+enum ElementSearchMode(811100012) {
+  summary: struct {} = 1;
+  body: struct {} = 2;
+  keyword: struct {} = 3;
+  none: struct {} = 4;
+}
+
+enum ElementSearchPolicy(811100013) {
+  ordinary_text: struct {} = 1;
+}
+
+struct ElementSearchPropertyOverride(811100014) {
+  owner_type: ResolvedTypeRef = 0;
+  field: string = 1;
+  mode: ElementSearchMode = 2;
+}
+
+struct ElementSearchDefinition(811100015) {
+  policy: ElementSearchPolicy = 0;
+  property_overrides: [ElementSearchPropertyOverride] = 1;
+  revision_fingerprint_inputs: [ResolvedTypeRef] = 2;
+}
+
 struct ElementDescriptor(811100008) {
   element_type_id: ElementTypeId = 0;
   type: ResolvedTypeRef = 1;
@@ -46,6 +69,7 @@ struct ElementDescriptor(811100008) {
   icon: Icon = 4;
   color: Color = 5;
   availability: AvailabilityExpression = 6;
+  search_definition: ElementSearchDefinition? = 7;
 }
 
 struct ElementIneligibility(811100009) {

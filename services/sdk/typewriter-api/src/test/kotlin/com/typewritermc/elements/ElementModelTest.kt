@@ -14,14 +14,62 @@ import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToByteArray
 
+@OptIn(ExperimentalSerializationApi::class)
 val ElementModelTest by testSuite {
     test("element contribution preserves typed icon and color values") {
-        val contribution = ElementDiscoveryContribution(descriptors = listOf(descriptor()))
+        val descriptor = descriptor()
+        val contribution =
+            ElementDiscoveryContribution(
+                descriptors =
+                    listOf(
+                        descriptor.copy(
+                            searchDefinition =
+                                ElementSearchDefinition(
+                                    ElementSearchPolicy.ORDINARY_TEXT,
+                                    listOf(
+                                        ElementSearchPropertyOverride(
+                                            descriptor.type,
+                                            "title",
+                                            ElementSearchMode.SUMMARY,
+                                        ),
+                                    ),
+                                    listOf(descriptor.type),
+                                ),
+                        ),
+                    ),
+            )
 
         val decoded = ElementDiscoveryContributionCodec.decode(ElementDiscoveryContributionCodec.encode(contribution))
 
         decoded shouldBe contribution
+    }
+
+    test("element contribution decodes descriptors produced before search metadata") {
+        val descriptor = descriptor()
+        val legacyContribution =
+            LegacyElementDiscoveryContribution(
+                listOf(
+                    LegacyElementDescriptor(
+                        descriptor.id,
+                        descriptor.type,
+                        descriptor.name,
+                        descriptor.description,
+                        descriptor.icon,
+                        descriptor.color,
+                        descriptor.availability,
+                    ),
+                ),
+            )
+
+        val decoded = ElementDiscoveryContributionCodec.decode(legacyCbor.encodeToByteArray(legacyContribution))
+
+        decoded.descriptors.single() shouldBe descriptor
+        decoded.descriptors.single().searchDefinition shouldBe null
     }
 
     test("availability expressions evaluate deployment facts") {
@@ -89,6 +137,25 @@ val ElementModelTest by testSuite {
         available.entries.single().available shouldBe true
     }
 }
+
+@Serializable
+private data class LegacyElementDiscoveryContribution(
+    val descriptors: List<LegacyElementDescriptor>,
+)
+
+@Serializable
+private data class LegacyElementDescriptor(
+    val id: ElementTypeId,
+    val type: ResolvedTypeRef,
+    val name: String,
+    val description: String,
+    val icon: Icon,
+    val color: Color,
+    val availability: AvailabilityExpression,
+)
+
+@OptIn(ExperimentalSerializationApi::class)
+private val legacyCbor = Cbor { encodeDefaults = true }
 
 private fun descriptor(): ElementDescriptor {
     val id = DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")

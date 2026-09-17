@@ -1035,6 +1035,1046 @@ final class AvailabilityExpression_notWrapper extends _AvailabilityExpression_wr
 }
 
 // -----------------------------------------------------------------------------
+// struct ElementSearchMode.Summary
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchMode_Summary_orMutable {
+  ElementSearchMode_Summary toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchMode_Summary implements ElementSearchMode_Summary_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchMode_Summary() => ElementSearchMode_Summary._();
+
+  ElementSearchMode_Summary._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchMode_Summary._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchMode_Summary_mutable mutable() => ElementSearchMode_Summary_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchMode_Summary toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchMode_Summary_mutable toMutable() => ElementSearchMode_Summary_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchMode_Summary) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchMode_Summary` instances.
+  static _skir.StructSerializer<ElementSearchMode_Summary, ElementSearchMode_Summary_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.Summary",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchMode_Summary_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchMode_Summary].
+final class ElementSearchMode_Summary_mutable implements ElementSearchMode_Summary_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchMode_Summary_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchMode_Summary toFrozen() => ElementSearchMode_Summary().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ElementSearchMode.Body
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchMode_Body_orMutable {
+  ElementSearchMode_Body toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchMode_Body implements ElementSearchMode_Body_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchMode_Body() => ElementSearchMode_Body._();
+
+  ElementSearchMode_Body._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchMode_Body._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchMode_Body_mutable mutable() => ElementSearchMode_Body_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchMode_Body toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchMode_Body_mutable toMutable() => ElementSearchMode_Body_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchMode_Body) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchMode_Body` instances.
+  static _skir.StructSerializer<ElementSearchMode_Body, ElementSearchMode_Body_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.Body",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchMode_Body_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchMode_Body].
+final class ElementSearchMode_Body_mutable implements ElementSearchMode_Body_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchMode_Body_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchMode_Body toFrozen() => ElementSearchMode_Body().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ElementSearchMode.Keyword
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchMode_Keyword_orMutable {
+  ElementSearchMode_Keyword toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchMode_Keyword implements ElementSearchMode_Keyword_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchMode_Keyword() => ElementSearchMode_Keyword._();
+
+  ElementSearchMode_Keyword._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchMode_Keyword._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchMode_Keyword_mutable mutable() => ElementSearchMode_Keyword_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchMode_Keyword toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchMode_Keyword_mutable toMutable() => ElementSearchMode_Keyword_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchMode_Keyword) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchMode_Keyword` instances.
+  static _skir.StructSerializer<ElementSearchMode_Keyword, ElementSearchMode_Keyword_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.Keyword",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchMode_Keyword_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchMode_Keyword].
+final class ElementSearchMode_Keyword_mutable implements ElementSearchMode_Keyword_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchMode_Keyword_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchMode_Keyword toFrozen() => ElementSearchMode_Keyword().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ElementSearchMode.None
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchMode_None_orMutable {
+  ElementSearchMode_None toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchMode_None implements ElementSearchMode_None_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchMode_None() => ElementSearchMode_None._();
+
+  ElementSearchMode_None._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchMode_None._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchMode_None_mutable mutable() => ElementSearchMode_None_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchMode_None toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchMode_None_mutable toMutable() => ElementSearchMode_None_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchMode_None) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchMode_None` instances.
+  static _skir.StructSerializer<ElementSearchMode_None, ElementSearchMode_None_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.None",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchMode_None_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchMode_None].
+final class ElementSearchMode_None_mutable implements ElementSearchMode_None_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchMode_None_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchMode_None toFrozen() => ElementSearchMode_None().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum ElementSearchMode
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ElementSearchMode_unknown(): { ... }
+///     case ElementSearchMode_summary(:var value): { ... }
+///     case ElementSearchMode_body(:var value): { ... }
+///     case ElementSearchMode_keyword(:var value): { ... }
+///     case ElementSearchMode_none(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ElementSearchMode {
+  /// Constant indicating an unknown `ElementSearchMode`.
+  /// Default value for fields of type `ElementSearchMode`.
+  static const ElementSearchMode unknown = ElementSearchMode_unknown._instance;
+
+  /// Create a 'summary' variant wrapping around the given value.
+  factory ElementSearchMode.wrapSummary(
+    ElementSearchMode_Summary value
+  ) => ElementSearchMode_summaryWrapper._(value);
+
+  /// Same as `wrapSummary(ElementSearchMode_Summary(...))`.
+  factory ElementSearchMode.createSummary() => ElementSearchMode.wrapSummary(
+    ElementSearchMode_Summary()
+  );
+
+  /// Create a 'body' variant wrapping around the given value.
+  factory ElementSearchMode.wrapBody(
+    ElementSearchMode_Body value
+  ) => ElementSearchMode_bodyWrapper._(value);
+
+  /// Same as `wrapBody(ElementSearchMode_Body(...))`.
+  factory ElementSearchMode.createBody() => ElementSearchMode.wrapBody(
+    ElementSearchMode_Body()
+  );
+
+  /// Create a 'keyword' variant wrapping around the given value.
+  factory ElementSearchMode.wrapKeyword(
+    ElementSearchMode_Keyword value
+  ) => ElementSearchMode_keywordWrapper._(value);
+
+  /// Same as `wrapKeyword(ElementSearchMode_Keyword(...))`.
+  factory ElementSearchMode.createKeyword() => ElementSearchMode.wrapKeyword(
+    ElementSearchMode_Keyword()
+  );
+
+  /// Create a 'none' variant wrapping around the given value.
+  factory ElementSearchMode.wrapNone(
+    ElementSearchMode_None value
+  ) => ElementSearchMode_noneWrapper._(value);
+
+  /// Same as `wrapNone(ElementSearchMode_None(...))`.
+  factory ElementSearchMode.createNone() => ElementSearchMode.wrapNone(
+    ElementSearchMode_None()
+  );
+
+  /// Returns the kind of variant held by this ElementSearchMode.
+  ElementSearchMode_kind get kind;
+
+  /// Serializer for `ElementSearchMode` instances.
+  static _skir.EnumSerializer<ElementSearchMode> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "summary",
+        "wrapSummary",
+        ElementSearchMode_Summary.serializer,
+        "",
+        ElementSearchMode_summaryWrapper._,
+        (it) => it.value,
+        ordinal: ElementSearchMode_kind.summaryWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "body",
+        "wrapBody",
+        ElementSearchMode_Body.serializer,
+        "",
+        ElementSearchMode_bodyWrapper._,
+        (it) => it.value,
+        ordinal: ElementSearchMode_kind.bodyWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "keyword",
+        "wrapKeyword",
+        ElementSearchMode_Keyword.serializer,
+        "",
+        ElementSearchMode_keywordWrapper._,
+        (it) => it.value,
+        ordinal: ElementSearchMode_kind.keywordWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "none",
+        "wrapNone",
+        ElementSearchMode_None.serializer,
+        "",
+        ElementSearchMode_noneWrapper._,
+        (it) => it.value,
+        ordinal: ElementSearchMode_kind.noneWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchMode",
+    doc: "",
+    unknownInstance: ElementSearchMode_unknown._instance,
+    enumInstance: ElementSearchMode.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ElementSearchMode_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `ElementSearchMode`.
+enum ElementSearchMode_kind {
+  unknown(0),
+  summaryWrapper(1),
+  bodyWrapper(2),
+  keywordWrapper(3),
+  noneWrapper(4);
+
+  final _core.int _ordinal;
+
+  const ElementSearchMode_kind(this._ordinal);
+}
+
+final class ElementSearchMode_unknown implements ElementSearchMode {
+  static const _instance = ElementSearchMode_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ElementSearchMode_unknown._() : _u = null;
+  ElementSearchMode_unknown._unrecognized(this._u);
+
+  @_core.override
+  ElementSearchMode_kind get kind => ElementSearchMode_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ElementSearchMode_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, ElementSearchMode.serializer);
+}
+
+sealed class _ElementSearchMode_wrapper implements ElementSearchMode {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _ElementSearchMode_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, ElementSearchMode.serializer);
+}
+
+final class ElementSearchMode_summaryWrapper extends _ElementSearchMode_wrapper {
+  final ElementSearchMode_Summary value;
+
+  ElementSearchMode_summaryWrapper._(this.value);
+
+  @_core.override
+  ElementSearchMode_kind get kind => ElementSearchMode_kind.summaryWrapper;
+}
+
+final class ElementSearchMode_bodyWrapper extends _ElementSearchMode_wrapper {
+  final ElementSearchMode_Body value;
+
+  ElementSearchMode_bodyWrapper._(this.value);
+
+  @_core.override
+  ElementSearchMode_kind get kind => ElementSearchMode_kind.bodyWrapper;
+}
+
+final class ElementSearchMode_keywordWrapper extends _ElementSearchMode_wrapper {
+  final ElementSearchMode_Keyword value;
+
+  ElementSearchMode_keywordWrapper._(this.value);
+
+  @_core.override
+  ElementSearchMode_kind get kind => ElementSearchMode_kind.keywordWrapper;
+}
+
+final class ElementSearchMode_noneWrapper extends _ElementSearchMode_wrapper {
+  final ElementSearchMode_None value;
+
+  ElementSearchMode_noneWrapper._(this.value);
+
+  @_core.override
+  ElementSearchMode_kind get kind => ElementSearchMode_kind.noneWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct ElementSearchPolicy.OrdinaryText
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchPolicy_OrdinaryText_orMutable {
+  ElementSearchPolicy_OrdinaryText toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchPolicy_OrdinaryText implements ElementSearchPolicy_OrdinaryText_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchPolicy_OrdinaryText() => ElementSearchPolicy_OrdinaryText._();
+
+  ElementSearchPolicy_OrdinaryText._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchPolicy_OrdinaryText._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchPolicy_OrdinaryText_mutable mutable() => ElementSearchPolicy_OrdinaryText_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchPolicy_OrdinaryText toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchPolicy_OrdinaryText_mutable toMutable() => ElementSearchPolicy_OrdinaryText_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchPolicy_OrdinaryText) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchPolicy_OrdinaryText` instances.
+  static _skir.StructSerializer<ElementSearchPolicy_OrdinaryText, ElementSearchPolicy_OrdinaryText_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchPolicy.OrdinaryText",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchPolicy_OrdinaryText_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchPolicy_OrdinaryText].
+final class ElementSearchPolicy_OrdinaryText_mutable implements ElementSearchPolicy_OrdinaryText_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchPolicy_OrdinaryText_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchPolicy_OrdinaryText toFrozen() => ElementSearchPolicy_OrdinaryText().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum ElementSearchPolicy
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ElementSearchPolicy_unknown(): { ... }
+///     case ElementSearchPolicy_ordinaryText(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ElementSearchPolicy {
+  /// Constant indicating an unknown `ElementSearchPolicy`.
+  /// Default value for fields of type `ElementSearchPolicy`.
+  static const ElementSearchPolicy unknown = ElementSearchPolicy_unknown._instance;
+
+  /// Create a 'ordinary_text' variant wrapping around the given value.
+  factory ElementSearchPolicy.wrapOrdinaryText(
+    ElementSearchPolicy_OrdinaryText value
+  ) => ElementSearchPolicy_ordinaryTextWrapper._(value);
+
+  /// Same as `wrapOrdinaryText(ElementSearchPolicy_OrdinaryText(...))`.
+  factory ElementSearchPolicy.createOrdinaryText() => ElementSearchPolicy.wrapOrdinaryText(
+    ElementSearchPolicy_OrdinaryText()
+  );
+
+  /// Returns the kind of variant held by this ElementSearchPolicy.
+  ElementSearchPolicy_kind get kind;
+
+  /// Serializer for `ElementSearchPolicy` instances.
+  static _skir.EnumSerializer<ElementSearchPolicy> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "ordinary_text",
+        "wrapOrdinaryText",
+        ElementSearchPolicy_OrdinaryText.serializer,
+        "",
+        ElementSearchPolicy_ordinaryTextWrapper._,
+        (it) => it.value,
+        ordinal: ElementSearchPolicy_kind.ordinaryTextWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchPolicy",
+    doc: "",
+    unknownInstance: ElementSearchPolicy_unknown._instance,
+    enumInstance: ElementSearchPolicy.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ElementSearchPolicy_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `ElementSearchPolicy`.
+enum ElementSearchPolicy_kind {
+  unknown(0),
+  ordinaryTextWrapper(1);
+
+  final _core.int _ordinal;
+
+  const ElementSearchPolicy_kind(this._ordinal);
+}
+
+final class ElementSearchPolicy_unknown implements ElementSearchPolicy {
+  static const _instance = ElementSearchPolicy_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ElementSearchPolicy_unknown._() : _u = null;
+  ElementSearchPolicy_unknown._unrecognized(this._u);
+
+  @_core.override
+  ElementSearchPolicy_kind get kind => ElementSearchPolicy_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ElementSearchPolicy_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, ElementSearchPolicy.serializer);
+}
+
+sealed class _ElementSearchPolicy_wrapper implements ElementSearchPolicy {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _ElementSearchPolicy_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, ElementSearchPolicy.serializer);
+}
+
+final class ElementSearchPolicy_ordinaryTextWrapper extends _ElementSearchPolicy_wrapper {
+  final ElementSearchPolicy_OrdinaryText value;
+
+  ElementSearchPolicy_ordinaryTextWrapper._(this.value);
+
+  @_core.override
+  ElementSearchPolicy_kind get kind => ElementSearchPolicy_kind.ordinaryTextWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct ElementSearchPropertyOverride
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchPropertyOverride_orMutable {
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get ownerType;
+  _core.String get field;
+  ElementSearchMode get mode;
+
+  ElementSearchPropertyOverride toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchPropertyOverride implements ElementSearchPropertyOverride_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ResolvedTypeRef ownerType;
+  @_core.override
+  final _core.String field;
+  @_core.override
+  final ElementSearchMode mode;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchPropertyOverride({
+    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable ownerType,
+    required _core.String field,
+    required ElementSearchMode mode,
+  }) => ElementSearchPropertyOverride._(
+    ownerType.toFrozen(),
+    field,
+    mode,
+  );
+
+  ElementSearchPropertyOverride._(
+    this.ownerType,
+    this.field,
+    this.mode,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchPropertyOverride._(
+    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    "",
+    ElementSearchMode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchPropertyOverride_mutable mutable() => ElementSearchPropertyOverride_mutable._(
+    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    "",
+    ElementSearchMode.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchPropertyOverride toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchPropertyOverride_mutable toMutable() => ElementSearchPropertyOverride_mutable._(
+    this.ownerType,
+    this.field,
+    this.mode,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchPropertyOverride) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.ownerType,
+    this.field,
+    this.mode,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchPropertyOverride` instances.
+  static _skir.StructSerializer<ElementSearchPropertyOverride, ElementSearchPropertyOverride_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "owner_type",
+        "ownerType",
+        0,
+        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        "",
+        (it) => it.ownerType,
+        (it, v) => it.ownerType = v,
+      );
+      _serializerBuilder.addField(
+        "field",
+        "field",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.field,
+        (it, v) => it.field = v,
+      );
+      _serializerBuilder.addField(
+        "mode",
+        "mode",
+        2,
+        ElementSearchMode.serializer,
+        "",
+        (it) => it.mode,
+        (it, v) => it.mode = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchPropertyOverride",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchPropertyOverride_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchPropertyOverride].
+final class ElementSearchPropertyOverride_mutable implements ElementSearchPropertyOverride_orMutable {
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable ownerType;
+  _core.String field;
+  ElementSearchMode mode;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchPropertyOverride_mutable._(
+    this.ownerType,
+    this.field,
+    this.mode,
+  );
+
+  /// If the value of [ownerType] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [ownerType] and returns it.
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableOwnerType {
+    final value = this.ownerType;
+    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
+      return value;
+    } else {
+      return this.ownerType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchPropertyOverride toFrozen() => ElementSearchPropertyOverride(
+    ownerType: this.ownerType,
+    field: this.field,
+    mode: this.mode,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ElementSearchDefinition
+// -----------------------------------------------------------------------------
+
+sealed class ElementSearchDefinition_orMutable {
+  ElementSearchPolicy get policy;
+  _core.Iterable<ElementSearchPropertyOverride_orMutable> get propertyOverrides;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get revisionFingerprintInputs;
+
+  ElementSearchDefinition toFrozen();
+}
+
+/// Deeply immutable.
+final class ElementSearchDefinition implements ElementSearchDefinition_orMutable {
+  @_core.override
+  final ElementSearchPolicy policy;
+  @_core.override
+  final _core.Iterable<ElementSearchPropertyOverride> propertyOverrides;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> revisionFingerprintInputs;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ElementSearchDefinition({
+    required ElementSearchPolicy policy,
+    required _core.Iterable<ElementSearchPropertyOverride_orMutable> propertyOverrides,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> revisionFingerprintInputs,
+  }) => ElementSearchDefinition._(
+    policy,
+    _skir.internal__frozenMappedCopy(propertyOverrides, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(revisionFingerprintInputs, (it) => it.toFrozen()),
+  );
+
+  ElementSearchDefinition._(
+    this.policy,
+    this.propertyOverrides,
+    this.revisionFingerprintInputs,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ElementSearchDefinition._(
+    ElementSearchPolicy.unknown,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ElementSearchDefinition_mutable mutable() => ElementSearchDefinition_mutable._(
+    ElementSearchPolicy.unknown,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ElementSearchDefinition toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ElementSearchDefinition_mutable toMutable() => ElementSearchDefinition_mutable._(
+    this.policy,
+    this.propertyOverrides,
+    this.revisionFingerprintInputs,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ElementSearchDefinition) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.policy,
+    this.propertyOverrides,
+    this.revisionFingerprintInputs,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ElementSearchDefinition` instances.
+  static _skir.StructSerializer<ElementSearchDefinition, ElementSearchDefinition_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "policy",
+        "policy",
+        0,
+        ElementSearchPolicy.serializer,
+        "",
+        (it) => it.policy,
+        (it, v) => it.policy = v,
+      );
+      _serializerBuilder.addField(
+        "property_overrides",
+        "propertyOverrides",
+        1,
+        _skir.Serializers.iterable(
+          ElementSearchPropertyOverride.serializer,
+        ),
+        "",
+        (it) => it.propertyOverrides,
+        (it, v) => it.propertyOverrides = v,
+      );
+      _serializerBuilder.addField(
+        "revision_fingerprint_inputs",
+        "revisionFingerprintInputs",
+        2,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        ),
+        "",
+        (it) => it.revisionFingerprintInputs,
+        (it, v) => it.revisionFingerprintInputs = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ElementSearchDefinition",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ElementSearchDefinition_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ElementSearchDefinition].
+final class ElementSearchDefinition_mutable implements ElementSearchDefinition_orMutable {
+  ElementSearchPolicy policy;
+  _core.Iterable<ElementSearchPropertyOverride_orMutable> propertyOverrides;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> revisionFingerprintInputs;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ElementSearchDefinition_mutable._(
+    this.policy,
+    this.propertyOverrides,
+    this.revisionFingerprintInputs,
+  );
+
+  /// If the value of [propertyOverrides] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [propertyOverrides] and returns it.
+  _core.List<ElementSearchPropertyOverride_orMutable> get mutablePropertyOverrides {
+    final value = this.propertyOverrides;
+    if (value is _skir.internal__MutableList<ElementSearchPropertyOverride_orMutable>) {
+      return value;
+    } else {
+      return this.propertyOverrides = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [revisionFingerprintInputs] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [revisionFingerprintInputs] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get mutableRevisionFingerprintInputs {
+    final value = this.revisionFingerprintInputs;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>) {
+      return value;
+    } else {
+      return this.revisionFingerprintInputs = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ElementSearchDefinition toFrozen() => ElementSearchDefinition(
+    policy: this.policy,
+    propertyOverrides: this.propertyOverrides,
+    revisionFingerprintInputs: this.revisionFingerprintInputs,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct ElementDescriptor
 // -----------------------------------------------------------------------------
 
@@ -1046,6 +2086,7 @@ sealed class ElementDescriptor_orMutable {
   _lib_kernel_v1_icon.Icon get icon;
   _lib_kernel_v1_color.Color_orMutable get color;
   AvailabilityExpression get availability;
+  ElementSearchDefinition_orMutable? get searchDefinition;
 
   ElementDescriptor toFrozen();
 }
@@ -1066,6 +2107,8 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
   final _lib_kernel_v1_color.Color color;
   @_core.override
   final AvailabilityExpression availability;
+  @_core.override
+  final ElementSearchDefinition? searchDefinition;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ElementDescriptor({
@@ -1076,6 +2119,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     required _lib_kernel_v1_icon.Icon icon,
     required _lib_kernel_v1_color.Color_orMutable color,
     required AvailabilityExpression availability,
+    required ElementSearchDefinition_orMutable? searchDefinition,
   }) => ElementDescriptor._(
     elementTypeId.toFrozen(),
     type.toFrozen(),
@@ -1084,6 +2128,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     icon,
     color.toFrozen(),
     availability,
+    (searchDefinition != null) ? searchDefinition.toFrozen() : null,
   );
 
   ElementDescriptor._(
@@ -1094,6 +2139,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     this.icon,
     this.color,
     this.availability,
+    this.searchDefinition,
   );
 
   /// Default instance with all fields set to their default values.
@@ -1105,6 +2151,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
     AvailabilityExpression.unknown,
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -1117,6 +2164,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
     AvailabilityExpression.unknown,
+    null,
   );
 
   /// Returns this instance (no-op).
@@ -1133,6 +2181,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     this.icon,
     this.color,
     this.availability,
+    this.searchDefinition,
   );
 
   @_core.override
@@ -1153,6 +2202,7 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     this.icon,
     this.color,
     this.availability,
+    this.searchDefinition,
   ];
 
   @_core.override
@@ -1224,6 +2274,17 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
         (it) => it.availability,
         (it, v) => it.availability = v,
       );
+      _serializerBuilder.addField(
+        "search_definition",
+        "searchDefinition",
+        7,
+        _skir.Serializers.optional(
+          ElementSearchDefinition.serializer,
+        ),
+        "",
+        (it) => it.searchDefinition,
+        (it, v) => it.searchDefinition = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1249,6 +2310,7 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
   _lib_kernel_v1_icon.Icon icon;
   _lib_kernel_v1_color.Color_orMutable color;
   AvailabilityExpression availability;
+  ElementSearchDefinition_orMutable? searchDefinition;
   _skir.internal__UnrecognizedFields? _u;
 
   ElementDescriptor_mutable._(
@@ -1259,6 +2321,7 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
     this.icon,
     this.color,
     this.availability,
+    this.searchDefinition,
   );
 
   /// If the value of [elementTypeId] is already mutable, returns it as-is.
@@ -1304,6 +2367,7 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
     icon: this.icon,
     color: this.color,
     availability: this.availability,
+    searchDefinition: this.searchDefinition,
   ).._u = this._u;
 }
 

@@ -44,6 +44,9 @@ import com.typewritermc.elements.ElementDiscoveryContribution
 import com.typewritermc.elements.ElementDiscoveryContributionCodec
 import com.typewritermc.elements.ElementPrototype
 import com.typewritermc.elements.ElementRuntimeFacet
+import com.typewritermc.elements.ElementSearch
+import com.typewritermc.elements.ElementSearchDefinition
+import com.typewritermc.elements.ElementSearchPropertyOverride
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
@@ -285,10 +288,10 @@ private class TypewriterElementProcessor(
         displayNames: Map<ResolvedTypeRef, String>,
     ): GeneratedElement? {
         val conversion = KspTypeGraphConverter(identityPolicy).convert(element.declaration.asStarProjectedType())
-        val graph =
+        val successfulConversion =
             when (conversion) {
                 is KspTypeConversionResult.Success -> {
-                    conversion.graph.withDisplayNames(displayNames)
+                    conversion
                 }
 
                 is KspTypeConversionResult.Failure -> {
@@ -296,11 +299,43 @@ private class TypewriterElementProcessor(
                     return null
                 }
             }
+        val graph = successfulConversion.graph.withDisplayNames(displayNames)
         if ((graph.root as? TypeExpression.Named)?.reference != element.reference) {
             logger.error("Element type graph root did not retain its declared identity.", element.declaration)
             return null
         }
-        return GeneratedElement(element, graph, generatePrototype(element, graph))
+        val overrideDeclarations =
+            successfulConversion.serializedProperties.mapNotNull { property ->
+                property.declaration.annotation<ElementSearch>()?.let { annotation ->
+                    ElementSearchPropertyOverride(property.ownerType, property.serializedName, annotation.mode) to
+                        property.declaration
+                }
+            }
+        val searchDefinition =
+            when (
+                val result =
+                    ElementSearchDefinitionGenerator.generate(
+                        graph,
+                        overrideDeclarations.map { it.first },
+                    )
+            ) {
+                is ElementSearchGenerationResult.Success -> {
+                    result.definition
+                }
+
+                is ElementSearchGenerationResult.InvalidOverrides -> {
+                    result.overrides.forEach { invalid ->
+                        val declaration = overrideDeclarations.single { it.first == invalid }.second
+                        logger.error(
+                            "Element search mode ${invalid.mode} requires a text leaf outside reference values.",
+                            declaration,
+                        )
+                    }
+                    return null
+                }
+            }
+        val searchableElement = element.copy(descriptor = element.descriptor.copy(searchDefinition = searchDefinition))
+        return GeneratedElement(searchableElement, graph, generatePrototype(searchableElement, graph))
     }
 
     private fun generatePrototype(
@@ -466,9 +501,23 @@ private fun TypeGraph.withDisplayNames(displayNames: Map<ResolvedTypeRef, String
 
 private fun ResolvedTypeRef.code(): String =
     "com.typewritermc.types.ResolvedTypeRef(" +
-        "com.typewritermc.types.TypeId.Declared(" +
-        "com.typewritermc.types.DeclaredTypeId.parse(\"${(id as TypeId.Declared).id}\")" +
-        "), $revision)"
+        "${id.code()}, $revision)"
+
+private fun TypeId.code(): String =
+    when (this) {
+        is TypeId.Builtin -> {
+            "com.typewritermc.types.TypeId.Builtin(com.typewritermc.types.BuiltinTypeId.$id)"
+        }
+
+        is TypeId.Declared -> {
+            "com.typewritermc.types.TypeId.Declared(" +
+                "com.typewritermc.types.DeclaredTypeId.parse(\"$id\"))"
+        }
+
+        is TypeId.Qualified -> {
+            "com.typewritermc.types.TypeId.Qualified(\"${namespace.escape()}\", \"${name.escape()}\")"
+        }
+    }
 
 private fun ElementDescriptor.code(): String =
     "com.typewritermc.elements.ElementDescriptor(" +
@@ -480,7 +529,20 @@ private fun ElementDescriptor.code(): String =
         "\"${description.escape()}\", " +
         "${icon.code()}, " +
         "com.typewritermc.types.Color(${color.argb}u), " +
-        "com.typewritermc.elements.AvailabilityExpression.Always)"
+        "com.typewritermc.elements.AvailabilityExpression.Always, " +
+        "${searchDefinition?.code() ?: "null"})"
+
+private fun ElementSearchDefinition.code(): String =
+    "com.typewritermc.elements.ElementSearchDefinition(" +
+        "com.typewritermc.elements.ElementSearchPolicy.$policy, " +
+        propertyOverrides.joinToString(", ", "listOf(", "), ") { it.code() } +
+        revisionFingerprintInputs.joinToString(", ", "listOf(", ")") { it.code() } +
+        ")"
+
+private fun ElementSearchPropertyOverride.code(): String =
+    "com.typewritermc.elements.ElementSearchPropertyOverride(" +
+        "${ownerType.code()}, \"${field.escape()}\", " +
+        "com.typewritermc.elements.ElementSearchMode.$mode)"
 
 private fun Icon.code(): String =
     when (this) {

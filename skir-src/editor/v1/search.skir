@@ -40,6 +40,7 @@ struct RealmSearchQuery(811000006) {
   normalized_query: string = 0;
   selectors: [RealmSearchSelector] = 1;
   selector_expression: RealmSearchSelectorExpression? = 2;
+  terms: [string] = 3;
 }
 
 struct RealmPresentationSearchRequest(811000007) {

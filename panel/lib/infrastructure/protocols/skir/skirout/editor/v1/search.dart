@@ -734,6 +734,7 @@ sealed class RealmSearchQuery_orMutable {
   _core.String get normalizedQuery;
   _core.Iterable<RealmSearchSelector_orMutable> get selectors;
   RealmSearchSelectorExpression? get selectorExpression;
+  _core.Iterable<_core.String> get terms;
 
   RealmSearchQuery toFrozen();
 }
@@ -746,22 +747,27 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
   final _core.Iterable<RealmSearchSelector> selectors;
   @_core.override
   final RealmSearchSelectorExpression? selectorExpression;
+  @_core.override
+  final _core.Iterable<_core.String> terms;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RealmSearchQuery({
     required _core.String normalizedQuery,
     required _core.Iterable<RealmSearchSelector_orMutable> selectors,
     required RealmSearchSelectorExpression? selectorExpression,
+    required _core.Iterable<_core.String> terms,
   }) => RealmSearchQuery._(
     normalizedQuery,
     _skir.internal__frozenMappedCopy(selectors, (it) => it.toFrozen()),
     selectorExpression,
+    _skir.internal__frozenCopy(terms),
   );
 
   RealmSearchQuery._(
     this.normalizedQuery,
     this.selectors,
     this.selectorExpression,
+    this.terms,
   );
 
   /// Default instance with all fields set to their default values.
@@ -769,6 +775,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
     "",
     _skir.KeyedIterable.empty,
     null,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
@@ -777,6 +784,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
     "",
     _skir.KeyedIterable.empty,
     null,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
@@ -789,6 +797,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
     this.normalizedQuery,
     this.selectors,
     this.selectorExpression,
+    this.terms,
   );
 
   @_core.override
@@ -805,6 +814,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
     this.normalizedQuery,
     this.selectors,
     this.selectorExpression,
+    this.terms,
   ];
 
   @_core.override
@@ -844,6 +854,17 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
         (it) => it.selectorExpression,
         (it, v) => it.selectorExpression = v,
       );
+      _serializerBuilder.addField(
+        "terms",
+        "terms",
+        3,
+        _skir.Serializers.iterable(
+          _skir.Serializers.string,
+        ),
+        "",
+        (it) => it.terms,
+        (it, v) => it.terms = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -865,12 +886,14 @@ final class RealmSearchQuery_mutable implements RealmSearchQuery_orMutable {
   _core.String normalizedQuery;
   _core.Iterable<RealmSearchSelector_orMutable> selectors;
   RealmSearchSelectorExpression? selectorExpression;
+  _core.Iterable<_core.String> terms;
   _skir.internal__UnrecognizedFields? _u;
 
   RealmSearchQuery_mutable._(
     this.normalizedQuery,
     this.selectors,
     this.selectorExpression,
+    this.terms,
   );
 
   /// If the value of [selectors] is already mutable, returns it as-is.
@@ -884,12 +907,24 @@ final class RealmSearchQuery_mutable implements RealmSearchQuery_orMutable {
     }
   }
 
+  /// If the value of [terms] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [terms] and returns it.
+  _core.List<_core.String> get mutableTerms {
+    final value = this.terms;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.terms = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   RealmSearchQuery toFrozen() => RealmSearchQuery(
     normalizedQuery: this.normalizedQuery,
     selectors: this.selectors,
     selectorExpression: this.selectorExpression,
+    terms: this.terms,
   ).._u = this._u;
 }
 

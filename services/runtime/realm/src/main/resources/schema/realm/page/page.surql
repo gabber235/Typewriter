@@ -36,3 +36,10 @@ DEFINE FIELD OVERWRITE chapter ON page TYPE string
 
 DEFINE FIELD OVERWRITE priority ON page TYPE int
     DEFAULT 0;
+
+DEFINE INDEX OVERWRITE page_name_search ON page
+    FIELDS name FULLTEXT ANALYZER authoring_text BM25 HIGHLIGHTS;
+DEFINE INDEX OVERWRITE page_name_prefix ON page
+    FIELDS name FULLTEXT ANALYZER authoring_prefix BM25 HIGHLIGHTS;
+DEFINE INDEX OVERWRITE page_name_approximate ON page
+    FIELDS name FULLTEXT ANALYZER authoring_approximate BM25 HIGHLIGHTS;

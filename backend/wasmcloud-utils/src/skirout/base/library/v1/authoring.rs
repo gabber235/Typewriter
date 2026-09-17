@@ -961,6 +961,7 @@ impl AuthoringSnapshotSlice {
 // struct AuthoringSnapshot
 // ==============================================================================
 
+/// Provides authoritative slices read at one collaboration sequence.
 /// All requested slices describe one consistent point in the Realm sequence.
 /// A missing book or page is represented by a null resource in its slice.
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -985,7 +986,7 @@ impl AuthoringSnapshot {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/authoring.skir",
                     "AuthoringSnapshot",
-                    "All requested slices describe one consistent point in the Realm sequence.\nA missing book or page is represented by a null resource in its slice.",
+                    "Provides authoritative slices read at one collaboration sequence.\nAll requested slices describe one consistent point in the Realm sequence.\nA missing book or page is represented by a null resource in its slice.",
                     |x: &AuthoringSnapshot| &x._unrecognized,
                     |x: &mut AuthoringSnapshot, u| x._unrecognized = u,
                 )
@@ -1102,9 +1103,9 @@ impl AuthoringResourceChange {
 // struct AuthoringChanged
 // ==============================================================================
 
-/// One committed batch. Sequence numbers advance across the whole Realm,
-/// including resources outside the client's acquired scopes.
-/// Ignore already observed sequences and refresh snapshots when a gap appears.
+/// Announces the direct and indirect effects of one committed authoring batch.
+/// Sequence numbers advance across the whole Realm, including resources outside
+/// the client's acquired scopes. Ignore older sequences and refresh on a gap.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringChanged {
     pub sequence: i64,
@@ -1129,7 +1130,7 @@ impl AuthoringChanged {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/authoring.skir",
                     "AuthoringChanged",
-                    "One committed batch. Sequence numbers advance across the whole Realm,\nincluding resources outside the client's acquired scopes.\nIgnore already observed sequences and refresh snapshots when a gap appears.",
+                    "Announces the direct and indirect effects of one committed authoring batch.\nSequence numbers advance across the whole Realm, including resources outside\nthe client's acquired scopes. Ignore older sequences and refresh on a gap.",
                     |x: &AuthoringChanged| &x._unrecognized,
                     |x: &mut AuthoringChanged, u| x._unrecognized = u,
                 )
@@ -1792,8 +1793,9 @@ impl ElementValueMutation {
 // struct ExpectedElementValueMutation
 // ==============================================================================
 
-/// Compares the logical value at the mutation path before applying the mutation.
-/// Earlier value mutations in the same operation are visible to this comparison.
+/// Guards and applies one structural edit to an element value.
+/// The expected value is read at the mutation path immediately before the edit;
+/// earlier mutations in the same operation are visible to later comparisons.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ExpectedElementValueMutation {
     pub expected: crate::skirout::base::editor::v1::type_catalog::TypedValue,
@@ -1816,7 +1818,7 @@ impl ExpectedElementValueMutation {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/authoring.skir",
                     "ExpectedElementValueMutation",
-                    "Compares the logical value at the mutation path before applying the mutation.\nEarlier value mutations in the same operation are visible to this comparison.",
+                    "Guards and applies one structural edit to an element value.\nThe expected value is read at the mutation path immediately before the edit;\nearlier mutations in the same operation are visible to later comparisons.",
                     |x: &ExpectedElementValueMutation| &x._unrecognized,
                     |x: &mut ExpectedElementValueMutation, u| x._unrecognized = u,
                 )
@@ -2550,8 +2552,7 @@ impl PropertyConflict {
 // struct AuthoringConflict
 // ==============================================================================
 
-/// No operations from the rejected batch are committed.
-/// Refresh snapshots to obtain current resource values before retrying.
+/// No operation from the rejected batch is committed. Refresh snapshots to obtain current values before retrying.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringConflict {
     pub conflicts: Vec<PropertyConflict>,
@@ -2573,7 +2574,7 @@ impl AuthoringConflict {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/authoring.skir",
                     "AuthoringConflict",
-                    "No operations from the rejected batch are committed.\nRefresh snapshots to obtain current resource values before retrying.",
+                    "No operation from the rejected batch is committed. Refresh snapshots to obtain current values before retrying.",
                     |x: &AuthoringConflict| &x._unrecognized,
                     |x: &mut AuthoringConflict, u| x._unrecognized = u,
                 )
@@ -2669,7 +2670,6 @@ impl AuthoringInvalid {
 // struct GetAuthoringSnapshotRequest
 // ==============================================================================
 
-/// Repeated scopes are read once. An empty scope list returns only the sequence.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GetAuthoringSnapshotRequest {
     pub scopes: Vec<AuthoringSnapshotScope>,
@@ -2691,7 +2691,7 @@ impl GetAuthoringSnapshotRequest {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/authoring.skir",
                     "GetAuthoringSnapshotRequest",
-                    "Repeated scopes are read once. An empty scope list returns only the sequence.",
+                    "",
                     |x: &GetAuthoringSnapshotRequest| &x._unrecognized,
                     |x: &mut GetAuthoringSnapshotRequest, u| x._unrecognized = u,
                 )
@@ -2705,44 +2705,6 @@ impl GetAuthoringSnapshotRequest {
 }
 
 // ==============================================================================
-// struct GetAuthoringSnapshotResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct GetAuthoringSnapshotResponse_InternalError {
-    pub message: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetAuthoringSnapshotResponse_InternalError>>,
-}
-
-impl GetAuthoringSnapshotResponse_InternalError {
-    pub fn default_ref() -> &'static GetAuthoringSnapshotResponse_InternalError {
-        static D: std::sync::LazyLock<GetAuthoringSnapshotResponse_InternalError> = std::sync::LazyLock::new(GetAuthoringSnapshotResponse_InternalError::default);
-        &D
-    }
-}
-
-impl GetAuthoringSnapshotResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetAuthoringSnapshotResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetAuthoringSnapshotResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/authoring.skir",
-                    "GetAuthoringSnapshotResponse.InternalError",
-                    "",
-                    |x: &GetAuthoringSnapshotResponse_InternalError| &x._unrecognized,
-                    |x: &mut GetAuthoringSnapshotResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<GetAuthoringSnapshotResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetAuthoringSnapshotResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum GetAuthoringSnapshotResponse
 // ==============================================================================
 
@@ -2751,7 +2713,7 @@ pub enum GetAuthoringSnapshotResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<GetAuthoringSnapshotResponse>>),
     Success(Box<AuthoringSnapshot>),
     Invalid(Box<AuthoringInvalid>),
-    InternalError(Box<GetAuthoringSnapshotResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for GetAuthoringSnapshotResponse {
@@ -2790,11 +2752,6 @@ impl GetAuthoringSnapshotResponse {
 // struct ApplyAuthoringBatchRequest
 // ==============================================================================
 
-/// Operations execute in order within one atomic transaction.
-/// A batch must be nonempty and contain at most one operation per target resource.
-/// Batch IDs must not be blank. Reuse an ID only for an identical request.
-/// Replaying a committed batch
-/// returns its original sequence and changes without applying its operations again.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ApplyAuthoringBatchRequest {
     pub batch_id: String,
@@ -2817,7 +2774,7 @@ impl ApplyAuthoringBatchRequest {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/authoring.skir",
                     "ApplyAuthoringBatchRequest",
-                    "Operations execute in order within one atomic transaction.\nA batch must be nonempty and contain at most one operation per target resource.\nBatch IDs must not be blank. Reuse an ID only for an identical request.\nReplaying a committed batch\nreturns its original sequence and changes without applying its operations again.",
+                    "",
                     |x: &ApplyAuthoringBatchRequest| &x._unrecognized,
                     |x: &mut ApplyAuthoringBatchRequest, u| x._unrecognized = u,
                 )
@@ -2831,44 +2788,6 @@ impl ApplyAuthoringBatchRequest {
 }
 
 // ==============================================================================
-// struct ApplyAuthoringBatchResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ApplyAuthoringBatchResponse_InternalError {
-    pub message: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ApplyAuthoringBatchResponse_InternalError>>,
-}
-
-impl ApplyAuthoringBatchResponse_InternalError {
-    pub fn default_ref() -> &'static ApplyAuthoringBatchResponse_InternalError {
-        static D: std::sync::LazyLock<ApplyAuthoringBatchResponse_InternalError> = std::sync::LazyLock::new(ApplyAuthoringBatchResponse_InternalError::default);
-        &D
-    }
-}
-
-impl ApplyAuthoringBatchResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ApplyAuthoringBatchResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ApplyAuthoringBatchResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/authoring.skir",
-                    "ApplyAuthoringBatchResponse.InternalError",
-                    "",
-                    |x: &ApplyAuthoringBatchResponse_InternalError| &x._unrecognized,
-                    |x: &mut ApplyAuthoringBatchResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ApplyAuthoringBatchResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ApplyAuthoringBatchResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum ApplyAuthoringBatchResponse
 // ==============================================================================
 
@@ -2878,7 +2797,7 @@ pub enum ApplyAuthoringBatchResponse {
     Applied(Box<AuthoringChanged>),
     Conflict(Box<AuthoringConflict>),
     Invalid(Box<AuthoringInvalid>),
-    InternalError(Box<ApplyAuthoringBatchResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for ApplyAuthoringBatchResponse {
@@ -2911,6 +2830,630 @@ impl ApplyAuthoringBatchResponse {
     pub fn serializer() -> crate::skir_client::Serializer<ApplyAuthoringBatchResponse> {
         initialize_module_serializers();
         crate::skir_client::internal::enum_serializer_from_static(ApplyAuthoringBatchResponse::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchMatch
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchMatch {
+    pub text: String,
+    pub start: i32,
+    pub end: i32,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchMatch>>,
+}
+
+impl AuthoringSearchMatch {
+    pub fn default_ref() -> &'static AuthoringSearchMatch {
+        static D: std::sync::LazyLock<AuthoringSearchMatch> = std::sync::LazyLock::new(AuthoringSearchMatch::default);
+        &D
+    }
+}
+
+impl AuthoringSearchMatch {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchMatch> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchMatch>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchMatch",
+                    "",
+                    |x: &AuthoringSearchMatch| &x._unrecognized,
+                    |x: &mut AuthoringSearchMatch, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchMatch> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchMatch::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchTag
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchTag {
+    pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub name: String,
+    pub color: crate::skirout::base::kernel::v1::color::Color,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchTag>>,
+}
+
+impl AuthoringSearchTag {
+    pub fn default_ref() -> &'static AuthoringSearchTag {
+        static D: std::sync::LazyLock<AuthoringSearchTag> = std::sync::LazyLock::new(AuthoringSearchTag::default);
+        &D
+    }
+}
+
+impl AuthoringSearchTag {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchTag> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchTag>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchTag",
+                    "",
+                    |x: &AuthoringSearchTag| &x._unrecognized,
+                    |x: &mut AuthoringSearchTag, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchTag> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchTag::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchBookContext
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchBookContext {
+    pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub title: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchBookContext>>,
+}
+
+impl AuthoringSearchBookContext {
+    pub fn default_ref() -> &'static AuthoringSearchBookContext {
+        static D: std::sync::LazyLock<AuthoringSearchBookContext> = std::sync::LazyLock::new(AuthoringSearchBookContext::default);
+        &D
+    }
+}
+
+impl AuthoringSearchBookContext {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchBookContext> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchBookContext>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchBookContext",
+                    "",
+                    |x: &AuthoringSearchBookContext| &x._unrecognized,
+                    |x: &mut AuthoringSearchBookContext, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchBookContext> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchBookContext::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchBook
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchBook {
+    pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub title: String,
+    pub icon: String,
+    pub color: crate::skirout::base::kernel::v1::color::Color,
+    pub tags: Vec<AuthoringSearchTag>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchBook>>,
+}
+
+impl AuthoringSearchBook {
+    pub fn default_ref() -> &'static AuthoringSearchBook {
+        static D: std::sync::LazyLock<AuthoringSearchBook> = std::sync::LazyLock::new(AuthoringSearchBook::default);
+        &D
+    }
+}
+
+impl AuthoringSearchBook {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchBook> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchBook>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchBook",
+                    "",
+                    |x: &AuthoringSearchBook| &x._unrecognized,
+                    |x: &mut AuthoringSearchBook, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchBook> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchBook::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchPage
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchPage {
+    pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub name: String,
+    pub kind: crate::skirout::base::kernel::v1::page_kind::PageKindRef,
+    pub book: AuthoringSearchBookContext,
+    pub chapter: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchPage>>,
+}
+
+impl AuthoringSearchPage {
+    pub fn default_ref() -> &'static AuthoringSearchPage {
+        static D: std::sync::LazyLock<AuthoringSearchPage> = std::sync::LazyLock::new(AuthoringSearchPage::default);
+        &D
+    }
+}
+
+impl AuthoringSearchPage {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchPage> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchPage>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchPage",
+                    "",
+                    |x: &AuthoringSearchPage| &x._unrecognized,
+                    |x: &mut AuthoringSearchPage, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchPage> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchPage::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchElement
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchElement {
+    pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub name: String,
+    pub element_type: String,
+    pub placement: ElementPlacement,
+    pub page: AuthoringSearchPage,
+    pub match_: Option<AuthoringSearchMatch>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchElement>>,
+}
+
+impl AuthoringSearchElement {
+    pub fn default_ref() -> &'static AuthoringSearchElement {
+        static D: std::sync::LazyLock<AuthoringSearchElement> = std::sync::LazyLock::new(AuthoringSearchElement::default);
+        &D
+    }
+}
+
+impl AuthoringSearchElement {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchElement> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchElement>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchElement",
+                    "",
+                    |x: &AuthoringSearchElement| &x._unrecognized,
+                    |x: &mut AuthoringSearchElement, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchElement> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchElement::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum AuthoringSearchHit
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AuthoringSearchHit {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringSearchHit>>),
+    Book(Box<AuthoringSearchBook>),
+    Tag(Box<AuthoringSearchTag>),
+    Page(Box<AuthoringSearchPage>),
+    Element(Box<AuthoringSearchElement>),
+}
+
+impl Default for AuthoringSearchHit {
+    fn default() -> Self {
+        AuthoringSearchHit::Unknown(None)
+    }
+}
+
+impl AuthoringSearchHit {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<AuthoringSearchHit> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<AuthoringSearchHit>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &AuthoringSearchHit| match x {
+                        AuthoringSearchHit::Unknown(_) => 0,
+                        AuthoringSearchHit::Book(_) => 1,
+                        AuthoringSearchHit::Tag(_) => 2,
+                        AuthoringSearchHit::Page(_) => 3,
+                        AuthoringSearchHit::Element(_) => 4,
+                    },
+                    |u| AuthoringSearchHit::Unknown(Some(u)),
+                    |x: &AuthoringSearchHit| match x { AuthoringSearchHit::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchHit",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchHit> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(AuthoringSearchHit::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum AuthoringSelectorKind
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AuthoringSelectorKind {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringSelectorKind>>),
+    Book,
+    Page,
+    Tag,
+    ElementType,
+}
+
+impl Default for AuthoringSelectorKind {
+    fn default() -> Self {
+        AuthoringSelectorKind::Unknown(None)
+    }
+}
+
+impl AuthoringSelectorKind {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<AuthoringSelectorKind> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<AuthoringSelectorKind>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &AuthoringSelectorKind| match x {
+                        AuthoringSelectorKind::Unknown(_) => 0,
+                        AuthoringSelectorKind::Book => 1,
+                        AuthoringSelectorKind::Page => 2,
+                        AuthoringSelectorKind::Tag => 3,
+                        AuthoringSelectorKind::ElementType => 4,
+                    },
+                    |u| AuthoringSelectorKind::Unknown(Some(u)),
+                    |x: &AuthoringSelectorKind| match x { AuthoringSelectorKind::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/authoring.skir",
+                    "AuthoringSelectorKind",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSelectorKind> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(AuthoringSelectorKind::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSelectorSuggestions
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSelectorSuggestions {
+    pub values: Vec<String>,
+    pub exhaustive: bool,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSelectorSuggestions>>,
+}
+
+impl AuthoringSelectorSuggestions {
+    pub fn default_ref() -> &'static AuthoringSelectorSuggestions {
+        static D: std::sync::LazyLock<AuthoringSelectorSuggestions> = std::sync::LazyLock::new(AuthoringSelectorSuggestions::default);
+        &D
+    }
+}
+
+impl AuthoringSelectorSuggestions {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSelectorSuggestions> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSelectorSuggestions>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSelectorSuggestions",
+                    "",
+                    |x: &AuthoringSelectorSuggestions| &x._unrecognized,
+                    |x: &mut AuthoringSelectorSuggestions, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSelectorSuggestions> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSelectorSuggestions::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSelectorValidation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSelectorValidation {
+    pub selector: AuthoringSelectorKind,
+    pub value: String,
+    pub accepted: bool,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSelectorValidation>>,
+}
+
+impl AuthoringSelectorValidation {
+    pub fn default_ref() -> &'static AuthoringSelectorValidation {
+        static D: std::sync::LazyLock<AuthoringSelectorValidation> = std::sync::LazyLock::new(AuthoringSelectorValidation::default);
+        &D
+    }
+}
+
+impl AuthoringSelectorValidation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSelectorValidation> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSelectorValidation>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSelectorValidation",
+                    "",
+                    |x: &AuthoringSelectorValidation| &x._unrecognized,
+                    |x: &mut AuthoringSelectorValidation, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSelectorValidation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSelectorValidation::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringSearchSnapshot
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringSearchSnapshot {
+    pub hits: Vec<AuthoringSearchHit>,
+    pub selector_validations: Vec<AuthoringSelectorValidation>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringSearchSnapshot>>,
+}
+
+impl AuthoringSearchSnapshot {
+    pub fn default_ref() -> &'static AuthoringSearchSnapshot {
+        static D: std::sync::LazyLock<AuthoringSearchSnapshot> = std::sync::LazyLock::new(AuthoringSearchSnapshot::default);
+        &D
+    }
+}
+
+impl AuthoringSearchSnapshot {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringSearchSnapshot> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringSearchSnapshot>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringSearchSnapshot",
+                    "",
+                    |x: &AuthoringSearchSnapshot| &x._unrecognized,
+                    |x: &mut AuthoringSearchSnapshot, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringSearchSnapshot> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchSnapshot::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SearchAuthoringContentRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SearchAuthoringContentRequest {
+    pub query: crate::skirout::base::editor::v1::search::RealmSearchQuery,
+    pub context_page: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchAuthoringContentRequest>>,
+}
+
+impl SearchAuthoringContentRequest {
+    pub fn default_ref() -> &'static SearchAuthoringContentRequest {
+        static D: std::sync::LazyLock<SearchAuthoringContentRequest> = std::sync::LazyLock::new(SearchAuthoringContentRequest::default);
+        &D
+    }
+}
+
+impl SearchAuthoringContentRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchAuthoringContentRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchAuthoringContentRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "SearchAuthoringContentRequest",
+                    "",
+                    |x: &SearchAuthoringContentRequest| &x._unrecognized,
+                    |x: &mut SearchAuthoringContentRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchAuthoringContentRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SearchAuthoringContentRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SearchAuthoringContentResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SearchAuthoringContentResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SearchAuthoringContentResponse>>),
+    Success(Box<AuthoringSearchSnapshot>),
+    Invalid(Box<AuthoringInvalid>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for SearchAuthoringContentResponse {
+    fn default() -> Self {
+        SearchAuthoringContentResponse::Unknown(None)
+    }
+}
+
+impl SearchAuthoringContentResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SearchAuthoringContentResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<SearchAuthoringContentResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &SearchAuthoringContentResponse| match x {
+                        SearchAuthoringContentResponse::Unknown(_) => 0,
+                        SearchAuthoringContentResponse::Success(_) => 1,
+                        SearchAuthoringContentResponse::Invalid(_) => 2,
+                        SearchAuthoringContentResponse::InternalError(_) => 3,
+                    },
+                    |u| SearchAuthoringContentResponse::Unknown(Some(u)),
+                    |x: &SearchAuthoringContentResponse| match x { SearchAuthoringContentResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/authoring.skir",
+                    "SearchAuthoringContentResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchAuthoringContentResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SearchAuthoringContentResponse::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SuggestAuthoringSelectorValuesRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SuggestAuthoringSelectorValuesRequest {
+    pub selector: AuthoringSelectorKind,
+    pub partial: String,
+    pub scope: Option<crate::skirout::base::editor::v1::search::RealmSearchSelectorExpression>,
+    pub context_page: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SuggestAuthoringSelectorValuesRequest>>,
+}
+
+impl SuggestAuthoringSelectorValuesRequest {
+    pub fn default_ref() -> &'static SuggestAuthoringSelectorValuesRequest {
+        static D: std::sync::LazyLock<SuggestAuthoringSelectorValuesRequest> = std::sync::LazyLock::new(SuggestAuthoringSelectorValuesRequest::default);
+        &D
+    }
+}
+
+impl SuggestAuthoringSelectorValuesRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SuggestAuthoringSelectorValuesRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SuggestAuthoringSelectorValuesRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "SuggestAuthoringSelectorValuesRequest",
+                    "",
+                    |x: &SuggestAuthoringSelectorValuesRequest| &x._unrecognized,
+                    |x: &mut SuggestAuthoringSelectorValuesRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SuggestAuthoringSelectorValuesRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SuggestAuthoringSelectorValuesRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SuggestAuthoringSelectorValuesResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SuggestAuthoringSelectorValuesResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SuggestAuthoringSelectorValuesResponse>>),
+    Success(Box<AuthoringSelectorSuggestions>),
+    Invalid(Box<AuthoringInvalid>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for SuggestAuthoringSelectorValuesResponse {
+    fn default() -> Self {
+        SuggestAuthoringSelectorValuesResponse::Unknown(None)
+    }
+}
+
+impl SuggestAuthoringSelectorValuesResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SuggestAuthoringSelectorValuesResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<SuggestAuthoringSelectorValuesResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &SuggestAuthoringSelectorValuesResponse| match x {
+                        SuggestAuthoringSelectorValuesResponse::Unknown(_) => 0,
+                        SuggestAuthoringSelectorValuesResponse::Success(_) => 1,
+                        SuggestAuthoringSelectorValuesResponse::Invalid(_) => 2,
+                        SuggestAuthoringSelectorValuesResponse::InternalError(_) => 3,
+                    },
+                    |u| SuggestAuthoringSelectorValuesResponse::Unknown(Some(u)),
+                    |x: &SuggestAuthoringSelectorValuesResponse| match x { SuggestAuthoringSelectorValuesResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/authoring.skir",
+                    "SuggestAuthoringSelectorValuesResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SuggestAuthoringSelectorValuesResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SuggestAuthoringSelectorValuesResponse::_adapter())
     }
 }
 
@@ -3394,15 +3937,10 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetAuthoringSnapshotResponse_InternalError> = GetAuthoringSnapshotResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).add_field("message", 0, crate::skir_client::Serializer::string(), "", |x: &GetAuthoringSnapshotResponse_InternalError| &x.message, |x: &mut GetAuthoringSnapshotResponse_InternalError, v| x.message = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<GetAuthoringSnapshotResponse> = GetAuthoringSnapshotResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringSnapshot::_adapter()), "", |v| GetAuthoringSnapshotResponse::Success(Box::new(v)), |x| match x { GetAuthoringSnapshotResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalid", 2, 2, crate::skir_client::internal::struct_serializer_from_static(AuthoringInvalid::_adapter()), "", |v| GetAuthoringSnapshotResponse::Invalid(Box::new(v)), |x| match x { GetAuthoringSnapshotResponse::Invalid(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(GetAuthoringSnapshotResponse_InternalError::_adapter()), "", |v| GetAuthoringSnapshotResponse::InternalError(Box::new(v)), |x| match x { GetAuthoringSnapshotResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| GetAuthoringSnapshotResponse::InternalError(Box::new(v)), |x| match x { GetAuthoringSnapshotResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -3412,16 +3950,122 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ApplyAuthoringBatchResponse_InternalError> = ApplyAuthoringBatchResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).add_field("message", 0, crate::skir_client::Serializer::string(), "", |x: &ApplyAuthoringBatchResponse_InternalError| &x.message, |x: &mut ApplyAuthoringBatchResponse_InternalError, v| x.message = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<ApplyAuthoringBatchResponse> = ApplyAuthoringBatchResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("applied", 1, 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringChanged::_adapter()), "", |v| ApplyAuthoringBatchResponse::Applied(Box::new(v)), |x| match x { ApplyAuthoringBatchResponse::Applied(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("conflict", 2, 2, crate::skir_client::internal::struct_serializer_from_static(AuthoringConflict::_adapter()), "", |v| ApplyAuthoringBatchResponse::Conflict(Box::new(v)), |x| match x { ApplyAuthoringBatchResponse::Conflict(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalid", 3, 3, crate::skir_client::internal::struct_serializer_from_static(AuthoringInvalid::_adapter()), "", |v| ApplyAuthoringBatchResponse::Invalid(Box::new(v)), |x| match x { ApplyAuthoringBatchResponse::Invalid(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ApplyAuthoringBatchResponse_InternalError::_adapter()), "", |v| ApplyAuthoringBatchResponse::InternalError(Box::new(v)), |x| match x { ApplyAuthoringBatchResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ApplyAuthoringBatchResponse::InternalError(Box::new(v)), |x| match x { ApplyAuthoringBatchResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchMatch> = AuthoringSearchMatch::_adapter() as *const _ as *mut _;
+                (*a).add_field("text", 0, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchMatch| &x.text, |x: &mut AuthoringSearchMatch, v| x.text = v);
+                (*a).add_field("start", 1, crate::skir_client::Serializer::int32(), "", |x: &AuthoringSearchMatch| &x.start, |x: &mut AuthoringSearchMatch, v| x.start = v);
+                (*a).add_field("end", 2, crate::skir_client::Serializer::int32(), "", |x: &AuthoringSearchMatch| &x.end, |x: &mut AuthoringSearchMatch, v| x.end = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchTag> = AuthoringSearchTag::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &AuthoringSearchTag| &x.id, |x: &mut AuthoringSearchTag, v| x.id = v);
+                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchTag| &x.name, |x: &mut AuthoringSearchTag, v| x.name = v);
+                (*a).add_field("color", 2, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &AuthoringSearchTag| &x.color, |x: &mut AuthoringSearchTag, v| x.color = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchBookContext> = AuthoringSearchBookContext::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &AuthoringSearchBookContext| &x.id, |x: &mut AuthoringSearchBookContext, v| x.id = v);
+                (*a).add_field("title", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchBookContext| &x.title, |x: &mut AuthoringSearchBookContext, v| x.title = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchBook> = AuthoringSearchBook::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &AuthoringSearchBook| &x.id, |x: &mut AuthoringSearchBook, v| x.id = v);
+                (*a).add_field("title", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchBook| &x.title, |x: &mut AuthoringSearchBook, v| x.title = v);
+                (*a).add_field("icon", 2, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchBook| &x.icon, |x: &mut AuthoringSearchBook, v| x.icon = v);
+                (*a).add_field("color", 3, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &AuthoringSearchBook| &x.color, |x: &mut AuthoringSearchBook, v| x.color = v);
+                (*a).add_field("tags", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchTag::_adapter())), "", |x: &AuthoringSearchBook| &x.tags, |x: &mut AuthoringSearchBook, v| x.tags = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchPage> = AuthoringSearchPage::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &AuthoringSearchPage| &x.id, |x: &mut AuthoringSearchPage, v| x.id = v);
+                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchPage| &x.name, |x: &mut AuthoringSearchPage, v| x.name = v);
+                (*a).add_field("kind", 2, crate::skirout::base::kernel::v1::page_kind::PageKindRef::serializer(), "", |x: &AuthoringSearchPage| &x.kind, |x: &mut AuthoringSearchPage, v| x.kind = v);
+                (*a).add_field("book", 3, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchBookContext::_adapter()), "", |x: &AuthoringSearchPage| &x.book, |x: &mut AuthoringSearchPage, v| x.book = v);
+                (*a).add_field("chapter", 4, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchPage| &x.chapter, |x: &mut AuthoringSearchPage, v| x.chapter = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchElement> = AuthoringSearchElement::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &AuthoringSearchElement| &x.id, |x: &mut AuthoringSearchElement, v| x.id = v);
+                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchElement| &x.name, |x: &mut AuthoringSearchElement, v| x.name = v);
+                (*a).add_field("element_type", 2, crate::skir_client::Serializer::string(), "", |x: &AuthoringSearchElement| &x.element_type, |x: &mut AuthoringSearchElement, v| x.element_type = v);
+                (*a).add_field("placement", 3, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &AuthoringSearchElement| &x.placement, |x: &mut AuthoringSearchElement, v| x.placement = v);
+                (*a).add_field("page", 4, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchPage::_adapter()), "", |x: &AuthoringSearchElement| &x.page, |x: &mut AuthoringSearchElement, v| x.page = v);
+                (*a).add_field("match", 5, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchMatch::_adapter())), "", |x: &AuthoringSearchElement| &x.match_, |x: &mut AuthoringSearchElement, v| x.match_ = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringSearchHit> = AuthoringSearchHit::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("book", 1, 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchBook::_adapter()), "", |v| AuthoringSearchHit::Book(Box::new(v)), |x| match x { AuthoringSearchHit::Book(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("tag", 2, 2, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchTag::_adapter()), "", |v| AuthoringSearchHit::Tag(Box::new(v)), |x| match x { AuthoringSearchHit::Tag(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("page", 3, 3, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchPage::_adapter()), "", |v| AuthoringSearchHit::Page(Box::new(v)), |x| match x { AuthoringSearchHit::Page(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("element", 4, 4, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchElement::_adapter()), "", |v| AuthoringSearchHit::Element(Box::new(v)), |x| match x { AuthoringSearchHit::Element(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringSelectorKind> = AuthoringSelectorKind::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("book", 1, 1, "", AuthoringSelectorKind::Book);
+                (*a).add_constant_variant("page", 2, 2, "", AuthoringSelectorKind::Page);
+                (*a).add_constant_variant("tag", 3, 3, "", AuthoringSelectorKind::Tag);
+                (*a).add_constant_variant("element_type", 4, 4, "", AuthoringSelectorKind::ElementType);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSelectorSuggestions> = AuthoringSelectorSuggestions::_adapter() as *const _ as *mut _;
+                (*a).add_field("values", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &AuthoringSelectorSuggestions| &x.values, |x: &mut AuthoringSelectorSuggestions, v| x.values = v);
+                (*a).add_field("exhaustive", 1, crate::skir_client::Serializer::bool(), "", |x: &AuthoringSelectorSuggestions| &x.exhaustive, |x: &mut AuthoringSelectorSuggestions, v| x.exhaustive = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSelectorValidation> = AuthoringSelectorValidation::_adapter() as *const _ as *mut _;
+                (*a).add_field("selector", 0, crate::skir_client::internal::enum_serializer_from_static(AuthoringSelectorKind::_adapter()), "", |x: &AuthoringSelectorValidation| &x.selector, |x: &mut AuthoringSelectorValidation, v| x.selector = v);
+                (*a).add_field("value", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringSelectorValidation| &x.value, |x: &mut AuthoringSelectorValidation, v| x.value = v);
+                (*a).add_field("accepted", 2, crate::skir_client::Serializer::bool(), "", |x: &AuthoringSelectorValidation| &x.accepted, |x: &mut AuthoringSelectorValidation, v| x.accepted = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringSearchSnapshot> = AuthoringSearchSnapshot::_adapter() as *const _ as *mut _;
+                (*a).add_field("hits", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(AuthoringSearchHit::_adapter())), "", |x: &AuthoringSearchSnapshot| &x.hits, |x: &mut AuthoringSearchSnapshot, v| x.hits = v);
+                (*a).add_field("selector_validations", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(AuthoringSelectorValidation::_adapter())), "", |x: &AuthoringSearchSnapshot| &x.selector_validations, |x: &mut AuthoringSearchSnapshot, v| x.selector_validations = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SearchAuthoringContentRequest> = SearchAuthoringContentRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("query", 0, crate::skirout::base::editor::v1::search::RealmSearchQuery::serializer(), "", |x: &SearchAuthoringContentRequest| &x.query, |x: &mut SearchAuthoringContentRequest, v| x.query = v);
+                (*a).add_field("context_page", 1, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &SearchAuthoringContentRequest| &x.context_page, |x: &mut SearchAuthoringContentRequest, v| x.context_page = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<SearchAuthoringContentResponse> = SearchAuthoringContentResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringSearchSnapshot::_adapter()), "", |v| SearchAuthoringContentResponse::Success(Box::new(v)), |x| match x { SearchAuthoringContentResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid", 2, 2, crate::skir_client::internal::struct_serializer_from_static(AuthoringInvalid::_adapter()), "", |v| SearchAuthoringContentResponse::Invalid(Box::new(v)), |x| match x { SearchAuthoringContentResponse::Invalid(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| SearchAuthoringContentResponse::InternalError(Box::new(v)), |x| match x { SearchAuthoringContentResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SuggestAuthoringSelectorValuesRequest> = SuggestAuthoringSelectorValuesRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("selector", 0, crate::skir_client::internal::enum_serializer_from_static(AuthoringSelectorKind::_adapter()), "", |x: &SuggestAuthoringSelectorValuesRequest| &x.selector, |x: &mut SuggestAuthoringSelectorValuesRequest, v| x.selector = v);
+                (*a).add_field("partial", 1, crate::skir_client::Serializer::string(), "", |x: &SuggestAuthoringSelectorValuesRequest| &x.partial, |x: &mut SuggestAuthoringSelectorValuesRequest, v| x.partial = v);
+                (*a).add_field("scope", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::search::RealmSearchSelectorExpression::serializer()), "", |x: &SuggestAuthoringSelectorValuesRequest| &x.scope, |x: &mut SuggestAuthoringSelectorValuesRequest, v| x.scope = v);
+                (*a).add_field("context_page", 3, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &SuggestAuthoringSelectorValuesRequest| &x.context_page, |x: &mut SuggestAuthoringSelectorValuesRequest, v| x.context_page = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<SuggestAuthoringSelectorValuesResponse> = SuggestAuthoringSelectorValuesResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringSelectorSuggestions::_adapter()), "", |v| SuggestAuthoringSelectorValuesResponse::Success(Box::new(v)), |x| match x { SuggestAuthoringSelectorValuesResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid", 2, 2, crate::skir_client::internal::struct_serializer_from_static(AuthoringInvalid::_adapter()), "", |v| SuggestAuthoringSelectorValuesResponse::Invalid(Box::new(v)), |x| match x { SuggestAuthoringSelectorValuesResponse::Invalid(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| SuggestAuthoringSelectorValuesResponse::InternalError(Box::new(v)), |x| match x { SuggestAuthoringSelectorValuesResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });
@@ -3432,6 +4076,7 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
+/// Repeated scopes are read once. An empty scope list returns only the sequence.
 pub fn get_authoring_snapshot_method() -> &'static crate::skir_client::Method<GetAuthoringSnapshotRequest, GetAuthoringSnapshotResponse> {
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<GetAuthoringSnapshotRequest, GetAuthoringSnapshotResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
@@ -3439,12 +4084,14 @@ pub fn get_authoring_snapshot_method() -> &'static crate::skir_client::Method<Ge
             number: 920001_i64,
             request_serializer: GetAuthoringSnapshotRequest::serializer(),
             response_serializer: GetAuthoringSnapshotResponse::serializer(),
-            doc: "".to_string(),
+            doc: "Repeated scopes are read once. An empty scope list returns only the sequence.".to_string(),
         }
     });
     &*METHOD
 }
 
+/// Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.
+/// Batch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.
 pub fn apply_authoring_batch_method() -> &'static crate::skir_client::Method<ApplyAuthoringBatchRequest, ApplyAuthoringBatchResponse> {
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<ApplyAuthoringBatchRequest, ApplyAuthoringBatchResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
@@ -3452,6 +4099,32 @@ pub fn apply_authoring_batch_method() -> &'static crate::skir_client::Method<App
             number: 920002_i64,
             request_serializer: ApplyAuthoringBatchRequest::serializer(),
             response_serializer: ApplyAuthoringBatchResponse::serializer(),
+            doc: "Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.\nBatch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn search_authoring_content_method() -> &'static crate::skir_client::Method<SearchAuthoringContentRequest, SearchAuthoringContentResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<SearchAuthoringContentRequest, SearchAuthoringContentResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "SearchAuthoringContent".to_string(),
+            number: 920004_i64,
+            request_serializer: SearchAuthoringContentRequest::serializer(),
+            response_serializer: SearchAuthoringContentResponse::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn suggest_authoring_selector_values_method() -> &'static crate::skir_client::Method<SuggestAuthoringSelectorValuesRequest, SuggestAuthoringSelectorValuesResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<SuggestAuthoringSelectorValuesRequest, SuggestAuthoringSelectorValuesResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "SuggestAuthoringSelectorValues".to_string(),
+            number: 920005_i64,
+            request_serializer: SuggestAuthoringSelectorValuesRequest::serializer(),
+            response_serializer: SuggestAuthoringSelectorValuesResponse::serializer(),
             doc: "".to_string(),
         }
     });

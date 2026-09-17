@@ -1,3 +1,4 @@
+search/authoring_text.surql
 book/book.surql
 compile/compiled_page_shard.surql
 compile/compiled_manifest.surql

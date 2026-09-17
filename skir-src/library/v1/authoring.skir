@@ -1,9 +1,14 @@
 import { DataPath } from "editor/v1/path.skir";
 import {
+  RealmSearchQuery,
+  RealmSearchSelectorExpression,
+} from "editor/v1/search.skir";
+import {
   ResolvedTypeRef,
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 import { Color } from "kernel/v1/color.skir";
+import { InternalError } from "kernel/v1/errors.skir";
 import { PageKindRef } from "kernel/v1/page_kind.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
@@ -419,40 +424,123 @@ struct AuthoringDiagnostic(812200059) {
 struct AuthoringInvalid(812200060) {
   diagnostics: [AuthoringDiagnostic] = 0;
 }
-
 /// Repeated scopes are read once. An empty scope list returns only the sequence.
-struct GetAuthoringSnapshotRequest(812200061) {
-  scopes: [AuthoringSnapshotScope] = 0;
-}
-
-enum GetAuthoringSnapshotResponse(812200062) {
+method GetAuthoringSnapshot(
+  struct {
+    scopes: [AuthoringSnapshotScope] = 0;
+  }
+): enum {
   success: AuthoringSnapshot = 1;
   invalid: AuthoringInvalid = 2;
-  internal_error: struct {
-    message: string = 0;
-  } = 3;
-}
+  internal_error: InternalError = 3;
+} = 920001;
 
 /// Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.
 /// Batch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.
-struct ApplyAuthoringBatchRequest(812200063) {
-  batch_id: string = 0;
-  operations: [AuthoringOperation] = 1;
-}
-
-enum ApplyAuthoringBatchResponse(812200064) {
+method ApplyAuthoringBatch(
+  struct {
+    batch_id: string = 0;
+    operations: [AuthoringOperation] = 1;
+  }
+): enum {
   applied: AuthoringChanged = 1;
   conflict: AuthoringConflict = 2;
   invalid: AuthoringInvalid = 3;
-  internal_error: struct {
-    message: string = 0;
-  } = 4;
+  internal_error: InternalError = 4;
+} = 920002;
+
+struct AuthoringSearchMatch(812200066) {
+  text: string = 0;
+  start: int32 = 1;
+  end: int32 = 2;
 }
 
-method GetAuthoringSnapshot(
-  GetAuthoringSnapshotRequest
-): GetAuthoringSnapshotResponse = 920001;
+struct AuthoringSearchTag(812200069) {
+  id: RecordId = 0;
+  name: string = 1;
+  color: Color = 2;
+}
 
-method ApplyAuthoringBatch(
-  ApplyAuthoringBatchRequest
-): ApplyAuthoringBatchResponse = 920002;
+struct AuthoringSearchBookContext(812200070) {
+  id: RecordId = 0;
+  title: string = 1;
+}
+
+struct AuthoringSearchBook(812200071) {
+  id: RecordId = 0;
+  title: string = 1;
+  icon: string = 2;
+  color: Color = 3;
+  tags: [AuthoringSearchTag] = 4;
+}
+
+struct AuthoringSearchPage(812200072) {
+  id: RecordId = 0;
+  name: string = 1;
+  kind: PageKindRef = 2;
+  book: AuthoringSearchBookContext = 3;
+  chapter: string = 4;
+}
+
+struct AuthoringSearchElement(812200073) {
+  id: RecordId = 0;
+  name: string = 1;
+  element_type: string = 2;
+  placement: ElementPlacement = 3;
+  page: AuthoringSearchPage = 4;
+  match: AuthoringSearchMatch? = 5;
+}
+
+enum AuthoringSearchHit(812200067) {
+  book: AuthoringSearchBook = 1;
+  tag: AuthoringSearchTag = 2;
+  page: AuthoringSearchPage = 3;
+  element: AuthoringSearchElement = 4;
+}
+
+enum AuthoringSelectorKind(812200074) {
+  book = 1;
+  page = 2;
+  tag = 3;
+  element_type = 4;
+}
+
+struct AuthoringSelectorSuggestions(812200075) {
+  values: [string] = 0;
+  exhaustive: bool = 1;
+}
+
+struct AuthoringSelectorValidation(812200076) {
+  selector: AuthoringSelectorKind = 0;
+  value: string = 1;
+  accepted: bool = 2;
+}
+
+struct AuthoringSearchSnapshot(812200068) {
+  hits: [AuthoringSearchHit] = 0;
+  selector_validations: [AuthoringSelectorValidation] = 1;
+}
+
+method SearchAuthoringContent(
+  struct {
+    query: RealmSearchQuery = 0;
+    context_page: RecordId? = 1;
+  }
+): enum {
+  success: AuthoringSearchSnapshot = 1;
+  invalid: AuthoringInvalid = 2;
+  internal_error: InternalError = 3;
+} = 920004;
+
+method SuggestAuthoringSelectorValues(
+  struct {
+    selector: AuthoringSelectorKind = 0;
+    partial: string = 1;
+    scope: RealmSearchSelectorExpression? = 2;
+    context_page: RecordId? = 3;
+  }
+): enum {
+  success: AuthoringSelectorSuggestions = 1;
+  invalid: AuthoringInvalid = 2;
+  internal_error: InternalError = 3;
+} = 920005;

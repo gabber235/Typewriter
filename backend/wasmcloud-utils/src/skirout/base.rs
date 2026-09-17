@@ -13,8 +13,8 @@
 // To install the Skir client library, run:
 //   cargo add skir-client
 pub mod kernel;
-pub mod service;
-pub mod library;
-pub mod editor;
 pub mod organization;
+pub mod service;
+pub mod editor;
+pub mod library;
 pub mod access;

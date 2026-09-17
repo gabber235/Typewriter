@@ -59,7 +59,7 @@ func (m *Typewriter) SkirSnapshot(
 func (m *Typewriter) SkirGenerate(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!panel/lib/infrastructure/protocols/skir/skirout", "!backend/wasmcloud-utils/src/skirout", "!services/libs/service-communicator/skir/src/main/kotlin/skirout"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!panel/lib/infrastructure/protocols/skir/skirout", "!backend/wasmcloud-utils/src/skirout", "!services/protocol/src/main/kotlin/skirout"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).

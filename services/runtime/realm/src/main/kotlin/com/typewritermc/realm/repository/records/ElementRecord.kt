@@ -8,6 +8,7 @@ import com.typewritermc.elements.StoredElement
 import com.typewritermc.elements.StoredElementValue
 import com.typewritermc.elements.StoredReference
 import com.typewritermc.realm.repository.utils.DataValueDatabaseCodec
+import com.typewritermc.realm.repository.utils.elementPlacement
 import com.typewritermc.realm.repository.utils.toElementInstanceId
 import com.typewritermc.realm.repository.utils.toResourceId
 import com.typewritermc.types.DeclaredTypeId
@@ -59,7 +60,7 @@ internal object ElementRecordParser {
                             valueWithSlots = DataValueDatabaseCodec.decode(objectValue.get("value")),
                             references = references[id].orEmpty().map(ParsedReference::reference),
                         ),
-                    placement = parsePlacement(objectValue.get("placement")),
+                    placement = objectValue.get("placement").elementPlacement(),
                 )
             }
         return StoredPageElements(elements, pages)
@@ -80,39 +81,6 @@ internal object ElementRecordParser {
                         ),
                 ),
         )
-    }
-
-    private fun parsePlacement(value: Value): ElementPlacement {
-        val placement = value.getObject()
-        return when (val kind = placement.get("kind").getString()) {
-            "graph_v1" -> {
-                ElementPlacement.Graph(
-                    x = placement.get("x").getLong().toInt(),
-                    y = placement.get("y").getLong().toInt(),
-                    width = placement.get("width").getLong().toInt(),
-                    height = placement.get("height").getLong().toInt(),
-                )
-            }
-
-            "timeline_entry_v1" -> {
-                ElementPlacement.TimelineEntry(placement.get("track_index").getLong().toInt())
-            }
-
-            "timeline_segment_v1" -> {
-                ElementPlacement.TimelineSegment(
-                    startFrame = placement.get("start_frame").getLong().toInt(),
-                    endFrame = placement.get("end_frame").getLong().toInt(),
-                )
-            }
-
-            "timeline_keyframe_v1" -> {
-                ElementPlacement.TimelineKeyframe(placement.get("frame").getLong().toInt())
-            }
-
-            else -> {
-                error("Unknown element placement kind '$kind'.")
-            }
-        }
     }
 }
 

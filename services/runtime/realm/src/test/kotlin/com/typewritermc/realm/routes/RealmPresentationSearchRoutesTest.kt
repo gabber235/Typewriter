@@ -141,6 +141,7 @@ private fun validSearchRequest() =
         query =
             RealmSearchQuery(
                 normalizedQuery = "alex",
+                terms = listOf("alex"),
                 selectors = emptyList(),
                 selectorExpression = null,
             ),

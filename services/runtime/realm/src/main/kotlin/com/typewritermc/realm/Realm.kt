@@ -10,6 +10,8 @@ import com.typewritermc.realm.compiler.SurrealCompiledContentRepository
 import com.typewritermc.realm.repository.PageDocumentCatalog
 import com.typewritermc.realm.repository.SurrealAuthoringRepository
 import com.typewritermc.realm.repository.SurrealPageDocumentRepository
+import com.typewritermc.realm.repository.search.ElementSearchCatalogEntry
+import com.typewritermc.realm.repository.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.routes.CompiledContentEvents
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
@@ -38,6 +40,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -75,6 +78,7 @@ class Realm(
     private var serviceMonitor: Job? = null
     private var compileCoordinator: RealmCompileCoordinator? = null
     private var compileCatalogMonitor: Job? = null
+    private var searchCatalogMonitor: Job? = null
 
     /**
      * Opens Realm storage, starts compilation, and waits until the first usable messaging session has routes.
@@ -104,6 +108,25 @@ class Realm(
                         }
                     }.orEmpty()
             }
+            val elementSearchCatalog = {
+                discoverySnapshots
+                    .current()
+                    ?.let { snapshot ->
+                        snapshot.elements.entries.associate { entry ->
+                            val descriptor = entry.descriptor
+                            descriptor.id to
+                                ElementSearchCatalogEntry(
+                                    graph =
+                                        TypeGraph(
+                                            TypeExpression.Named(descriptor.type),
+                                            snapshot.discovery.types.definitions,
+                                        ),
+                                    definition = descriptor.searchDefinition,
+                                    displayName = descriptor.name,
+                                )
+                        }
+                    }.orEmpty()
+            }
             val compiledContentEvents = CompiledContentEvents()
             val compiledContent =
                 SurrealCompiledContentRepository(
@@ -111,7 +134,8 @@ class Realm(
                     compiledContentEvents::publishActivated,
                     compiledContentEvents::publishBlocked,
                 )
-            val authoring = SurrealAuthoringRepository(connected, pageDocuments, elementTypeGraphs)
+            val authoringSearch = SurrealAuthoringSearchRepository(connected, elementSearchCatalog)
+            val authoring = SurrealAuthoringRepository(connected, pageDocuments, elementTypeGraphs, authoringSearch)
             val compiler =
                 RealmCompileCoordinator(
                     documents = pageDocuments,
@@ -127,6 +151,7 @@ class Realm(
             routeFactory =
                 RealmRouteFactory(
                     authoring = authoring,
+                    authoringSearch = authoringSearch,
                     compiledContent = compiledContent,
                     editorCatalog = editorCatalog,
                     presentationSearch = presentationSearch,
@@ -138,6 +163,10 @@ class Realm(
             compileCatalogMonitor =
                 scope.launch {
                     discoverySnapshots.changes.collect { compiler.invalidate() }
+                }
+            searchCatalogMonitor =
+                scope.launch {
+                    discoverySnapshots.snapshots.filterNotNull().collectLatest { authoringSearch.reconcile() }
                 }
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =
@@ -156,6 +185,8 @@ class Realm(
             runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
             compileCatalogMonitor = null
+            runCatching { searchCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
+            searchCatalogMonitor = null
             runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             compileCoordinator = null
             runCatching {
@@ -190,6 +221,8 @@ class Realm(
             serviceMonitor = null
             runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
             compileCatalogMonitor = null
+            runCatching { searchCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
+            searchCatalogMonitor = null
             runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failures::add)
             compileCoordinator = null
             runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)

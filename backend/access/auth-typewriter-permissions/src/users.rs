@@ -358,23 +358,25 @@ fn add_organization_realm_permissions(
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.update"));
 
     for suffix in [
+        "compiled.content.watch",
+        "editor.capability.command.invoke",
+        "editor.capability.computation.invoke",
         "editor.catalog.fetch",
         "editor.catalog.invalidate",
         "editor.elements.fetch",
         "editor.presentation.search",
         "editor.presentation.search.cancel",
-        "editor.capability.computation.invoke",
-        "editor.capability.command.invoke",
-        "shared.catalog.fetch",
-        "shared.publish",
+        "library.authoring.batch.apply",
+        "library.authoring.content.search",
+        "library.authoring.selector.suggest",
+        "library.authoring.snapshot.get",
+        "shared.blob.begin",
+        "shared.blob.complete",
         "shared.blob.metadata",
         "shared.blob.read",
-        "shared.blob.begin",
         "shared.blob.write",
-        "shared.blob.complete",
-        "library.authoring.snapshot.get",
-        "library.authoring.batch.apply",
-        "compiled.content.watch",
+        "shared.catalog.fetch",
+        "shared.publish",
     ] {
         allow_publish.push(format!("service.to.*.organization.{org_id}.realm.{suffix}",));
     }

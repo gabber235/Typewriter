@@ -15,8 +15,10 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../editor/v1/path.dart" as _lib_editor_v1_path;
+import "../../editor/v1/search.dart" as _lib_editor_v1_search;
 import "../../editor/v1/type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/page_kind.dart" as _lib_kernel_v1_page_kind;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
@@ -4174,6 +4176,7 @@ sealed class AuthoringSnapshot_orMutable {
   AuthoringSnapshot toFrozen();
 }
 
+/// Provides authoritative slices read at one collaboration sequence.
 /// All requested slices describe one consistent point in the Realm sequence.
 /// A missing book or page is represented by a null resource in its slice.
 ///
@@ -4270,7 +4273,7 @@ final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/authoring.skir:AuthoringSnapshot",
-    doc: "All requested slices describe one consistent point in the Realm sequence.\nA missing book or page is represented by a null resource in its slice.",
+    doc: "Provides authoritative slices read at one collaboration sequence.\nAll requested slices describe one consistent point in the Realm sequence.\nA missing book or page is represented by a null resource in its slice.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringSnapshot_mutable it) => it.toFrozen(),
@@ -4960,9 +4963,9 @@ sealed class AuthoringChanged_orMutable {
   AuthoringChanged toFrozen();
 }
 
-/// One committed batch. Sequence numbers advance across the whole Realm,
-/// including resources outside the client's acquired scopes.
-/// Ignore already observed sequences and refresh snapshots when a gap appears.
+/// Announces the direct and indirect effects of one committed authoring batch.
+/// Sequence numbers advance across the whole Realm, including resources outside
+/// the client's acquired scopes. Ignore older sequences and refresh on a gap.
 ///
 /// Deeply immutable.
 final class AuthoringChanged implements AuthoringChanged_orMutable {
@@ -5095,7 +5098,7 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/authoring.skir:AuthoringChanged",
-    doc: "One committed batch. Sequence numbers advance across the whole Realm,\nincluding resources outside the client's acquired scopes.\nIgnore already observed sequences and refresh snapshots when a gap appears.",
+    doc: "Announces the direct and indirect effects of one committed authoring batch.\nSequence numbers advance across the whole Realm, including resources outside\nthe client's acquired scopes. Ignore older sequences and refresh on a gap.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringChanged_mutable it) => it.toFrozen(),
@@ -7866,8 +7869,9 @@ sealed class ExpectedElementValueMutation_orMutable {
   ExpectedElementValueMutation toFrozen();
 }
 
-/// Compares the logical value at the mutation path before applying the mutation.
-/// Earlier value mutations in the same operation are visible to this comparison.
+/// Guards and applies one structural edit to an element value.
+/// The expected value is read at the mutation path immediately before the edit;
+/// earlier mutations in the same operation are visible to later comparisons.
 ///
 /// Deeply immutable.
 final class ExpectedElementValueMutation implements ExpectedElementValueMutation_orMutable {
@@ -7960,7 +7964,7 @@ final class ExpectedElementValueMutation implements ExpectedElementValueMutation
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/authoring.skir:ExpectedElementValueMutation",
-    doc: "Compares the logical value at the mutation path before applying the mutation.\nEarlier value mutations in the same operation are visible to this comparison.",
+    doc: "Guards and applies one structural edit to an element value.\nThe expected value is read at the mutation path immediately before the edit;\nearlier mutations in the same operation are visible to later comparisons.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ExpectedElementValueMutation_mutable it) => it.toFrozen(),
@@ -11396,8 +11400,7 @@ sealed class AuthoringConflict_orMutable {
   AuthoringConflict toFrozen();
 }
 
-/// No operations from the rejected batch are committed.
-/// Refresh snapshots to obtain current resource values before retrying.
+/// No operation from the rejected batch is committed. Refresh snapshots to obtain current values before retrying.
 ///
 /// Deeply immutable.
 final class AuthoringConflict implements AuthoringConflict_orMutable {
@@ -11474,7 +11477,7 @@ final class AuthoringConflict implements AuthoringConflict_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/authoring.skir:AuthoringConflict",
-    doc: "No operations from the rejected batch are committed.\nRefresh snapshots to obtain current resource values before retrying.",
+    doc: "No operation from the rejected batch is committed. Refresh snapshots to obtain current values before retrying.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringConflict_mutable it) => it.toFrozen(),
@@ -11819,8 +11822,6 @@ sealed class GetAuthoringSnapshotRequest_orMutable {
   GetAuthoringSnapshotRequest toFrozen();
 }
 
-/// Repeated scopes are read once. An empty scope list returns only the sequence.
-///
 /// Deeply immutable.
 final class GetAuthoringSnapshotRequest implements GetAuthoringSnapshotRequest_orMutable {
   @_core.override
@@ -11896,7 +11897,7 @@ final class GetAuthoringSnapshotRequest implements GetAuthoringSnapshotRequest_o
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/authoring.skir:GetAuthoringSnapshotRequest",
-    doc: "Repeated scopes are read once. An empty scope list returns only the sequence.",
+    doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (GetAuthoringSnapshotRequest_mutable it) => it.toFrozen(),
@@ -11929,114 +11930,6 @@ final class GetAuthoringSnapshotRequest_mutable implements GetAuthoringSnapshotR
   @_core.override
   GetAuthoringSnapshotRequest toFrozen() => GetAuthoringSnapshotRequest(
     scopes: this.scopes,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct GetAuthoringSnapshotResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class GetAuthoringSnapshotResponse_InternalError_orMutable {
-  _core.String get message;
-
-  GetAuthoringSnapshotResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class GetAuthoringSnapshotResponse_InternalError implements GetAuthoringSnapshotResponse_InternalError_orMutable {
-  @_core.override
-  final _core.String message;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory GetAuthoringSnapshotResponse_InternalError({
-    required _core.String message,
-  }) => GetAuthoringSnapshotResponse_InternalError._(
-    message,
-  );
-
-  GetAuthoringSnapshotResponse_InternalError._(
-    this.message,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = GetAuthoringSnapshotResponse_InternalError._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static GetAuthoringSnapshotResponse_InternalError_mutable mutable() => GetAuthoringSnapshotResponse_InternalError_mutable._(
-    "",
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  GetAuthoringSnapshotResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  GetAuthoringSnapshotResponse_InternalError_mutable toMutable() => GetAuthoringSnapshotResponse_InternalError_mutable._(
-    this.message,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! GetAuthoringSnapshotResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.message,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `GetAuthoringSnapshotResponse_InternalError` instances.
-  static _skir.StructSerializer<GetAuthoringSnapshotResponse_InternalError, GetAuthoringSnapshotResponse_InternalError_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "message",
-        "message",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.message,
-        (it, v) => it.message = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "library/v1/authoring.skir:GetAuthoringSnapshotResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (GetAuthoringSnapshotResponse_InternalError_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [GetAuthoringSnapshotResponse_InternalError].
-final class GetAuthoringSnapshotResponse_InternalError_mutable implements GetAuthoringSnapshotResponse_InternalError_orMutable {
-  _core.String message;
-  _skir.internal__UnrecognizedFields? _u;
-
-  GetAuthoringSnapshotResponse_InternalError_mutable._(
-    this.message,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  GetAuthoringSnapshotResponse_InternalError toFrozen() => GetAuthoringSnapshotResponse_InternalError(
-    message: this.message,
   ).._u = this._u;
 }
 
@@ -12092,16 +11985,12 @@ sealed class GetAuthoringSnapshotResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory GetAuthoringSnapshotResponse.wrapInternalError(
-    GetAuthoringSnapshotResponse_InternalError value
+    _lib_kernel_v1_errors.InternalError value
   ) => GetAuthoringSnapshotResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(GetAuthoringSnapshotResponse_InternalError(...))`.
-  factory GetAuthoringSnapshotResponse.createInternalError({
-    required _core.String message,
-  }) => GetAuthoringSnapshotResponse.wrapInternalError(
-    GetAuthoringSnapshotResponse_InternalError(
-      message: message,
-    )
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory GetAuthoringSnapshotResponse.createInternalError() => GetAuthoringSnapshotResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
   );
 
   /// Returns the kind of variant held by this GetAuthoringSnapshotResponse.
@@ -12134,7 +12023,7 @@ sealed class GetAuthoringSnapshotResponse {
         3,
         "internal_error",
         "wrapInternalError",
-        GetAuthoringSnapshotResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         GetAuthoringSnapshotResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -12221,7 +12110,7 @@ final class GetAuthoringSnapshotResponse_invalidWrapper extends _GetAuthoringSna
 }
 
 final class GetAuthoringSnapshotResponse_internalErrorWrapper extends _GetAuthoringSnapshotResponse_wrapper {
-  final GetAuthoringSnapshotResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   GetAuthoringSnapshotResponse_internalErrorWrapper._(this.value);
 
@@ -12240,12 +12129,6 @@ sealed class ApplyAuthoringBatchRequest_orMutable {
   ApplyAuthoringBatchRequest toFrozen();
 }
 
-/// Operations execute in order within one atomic transaction.
-/// A batch must be nonempty and contain at most one operation per target resource.
-/// Batch IDs must not be blank. Reuse an ID only for an identical request.
-/// Replaying a committed batch
-/// returns its original sequence and changes without applying its operations again.
-///
 /// Deeply immutable.
 final class ApplyAuthoringBatchRequest implements ApplyAuthoringBatchRequest_orMutable {
   @_core.override
@@ -12339,7 +12222,7 @@ final class ApplyAuthoringBatchRequest implements ApplyAuthoringBatchRequest_orM
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/authoring.skir:ApplyAuthoringBatchRequest",
-    doc: "Operations execute in order within one atomic transaction.\nA batch must be nonempty and contain at most one operation per target resource.\nBatch IDs must not be blank. Reuse an ID only for an identical request.\nReplaying a committed batch\nreturns its original sequence and changes without applying its operations again.",
+    doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ApplyAuthoringBatchRequest_mutable it) => it.toFrozen(),
@@ -12375,114 +12258,6 @@ final class ApplyAuthoringBatchRequest_mutable implements ApplyAuthoringBatchReq
   ApplyAuthoringBatchRequest toFrozen() => ApplyAuthoringBatchRequest(
     batchId: this.batchId,
     operations: this.operations,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct ApplyAuthoringBatchResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class ApplyAuthoringBatchResponse_InternalError_orMutable {
-  _core.String get message;
-
-  ApplyAuthoringBatchResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class ApplyAuthoringBatchResponse_InternalError implements ApplyAuthoringBatchResponse_InternalError_orMutable {
-  @_core.override
-  final _core.String message;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ApplyAuthoringBatchResponse_InternalError({
-    required _core.String message,
-  }) => ApplyAuthoringBatchResponse_InternalError._(
-    message,
-  );
-
-  ApplyAuthoringBatchResponse_InternalError._(
-    this.message,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ApplyAuthoringBatchResponse_InternalError._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ApplyAuthoringBatchResponse_InternalError_mutable mutable() => ApplyAuthoringBatchResponse_InternalError_mutable._(
-    "",
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ApplyAuthoringBatchResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ApplyAuthoringBatchResponse_InternalError_mutable toMutable() => ApplyAuthoringBatchResponse_InternalError_mutable._(
-    this.message,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ApplyAuthoringBatchResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.message,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ApplyAuthoringBatchResponse_InternalError` instances.
-  static _skir.StructSerializer<ApplyAuthoringBatchResponse_InternalError, ApplyAuthoringBatchResponse_InternalError_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "message",
-        "message",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.message,
-        (it, v) => it.message = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "library/v1/authoring.skir:ApplyAuthoringBatchResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ApplyAuthoringBatchResponse_InternalError_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ApplyAuthoringBatchResponse_InternalError].
-final class ApplyAuthoringBatchResponse_InternalError_mutable implements ApplyAuthoringBatchResponse_InternalError_orMutable {
-  _core.String message;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ApplyAuthoringBatchResponse_InternalError_mutable._(
-    this.message,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ApplyAuthoringBatchResponse_InternalError toFrozen() => ApplyAuthoringBatchResponse_InternalError(
-    message: this.message,
   ).._u = this._u;
 }
 
@@ -12557,16 +12332,12 @@ sealed class ApplyAuthoringBatchResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory ApplyAuthoringBatchResponse.wrapInternalError(
-    ApplyAuthoringBatchResponse_InternalError value
+    _lib_kernel_v1_errors.InternalError value
   ) => ApplyAuthoringBatchResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(ApplyAuthoringBatchResponse_InternalError(...))`.
-  factory ApplyAuthoringBatchResponse.createInternalError({
-    required _core.String message,
-  }) => ApplyAuthoringBatchResponse.wrapInternalError(
-    ApplyAuthoringBatchResponse_InternalError(
-      message: message,
-    )
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory ApplyAuthoringBatchResponse.createInternalError() => ApplyAuthoringBatchResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
   );
 
   /// Returns the kind of variant held by this ApplyAuthoringBatchResponse.
@@ -12609,7 +12380,7 @@ sealed class ApplyAuthoringBatchResponse {
         4,
         "internal_error",
         "wrapInternalError",
-        ApplyAuthoringBatchResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         ApplyAuthoringBatchResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -12706,7 +12477,7 @@ final class ApplyAuthoringBatchResponse_invalidWrapper extends _ApplyAuthoringBa
 }
 
 final class ApplyAuthoringBatchResponse_internalErrorWrapper extends _ApplyAuthoringBatchResponse_wrapper {
-  final ApplyAuthoringBatchResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   ApplyAuthoringBatchResponse_internalErrorWrapper._(this.value);
 
@@ -12714,6 +12485,2692 @@ final class ApplyAuthoringBatchResponse_internalErrorWrapper extends _ApplyAutho
   ApplyAuthoringBatchResponse_kind get kind => ApplyAuthoringBatchResponse_kind.internalErrorWrapper;
 }
 
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchMatch
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchMatch_orMutable {
+  _core.String get text;
+  _core.int get start;
+  _core.int get end;
+
+  AuthoringSearchMatch toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchMatch implements AuthoringSearchMatch_orMutable {
+  @_core.override
+  final _core.String text;
+  @_core.override
+  final _core.int start;
+  @_core.override
+  final _core.int end;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchMatch({
+    required _core.String text,
+    required _core.int start,
+    required _core.int end,
+  }) => AuthoringSearchMatch._(
+    text,
+    start,
+    end,
+  );
+
+  AuthoringSearchMatch._(
+    this.text,
+    this.start,
+    this.end,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchMatch._(
+    "",
+    0,
+    0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchMatch_mutable mutable() => AuthoringSearchMatch_mutable._(
+    "",
+    0,
+    0,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchMatch toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchMatch_mutable toMutable() => AuthoringSearchMatch_mutable._(
+    this.text,
+    this.start,
+    this.end,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchMatch) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.text,
+    this.start,
+    this.end,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchMatch` instances.
+  static _skir.StructSerializer<AuthoringSearchMatch, AuthoringSearchMatch_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "text",
+        "text",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.text,
+        (it, v) => it.text = v,
+      );
+      _serializerBuilder.addField(
+        "start",
+        "start",
+        1,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.start,
+        (it, v) => it.start = v,
+      );
+      _serializerBuilder.addField(
+        "end",
+        "end",
+        2,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.end,
+        (it, v) => it.end = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchMatch",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchMatch_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchMatch].
+final class AuthoringSearchMatch_mutable implements AuthoringSearchMatch_orMutable {
+  _core.String text;
+  _core.int start;
+  _core.int end;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchMatch_mutable._(
+    this.text,
+    this.start,
+    this.end,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchMatch toFrozen() => AuthoringSearchMatch(
+    text: this.text,
+    start: this.start,
+    end: this.end,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchTag
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchTag_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get id;
+  _core.String get name;
+  _lib_kernel_v1_color.Color_orMutable get color;
+
+  AuthoringSearchTag toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchTag implements AuthoringSearchTag_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId id;
+  @_core.override
+  final _core.String name;
+  @_core.override
+  final _lib_kernel_v1_color.Color color;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchTag({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+    required _lib_kernel_v1_color.Color_orMutable color,
+  }) => AuthoringSearchTag._(
+    id.toFrozen(),
+    name,
+    color.toFrozen(),
+  );
+
+  AuthoringSearchTag._(
+    this.id,
+    this.name,
+    this.color,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchTag._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchTag_mutable mutable() => AuthoringSearchTag_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchTag toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchTag_mutable toMutable() => AuthoringSearchTag_mutable._(
+    this.id,
+    this.name,
+    this.color,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchTag) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.name,
+    this.color,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchTag` instances.
+  static _skir.StructSerializer<AuthoringSearchTag, AuthoringSearchTag_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.addField(
+        "color",
+        "color",
+        2,
+        _lib_kernel_v1_color.Color.serializer,
+        "",
+        (it) => it.color,
+        (it, v) => it.color = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchTag",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchTag_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchTag].
+final class AuthoringSearchTag_mutable implements AuthoringSearchTag_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable id;
+  _core.String name;
+  _lib_kernel_v1_color.Color_orMutable color;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchTag_mutable._(
+    this.id,
+    this.name,
+    this.color,
+  );
+
+  /// If the value of [id] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [color] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+  _lib_kernel_v1_color.Color_mutable get mutableColor {
+    final value = this.color;
+    if (value is _lib_kernel_v1_color.Color_mutable) {
+      return value;
+    } else {
+      return this.color = (value as _lib_kernel_v1_color.Color).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchTag toFrozen() => AuthoringSearchTag(
+    id: this.id,
+    name: this.name,
+    color: this.color,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchBookContext
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchBookContext_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get id;
+  _core.String get title;
+
+  AuthoringSearchBookContext toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchBookContext implements AuthoringSearchBookContext_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId id;
+  @_core.override
+  final _core.String title;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchBookContext({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String title,
+  }) => AuthoringSearchBookContext._(
+    id.toFrozen(),
+    title,
+  );
+
+  AuthoringSearchBookContext._(
+    this.id,
+    this.title,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchBookContext._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchBookContext_mutable mutable() => AuthoringSearchBookContext_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchBookContext toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchBookContext_mutable toMutable() => AuthoringSearchBookContext_mutable._(
+    this.id,
+    this.title,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchBookContext) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.title,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchBookContext` instances.
+  static _skir.StructSerializer<AuthoringSearchBookContext, AuthoringSearchBookContext_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "title",
+        "title",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.title,
+        (it, v) => it.title = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchBookContext",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchBookContext_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchBookContext].
+final class AuthoringSearchBookContext_mutable implements AuthoringSearchBookContext_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable id;
+  _core.String title;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchBookContext_mutable._(
+    this.id,
+    this.title,
+  );
+
+  /// If the value of [id] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchBookContext toFrozen() => AuthoringSearchBookContext(
+    id: this.id,
+    title: this.title,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchBook
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchBook_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get id;
+  _core.String get title;
+  _core.String get icon;
+  _lib_kernel_v1_color.Color_orMutable get color;
+  _core.Iterable<AuthoringSearchTag_orMutable> get tags;
+
+  AuthoringSearchBook toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchBook implements AuthoringSearchBook_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId id;
+  @_core.override
+  final _core.String title;
+  @_core.override
+  final _core.String icon;
+  @_core.override
+  final _lib_kernel_v1_color.Color color;
+  @_core.override
+  final _core.Iterable<AuthoringSearchTag> tags;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchBook({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String title,
+    required _core.String icon,
+    required _lib_kernel_v1_color.Color_orMutable color,
+    required _core.Iterable<AuthoringSearchTag_orMutable> tags,
+  }) => AuthoringSearchBook._(
+    id.toFrozen(),
+    title,
+    icon,
+    color.toFrozen(),
+    _skir.internal__frozenMappedCopy(tags, (it) => it.toFrozen()),
+  );
+
+  AuthoringSearchBook._(
+    this.id,
+    this.title,
+    this.icon,
+    this.color,
+    this.tags,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchBook._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchBook_mutable mutable() => AuthoringSearchBook_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchBook toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchBook_mutable toMutable() => AuthoringSearchBook_mutable._(
+    this.id,
+    this.title,
+    this.icon,
+    this.color,
+    this.tags,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchBook) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.title,
+    this.icon,
+    this.color,
+    this.tags,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchBook` instances.
+  static _skir.StructSerializer<AuthoringSearchBook, AuthoringSearchBook_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "title",
+        "title",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.title,
+        (it, v) => it.title = v,
+      );
+      _serializerBuilder.addField(
+        "icon",
+        "icon",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.icon,
+        (it, v) => it.icon = v,
+      );
+      _serializerBuilder.addField(
+        "color",
+        "color",
+        3,
+        _lib_kernel_v1_color.Color.serializer,
+        "",
+        (it) => it.color,
+        (it, v) => it.color = v,
+      );
+      _serializerBuilder.addField(
+        "tags",
+        "tags",
+        4,
+        _skir.Serializers.iterable(
+          AuthoringSearchTag.serializer,
+        ),
+        "",
+        (it) => it.tags,
+        (it, v) => it.tags = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchBook",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchBook_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchBook].
+final class AuthoringSearchBook_mutable implements AuthoringSearchBook_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable id;
+  _core.String title;
+  _core.String icon;
+  _lib_kernel_v1_color.Color_orMutable color;
+  _core.Iterable<AuthoringSearchTag_orMutable> tags;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchBook_mutable._(
+    this.id,
+    this.title,
+    this.icon,
+    this.color,
+    this.tags,
+  );
+
+  /// If the value of [id] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [color] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+  _lib_kernel_v1_color.Color_mutable get mutableColor {
+    final value = this.color;
+    if (value is _lib_kernel_v1_color.Color_mutable) {
+      return value;
+    } else {
+      return this.color = (value as _lib_kernel_v1_color.Color).toMutable();
+    }
+  }
+
+  /// If the value of [tags] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
+  _core.List<AuthoringSearchTag_orMutable> get mutableTags {
+    final value = this.tags;
+    if (value is _skir.internal__MutableList<AuthoringSearchTag_orMutable>) {
+      return value;
+    } else {
+      return this.tags = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchBook toFrozen() => AuthoringSearchBook(
+    id: this.id,
+    title: this.title,
+    icon: this.icon,
+    color: this.color,
+    tags: this.tags,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchPage
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchPage_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get id;
+  _core.String get name;
+  _lib_kernel_v1_page_kind.PageKindRef_orMutable get kind;
+  AuthoringSearchBookContext_orMutable get book;
+  _core.String get chapter;
+
+  AuthoringSearchPage toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchPage implements AuthoringSearchPage_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId id;
+  @_core.override
+  final _core.String name;
+  @_core.override
+  final _lib_kernel_v1_page_kind.PageKindRef kind;
+  @_core.override
+  final AuthoringSearchBookContext book;
+  @_core.override
+  final _core.String chapter;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchPage({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+    required _lib_kernel_v1_page_kind.PageKindRef_orMutable kind,
+    required AuthoringSearchBookContext_orMutable book,
+    required _core.String chapter,
+  }) => AuthoringSearchPage._(
+    id.toFrozen(),
+    name,
+    kind.toFrozen(),
+    book.toFrozen(),
+    chapter,
+  );
+
+  AuthoringSearchPage._(
+    this.id,
+    this.name,
+    this.kind,
+    this.book,
+    this.chapter,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchPage._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    _lib_kernel_v1_page_kind.PageKindRef.defaultInstance,
+    AuthoringSearchBookContext.defaultInstance,
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchPage_mutable mutable() => AuthoringSearchPage_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    _lib_kernel_v1_page_kind.PageKindRef.defaultInstance,
+    AuthoringSearchBookContext.defaultInstance,
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchPage toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchPage_mutable toMutable() => AuthoringSearchPage_mutable._(
+    this.id,
+    this.name,
+    this.kind,
+    this.book,
+    this.chapter,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchPage) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.name,
+    this.kind,
+    this.book,
+    this.chapter,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchPage` instances.
+  static _skir.StructSerializer<AuthoringSearchPage, AuthoringSearchPage_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.addField(
+        "kind",
+        "kind",
+        2,
+        _lib_kernel_v1_page_kind.PageKindRef.serializer,
+        "",
+        (it) => it.kind,
+        (it, v) => it.kind = v,
+      );
+      _serializerBuilder.addField(
+        "book",
+        "book",
+        3,
+        AuthoringSearchBookContext.serializer,
+        "",
+        (it) => it.book,
+        (it, v) => it.book = v,
+      );
+      _serializerBuilder.addField(
+        "chapter",
+        "chapter",
+        4,
+        _skir.Serializers.string,
+        "",
+        (it) => it.chapter,
+        (it, v) => it.chapter = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchPage",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchPage_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchPage].
+final class AuthoringSearchPage_mutable implements AuthoringSearchPage_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable id;
+  _core.String name;
+  _lib_kernel_v1_page_kind.PageKindRef_orMutable kind;
+  AuthoringSearchBookContext_orMutable book;
+  _core.String chapter;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchPage_mutable._(
+    this.id,
+    this.name,
+    this.kind,
+    this.book,
+    this.chapter,
+  );
+
+  /// If the value of [id] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [kind] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [kind] and returns it.
+  _lib_kernel_v1_page_kind.PageKindRef_mutable get mutableKind {
+    final value = this.kind;
+    if (value is _lib_kernel_v1_page_kind.PageKindRef_mutable) {
+      return value;
+    } else {
+      return this.kind = (value as _lib_kernel_v1_page_kind.PageKindRef).toMutable();
+    }
+  }
+
+  /// If the value of [book] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [book] and returns it.
+  AuthoringSearchBookContext_mutable get mutableBook {
+    final value = this.book;
+    if (value is AuthoringSearchBookContext_mutable) {
+      return value;
+    } else {
+      return this.book = (value as AuthoringSearchBookContext).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchPage toFrozen() => AuthoringSearchPage(
+    id: this.id,
+    name: this.name,
+    kind: this.kind,
+    book: this.book,
+    chapter: this.chapter,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchElement
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchElement_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get id;
+  _core.String get name;
+  _core.String get elementType;
+  ElementPlacement get placement;
+  AuthoringSearchPage_orMutable get page;
+  AuthoringSearchMatch_orMutable? get match;
+
+  AuthoringSearchElement toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchElement implements AuthoringSearchElement_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId id;
+  @_core.override
+  final _core.String name;
+  @_core.override
+  final _core.String elementType;
+  @_core.override
+  final ElementPlacement placement;
+  @_core.override
+  final AuthoringSearchPage page;
+  @_core.override
+  final AuthoringSearchMatch? match;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchElement({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+    required _core.String elementType,
+    required ElementPlacement placement,
+    required AuthoringSearchPage_orMutable page,
+    required AuthoringSearchMatch_orMutable? match,
+  }) => AuthoringSearchElement._(
+    id.toFrozen(),
+    name,
+    elementType,
+    placement,
+    page.toFrozen(),
+    (match != null) ? match.toFrozen() : null,
+  );
+
+  AuthoringSearchElement._(
+    this.id,
+    this.name,
+    this.elementType,
+    this.placement,
+    this.page,
+    this.match,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchElement._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    "",
+    ElementPlacement.unknown,
+    AuthoringSearchPage.defaultInstance,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchElement_mutable mutable() => AuthoringSearchElement_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+    "",
+    ElementPlacement.unknown,
+    AuthoringSearchPage.defaultInstance,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchElement toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchElement_mutable toMutable() => AuthoringSearchElement_mutable._(
+    this.id,
+    this.name,
+    this.elementType,
+    this.placement,
+    this.page,
+    this.match,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchElement) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.name,
+    this.elementType,
+    this.placement,
+    this.page,
+    this.match,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchElement` instances.
+  static _skir.StructSerializer<AuthoringSearchElement, AuthoringSearchElement_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.addField(
+        "element_type",
+        "elementType",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.elementType,
+        (it, v) => it.elementType = v,
+      );
+      _serializerBuilder.addField(
+        "placement",
+        "placement",
+        3,
+        ElementPlacement.serializer,
+        "",
+        (it) => it.placement,
+        (it, v) => it.placement = v,
+      );
+      _serializerBuilder.addField(
+        "page",
+        "page",
+        4,
+        AuthoringSearchPage.serializer,
+        "",
+        (it) => it.page,
+        (it, v) => it.page = v,
+      );
+      _serializerBuilder.addField(
+        "match",
+        "match",
+        5,
+        _skir.Serializers.optional(
+          AuthoringSearchMatch.serializer,
+        ),
+        "",
+        (it) => it.match,
+        (it, v) => it.match = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchElement",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchElement_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchElement].
+final class AuthoringSearchElement_mutable implements AuthoringSearchElement_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable id;
+  _core.String name;
+  _core.String elementType;
+  ElementPlacement placement;
+  AuthoringSearchPage_orMutable page;
+  AuthoringSearchMatch_orMutable? match;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchElement_mutable._(
+    this.id,
+    this.name,
+    this.elementType,
+    this.placement,
+    this.page,
+    this.match,
+  );
+
+  /// If the value of [id] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [page] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [page] and returns it.
+  AuthoringSearchPage_mutable get mutablePage {
+    final value = this.page;
+    if (value is AuthoringSearchPage_mutable) {
+      return value;
+    } else {
+      return this.page = (value as AuthoringSearchPage).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchElement toFrozen() => AuthoringSearchElement(
+    id: this.id,
+    name: this.name,
+    elementType: this.elementType,
+    placement: this.placement,
+    page: this.page,
+    match: this.match,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum AuthoringSearchHit
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case AuthoringSearchHit_unknown(): { ... }
+///     case AuthoringSearchHit_book(:var value): { ... }
+///     case AuthoringSearchHit_tag(:var value): { ... }
+///     case AuthoringSearchHit_page(:var value): { ... }
+///     case AuthoringSearchHit_element(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class AuthoringSearchHit {
+  /// Constant indicating an unknown `AuthoringSearchHit`.
+  /// Default value for fields of type `AuthoringSearchHit`.
+  static const AuthoringSearchHit unknown = AuthoringSearchHit_unknown._instance;
+
+  /// Create a 'book' variant wrapping around the given value.
+  factory AuthoringSearchHit.wrapBook(
+    AuthoringSearchBook value
+  ) => AuthoringSearchHit_bookWrapper._(value);
+
+  /// Same as `wrapBook(AuthoringSearchBook(...))`.
+  factory AuthoringSearchHit.createBook({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String title,
+    required _core.String icon,
+    required _lib_kernel_v1_color.Color_orMutable color,
+    required _core.Iterable<AuthoringSearchTag_orMutable> tags,
+  }) => AuthoringSearchHit.wrapBook(
+    AuthoringSearchBook(
+      id: id,
+      title: title,
+      icon: icon,
+      color: color,
+      tags: tags,
+    )
+  );
+
+  /// Create a 'tag' variant wrapping around the given value.
+  factory AuthoringSearchHit.wrapTag(
+    AuthoringSearchTag value
+  ) => AuthoringSearchHit_tagWrapper._(value);
+
+  /// Same as `wrapTag(AuthoringSearchTag(...))`.
+  factory AuthoringSearchHit.createTag({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+    required _lib_kernel_v1_color.Color_orMutable color,
+  }) => AuthoringSearchHit.wrapTag(
+    AuthoringSearchTag(
+      id: id,
+      name: name,
+      color: color,
+    )
+  );
+
+  /// Create a 'page' variant wrapping around the given value.
+  factory AuthoringSearchHit.wrapPage(
+    AuthoringSearchPage value
+  ) => AuthoringSearchHit_pageWrapper._(value);
+
+  /// Same as `wrapPage(AuthoringSearchPage(...))`.
+  factory AuthoringSearchHit.createPage({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+    required _lib_kernel_v1_page_kind.PageKindRef_orMutable kind,
+    required AuthoringSearchBookContext_orMutable book,
+    required _core.String chapter,
+  }) => AuthoringSearchHit.wrapPage(
+    AuthoringSearchPage(
+      id: id,
+      name: name,
+      kind: kind,
+      book: book,
+      chapter: chapter,
+    )
+  );
+
+  /// Create a 'element' variant wrapping around the given value.
+  factory AuthoringSearchHit.wrapElement(
+    AuthoringSearchElement value
+  ) => AuthoringSearchHit_elementWrapper._(value);
+
+  /// Same as `wrapElement(AuthoringSearchElement(...))`.
+  factory AuthoringSearchHit.createElement({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+    required _core.String elementType,
+    required ElementPlacement placement,
+    required AuthoringSearchPage_orMutable page,
+    required AuthoringSearchMatch_orMutable? match,
+  }) => AuthoringSearchHit.wrapElement(
+    AuthoringSearchElement(
+      id: id,
+      name: name,
+      elementType: elementType,
+      placement: placement,
+      page: page,
+      match: match,
+    )
+  );
+
+  /// Returns the kind of variant held by this AuthoringSearchHit.
+  AuthoringSearchHit_kind get kind;
+
+  /// Serializer for `AuthoringSearchHit` instances.
+  static _skir.EnumSerializer<AuthoringSearchHit> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "book",
+        "wrapBook",
+        AuthoringSearchBook.serializer,
+        "",
+        AuthoringSearchHit_bookWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringSearchHit_kind.bookWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "tag",
+        "wrapTag",
+        AuthoringSearchTag.serializer,
+        "",
+        AuthoringSearchHit_tagWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringSearchHit_kind.tagWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "page",
+        "wrapPage",
+        AuthoringSearchPage.serializer,
+        "",
+        AuthoringSearchHit_pageWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringSearchHit_kind.pageWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "element",
+        "wrapElement",
+        AuthoringSearchElement.serializer,
+        "",
+        AuthoringSearchHit_elementWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringSearchHit_kind.elementWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/authoring.skir:AuthoringSearchHit",
+    doc: "",
+    unknownInstance: AuthoringSearchHit_unknown._instance,
+    enumInstance: AuthoringSearchHit.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: AuthoringSearchHit_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `AuthoringSearchHit`.
+enum AuthoringSearchHit_kind {
+  unknown(0),
+  bookWrapper(1),
+  tagWrapper(2),
+  pageWrapper(3),
+  elementWrapper(4);
+
+  final _core.int _ordinal;
+
+  const AuthoringSearchHit_kind(this._ordinal);
+}
+
+final class AuthoringSearchHit_unknown implements AuthoringSearchHit {
+  static const _instance = AuthoringSearchHit_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const AuthoringSearchHit_unknown._() : _u = null;
+  AuthoringSearchHit_unknown._unrecognized(this._u);
+
+  @_core.override
+  AuthoringSearchHit_kind get kind => AuthoringSearchHit_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is AuthoringSearchHit_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, AuthoringSearchHit.serializer);
+}
+
+sealed class _AuthoringSearchHit_wrapper implements AuthoringSearchHit {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _AuthoringSearchHit_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, AuthoringSearchHit.serializer);
+}
+
+final class AuthoringSearchHit_bookWrapper extends _AuthoringSearchHit_wrapper {
+  final AuthoringSearchBook value;
+
+  AuthoringSearchHit_bookWrapper._(this.value);
+
+  @_core.override
+  AuthoringSearchHit_kind get kind => AuthoringSearchHit_kind.bookWrapper;
+}
+
+final class AuthoringSearchHit_tagWrapper extends _AuthoringSearchHit_wrapper {
+  final AuthoringSearchTag value;
+
+  AuthoringSearchHit_tagWrapper._(this.value);
+
+  @_core.override
+  AuthoringSearchHit_kind get kind => AuthoringSearchHit_kind.tagWrapper;
+}
+
+final class AuthoringSearchHit_pageWrapper extends _AuthoringSearchHit_wrapper {
+  final AuthoringSearchPage value;
+
+  AuthoringSearchHit_pageWrapper._(this.value);
+
+  @_core.override
+  AuthoringSearchHit_kind get kind => AuthoringSearchHit_kind.pageWrapper;
+}
+
+final class AuthoringSearchHit_elementWrapper extends _AuthoringSearchHit_wrapper {
+  final AuthoringSearchElement value;
+
+  AuthoringSearchHit_elementWrapper._(this.value);
+
+  @_core.override
+  AuthoringSearchHit_kind get kind => AuthoringSearchHit_kind.elementWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// enum AuthoringSelectorKind
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case AuthoringSelectorKind_unknown(): { ... }
+///     case AuthoringSelectorKind.book: { ... }
+///     case AuthoringSelectorKind.page: { ... }
+///     case AuthoringSelectorKind.tag: { ... }
+///     case AuthoringSelectorKind.elementType: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class AuthoringSelectorKind {
+  /// Constant indicating an unknown `AuthoringSelectorKind`.
+  /// Default value for fields of type `AuthoringSelectorKind`.
+  static const AuthoringSelectorKind unknown = AuthoringSelectorKind_unknown._instance;
+
+  static const book = _AuthoringSelectorKind_consts.bookConst;
+  static const page = _AuthoringSelectorKind_consts.pageConst;
+  static const tag = _AuthoringSelectorKind_consts.tagConst;
+  static const elementType = _AuthoringSelectorKind_consts.elementTypeConst;
+
+  /// Returns the kind of variant held by this AuthoringSelectorKind.
+  AuthoringSelectorKind_kind get kind;
+
+  /// Serializer for `AuthoringSelectorKind` instances.
+  static _skir.EnumSerializer<AuthoringSelectorKind> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "book",
+        "book",
+        "",
+        book,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "page",
+        "page",
+        "",
+        page,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "tag",
+        "tag",
+        "",
+        tag,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "element_type",
+        "elementType",
+        "",
+        elementType,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/authoring.skir:AuthoringSelectorKind",
+    doc: "",
+    unknownInstance: AuthoringSelectorKind_unknown._instance,
+    enumInstance: AuthoringSelectorKind.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: AuthoringSelectorKind_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `AuthoringSelectorKind`.
+enum AuthoringSelectorKind_kind {
+  unknown(0),
+  bookConst(1),
+  pageConst(2),
+  tagConst(3),
+  elementTypeConst(4);
+
+  final _core.int _ordinal;
+
+  const AuthoringSelectorKind_kind(this._ordinal);
+}
+
+final class AuthoringSelectorKind_unknown implements AuthoringSelectorKind {
+  static const _instance = AuthoringSelectorKind_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const AuthoringSelectorKind_unknown._() : _u = null;
+  AuthoringSelectorKind_unknown._unrecognized(this._u);
+
+  @_core.override
+  AuthoringSelectorKind_kind get kind => AuthoringSelectorKind_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is AuthoringSelectorKind_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, AuthoringSelectorKind.serializer);
+}
+
+enum _AuthoringSelectorKind_consts implements AuthoringSelectorKind {
+  bookConst(AuthoringSelectorKind_kind.bookConst),
+  pageConst(AuthoringSelectorKind_kind.pageConst),
+  tagConst(AuthoringSelectorKind_kind.tagConst),
+  elementTypeConst(AuthoringSelectorKind_kind.elementTypeConst);
+
+  @_core.override
+  final AuthoringSelectorKind_kind kind;
+
+  const _AuthoringSelectorKind_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, AuthoringSelectorKind.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSelectorSuggestions
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSelectorSuggestions_orMutable {
+  _core.Iterable<_core.String> get values;
+  _core.bool get exhaustive;
+
+  AuthoringSelectorSuggestions toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSelectorSuggestions implements AuthoringSelectorSuggestions_orMutable {
+  @_core.override
+  final _core.Iterable<_core.String> values;
+  @_core.override
+  final _core.bool exhaustive;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSelectorSuggestions({
+    required _core.Iterable<_core.String> values,
+    required _core.bool exhaustive,
+  }) => AuthoringSelectorSuggestions._(
+    _skir.internal__frozenCopy(values),
+    exhaustive,
+  );
+
+  AuthoringSelectorSuggestions._(
+    this.values,
+    this.exhaustive,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSelectorSuggestions._(
+    _skir.KeyedIterable.empty,
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSelectorSuggestions_mutable mutable() => AuthoringSelectorSuggestions_mutable._(
+    _skir.KeyedIterable.empty,
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSelectorSuggestions toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSelectorSuggestions_mutable toMutable() => AuthoringSelectorSuggestions_mutable._(
+    this.values,
+    this.exhaustive,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSelectorSuggestions) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.values,
+    this.exhaustive,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSelectorSuggestions` instances.
+  static _skir.StructSerializer<AuthoringSelectorSuggestions, AuthoringSelectorSuggestions_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "values",
+        "values",
+        0,
+        _skir.Serializers.iterable(
+          _skir.Serializers.string,
+        ),
+        "",
+        (it) => it.values,
+        (it, v) => it.values = v,
+      );
+      _serializerBuilder.addField(
+        "exhaustive",
+        "exhaustive",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.exhaustive,
+        (it, v) => it.exhaustive = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSelectorSuggestions",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSelectorSuggestions_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSelectorSuggestions].
+final class AuthoringSelectorSuggestions_mutable implements AuthoringSelectorSuggestions_orMutable {
+  _core.Iterable<_core.String> values;
+  _core.bool exhaustive;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSelectorSuggestions_mutable._(
+    this.values,
+    this.exhaustive,
+  );
+
+  /// If the value of [values] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
+  _core.List<_core.String> get mutableValues {
+    final value = this.values;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.values = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSelectorSuggestions toFrozen() => AuthoringSelectorSuggestions(
+    values: this.values,
+    exhaustive: this.exhaustive,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSelectorValidation
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSelectorValidation_orMutable {
+  AuthoringSelectorKind get selector;
+  _core.String get value;
+  _core.bool get accepted;
+
+  AuthoringSelectorValidation toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSelectorValidation implements AuthoringSelectorValidation_orMutable {
+  @_core.override
+  final AuthoringSelectorKind selector;
+  @_core.override
+  final _core.String value;
+  @_core.override
+  final _core.bool accepted;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSelectorValidation({
+    required AuthoringSelectorKind selector,
+    required _core.String value,
+    required _core.bool accepted,
+  }) => AuthoringSelectorValidation._(
+    selector,
+    value,
+    accepted,
+  );
+
+  AuthoringSelectorValidation._(
+    this.selector,
+    this.value,
+    this.accepted,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSelectorValidation._(
+    AuthoringSelectorKind.unknown,
+    "",
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSelectorValidation_mutable mutable() => AuthoringSelectorValidation_mutable._(
+    AuthoringSelectorKind.unknown,
+    "",
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSelectorValidation toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSelectorValidation_mutable toMutable() => AuthoringSelectorValidation_mutable._(
+    this.selector,
+    this.value,
+    this.accepted,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSelectorValidation) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.selector,
+    this.value,
+    this.accepted,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSelectorValidation` instances.
+  static _skir.StructSerializer<AuthoringSelectorValidation, AuthoringSelectorValidation_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "selector",
+        "selector",
+        0,
+        AuthoringSelectorKind.serializer,
+        "",
+        (it) => it.selector,
+        (it, v) => it.selector = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.addField(
+        "accepted",
+        "accepted",
+        2,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.accepted,
+        (it, v) => it.accepted = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSelectorValidation",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSelectorValidation_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSelectorValidation].
+final class AuthoringSelectorValidation_mutable implements AuthoringSelectorValidation_orMutable {
+  AuthoringSelectorKind selector;
+  _core.String value;
+  _core.bool accepted;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSelectorValidation_mutable._(
+    this.selector,
+    this.value,
+    this.accepted,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSelectorValidation toFrozen() => AuthoringSelectorValidation(
+    selector: this.selector,
+    value: this.value,
+    accepted: this.accepted,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringSearchSnapshot
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringSearchSnapshot_orMutable {
+  _core.Iterable<AuthoringSearchHit> get hits;
+  _core.Iterable<AuthoringSelectorValidation_orMutable> get selectorValidations;
+
+  AuthoringSearchSnapshot toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable {
+  @_core.override
+  final _core.Iterable<AuthoringSearchHit> hits;
+  @_core.override
+  final _core.Iterable<AuthoringSelectorValidation> selectorValidations;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringSearchSnapshot({
+    required _core.Iterable<AuthoringSearchHit> hits,
+    required _core.Iterable<AuthoringSelectorValidation_orMutable> selectorValidations,
+  }) => AuthoringSearchSnapshot._(
+    _skir.internal__frozenCopy(hits),
+    _skir.internal__frozenMappedCopy(selectorValidations, (it) => it.toFrozen()),
+  );
+
+  AuthoringSearchSnapshot._(
+    this.hits,
+    this.selectorValidations,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringSearchSnapshot._(
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringSearchSnapshot_mutable mutable() => AuthoringSearchSnapshot_mutable._(
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringSearchSnapshot toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringSearchSnapshot_mutable toMutable() => AuthoringSearchSnapshot_mutable._(
+    this.hits,
+    this.selectorValidations,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringSearchSnapshot) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.hits,
+    this.selectorValidations,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringSearchSnapshot` instances.
+  static _skir.StructSerializer<AuthoringSearchSnapshot, AuthoringSearchSnapshot_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "hits",
+        "hits",
+        0,
+        _skir.Serializers.iterable(
+          AuthoringSearchHit.serializer,
+        ),
+        "",
+        (it) => it.hits,
+        (it, v) => it.hits = v,
+      );
+      _serializerBuilder.addField(
+        "selector_validations",
+        "selectorValidations",
+        1,
+        _skir.Serializers.iterable(
+          AuthoringSelectorValidation.serializer,
+        ),
+        "",
+        (it) => it.selectorValidations,
+        (it, v) => it.selectorValidations = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:AuthoringSearchSnapshot",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringSearchSnapshot_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringSearchSnapshot].
+final class AuthoringSearchSnapshot_mutable implements AuthoringSearchSnapshot_orMutable {
+  _core.Iterable<AuthoringSearchHit> hits;
+  _core.Iterable<AuthoringSelectorValidation_orMutable> selectorValidations;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringSearchSnapshot_mutable._(
+    this.hits,
+    this.selectorValidations,
+  );
+
+  /// If the value of [hits] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [hits] and returns it.
+  _core.List<AuthoringSearchHit> get mutableHits {
+    final value = this.hits;
+    if (value is _skir.internal__MutableList<AuthoringSearchHit>) {
+      return value;
+    } else {
+      return this.hits = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [selectorValidations] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [selectorValidations] and returns it.
+  _core.List<AuthoringSelectorValidation_orMutable> get mutableSelectorValidations {
+    final value = this.selectorValidations;
+    if (value is _skir.internal__MutableList<AuthoringSelectorValidation_orMutable>) {
+      return value;
+    } else {
+      return this.selectorValidations = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringSearchSnapshot toFrozen() => AuthoringSearchSnapshot(
+    hits: this.hits,
+    selectorValidations: this.selectorValidations,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct SearchAuthoringContentRequest
+// -----------------------------------------------------------------------------
+
+sealed class SearchAuthoringContentRequest_orMutable {
+  _lib_editor_v1_search.RealmSearchQuery_orMutable get query;
+  _lib_kernel_v1_record_id.RecordId_orMutable? get contextPage;
+
+  SearchAuthoringContentRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class SearchAuthoringContentRequest implements SearchAuthoringContentRequest_orMutable {
+  @_core.override
+  final _lib_editor_v1_search.RealmSearchQuery query;
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId? contextPage;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SearchAuthoringContentRequest({
+    required _lib_editor_v1_search.RealmSearchQuery_orMutable query,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? contextPage,
+  }) => SearchAuthoringContentRequest._(
+    query.toFrozen(),
+    (contextPage != null) ? contextPage.toFrozen() : null,
+  );
+
+  SearchAuthoringContentRequest._(
+    this.query,
+    this.contextPage,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SearchAuthoringContentRequest._(
+    _lib_editor_v1_search.RealmSearchQuery.defaultInstance,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SearchAuthoringContentRequest_mutable mutable() => SearchAuthoringContentRequest_mutable._(
+    _lib_editor_v1_search.RealmSearchQuery.defaultInstance,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SearchAuthoringContentRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SearchAuthoringContentRequest_mutable toMutable() => SearchAuthoringContentRequest_mutable._(
+    this.query,
+    this.contextPage,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SearchAuthoringContentRequest) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.query,
+    this.contextPage,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SearchAuthoringContentRequest` instances.
+  static _skir.StructSerializer<SearchAuthoringContentRequest, SearchAuthoringContentRequest_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "query",
+        "query",
+        0,
+        _lib_editor_v1_search.RealmSearchQuery.serializer,
+        "",
+        (it) => it.query,
+        (it, v) => it.query = v,
+      );
+      _serializerBuilder.addField(
+        "context_page",
+        "contextPage",
+        1,
+        _skir.Serializers.optional(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.contextPage,
+        (it, v) => it.contextPage = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:SearchAuthoringContentRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SearchAuthoringContentRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SearchAuthoringContentRequest].
+final class SearchAuthoringContentRequest_mutable implements SearchAuthoringContentRequest_orMutable {
+  _lib_editor_v1_search.RealmSearchQuery_orMutable query;
+  _lib_kernel_v1_record_id.RecordId_orMutable? contextPage;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SearchAuthoringContentRequest_mutable._(
+    this.query,
+    this.contextPage,
+  );
+
+  /// If the value of [query] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [query] and returns it.
+  _lib_editor_v1_search.RealmSearchQuery_mutable get mutableQuery {
+    final value = this.query;
+    if (value is _lib_editor_v1_search.RealmSearchQuery_mutable) {
+      return value;
+    } else {
+      return this.query = (value as _lib_editor_v1_search.RealmSearchQuery).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SearchAuthoringContentRequest toFrozen() => SearchAuthoringContentRequest(
+    query: this.query,
+    contextPage: this.contextPage,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum SearchAuthoringContentResponse
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case SearchAuthoringContentResponse_unknown(): { ... }
+///     case SearchAuthoringContentResponse_success(:var value): { ... }
+///     case SearchAuthoringContentResponse_invalid(:var value): { ... }
+///     case SearchAuthoringContentResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class SearchAuthoringContentResponse {
+  /// Constant indicating an unknown `SearchAuthoringContentResponse`.
+  /// Default value for fields of type `SearchAuthoringContentResponse`.
+  static const SearchAuthoringContentResponse unknown = SearchAuthoringContentResponse_unknown._instance;
+
+  /// Create a 'success' variant wrapping around the given value.
+  factory SearchAuthoringContentResponse.wrapSuccess(
+    AuthoringSearchSnapshot value
+  ) => SearchAuthoringContentResponse_successWrapper._(value);
+
+  /// Same as `wrapSuccess(AuthoringSearchSnapshot(...))`.
+  factory SearchAuthoringContentResponse.createSuccess({
+    required _core.Iterable<AuthoringSearchHit> hits,
+    required _core.Iterable<AuthoringSelectorValidation_orMutable> selectorValidations,
+  }) => SearchAuthoringContentResponse.wrapSuccess(
+    AuthoringSearchSnapshot(
+      hits: hits,
+      selectorValidations: selectorValidations,
+    )
+  );
+
+  /// Create a 'invalid' variant wrapping around the given value.
+  factory SearchAuthoringContentResponse.wrapInvalid(
+    AuthoringInvalid value
+  ) => SearchAuthoringContentResponse_invalidWrapper._(value);
+
+  /// Same as `wrapInvalid(AuthoringInvalid(...))`.
+  factory SearchAuthoringContentResponse.createInvalid({
+    required _core.Iterable<AuthoringDiagnostic_orMutable> diagnostics,
+  }) => SearchAuthoringContentResponse.wrapInvalid(
+    AuthoringInvalid(
+      diagnostics: diagnostics,
+    )
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory SearchAuthoringContentResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value
+  ) => SearchAuthoringContentResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory SearchAuthoringContentResponse.createInternalError() => SearchAuthoringContentResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
+
+  /// Returns the kind of variant held by this SearchAuthoringContentResponse.
+  SearchAuthoringContentResponse_kind get kind;
+
+  /// Serializer for `SearchAuthoringContentResponse` instances.
+  static _skir.EnumSerializer<SearchAuthoringContentResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "success",
+        "wrapSuccess",
+        AuthoringSearchSnapshot.serializer,
+        "",
+        SearchAuthoringContentResponse_successWrapper._,
+        (it) => it.value,
+        ordinal: SearchAuthoringContentResponse_kind.successWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "invalid",
+        "wrapInvalid",
+        AuthoringInvalid.serializer,
+        "",
+        SearchAuthoringContentResponse_invalidWrapper._,
+        (it) => it.value,
+        ordinal: SearchAuthoringContentResponse_kind.invalidWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        SearchAuthoringContentResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: SearchAuthoringContentResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/authoring.skir:SearchAuthoringContentResponse",
+    doc: "",
+    unknownInstance: SearchAuthoringContentResponse_unknown._instance,
+    enumInstance: SearchAuthoringContentResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: SearchAuthoringContentResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `SearchAuthoringContentResponse`.
+enum SearchAuthoringContentResponse_kind {
+  unknown(0),
+  successWrapper(1),
+  invalidWrapper(2),
+  internalErrorWrapper(3);
+
+  final _core.int _ordinal;
+
+  const SearchAuthoringContentResponse_kind(this._ordinal);
+}
+
+final class SearchAuthoringContentResponse_unknown implements SearchAuthoringContentResponse {
+  static const _instance = SearchAuthoringContentResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const SearchAuthoringContentResponse_unknown._() : _u = null;
+  SearchAuthoringContentResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  SearchAuthoringContentResponse_kind get kind => SearchAuthoringContentResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is SearchAuthoringContentResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, SearchAuthoringContentResponse.serializer);
+}
+
+sealed class _SearchAuthoringContentResponse_wrapper implements SearchAuthoringContentResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _SearchAuthoringContentResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, SearchAuthoringContentResponse.serializer);
+}
+
+final class SearchAuthoringContentResponse_successWrapper extends _SearchAuthoringContentResponse_wrapper {
+  final AuthoringSearchSnapshot value;
+
+  SearchAuthoringContentResponse_successWrapper._(this.value);
+
+  @_core.override
+  SearchAuthoringContentResponse_kind get kind => SearchAuthoringContentResponse_kind.successWrapper;
+}
+
+final class SearchAuthoringContentResponse_invalidWrapper extends _SearchAuthoringContentResponse_wrapper {
+  final AuthoringInvalid value;
+
+  SearchAuthoringContentResponse_invalidWrapper._(this.value);
+
+  @_core.override
+  SearchAuthoringContentResponse_kind get kind => SearchAuthoringContentResponse_kind.invalidWrapper;
+}
+
+final class SearchAuthoringContentResponse_internalErrorWrapper extends _SearchAuthoringContentResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  SearchAuthoringContentResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  SearchAuthoringContentResponse_kind get kind => SearchAuthoringContentResponse_kind.internalErrorWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct SuggestAuthoringSelectorValuesRequest
+// -----------------------------------------------------------------------------
+
+sealed class SuggestAuthoringSelectorValuesRequest_orMutable {
+  AuthoringSelectorKind get selector;
+  _core.String get partial;
+  _lib_editor_v1_search.RealmSearchSelectorExpression? get scope;
+  _lib_kernel_v1_record_id.RecordId_orMutable? get contextPage;
+
+  SuggestAuthoringSelectorValuesRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class SuggestAuthoringSelectorValuesRequest implements SuggestAuthoringSelectorValuesRequest_orMutable {
+  @_core.override
+  final AuthoringSelectorKind selector;
+  @_core.override
+  final _core.String partial;
+  @_core.override
+  final _lib_editor_v1_search.RealmSearchSelectorExpression? scope;
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId? contextPage;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SuggestAuthoringSelectorValuesRequest({
+    required AuthoringSelectorKind selector,
+    required _core.String partial,
+    required _lib_editor_v1_search.RealmSearchSelectorExpression? scope,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? contextPage,
+  }) => SuggestAuthoringSelectorValuesRequest._(
+    selector,
+    partial,
+    scope,
+    (contextPage != null) ? contextPage.toFrozen() : null,
+  );
+
+  SuggestAuthoringSelectorValuesRequest._(
+    this.selector,
+    this.partial,
+    this.scope,
+    this.contextPage,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SuggestAuthoringSelectorValuesRequest._(
+    AuthoringSelectorKind.unknown,
+    "",
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SuggestAuthoringSelectorValuesRequest_mutable mutable() => SuggestAuthoringSelectorValuesRequest_mutable._(
+    AuthoringSelectorKind.unknown,
+    "",
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SuggestAuthoringSelectorValuesRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SuggestAuthoringSelectorValuesRequest_mutable toMutable() => SuggestAuthoringSelectorValuesRequest_mutable._(
+    this.selector,
+    this.partial,
+    this.scope,
+    this.contextPage,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SuggestAuthoringSelectorValuesRequest) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.selector,
+    this.partial,
+    this.scope,
+    this.contextPage,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SuggestAuthoringSelectorValuesRequest` instances.
+  static _skir.StructSerializer<SuggestAuthoringSelectorValuesRequest, SuggestAuthoringSelectorValuesRequest_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "selector",
+        "selector",
+        0,
+        AuthoringSelectorKind.serializer,
+        "",
+        (it) => it.selector,
+        (it, v) => it.selector = v,
+      );
+      _serializerBuilder.addField(
+        "partial",
+        "partial",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.partial,
+        (it, v) => it.partial = v,
+      );
+      _serializerBuilder.addField(
+        "scope",
+        "scope",
+        2,
+        _skir.Serializers.optional(
+          _lib_editor_v1_search.RealmSearchSelectorExpression.serializer,
+        ),
+        "",
+        (it) => it.scope,
+        (it, v) => it.scope = v,
+      );
+      _serializerBuilder.addField(
+        "context_page",
+        "contextPage",
+        3,
+        _skir.Serializers.optional(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.contextPage,
+        (it, v) => it.contextPage = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/authoring.skir:SuggestAuthoringSelectorValuesRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SuggestAuthoringSelectorValuesRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SuggestAuthoringSelectorValuesRequest].
+final class SuggestAuthoringSelectorValuesRequest_mutable implements SuggestAuthoringSelectorValuesRequest_orMutable {
+  AuthoringSelectorKind selector;
+  _core.String partial;
+  _lib_editor_v1_search.RealmSearchSelectorExpression? scope;
+  _lib_kernel_v1_record_id.RecordId_orMutable? contextPage;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SuggestAuthoringSelectorValuesRequest_mutable._(
+    this.selector,
+    this.partial,
+    this.scope,
+    this.contextPage,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SuggestAuthoringSelectorValuesRequest toFrozen() => SuggestAuthoringSelectorValuesRequest(
+    selector: this.selector,
+    partial: this.partial,
+    scope: this.scope,
+    contextPage: this.contextPage,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum SuggestAuthoringSelectorValuesResponse
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case SuggestAuthoringSelectorValuesResponse_unknown(): { ... }
+///     case SuggestAuthoringSelectorValuesResponse_success(:var value): { ... }
+///     case SuggestAuthoringSelectorValuesResponse_invalid(:var value): { ... }
+///     case SuggestAuthoringSelectorValuesResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class SuggestAuthoringSelectorValuesResponse {
+  /// Constant indicating an unknown `SuggestAuthoringSelectorValuesResponse`.
+  /// Default value for fields of type `SuggestAuthoringSelectorValuesResponse`.
+  static const SuggestAuthoringSelectorValuesResponse unknown = SuggestAuthoringSelectorValuesResponse_unknown._instance;
+
+  /// Create a 'success' variant wrapping around the given value.
+  factory SuggestAuthoringSelectorValuesResponse.wrapSuccess(
+    AuthoringSelectorSuggestions value
+  ) => SuggestAuthoringSelectorValuesResponse_successWrapper._(value);
+
+  /// Same as `wrapSuccess(AuthoringSelectorSuggestions(...))`.
+  factory SuggestAuthoringSelectorValuesResponse.createSuccess({
+    required _core.Iterable<_core.String> values,
+    required _core.bool exhaustive,
+  }) => SuggestAuthoringSelectorValuesResponse.wrapSuccess(
+    AuthoringSelectorSuggestions(
+      values: values,
+      exhaustive: exhaustive,
+    )
+  );
+
+  /// Create a 'invalid' variant wrapping around the given value.
+  factory SuggestAuthoringSelectorValuesResponse.wrapInvalid(
+    AuthoringInvalid value
+  ) => SuggestAuthoringSelectorValuesResponse_invalidWrapper._(value);
+
+  /// Same as `wrapInvalid(AuthoringInvalid(...))`.
+  factory SuggestAuthoringSelectorValuesResponse.createInvalid({
+    required _core.Iterable<AuthoringDiagnostic_orMutable> diagnostics,
+  }) => SuggestAuthoringSelectorValuesResponse.wrapInvalid(
+    AuthoringInvalid(
+      diagnostics: diagnostics,
+    )
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory SuggestAuthoringSelectorValuesResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value
+  ) => SuggestAuthoringSelectorValuesResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory SuggestAuthoringSelectorValuesResponse.createInternalError() => SuggestAuthoringSelectorValuesResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
+
+  /// Returns the kind of variant held by this SuggestAuthoringSelectorValuesResponse.
+  SuggestAuthoringSelectorValuesResponse_kind get kind;
+
+  /// Serializer for `SuggestAuthoringSelectorValuesResponse` instances.
+  static _skir.EnumSerializer<SuggestAuthoringSelectorValuesResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "success",
+        "wrapSuccess",
+        AuthoringSelectorSuggestions.serializer,
+        "",
+        SuggestAuthoringSelectorValuesResponse_successWrapper._,
+        (it) => it.value,
+        ordinal: SuggestAuthoringSelectorValuesResponse_kind.successWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "invalid",
+        "wrapInvalid",
+        AuthoringInvalid.serializer,
+        "",
+        SuggestAuthoringSelectorValuesResponse_invalidWrapper._,
+        (it) => it.value,
+        ordinal: SuggestAuthoringSelectorValuesResponse_kind.invalidWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        SuggestAuthoringSelectorValuesResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: SuggestAuthoringSelectorValuesResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/authoring.skir:SuggestAuthoringSelectorValuesResponse",
+    doc: "",
+    unknownInstance: SuggestAuthoringSelectorValuesResponse_unknown._instance,
+    enumInstance: SuggestAuthoringSelectorValuesResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: SuggestAuthoringSelectorValuesResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `SuggestAuthoringSelectorValuesResponse`.
+enum SuggestAuthoringSelectorValuesResponse_kind {
+  unknown(0),
+  successWrapper(1),
+  invalidWrapper(2),
+  internalErrorWrapper(3);
+
+  final _core.int _ordinal;
+
+  const SuggestAuthoringSelectorValuesResponse_kind(this._ordinal);
+}
+
+final class SuggestAuthoringSelectorValuesResponse_unknown implements SuggestAuthoringSelectorValuesResponse {
+  static const _instance = SuggestAuthoringSelectorValuesResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const SuggestAuthoringSelectorValuesResponse_unknown._() : _u = null;
+  SuggestAuthoringSelectorValuesResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  SuggestAuthoringSelectorValuesResponse_kind get kind => SuggestAuthoringSelectorValuesResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is SuggestAuthoringSelectorValuesResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, SuggestAuthoringSelectorValuesResponse.serializer);
+}
+
+sealed class _SuggestAuthoringSelectorValuesResponse_wrapper implements SuggestAuthoringSelectorValuesResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _SuggestAuthoringSelectorValuesResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, SuggestAuthoringSelectorValuesResponse.serializer);
+}
+
+final class SuggestAuthoringSelectorValuesResponse_successWrapper extends _SuggestAuthoringSelectorValuesResponse_wrapper {
+  final AuthoringSelectorSuggestions value;
+
+  SuggestAuthoringSelectorValuesResponse_successWrapper._(this.value);
+
+  @_core.override
+  SuggestAuthoringSelectorValuesResponse_kind get kind => SuggestAuthoringSelectorValuesResponse_kind.successWrapper;
+}
+
+final class SuggestAuthoringSelectorValuesResponse_invalidWrapper extends _SuggestAuthoringSelectorValuesResponse_wrapper {
+  final AuthoringInvalid value;
+
+  SuggestAuthoringSelectorValuesResponse_invalidWrapper._(this.value);
+
+  @_core.override
+  SuggestAuthoringSelectorValuesResponse_kind get kind => SuggestAuthoringSelectorValuesResponse_kind.invalidWrapper;
+}
+
+final class SuggestAuthoringSelectorValuesResponse_internalErrorWrapper extends _SuggestAuthoringSelectorValuesResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  SuggestAuthoringSelectorValuesResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  SuggestAuthoringSelectorValuesResponse_kind get kind => SuggestAuthoringSelectorValuesResponse_kind.internalErrorWrapper;
+}
+
+/// Repeated scopes are read once. An empty scope list returns only the sequence.
 final _skir.Method<
   GetAuthoringSnapshotRequest,
   GetAuthoringSnapshotResponse
@@ -12723,9 +15180,11 @@ final _skir.Method<
     920001,
     GetAuthoringSnapshotRequest.serializer,
     GetAuthoringSnapshotResponse.serializer,
-    "",
+    "Repeated scopes are read once. An empty scope list returns only the sequence.",
   );
 
+/// Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.
+/// Batch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.
 final _skir.Method<
   ApplyAuthoringBatchRequest,
   ApplyAuthoringBatchResponse
@@ -12735,5 +15194,29 @@ final _skir.Method<
     920002,
     ApplyAuthoringBatchRequest.serializer,
     ApplyAuthoringBatchResponse.serializer,
+    "Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.\nBatch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.",
+  );
+
+final _skir.Method<
+  SearchAuthoringContentRequest,
+  SearchAuthoringContentResponse
+> searchAuthoringContentMethod =
+  _skir.Method(
+    "SearchAuthoringContent",
+    920004,
+    SearchAuthoringContentRequest.serializer,
+    SearchAuthoringContentResponse.serializer,
+    "",
+  );
+
+final _skir.Method<
+  SuggestAuthoringSelectorValuesRequest,
+  SuggestAuthoringSelectorValuesResponse
+> suggestAuthoringSelectorValuesMethod =
+  _skir.Method(
+    "SuggestAuthoringSelectorValues",
+    920005,
+    SuggestAuthoringSelectorValuesRequest.serializer,
+    SuggestAuthoringSelectorValuesResponse.serializer,
     "",
   );

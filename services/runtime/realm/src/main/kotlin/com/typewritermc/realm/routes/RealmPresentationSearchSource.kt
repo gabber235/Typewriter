@@ -4,9 +4,6 @@ import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmSearchContext
-import com.typewritermc.capability.RealmSearchQuery
-import com.typewritermc.capability.RealmSearchSelector
-import com.typewritermc.capability.RealmSearchSelectorExpression
 import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.realm.RealmDiscoverySnapshotStore
 import com.typewritermc.types.TypeExpression
@@ -28,7 +25,6 @@ import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import java.util.concurrent.ConcurrentHashMap
-import skirout.editor.v1.search.RealmSearchSelectorExpression as WireSelectorExpression
 
 /**
  * Supplies Realm owned presentation search results to the route layer.
@@ -185,44 +181,6 @@ class CapabilityRealmPresentationSearchSource(
 private data class SearchContext(
     override val invocationId: String,
 ) : RealmSearchContext
-
-private fun skirout.editor.v1.search.RealmSearchQuery.toDomain(): RealmSearchQuery =
-    RealmSearchQuery(
-        normalizedQuery = normalizedQuery,
-        selectors = selectors.map { RealmSearchSelector(it.selectorId, it.key, it.value) },
-        selectorExpression = selectorExpression?.toDomain(),
-    )
-
-private fun WireSelectorExpression.toDomain(): RealmSearchSelectorExpression =
-    when (this) {
-        is WireSelectorExpression.SelectorWrapper -> {
-            RealmSearchSelectorExpression.Selector(value.selectorId)
-        }
-
-        is WireSelectorExpression.BinaryWrapper -> {
-            when (value.operator_) {
-                skirout.editor.v1.search.RealmSearchSelectorOperator.AND -> {
-                    RealmSearchSelectorExpression.And(value.left.toDomain(), value.right.toDomain())
-                }
-
-                skirout.editor.v1.search.RealmSearchSelectorOperator.OR -> {
-                    RealmSearchSelectorExpression.Or(value.left.toDomain(), value.right.toDomain())
-                }
-
-                else -> {
-                    error("Unknown Realm search selector operator")
-                }
-            }
-        }
-
-        is WireSelectorExpression.NotWrapper -> {
-            RealmSearchSelectorExpression.Not(value.expression.toDomain())
-        }
-
-        else -> {
-            error("Unknown Realm search selector expression")
-        }
-    }
 
 private fun searchSnapshot(
     subscriptionId: String,

@@ -64,6 +64,8 @@ internal fun TagId.toSkirRecordId(): RecordId = RecordId(table = "tag", key = ke
 
 internal fun PageId.toSkirRecordId(): RecordId = RecordId(table = "page", key = key.toSkirKey())
 
+internal fun ElementInstanceId.toSkirRecordId(): RecordId = RecordId(table = "element", key = RecordIdKey.String(value).toSkirKey())
+
 internal fun Ref<*>.toSkirRecordId(): RecordId = RecordId(table = id.table, key = id.key.toSkirKey())
 
 internal fun ResourceId.toSkirRecordId(): RecordId = RecordId(table = table, key = key.toSkirKey())

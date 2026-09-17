@@ -226,6 +226,7 @@ pub struct RealmSearchQuery {
     pub normalized_query: String,
     pub selectors: Vec<RealmSearchSelector>,
     pub selector_expression: Option<RealmSearchSelectorExpression>,
+    pub terms: Vec<String>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmSearchQuery>>,
 }
@@ -593,6 +594,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("normalized_query", 0, crate::skir_client::Serializer::string(), "", |x: &RealmSearchQuery| &x.normalized_query, |x: &mut RealmSearchQuery, v| x.normalized_query = v);
                 (*a).add_field("selectors", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelector::_adapter())), "", |x: &RealmSearchQuery| &x.selectors, |x: &mut RealmSearchQuery, v| x.selectors = v);
                 (*a).add_field("selector_expression", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorExpression::_adapter())), "", |x: &RealmSearchQuery| &x.selector_expression, |x: &mut RealmSearchQuery, v| x.selector_expression = v);
+                (*a).add_field("terms", 3, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &RealmSearchQuery| &x.terms, |x: &mut RealmSearchQuery, v| x.terms = v);
                 (*a).finalize();
             }
             unsafe {

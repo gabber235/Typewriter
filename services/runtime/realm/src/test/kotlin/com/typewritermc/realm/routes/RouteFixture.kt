@@ -36,6 +36,7 @@ internal class RouteFixture(
         communicator.createRouter(
             RealmRouteFactory(
                 authoring = repositories.authoring,
+                authoringSearch = repositories.search,
                 compiledContent = compiledContent,
                 editorCatalog = editorCatalog,
                 presentationSearch = presentationSearch,

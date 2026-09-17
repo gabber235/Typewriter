@@ -179,7 +179,7 @@ private fun PageDocumentElement.toWire(page: Page): WireElement =
         placement = placement.toWire(),
     )
 
-private fun ElementPlacement.toWire(): WirePlacement =
+internal fun ElementPlacement.toWire(): WirePlacement =
     when (this) {
         is ElementPlacement.Graph -> {
             WirePlacement.createGraph(x = x, y = y, width = width, height = height)
@@ -249,7 +249,7 @@ private fun AuthoringResourceChange.toWire(): WireChange =
         is AuthoringResourceChange.RemoveElement -> WireChange.RemoveElementWrapper(id.ref<Element>().toSkirRecordId())
     }
 
-private fun AuthoringResourceRef.toWire(): WireResourceRef =
+internal fun AuthoringResourceRef.toWire(): WireResourceRef =
     when (this) {
         is AuthoringResourceRef.Book -> WireResourceRef.BookWrapper(id.toSkirRecordId())
         is AuthoringResourceRef.Tag -> WireResourceRef.TagWrapper(id.toSkirRecordId())
@@ -304,7 +304,7 @@ private fun AuthoringDiagnostic.toWire(): skirout.library.v1.authoring.Authoring
         path = path?.toWire(),
     )
 
-private fun ElementValuePath.toWire(): DataPath =
+internal fun ElementValuePath.toWire(): DataPath =
     DataPath(
         segments =
             segments.map {

@@ -10,6 +10,7 @@ import com.typewritermc.library.PageId
 import com.typewritermc.realm.repository.records.BookRecord
 import com.typewritermc.realm.repository.records.PageRecord
 import com.typewritermc.realm.repository.records.TagRecord
+import com.typewritermc.realm.repository.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.repository.utils.advanceCollaborationRevision
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
@@ -25,10 +26,11 @@ import java.security.MessageDigest
  * collaboration sequence, and relevant changes also advance compiler source revision. Domain rejection unwinds the
  * transaction before becoming a result.
  */
-class SurrealAuthoringRepository(
+internal class SurrealAuthoringRepository(
     private val database: Surreal,
     private val pageDocuments: SurrealPageDocumentRepository,
     private val typeGraphs: () -> Map<ElementTypeId, TypeGraph>,
+    private val search: SurrealAuthoringSearchRepository? = null,
     private val valueMutator: ElementValueMutator = ElementValueMutator(),
 ) : AuthoringRepository {
     /**
@@ -54,6 +56,7 @@ class SurrealAuthoringRepository(
                 transaction.replay(batch.id, requestHash)?.let { return@inTransaction it }
                 val mutation = AuthoringMutation(transaction, typeGraphs(), valueMutator)
                 batch.operations.forEach(mutation::apply)
+                search?.update(transaction, mutation.dirtyElementIds)
                 val sequence = transaction.advanceCollaborationRevision()
                 if (mutation.affectsCompilation) {
                     transaction.query("UPDATE ONLY authoring_head:current SET revision += 1;").take(0)

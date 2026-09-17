@@ -90,6 +90,7 @@ data class RealmCommandCapabilityRef<Request : Any>(
  */
 data class RealmSearchQuery(
     val normalizedQuery: String,
+    val terms: List<String> = emptyList(),
     val selectors: List<RealmSearchSelector> = emptyList(),
     val selectorExpression: RealmSearchSelectorExpression? = null,
 )

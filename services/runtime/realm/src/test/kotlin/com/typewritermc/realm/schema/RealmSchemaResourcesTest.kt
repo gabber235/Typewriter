@@ -8,6 +8,7 @@ val RealmSchemaResourcesTest by testSuite {
     test("packaged Realm schema catalog exposes its dependency order") {
         MigrationResources().loadRealmSchema().map(SchemaResource::path) shouldBe
             listOf(
+                "search/authoring_text.surql",
                 "book/book.surql",
                 "compile/compiled_page_shard.surql",
                 "compile/compiled_manifest.surql",
