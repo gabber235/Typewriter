@@ -226,6 +226,15 @@ extension RefNatsExtension on Ref {
         await subscription?.unsubscribe();
       }();
 
+      Future<void> cancel() async {
+        try {
+          await unsubscribe();
+        } on Object {
+          // Cancellation is already terminal for this watcher. The shared
+          // connection retains final ownership when local cleanup has failed.
+        }
+      }
+
       Future<SequencedSnapshot<TData>> loadSnapshot() async {
         final telemetry = await read(panelTelemetryProvider.future);
         final response = await telemetry.traceNats(
@@ -242,8 +251,11 @@ extension RefNatsExtension on Ref {
         return snapshot(responseSerializer.fromBytes(response.payload));
       }
 
-      controller.onCancel = unsubscribe;
-      onDispose(() => unawaited(unsubscribe()));
+      controller.onCancel = cancel;
+      onDispose(() => unawaited(cancel()));
+
+      Object? failure;
+      StackTrace? failureStackTrace;
 
       try {
         subscription = await client.subscribeOrdered(
@@ -290,9 +302,23 @@ extension RefNatsExtension on Ref {
           controller.add(sequenceState.value);
         }
       } on Object catch (error, stackTrace) {
-        if (active) controller.addError(error, stackTrace);
+        if (active) {
+          failure = error;
+          failureStackTrace = stackTrace;
+        }
       } finally {
-        await unsubscribe();
+        final reportCleanupFailure = active;
+        try {
+          await unsubscribe();
+        } on Object catch (error, stackTrace) {
+          if (failure == null && reportCleanupFailure) {
+            failure = error;
+            failureStackTrace = stackTrace;
+          }
+        }
+        if (failure != null && !controller.isClosed) {
+          controller.addError(failure, failureStackTrace);
+        }
         if (!controller.isClosed) await controller.close();
       }
     });

@@ -76,6 +76,81 @@ final class _TrackingNatsSubscription implements NatsSubscription {
   }
 }
 
+final class _FailingOrderedNatsClient implements NatsClient {
+  _FailingOrderedNatsClient({required this.unsubscribeError});
+
+  final Exception unsubscribeError;
+  late final _FailingOrderedNatsSubscription subscription =
+      _FailingOrderedNatsSubscription(unsubscribeError);
+  int requests = 0;
+
+  @override
+  NatsConnectionState get connectionState => const NatsConnected();
+
+  @override
+  Stream<NatsConnectionState> get connectionStateChanges =>
+      const Stream.empty();
+
+  @override
+  Future<NatsMessage> request(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    requests++;
+    return NatsMessage(
+      skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
+    );
+  }
+
+  @override
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+  }) => throw UnsupportedError("Not used by this test");
+
+  @override
+  Future<NatsSubscription> subscribe(String subject) =>
+      throw UnsupportedError("Not used by this test");
+
+  @override
+  Future<NatsSubscription> subscribeOrdered(
+    String stream,
+    String filterSubject,
+  ) async => subscription;
+
+  @override
+  Future<void> close() async {}
+}
+
+final class _FailingOrderedNatsSubscription implements NatsSubscription {
+  _FailingOrderedNatsSubscription(this.unsubscribeError);
+
+  final Exception unsubscribeError;
+  final StreamController<NatsMessage> _messages = StreamController();
+  int unsubscribeCount = 0;
+
+  @override
+  Stream<NatsMessage> get messages => _messages.stream;
+
+  @override
+  Future<void> get done => _messages.done;
+
+  void fail(Object error, StackTrace stackTrace) {
+    _messages.addError(error, stackTrace);
+    unawaited(_messages.close());
+  }
+
+  @override
+  Future<void> unsubscribe() async {
+    unsubscribeCount++;
+    await _messages.close();
+    throw unsubscribeError;
+  }
+}
+
 final class _ControlledCloseNatsClient implements NatsClient {
   final Completer<void> closeStarted = Completer<void>();
   final Completer<void> allowClose = Completer<void>();
@@ -523,6 +598,101 @@ void main() {
       expect(values, [1, 2, 4, 5]);
       expect(mockClient.requests, hasLength(2));
       await subscription.cancel();
+    });
+
+    test(
+      "sequenced watch preserves stream failure when cleanup also fails",
+      () async {
+        final primaryFailure = StateError("primary stream failure");
+        final cleanupFailure = Exception("cleanup failure");
+        final client = _FailingOrderedNatsClient(
+          unsubscribeError: cleanupFailure,
+        );
+        final failingContainer = ProviderContainer(
+          overrides: [
+            natsProvider.overrideWithValue(client),
+            panelTelemetryProvider.overrideWithValue(
+              AsyncData(_FakeTelemetry()),
+            ),
+          ],
+        );
+        addTearDown(failingContainer.dispose);
+        final values = <int>[];
+        final errors = <Object>[];
+        final completed = Completer<void>();
+        failingContainer
+            .read(_testRefProvider)
+            .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+              subject: "test.sequenced.failure",
+              eventSubject: "test.sequenced.failure.changed",
+              requestBytes: Uint8List(0),
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => SequencedSnapshot(
+                sequence: response.milliseconds,
+                value: response.milliseconds,
+              ),
+              eventSequence: (event) => event.milliseconds,
+              reduce: (_, event) => event.milliseconds,
+              sequenceState: SequencedCollection<int>(),
+            )
+            .listen(
+              values.add,
+              onError: (Object error, StackTrace _) => errors.add(error),
+              onDone: completed.complete,
+            );
+
+        while (values.isEmpty) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        client.subscription.fail(primaryFailure, StackTrace.current);
+        await completed.future;
+
+        expect(errors, [same(primaryFailure)]);
+        expect(client.subscription.unsubscribeCount, 1);
+      },
+    );
+
+    test("sequenced watch cancellation suppresses cleanup failure", () async {
+      final client = _FailingOrderedNatsClient(
+        unsubscribeError: Exception("cleanup failure"),
+      );
+      final failingContainer = ProviderContainer(
+        overrides: [
+          natsProvider.overrideWithValue(client),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+      addTearDown(failingContainer.dispose);
+      final errors = <Object>[];
+      final listener = failingContainer
+          .read(_testRefProvider)
+          .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+            subject: "test.sequenced.cancel",
+            eventSubject: "test.sequenced.cancel.changed",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => SequencedSnapshot(
+              sequence: response.milliseconds,
+              value: response.milliseconds,
+            ),
+            eventSequence: (event) => event.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            sequenceState: SequencedCollection<int>(),
+          )
+          .listen(
+            null,
+            onError: (Object error, StackTrace _) => errors.add(error),
+          );
+
+      while (client.requests == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      await listener.cancel();
+
+      expect(errors, isEmpty);
+      expect(client.subscription.unsubscribeCount, 1);
     });
 
     test("sequenced collection rejects historical mutation responses", () {

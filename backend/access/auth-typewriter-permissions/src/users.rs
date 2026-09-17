@@ -310,6 +310,7 @@ fn add_membership_stream_permissions(allow_publish: &mut Vec<String>) {
     allow_publish.extend([
         "$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP".to_string(),
         "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.>".to_string(),
+        "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.>".to_string(),
         "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.>".to_string(),
         "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.>".to_string(),
     ]);
@@ -494,6 +495,7 @@ mod tests {
             [
                 "$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP",
                 "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.>",
+                "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.>",
                 "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.>",
                 "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.>",
             ]

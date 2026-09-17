@@ -316,10 +316,22 @@ final class _NatsJetStreamSubscription implements NatsSubscription {
   );
 
   @override
-  Future<void> get done => _subscription.done;
+  Future<void> get done async {
+    try {
+      await _subscription.done;
+    } on Object catch (error, stackTrace) {
+      Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+    }
+  }
 
   @override
-  Future<void> unsubscribe() => _subscription.stop();
+  Future<void> unsubscribe() async {
+    try {
+      await _subscription.stop();
+    } on Object catch (error, stackTrace) {
+      Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+    }
+  }
 }
 
 NatsClientException _translate(Object error, StackTrace stackTrace) {
