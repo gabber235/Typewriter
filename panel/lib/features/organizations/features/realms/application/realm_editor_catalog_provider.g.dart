@@ -8,9 +8,12 @@ part of 'realm_editor_catalog_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the replaceable catalog transport boundary.
 
 @ProviderFor(realmEditorCatalogSource)
 final realmEditorCatalogSourceProvider = RealmEditorCatalogSourceProvider._();
+
+/// Provides the replaceable catalog transport boundary.
 
 final class RealmEditorCatalogSourceProvider
     extends
@@ -20,6 +23,7 @@ final class RealmEditorCatalogSourceProvider
           RealmEditorCatalogSource
         >
     with $Provider<RealmEditorCatalogSource> {
+  /// Provides the replaceable catalog transport boundary.
   RealmEditorCatalogSourceProvider._()
     : super(
         from: null,
@@ -57,8 +61,20 @@ final class RealmEditorCatalogSourceProvider
 String _$realmEditorCatalogSourceHash() =>
     r'4c919983889dddf4d34eb24e95e09953663d68a1';
 
+/// Owns the catalog cache while the selected realm is online.
+///
+/// A null value is deliberate when selection or connectivity is absent. This
+/// prevents stale realm subscriptions from surviving a route or connection
+/// change.
+
 @ProviderFor(realmEditorCatalogCache)
 final realmEditorCatalogCacheProvider = RealmEditorCatalogCacheProvider._();
+
+/// Owns the catalog cache while the selected realm is online.
+///
+/// A null value is deliberate when selection or connectivity is absent. This
+/// prevents stale realm subscriptions from surviving a route or connection
+/// change.
 
 final class RealmEditorCatalogCacheProvider
     extends
@@ -68,6 +84,11 @@ final class RealmEditorCatalogCacheProvider
           RealmEditorCatalogCache?
         >
     with $Provider<RealmEditorCatalogCache?> {
+  /// Owns the catalog cache while the selected realm is online.
+  ///
+  /// A null value is deliberate when selection or connectivity is absent. This
+  /// prevents stale realm subscriptions from surviving a route or connection
+  /// change.
   RealmEditorCatalogCacheProvider._()
     : super(
         from: null,
@@ -105,8 +126,14 @@ final class RealmEditorCatalogCacheProvider
 String _$realmEditorCatalogCacheHash() =>
     r'42a6334c39bcca0c0e3887213bb567d15a3021c6';
 
+/// Exposes catalog state, including explicit reasons for missing selection or
+/// connection. Consumers should watch this stream instead of creating a cache.
+
 @ProviderFor(realmEditorCatalog)
 final realmEditorCatalogProvider = RealmEditorCatalogProvider._();
+
+/// Exposes catalog state, including explicit reasons for missing selection or
+/// connection. Consumers should watch this stream instead of creating a cache.
 
 final class RealmEditorCatalogProvider
     extends
@@ -118,6 +145,8 @@ final class RealmEditorCatalogProvider
     with
         $FutureModifier<RealmEditorCatalogState>,
         $StreamProvider<RealmEditorCatalogState> {
+  /// Exposes catalog state, including explicit reasons for missing selection or
+  /// connection. Consumers should watch this stream instead of creating a cache.
   RealmEditorCatalogProvider._()
     : super(
         from: null,
@@ -147,8 +176,12 @@ final class RealmEditorCatalogProvider
 String _$realmEditorCatalogHash() =>
     r'6ce9c4d1a238c8f20f50a3520d0a94f6ef4b8e99';
 
+/// Retains one root type as demand on the shared catalog cache.
+
 @ProviderFor(realmEditorCatalogForType)
 final realmEditorCatalogForTypeProvider = RealmEditorCatalogForTypeFamily._();
+
+/// Retains one root type as demand on the shared catalog cache.
 
 final class RealmEditorCatalogForTypeProvider
     extends
@@ -160,6 +193,7 @@ final class RealmEditorCatalogForTypeProvider
     with
         $FutureModifier<RealmEditorCatalogState>,
         $StreamProvider<RealmEditorCatalogState> {
+  /// Retains one root type as demand on the shared catalog cache.
   RealmEditorCatalogForTypeProvider._({
     required RealmEditorCatalogForTypeFamily super.from,
     required ResolvedTypeRef super.argument,
@@ -208,6 +242,8 @@ final class RealmEditorCatalogForTypeProvider
 String _$realmEditorCatalogForTypeHash() =>
     r'dfbda60452b4295e94fb556a46e76b065802ced9';
 
+/// Retains one root type as demand on the shared catalog cache.
+
 final class RealmEditorCatalogForTypeFamily extends $Family
     with
         $FunctionalFamilyOverride<
@@ -223,6 +259,8 @@ final class RealmEditorCatalogForTypeFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Retains one root type as demand on the shared catalog cache.
+
   RealmEditorCatalogForTypeProvider call(ResolvedTypeRef rootType) =>
       RealmEditorCatalogForTypeProvider._(argument: rootType, from: this);
 
@@ -230,8 +268,12 @@ final class RealmEditorCatalogForTypeFamily extends $Family
   String toString() => r'realmEditorCatalogForTypeProvider';
 }
 
+/// Acquires a provider owned lease for merged catalog demand.
+
 @ProviderFor(realmEditorCatalogLease)
 final realmEditorCatalogLeaseProvider = RealmEditorCatalogLeaseFamily._();
+
+/// Acquires a provider owned lease for merged catalog demand.
 
 final class RealmEditorCatalogLeaseProvider
     extends
@@ -241,6 +283,7 @@ final class RealmEditorCatalogLeaseProvider
           RealmEditorCatalogLease?
         >
     with $Provider<RealmEditorCatalogLease?> {
+  /// Acquires a provider owned lease for merged catalog demand.
   RealmEditorCatalogLeaseProvider._({
     required RealmEditorCatalogLeaseFamily super.from,
     required RealmEditorCatalogRequest super.argument,
@@ -297,6 +340,8 @@ final class RealmEditorCatalogLeaseProvider
 String _$realmEditorCatalogLeaseHash() =>
     r'0ebc66158a07b11aa18b2893e85a14ae2a2bed70';
 
+/// Acquires a provider owned lease for merged catalog demand.
+
 final class RealmEditorCatalogLeaseFamily extends $Family
     with
         $FunctionalFamilyOverride<
@@ -312,6 +357,8 @@ final class RealmEditorCatalogLeaseFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Acquires a provider owned lease for merged catalog demand.
+
   RealmEditorCatalogLeaseProvider call(RealmEditorCatalogRequest request) =>
       RealmEditorCatalogLeaseProvider._(argument: request, from: this);
 
@@ -319,9 +366,119 @@ final class RealmEditorCatalogLeaseFamily extends $Family
   String toString() => r'realmEditorCatalogLeaseProvider';
 }
 
+/// Returns page definitions from the latest complete realm catalog.
+
+@ProviderFor(realmPageDefinitions)
+final realmPageDefinitionsProvider = RealmPageDefinitionsProvider._();
+
+/// Returns page definitions from the latest complete realm catalog.
+
+final class RealmPageDefinitionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<RealmPageDefinition>>,
+          AsyncValue<List<RealmPageDefinition>>,
+          AsyncValue<List<RealmPageDefinition>>
+        >
+    with $Provider<AsyncValue<List<RealmPageDefinition>>> {
+  /// Returns page definitions from the latest complete realm catalog.
+  RealmPageDefinitionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'realmPageDefinitionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmPageDefinitionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<AsyncValue<List<RealmPageDefinition>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AsyncValue<List<RealmPageDefinition>> create(Ref ref) {
+    return realmPageDefinitions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<RealmPageDefinition>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<AsyncValue<List<RealmPageDefinition>>>(value),
+    );
+  }
+}
+
+String _$realmPageDefinitionsHash() =>
+    r'397c78750833dd566ec9bc7d3c09c1feb7c5d9c0';
+
+/// Returns discovered definitions that the realm permits and exposes while
+/// preserving catalog loading and failure states for asynchronous consumers.
+
+@ProviderFor(availableElementDefinitionsFuture)
+final availableElementDefinitionsFutureProvider =
+    AvailableElementDefinitionsFutureProvider._();
+
+/// Returns discovered definitions that the realm permits and exposes while
+/// preserving catalog loading and failure states for asynchronous consumers.
+
+final class AvailableElementDefinitionsFutureProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<ElementDefinition>>,
+          List<ElementDefinition>,
+          FutureOr<List<ElementDefinition>>
+        >
+    with
+        $FutureModifier<List<ElementDefinition>>,
+        $FutureProvider<List<ElementDefinition>> {
+  /// Returns discovered definitions that the realm permits and exposes while
+  /// preserving catalog loading and failure states for asynchronous consumers.
+  AvailableElementDefinitionsFutureProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'availableElementDefinitionsFutureProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() =>
+      _$availableElementDefinitionsFutureHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<ElementDefinition>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<ElementDefinition>> create(Ref ref) {
+    return availableElementDefinitionsFuture(ref);
+  }
+}
+
+String _$availableElementDefinitionsFutureHash() =>
+    r'40fce74ea30e60920eb7cb205e1dde2e667d5c00';
+
+/// Returns the latest available element definitions for synchronous consumers.
+
 @ProviderFor(availableElementDefinitions)
 final availableElementDefinitionsProvider =
     AvailableElementDefinitionsProvider._();
+
+/// Returns the latest available element definitions for synchronous consumers.
 
 final class AvailableElementDefinitionsProvider
     extends
@@ -331,6 +488,7 @@ final class AvailableElementDefinitionsProvider
           List<ElementDefinition>
         >
     with $Provider<List<ElementDefinition>> {
+  /// Returns the latest available element definitions for synchronous consumers.
   AvailableElementDefinitionsProvider._()
     : super(
         from: null,
@@ -366,4 +524,4 @@ final class AvailableElementDefinitionsProvider
 }
 
 String _$availableElementDefinitionsHash() =>
-    r'd898191de647937a90584eb81e62ae72aaeb4bc4';
+    r'f1fe88e5b82cf47993d012344876f8bc4b93efb9';

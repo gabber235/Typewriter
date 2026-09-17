@@ -83,6 +83,49 @@ void main() {
     expect(definition.color, const Color(0xFF7C4DFF));
   });
 
+  test("asynchronous element definitions follow catalog updates", () async {
+    final states = StreamController<RealmEditorCatalogState>();
+    addTearDown(states.close);
+    final container = ProviderContainer(
+      overrides: [
+        realmEditorCatalogProvider.overrideWith((ref) => states.stream),
+      ],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      availableElementDefinitionsFutureProvider,
+      (previous, next) {},
+    );
+    addTearDown(subscription.close);
+
+    expect(
+      container.read(availableElementDefinitionsFutureProvider),
+      isA<AsyncLoading<List<ElementDefinition>>>(),
+    );
+
+    states.add(RealmEditorCatalogReady(_elementSnapshot("First", "1")));
+    await _waitFor(
+      () =>
+          container
+              .read(availableElementDefinitionsFutureProvider)
+              .value
+              ?.single
+              .name ==
+          "First",
+    );
+
+    states.add(RealmEditorCatalogReady(_elementSnapshot("Second", "2")));
+    await _waitFor(
+      () =>
+          container
+              .read(availableElementDefinitionsFutureProvider)
+              .value
+              ?.single
+              .name ==
+          "Second",
+    );
+  });
+
   test("provider disposes the realm watch on disconnect", () async {
     final source = _TrackingSource();
     final connection = StreamController<RealmConnectionState>();
@@ -213,6 +256,31 @@ final class _TrackingSource implements RealmEditorCatalogSource {
 
 const _elementId = "019d1c2a8f7b7cc18c2a4a7b2fd1e281";
 
+RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
+  final type = ResolvedTypeRef(id: DeclaredTypeId(_elementId), revision: 1);
+  return RealmEditorCatalogSnapshot(
+    catalog: const TypeCatalog([]),
+    generation: CatalogGeneration(generation),
+    elements: {
+      _elementId: RealmElementCatalogEntry(
+        originArtifactId: "typewritermc:conformance",
+        sourcePart: "common",
+        definition: DiscoveredElementDefinition(
+          id: _elementId,
+          type: type,
+          name: name,
+          description: "Verifies Typewriter discovery",
+          icon: const IconValue.iconify("material-symbols:science"),
+          color: const Color(0xFF7C4DFF),
+          availability: ElementAvailability.always(),
+        ),
+        eligible: true,
+        available: true,
+      ),
+    },
+  );
+}
+
 final class _ElementSource implements RealmEditorCatalogSource {
   final _watch = StreamController<RealmEditorCatalogWatchEvent>();
 
@@ -222,30 +290,7 @@ final class _ElementSource implements RealmEditorCatalogSource {
     RealmEditorCatalogRequest request, {
     CatalogGeneration? expectedGeneration,
   }) async {
-    final type = ResolvedTypeRef(id: DeclaredTypeId(_elementId), revision: 1);
-    return RealmEditorCatalogFetched(
-      RealmEditorCatalogSnapshot(
-        catalog: const TypeCatalog([]),
-        generation: const CatalogGeneration("1"),
-        elements: {
-          _elementId: RealmElementCatalogEntry(
-            originArtifactId: "typewritermc:conformance",
-            sourcePart: "common",
-            definition: DiscoveredElementDefinition(
-              id: _elementId,
-              type: type,
-              name: "Synthetic Entry",
-              description: "Verifies Typewriter discovery",
-              icon: const IconValue.iconify("material-symbols:science"),
-              color: const Color(0xFF7C4DFF),
-              availability: ElementAvailability.always(),
-            ),
-            eligible: true,
-            available: true,
-          ),
-        },
-      ),
-    );
+    return RealmEditorCatalogFetched(_elementSnapshot("Synthetic Entry", "1"));
   }
 
   @override

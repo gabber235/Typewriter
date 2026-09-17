@@ -213,16 +213,37 @@ Future<RealmCommandResult> _executeRealmAction({
   return transport.execute(action, payload.valueOrNull);
 }
 
-/// Returns discovered definitions that the realm permits and exposes.
+/// Returns page definitions from the latest complete realm catalog.
 @riverpod
-List<ElementDefinition> availableElementDefinitions(Ref ref) {
-  final state = ref.watch(realmEditorCatalogProvider).value;
-  final snapshot = state?.snapshot;
+AsyncValue<List<RealmPageDefinition>> realmPageDefinitions(Ref ref) => ref
+    .watch(realmEditorCatalogProvider)
+    .whenData(
+      (state) =>
+          state.snapshot?.pageCatalog.definitions.values.toList(
+            growable: false,
+          ) ??
+          const [],
+    );
+
+/// Returns discovered definitions that the realm permits and exposes while
+/// preserving catalog loading and failure states for asynchronous consumers.
+@riverpod
+Future<List<ElementDefinition>> availableElementDefinitionsFuture(
+  Ref ref,
+) async {
+  final state = await ref.watch(realmEditorCatalogProvider.future);
+  final snapshot = state.snapshot;
   if (snapshot == null) return const [];
   return snapshot.elements.values
       .where((entry) => entry.eligible && entry.available)
       .map((entry) => entry.definition.toElementDefinition())
       .toList(growable: false);
+}
+
+/// Returns the latest available element definitions for synchronous consumers.
+@riverpod
+List<ElementDefinition> availableElementDefinitions(Ref ref) {
+  return ref.watch(availableElementDefinitionsFutureProvider).value ?? const [];
 }
 
 /// Resolves an element and verifies its presentation dependencies before use.

@@ -81,6 +81,20 @@ Future<List<TopologyRealm>> realms(Ref ref) async {
   return topology.realmInstances;
 }
 
+@riverpod
+Future<Map<skir.RecordId, bool>> realmsAvailability(Ref ref) async {
+  final realms = await ref.watch(realmsProvider.future);
+
+  return realms
+      .map(
+        (realm) => MapEntry(
+          realm.realmId,
+          ref.watch(hostConnectedProvider(realm.ownerHost.id)),
+        ),
+      )
+      .toMap();
+}
+
 /// Derives the connection gate consumed by the workspace and editor providers.
 ///
 /// The selected realm must resolve, report an active runtime status, and have

@@ -3,8 +3,8 @@
 // declarations can be reported without losing valid page kinds.
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/page_kind.dart"
-    as wire_page_kind;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm_page_catalog.freezed.dart";
@@ -17,11 +17,11 @@ abstract class PageKindRef with _$PageKindRef {
 
   const PageKindRef._();
 
-  factory PageKindRef.fromSkir(wire_page_kind.PageKindRef value) =>
+  factory PageKindRef.fromSkir(skir.PageKindRef value) =>
       PageKindRef(id: value.id.value, revision: value.revision);
 
-  wire_page_kind.PageKindRef toSkir() => wire_page_kind.PageKindRef(
-    id: wire_page_kind.PageKindId(value: id),
+  skir.PageKindRef toSkir() => skir.PageKindRef(
+    id: skir.PageKindId(value: id),
     revision: revision,
   );
 }
@@ -54,6 +54,10 @@ abstract class RealmPageDefinition with _$RealmPageDefinition {
     required String originArtifactId,
     required String sourcePart,
   }) = _RealmPageDefinition;
+
+  const RealmPageDefinition._();
+
+  String get id => "page_kind:${kind.id}:${kind.revision}";
 }
 
 @freezed

@@ -1,6 +1,11 @@
+import "dart:async";
+
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:hooks_riverpod/misc.dart";
+import "package:rxdart/rxdart.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Signals that an operation was requested while its provider state was not
@@ -100,5 +105,26 @@ extension RefExtension on Ref {
     await Future.delayed(duration);
 
     if (didDispose) throw Exception("Debounce was disposed");
+  }
+
+  Stream<StateT> streamed<StateT>(ProviderListenable<StateT> provider) {
+    final subject = BehaviorSubject<StateT>();
+    onDispose(subject.close);
+    listen(
+      provider,
+      fireImmediately: true,
+      (previous, next) => subject.add(next),
+    );
+    return subject.stream;
+  }
+
+  ValueListenable<StateT> valued<StateT>(ProviderListenable<StateT> provider) {
+    final notifier = ValueNotifier<StateT>(read(provider));
+    listen(
+      provider,
+      fireImmediately: true,
+      (previous, next) => notifier.value = next,
+    );
+    return notifier;
   }
 }
