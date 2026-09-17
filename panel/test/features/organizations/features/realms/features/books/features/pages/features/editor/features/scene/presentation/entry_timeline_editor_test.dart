@@ -5,15 +5,13 @@ import "package:iconify_flutter_plus/icons/iconoir.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
 void main() {
-  group("EntryScene", () {
+  group("EntryTimelineEditor", () {
     testWidgets("commits nested move using resolved local frames", (
       tester,
     ) async {
@@ -24,7 +22,7 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
@@ -55,7 +53,7 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
@@ -87,7 +85,7 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
@@ -117,7 +115,7 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
@@ -148,7 +146,7 @@ void main() {
           child: const SizedBox(
             width: 1600,
             height: 900,
-            child: Material(child: EntryScene(pageId: "page")),
+            child: Material(child: EntryTimelineEditor(pageId: "page")),
           ),
         );
 
@@ -181,7 +179,7 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
@@ -215,12 +213,12 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
       final container = ProviderScope.containerOf(
-        tester.element(find.byType(EntryScene)),
+        tester.element(find.byType(EntryTimelineEditor)),
       );
       container.read(selectionProvider.notifier).selectAll([
         const CueIdentifier(pageId: "page", id: "root_a"),
@@ -255,12 +253,12 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
       final container = ProviderScope.containerOf(
-        tester.element(find.byType(EntryScene)),
+        tester.element(find.byType(EntryTimelineEditor)),
       );
       container.read(selectionProvider.notifier).selectAll([
         const CueIdentifier(pageId: "page", id: "root_b"),
@@ -294,7 +292,7 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
@@ -335,12 +333,12 @@ void main() {
         child: const SizedBox(
           width: 1600,
           height: 900,
-          child: Material(child: EntryScene(pageId: "page")),
+          child: Material(child: EntryTimelineEditor(pageId: "page")),
         ),
       );
 
       final container = ProviderScope.containerOf(
-        tester.element(find.byType(EntryScene)),
+        tester.element(find.byType(EntryTimelineEditor)),
       );
       container.read(selectionProvider.notifier).selectAll([
         const CueIdentifier(pageId: "page", id: "root"),
@@ -371,8 +369,8 @@ class _TestPageElements extends PageElements {
   _TestPageElements(this.initialElements) {
     nats.registerHandler(
       _snapshotSubject,
-      (_) => wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-        wire.GetAuthoringSnapshotResponse.createSuccess(
+      (_) => skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+        skir.GetAuthoringSnapshotResponse.createSuccess(
           sequence: 1,
           slices: const [],
         ),

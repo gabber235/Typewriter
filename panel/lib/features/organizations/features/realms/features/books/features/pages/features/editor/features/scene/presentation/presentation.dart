@@ -1,7 +1,7 @@
-/// Widgets that render and edit a page's timeline scene.
+/// Widgets that render and edit a page timeline.
 ///
-/// [EntryScene] converts the projected page elements into timeline tracks and
+/// [EntryTimelineEditor] converts the projected page elements into timeline tracks and
 /// sends committed frame changes to the page element mutation owner.
 library;
 
-export "scene.dart";
+export "entry_timeline_editor.dart";

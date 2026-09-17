@@ -162,42 +162,32 @@ class EntryGraph extends HookConsumerWidget {
     return elements(
       name: "elements",
       builder: (elements) {
-        if (elements.isEmpty) {
-          return EmptyEntryPage(
-            pageId: pageId,
-            placementKind: EntryPlacementKind.graph,
-          );
-        }
-        return Stack(
-          children: [
-            Graph(
-              data: _graphFromElements(elements),
-              onElementsMoved: (changes) {
-                final changed = changes
-                    .map((entry) => (entry.id.id, entry.x, entry.y))
-                    .toList(growable: false);
-                ref.read(commands.notifier).moveAll(changed);
-              },
-              onElementsResized: (changes) {
-                final changed = changes
-                    .map((entry) => (entry.id.id, entry.width, entry.height))
-                    .toList(growable: false);
-                ref.read(commands.notifier).resizeAll(changed);
-              },
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: PageDiagnosticsBanner(pageId: pageId),
-            ),
-            Positioned(
-              right: context.spacing.space2,
-              bottom: context.spacing.space2,
-              child: AddEntryButton(
-                pageId: pageId,
-                placementKind: EntryPlacementKind.graph,
+        return FloatingButton(
+          icon: const Icon(Icons.add),
+          onPressed: () => showAddElementSearch(context, pageId: pageId),
+          child: Stack(
+            children: [
+              Graph(
+                data: _graphFromElements(elements),
+                onElementsMoved: (changes) {
+                  final changed = changes
+                      .map((entry) => (entry.id.id, entry.x, entry.y))
+                      .toList(growable: false);
+                  ref.read(commands.notifier).moveAll(changed);
+                },
+                onElementsResized: (changes) {
+                  final changed = changes
+                      .map((entry) => (entry.id.id, entry.width, entry.height))
+                      .toList(growable: false);
+                  ref.read(commands.notifier).resizeAll(changed);
+                },
               ),
-            ),
-          ],
+              Align(
+                alignment: Alignment.topCenter,
+                child: PageDiagnosticsBanner(pageId: pageId),
+              ),
+            ],
+          ),
         );
       },
       loading: (_) => ShimmerBox.rectangle(

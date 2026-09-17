@@ -11,10 +11,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// into one page element mutation batch. The projected input may include local
 /// drafts, so the surface can reflect edits before the authoring session
 /// confirms them.
-class EntryScene extends HookConsumerWidget {
-  const EntryScene({required this.pageId, super.key});
+class EntryTimelineEditor extends HookConsumerWidget {
+  const EntryTimelineEditor({required this.pageId, super.key});
 
-  /// Identifier of the page whose projected elements supply the scene.
+  /// Identifier of the page whose projected elements supply the timeline.
   final String pageId;
 
   @override
@@ -31,13 +31,6 @@ class EntryScene extends HookConsumerWidget {
     return pageElements(
       name: "elements",
       builder: (elements) {
-        if (elements.isEmpty) {
-          return EmptyEntryPage(
-            pageId: pageId,
-            placementKind: EntryPlacementKind.timelineEntry,
-          );
-        }
-
         return HookBuilder(
           builder: (context) {
             final elementsById = useMemoized(
@@ -45,8 +38,8 @@ class EntryScene extends HookConsumerWidget {
               [elements],
             );
 
-            final sceneView = useMemoized(
-              () => _SceneViewData.create(
+            final timelineView = useMemoized(
+              () => _TimelineViewData.create(
                 pageId: pageId,
                 elementsById: elementsById,
               ),
@@ -54,43 +47,39 @@ class EntryScene extends HookConsumerWidget {
             );
 
             assert(
-              sceneView.timelineData.tracks.length ==
+              timelineView.timelineData.tracks.length ==
                   elements.whereType<PageElementEntry>().length,
-              "Scene track count must match page entry count.",
+              "Timeline track count must match page entry count.",
             );
 
-            return Stack(
-              children: [
-                Timeline(
-                  data: sceneView.timelineData,
-                  resolveTargets: (draggedId) {
-                    final roots = _resolveCues(
+            return FloatingButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => showAddElementSearch(context, pageId: pageId),
+              child: Stack(
+                children: [
+                  Timeline(
+                    data: timelineView.timelineData,
+                    resolveTargets: (draggedId) {
+                      final roots = _resolveCues(
+                        ref: ref,
+                        pageId: pageId,
+                        primaryCueId: draggedId?.id,
+                        elementsById: elementsById,
+                      );
+                      return roots.map(TimelineIdentifier.new).toList();
+                    },
+                    onElementsCommited: (changes) => _commitTimelineBatch(
                       ref: ref,
                       pageId: pageId,
-                      primaryCueId: draggedId?.id,
-                      elementsById: elementsById,
-                    );
-                    return roots.map(TimelineIdentifier.new).toList();
-                  },
-                  onElementsCommited: (changes) => _commitSceneBatch(
-                    ref: ref,
-                    pageId: pageId,
-                    changes: changes,
+                      changes: changes,
+                    ),
                   ),
-                ),
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: PageDiagnosticsBanner(pageId: pageId),
-                ),
-                Positioned(
-                  right: context.spacing.space2,
-                  bottom: context.spacing.space2,
-                  child: AddEntryButton(
-                    pageId: pageId,
-                    placementKind: EntryPlacementKind.timelineEntry,
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: PageDiagnosticsBanner(pageId: pageId),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         );
@@ -140,7 +129,7 @@ Set<String> _resolveCues({
 /// validates readiness, overlays the placement values on the current owner
 /// state, and performs the authoring batch. This scene does not decide how
 /// uncertain or conflicting persistence results are reconciled.
-Future<void> _commitSceneBatch({
+Future<void> _commitTimelineBatch({
   required WidgetRef ref,
   required String pageId,
   required List<TimelineCommitPayload> changes,
@@ -163,10 +152,10 @@ Future<void> _commitSceneBatch({
 /// Track order follows the projected page entries. Cue hierarchy is rebuilt
 /// from local outward links, so the timeline does not infer relationships from
 /// frame overlap or from unrelated page elements.
-class _SceneViewData {
-  const _SceneViewData({required this.timelineData});
+class _TimelineViewData {
+  const _TimelineViewData({required this.timelineData});
 
-  factory _SceneViewData.create({
+  factory _TimelineViewData.create({
     required String pageId,
     required Map<String, PageElement> elementsById,
   }) {
@@ -190,7 +179,7 @@ class _SceneViewData {
         ),
     ];
 
-    return _SceneViewData(timelineData: TimelineData(tracks: tracks));
+    return _TimelineViewData(timelineData: TimelineData(tracks: tracks));
   }
 
   final TimelineData timelineData;
