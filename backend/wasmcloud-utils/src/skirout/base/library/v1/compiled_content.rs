@@ -95,6 +95,9 @@ impl CompiledShardPointer {
 // struct CompiledContentActivation
 // ==============================================================================
 
+/// Describes the compiled content revision currently available for activation.
+/// The activation revision orders delivery. Manifest and shard digests identify
+/// content, while their blob pointers identify bytes to download and verify.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledContentActivation {
     pub activation_revision: i64,
@@ -119,7 +122,7 @@ impl CompiledContentActivation {
                 crate::skir_client::internal::StructAdapter::new(
                     "library/v1/compiled_content.skir",
                     "CompiledContentActivation",
-                    "",
+                    "Describes the compiled content revision currently available for activation.\nThe activation revision orders delivery. Manifest and shard digests identify\ncontent, while their blob pointers identify bytes to download and verify.",
                     |x: &CompiledContentActivation| &x._unrecognized,
                     |x: &mut CompiledContentActivation, u| x._unrecognized = u,
                 )
@@ -245,44 +248,6 @@ impl WatchCompiledContentResponse_Blocked {
 }
 
 // ==============================================================================
-// struct WatchCompiledContentResponse.InternalError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WatchCompiledContentResponse_InternalError {
-    pub message: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchCompiledContentResponse_InternalError>>,
-}
-
-impl WatchCompiledContentResponse_InternalError {
-    pub fn default_ref() -> &'static WatchCompiledContentResponse_InternalError {
-        static D: std::sync::LazyLock<WatchCompiledContentResponse_InternalError> = std::sync::LazyLock::new(WatchCompiledContentResponse_InternalError::default);
-        &D
-    }
-}
-
-impl WatchCompiledContentResponse_InternalError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/compiled_content.skir",
-                    "WatchCompiledContentResponse.InternalError",
-                    "",
-                    |x: &WatchCompiledContentResponse_InternalError| &x._unrecognized,
-                    |x: &mut WatchCompiledContentResponse_InternalError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<WatchCompiledContentResponse_InternalError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_InternalError::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum WatchCompiledContentResponse
 // ==============================================================================
 
@@ -292,7 +257,7 @@ pub enum WatchCompiledContentResponse {
     Initial(Box<WatchCompiledContentResponse_Initial>),
     Activated(Box<CompiledContentActivation>),
     Blocked(Box<WatchCompiledContentResponse_Blocked>),
-    InternalError(Box<WatchCompiledContentResponse_InternalError>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for WatchCompiledContentResponse {
@@ -369,16 +334,11 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_InternalError> = WatchCompiledContentResponse_InternalError::_adapter() as *const _ as *mut _;
-                (*a).add_field("message", 0, crate::skir_client::Serializer::string(), "", |x: &WatchCompiledContentResponse_InternalError| &x.message, |x: &mut WatchCompiledContentResponse_InternalError, v| x.message = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<WatchCompiledContentResponse> = WatchCompiledContentResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("initial", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_Initial::_adapter()), "", |v| WatchCompiledContentResponse::Initial(Box::new(v)), |x| match x { WatchCompiledContentResponse::Initial(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("activated", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CompiledContentActivation::_adapter()), "", |v| WatchCompiledContentResponse::Activated(Box::new(v)), |x| match x { WatchCompiledContentResponse::Activated(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("blocked", 3, 3, crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_Blocked::_adapter()), "", |v| WatchCompiledContentResponse::Blocked(Box::new(v)), |x| match x { WatchCompiledContentResponse::Blocked(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_InternalError::_adapter()), "", |v| WatchCompiledContentResponse::InternalError(Box::new(v)), |x| match x { WatchCompiledContentResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchCompiledContentResponse::InternalError(Box::new(v)), |x| match x { WatchCompiledContentResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });
@@ -389,6 +349,9 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
+/// Watches the current compiled activation and later activation state changes.
+/// The initial response is a point in time. Activated and blocked notifications
+/// are advisory, so consumers reconnect or refresh when delivery is uncertain.
 pub fn watch_compiled_content_method() -> &'static crate::skir_client::Method<WatchCompiledContentRequest, WatchCompiledContentResponse> {
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchCompiledContentRequest, WatchCompiledContentResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
@@ -396,7 +359,7 @@ pub fn watch_compiled_content_method() -> &'static crate::skir_client::Method<Wa
             number: 920003_i64,
             request_serializer: WatchCompiledContentRequest::serializer(),
             response_serializer: WatchCompiledContentResponse::serializer(),
-            doc: "".to_string(),
+            doc: "Watches the current compiled activation and later activation state changes.\nThe initial response is a point in time. Activated and blocked notifications\nare advisory, so consumers reconnect or refresh when delivery is uncertain.".to_string(),
         }
     });
     &*METHOD

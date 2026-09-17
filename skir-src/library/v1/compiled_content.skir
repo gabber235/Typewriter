@@ -1,3 +1,5 @@
+import { InternalError } from "kernel/v1/errors.skir";
+
 // Compiled content delivery contract shared by the Realm and runtime consumers.
 // Semantic content digests identify manifests and shards. Blob digests identify
 // the serialized bytes fetched from the blob endpoint.
@@ -33,7 +35,5 @@ method WatchCompiledContent(
   } = 1;
   activated: CompiledContentActivation = 2;
   blocked: struct {} = 3;
-  internal_error: struct {
-    message: string = 0;
-  } = 4;
+  internal_error: InternalError = 4;
 } = 920003;

@@ -357,7 +357,13 @@ sealed interface CompiledContentActivation_OrMutable {
     fun toFrozen(): skirout.library.v1.compiled_content.CompiledContentActivation;
 }
 
-/** Deeply immutable. */
+/**
+ * Describes the compiled content revision currently available for activation.
+ * The activation revision orders delivery. Manifest and shard digests identify
+ * content, while their blob pointers identify bytes to download and verify.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompiledContentActivation private constructor(
     override val activationRevision: kotlin.Long,
@@ -528,7 +534,7 @@ class CompiledContentActivation private constructor(
 
         private val serializerImpl = build.skir.internal.StructSerializer(
             recordId = "library/v1/compiled_content.skir:CompiledContentActivation",
-            doc = "",
+            doc = "Describes the compiled content revision currently available for activation.\nThe activation revision orders delivery. Manifest and shard digests identify\ncontent, while their blob pointers identify bytes to download and verify.",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
             toFrozenFn = { it.toFrozen() },
@@ -761,10 +767,10 @@ sealed class WatchCompiledContentResponse private constructor() {
     }
 
     class InternalErrorWrapper private constructor (
-        val value: skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError,
+        val value: skirout.kernel.v1.errors.InternalError,
     ) : skirout.library.v1.compiled_content.WatchCompiledContentResponse() {
         constructor(
-            value: skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError_OrMutable,
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
@@ -835,16 +841,13 @@ sealed class WatchCompiledContentResponse private constructor() {
             skirout.library.v1.compiled_content.WatchCompiledContentResponse.Blocked()
         );
 
-        /** Shortcut for `InternalErrorWrapper(skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError(...))`. */
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            message: kotlin.String,
         ) = InternalErrorWrapper(
-            skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError(
-                message = message,
-            )
+            skirout.kernel.v1.errors.InternalError()
         );
 
         private val _serializerImpl =
@@ -904,7 +907,7 @@ sealed class WatchCompiledContentResponse private constructor() {
                     4,
                     "internal_error",
                     Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError.serializer,
+                    skirout.kernel.v1.errors.InternalError.serializer,
                     "",
                     { InternalErrorWrapper(it) },
                     { it.value },
@@ -1141,140 +1144,13 @@ sealed class WatchCompiledContentResponse private constructor() {
             }
         }
     }
-
-    sealed interface InternalError_OrMutable {
-        val message: kotlin.String;
-
-        fun toFrozen(): skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InternalError private constructor(
-        override val message: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError>? =
-            null,
-    ): skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            message: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError>? =
-                null,
-        ): this(
-            message,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            message = this.message,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            message: kotlin.String =
-                this.message,
-        ) = skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError(
-            message,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError && this.message == other.message);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.message).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [InternalError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var message: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError>? =
-                null,
-        ): skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError(
-                message = this.message,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InternalError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                message: kotlin.String =
-                    "",
-            ) = skirout.library.v1.compiled_content.WatchCompiledContentResponse.InternalError(
-                message = message,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "library/v1/compiled_content.skir:WatchCompiledContentResponse.InternalError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [InternalError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [InternalError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "message",
-                    "message",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.message },
-                    { mut, v -> mut.message = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
 }
 
+/**
+ * Watches the current compiled activation and later activation state changes.
+ * The initial response is a point in time. Activated and blocked notifications
+ * are advisory, so consumers reconnect or refresh when delivery is uncertain.
+ */
 val WatchCompiledContent: build.skir.service.Method<
     skirout.library.v1.compiled_content.WatchCompiledContentRequest,
     skirout.library.v1.compiled_content.WatchCompiledContentResponse,
@@ -1284,6 +1160,6 @@ val WatchCompiledContent: build.skir.service.Method<
         920003,
         skirout.library.v1.compiled_content.WatchCompiledContentRequest.serializer,
         skirout.library.v1.compiled_content.WatchCompiledContentResponse.serializer,
-        "",
+        "Watches the current compiled activation and later activation state changes.\nThe initial response is a point in time. Activated and blocked notifications\nare advisory, so consumers reconnect or refresh when delivery is uncertain.",
     )
 }

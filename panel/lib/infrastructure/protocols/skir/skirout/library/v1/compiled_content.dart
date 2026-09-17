@@ -14,6 +14,8 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+
 // -----------------------------------------------------------------------------
 // struct CompiledBlobPointer
 // -----------------------------------------------------------------------------
@@ -298,6 +300,10 @@ sealed class CompiledContentActivation_orMutable {
   CompiledContentActivation toFrozen();
 }
 
+/// Describes the compiled content revision currently available for activation.
+/// The activation revision orders delivery. Manifest and shard digests identify
+/// content, while their blob pointers identify bytes to download and verify.
+///
 /// Deeply immutable.
 final class CompiledContentActivation implements CompiledContentActivation_orMutable {
   @_core.override
@@ -427,7 +433,7 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "library/v1/compiled_content.skir:CompiledContentActivation",
-    doc: "",
+    doc: "Describes the compiled content revision currently available for activation.\nThe activation revision orders delivery. Manifest and shard digests identify\ncontent, while their blob pointers identify bytes to download and verify.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CompiledContentActivation_mutable it) => it.toFrozen(),
@@ -746,114 +752,6 @@ final class WatchCompiledContentResponse_Blocked_mutable implements WatchCompile
 }
 
 // -----------------------------------------------------------------------------
-// struct WatchCompiledContentResponse.InternalError
-// -----------------------------------------------------------------------------
-
-sealed class WatchCompiledContentResponse_InternalError_orMutable {
-  _core.String get message;
-
-  WatchCompiledContentResponse_InternalError toFrozen();
-}
-
-/// Deeply immutable.
-final class WatchCompiledContentResponse_InternalError implements WatchCompiledContentResponse_InternalError_orMutable {
-  @_core.override
-  final _core.String message;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory WatchCompiledContentResponse_InternalError({
-    required _core.String message,
-  }) => WatchCompiledContentResponse_InternalError._(
-    message,
-  );
-
-  WatchCompiledContentResponse_InternalError._(
-    this.message,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = WatchCompiledContentResponse_InternalError._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static WatchCompiledContentResponse_InternalError_mutable mutable() => WatchCompiledContentResponse_InternalError_mutable._(
-    "",
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  WatchCompiledContentResponse_InternalError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentResponse_InternalError_mutable toMutable() => WatchCompiledContentResponse_InternalError_mutable._(
-    this.message,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! WatchCompiledContentResponse_InternalError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.message,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `WatchCompiledContentResponse_InternalError` instances.
-  static _skir.StructSerializer<WatchCompiledContentResponse_InternalError, WatchCompiledContentResponse_InternalError_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "message",
-        "message",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.message,
-        (it, v) => it.message = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "library/v1/compiled_content.skir:WatchCompiledContentResponse.InternalError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchCompiledContentResponse_InternalError_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [WatchCompiledContentResponse_InternalError].
-final class WatchCompiledContentResponse_InternalError_mutable implements WatchCompiledContentResponse_InternalError_orMutable {
-  _core.String message;
-  _skir.internal__UnrecognizedFields? _u;
-
-  WatchCompiledContentResponse_InternalError_mutable._(
-    this.message,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  WatchCompiledContentResponse_InternalError toFrozen() => WatchCompiledContentResponse_InternalError(
-    message: this.message,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum WatchCompiledContentResponse
 // -----------------------------------------------------------------------------
 
@@ -920,16 +818,12 @@ sealed class WatchCompiledContentResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchCompiledContentResponse.wrapInternalError(
-    WatchCompiledContentResponse_InternalError value
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchCompiledContentResponse_internalErrorWrapper._(value);
 
-  /// Same as `wrapInternalError(WatchCompiledContentResponse_InternalError(...))`.
-  factory WatchCompiledContentResponse.createInternalError({
-    required _core.String message,
-  }) => WatchCompiledContentResponse.wrapInternalError(
-    WatchCompiledContentResponse_InternalError(
-      message: message,
-    )
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory WatchCompiledContentResponse.createInternalError() => WatchCompiledContentResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
   );
 
   /// Returns the kind of variant held by this WatchCompiledContentResponse.
@@ -972,7 +866,7 @@ sealed class WatchCompiledContentResponse {
         4,
         "internal_error",
         "wrapInternalError",
-        WatchCompiledContentResponse_InternalError.serializer,
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
         WatchCompiledContentResponse_internalErrorWrapper._,
         (it) => it.value,
@@ -1069,7 +963,7 @@ final class WatchCompiledContentResponse_blockedWrapper extends _WatchCompiledCo
 }
 
 final class WatchCompiledContentResponse_internalErrorWrapper extends _WatchCompiledContentResponse_wrapper {
-  final WatchCompiledContentResponse_InternalError value;
+  final _lib_kernel_v1_errors.InternalError value;
 
   WatchCompiledContentResponse_internalErrorWrapper._(this.value);
 
@@ -1077,6 +971,9 @@ final class WatchCompiledContentResponse_internalErrorWrapper extends _WatchComp
   WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.internalErrorWrapper;
 }
 
+/// Watches the current compiled activation and later activation state changes.
+/// The initial response is a point in time. Activated and blocked notifications
+/// are advisory, so consumers reconnect or refresh when delivery is uncertain.
 final _skir.Method<
   WatchCompiledContentRequest,
   WatchCompiledContentResponse
@@ -1086,5 +983,5 @@ final _skir.Method<
     920003,
     WatchCompiledContentRequest.serializer,
     WatchCompiledContentResponse.serializer,
-    "",
+    "Watches the current compiled activation and later activation state changes.\nThe initial response is a point in time. Activated and blocked notifications\nare advisory, so consumers reconnect or refresh when delivery is uncertain.",
   );

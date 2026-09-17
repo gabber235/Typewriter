@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import skirout.library.v1.compiled_content.WatchCompiledContent
 import skirout.library.v1.compiled_content.WatchCompiledContentRequest
 import skirout.library.v1.compiled_content.WatchCompiledContentResponse
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Owns the subscription that brings compiled activations into an engine.
@@ -137,7 +138,7 @@ class MessagingEngineContentDelivery(
                                     error.message ?: "Compiled content delivery failed.",
                                 )
                         }
-                        delay(RETRY_DELAY_MILLIS)
+                        delay(RETRY_DELAY_MILLIS.milliseconds)
                     }
                 }
             }
@@ -174,7 +175,7 @@ private fun compiledContentWatch(address: RealmServiceAddress) =
         updateAddress = realmEventAddress("compiled.content.watch"),
         initialPolicy =
             ResponsePolicy(
-                WatchCompiledContentResponse.createInternalError(message = "Compiled content watch failed"),
+                WatchCompiledContentResponse.createInternalError(),
                 compiledContentResponseClassifier,
             ),
         updateClassifier = compiledContentResponseClassifier,
