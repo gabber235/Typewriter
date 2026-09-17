@@ -100,6 +100,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: BookRoute.page,
       path: "/organization/:organizationId/realm/:realmId/book/:bookId",
+      usesPathAsKey: true,
       // TODO: Validate realm/book existence and finer-grained book access.
       guards: [_authGuard, _organizationGuard],
       children: [AutoRoute(page: RouteRoute.page, path: "page/:pageId")],
