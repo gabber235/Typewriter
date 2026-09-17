@@ -9,7 +9,6 @@ import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const entrySelectionOperations = <SelectionOperation>[
-  EntryDeleteOperation(),
   EntryLinkWithOperation(),
   EntryLinkWithDuplicateOperation(),
   EntryDuplicateOperation(),
@@ -245,86 +244,6 @@ class EntryDuplicateOperation extends ActivatorShortcutOperation {
         foregroundColor: WidgetStateProperty.all(color.on(context)),
       ),
     ),
-  );
-}
-
-/// Deletes selected entries after confirmation and removes them from selection.
-///
-/// All entries must belong to one page. The page coordinator validates their
-/// current location again before submitting the batch.
-class EntryDeleteOperation extends IntentShortcutOperation {
-  const EntryDeleteOperation();
-
-  @override
-  String get name => "Delete";
-
-  @override
-  String get description => "Delete selected entries";
-
-  @override
-  Type get intent => DeleteIntent;
-
-  @override
-  bool canExecuteOn(List<Selectable> selection) =>
-      selection.allAre<EntrySelection>();
-
-  @override
-  FutureOr<void> executeOn(WidgetRef ref) async {
-    final selected = ref.read(selectedProvider).requireValue;
-    final entries = selected.whereType<EntrySelection>().toList();
-    if (entries.isEmpty) return;
-    final cached = _cachedEntries(ref, entries);
-    final pageIds = {for (final entry in cached) entry.pageId};
-    if (pageIds.length != 1) {
-      throw ApiException.badRequest(
-        "Entries from different pages cannot be deleted together",
-      );
-    }
-
-    await ref.withReadyPageElements(pageIds.single, (elements) {
-      _requireEntriesOnPage(ref, entries, pageIds.single);
-      return elements.deleteAll(entries.map((entry) => entry.id.id).toList());
-    });
-    ref
-        .read(selectionProvider.notifier)
-        .unselectAll(entries.map((entry) => entry.id).toList());
-  }
-
-  @override
-  MenuItem menuItem(WidgetRef ref) => MenuItem(
-    icon: const Icon(Icons.delete),
-    label: name,
-    color: Theme.of(ref.context).colorScheme.error,
-    onPressed: () => executeOn(ref),
-  );
-
-  @override
-  Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) {
-      final scheme = Theme.of(context).colorScheme;
-      return OperationButton.filledIcon(
-        operation: this,
-        icon: const Icon(Icons.delete_outline, size: 16),
-        label: Text(
-          selection.length > 1 ? "Delete (${selection.length})" : "Delete",
-        ),
-        onPressed: () {
-          showConfirmationDialogue(
-            context: context,
-            title: "Delete ${selection.length} item(s)?",
-            content: "This action cannot be undone.",
-            confirmText: "Delete",
-            confirmColor: scheme.error,
-            onConfirmColor: scheme.onError,
-            onConfirm: () async => executeOn(ref),
-          );
-        },
-        style: FilledButton.styleFrom(
-          foregroundColor: scheme.onError,
-          backgroundColor: scheme.error,
-        ),
-      );
-    },
   );
 }
 

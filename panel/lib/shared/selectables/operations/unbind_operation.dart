@@ -40,6 +40,21 @@ class UnbindOperation extends ActivatorShortcutOperation {
   @override
   FutureOr<void> executeOn(WidgetRef ref) async {
     final selection = ref.read(selectedProvider).requireValue;
+
+    final context = ref.context;
+    final backgroundColor = Colors.orange;
+    final foregroundColor = backgroundColor.on(context);
+
+    final confirmed = await showConfirmationDialogue(
+      context: context,
+      title: "Unbind ${selection.length} item(s)?",
+      content: "This will disconnect the selected items.",
+      confirmText: "Unbind",
+      confirmColor: backgroundColor,
+      onConfirmColor: foregroundColor,
+    );
+    if (!confirmed) return;
+
     final callbacks = <(Selectable, Future<void> Function())>[];
     for (final (s, op)
         in selection
@@ -94,26 +109,16 @@ class UnbindOperationButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final color = Colors.orange;
-    final onColor = color.on(context);
+    final backgroundColor = Colors.orange;
+    final foregroundColor = backgroundColor.on(context);
     return OperationButton.filledIcon(
       operation: operation,
-      onPressed: () {
-        showConfirmationDialogue(
-          context: context,
-          title: "Unbind ${selection.length} item(s)?",
-          content: "This will disconnect the selected items.",
-          confirmText: "Unbind",
-          confirmColor: color,
-          onConfirmColor: onColor,
-          onConfirm: () async {
-            await operation.executeOn(ref);
-          },
-        );
+      onPressed: () async {
+        await operation.executeOn(ref);
       },
       style: FilledButton.styleFrom(
-        foregroundColor: onColor,
-        backgroundColor: color,
+        foregroundColor: foregroundColor,
+        backgroundColor: backgroundColor,
       ),
       icon: const Icon(Icons.link_off, size: 16),
       label: Text(

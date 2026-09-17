@@ -151,7 +151,7 @@ Future<void> showOperationErrorsPopup(
   List<(Selectable, Object)> errors,
   String operationName,
 ) async {
-  await showDialog<void>(
+  await showAdvancedDialog<void>(
     context: context,
     builder: (context) {
       return AlertDialog(

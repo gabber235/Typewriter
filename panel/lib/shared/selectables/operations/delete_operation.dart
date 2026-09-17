@@ -38,6 +38,22 @@ class DeleteOperation extends IntentShortcutOperation {
   @override
   FutureOr<void> executeOn(WidgetRef ref) async {
     final selection = ref.read(selectedProvider).requireValue;
+
+    final context = ref.context;
+    final scheme = Theme.of(context).colorScheme;
+    final foregroundColor = scheme.onError;
+    final backgroundColor = scheme.error;
+
+    final confirmed = await showConfirmationDialogue(
+      context: context,
+      title: "Delete ${selection.length} item(s)?",
+      content: "This action cannot be undone.",
+      confirmText: "Delete",
+      confirmColor: backgroundColor,
+      onConfirmColor: foregroundColor,
+    );
+    if (!confirmed) return;
+
     final callbacks = <(Selectable, Future<void> Function())>[];
     for (final (s, op)
         in selection
@@ -100,18 +116,8 @@ class DeleteOperationButton extends HookConsumerWidget {
       padding: EdgeInsets.only(bottom: context.spacing.space2),
       child: OperationButton.filledIcon(
         operation: operation,
-        onPressed: () {
-          showConfirmationDialogue(
-            context: context,
-            title: "Delete ${selection.length} item(s)?",
-            content: "This action cannot be undone.",
-            confirmText: "Delete",
-            confirmColor: backgroundColor,
-            onConfirmColor: foregroundColor,
-            onConfirm: () async {
-              await operation.executeOn(ref);
-            },
-          );
+        onPressed: () async {
+          await operation.executeOn(ref);
         },
         style: FilledButton.styleFrom(
           foregroundColor: foregroundColor,

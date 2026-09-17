@@ -45,6 +45,7 @@ class EntryIdentifier extends SelectableIdentifier
         .authoring(organizationId, realmId);
 
     final value = location.definition;
+    final identity = EntryIdentifier(id, pageId: location.pageId);
 
     final catalogState = ref.watch(
       realmEditorCatalogForTypeProvider(value.elementDefinition.rootType),
@@ -56,7 +57,7 @@ class EntryIdentifier extends SelectableIdentifier
         target: authoringElementTarget(
           repository: repository,
           state: state,
-          identity: EntryIdentifier(id, pageId: location.pageId),
+          identity: identity,
           pageId: location.pageId,
           label: value.name,
           document: EditorDocument(
@@ -66,12 +67,45 @@ class EntryIdentifier extends SelectableIdentifier
             revision: indexed.revision,
           ),
         ),
-        id: EntryIdentifier(id, pageId: location.pageId),
+        id: identity,
         definition: value,
         typeCatalog: catalog,
         presentations: presentations,
+        selectionCapabilities: [identity.deleteCapability(ref)],
       ),
     );
+  }
+
+  /// Creates deletion capability for this resolved entry identity.
+  ///
+  /// The callback captures the resolved page, then validates the live index
+  /// before submitting through that page owner.
+  DeleteSelectionCapability deleteCapability(Ref ref) {
+    final expectedPageId = pageId;
+    if (expectedPageId == null) {
+      throw StateError("Cannot delete an unresolved entry identifier");
+    }
+    return DeleteSelectionCapability(
+      onDelete: () => _delete(ref, expectedPageId),
+    );
+  }
+
+  Future<void> _delete(Ref ref, String expectedPageId) async {
+    await ref.withReadyPageElements(expectedPageId, (elements) {
+      final organizationId = ref.read(organizationIdProvider);
+      final realmId = ref.read(realmIdProvider);
+      if (organizationId == null) throw ApiException.noOrganization();
+      if (realmId == null) throw ApiException.badRequest("No realm selected");
+
+      final current = ref
+          .read(realmEntryIndexProvider(organizationId, realmId))
+          .requireValue[id];
+      if (current == null) throw ApiException.notFound("Entry");
+      if (current.pageId != expectedPageId) {
+        throw ApiException.conflict("The entry moved to another page");
+      }
+      return elements.deleteAll([id]);
+    });
   }
 
   @override
@@ -97,6 +131,7 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
     required this.definition,
     required this.typeCatalog,
     required this.presentations,
+    required this.selectionCapabilities,
   });
 
   final EditorTarget target;
@@ -109,6 +144,7 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
   final TypeCatalog typeCatalog;
   @override
   final List<PresentationDefinition> presentations;
+  final List<SelectionCapability> selectionCapabilities;
 
   @override
   String get name => definition.name;
@@ -123,7 +159,7 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
   ResolvedTypeRef get rootType => definition.elementDefinition.rootType;
 
   @override
-  List<SelectionCapability> get capabilities => [];
+  List<SelectionCapability> get capabilities => selectionCapabilities;
 
   @override
   Widget? buildInspectorHeader(EditOwner owner) {
