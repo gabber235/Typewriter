@@ -24,6 +24,7 @@ import kotlin.reflect.KClass
  */
 interface Element : Referenceable {
     val id: ElementInstanceId
+    val name: String
 }
 
 /**

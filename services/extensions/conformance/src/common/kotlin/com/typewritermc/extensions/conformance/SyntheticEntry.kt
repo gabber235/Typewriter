@@ -61,6 +61,7 @@ interface ConformanceEntry : Entry
 /** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
 @TypewriterElement(
     id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
+    revision = 2,
     name = "Synthetic Entry",
     description = "Verifies Typewriter discovery",
     icon = "material-symbols:science",
@@ -68,6 +69,7 @@ interface ConformanceEntry : Entry
 )
 data class SyntheticEntry(
     override val id: ElementInstanceId,
+    override val name: String,
     val message: SyntheticMessage,
 ) : ConformanceEntry
 

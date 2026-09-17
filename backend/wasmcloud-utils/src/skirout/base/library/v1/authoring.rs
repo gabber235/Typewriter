@@ -352,7 +352,6 @@ pub struct PageElement {
     pub page: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub element_type: String,
     pub schema_revision: i32,
-    pub name: String,
     pub value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
     pub placement: ElementPlacement,
     /// Set this to None when you're creating a struct.
@@ -2234,7 +2233,6 @@ impl CreateElement {
 pub struct PatchElement {
     pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub page: Option<RecordIdChange>,
-    pub name: Option<StringChange>,
     pub placement: Option<ElementPlacementChange>,
     pub value_mutations: Vec<ExpectedElementValueMutation>,
     /// Set this to None when you're creating a struct.
@@ -2317,7 +2315,6 @@ pub struct DuplicateElement {
     pub expected_value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
     pub new_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub page: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub name: String,
     pub placement: ElementPlacement,
     pub reference_rewrites: Vec<ReferenceRewrite>,
     /// Set this to None when you're creating a struct.
@@ -3526,11 +3523,11 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PageElement> = PageElement::_adapter() as *const _ as *mut _;
+                (*a).add_removed_number(4);
                 (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PageElement| &x.id, |x: &mut PageElement, v| x.id = v);
                 (*a).add_field("page", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PageElement| &x.page, |x: &mut PageElement, v| x.page = v);
                 (*a).add_field("element_type", 2, crate::skir_client::Serializer::string(), "", |x: &PageElement| &x.element_type, |x: &mut PageElement, v| x.element_type = v);
                 (*a).add_field("schema_revision", 3, crate::skir_client::Serializer::int32(), "", |x: &PageElement| &x.schema_revision, |x: &mut PageElement, v| x.schema_revision = v);
-                (*a).add_field("name", 4, crate::skir_client::Serializer::string(), "", |x: &PageElement| &x.name, |x: &mut PageElement, v| x.name = v);
                 (*a).add_field("value", 5, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &PageElement| &x.value, |x: &mut PageElement, v| x.value = v);
                 (*a).add_field("placement", 6, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &PageElement| &x.placement, |x: &mut PageElement, v| x.placement = v);
                 (*a).finalize();
@@ -3848,9 +3845,9 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PatchElement> = PatchElement::_adapter() as *const _ as *mut _;
+                (*a).add_removed_number(2);
                 (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PatchElement| &x.id, |x: &mut PatchElement, v| x.id = v);
                 (*a).add_field("page", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(RecordIdChange::_adapter())), "", |x: &PatchElement| &x.page, |x: &mut PatchElement, v| x.page = v);
-                (*a).add_field("name", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(StringChange::_adapter())), "", |x: &PatchElement| &x.name, |x: &mut PatchElement, v| x.name = v);
                 (*a).add_field("placement", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ElementPlacementChange::_adapter())), "", |x: &PatchElement| &x.placement, |x: &mut PatchElement, v| x.placement = v);
                 (*a).add_field("value_mutations", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ExpectedElementValueMutation::_adapter())), "", |x: &PatchElement| &x.value_mutations, |x: &mut PatchElement, v| x.value_mutations = v);
                 (*a).finalize();
@@ -3863,11 +3860,11 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<DuplicateElement> = DuplicateElement::_adapter() as *const _ as *mut _;
+                (*a).add_removed_number(4);
                 (*a).add_field("source_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DuplicateElement| &x.source_id, |x: &mut DuplicateElement, v| x.source_id = v);
                 (*a).add_field("expected_value", 1, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &DuplicateElement| &x.expected_value, |x: &mut DuplicateElement, v| x.expected_value = v);
                 (*a).add_field("new_id", 2, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DuplicateElement| &x.new_id, |x: &mut DuplicateElement, v| x.new_id = v);
                 (*a).add_field("page", 3, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DuplicateElement| &x.page, |x: &mut DuplicateElement, v| x.page = v);
-                (*a).add_field("name", 4, crate::skir_client::Serializer::string(), "", |x: &DuplicateElement| &x.name, |x: &mut DuplicateElement, v| x.name = v);
                 (*a).add_field("placement", 5, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &DuplicateElement| &x.placement, |x: &mut DuplicateElement, v| x.placement = v);
                 (*a).add_field("reference_rewrites", 6, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ReferenceRewrite::_adapter())), "", |x: &DuplicateElement| &x.reference_rewrites, |x: &mut DuplicateElement, v| x.reference_rewrites = v);
                 (*a).finalize();

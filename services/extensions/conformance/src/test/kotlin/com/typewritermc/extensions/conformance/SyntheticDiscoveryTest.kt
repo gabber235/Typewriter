@@ -106,7 +106,12 @@ val SyntheticDiscoveryTest by testSuite {
                 ),
                 (contribution.definitions + typeContribution("elements.cbor").definitions).distinctBy { it.id },
             )
-        val source = SyntheticEntry(elementId("00000000000000000000000000000002"), LiteralMessage("hello"))
+        val source =
+            SyntheticEntry(
+                elementId("00000000000000000000000000000002"),
+                "Synthetic Entry",
+                LiteralMessage("hello"),
+            )
 
         val encoded = with(CodecContext(registry)) { SyntheticEntryElementPrototype.encode(source) }
         val message = (encoded as DataValue.Record).fields.getValue("message") as DataValue.Polymorphic
@@ -137,6 +142,7 @@ val SyntheticDiscoveryTest by testSuite {
         val source =
             SyntheticPageReferenceEntry(
                 elementId("00000000000000000000000000000003"),
+                "Synthetic Page Reference",
                 Ref<SyntheticPageKind>(ResourceId("page", PageId("opening").key)),
             )
 

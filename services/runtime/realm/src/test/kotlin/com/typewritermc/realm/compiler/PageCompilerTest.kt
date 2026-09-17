@@ -73,8 +73,14 @@ private fun document(placement: ElementPlacement): PageDocument =
                     id = ELEMENT_ID,
                     elementType = ELEMENT_TYPE,
                     schemaRevision = 1,
-                    name = "Element",
-                    value = DataValue.Record(mapOf("text" to DataValue.StringValue("value"))),
+                    value =
+                        DataValue.Record(
+                            mapOf(
+                                "id" to DataValue.StringValue(ELEMENT_ID.value),
+                                "name" to DataValue.StringValue("Element"),
+                                "text" to DataValue.StringValue("value"),
+                            ),
+                        ),
                     placement = placement,
                 ),
             ),

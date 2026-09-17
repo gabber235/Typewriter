@@ -149,7 +149,6 @@ private fun WireOperation.toDomain(): AuthoringOperation =
             AuthoringOperation.PatchElement(
                 id = value.id.toElementInstanceId(),
                 page = value.page?.toDomain { it.toPageId().ref() },
-                name = value.name?.toDomain(),
                 placement = value.placement?.toDomain(WirePlacement::toDomain),
                 valueMutations =
                     value.valueMutations.map {
@@ -167,7 +166,6 @@ private fun WireOperation.toDomain(): AuthoringOperation =
                 expectedValue = SkirDataValueCodec.decode(value.expectedValue).getOrThrow(),
                 newId = value.newId.toElementInstanceId(),
                 page = value.page.toPageId().ref(),
-                name = value.name,
                 placement = value.placement.toDomain(),
                 referenceRewrites =
                     value.referenceRewrites.associate {
@@ -219,7 +217,6 @@ private fun WireElement.toDomain(): AuthoringElement =
         page = page.toPageId().ref(),
         elementType = ElementTypeId(DeclaredTypeId.parse(elementType)),
         schemaRevision = schemaRevision,
-        name = name,
         value = SkirDataValueCodec.decode(value).getOrThrow(),
         placement = placement.toDomain(),
     )

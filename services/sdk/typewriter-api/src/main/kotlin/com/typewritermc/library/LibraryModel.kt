@@ -110,7 +110,6 @@ data class PageDocumentElement(
     val id: ElementInstanceId,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
-    val name: String,
     val value: DataValue,
     val placement: ElementPlacement,
 )

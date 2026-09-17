@@ -5,6 +5,7 @@ import com.typewritermc.elements.ElementPlacement
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ElementValueMutation
 import com.typewritermc.elements.ElementValuePath
+import com.typewritermc.elements.elementName
 import com.typewritermc.library.BookId
 import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.GridPlacement
@@ -153,13 +154,12 @@ data class AuthoringElement(
     val page: Ref<LibraryPage>,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
-    val name: String,
     val value: DataValue,
     val placement: ElementPlacement,
 ) {
     init {
         require(schemaRevision > 0) { "Authoring element schema revisions must be positive." }
-        require(name.isNotBlank()) { "Authoring element names must not be blank." }
+        value.elementName()
     }
 }
 
@@ -300,7 +300,6 @@ sealed interface AuthoringOperation {
     data class PatchElement(
         val id: ElementInstanceId,
         val page: ExpectedChange<Ref<LibraryPage>>? = null,
-        val name: ExpectedChange<String>? = null,
         val placement: ExpectedChange<ElementPlacement>? = null,
         val valueMutations: List<ExpectedElementValueMutation> = emptyList(),
     ) : AuthoringOperation {
@@ -314,7 +313,6 @@ sealed interface AuthoringOperation {
         val expectedValue: DataValue,
         val newId: ElementInstanceId,
         val page: Ref<LibraryPage>,
-        val name: String,
         val placement: ElementPlacement,
         val referenceRewrites: Map<ResourceId, ResourceId> = emptyMap(),
     ) : AuthoringOperation {

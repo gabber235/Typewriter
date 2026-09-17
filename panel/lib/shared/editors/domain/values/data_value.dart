@@ -96,4 +96,9 @@ extension RecordValueMutation on RecordValue {
 
   RecordValue withoutField(String name) =>
       RecordValue(Map.of(fields)..remove(name));
+
+  String requiredStringField(String name) => switch (fields[name]) {
+    StringValue(:final value) => value,
+    _ => throw StateError("Record field '$name' must be a string"),
+  };
 }

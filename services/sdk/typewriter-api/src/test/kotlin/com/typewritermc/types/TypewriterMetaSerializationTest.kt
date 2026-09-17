@@ -24,7 +24,7 @@ val TypewriterMetaSerializationTest by testSuite {
     }
 
     test("TypewriterElement generates its serializer") {
-        val source = MetaSerializableElement(ElementInstanceId("element"))
+        val source = MetaSerializableElement(ElementInstanceId("element"), "Element")
 
         Json.decodeFromString(
             MetaSerializableElement.serializer(),
@@ -53,4 +53,5 @@ private data class MetaSerializableType(
 )
 private data class MetaSerializableElement(
     override val id: ElementInstanceId,
+    override val name: String,
 ) : Element

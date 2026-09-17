@@ -517,7 +517,8 @@ private fun exactElement(
         SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
     )
     return batch.enqueue(
-        "SELECT id, name, page, page.name AS page_name, page.book AS book, page.book.title AS book_title, " +
+        "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.name AS page_name, page.book AS book, " +
+            "page.book.title AS book_title, " +
             "page.chapter AS chapter, page.kind AS page_kind, element_type, placement " +
             "FROM element WHERE ${conditions.joinToString(" AND ")} LIMIT 1;",
         bindings,
@@ -772,7 +773,7 @@ private fun searchElementNames(
     lane: NameSearchLane = NameSearchLane.LEXICAL,
 ): PendingSearchResult<List<AuthoringSearchCandidate>> {
     val bindings = mutableMapOf<String, Any>("query" to queryText)
-    val conditions = mutableListOf(lane.condition("name", queryText, bindings))
+    val conditions = mutableListOf(lane.condition(ELEMENT_NAME_FIELD, queryText, bindings))
     bindings["limit"] = limit
     scope.addSqlFilter(
         conditions,
@@ -780,9 +781,10 @@ private fun searchElementNames(
         SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
     )
     return batch.enqueue(
-        "SELECT id, name, page, page.book AS book, page.name AS page_name, page.book.title AS book_title, " +
+        "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
+            "page.book.title AS book_title, " +
             "page.chapter AS chapter, page.kind AS page_kind, element_type, placement, " +
-            "${lane.scoreProjection("name")}, ${lane.rawScore("name")} AS score " +
+            "${lane.scoreProjection(ELEMENT_NAME_VALUE)}, ${lane.rawScore(ELEMENT_NAME_VALUE)} AS score " +
             "FROM element WITH INDEX element_name_${lane.indexSuffix} " +
             "WHERE ${conditions.joinToString(" AND ")} ORDER BY score DESC LIMIT \$limit;",
         bindings,
@@ -850,7 +852,8 @@ private fun searchExactElementContent(
         SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
     )
     return batch.enqueue(
-        "SELECT id, name, page, page.book AS book, page.name AS page_name, page.book.title AS book_name, " +
+        "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
+            "page.book.title AS book_name, " +
             "page.chapter AS chapter, page.kind AS page_kind, element_type, placement, " +
             "search.policy_revision AS policy_revision, " +
             "search.summary.values AS summary_values, search.summary.paths AS summary_paths, " +
@@ -895,7 +898,8 @@ private fun searchApproximateElementContent(
         SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
     )
     return batch.enqueue(
-        "SELECT id, name, page, page.book AS book, page.name AS page_name, page.book.title AS book_name, " +
+        "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
+            "page.book.title AS book_name, " +
             "page.chapter AS chapter, page.kind AS page_kind, element_type, placement, " +
             "search.policy_revision AS policy_revision, " +
             "search.summary.values AS summary_values, search.summary.paths AS summary_paths, " +
@@ -961,7 +965,8 @@ private fun Surreal.searchElementRows(
         SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
     )
     return query(
-        "SELECT id, name, page, page.book AS book, page.name AS page_name, page.book.title AS book_title, " +
+        "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
+            "page.book.title AS book_title, " +
             "page.chapter AS chapter, page.kind AS page_kind, element_type, placement, $projection " +
             "FROM element ${indexHint?.let { "WITH INDEX $it " }.orEmpty()}" +
             $$"WHERE $${conditions.joinToString(" AND ")} ORDER BY score DESC LIMIT $limit;",
@@ -1324,6 +1329,8 @@ private fun candidate(
 
 internal const val DEFAULT_SEARCH_LIMIT = 12
 private const val SELECTOR_SUGGESTION_LIMIT = 20
+private const val ELEMENT_NAME_FIELD = "search.name.values"
+private const val ELEMENT_NAME_VALUE = "search.name.values[0]"
 private const val CONTENT_CANDIDATE_FACTOR = 4
 private const val MAX_QUERY_TERMS = 12
 private const val MIN_APPROXIMATE_NGRAM = 2

@@ -44,7 +44,6 @@ List<PageElement> generateTimelinePageElements({
 
     final definition = EntryDefinition(
       id: trackId,
-      name: "Timeline Track ${trackIndex + 1}",
       elementDefinition: _definition(
         id: "track_$trackIndex",
         name: "Timeline Track",
@@ -58,7 +57,11 @@ List<PageElement> generateTimelinePageElements({
         height: 1,
         kind: EntryPlacementKind.timelineEntry,
       ),
-      data: RecordValue({"label": StringValue("Track ${trackIndex + 1}")}),
+      data: RecordValue({
+        "id": StringValue(trackId),
+        "name": StringValue("Timeline Track ${trackIndex + 1}"),
+        "label": StringValue("Track ${trackIndex + 1}"),
+      }),
       inwardEdges: const [],
       outwardEdges: outward,
     );

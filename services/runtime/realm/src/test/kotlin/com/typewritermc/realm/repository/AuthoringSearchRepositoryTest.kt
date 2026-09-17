@@ -501,8 +501,14 @@ private suspend fun RepositoryFixture.createSearchElement(
                         page = page.ref(),
                         elementType = elementType,
                         schemaRevision = 1,
-                        name = name,
-                        value = DataValue.Record(mapOf("dialogue" to DataValue.StringValue(dialogue))),
+                        value =
+                            DataValue.Record(
+                                mapOf(
+                                    "id" to DataValue.StringValue(id.value),
+                                    "name" to DataValue.StringValue(name),
+                                    "dialogue" to DataValue.StringValue(dialogue),
+                                ),
+                            ),
                         placement = ElementPlacement.Graph(0, 0, 2, 1),
                     ),
                 ),
@@ -512,7 +518,19 @@ private suspend fun RepositoryFixture.createSearchElement(
 }
 
 private suspend fun RepositoryFixture.createUnavailableElement(page: PageId) {
-    registerElementType(UNAVAILABLE_ELEMENT_TYPE, TypeGraph(TypeExpression.Any, emptyList()))
+    registerElementType(
+        UNAVAILABLE_ELEMENT_TYPE,
+        TypeGraph(
+            TypeExpression.Record(
+                listOf(
+                    TypeField("id", TypeExpression.StringType()),
+                    TypeField("name", TypeExpression.StringType()),
+                    TypeField("payload", TypeExpression.StringType()),
+                ),
+            ),
+            emptyList(),
+        ),
+    )
     authoring.apply(
         AuthoringBatch(
             BatchId("create-unavailable-search"),
@@ -523,8 +541,14 @@ private suspend fun RepositoryFixture.createUnavailableElement(page: PageId) {
                         page = page.ref(),
                         elementType = UNAVAILABLE_ELEMENT_TYPE,
                         schemaRevision = 1,
-                        name = "Fallback name",
-                        value = DataValue.StringValue("Invisible payload"),
+                        value =
+                            DataValue.Record(
+                                mapOf(
+                                    "id" to DataValue.StringValue(UNAVAILABLE_ELEMENT.value),
+                                    "name" to DataValue.StringValue("Fallback name"),
+                                    "payload" to DataValue.StringValue("Invisible payload"),
+                                ),
+                            ),
                         placement = ElementPlacement.Graph(0, 0, 2, 1),
                     ),
                 ),
@@ -555,7 +579,11 @@ private val SEARCH_GRAPH =
                     kind = NominalTypeKind.CONCRETE,
                     representation =
                         TypeExpression.Record(
-                            listOf(TypeField("dialogue", TypeExpression.StringType())),
+                            listOf(
+                                TypeField("id", TypeExpression.StringType()),
+                                TypeField("name", TypeExpression.StringType()),
+                                TypeField("dialogue", TypeExpression.StringType()),
+                            ),
                         ),
                 ),
             ),
@@ -563,20 +591,38 @@ private val SEARCH_GRAPH =
 private val SEARCH_DEFINITION =
     ElementSearchDefinition(
         policy = ElementSearchPolicy.ORDINARY_TEXT,
-        propertyOverrides = emptyList<ElementSearchPropertyOverride>(),
+        propertyOverrides =
+            listOf(
+                ElementSearchPropertyOverride(SEARCH_TYPE_REF, "id", ElementSearchMode.NONE),
+                ElementSearchPropertyOverride(SEARCH_TYPE_REF, "name", ElementSearchMode.NONE),
+            ),
         revisionFingerprintInputs = listOf(SEARCH_TYPE_REF),
     )
 private val INHERITED_PARENT_DEFINITION =
     TypeDefinition(
         id = INHERITED_PARENT_TYPE_REF,
         kind = NominalTypeKind.CONCRETE,
-        representation = TypeExpression.Record(listOf(TypeField("dialogue", TypeExpression.StringType()))),
+        representation =
+            TypeExpression.Record(
+                listOf(
+                    TypeField("id", TypeExpression.StringType()),
+                    TypeField("name", TypeExpression.StringType()),
+                    TypeField("dialogue", TypeExpression.StringType()),
+                ),
+            ),
     )
 private val INHERITED_CHILD_DEFINITION =
     TypeDefinition(
         id = INHERITED_CHILD_TYPE_REF,
         kind = NominalTypeKind.CONCRETE,
-        representation = TypeExpression.Record(listOf(TypeField("dialogue", TypeExpression.StringType()))),
+        representation =
+            TypeExpression.Record(
+                listOf(
+                    TypeField("id", TypeExpression.StringType()),
+                    TypeField("name", TypeExpression.StringType()),
+                    TypeField("dialogue", TypeExpression.StringType()),
+                ),
+            ),
         parents = listOf(INHERITED_PARENT_TYPE_REF),
     )
 private val INHERITED_PARENT_GRAPH =

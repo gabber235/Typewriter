@@ -11,21 +11,47 @@ import kotlinx.serialization.Serializable
  * Represents an authored element in persistence, including schema revision and editor placement.
  *
  * [value] contains reference slots rather than the logical values consumed by extension codecs. Assemble
- * references before decoding. Names must be nonblank and schema revisions positive.
+ * references before decoding. Schema revisions must be positive.
  */
 @Serializable
 data class StoredElement(
     val id: ElementInstanceId,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
-    val name: String,
     val value: StoredElementValue,
     val placement: ElementPlacement,
 ) {
     init {
         require(schemaRevision > 0) { "Stored element schema revisions must be positive." }
-        require(name.isNotBlank()) { "Stored element names must not be blank." }
     }
+}
+
+fun DataValue.elementId(): ElementInstanceId =
+    ElementInstanceId(requireElementField("id"))
+
+fun DataValue.elementName(): String =
+    requireElementField("name").also { require(it.isNotBlank()) { "Element names must not be blank." } }
+
+fun DataValue.withElementId(id: ElementInstanceId): DataValue = withElementField("id", id.value)
+
+fun DataValue.withElementName(name: String): DataValue {
+    require(name.isNotBlank()) { "Element names must not be blank." }
+    return withElementField("name", name)
+}
+
+private fun DataValue.requireElementField(field: String): String {
+    val record = this as? DataValue.Record ?: error("Element values must be records.")
+    return (record.fields[field] as? DataValue.StringValue)?.value
+        ?: error("Element field '$field' must be a string.")
+}
+
+private fun DataValue.withElementField(
+    field: String,
+    value: String,
+): DataValue {
+    val record = this as? DataValue.Record ?: error("Element values must be records.")
+    require(field in record.fields) { "Element field '$field' is required." }
+    return record.copy(fields = record.fields + (field to DataValue.StringValue(value)))
 }
 
 /**

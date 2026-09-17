@@ -88,7 +88,6 @@ EntryDefinition _storyEntry(
   bool deprecated = false,
 }) => EntryDefinition(
   id: "$id-entry",
-  name: name,
   elementDefinition: _elementDefinition(
     id: "$id-elementDefinition",
     name: id.formatted,
@@ -98,7 +97,10 @@ EntryDefinition _storyEntry(
     deprecated: deprecated,
   ),
   placement: EntryPlacement(x: 0, y: 0, width: width, height: height),
-  data: RecordValue(const {}),
+  data: RecordValue({
+    "id": StringValue("$id-entry"),
+    "name": StringValue(name),
+  }),
   inwardEdges: const [],
   outwardEdges: const [],
 );

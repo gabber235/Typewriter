@@ -1505,7 +1505,6 @@ sealed class PageElement_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get page;
   _core.String get elementType;
   _core.int get schemaRevision;
-  _core.String get name;
   _lib_editor_v1_type_catalog.TypedValue get value;
   ElementPlacement get placement;
 
@@ -1523,8 +1522,6 @@ final class PageElement implements PageElement_orMutable {
   @_core.override
   final _core.int schemaRevision;
   @_core.override
-  final _core.String name;
-  @_core.override
   final _lib_editor_v1_type_catalog.TypedValue value;
   @_core.override
   final ElementPlacement placement;
@@ -1535,7 +1532,6 @@ final class PageElement implements PageElement_orMutable {
     required _lib_kernel_v1_record_id.RecordId_orMutable page,
     required _core.String elementType,
     required _core.int schemaRevision,
-    required _core.String name,
     required _lib_editor_v1_type_catalog.TypedValue value,
     required ElementPlacement placement,
   }) => PageElement._(
@@ -1543,7 +1539,6 @@ final class PageElement implements PageElement_orMutable {
     page.toFrozen(),
     elementType,
     schemaRevision,
-    name,
     value,
     placement,
   );
@@ -1553,7 +1548,6 @@ final class PageElement implements PageElement_orMutable {
     this.page,
     this.elementType,
     this.schemaRevision,
-    this.name,
     this.value,
     this.placement,
   );
@@ -1564,7 +1558,6 @@ final class PageElement implements PageElement_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     0,
-    "",
     _lib_editor_v1_type_catalog.TypedValue.unknown,
     ElementPlacement.unknown,
   );
@@ -1576,7 +1569,6 @@ final class PageElement implements PageElement_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     "",
     0,
-    "",
     _lib_editor_v1_type_catalog.TypedValue.unknown,
     ElementPlacement.unknown,
   );
@@ -1592,7 +1584,6 @@ final class PageElement implements PageElement_orMutable {
     this.page,
     this.elementType,
     this.schemaRevision,
-    this.name,
     this.value,
     this.placement,
   );
@@ -1612,7 +1603,6 @@ final class PageElement implements PageElement_orMutable {
     this.page,
     this.elementType,
     this.schemaRevision,
-    this.name,
     this.value,
     this.placement,
   ];
@@ -1660,15 +1650,6 @@ final class PageElement implements PageElement_orMutable {
         (it, v) => it.schemaRevision = v,
       );
       _serializerBuilder.addField(
-        "name",
-        "name",
-        4,
-        _skir.Serializers.string,
-        "",
-        (it) => it.name,
-        (it, v) => it.name = v,
-      );
-      _serializerBuilder.addField(
         "value",
         "value",
         5,
@@ -1686,6 +1667,7 @@ final class PageElement implements PageElement_orMutable {
         (it) => it.placement,
         (it, v) => it.placement = v,
       );
+      _serializerBuilder.addRemovedNumber(4);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1708,7 +1690,6 @@ final class PageElement_mutable implements PageElement_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable page;
   _core.String elementType;
   _core.int schemaRevision;
-  _core.String name;
   _lib_editor_v1_type_catalog.TypedValue value;
   ElementPlacement placement;
   _skir.internal__UnrecognizedFields? _u;
@@ -1718,7 +1699,6 @@ final class PageElement_mutable implements PageElement_orMutable {
     this.page,
     this.elementType,
     this.schemaRevision,
-    this.name,
     this.value,
     this.placement,
   );
@@ -1752,7 +1732,6 @@ final class PageElement_mutable implements PageElement_orMutable {
     page: this.page,
     elementType: this.elementType,
     schemaRevision: this.schemaRevision,
-    name: this.name,
     value: this.value,
     placement: this.placement,
   ).._u = this._u;
@@ -4694,7 +4673,6 @@ sealed class AuthoringResourceChange {
     required _lib_kernel_v1_record_id.RecordId_orMutable page,
     required _core.String elementType,
     required _core.int schemaRevision,
-    required _core.String name,
     required _lib_editor_v1_type_catalog.TypedValue value,
     required ElementPlacement placement,
   }) => AuthoringResourceChange.wrapUpsertElement(
@@ -4703,7 +4681,6 @@ sealed class AuthoringResourceChange {
       page: page,
       elementType: elementType,
       schemaRevision: schemaRevision,
-      name: name,
       value: value,
       placement: placement,
     )
@@ -9549,7 +9526,6 @@ final class CreateElement_mutable implements CreateElement_orMutable {
 sealed class PatchElement_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get id;
   RecordIdChange_orMutable? get page;
-  StringChange_orMutable? get name;
   ElementPlacementChange_orMutable? get placement;
   _core.Iterable<ExpectedElementValueMutation_orMutable> get valueMutations;
 
@@ -9563,8 +9539,6 @@ final class PatchElement implements PatchElement_orMutable {
   @_core.override
   final RecordIdChange? page;
   @_core.override
-  final StringChange? name;
-  @_core.override
   final ElementPlacementChange? placement;
   @_core.override
   final _core.Iterable<ExpectedElementValueMutation> valueMutations;
@@ -9573,13 +9547,11 @@ final class PatchElement implements PatchElement_orMutable {
   factory PatchElement({
     required _lib_kernel_v1_record_id.RecordId_orMutable id,
     required RecordIdChange_orMutable? page,
-    required StringChange_orMutable? name,
     required ElementPlacementChange_orMutable? placement,
     required _core.Iterable<ExpectedElementValueMutation_orMutable> valueMutations,
   }) => PatchElement._(
     id.toFrozen(),
     (page != null) ? page.toFrozen() : null,
-    (name != null) ? name.toFrozen() : null,
     (placement != null) ? placement.toFrozen() : null,
     _skir.internal__frozenMappedCopy(valueMutations, (it) => it.toFrozen()),
   );
@@ -9587,7 +9559,6 @@ final class PatchElement implements PatchElement_orMutable {
   PatchElement._(
     this.id,
     this.page,
-    this.name,
     this.placement,
     this.valueMutations,
   );
@@ -9597,7 +9568,6 @@ final class PatchElement implements PatchElement_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     null,
     null,
-    null,
     _skir.KeyedIterable.empty,
   );
 
@@ -9605,7 +9575,6 @@ final class PatchElement implements PatchElement_orMutable {
   /// Fields are initialized to their default values.
   static PatchElement_mutable mutable() => PatchElement_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    null,
     null,
     null,
     _skir.KeyedIterable.empty,
@@ -9620,7 +9589,6 @@ final class PatchElement implements PatchElement_orMutable {
   PatchElement_mutable toMutable() => PatchElement_mutable._(
     this.id,
     this.page,
-    this.name,
     this.placement,
     this.valueMutations,
   );
@@ -9638,7 +9606,6 @@ final class PatchElement implements PatchElement_orMutable {
   _core.List get _equality_proxy => [
     this.id,
     this.page,
-    this.name,
     this.placement,
     this.valueMutations,
   ];
@@ -9670,17 +9637,6 @@ final class PatchElement implements PatchElement_orMutable {
         (it, v) => it.page = v,
       );
       _serializerBuilder.addField(
-        "name",
-        "name",
-        2,
-        _skir.Serializers.optional(
-          StringChange.serializer,
-        ),
-        "",
-        (it) => it.name,
-        (it, v) => it.name = v,
-      );
-      _serializerBuilder.addField(
         "placement",
         "placement",
         3,
@@ -9702,6 +9658,7 @@ final class PatchElement implements PatchElement_orMutable {
         (it) => it.valueMutations,
         (it, v) => it.valueMutations = v,
       );
+      _serializerBuilder.addRemovedNumber(2);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -9722,7 +9679,6 @@ final class PatchElement implements PatchElement_orMutable {
 final class PatchElement_mutable implements PatchElement_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable id;
   RecordIdChange_orMutable? page;
-  StringChange_orMutable? name;
   ElementPlacementChange_orMutable? placement;
   _core.Iterable<ExpectedElementValueMutation_orMutable> valueMutations;
   _skir.internal__UnrecognizedFields? _u;
@@ -9730,7 +9686,6 @@ final class PatchElement_mutable implements PatchElement_orMutable {
   PatchElement_mutable._(
     this.id,
     this.page,
-    this.name,
     this.placement,
     this.valueMutations,
   );
@@ -9762,7 +9717,6 @@ final class PatchElement_mutable implements PatchElement_orMutable {
   PatchElement toFrozen() => PatchElement(
     id: this.id,
     page: this.page,
-    name: this.name,
     placement: this.placement,
     valueMutations: this.valueMutations,
   ).._u = this._u;
@@ -9929,7 +9883,6 @@ sealed class DuplicateElement_orMutable {
   _lib_editor_v1_type_catalog.TypedValue get expectedValue;
   _lib_kernel_v1_record_id.RecordId_orMutable get newId;
   _lib_kernel_v1_record_id.RecordId_orMutable get page;
-  _core.String get name;
   ElementPlacement get placement;
   _core.Iterable<ReferenceRewrite_orMutable> get referenceRewrites;
 
@@ -9947,8 +9900,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId page;
   @_core.override
-  final _core.String name;
-  @_core.override
   final ElementPlacement placement;
   @_core.override
   final _core.Iterable<ReferenceRewrite> referenceRewrites;
@@ -9959,7 +9910,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     required _lib_editor_v1_type_catalog.TypedValue expectedValue,
     required _lib_kernel_v1_record_id.RecordId_orMutable newId,
     required _lib_kernel_v1_record_id.RecordId_orMutable page,
-    required _core.String name,
     required ElementPlacement placement,
     required _core.Iterable<ReferenceRewrite_orMutable> referenceRewrites,
   }) => DuplicateElement._(
@@ -9967,7 +9917,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     expectedValue,
     newId.toFrozen(),
     page.toFrozen(),
-    name,
     placement,
     _skir.internal__frozenMappedCopy(referenceRewrites, (it) => it.toFrozen()),
   );
@@ -9977,7 +9926,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     this.expectedValue,
     this.newId,
     this.page,
-    this.name,
     this.placement,
     this.referenceRewrites,
   );
@@ -9988,7 +9936,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     _lib_editor_v1_type_catalog.TypedValue.unknown,
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    "",
     ElementPlacement.unknown,
     _skir.KeyedIterable.empty,
   );
@@ -10000,7 +9947,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     _lib_editor_v1_type_catalog.TypedValue.unknown,
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    "",
     ElementPlacement.unknown,
     _skir.KeyedIterable.empty,
   );
@@ -10016,7 +9962,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     this.expectedValue,
     this.newId,
     this.page,
-    this.name,
     this.placement,
     this.referenceRewrites,
   );
@@ -10036,7 +9981,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
     this.expectedValue,
     this.newId,
     this.page,
-    this.name,
     this.placement,
     this.referenceRewrites,
   ];
@@ -10084,15 +10028,6 @@ final class DuplicateElement implements DuplicateElement_orMutable {
         (it, v) => it.page = v,
       );
       _serializerBuilder.addField(
-        "name",
-        "name",
-        4,
-        _skir.Serializers.string,
-        "",
-        (it) => it.name,
-        (it, v) => it.name = v,
-      );
-      _serializerBuilder.addField(
         "placement",
         "placement",
         5,
@@ -10112,6 +10047,7 @@ final class DuplicateElement implements DuplicateElement_orMutable {
         (it) => it.referenceRewrites,
         (it, v) => it.referenceRewrites = v,
       );
+      _serializerBuilder.addRemovedNumber(4);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -10134,7 +10070,6 @@ final class DuplicateElement_mutable implements DuplicateElement_orMutable {
   _lib_editor_v1_type_catalog.TypedValue expectedValue;
   _lib_kernel_v1_record_id.RecordId_orMutable newId;
   _lib_kernel_v1_record_id.RecordId_orMutable page;
-  _core.String name;
   ElementPlacement placement;
   _core.Iterable<ReferenceRewrite_orMutable> referenceRewrites;
   _skir.internal__UnrecognizedFields? _u;
@@ -10144,7 +10079,6 @@ final class DuplicateElement_mutable implements DuplicateElement_orMutable {
     this.expectedValue,
     this.newId,
     this.page,
-    this.name,
     this.placement,
     this.referenceRewrites,
   );
@@ -10200,7 +10134,6 @@ final class DuplicateElement_mutable implements DuplicateElement_orMutable {
     expectedValue: this.expectedValue,
     newId: this.newId,
     page: this.page,
-    name: this.name,
     placement: this.placement,
     referenceRewrites: this.referenceRewrites,
   ).._u = this._u;
@@ -10537,14 +10470,12 @@ sealed class AuthoringOperation {
   factory AuthoringOperation.createPatchElement({
     required _lib_kernel_v1_record_id.RecordId_orMutable id,
     required RecordIdChange_orMutable? page,
-    required StringChange_orMutable? name,
     required ElementPlacementChange_orMutable? placement,
     required _core.Iterable<ExpectedElementValueMutation_orMutable> valueMutations,
   }) => AuthoringOperation.wrapPatchElement(
     PatchElement(
       id: id,
       page: page,
-      name: name,
       placement: placement,
       valueMutations: valueMutations,
     )
@@ -10561,7 +10492,6 @@ sealed class AuthoringOperation {
     required _lib_editor_v1_type_catalog.TypedValue expectedValue,
     required _lib_kernel_v1_record_id.RecordId_orMutable newId,
     required _lib_kernel_v1_record_id.RecordId_orMutable page,
-    required _core.String name,
     required ElementPlacement placement,
     required _core.Iterable<ReferenceRewrite_orMutable> referenceRewrites,
   }) => AuthoringOperation.wrapDuplicateElement(
@@ -10570,7 +10500,6 @@ sealed class AuthoringOperation {
       expectedValue: expectedValue,
       newId: newId,
       page: page,
-      name: name,
       placement: placement,
       referenceRewrites: referenceRewrites,
     )

@@ -4,7 +4,6 @@ import "package:typewriter_testkit/features/organizations.dart";
 
 EntryDefinition _entry(String id) => EntryDefinition(
   id: id,
-  name: id,
   elementDefinition: ElementDefinition(
     rootType: ResolvedTypeRef(
       id: QualifiedTypeId(namespace: "test", name: id),
@@ -16,7 +15,7 @@ EntryDefinition _entry(String id) => EntryDefinition(
     icon: const IconValue.iconify("fa-solid:star"),
   ),
   placement: const EntryPlacement(x: 0, y: 0, width: 3, height: 2),
-  data: RecordValue(const {}),
+  data: RecordValue({"id": StringValue(id), "name": StringValue(id)}),
   inwardEdges: const [],
   outwardEdges: const [],
 );

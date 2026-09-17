@@ -46,7 +46,6 @@ void main() {
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
-                      name: "Test Entry",
                       elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
@@ -54,7 +53,10 @@ void main() {
                         width: 6,
                         height: 1,
                       ),
-                      data: RecordValue(const {}),
+                      data: RecordValue(const {
+                        "id": StringValue("test-entry"),
+                        "name": StringValue("Test Entry"),
+                      }),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -81,7 +83,6 @@ void main() {
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
-                      name: "Test Entry",
                       elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
@@ -89,7 +90,10 @@ void main() {
                         width: 1,
                         height: 1,
                       ),
-                      data: RecordValue(const {}),
+                      data: RecordValue(const {
+                        "id": StringValue("test-entry"),
+                        "name": StringValue("Test Entry"),
+                      }),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -148,7 +152,6 @@ void main() {
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
-                      name: "Test Entry",
                       elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
@@ -156,7 +159,10 @@ void main() {
                         width: 1,
                         height: 1,
                       ),
-                      data: RecordValue(const {}),
+                      data: RecordValue(const {
+                        "id": StringValue("test-entry"),
+                        "name": StringValue("Test Entry"),
+                      }),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -195,7 +201,6 @@ void main() {
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
-                      name: "Test Entry",
                       elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
@@ -203,7 +208,10 @@ void main() {
                         width: 6,
                         height: 1,
                       ),
-                      data: RecordValue(const {}),
+                      data: RecordValue(const {
+                        "id": StringValue("test-entry"),
+                        "name": StringValue("Test Entry"),
+                      }),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -246,8 +254,6 @@ void main() {
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
-                      name:
-                          "This is a very long entry name that should be truncated",
                       elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
@@ -255,7 +261,12 @@ void main() {
                         width: 3,
                         height: 1,
                       ),
-                      data: RecordValue(const {}),
+                      data: RecordValue(const {
+                        "id": StringValue("test-entry"),
+                        "name": StringValue(
+                          "This is a very long entry name that should be truncated",
+                        ),
+                      }),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -341,7 +352,6 @@ void main() {
                       entry: PageEntry.definition(
                         definition: EntryDefinition(
                           id: "test-entry",
-                          name: "Test Entry",
                           elementDefinition: testBlueprint,
                           placement: const EntryPlacement(
                             x: 0,
@@ -349,7 +359,10 @@ void main() {
                             width: 6,
                             height: 1,
                           ),
-                          data: RecordValue(const {}),
+                          data: RecordValue(const {
+                            "id": StringValue("test-entry"),
+                            "name": StringValue("Test Entry"),
+                          }),
                           inwardEdges: const [],
                           outwardEdges: const [],
                         ),

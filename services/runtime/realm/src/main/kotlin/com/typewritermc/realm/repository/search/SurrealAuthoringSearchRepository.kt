@@ -6,6 +6,7 @@ import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ElementValuePath
 import com.typewritermc.elements.StoredElement
+import com.typewritermc.elements.elementName
 import com.typewritermc.realm.repository.records.ElementRecordParser
 import com.typewritermc.realm.repository.records.StoredPageElements
 import com.typewritermc.realm.repository.utils.inTransaction
@@ -39,7 +40,7 @@ internal class SurrealAuthoringSearchRepository(
             val element = elements[id] ?: return@forEach
             when (val result = projector.project(element, catalog()[element.elementType])) {
                 is ElementSearchProjectionResult.Projected -> transaction.replaceSearch(result.projection)
-                is ElementSearchProjectionResult.Unavailable -> transaction.clearSearch(element.id)
+                is ElementSearchProjectionResult.Unavailable -> transaction.replaceUnavailableSearch(element)
             }
         }
     }
@@ -68,7 +69,7 @@ internal class SurrealAuthoringSearchRepository(
                             }
 
                             is ElementSearchProjectionResult.Unavailable -> {
-                                transaction.clearSearch(element.id)
+                                transaction.replaceUnavailableSearch(element)
                                 unavailable++
                             }
                         }
@@ -97,6 +98,7 @@ private fun Transaction.replaceSearch(projection: ElementSearchProjection) {
             "element" to projection.element.id.surrealId(),
             "search" to
                 mapOf(
+                    "name" to mapOf("values" to listOf(projection.name)),
                     "policy_revision" to projection.policyRevision,
                     "summary" to projection.summary.databaseValue(),
                     "body" to projection.body.databaseValue(),
@@ -112,8 +114,21 @@ private fun List<SearchFragment>.databaseValue(): Map<String, List<String>> =
         "paths" to map { encodeSearchPath(it.path) },
     )
 
-private fun Transaction.clearSearch(id: ElementInstanceId) {
-    query($$"UPDATE ONLY $element SET search = NONE;", mapOf("element" to id.surrealId())).take(0)
+private fun Transaction.replaceUnavailableSearch(element: StoredElement) {
+    query(
+        $$"UPDATE ONLY $element SET search = $search;",
+        mapOf(
+            "element" to element.id.surrealId(),
+            "search" to
+                mapOf(
+                    "name" to mapOf("values" to listOf(element.value.valueWithSlots.elementName())),
+                    "policy_revision" to "unavailable",
+                    "summary" to emptyList<SearchFragment>().databaseValue(),
+                    "body" to emptyList<SearchFragment>().databaseValue(),
+                    "keyword" to emptyList<SearchFragment>().databaseValue(),
+                ),
+        ),
+    ).take(0)
 }
 
 private fun Transaction.loadSearchElements(ids: Collection<ElementInstanceId>): StoredPageElements {

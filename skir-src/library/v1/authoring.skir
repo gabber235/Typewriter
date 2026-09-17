@@ -75,7 +75,7 @@ struct PageElement(812200009) {
   page: RecordId = 1;
   element_type: string = 2;
   schema_revision: int32 = 3;
-  name: string = 4;
+  removed 4;
   value: TypedValue = 5;
   placement: ElementPlacement = 6;
 }
@@ -350,7 +350,7 @@ struct CreateElement(812200050) {
 struct PatchElement(812200051) {
   id: RecordId = 0;
   page: RecordIdChange? = 1;
-  name: StringChange? = 2;
+  removed 2;
   placement: ElementPlacementChange? = 3;
   value_mutations: [ExpectedElementValueMutation] = 4;
 }
@@ -365,7 +365,7 @@ struct DuplicateElement(812200053) {
   expected_value: TypedValue = 1;
   new_id: RecordId = 2;
   page: RecordId = 3;
-  name: string = 4;
+  removed 4;
   placement: ElementPlacement = 5;
   reference_rewrites: [ReferenceRewrite] = 6;
 }

@@ -14,7 +14,6 @@ Widget entryNodeMultipleEntriesUseCase(BuildContext context) =>
 Widget entryNodeDefinitionUseCase(BuildContext context) {
   final definition = EntryDefinition(
     id: "test-entry-id",
-    name: "Test Entry",
     elementDefinition: _elementDefinition(
       id: "test-elementDefinition",
       name: "Test Blueprint",
@@ -39,6 +38,7 @@ Widget entryNodeDefinitionUseCase(BuildContext context) {
       ),
     ),
     data: RecordValue({
+      "id": const StringValue("test-entry-id"),
       "name": const StringValue("Test Entry"),
       "value": IntegerValue(BigInt.from(42)),
     }),
@@ -65,7 +65,6 @@ Widget entryNodeDefinitionUseCase(BuildContext context) {
 Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
   final definition = EntryDefinition(
     id: "deprecated-entry-id",
-    name: "Deprecated Entry",
     elementDefinition: _elementDefinition(
       id: "deprecated-elementDefinition",
       name: "Deprecated Blueprint",
@@ -90,7 +89,10 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
         max: 10,
       ),
     ),
-    data: RecordValue({"name": const StringValue("Deprecated Entry")}),
+    data: RecordValue({
+      "id": const StringValue("deprecated-entry-id"),
+      "name": const StringValue("Deprecated Entry"),
+    }),
     inwardEdges: const [],
     outwardEdges: const [],
     metadata: const [],

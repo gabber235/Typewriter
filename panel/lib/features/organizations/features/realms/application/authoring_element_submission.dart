@@ -36,7 +36,6 @@ skir.AuthoringOperation elementCommitOperation(
   return skir.AuthoringOperation.createPatchElement(
     id: recordId("element:$id"),
     page: null,
-    name: null,
     placement:
         commit.changedPaths.any(
           (path) => path.isAtOrBelow(elementPlacementPath),

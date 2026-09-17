@@ -122,8 +122,13 @@ mixin _PageElementMutations
             page: _pageId,
             elementType: indexed.$2.typeId.uuid,
             schemaRevision: indexed.$2.rootType.revision,
-            name: indexed.$2.name,
-            value: _initialElementValue(indexed.$2, registry, codec.codec),
+            value: _initialElementValue(
+              indexed.$2,
+              ids[indexed.$1],
+              indexed.$2.name,
+              registry,
+              codec.codec,
+            ),
             placement: switch (placementKind) {
               EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
                 x: graphPlacements[indexed.$1].x,

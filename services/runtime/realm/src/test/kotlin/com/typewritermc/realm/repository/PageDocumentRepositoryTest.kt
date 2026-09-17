@@ -10,6 +10,7 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeGraph
 import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
@@ -75,7 +76,18 @@ private suspend fun RepositoryFixture.createElement(
     graph: TypeGraph,
 ) {
     val type = if (graph.root == REF_EXPRESSION) REFERENCE_ELEMENT_TYPE else ELEMENT_TYPE
-    registerElementType(type, graph)
+    val elementGraph =
+        TypeGraph(
+            TypeExpression.Record(
+                listOf(
+                    TypeField("id", TypeExpression.StringType()),
+                    TypeField("name", TypeExpression.StringType()),
+                    TypeField("payload", graph.root),
+                ),
+            ),
+            graph.definitions,
+        )
+    registerElementType(type, elementGraph)
     authoring.apply(
         AuthoringBatch(
             BatchId("create-element-${id.value}"),
@@ -86,8 +98,14 @@ private suspend fun RepositoryFixture.createElement(
                         page = page.pageRef(),
                         elementType = type,
                         schemaRevision = 1,
-                        name = name,
-                        value = value,
+                        value =
+                            DataValue.Record(
+                                mapOf(
+                                    "id" to DataValue.StringValue(id.value),
+                                    "name" to DataValue.StringValue(name),
+                                    "payload" to value,
+                                ),
+                            ),
                         placement = ElementPlacement.Graph(0, 0, 2, 1),
                     ),
                 ),

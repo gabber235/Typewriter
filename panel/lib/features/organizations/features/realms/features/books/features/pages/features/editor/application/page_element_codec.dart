@@ -5,6 +5,8 @@ part of "page_elements.dart";
 // boundary so callers can report why creation cannot proceed.
 skir.TypedValue _initialElementValue(
   ElementDefinition definition,
+  String id,
+  String name,
   TypeRegistry registry,
   SkirEditorCodec codec,
 ) {
@@ -14,7 +16,13 @@ skir.TypedValue _initialElementValue(
   if (value == null) {
     throw ApiException.badRequest(initial.diagnostics.join("; "));
   }
-  final encoded = codec.encodeValue(value);
+  if (value is! RecordValue) {
+    throw ApiException.badRequest("Element values must be records");
+  }
+  final identified = value
+      .withField("id", DataValue.string(id))
+      .withField("name", DataValue.string(name));
+  final encoded = codec.encodeValue(identified);
   return encoded.valueOrNull ??
       (throw ApiException.badRequest(encoded.diagnostics.join("; ")));
 }
@@ -115,7 +123,6 @@ List<PageElement> _decodePageElements(
         ? PageEntry.definition(
             definition: EntryDefinition(
               id: element.id.id,
-              name: element.name,
               elementDefinition: definition,
               placement: entryPlacement,
               data: data,
@@ -125,7 +132,7 @@ List<PageElement> _decodePageElements(
           )
         : PageEntry.missingElementDefinition(
             id: element.id.id,
-            name: element.name,
+            name: data?.requiredStringField("name") ?? element.id.id,
             placement: entryPlacement,
             inwardLinks: incoming,
             outwardLinks: outgoing,

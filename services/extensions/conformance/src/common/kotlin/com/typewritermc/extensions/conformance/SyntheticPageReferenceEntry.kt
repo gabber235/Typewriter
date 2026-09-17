@@ -11,6 +11,7 @@ import com.typewritermc.types.Ref
  */
 @TypewriterElement(
     id = "019d3a87000270008000000000000002",
+    revision = 2,
     name = "Synthetic Page Reference",
     description = "Verifies generated page kind references",
     icon = "material-symbols:link",
@@ -18,5 +19,6 @@ import com.typewritermc.types.Ref
 )
 data class SyntheticPageReferenceEntry(
     override val id: ElementInstanceId,
+    override val name: String,
     val page: Ref<SyntheticPageKind>,
 ) : Entry

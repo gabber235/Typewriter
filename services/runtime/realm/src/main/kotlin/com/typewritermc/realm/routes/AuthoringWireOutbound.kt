@@ -152,7 +152,6 @@ private fun AuthoringElement.toWire(): WireElement =
         page = page.toSkirRecordId(),
         elementType = elementType.value.toString(),
         schemaRevision = schemaRevision,
-        name = name,
         value = SkirDataValueCodec.encode(value).getOrThrow(),
         placement = placement.toWire(),
     )
@@ -174,7 +173,6 @@ private fun PageDocumentElement.toWire(page: Page): WireElement =
         page = page.id.toSkirRecordId(),
         elementType = elementType.value.toString(),
         schemaRevision = schemaRevision,
-        name = name,
         value = SkirDataValueCodec.encode(value).getOrThrow(),
         placement = placement.toWire(),
     )

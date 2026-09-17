@@ -12,9 +12,12 @@ void main() {
     (tester) async {
       final organizationId = recordId("organization:test");
       final realmId = recordId("service:test");
-      final definition = generateRandomEntryDefinition().copyWith(
+      final generated = generateRandomEntryDefinition();
+      final definition = generated.copyWith(
         id: "definition",
-        name: "Definition Entry",
+        data: generated.data
+            .withField("id", const StringValue("definition"))
+            .withField("name", const StringValue("Definition Entry")),
         placement: const EntryPlacement(x: 0, y: 0, width: 2, height: 2),
       );
       final elements = [

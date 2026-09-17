@@ -59,15 +59,13 @@ private const val ELEMENT_FIXTURES =
     CREATE element:source CONTENT {
         element_type: 'test:entry',
         schema_revision: 1,
-        name: 'Source',
-        value: {},
+        value: { format: 1, data: { kind: 'record', fields: { id: { kind: 'string', value: 'source' }, name: { kind: 'string', value: 'Source' } } } },
         placement: { kind: 'graph_v1', x: 0, y: 0, width: 1, height: 1 }
     };
     CREATE element:target CONTENT {
         element_type: 'test:entry',
         schema_revision: 1,
-        name: 'Target',
-        value: {},
+        value: { format: 1, data: { kind: 'record', fields: { id: { kind: 'string', value: 'target' }, name: { kind: 'string', value: 'Target' } } } },
         placement: { kind: 'graph_v1', x: 1, y: 1, width: 1, height: 1 }
     };
     """

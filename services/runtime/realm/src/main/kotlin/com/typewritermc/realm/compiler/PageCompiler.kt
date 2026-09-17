@@ -63,7 +63,6 @@ class PageCompiler(
                     sourceId = element.id,
                     elementType = element.elementType,
                     schemaRevision = element.schemaRevision,
-                    name = element.name,
                     value = element.value,
                     placement = element.placement.compiled(),
                 )
@@ -107,7 +106,6 @@ private fun StringBuilder.appendElement(element: PageDocumentElement) {
     append("|element:").append(element.id.value)
     append(':').append(element.elementType.value)
     append(':').append(element.schemaRevision)
-    append(':').append(element.name.length).append(':').append(element.name)
     append(':').append(element.value.canonical())
     append(':').append(element.placement.executionFacts())
 }
@@ -135,7 +133,6 @@ private fun shardFacts(
             append("|compiled:").append(element.sourceId.value)
             append(':').append(element.elementType.value)
             append(':').append(element.schemaRevision)
-            append(':').append(element.name)
             append(':').append(element.value.canonical())
             append(':').append(element.placement)
         }

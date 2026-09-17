@@ -40,7 +40,19 @@ val AuthoringRepositoryTest by testSuite {
                         ElementTypeId(
                             DeclaredTypeId.parse("40000000000000000000000000000001"),
                         )
-                    fixture.registerElementType(type, TypeGraph(TypeExpression.Any, emptyList()))
+                    fixture.registerElementType(
+                        type,
+                        TypeGraph(
+                            TypeExpression.Record(
+                                listOf(
+                                    TypeField("id", TypeExpression.StringType()),
+                                    TypeField("name", TypeExpression.StringType()),
+                                    TypeField("content", TypeExpression.StringType()),
+                                ),
+                            ),
+                            emptyList(),
+                        ),
+                    )
                     val id = ElementInstanceId("kd9pn4fa2s7m8q3v6x0z")
                     val base = mixedCreateBatch("related")
                     val operations =
@@ -51,8 +63,14 @@ val AuthoringRepositoryTest by testSuite {
                                     page = PageId("related_page").ref(),
                                     elementType = type,
                                     schemaRevision = 1,
-                                    name = "element",
-                                    value = DataValue.StringValue("content"),
+                                    value =
+                                        DataValue.Record(
+                                            mapOf(
+                                                "id" to DataValue.StringValue(id.value),
+                                                "name" to DataValue.StringValue("element"),
+                                                "content" to DataValue.StringValue("content"),
+                                            ),
+                                        ),
                                     placement = ElementPlacement.Graph(0, 0, 2, 1),
                                 ),
                             )
@@ -98,6 +116,7 @@ val AuthoringRepositoryTest by testSuite {
                         TypeExpression.Record(
                             listOf(
                                 TypeField("id", TypeExpression.StringType()),
+                                TypeField("name", TypeExpression.StringType()),
                                 TypeField("message", TypeExpression.Any),
                             ),
                         ),
@@ -116,6 +135,7 @@ val AuthoringRepositoryTest by testSuite {
                     DataValue.Record(
                         mapOf(
                             "id" to DataValue.StringValue(""),
+                            "name" to DataValue.StringValue("Synthetic Entry"),
                             "message" to message,
                         ),
                     )
@@ -131,7 +151,6 @@ val AuthoringRepositoryTest by testSuite {
                                         page = PageId("identity_page").ref(),
                                         elementType = elementType,
                                         schemaRevision = 1,
-                                        name = "Synthetic Entry",
                                         value = submitted,
                                         placement = ElementPlacement.Graph(0, 0, 4, 1),
                                     ),
@@ -148,9 +167,37 @@ val AuthoringRepositoryTest by testSuite {
                     DataValue.Record(
                         mapOf(
                             "id" to DataValue.StringValue(sourceId.value),
+                            "name" to DataValue.StringValue("Synthetic Entry"),
                             "message" to message,
                         ),
                     )
+
+                val idMutation =
+                    fixture.authoring
+                        .apply(
+                            AuthoringBatch(
+                                BatchId("reject-identity-edit"),
+                                listOf(
+                                    AuthoringOperation.PatchElement(
+                                        id = sourceId,
+                                        valueMutations =
+                                            listOf(
+                                                ExpectedElementValueMutation(
+                                                    expected = DataValue.StringValue(sourceId.value),
+                                                    mutation =
+                                                        ElementValueMutation.SetValue(
+                                                            ElementValuePath(
+                                                                listOf(ElementValuePathSegment.Field("id")),
+                                                            ),
+                                                            DataValue.StringValue("other"),
+                                                        ),
+                                                ),
+                                            ),
+                                    ),
+                                ),
+                            ),
+                        ).shouldBeInstanceOf<AuthoringBatchResult.Invalid>()
+                idMutation.diagnostics.single().code shouldBe "immutable-element-id"
 
                 val editedMessage =
                     message.copy(
@@ -190,6 +237,7 @@ val AuthoringRepositoryTest by testSuite {
                     DataValue.Record(
                         mapOf(
                             "id" to DataValue.StringValue(sourceId.value),
+                            "name" to DataValue.StringValue("Synthetic Entry"),
                             "message" to editedMessage,
                         ),
                     )
@@ -204,7 +252,6 @@ val AuthoringRepositoryTest by testSuite {
                                     expectedValue = edited,
                                     newId = duplicateId,
                                     page = PageId("identity_page").ref(),
-                                    name = "Synthetic Entry Copy",
                                     placement = ElementPlacement.Graph(0, 1, 4, 1),
                                 ),
                             ),
@@ -219,6 +266,7 @@ val AuthoringRepositoryTest by testSuite {
                     DataValue.Record(
                         mapOf(
                             "id" to DataValue.StringValue(duplicateId.value),
+                            "name" to DataValue.StringValue("Synthetic Entry Copy"),
                             "message" to editedMessage,
                         ),
                     )
@@ -365,8 +413,7 @@ val AuthoringRepositoryTest by testSuite {
                             CREATE element:referrer CONTENT {
                                 element_type: 'test:entry',
                                 schema_revision: 1,
-                                name: 'Referrer',
-                                value: {},
+                                value: { format: 1, data: { kind: 'record', fields: { id: { kind: 'string', value: 'referrer' }, name: { kind: 'string', value: 'Referrer' } } } },
                                 placement: { kind: 'graph_v1', x: 0, y: 0, width: 1, height: 1 }
                             };
                             RELATE page:source_page->contains_element:[page:source_page, element:referrer]->element:referrer;

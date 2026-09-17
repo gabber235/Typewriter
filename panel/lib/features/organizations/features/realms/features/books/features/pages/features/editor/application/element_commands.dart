@@ -23,13 +23,11 @@ extension ElementCommands on AuthoringSession {
 
   Future<skir.ApplyAuthoringBatchResponse> patchElement({
     required skir.RecordId id,
-    skir.StringChange? name,
     List<skir.ExpectedElementValueMutation> valueMutations = const [],
   }) => apply([
     skir.AuthoringOperation.createPatchElement(
       id: id,
       page: null,
-      name: name,
       placement: null,
       valueMutations: valueMutations,
     ),
@@ -42,7 +40,6 @@ extension ElementCommands on AuthoringSession {
       skir.AuthoringOperation.createPatchElement(
         id: element.id,
         page: null,
-        name: null,
         placement: skir.ElementPlacementChange(
           expected: element.placement,
           value: placement,
@@ -60,7 +57,6 @@ extension ElementCommands on AuthoringSession {
       skir.AuthoringOperation.createPatchElement(
         id: element.id,
         page: skir.RecordIdChange(expected: element.page, value: targetPage),
-        name: null,
         placement: skir.ElementPlacementChange(
           expected: element.placement,
           value: placement,
@@ -88,7 +84,6 @@ extension ElementCommands on AuthoringSession {
           expectedValue: copy.key.value,
           newId: copy.value.id,
           page: copy.key.page,
-          name: "${copy.key.name} Copy",
           placement: copy.value.placement,
           referenceRewrites: rewrites,
         ),

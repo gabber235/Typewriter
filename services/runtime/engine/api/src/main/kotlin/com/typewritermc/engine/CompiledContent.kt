@@ -70,7 +70,6 @@ data class CompiledElement(
     val sourceId: ElementInstanceId,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
-    val name: String,
     val value: DataValue,
     val placement: CompiledPlacement,
 )

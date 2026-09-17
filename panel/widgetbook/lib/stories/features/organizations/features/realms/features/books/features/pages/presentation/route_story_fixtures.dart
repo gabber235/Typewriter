@@ -12,7 +12,6 @@ List<PageElement> graphPageStoryElements({
     for (var index = 0; index < count; index++)
       EntryDefinition(
         id: "graph_entry_$index",
-        name: "Graph Entry ${index + 1}",
         elementDefinition: ElementDefinition(
           rootType: ResolvedTypeRef(
             id: fixtureDeclaredTypeId("widgetbook:graphEntry"),
@@ -25,7 +24,8 @@ List<PageElement> graphPageStoryElements({
         ),
         placement: const EntryPlacement(x: 0, y: 0, width: 4, height: 2),
         data: RecordValue({
-          "name": StringValue("Entry ${index + 1}"),
+          "id": StringValue("graph_entry_$index"),
+          "name": StringValue("Graph Entry ${index + 1}"),
           "priority": IntegerValue(BigInt.from(index)),
           "weight": FloatValue(index + 0.5),
           "enabled": BooleanValue(index.isEven),

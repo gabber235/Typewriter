@@ -1761,7 +1761,6 @@ sealed interface PageElement_OrMutable {
     val page: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val elementType: kotlin.String;
     val schemaRevision: kotlin.Int;
-    val name: kotlin.String;
     val value: skirout.editor.v1.type_catalog.TypedValue;
     val placement: skirout.library.v1.authoring.ElementPlacement;
 
@@ -1775,7 +1774,6 @@ class PageElement private constructor(
     override val page: skirout.kernel.v1.record_id.RecordId,
     override val elementType: kotlin.String,
     override val schemaRevision: kotlin.Int,
-    override val name: kotlin.String,
     override val value: skirout.editor.v1.type_catalog.TypedValue,
     override val placement: skirout.library.v1.authoring.ElementPlacement,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PageElement>? =
@@ -1788,7 +1786,6 @@ class PageElement private constructor(
         page: skirout.kernel.v1.record_id.RecordId_OrMutable,
         elementType: kotlin.String,
         schemaRevision: kotlin.Int,
-        name: kotlin.String,
         value: skirout.editor.v1.type_catalog.TypedValue,
         placement: skirout.library.v1.authoring.ElementPlacement,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PageElement>? =
@@ -1798,7 +1795,6 @@ class PageElement private constructor(
         page.toFrozen(),
         elementType,
         schemaRevision,
-        name,
         value,
         placement,
         _unrecognizedFields,
@@ -1813,7 +1809,6 @@ class PageElement private constructor(
         page = this.page,
         elementType = this.elementType,
         schemaRevision = this.schemaRevision,
-        name = this.name,
         value = this.value,
         placement = this.placement,
     );
@@ -1830,8 +1825,6 @@ class PageElement private constructor(
             this.elementType,
         schemaRevision: kotlin.Int =
             this.schemaRevision,
-        name: kotlin.String =
-            this.name,
         value: skirout.editor.v1.type_catalog.TypedValue =
             this.value,
         placement: skirout.library.v1.authoring.ElementPlacement =
@@ -1841,7 +1834,6 @@ class PageElement private constructor(
         page.toFrozen(),
         elementType,
         schemaRevision,
-        name,
         value,
         placement,
         this._unrecognizedFields,
@@ -1851,11 +1843,11 @@ class PageElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.authoring.PageElement && this.id == other.id && this.page == other.page && this.elementType == other.elementType && this.schemaRevision == other.schemaRevision && this.name == other.name && this.value == other.value && this.placement == other.placement);
+        return this === other || (other is skirout.library.v1.authoring.PageElement && this.id == other.id && this.page == other.page && this.elementType == other.elementType && this.schemaRevision == other.schemaRevision && this.value == other.value && this.placement == other.placement);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.page, this.elementType, this.schemaRevision, this.name, this.value, this.placement).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.page, this.elementType, this.schemaRevision, this.value, this.placement).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1877,8 +1869,6 @@ class PageElement private constructor(
             "",
         override var schemaRevision: kotlin.Int =
             0,
-        override var name: kotlin.String =
-            "",
         override var value: skirout.editor.v1.type_catalog.TypedValue =
             skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
         override var placement: skirout.library.v1.authoring.ElementPlacement =
@@ -1892,7 +1882,6 @@ class PageElement private constructor(
             page = this.page,
             elementType = this.elementType,
             schemaRevision = this.schemaRevision,
-            name = this.name,
             value = this.value,
             placement = this.placement,
             _unrecognizedFields = this._unrecognizedFields,
@@ -1938,7 +1927,6 @@ class PageElement private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 "",
                 0,
-                "",
                 skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
                 skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
             );
@@ -1962,8 +1950,6 @@ class PageElement private constructor(
                 "",
             schemaRevision: kotlin.Int =
                 0,
-            name: kotlin.String =
-                "",
             value: skirout.editor.v1.type_catalog.TypedValue =
                 skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
             placement: skirout.library.v1.authoring.ElementPlacement =
@@ -1973,7 +1959,6 @@ class PageElement private constructor(
             page = page,
             elementType = elementType,
             schemaRevision = schemaRevision,
-            name = name,
             value = value,
             placement = placement,
             _unrecognizedFields = null,
@@ -2033,15 +2018,6 @@ class PageElement private constructor(
                 { mut, v -> mut.schemaRevision = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
-                4,
-                build.skir.Serializers.string,
-                "",
-                { it.name },
-                { mut, v -> mut.name = v },
-            );
-            serializerImpl.addField(
                 "value",
                 "value",
                 5,
@@ -2059,6 +2035,7 @@ class PageElement private constructor(
                 { it.placement },
                 { mut, v -> mut.placement = v },
             );
+            serializerImpl.addRemovedNumber(4);
             serializerImpl.finalizeStruct();
         }
     }
@@ -5591,7 +5568,6 @@ sealed class AuthoringResourceChange private constructor() {
             page: skirout.kernel.v1.record_id.RecordId_OrMutable,
             elementType: kotlin.String,
             schemaRevision: kotlin.Int,
-            name: kotlin.String,
             value: skirout.editor.v1.type_catalog.TypedValue,
             placement: skirout.library.v1.authoring.ElementPlacement,
         ) = UpsertElementWrapper(
@@ -5600,7 +5576,6 @@ sealed class AuthoringResourceChange private constructor() {
                 page = page,
                 elementType = elementType,
                 schemaRevision = schemaRevision,
-                name = name,
                 value = value,
                 placement = placement,
             )
@@ -11233,7 +11208,6 @@ class CreateElement private constructor(
 sealed interface PatchElement_OrMutable {
     val id: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val page: skirout.library.v1.authoring.RecordIdChange_OrMutable?;
-    val name: skirout.library.v1.authoring.StringChange_OrMutable?;
     val placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable?;
     val valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable>;
 
@@ -11245,7 +11219,6 @@ sealed interface PatchElement_OrMutable {
 class PatchElement private constructor(
     override val id: skirout.kernel.v1.record_id.RecordId,
     override val page: skirout.library.v1.authoring.RecordIdChange?,
-    override val name: skirout.library.v1.authoring.StringChange?,
     override val placement: skirout.library.v1.authoring.ElementPlacementChange?,
     override val valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ExpectedElementValueMutation>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PatchElement>? =
@@ -11256,7 +11229,6 @@ class PatchElement private constructor(
             _MustNameArguments,
         id: skirout.kernel.v1.record_id.RecordId_OrMutable,
         page: skirout.library.v1.authoring.RecordIdChange_OrMutable?,
-        name: skirout.library.v1.authoring.StringChange_OrMutable?,
         placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable?,
         valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PatchElement>? =
@@ -11264,7 +11236,6 @@ class PatchElement private constructor(
     ): this(
         id.toFrozen(),
         if (page != null) page.toFrozen() else null,
-        if (name != null) name.toFrozen() else null,
         if (placement != null) placement.toFrozen() else null,
         build.skir.internal.toFrozenList(valueMutations, { it.toFrozen() }),
         _unrecognizedFields,
@@ -11277,7 +11248,6 @@ class PatchElement private constructor(
     fun toMutable() = Mutable(
         id = this.id,
         page = this.page,
-        name = this.name,
         placement = this.placement,
         valueMutations = this.valueMutations,
     );
@@ -11290,8 +11260,6 @@ class PatchElement private constructor(
             this.id,
         page: skirout.library.v1.authoring.RecordIdChange_OrMutable? =
             this.page,
-        name: skirout.library.v1.authoring.StringChange_OrMutable? =
-            this.name,
         placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable? =
             this.placement,
         valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable> =
@@ -11299,7 +11267,6 @@ class PatchElement private constructor(
     ) = skirout.library.v1.authoring.PatchElement(
         id.toFrozen(),
         if (page != null) page.toFrozen() else null,
-        if (name != null) name.toFrozen() else null,
         if (placement != null) placement.toFrozen() else null,
         build.skir.internal.toFrozenList(valueMutations, { it.toFrozen() }),
         this._unrecognizedFields,
@@ -11309,11 +11276,11 @@ class PatchElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.authoring.PatchElement && this.id == other.id && this.page == other.page && this.name == other.name && this.placement == other.placement && this.valueMutations == other.valueMutations);
+        return this === other || (other is skirout.library.v1.authoring.PatchElement && this.id == other.id && this.page == other.page && this.placement == other.placement && this.valueMutations == other.valueMutations);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.page, this.name, this.placement, this.valueMutations).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.page, this.placement, this.valueMutations).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -11331,8 +11298,6 @@ class PatchElement private constructor(
             skirout.kernel.v1.record_id.RecordId.partial(),
         override var page: skirout.library.v1.authoring.RecordIdChange_OrMutable? =
             null,
-        override var name: skirout.library.v1.authoring.StringChange_OrMutable? =
-            null,
         override var placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable? =
             null,
         override var valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable> =
@@ -11344,7 +11309,6 @@ class PatchElement private constructor(
         override fun toFrozen() = skirout.library.v1.authoring.PatchElement(
             id = this.id,
             page = this.page,
-            name = this.name,
             placement = this.placement,
             valueMutations = this.valueMutations,
             _unrecognizedFields = this._unrecognizedFields,
@@ -11389,7 +11353,6 @@ class PatchElement private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 null,
                 null,
-                null,
                 build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ExpectedElementValueMutation>(),
             );
 
@@ -11408,8 +11371,6 @@ class PatchElement private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
             page: skirout.library.v1.authoring.RecordIdChange_OrMutable? =
                 null,
-            name: skirout.library.v1.authoring.StringChange_OrMutable? =
-                null,
             placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable? =
                 null,
             valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable> =
@@ -11417,7 +11378,6 @@ class PatchElement private constructor(
         ) = skirout.library.v1.authoring.PatchElement(
             id = id,
             page = page,
-            name = name,
             placement = placement,
             valueMutations = valueMutations,
             _unrecognizedFields = null,
@@ -11461,17 +11421,6 @@ class PatchElement private constructor(
                 { mut, v -> mut.page = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.library.v1.authoring.StringChange.serializer,
-                ),
-                "",
-                { it.name },
-                { mut, v -> mut.name = v },
-            );
-            serializerImpl.addField(
                 "placement",
                 "placement",
                 3,
@@ -11493,6 +11442,7 @@ class PatchElement private constructor(
                 { it.valueMutations },
                 { mut, v -> mut.valueMutations = v },
             );
+            serializerImpl.addRemovedNumber(2);
             serializerImpl.finalizeStruct();
         }
     }
@@ -11691,7 +11641,6 @@ sealed interface DuplicateElement_OrMutable {
     val expectedValue: skirout.editor.v1.type_catalog.TypedValue;
     val newId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val page: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val name: kotlin.String;
     val placement: skirout.library.v1.authoring.ElementPlacement;
     val referenceRewrites: kotlin.collections.List<skirout.library.v1.authoring.ReferenceRewrite_OrMutable>;
 
@@ -11705,7 +11654,6 @@ class DuplicateElement private constructor(
     override val expectedValue: skirout.editor.v1.type_catalog.TypedValue,
     override val newId: skirout.kernel.v1.record_id.RecordId,
     override val page: skirout.kernel.v1.record_id.RecordId,
-    override val name: kotlin.String,
     override val placement: skirout.library.v1.authoring.ElementPlacement,
     override val referenceRewrites: kotlin.collections.List<skirout.library.v1.authoring.ReferenceRewrite>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.DuplicateElement>? =
@@ -11718,7 +11666,6 @@ class DuplicateElement private constructor(
         expectedValue: skirout.editor.v1.type_catalog.TypedValue,
         newId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         page: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        name: kotlin.String,
         placement: skirout.library.v1.authoring.ElementPlacement,
         referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.DuplicateElement>? =
@@ -11728,7 +11675,6 @@ class DuplicateElement private constructor(
         expectedValue,
         newId.toFrozen(),
         page.toFrozen(),
-        name,
         placement,
         build.skir.internal.toFrozenList(referenceRewrites, { it.toFrozen() }),
         _unrecognizedFields,
@@ -11743,7 +11689,6 @@ class DuplicateElement private constructor(
         expectedValue = this.expectedValue,
         newId = this.newId,
         page = this.page,
-        name = this.name,
         placement = this.placement,
         referenceRewrites = this.referenceRewrites,
     );
@@ -11760,8 +11705,6 @@ class DuplicateElement private constructor(
             this.newId,
         page: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.page,
-        name: kotlin.String =
-            this.name,
         placement: skirout.library.v1.authoring.ElementPlacement =
             this.placement,
         referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable> =
@@ -11771,7 +11714,6 @@ class DuplicateElement private constructor(
         expectedValue,
         newId.toFrozen(),
         page.toFrozen(),
-        name,
         placement,
         build.skir.internal.toFrozenList(referenceRewrites, { it.toFrozen() }),
         this._unrecognizedFields,
@@ -11781,11 +11723,11 @@ class DuplicateElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.authoring.DuplicateElement && this.sourceId == other.sourceId && this.expectedValue == other.expectedValue && this.newId == other.newId && this.page == other.page && this.name == other.name && this.placement == other.placement && this.referenceRewrites == other.referenceRewrites);
+        return this === other || (other is skirout.library.v1.authoring.DuplicateElement && this.sourceId == other.sourceId && this.expectedValue == other.expectedValue && this.newId == other.newId && this.page == other.page && this.placement == other.placement && this.referenceRewrites == other.referenceRewrites);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.expectedValue, this.newId, this.page, this.name, this.placement, this.referenceRewrites).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.expectedValue, this.newId, this.page, this.placement, this.referenceRewrites).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -11807,8 +11749,6 @@ class DuplicateElement private constructor(
             skirout.kernel.v1.record_id.RecordId.partial(),
         override var page: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
-        override var name: kotlin.String =
-            "",
         override var placement: skirout.library.v1.authoring.ElementPlacement =
             skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
         override var referenceRewrites: kotlin.collections.List<skirout.library.v1.authoring.ReferenceRewrite_OrMutable> =
@@ -11822,7 +11762,6 @@ class DuplicateElement private constructor(
             expectedValue = this.expectedValue,
             newId = this.newId,
             page = this.page,
-            name = this.name,
             placement = this.placement,
             referenceRewrites = this.referenceRewrites,
             _unrecognizedFields = this._unrecognizedFields,
@@ -11900,7 +11839,6 @@ class DuplicateElement private constructor(
                 skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 skirout.kernel.v1.record_id.RecordId.partial(),
-                "",
                 skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
                 build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceRewrite>(),
             );
@@ -11924,8 +11862,6 @@ class DuplicateElement private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
             page: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
-            name: kotlin.String =
-                "",
             placement: skirout.library.v1.authoring.ElementPlacement =
                 skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
             referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable> =
@@ -11935,7 +11871,6 @@ class DuplicateElement private constructor(
             expectedValue = expectedValue,
             newId = newId,
             page = page,
-            name = name,
             placement = placement,
             referenceRewrites = referenceRewrites,
             _unrecognizedFields = null,
@@ -11995,15 +11930,6 @@ class DuplicateElement private constructor(
                 { mut, v -> mut.page = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
-                4,
-                build.skir.Serializers.string,
-                "",
-                { it.name },
-                { mut, v -> mut.name = v },
-            );
-            serializerImpl.addField(
                 "placement",
                 "placement",
                 5,
@@ -12023,6 +11949,7 @@ class DuplicateElement private constructor(
                 { it.referenceRewrites },
                 { mut, v -> mut.referenceRewrites = v },
             );
+            serializerImpl.addRemovedNumber(4);
             serializerImpl.finalizeStruct();
         }
     }
@@ -12625,14 +12552,12 @@ sealed class AuthoringOperation private constructor() {
                 _MustNameArguments,
             id: skirout.kernel.v1.record_id.RecordId_OrMutable,
             page: skirout.library.v1.authoring.RecordIdChange_OrMutable?,
-            name: skirout.library.v1.authoring.StringChange_OrMutable?,
             placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable?,
             valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable>,
         ) = PatchElementWrapper(
             skirout.library.v1.authoring.PatchElement(
                 id = id,
                 page = page,
-                name = name,
                 placement = placement,
                 valueMutations = valueMutations,
             )
@@ -12647,7 +12572,6 @@ sealed class AuthoringOperation private constructor() {
             expectedValue: skirout.editor.v1.type_catalog.TypedValue,
             newId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             page: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            name: kotlin.String,
             placement: skirout.library.v1.authoring.ElementPlacement,
             referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable>,
         ) = DuplicateElementWrapper(
@@ -12656,7 +12580,6 @@ sealed class AuthoringOperation private constructor() {
                 expectedValue = expectedValue,
                 newId = newId,
                 page = page,
-                name = name,
                 placement = placement,
                 referenceRewrites = referenceRewrites,
             )

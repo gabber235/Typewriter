@@ -143,7 +143,19 @@ private suspend fun RepositoryFixture.createDanglingElement(
     page: com.typewritermc.library.PageId,
     batchId: String,
 ) {
-    registerElementType(INVALID_TYPE, TypeGraph(REFERENCE_TYPE, emptyList()))
+    registerElementType(
+        INVALID_TYPE,
+        TypeGraph(
+            TypeExpression.Record(
+                listOf(
+                    com.typewritermc.types.TypeField("id", TypeExpression.StringType()),
+                    com.typewritermc.types.TypeField("name", TypeExpression.StringType()),
+                    com.typewritermc.types.TypeField("target", REFERENCE_TYPE),
+                ),
+            ),
+            emptyList(),
+        ),
+    )
     authoring.apply(
         AuthoringBatch(
             BatchId(batchId),
@@ -154,8 +166,17 @@ private suspend fun RepositoryFixture.createDanglingElement(
                         page = page.pageRef(),
                         elementType = INVALID_TYPE,
                         schemaRevision = 1,
-                        name = "Invalid",
-                        value = DataValue.StringValue(MISSING_ID.ref<com.typewritermc.elements.Element>().id.referenceString()),
+                        value =
+                            DataValue.Record(
+                                mapOf(
+                                    "id" to DataValue.StringValue(INVALID_ID.value),
+                                    "name" to DataValue.StringValue("Invalid"),
+                                    "target" to
+                                        DataValue.StringValue(
+                                            MISSING_ID.ref<com.typewritermc.elements.Element>().id.referenceString(),
+                                        ),
+                                ),
+                            ),
                         placement = ElementPlacement.Graph(0, 0, 1, 1),
                     ),
                 ),

@@ -219,7 +219,8 @@ class SurrealPageDocumentRepository(
         if (ids.isEmpty()) return emptyList()
         return transaction
             .query(
-                "SELECT id, name, title, element_type, page FROM \$targets ORDER BY id;",
+                "SELECT id, name, title, value.data.fields.name.value AS element_name, element_type, page " +
+                    "FROM \$targets ORDER BY id;",
                 mapOf("targets" to ids.map(ResourceId::surrealId)),
             ).take(0)
             .getArray()
@@ -310,13 +311,14 @@ private fun StoredElement.assemble(
                 }
             }
         }
-    return PageDocumentElement(id, elementType, schemaRevision, name, logicalValue, placement)
+    return PageDocumentElement(id, elementType, schemaRevision, logicalValue, placement)
 }
 
 private fun parseSummary(value: Value): ResourceSummary {
     val record = value.getObject()
     val id = record.get("id").getRecordId().toResourceId()
-    val name = record.optionalString("name") ?: record.optionalString("title")
+    val name =
+        record.optionalString("name") ?: record.optionalString("title") ?: record.optionalString("element_name")
     val elementType =
         record.optionalString("element_type")?.let { com.typewritermc.elements.ElementTypeId(DeclaredTypeId.parse(it)) }
     val page =

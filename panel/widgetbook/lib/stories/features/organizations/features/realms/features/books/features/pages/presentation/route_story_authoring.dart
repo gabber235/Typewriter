@@ -56,10 +56,9 @@ skir.PageElement _wireElement(
   skir.Page page,
   SkirEditorCodec codec,
 ) {
-  final (id, name, definition, data, placement) = switch (element) {
+  final (id, definition, data, placement) = switch (element) {
     PageElementEntry(entry: DefinitionPageEntry(:final definition)) => (
       definition.id,
-      definition.name,
       definition.elementDefinition,
       definition.data,
       switch (definition.placement.kind) {
@@ -77,7 +76,6 @@ skir.PageElement _wireElement(
     ),
     PageElementCue(:final cue) => (
       cue.id,
-      cue.elementDefinition.name,
       cue.elementDefinition,
       cue.data,
       switch (cue) {
@@ -97,7 +95,6 @@ skir.PageElement _wireElement(
   return skir.PageElement(
     id: recordId("element:$id"),
     page: page.id,
-    name: name,
     elementType: definition.typeId.uuid,
     schemaRevision: definition.rootType.revision,
     value: codec.encodeValue(data).valueOrNull!,

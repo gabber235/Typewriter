@@ -7,6 +7,7 @@ import com.typewritermc.elements.ElementSearchPropertyOverride
 import com.typewritermc.elements.ElementValuePath
 import com.typewritermc.elements.ElementValuePathSegment
 import com.typewritermc.elements.StoredElement
+import com.typewritermc.elements.elementName
 import com.typewritermc.types.BuiltinTypeId
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NominalTypeKind
@@ -28,6 +29,7 @@ internal data class ElementSearchCatalogEntry(
 
 internal data class ElementSearchProjection(
     val element: StoredElement,
+    val name: String,
     val policyRevision: String,
     val summary: List<SearchFragment>,
     val body: List<SearchFragment>,
@@ -88,6 +90,7 @@ internal class ElementSearchProjector {
         return ElementSearchProjectionResult.Projected(
             ElementSearchProjection(
                 element = element,
+                name = element.value.valueWithSlots.elementName(),
                 policyRevision = elementSearchPolicyRevision(definition),
                 summary = fragments.filterMode(ElementSearchMode.SUMMARY),
                 body = fragments.filterMode(ElementSearchMode.BODY),

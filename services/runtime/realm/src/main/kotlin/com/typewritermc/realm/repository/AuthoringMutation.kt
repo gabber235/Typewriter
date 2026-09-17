@@ -15,6 +15,10 @@ import com.typewritermc.elements.ReferenceDecomposer
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.elements.StoredElement
 import com.typewritermc.elements.StoredReference
+import com.typewritermc.elements.elementId
+import com.typewritermc.elements.elementName
+import com.typewritermc.elements.withElementId
+import com.typewritermc.elements.withElementName
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookId
 import com.typewritermc.library.LibraryName
@@ -414,7 +418,6 @@ internal class AuthoringMutation(
                 id = element.id,
                 elementType = element.elementType,
                 schemaRevision = element.schemaRevision,
-                name = element.name,
                 value = decomposer.decompose(graph, element.value.withElementId(element.id)),
                 placement = element.placement,
             )
@@ -437,7 +440,6 @@ internal class AuthoringMutation(
         operation.page.check(operation.resource, "page", currentPage, conflicts) {
             AuthoringPropertyValue.ResourceValue(it.id)
         }
-        operation.name.check(operation.resource, "name", current.name, conflicts, ::stringValue)
         operation.placement.check(
             operation.resource,
             "placement",
@@ -447,6 +449,9 @@ internal class AuthoringMutation(
         var projectedValue = current.value
         operation.valueMutations.forEach { expectedMutation ->
             val mutation = expectedMutation.mutation
+            if (mutation.path.segments.firstOrNull() == ElementValuePathSegment.Field("id")) {
+                invalid("immutable-element-id", operation.resource, mutation.path)
+            }
             val actual =
                 runCatching { valueMutator.read(graph, projectedValue, mutation.path) }
                     .getOrElse { invalid("invalid-value-path", operation.resource, mutation.path) }
@@ -482,10 +487,9 @@ internal class AuthoringMutation(
         }
         transaction
             .query(
-                "UPDATE ONLY \$element SET name = \$name, value = \$value, placement = \$placement;",
+                "UPDATE ONLY \$element SET value = \$value, placement = \$placement;",
                 mapOf(
                     "element" to operation.id.surrealId(),
-                    "name" to (operation.name?.value ?: current.name),
                     "value" to DataValueDatabaseCodec.encode(projectedValue.valueWithSlots),
                     "placement" to (operation.placement?.value ?: current.placement).databaseValue(),
                 ),
@@ -502,7 +506,6 @@ internal class AuthoringMutation(
             } == true
         if (
             operation.page != null ||
-            operation.name != null ||
             operation.valueMutations.isNotEmpty() ||
             placementAffectsCompilation
         ) {
@@ -533,8 +536,12 @@ internal class AuthoringMutation(
         requireRecords(listOf(operation.page.id), "page-not-found", operation.resource)
         val value =
             decomposer
-                .decompose(graph, logical.withElementId(operation.newId))
-                .copy(
+                .decompose(
+                    graph,
+                    logical
+                        .withElementId(operation.newId)
+                        .withElementName("${logical.elementName()} Copy"),
+                ).copy(
                     references =
                         source.value.references.map { reference ->
                             reference.copy(target = operation.referenceRewrites[reference.target] ?: reference.target)
@@ -544,7 +551,6 @@ internal class AuthoringMutation(
             operation.page.pageId(),
             source.copy(
                 id = operation.newId,
-                name = operation.name,
                 value = value,
                 placement = operation.placement,
             ),
@@ -704,30 +710,19 @@ private fun StoredElement.toAuthoringElement(
         page,
         elementType,
         schemaRevision,
-        name,
         logicalValue(graph),
         placement,
     )
 
-private fun StoredElement.logicalValue(graph: TypeGraph): DataValue =
-    ReferenceAssembler()
-        .assemble(graph, value)
-        .value
-
-private fun DataValue.withElementId(id: ElementInstanceId): DataValue =
-    when (this) {
-        is DataValue.Record -> {
-            if ("id" in fields) {
-                copy(fields = fields + ("id" to DataValue.StringValue(id.value)))
-            } else {
-                this
-            }
-        }
-
-        else -> {
-            this
-        }
-    }
+private fun StoredElement.logicalValue(graph: TypeGraph): DataValue {
+    val logical =
+        ReferenceAssembler()
+            .assemble(graph, value)
+            .value
+    check(logical.elementId() == id) { "Element payload id ${logical.elementId().value} does not match ${id.value}." }
+    logical.elementName()
+    return logical
+}
 
 private fun Transaction.createElement(
     pageId: PageId,
@@ -743,7 +738,6 @@ private fun Transaction.createElement(
                 mapOf(
                     "element_type" to element.elementType.value.toString(),
                     "schema_revision" to element.schemaRevision,
-                    "name" to element.name,
                     "value" to DataValueDatabaseCodec.encode(element.value.valueWithSlots),
                     "placement" to element.placement.databaseValue(),
                 ),

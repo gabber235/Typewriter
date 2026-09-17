@@ -150,10 +150,12 @@ void main() {
     test("exposes the identifier for every page entry state", () {
       final definition = EntryDefinition(
         id: "defined",
-        name: "Defined",
         elementDefinition: _elementDefinition(),
         placement: const EntryPlacement(x: 0, y: 0, width: 10, height: 10),
-        data: RecordValue(const {}),
+        data: RecordValue(const {
+          "id": StringValue("defined"),
+          "name": StringValue("Defined"),
+        }),
         inwardEdges: const [],
         outwardEdges: const [],
       );

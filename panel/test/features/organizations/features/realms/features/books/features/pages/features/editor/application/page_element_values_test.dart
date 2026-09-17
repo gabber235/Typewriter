@@ -40,7 +40,6 @@ void main() {
         page: first.page,
         elementType: first.elementType,
         schemaRevision: first.schemaRevision,
-        name: "Second",
         value: first.value,
         placement: first.placement,
       );
@@ -860,13 +859,16 @@ final class _Harness {
     final codec = SkirEditorCodec(
       TypeRegistry(bootstrapTypeCatalog(catalog.catalog.definitions)),
     );
-    final value = RecordValue({"title": StringValue(title)});
+    final value = RecordValue({
+      "id": StringValue(_element.id),
+      "name": const StringValue("Element"),
+      "title": StringValue(title),
+    });
     return skir.PageElement(
       id: _element,
       page: _page,
       elementType: _typeId,
       schemaRevision: 1,
-      name: "Element",
       value: codec.encodeValue(value).valueOrNull!,
       placement: skir.ElementPlacement.createGraph(
         x: x,
@@ -884,7 +886,6 @@ final class _Harness {
       page: _targetPage,
       elementType: source.elementType,
       schemaRevision: source.schemaRevision,
-      name: "Target Element",
       value: source.value,
       placement: skir.ElementPlacement.createGraph(
         x: 0,
@@ -946,6 +947,8 @@ RealmEditorCatalogSnapshot _catalog({String elementName = "Element"}) =>
           kind: NominalTypeKind.concrete,
           representation: RecordType(
             fields: {
+              "id": const TypeField(name: "id", type: StringType()),
+              "name": const TypeField(name: "name", type: StringType()),
               "title": const TypeField(name: "title", type: StringType()),
             },
           ),

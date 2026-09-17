@@ -6,19 +6,19 @@ DEFINE FIELD OVERWRITE element_type ON element TYPE string;
 DEFINE FIELD OVERWRITE schema_revision ON element TYPE int
     ASSERT $value > 0;
 
-DEFINE FIELD OVERWRITE name ON element TYPE string
-    ASSERT string::trim($value) != "";
-
 DEFINE FIELD OVERWRITE value ON element TYPE object FLEXIBLE;
 
 DEFINE FIELD OVERWRITE search ON element TYPE option<{
+    name: { values: array<string> },
     policy_revision: string,
     summary: { values: array<string>, paths: array<string> },
     body: { values: array<string>, paths: array<string> },
     keyword: { values: array<string>, paths: array<string> }
 }>
     ASSERT {
-        RETURN string::trim($value.policy_revision) != ""
+        RETURN array::len($value.name.values) = 1
+            AND string::trim($value.name.values[0]) != ""
+            AND string::trim($value.policy_revision) != ""
             AND array::len($value.summary.values) = array::len($value.summary.paths)
             AND array::len($value.body.values) = array::len($value.body.paths)
             AND array::len($value.keyword.values) = array::len($value.keyword.paths);
@@ -75,11 +75,11 @@ DEFINE FIELD OVERWRITE placement ON element TYPE
 DEFINE INDEX OVERWRITE element_type ON element FIELDS element_type;
 
 DEFINE INDEX OVERWRITE element_name_search ON element
-    FIELDS name FULLTEXT ANALYZER authoring_text BM25 HIGHLIGHTS;
+    FIELDS search.name.values FULLTEXT ANALYZER authoring_text BM25 HIGHLIGHTS;
 DEFINE INDEX OVERWRITE element_name_prefix ON element
-    FIELDS name FULLTEXT ANALYZER authoring_prefix BM25 HIGHLIGHTS;
+    FIELDS search.name.values FULLTEXT ANALYZER authoring_prefix BM25 HIGHLIGHTS;
 DEFINE INDEX OVERWRITE element_name_approximate ON element
-    FIELDS name FULLTEXT ANALYZER authoring_approximate BM25 HIGHLIGHTS;
+    FIELDS search.name.values FULLTEXT ANALYZER authoring_approximate BM25 HIGHLIGHTS;
 
 DEFINE INDEX OVERWRITE element_search_summary ON element
     FIELDS search.summary.values FULLTEXT ANALYZER authoring_text BM25 HIGHLIGHTS;

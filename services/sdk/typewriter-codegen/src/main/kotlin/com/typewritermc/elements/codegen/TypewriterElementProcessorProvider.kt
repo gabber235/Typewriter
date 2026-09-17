@@ -42,6 +42,7 @@ import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementDescriptor
 import com.typewritermc.elements.ElementDiscoveryContribution
 import com.typewritermc.elements.ElementDiscoveryContributionCodec
+import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementPrototype
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementSearch
@@ -304,6 +305,10 @@ private class TypewriterElementProcessor(
             logger.error("Element type graph root did not retain its declared identity.", element.declaration)
             return null
         }
+        val rootProperties =
+            successfulConversion.serializedProperties.filter { it.ownerType == element.reference }
+        if (!validateRequiredProperty(element, rootProperties, "id", ElementInstanceId::class.qualifiedName!!)) return null
+        if (!validateRequiredProperty(element, rootProperties, "name", String::class.qualifiedName!!)) return null
         val overrideDeclarations =
             successfulConversion.serializedProperties.mapNotNull { property ->
                 property.declaration.annotation<ElementSearch>()?.let { annotation ->
@@ -311,12 +316,34 @@ private class TypewriterElementProcessor(
                         property.declaration
                 }
             }
+        val reservedOverrides =
+            overrideDeclarations.filter { (override, _) ->
+                override.ownerType == element.reference && override.field in setOf("id", "name")
+            }
+        if (reservedOverrides.isNotEmpty()) {
+            reservedOverrides.forEach { (_, declaration) ->
+                logger.error("Element id and name fields have fixed search behavior.", declaration)
+            }
+            return null
+        }
         val searchDefinition =
             when (
                 val result =
                     ElementSearchDefinitionGenerator.generate(
                         graph,
-                        overrideDeclarations.map { it.first },
+                        overrideDeclarations.map { it.first } +
+                            listOf(
+                                ElementSearchPropertyOverride(
+                                    element.reference,
+                                    "id",
+                                    com.typewritermc.elements.ElementSearchMode.NONE,
+                                ),
+                                ElementSearchPropertyOverride(
+                                    element.reference,
+                                    "name",
+                                    com.typewritermc.elements.ElementSearchMode.NONE,
+                                ),
+                            ),
                     )
             ) {
                 is ElementSearchGenerationResult.Success -> {
@@ -336,6 +363,30 @@ private class TypewriterElementProcessor(
             }
         val searchableElement = element.copy(descriptor = element.descriptor.copy(searchDefinition = searchDefinition))
         return GeneratedElement(searchableElement, graph, generatePrototype(searchableElement, graph))
+    }
+
+    private fun validateRequiredProperty(
+        element: ElementDeclaration,
+        properties: List<com.typewritermc.types.ksp.KspSerializedProperty>,
+        name: String,
+        expectedType: String,
+    ): Boolean {
+        val matches = properties.filter { it.serializedName == name }
+        val actualType =
+            matches
+                .singleOrNull()
+                ?.declaration
+                ?.type
+                ?.resolve()
+                ?.declaration
+                ?.qualifiedName
+                ?.asString()
+        if (actualType == expectedType) return true
+        logger.error(
+            "Typewriter elements must serialize '$name' as $expectedType.",
+            matches.singleOrNull()?.declaration ?: element.declaration,
+        )
+        return false
     }
 
     private fun generatePrototype(

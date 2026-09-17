@@ -466,10 +466,12 @@ List<PageElement> _sceneElements() {
       entry: PageEntry.definition(
         definition: EntryDefinition(
           id: "entry",
-          name: "Scene Entry",
           elementDefinition: _blueprint("entry_blueprint", "Scene Entry"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: RecordValue(const {}),
+          data: RecordValue(const {
+            "id": StringValue("entry"),
+            "name": StringValue("Scene Entry"),
+          }),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -553,13 +555,15 @@ List<PageElement> _nestedRootResizeSceneElements() {
       entry: PageEntry.definition(
         definition: EntryDefinition(
           id: "entry",
-          name: "Nested Scene Entry",
           elementDefinition: _blueprint(
             "entry_blueprint",
             "Nested Scene Entry",
           ),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: RecordValue(const {}),
+          data: RecordValue(const {
+            "id": StringValue("entry"),
+            "name": StringValue("Nested Scene Entry"),
+          }),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -620,10 +624,12 @@ List<PageElement> _multiRootSceneElements() {
       entry: PageEntry.definition(
         definition: EntryDefinition(
           id: "entry",
-          name: "Scene Entry",
           elementDefinition: _blueprint("entry_blueprint", "Scene Entry"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: RecordValue(const {}),
+          data: RecordValue(const {
+            "id": StringValue("entry"),
+            "name": StringValue("Scene Entry"),
+          }),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -683,10 +689,12 @@ List<PageElement> _adjacentRootSceneElements() {
       entry: PageEntry.definition(
         definition: EntryDefinition(
           id: "entry",
-          name: "Scene Entry",
           elementDefinition: _blueprint("entry_blueprint", "Scene Entry"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: RecordValue(const {}),
+          data: RecordValue(const {
+            "id": StringValue("entry"),
+            "name": StringValue("Scene Entry"),
+          }),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(

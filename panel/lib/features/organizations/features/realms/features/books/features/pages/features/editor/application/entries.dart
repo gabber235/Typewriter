@@ -2,7 +2,6 @@ import "dart:async";
 
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -122,7 +121,6 @@ abstract class EntryDefinition with _$EntryDefinition {
   @Assert("id != \"\"", "ID must not be empty.")
   const factory EntryDefinition({
     required String id,
-    required String name,
     required ElementDefinition elementDefinition,
     required EntryPlacement placement,
     required RecordValue data,
@@ -130,6 +128,10 @@ abstract class EntryDefinition with _$EntryDefinition {
     required List<ElementLink> outwardEdges,
     @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
+
+  const EntryDefinition._();
+
+  String get name => data.requiredStringField("name");
 }
 
 /// Position and size of an entry in its owning page projection.

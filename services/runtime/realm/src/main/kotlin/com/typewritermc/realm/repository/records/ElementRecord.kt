@@ -54,7 +54,6 @@ internal object ElementRecordParser {
                     id = id,
                     elementType = ElementTypeId(DeclaredTypeId.parse(objectValue.get("element_type").getString())),
                     schemaRevision = objectValue.get("schema_revision").getLong().toInt(),
-                    name = objectValue.get("name").getString(),
                     value =
                         StoredElementValue(
                             valueWithSlots = DataValueDatabaseCodec.decode(objectValue.get("value")),

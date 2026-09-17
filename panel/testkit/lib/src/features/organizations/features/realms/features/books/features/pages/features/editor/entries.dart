@@ -26,11 +26,14 @@ EntryDefinition generateRandomEntryDefinition() {
   final width = faker.randomGenerator.integer(3, min: 2) * 50;
   final height = faker.randomGenerator.integer(3, min: 2) * 30;
   final elementDefinition = generateRandomElementDefinition();
-  final data = generateRandomRecordData(maxDepth: 2).value;
+  final id = faker.guid.guid();
+  final name = faker.lorem.words(2).join(" ").formatted;
+  final data = generateRandomRecordData(maxDepth: 2).value
+      .withField("id", StringValue(id))
+      .withField("name", StringValue(name));
 
   return EntryDefinition(
-    id: faker.guid.guid(),
-    name: faker.lorem.words(2).join(" ").formatted,
+    id: id,
     elementDefinition: elementDefinition,
     placement: EntryPlacement(
       x: faker.randomGenerator.integer(400),
