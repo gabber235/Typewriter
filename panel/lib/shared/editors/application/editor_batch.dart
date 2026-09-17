@@ -40,7 +40,9 @@ final class EditorBatch {
   /// Sources with an active save are awaited first. Every input path must be
   /// non empty and disjoint within its source. The returned map contains one
   /// outcome per input source; invalid input is returned without changing any
-  /// draft, while an unconfirmable submission returns [MutationUncertain].
+  /// draft. Accepted changes are published before resource refresh begins, so
+  /// projected consumers observe them immediately. An unconfirmable submission
+  /// returns [MutationUncertain].
   static Future<Map<TransactionalEditorSource, TypedMutationResult>> submit({
     required Map<TransactionalEditorSource, Map<DataPath, DataValue>> changes,
     EditorBatchSender? send,
@@ -128,6 +130,9 @@ final class EditorBatch {
       }
     }
     if (resourceBatch) {
+      for (final source in changes.keys) {
+        source._notify();
+      }
       return _flushPreparedClaimed(
         {
           for (final entry in changes.entries)

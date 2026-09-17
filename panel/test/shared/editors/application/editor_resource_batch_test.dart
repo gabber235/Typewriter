@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -24,10 +26,14 @@ final class _BatchResource implements EditableResource {
   Set<Object> get reservations => {key};
   int reads = 0;
   bool unavailable = false;
+  Completer<void>? refreshStarted;
+  Future<void>? refreshBarrier;
 
   @override
   Future<EditorSnapshot?> refresh() async {
     reads++;
+    refreshStarted?.complete();
+    if (refreshBarrier case final barrier?) await barrier;
     if (unavailable) throw StateError("Unavailable");
     return _snapshot();
   }
@@ -82,6 +88,40 @@ TransactionalEditorSource _source(
 }
 
 void main() {
+  test("resource batch publishes accepted drafts before refresh", () async {
+    final workspace = LocalWorkSession();
+    addTearDown(workspace.dispose);
+    final refreshStarted = Completer<void>();
+    final refreshBarrier = Completer<void>();
+    final combiner = MutationCombiner<_Operation, List<_Operation>>(
+      prepare: (operations) => PreparedCommit(
+        id: Object(),
+        label: "Batch",
+        resources: operations.map((operation) => operation.$1).toSet(),
+        send: () async => SubmissionConfirmed(operations),
+      ),
+    );
+    final resource = _BatchResource("first", combiner)
+      ..refreshStarted = refreshStarted
+      ..refreshBarrier = refreshBarrier.future;
+    final source = _source(workspace, resource);
+
+    final batch = EditorBatch.submit(
+      changes: {
+        source: {DataPath.root: const StringValue("Draft")},
+      },
+    );
+    await refreshStarted.future;
+
+    final projected = workspace.state.editorValues[resource.key];
+    expect(projected?.value, const StringValue("Draft"));
+    expect(projected?.editedPaths, {DataPath.root});
+
+    refreshBarrier.complete();
+    expect((await batch).values, everyElement(isA<MutationSuccess>()));
+    expect(workspace.state.editorValues, isEmpty);
+  });
+
   test(
     "multi interaction sends one batch for every selected resource",
     () async {
