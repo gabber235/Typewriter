@@ -1,5 +1,7 @@
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "page_element_type_policy.freezed.dart";
@@ -22,6 +24,22 @@ sealed class PageElementTypesState with _$PageElementTypesState {
   const factory PageElementTypesState.unavailable(
     List<TypeDiagnostic> diagnostics,
   ) = PageElementTypesUnavailable;
+}
+
+/// Initial placement supported when creating a top level entry on a page.
+enum PageEntryCreationPlacement { graph, timelineTrack }
+
+/// Concrete element types that can be created as top level entries.
+@freezed
+abstract class PageEntryCreationPolicy with _$PageEntryCreationPolicy {
+  const factory PageEntryCreationPolicy({
+    required PageEntryCreationPlacement placement,
+    required Set<ResolvedTypeRef> types,
+  }) = _PageEntryCreationPolicy;
+
+  const PageEntryCreationPolicy._();
+
+  bool accepts(ResolvedTypeRef type) => types.contains(type);
 }
 
 /// Resolves the concrete element types allowed by [pageKind].
@@ -84,8 +102,142 @@ Stream<PageElementTypesState> pageElementTypes(Ref ref, PageKindRef pageKind) {
   );
 }
 
+/// Resolves the concrete types that can be created directly on [pageKind].
+///
+/// Timeline segment and keyframe types are deliberately excluded. They need a
+/// parent timeline entry and therefore cannot be created from page selection
+/// alone.
+@riverpod
+AsyncValue<PageEntryCreationPolicy> pageEntryCreationPolicy(
+  Ref ref,
+  PageKindRef pageKind,
+) {
+  final elementTypes = ref.watch(pageElementTypesProvider(pageKind));
+  if (elementTypes.mapUnready<PageEntryCreationPolicy>() case final value?) {
+    return value;
+  }
+  final state = elementTypes.requireValue;
+  switch (state) {
+    case PageElementTypesLoading():
+      return const AsyncLoading();
+    case PageElementTypesUnavailable(:final diagnostics):
+      return AsyncError(
+        ApiException.badRequest(
+          diagnostics.map((diagnostic) => diagnostic.message).join("; "),
+        ),
+        StackTrace.current,
+      );
+    case PageElementTypesReady(:final types):
+      final catalog = ref.watch(realmEditorCatalogProvider);
+      if (catalog.mapUnready<PageEntryCreationPolicy>() case final value?) {
+        return value;
+      }
+      final snapshot = catalog.requireValue.snapshot;
+      final definition = snapshot?.pageCatalog.definitions[pageKind];
+      if (snapshot == null || definition == null) {
+        return AsyncError(
+          ApiException.badRequest("The page kind is unavailable"),
+          StackTrace.current,
+        );
+      }
+      return AsyncData(_entryCreationPolicy(definition, snapshot, types));
+  }
+}
+
+/// Resolves the live entry creation policy for one page identity.
+///
+/// Page metadata changes may select a different page kind. Keeping that
+/// indirection in a provider lets consumers observe policy changes without
+/// rebuilding their own lifecycle owner.
+@riverpod
+AsyncValue<PageEntryCreationPolicy> pageEntryCreationPolicyForPage(
+  Ref ref,
+  skir.RecordId pageId,
+) {
+  final page = ref.watch(projectedPageProvider(pageId));
+  if (page.mapUnready<PageEntryCreationPolicy>() case final value?) {
+    return value;
+  }
+  return ref.watch(pageEntryCreationPolicyProvider(page.requireValue.kind));
+}
+
+/// Maps page kinds that can directly create [elementType] to their policy.
+@riverpod
+AsyncValue<Map<PageKindRef, PageEntryCreationPolicy>> compatiblePageEntryKinds(
+  Ref ref,
+  ResolvedTypeRef elementType,
+) {
+  final policies = ref.watch(pageEntryCreationPoliciesProvider);
+  if (policies.mapUnready<Map<PageKindRef, PageEntryCreationPolicy>>()
+      case final value?) {
+    return value;
+  }
+  return AsyncData(
+    Map.unmodifiable(
+      Map.fromEntries(
+        policies.requireValue.entries.where(
+          (entry) => entry.value.accepts(elementType),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Resolves the live entry creation policy for every available page kind.
+@riverpod
+AsyncValue<Map<PageKindRef, PageEntryCreationPolicy>> pageEntryCreationPolicies(
+  Ref ref,
+) {
+  final definitions = ref.watch(realmPageDefinitionsProvider);
+  if (definitions.mapUnready<Map<PageKindRef, PageEntryCreationPolicy>>()
+      case final value?) {
+    return value;
+  }
+
+  final policies = {
+    for (final definition in definitions.requireValue)
+      definition.kind: ref.watch(
+        pageEntryCreationPolicyProvider(definition.kind),
+      ),
+  };
+  final resolved = <PageKindRef, PageEntryCreationPolicy>{};
+  for (final MapEntry(key: kind, value: policy) in policies.entries) {
+    if (policy.mapUnready<Map<PageKindRef, PageEntryCreationPolicy>>()
+        case final value?) {
+      return value;
+    }
+    resolved[kind] = policy.requireValue;
+  }
+  return AsyncData(Map.unmodifiable(resolved));
+}
+
+PageEntryCreationPolicy _entryCreationPolicy(
+  RealmPageDefinition definition,
+  RealmEditorCatalogSnapshot snapshot,
+  Set<ResolvedTypeRef> allConcreteTypes,
+) {
+  final (placement, roots) = switch (definition.editor) {
+    RealmGraphPageEditor(:final nodeTypes) => (
+      PageEntryCreationPlacement.graph,
+      nodeTypes,
+    ),
+    RealmTimelinePageEditor(:final trackTypes) => (
+      PageEntryCreationPlacement.timelineTrack,
+      trackTypes,
+    ),
+  };
+  final types = {
+    ...roots,
+    for (final root in roots.indexed)
+      ...?snapshot
+          .subtypeResults["page:${definition.kind.id}:${definition.kind.revision}:${root.$1}"]
+          ?.matches,
+  }.where(allConcreteTypes.contains).toSet();
+  return PageEntryCreationPolicy(placement: placement, types: types);
+}
+
 extension on RealmEditorCatalogState {
-  /// Maps the current catalog observation to the page type policy state.
+  /// Maps the current catalog observation to the page kind policy state.
   PageElementTypesState _pageElementTypes(
     Iterable<ResolvedTypeRef> roots,
     Iterable<String> queryIds,

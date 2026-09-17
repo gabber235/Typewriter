@@ -40,10 +40,9 @@ class PagePage extends HookConsumerWidget {
                 ?.pageCatalog
                 .definitions[page.kind];
             if (definition == null) {
-              return const Center(
-                child: Text(
-                  "This page kind is unavailable. The page is read only.",
-                ),
+              return const ErrorScreen(
+                title: "Page Kind Unavailable",
+                message: "This page kind is unavailable. Likely because the extension which provides it failed to load or was removed.",
               );
             }
             return switch (definition.editor) {
@@ -51,7 +50,7 @@ class PagePage extends HookConsumerWidget {
                 pageId: pageId,
                 graphDirection: direction,
               ),
-              RealmTimelinePageEditor() => EntryScene(pageId: pageId),
+              RealmTimelinePageEditor() => EntryTimelineEditor(pageId: pageId),
             };
           },
         ),

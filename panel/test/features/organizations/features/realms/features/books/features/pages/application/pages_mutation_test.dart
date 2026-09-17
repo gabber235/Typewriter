@@ -4,8 +4,6 @@ import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -17,18 +15,70 @@ const _eventSubject =
     "service.from.realm1.organization.org1.realm.library.authoring.changed";
 
 void main() {
+  test("page creation input builds and submits one page", () async {
+    final nats = FakeNatsClient();
+    late skir.ApplyAuthoringBatchRequest submitted;
+    nats.registerHandler(_batchSubject, (bytes) {
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
+          sequence: 1,
+          batchId: submitted.batchId,
+          changes: const [],
+          indirectlyAffectedResources: const [],
+        ),
+      );
+    });
+    final container = ProviderContainer.test(
+      overrides: [
+        natsProvider.overrideWithValue(nats),
+        panelTelemetryProvider.overrideWithValue(
+          const AsyncData(NoopPanelTelemetry()),
+        ),
+      ],
+    );
+    final provider = authoringSessionProvider(_organization, _realm);
+    final subscription = container.listen(provider, (_, _) {});
+
+    final page = await container
+        .read(provider.notifier)
+        .createPageFromInput(
+          _book,
+          const PageCreationInput(
+            name: "Created",
+            kind: PageKindRef(id: "test", revision: 2),
+            chapter: "chapter",
+            priority: 3,
+          ),
+        );
+
+    final operation =
+        submitted.operations.single
+            as skir.AuthoringOperation_createPageWrapper;
+    expect(operation.value.page.id, page.pageId);
+    expect(operation.value.page.book, _book);
+    expect(operation.value.page.name, "Created");
+    expect(operation.value.page.kind.revision, 2);
+    expect(operation.value.page.chapter, "chapter");
+    expect(operation.value.page.priority, 3);
+
+    subscription.close();
+    container.dispose();
+    await nats.dispose();
+  });
+
   test(
     "metadata commands submit without a page provider or snapshot",
     () async {
       final nats = FakeNatsClient();
-      final submitted = <wire.ApplyAuthoringBatchRequest>[];
+      final submitted = <skir.ApplyAuthoringBatchRequest>[];
       nats.registerHandler(_batchSubject, (bytes) {
-        final request = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(
+        final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
           bytes,
         );
         submitted.add(request);
-        return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-          wire.ApplyAuthoringBatchResponse.createApplied(
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createApplied(
             sequence: submitted.length,
             batchId: request.batchId,
             changes: const [],
@@ -50,27 +100,27 @@ void main() {
       final session = container.read(provider.notifier);
       final nameResult = await session.patchPage(
         id: _page,
-        name: wire.StringChange(expected: "Initial", value: "Renamed"),
+        name: skir.StringChange(expected: "Initial", value: "Renamed"),
       );
       final priorityResult = await session.patchPage(
         id: _page,
-        priority: wire.Int32Change(expected: 2, value: 5),
+        priority: skir.Int32Change(expected: 2, value: 5),
       );
       expect(
         nameResult,
-        isA<wire.ApplyAuthoringBatchResponse_appliedWrapper>(),
+        isA<skir.ApplyAuthoringBatchResponse_appliedWrapper>(),
       );
       expect(
         priorityResult,
-        isA<wire.ApplyAuthoringBatchResponse_appliedWrapper>(),
+        isA<skir.ApplyAuthoringBatchResponse_appliedWrapper>(),
       );
       final rename =
           submitted.first.operations.single
-              as wire.AuthoringOperation_patchPageWrapper;
+              as skir.AuthoringOperation_patchPageWrapper;
 
       final priority =
           submitted.last.operations.single
-              as wire.AuthoringOperation_patchPageWrapper;
+              as skir.AuthoringOperation_patchPageWrapper;
       expect(rename.value.name?.expected, "Initial");
       expect(rename.value.priority, isNull);
       expect(priority.value.priority?.expected, 2);
@@ -91,20 +141,20 @@ void main() {
     final nats = FakeNatsClient()
       ..registerHandler(_snapshotSubject, (_) => _snapshot("Initial", 1))
       ..registerHandler(_batchSubject, (bytes) {
-        final request = wire.ApplyAuthoringBatchRequest.serializer.fromBytes(
+        final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
           bytes,
         );
         final patch =
             (request.operations.single
-                    as wire.AuthoringOperation_patchPageWrapper)
+                    as skir.AuthoringOperation_patchPageWrapper)
                 .value;
         expect(patch.name?.expected, "Initial");
         expect(patch.name?.value, "Retained");
         expect(patch.priority, isNull);
-        return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-          wire.ApplyAuthoringBatchResponse.createInvalid(
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createInvalid(
             diagnostics: [
-              wire.AuthoringDiagnostic(
+              skir.AuthoringDiagnostic(
                 code: "invalid",
                 message: "Rejected",
                 resource: null,
@@ -162,12 +212,12 @@ void main() {
       ..registerHandler(_batchSubject, (_) {
         nats.emitMessageOnSubject(
           _eventSubject,
-          wire.AuthoringChanged.serializer.toBytes(
-            wire.AuthoringChanged(
+          skir.AuthoringChanged.serializer.toBytes(
+            skir.AuthoringChanged(
               sequence: 2,
               batchId: "remote-2",
               changes: [
-                wire.AuthoringResourceChange.wrapUpsertPage(
+                skir.AuthoringResourceChange.wrapUpsertPage(
                   _wirePage("Remote"),
                 ),
               ],
@@ -175,10 +225,10 @@ void main() {
             ),
           ),
         );
-        return wire.ApplyAuthoringBatchResponse.serializer.toBytes(
-          wire.ApplyAuthoringBatchResponse.createInvalid(
+        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createInvalid(
             diagnostics: [
-              wire.AuthoringDiagnostic(
+              skir.AuthoringDiagnostic(
                 code: "invalid",
                 message: "Rejected",
                 resource: null,
@@ -206,9 +256,9 @@ void main() {
         .read(authoringSessionProvider(_organization, _realm).notifier)
         .patchPage(
           id: _page,
-          name: wire.StringChange(expected: "Initial", value: "Local"),
+          name: skir.StringChange(expected: "Initial", value: "Local"),
         );
-    expect(result, isA<wire.ApplyAuthoringBatchResponse_invalidWrapper>());
+    expect(result, isA<skir.ApplyAuthoringBatchResponse_invalidWrapper>());
 
     expect(container.read(provider).requireValue.name, "Remote");
     expect(
@@ -227,7 +277,7 @@ final _realm = recordId("service:realm1");
 final _book = recordId("book:book1");
 final _page = recordId("page:page1");
 
-wire.Page _wirePage(String name) => wire.Page(
+skir.Page _wirePage(String name) => skir.Page(
   id: _page,
   book: _book,
   name: name,
@@ -237,20 +287,20 @@ wire.Page _wirePage(String name) => wire.Page(
 );
 
 Uint8List _snapshot(String name, int sequence) =>
-    wire.GetAuthoringSnapshotResponse.serializer.toBytes(
-      wire.GetAuthoringSnapshotResponse.createSuccess(
+    skir.GetAuthoringSnapshotResponse.serializer.toBytes(
+      skir.GetAuthoringSnapshotResponse.createSuccess(
         sequence: sequence,
         slices: [
-          wire.AuthoringSnapshotSlice.createPage(
+          skir.AuthoringSnapshotSlice.createPage(
             pageId: _page,
-            document: wire.PageDocument(
+            document: skir.PageDocument(
               page: _wirePage(name),
               elements: const [],
               references: const [],
               crossPageTargets: const [],
               crossPageSources: const [],
               diagnostics: const [],
-              compileStatus: wire.PageCompileStatus.notCompiled,
+              compileStatus: skir.PageCompileStatus.notCompiled,
             ),
           ),
         ],

@@ -32,12 +32,6 @@ Future<void> _changePagesChapter(
 class _AddPageButton extends HookConsumerWidget {
   const _AddPageButton();
 
-  Future<String?> _showAddPageDialog(BuildContext context) async =>
-      showAdvancedDialog(
-        context: context,
-        builder: (context) => const AddPageDialogue(),
-      );
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isFocused = useState(false);
@@ -72,7 +66,7 @@ class _AddPageButton extends HookConsumerWidget {
         padding: EdgeInsets.zero,
       ),
       child: TextButton(
-        onPressed: () => _showAddPageDialog(context),
+        onPressed: () => promptAndCreatePage(context: context, ref: ref),
         onFocusChange: (focus) => isFocused.value = focus,
         onHover: (hover) => isHovered.value = hover,
         style: TextButton.styleFrom(

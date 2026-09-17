@@ -1,8 +1,20 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "page_commands.freezed.dart";
+
+/// Validated user input required to create one page in a selected book.
+@freezed
+abstract class PageCreationInput with _$PageCreationInput {
+  const factory PageCreationInput({
+    required String name,
+    required PageKindRef kind,
+    required String chapter,
+    required int priority,
+  }) = _PageCreationInput;
+}
 
 /// Builds page mutations at the shared authoring session boundary.
 ///
@@ -11,29 +23,50 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// store, and patch fields carry expected values so stale metadata is rejected
 /// rather than overwritten.
 extension PageCommands on AuthoringSession {
+  /// Creates a new page from user supplied metadata.
+  ///
+  /// Identity generation and application validation stay at the authoring
+  /// command boundary so dialogs and search actions share one mutation path.
+  Future<Page> createPageFromInput(
+    skir.RecordId bookId,
+    PageCreationInput input,
+  ) async {
+    final page = skir.Page(
+      id: newResourceId(AuthoringResource.page),
+      book: bookId,
+      name: input.name,
+      kind: input.kind.toSkir(),
+      chapter: input.chapter,
+      priority: input.priority,
+    );
+    final response = await createPage(page);
+    response.requireApplied(conflictMessage: "The page already exists");
+    return Page.fromWire(page);
+  }
+
   /// Creates [page] through the session's authoring batch protocol.
-  Future<wire.ApplyAuthoringBatchResponse> createPage(wire.Page page) =>
-      apply([wire.AuthoringOperation.createCreatePage(page: page)]);
+  Future<skir.ApplyAuthoringBatchResponse> createPage(skir.Page page) =>
+      apply([skir.AuthoringOperation.createCreatePage(page: page)]);
 
   /// Deletes the page identified by [id] through the authoring boundary.
-  Future<wire.ApplyAuthoringBatchResponse> deletePage(skir.RecordId id) =>
-      apply([wire.AuthoringOperation.createDeletePage(id: id)]);
+  Future<skir.ApplyAuthoringBatchResponse> deletePage(skir.RecordId id) =>
+      apply([skir.AuthoringOperation.createDeletePage(id: id)]);
 
   /// Applies the supplied metadata changes if at least one field is present.
   ///
   /// Each non null change contains its expected old value. The returned wire
   /// outcome distinguishes application, rejection, and other boundary states.
-  Future<wire.ApplyAuthoringBatchResponse> patchPage({
+  Future<skir.ApplyAuthoringBatchResponse> patchPage({
     required skir.RecordId id,
-    wire.StringChange? name,
-    wire.StringChange? chapter,
-    wire.Int32Change? priority,
+    skir.StringChange? name,
+    skir.StringChange? chapter,
+    skir.Int32Change? priority,
   }) {
     if (name == null && chapter == null && priority == null) {
       throw ApiException.badRequest("At least one page field is required");
     }
     return apply([
-      wire.AuthoringOperation.createPatchPage(
+      skir.AuthoringOperation.createPatchPage(
         id: id,
         book: null,
         name: name,
@@ -48,17 +81,17 @@ extension PageCommands on AuthoringSession {
   /// The page collection must include the complete subtree selected by the
   /// caller. Each operation expects the page's current chapter, making a
   /// concurrent change observable as a conflict.
-  Future<wire.ApplyAuthoringBatchResponse> changePagesChapters(
+  Future<skir.ApplyAuthoringBatchResponse> changePagesChapters(
     Iterable<Page> pages,
     String oldChapter,
     String newChapter,
   ) => apply([
     for (final page in pages)
-      wire.AuthoringOperation.createPatchPage(
+      skir.AuthoringOperation.createPatchPage(
         id: page.pageId,
         book: null,
         name: null,
-        chapter: wire.StringChange(
+        chapter: skir.StringChange(
           expected: page.chapter,
           value: replacePageChapter(page.chapter, oldChapter, newChapter),
         ),

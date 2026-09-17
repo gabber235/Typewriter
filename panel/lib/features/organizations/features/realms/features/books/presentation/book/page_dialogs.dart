@@ -1,52 +1,15 @@
 part of "route.dart";
 
-/// Creates a page in the active book.
+/// Collects the metadata required to create a page.
 ///
-/// Page kinds come from the active realm catalog. Submission creates the
-/// authoring resource through the session, requires the optimistic result to be
-/// applied, and optionally navigates to the new page. A missing catalog is
-/// presented as an unavailable capability rather than retried by the dialog.
+/// Page kinds come from the active realm catalog. Submission returns a
+/// [PageCreationInput] to the caller without mutating authoring state. A missing
+/// catalog is presented as an unavailable capability rather than retried.
 class AddPageDialogue extends HookConsumerWidget {
-  const AddPageDialogue({
-    this.fixedKind,
-    this.autoNavigate = true,
-    this.chapter = "",
-    super.key,
-  });
+  const AddPageDialogue({this.fixedKind, this.chapter = "", super.key});
 
   final String chapter;
   final PageKindRef? fixedKind;
-  final bool autoNavigate;
-
-  Future<String> _addPage(
-    WidgetRef ref,
-    String name,
-    PageKindRef kind,
-    String chapter,
-    int priority,
-  ) async {
-    final router = ref.read(appRouterProvider);
-    final bookId = ref.read(bookIdProvider);
-    if (bookId == null) {
-      throw Exception("Book ID not found");
-    }
-    final pageId = newResourceId(AuthoringResource.page);
-    final result = await ref.readAuthoringSession().notifier.createPage(
-      skir.Page(
-        id: pageId,
-        book: bookId,
-        name: name,
-        kind: kind.toSkir(),
-        chapter: chapter,
-        priority: priority,
-      ),
-    );
-    result.requireApplied(conflictMessage: "The page already exists");
-
-    if (!autoNavigate) return pageId.id;
-    unawaited(router.push(RouteRoute(pageId: pageId.id)));
-    return pageId.id;
-  }
 
   /// Rejects an empty page name before authoring is attempted.
   String? _validateName(String text) {
@@ -72,7 +35,7 @@ class AddPageDialogue extends HookConsumerWidget {
     final chapter = useState(this.chapter);
     final priority = useState(0);
 
-    final pageTypeFocus = useFocusNode();
+    final pageKindFocus = useFocusNode();
     final chapterFocus = useFocusNode();
     final priorityFocus = useFocusNode();
     useEffect(() {
@@ -137,7 +100,7 @@ class AddPageDialogue extends HookConsumerWidget {
           if (fixedKind == null) ...[
             SizedBox(height: context.spacing.space3),
             Dropdown<PageKindRef>(
-              focusNode: pageTypeFocus,
+              focusNode: pageKindFocus,
               selected: selectedKind,
               onSelected: (value) {
                 if (value != null) kind.value = value;
@@ -210,21 +173,57 @@ class AddPageDialogue extends HookConsumerWidget {
         LoadingButton.filledIcon(
           onPressed: !isNameValid.value
               ? null
-              : () async {
-                  final navigator = Navigator.of(context);
-                  final pageId = await _addPage(
-                    ref,
-                    name.value,
-                    selectedKind,
-                    chapter.value,
-                    priority.value,
-                  );
-                  navigator.pop(pageId);
-                },
+              : () => Navigator.of(context).pop(
+                  PageCreationInput(
+                    name: name.value,
+                    kind: selectedKind,
+                    chapter: chapter.value,
+                    priority: priority.value,
+                  ),
+                ),
           label: const Text("Add"),
           icon: const Icones(Fa6Solid.plus),
         ),
       ],
     );
   }
+}
+
+/// Prompts for page metadata using the panel dialog integration.
+Future<PageCreationInput?> promptPageCreation({
+  required BuildContext context,
+  PageKindRef? fixedKind,
+  String chapter = "",
+}) => showAdvancedDialog<PageCreationInput>(
+  context: context,
+  builder: (_) => AddPageDialogue(fixedKind: fixedKind, chapter: chapter),
+);
+
+/// Prompts, creates, and optionally opens a page for ordinary book controls.
+Future<Page?> promptAndCreatePage({
+  required BuildContext context,
+  required WidgetRef ref,
+  PageKindRef? fixedKind,
+  String chapter = "",
+  bool navigate = true,
+}) async {
+  final input = await promptPageCreation(
+    context: context,
+    fixedKind: fixedKind,
+    chapter: chapter,
+  );
+  if (input == null || !context.mounted) return null;
+
+  final bookId = ref.read(bookIdProvider);
+  if (bookId == null) throw ApiException.badRequest("No book selected");
+  final page = await ref.readAuthoringSession().notifier.createPageFromInput(
+    bookId,
+    input,
+  );
+  if (navigate && context.mounted) {
+    unawaited(
+      ref.read(appRouterProvider).push(RouteRoute(pageId: page.pageId.id)),
+    );
+  }
+  return page;
 }

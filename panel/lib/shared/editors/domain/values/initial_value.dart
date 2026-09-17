@@ -7,10 +7,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Initial values are used when a new typed resource or nested field needs a
 /// complete draft. The operation honors scalar bounds, collection minimums,
 /// record field defaults, nominal registry resolution, and the standard
-/// `none` representation for an abstract option. Unsupported unresolved types
-/// and structures that need caller supplied data return diagnostics. The
-/// result is validated against the original expression before success is
-/// returned.
+/// `none` representation for an abstract option. Other abstract types use the
+/// first resolvable concrete descendant in catalog declaration order, yielding
+/// a deterministic complete value for creation.
+/// Unsupported unresolved types return diagnostics. The result is validated
+/// against the original expression before success is returned.
 extension TypeExpressionInitialValue on TypeExpression {
   TypeResult<DataValue> createInitialValue({TypeRegistry? registry}) {
     final value = _createInitialValue(registry);
@@ -137,21 +138,31 @@ extension on RecordType {
   }
 }
 
-/// Supplies the supported concrete representation for an abstract option.
+/// Supplies a deterministic concrete representation for an abstract value.
 extension on ResolvedTypeRef {
   TypeResult<DataValue> _createAbstractValue(TypeRegistry registry) {
-    if (id != const TypeId.option()) {
-      return _failure(
-        "An abstract type requires an explicit concrete initializer",
+    if (id == const TypeId.option()) {
+      final concrete = standardTypeRefs.noneOf(arguments.single);
+      final resolved = registry.resolveExact(concrete);
+      if (resolved case TypeFailure(:final diagnostics)) {
+        return TypeResult.failure(diagnostics);
+      }
+      return TypeResult.success(
+        PolymorphicValue(concreteType: concrete, value: const UnitValue()),
       );
     }
-    final concrete = standardTypeRefs.noneOf(arguments.single);
-    final resolved = registry.resolveExact(concrete);
-    if (resolved case TypeFailure(:final diagnostics)) {
+
+    final concrete = registry.concreteDescendantsOf(this).firstOrNull;
+    if (concrete == null) {
+      return _failure("An abstract type has no concrete initializer");
+    }
+    final resolved = registry.resolveExact(concrete).valueOrNull!;
+    final initial = resolved.representation._createInitialValue(registry);
+    if (initial case TypeFailure(:final diagnostics)) {
       return TypeResult.failure(diagnostics);
     }
     return TypeResult.success(
-      PolymorphicValue(concreteType: concrete, value: const UnitValue()),
+      PolymorphicValue(concreteType: concrete, value: initial.valueOrNull!),
     );
   }
 }

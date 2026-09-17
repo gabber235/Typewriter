@@ -113,9 +113,10 @@ class _TreeCategory extends HookConsumerWidget {
               activators: [SingleActivator(LogicalKeyboardKey.keyN)],
               priority: 2,
               onInvoke: (_) {
-                showAdvancedDialog(
+                promptAndCreatePage(
                   context: context,
-                  builder: (_) => AddPageDialogue(chapter: chapter),
+                  ref: ref,
+                  chapter: chapter,
                 );
               },
             ),
@@ -143,9 +144,10 @@ class _TreeCategory extends HookConsumerWidget {
               MenuItem(
                 label: "New Page",
                 icon: Icones(Fa6Solid.plus),
-                onPressed: () => showAdvancedDialog(
+                onPressed: () => promptAndCreatePage(
                   context: context,
-                  builder: (_) => AddPageDialogue(chapter: chapter),
+                  ref: ref,
+                  chapter: chapter,
                 ),
               ),
               MenuItem(

@@ -62,6 +62,35 @@ void main() {
 
     expect(unavailable.read().requireValue, isA<PageElementTypesUnavailable>());
   });
+
+  test("entry creation policy excludes timeline cue types", () async {
+    final track = _type("Track");
+    final segment = _type("Segment");
+    final keyframe = _type("Keyframe");
+    final container = _container(
+      _SubtypeSource(
+        concreteRoots: {track, segment, keyframe},
+        editor: RealmTimelinePageEditor(
+          trackTypes: [track],
+          segmentTypes: [segment],
+          keyframeTypes: [keyframe],
+        ),
+      ),
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      pageEntryCreationPolicyProvider(_kind),
+      (previous, next) {},
+    );
+    addTearDown(subscription.close);
+    await _waitFor(() => subscription.read().hasValue);
+
+    final policy = subscription.read().requireValue;
+    expect(policy.placement, PageEntryCreationPlacement.timelineTrack);
+    expect(policy.types, {track});
+    expect(policy.accepts(segment), isFalse);
+    expect(policy.accepts(keyframe), isFalse);
+  });
 }
 
 const _kind = PageKindRef(id: "test-page", revision: 1);
@@ -98,6 +127,7 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
     this.concreteRoots = const {},
     this.unavailable = false,
     this.holdFetch = false,
+    this.editor,
   });
 
   final List<ResolvedTypeRef> matches;
@@ -105,6 +135,7 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
   final Set<ResolvedTypeRef> concreteRoots;
   final bool unavailable;
   final bool holdFetch;
+  final RealmPageEditor? editor;
   ResolvedTypeRef? requestedTarget;
   final _watch = StreamController<RealmEditorCatalogWatchEvent>();
 
@@ -151,10 +182,12 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
               description: null,
               icon: IconValue.iconify("mdi:test-tube"),
               color: Color(0xFF000000),
-              editor: RealmGraphPageEditor(
-                direction: GraphDirection.leftToRight,
-                nodeTypes: [_type("SequenceEntry")],
-              ),
+              editor:
+                  editor ??
+                  RealmGraphPageEditor(
+                    direction: GraphDirection.leftToRight,
+                    nodeTypes: [_type("SequenceEntry")],
+                  ),
               originArtifactId: "test",
               sourcePart: "test",
             ),

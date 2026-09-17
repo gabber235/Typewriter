@@ -33,9 +33,8 @@ void main() {
     final types = registry(initial);
     expect(types.resolveExact(container), isA<TypeSuccess<ResolvedType>>());
     expect(
-      RecordValue({
-        "optional": initial,
-      }).validateAgainst(NamedType(container), registry: types),
+      RecordValue({"optional": initial})
+          .validateAgainst(NamedType(container), registry: types),
       isEmpty,
     );
   });
@@ -47,6 +46,65 @@ void main() {
     expect(
       result.diagnostics.map((issue) => issue.path),
       contains(DataPath.root.field("optional")),
+    );
+  });
+
+  test("abstract fields use the first concrete descendant", () {
+    final abstract = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "Abstract"),
+      revision: 1,
+    );
+    final first = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "First"),
+      revision: 1,
+    );
+    final second = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "Second"),
+      revision: 1,
+    );
+    final root = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "Root"),
+      revision: 1,
+    );
+    final types = TypeRegistry(
+      TypeCatalog([
+        TypeDefinition(id: abstract, kind: NominalTypeKind.sealedAbstract),
+        TypeDefinition(
+          id: first,
+          kind: NominalTypeKind.concrete,
+          parents: [abstract],
+          representation: const RecordType(
+            fields: {"value": TypeField(name: "value", type: StringType())},
+          ),
+        ),
+        TypeDefinition(
+          id: second,
+          kind: NominalTypeKind.concrete,
+          parents: [abstract],
+          representation: const UnitType(),
+        ),
+        TypeDefinition(
+          id: root,
+          kind: NominalTypeKind.concrete,
+          representation: RecordType(
+            fields: {
+              "choice": TypeField(name: "choice", type: NamedType(abstract)),
+            },
+          ),
+        ),
+      ]),
+    );
+
+    final result = NamedType(root).createInitialValue(registry: types);
+
+    expect(
+      result.valueOrNull,
+      RecordValue({
+        "choice": PolymorphicValue(
+          concreteType: first,
+          value: RecordValue({"value": const StringValue("")}),
+        ),
+      }),
     );
   });
 }

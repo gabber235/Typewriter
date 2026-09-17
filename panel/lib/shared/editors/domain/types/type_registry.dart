@@ -262,6 +262,26 @@ final class TypeRegistry {
   TypeDefinition? definition(ResolvedTypeRef reference) =>
       _definitions[reference._declarationRef];
 
+  /// Returns concrete descendants in catalog declaration order.
+  ///
+  /// Generic descendants are inferred from [ancestor]. Definitions that cannot
+  /// be fully inferred or resolved are omitted, so callers receive only values
+  /// that can safely act as concrete representatives of the requested type.
+  Iterable<ResolvedTypeRef> concreteDescendantsOf(
+    ResolvedTypeRef ancestor,
+  ) sync* {
+    for (final definition in _definitions.values) {
+      if (definition.kind != NominalTypeKind.concrete) continue;
+      final candidate = definition.parameters.isEmpty
+          ? definition.id
+          : definition.id.inferFrom(NamedType(ancestor), this).valueOrNull;
+      if (candidate == null) continue;
+      final resolved = resolveExact(candidate).valueOrNull;
+      if (resolved == null || !resolved.ancestors.contains(ancestor)) continue;
+      yield candidate;
+    }
+  }
+
   static Set<ResolvedTypeRef> _findDuplicates(
     Iterable<TypeDefinition> definitions,
   ) {
