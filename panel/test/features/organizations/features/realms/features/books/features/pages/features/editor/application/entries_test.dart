@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   group("ElementDefinition", () {
@@ -182,6 +183,85 @@ void main() {
         "unknown",
       );
     });
+  });
+
+  test("entry presentation always starts with the editable name", () {
+    const presentationId = PresentationId(namespace: "example", name: "editor");
+    const rootBinding = BindingReference(bindingId: BindingId(0));
+    final catalog = TypeCatalog([
+      TypeDefinition(
+        id: _rootType,
+        kind: NominalTypeKind.concrete,
+        representation: RecordType(
+          fields: const {
+            "id": TypeField(name: "id", type: StringType()),
+            "name": TypeField(name: "name", type: StringType()),
+            "message": TypeField(name: "message", type: StringType()),
+          },
+        ),
+        defaultPresentationId: presentationId,
+      ),
+    ]);
+    final presentation = PresentationDefinition.single(
+      id: presentationId,
+      target: NamedType(_rootType),
+      root: PresentationNode(
+        id: "message",
+        element: TextInputElement(
+          control: BoundControl(
+            binding: rootBinding.at(DataPath.root.field("message")),
+            label: "Message".asStringLiteral,
+          ),
+          multiline: false,
+        ),
+      ),
+    );
+    final value = RecordValue(const {
+      "id": StringValue("entry"),
+      "name": StringValue("Entry name"),
+      "message": StringValue("Hello"),
+    });
+    final target = fakeEditorTarget(
+      targetId: "entry",
+      label: "Entry name",
+      document: EditorDocument(
+        rootType: RecordType(
+          fields: {
+            "value": TypeField(name: "value", type: NamedType(_rootType)),
+          },
+        ),
+        typeCatalog: catalog,
+        confirmedValue: RecordValue({"value": value}),
+        revision: 1,
+      ),
+      commit: (commit) async =>
+          MutationSuccess(revision: 2, value: commit.rootValue),
+    );
+    final selection = EntrySelection(
+      target: target,
+      id: const EntryIdentifier("entry", pageId: "page"),
+      definition: EntryDefinition(
+        id: "entry",
+        elementDefinition: _elementDefinition(),
+        placement: const EntryPlacement(x: 0, y: 0, width: 10, height: 10),
+        data: value,
+        inwardEdges: const [],
+        outwardEdges: const [],
+      ),
+      typeCatalog: catalog,
+      presentations: [presentation],
+      selectionCapabilities: const [],
+    );
+    final owners = EditorOwnerRegistry();
+    addTearDown(owners.dispose);
+
+    final model = selection.buildPresentation(owners);
+    final children = (model.root.element as ColumnElement).children;
+    final name = children.first.element as TypedFieldElement;
+
+    expect(name.binding, rootBinding.at(DataPath.root.field("name")));
+    expect(name.expectedType, const StringType());
+    expect(children.last.element, isA<PresentationInvocationElement>());
   });
 }
 

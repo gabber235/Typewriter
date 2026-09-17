@@ -251,6 +251,7 @@ void main() {
     expect(resolvedSelection.value, hasLength(1));
     expect(find.byType(ComposedEditor), findsOneWidget);
     expect(find.byType(EntryHeader), findsOneWidget);
+    expect(find.text("Name"), findsOneWidget);
     expect(find.text("Priority"), findsOneWidget);
     expect(find.text("Weight"), findsOneWidget);
   });

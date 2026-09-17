@@ -162,13 +162,48 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
   List<SelectionCapability> get capabilities => selectionCapabilities;
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) {
-    return EntryHeader(
-      id: id.id,
-      name: name,
-      color: definition.elementDefinition.color,
+  PresentationModel buildPresentation(EditorOwnerScope owners) {
+    final model = super.buildPresentation(owners);
+    final nameBinding = const BindingReference(bindingId: BindingId(0))
+        .at(DataPath.root.field("name"));
+    final content = model.root.withoutEntryIdentityFields();
+    return model.copyWith(
+      root: PresentationNode(
+        id: "entry.editor",
+        element: ColumnElement(
+          spacing: 12,
+          children: [
+            PresentationNode(
+              id: "entry.name",
+              element: TypedFieldElement(
+                binding: nameBinding,
+                expectedType: const StringType(),
+                presentation: PresentationNode(
+                  id: "entry.name.control",
+                  element: TextInputElement(
+                    control: BoundControl(
+                      binding: nameBinding,
+                      label: "Name".asStringLiteral,
+                    ),
+                    multiline: false,
+                  ),
+                ),
+              ),
+            ),
+            ?content,
+          ],
+        ),
+      ),
     );
   }
+
+  @override
+  Widget? buildInspectorHeader(EditOwner owner) => EntryHeader(
+    id: id.id,
+    name: name,
+    color: definition.elementDefinition.color,
+    owner: ProjectedEditOwner(owner, elementValuePath),
+  );
 
   @override
   EditableResource get resource => target.resource;
@@ -179,28 +214,61 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
   String toString() => "EntrySelection($id)";
 }
 
-/// Inspector header that identifies the selected entry and its catalog type.
-class EntryHeader extends HookWidget {
+extension PresentationNodeIdentityFields on PresentationNode {
+  PresentationNode? withoutEntryIdentityFields() {
+    final record = element;
+    if (record is! RecordInputElement) return this;
+    final fields = record.fieldPresentation;
+    final column = fields?.element;
+    if (fields == null || column is! ColumnElement) return this;
+    final identityPaths = {
+      DataPath.root.field("id"),
+      DataPath.root.field("name"),
+    };
+    final children = column.children.where((node) {
+      final element = node.element;
+      return element is! TypedFieldElement ||
+          !identityPaths.contains(element.binding.path);
+    }).toList();
+    if (children.isEmpty) return null;
+    return copyWith(
+      element: record.copyWith(
+        fieldPresentation: fields.copyWith(
+          element: column.copyWith(children: children),
+        ),
+      ),
+    );
+  }
+}
+
+/// Static entry header used by stories and read only surfaces.
+class EntryHeader extends StatelessWidget {
   const EntryHeader({
     required this.id,
     required this.name,
     required this.color,
+    this.owner,
     super.key,
   });
 
   final String id;
   final String name;
   final Color color;
+  final EditOwner? owner;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Title(title: name, color: color),
-        const SizedBox(height: 8),
-        Identifier(id: id),
-      ],
+    final owner = this.owner;
+    if (owner == null) {
+      return InspectorHeader(id: id, name: name, color: color);
+    }
+    return ManagedInspectorHeader(
+      id: id,
+      owner: owner,
+      fallbackName: name,
+      fallbackColor: color,
+      colorField: null,
+      nameFormatter: null,
     );
   }
 }
