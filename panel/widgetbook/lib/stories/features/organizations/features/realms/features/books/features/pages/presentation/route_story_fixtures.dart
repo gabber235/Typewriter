@@ -4,74 +4,100 @@ const _storyEntryIcon = IconValue.svg(
   "<svg viewBox=\"0 0 24 24\"><path d=\"M4 4h16v16H4z\"/></svg>",
 );
 
-List<PageElement>? pageStoryElements({
-  required PageType pageType,
-  required DisplayState state,
-  required List<PageElement>? overwriteElements,
+List<PageElement> graphPageStoryElements({
+  required int count,
+  required GraphDirection direction,
 }) {
-  if (overwriteElements != null) return overwriteElements;
-  return switch (state) {
-    DisplayState.loading || DisplayState.error => null,
-    DisplayState.noItems => const [],
-    DisplayState.fewItems => _entryStoryElements(pageType, 6),
-    DisplayState.manyItems => _entryStoryElements(pageType, 12),
-  };
-}
-
-List<PageElement> _entryStoryElements(PageType pageType, int count) {
-  final rootType = ResolvedTypeRef(
-    id: fixtureDeclaredTypeId("widgetbook:${pageType.name}Entry"),
-    revision: 1,
-  );
-  return [
+  final definitions = [
     for (var index = 0; index < count; index++)
-      PageElement.entry(
-        entry: PageEntry.definition(
-          definition: EntryDefinition(
-            id: "${pageType.name}_entry_$index",
-            name: "${pageType.name.formatted} Entry ${index + 1}",
-            elementDefinition: ElementDefinition(
-              rootType: rootType,
-              name: "${pageType.name.formatted} Entry",
-              description: "Deterministic Widgetbook Entry",
-              icon: _storyEntryIcon,
-              color: safeColors[index % safeColors.length],
-            ),
-            placement: EntryPlacement(
-              x: (index % 4) * 5,
-              y: (index ~/ 4) * 3,
-              width: 4,
-              height: 2,
-            ),
-            data: RecordValue({
-              "name": StringValue("Entry ${index + 1}"),
-              "priority": IntegerValue(BigInt.from(index)),
-              "weight": FloatValue(index + 0.5),
-              "enabled": BooleanValue(index.isEven),
-            }),
-            inwardEdges: const [],
-            outwardEdges: const [],
+      EntryDefinition(
+        id: "graph_entry_$index",
+        name: "Graph Entry ${index + 1}",
+        elementDefinition: ElementDefinition(
+          rootType: ResolvedTypeRef(
+            id: fixtureDeclaredTypeId("widgetbook:graphEntry"),
+            revision: 1,
           ),
+          name: "Graph Entry",
+          description: "Deterministic Widgetbook graph entry",
+          icon: _storyEntryIcon,
+          color: safeColors[index % safeColors.length],
         ),
+        placement: const EntryPlacement(x: 0, y: 0, width: 4, height: 2),
+        data: RecordValue({
+          "name": StringValue("Entry ${index + 1}"),
+          "priority": IntegerValue(BigInt.from(index)),
+          "weight": FloatValue(index + 0.5),
+          "enabled": BooleanValue(index.isEven),
+        }),
+        inwardEdges: const [],
+        outwardEdges: const [],
       ),
   ];
+  return [
+    for (final definition in layoutGraphEntries(
+      definitions,
+      direction: direction,
+    ))
+      PageElement.entry(entry: PageEntry.definition(definition: definition)),
+  ];
 }
+
+RealmPageDefinition graphPageStoryDefinition(
+  GraphDirection direction,
+  List<PageElement> elements,
+) => RealmPageDefinition(
+  kind: const PageKindRef(id: "widgetbook.graph", revision: 1),
+  name: "Graph",
+  description: "Widgetbook graph page",
+  icon: _storyEntryIcon,
+  color: safeColors.first,
+  editor: RealmPageEditor.graph(
+    direction: direction,
+    nodeTypes: _roleTypes<DefinitionPageEntry>(elements),
+  ),
+  originArtifactId: "widgetbook",
+  sourcePart: "page-story",
+);
+
+RealmPageDefinition timelinePageStoryDefinition(List<PageElement> elements) =>
+    RealmPageDefinition(
+      kind: const PageKindRef(id: "widgetbook.timeline", revision: 1),
+      name: "Timeline",
+      description: "Widgetbook timeline page",
+      icon: _storyEntryIcon,
+      color: safeColors[1],
+      editor: RealmPageEditor.timeline(
+        trackTypes: _roleTypes<DefinitionPageEntry>(elements),
+        segmentTypes: _roleTypes<Segment>(elements),
+        keyframeTypes: _roleTypes<Keyframe>(elements),
+      ),
+      originArtifactId: "widgetbook",
+      sourcePart: "page-story",
+    );
+
+List<ResolvedTypeRef> _roleTypes<T>(List<PageElement> elements) => {
+  for (final element in elements)
+    if (element case PageElementEntry(entry: final entry) when entry is T)
+      (entry as DefinitionPageEntry).definition.elementDefinition.rootType
+    else if (element case PageElementCue(:final cue) when cue is T)
+      cue.elementDefinition.rootType,
+}.toList();
 
 RealmEditorCatalogState pageStoryCatalog(
   ResolvedTypeRef rootType,
   List<PageElement> elements,
 ) {
   final value = _rootValues(elements)[rootType];
-  final representation = value == null
-      ? RecordType(fields: {})
-      : _recordType(value);
   return RealmEditorCatalogState.ready(
     RealmEditorCatalogSnapshot(
       catalog: TypeCatalog([
         TypeDefinition(
           id: rootType,
           kind: NominalTypeKind.concrete,
-          representation: representation,
+          representation: value == null
+              ? RecordType(fields: {})
+              : _recordType(value),
         ),
       ]),
       generation: const CatalogGeneration("widgetbook"),
@@ -80,7 +106,7 @@ RealmEditorCatalogState pageStoryCatalog(
 }
 
 RealmEditorCatalogState pageStoryPageCatalog(
-  PageType pageType,
+  RealmPageDefinition pageDefinition,
   List<PageElement> elements,
 ) {
   final elementDefinitions = [
@@ -92,27 +118,6 @@ RealmEditorCatalogState pageStoryPageCatalog(
         _ => null,
       },
   ].nonNulls;
-  final editor = switch (pageType) {
-    PageType.scene => const RealmTimelinePageEditor(
-      trackTypes: [],
-      segmentTypes: [],
-      keyframeTypes: [],
-    ),
-    _ => const RealmGraphPageEditor(
-      direction: GraphDirection.leftToRight,
-      nodeTypes: [],
-    ),
-  };
-  final definition = RealmPageDefinition(
-    kind: pageType.kind,
-    name: pageType.displayName.formatted,
-    description: "Widgetbook page definition",
-    icon: _storyEntryIcon,
-    color: safeColors.first,
-    editor: editor,
-    originArtifactId: "widgetbook",
-    sourcePart: "page-story",
-  );
   return RealmEditorCatalogState.ready(
     RealmEditorCatalogSnapshot(
       catalog: TypeCatalog([
@@ -142,7 +147,9 @@ RealmEditorCatalogState pageStoryPageCatalog(
             available: true,
           ),
       },
-      pageCatalog: RealmPageCatalog(definitions: {pageType.kind: definition}),
+      pageCatalog: RealmPageCatalog(
+        definitions: {pageDefinition.kind: pageDefinition},
+      ),
     ),
   );
 }
@@ -169,116 +176,23 @@ RecordType _recordType(RecordValue value) => RecordType(
   },
 );
 
-TypeExpression _valueType(DataValue value) {
-  if (value is RecordValue) return _recordType(value);
-  return switch (value) {
-    UnitValue() => const UnitType(),
-    BooleanValue() => const BooleanType(),
-    IntegerValue() => const IntegerType(width: IntegerWidth.signed64),
-    FloatValue() => const FloatType(width: FloatWidth.float64),
-    DecimalValue() => const DecimalType(),
-    StringValue() => const StringType(),
-    BytesValue() => const BytesType(),
-    TimestampValue() => const TimestampType(),
-    DurationValue() => const DurationType(),
-    ListValue(:final values) => ListType(
-      element: values.isEmpty ? const AnyType() : _valueType(values.first),
-    ),
-    MapValue(:final entries) => MapType(
-      key: entries.isEmpty ? const AnyType() : _valueType(entries.first.key),
-      value: entries.isEmpty
-          ? const AnyType()
-          : _valueType(entries.first.value),
-    ),
-    PolymorphicValue(:final concreteType) => NamedType(concreteType),
-    _ => const AnyType(),
-  };
-}
-
-AuthoringSessionState pageStoryAuthoring(
-  PageType pageType,
-  List<PageElement> elements,
-) {
-  final page = wire.Page(
-    id: recordId("page:example-page-id"),
-    book: recordId("book:example-book-id"),
-    name: "Example",
-    kind: skir.PageKindRef(id: skir.PageKindId(value: "example"), revision: 1),
-    chapter: "",
-    priority: 0,
-  );
-  final catalog = (pageStoryPageCatalog(
-    pageType,
-    elements,
-  ) as RealmEditorCatalogReady).value.catalog;
-  final codec = SkirEditorCodec(TypeRegistry(catalog));
-  return AuthoringSessionState(
-    sequence: 1,
-    pages: {page.id: page},
-    documents: {
-      page.id: wire.PageDocument(
-        page: page,
-        elements: [
-          for (final element in elements)
-            switch (element) {
-              PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-                wire.PageElement(
-                  id: recordId("element:${definition.id}"),
-                  page: page.id,
-                  name: definition.name,
-                  elementType: definition.elementDefinition.typeId.uuid,
-                  schemaRevision:
-                      definition.elementDefinition.rootType.revision,
-                  value: codec.encodeValue(definition.data).valueOrNull!,
-                  placement: wire.ElementPlacement.createGraph(
-                    x: definition.placement.x,
-                    y: definition.placement.y,
-                    width: definition.placement.width,
-                    height: definition.placement.height,
-                  ),
-                ),
-              PageElementCue(:final cue) => wire.PageElement(
-                id: recordId("element:${cue.id}"),
-                page: page.id,
-                name: cue.elementDefinition.name,
-                elementType: cue.elementDefinition.typeId.uuid,
-                schemaRevision: cue.elementDefinition.rootType.revision,
-                value: codec.encodeValue(cue.data).valueOrNull!,
-                placement: switch (cue) {
-                  Segment(:final startFrame, :final endFrame) =>
-                    wire.ElementPlacement.createTimelineSegment(
-                      startFrame: startFrame,
-                      endFrame: endFrame,
-                    ),
-                  Keyframe(:final frame) =>
-                    wire.ElementPlacement.createTimelineKeyframe(frame: frame),
-                  _ => throw StateError("Unknown story cue"),
-                },
-              ),
-              _ => throw StateError("Unsupported story element"),
-            },
-        ],
-        references: [
-          for (final element in elements)
-            for (final link in switch (element) {
-              PageElementEntry(:final entry) => entry.links.$2,
-              PageElementCue(cue: Segment(:final outwardLinks)) => outwardLinks,
-              _ => const <ElementLink>[],
-            })
-              wire.PageReference(
-                source: recordId("element:${element.id}"),
-                slot: link.path,
-                target: recordId("element:${link.otherId}"),
-              ),
-        ],
-        crossPageTargets: const [],
-        crossPageSources: const [],
-        diagnostics: const [],
-        compileStatus: wire.PageCompileStatus.createBlocked(
-          lastActiveManifestId: null,
-          diagnosticCount: 0,
-        ),
-      ),
-    },
-  );
-}
+TypeExpression _valueType(DataValue value) => switch (value) {
+  UnitValue() => const UnitType(),
+  BooleanValue() => const BooleanType(),
+  IntegerValue() => const IntegerType(width: IntegerWidth.signed64),
+  FloatValue() => const FloatType(width: FloatWidth.float64),
+  DecimalValue() => const DecimalType(),
+  StringValue() => const StringType(),
+  BytesValue() => const BytesType(),
+  TimestampValue() => const TimestampType(),
+  DurationValue() => const DurationType(),
+  RecordValue() => _recordType(value),
+  ListValue(:final values) => ListType(
+    element: values.isEmpty ? const AnyType() : _valueType(values.first),
+  ),
+  MapValue(:final entries) => MapType(
+    key: entries.isEmpty ? const AnyType() : _valueType(entries.first.key),
+    value: entries.isEmpty ? const AnyType() : _valueType(entries.first.value),
+  ),
+  PolymorphicValue(:final concreteType) => NamedType(concreteType),
+};

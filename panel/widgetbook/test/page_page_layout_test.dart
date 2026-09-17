@@ -9,19 +9,25 @@ import "support/network_images.dart";
 
 void main() {
   testWidgetsWithNetworkImages(
-    "sequence page stays within a narrow Widgetbook canvas",
+    "graph page stays within a narrow Widgetbook canvas",
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1280, 720));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      final story =
-          pagePageStory(
-                pageType: PageType.sequence,
-                pagesState: DisplayState.manyItems,
-                entriesState: DisplayState.fewItems,
-                servicesState: DisplayState.manyItems,
-              )
-              as FakeApp;
+      final elements = graphPageStoryElements(
+        count: 6,
+        direction: GraphDirection.leftToRight,
+      );
+      final story = pagePageStory(
+        definition: graphPageStoryDefinition(
+          GraphDirection.leftToRight,
+          elements,
+        ),
+        elements: elements,
+        pagesState: DisplayState.manyItems,
+        entriesState: DisplayState.fewItems,
+        servicesState: DisplayState.manyItems,
+      ) as FakeApp;
       await tester.pumpWidget(
         FakeApp(
           overrides: story.overrides,

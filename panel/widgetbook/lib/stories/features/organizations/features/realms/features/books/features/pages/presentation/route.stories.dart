@@ -1,9 +1,7 @@
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" hide Page;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
-    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -11,47 +9,99 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
 part "route_story_fixtures.dart";
+part "route_story_authoring.dart";
 
-Widget _buildPagePageUseCase(
-  BuildContext context,
-  PageType pageType, {
-  List<PageElement>? overwriteElements,
-}) {
-  final pagesState = context.knobs.displayState(
-    label: "Pages State",
-    initialOption: DisplayState.manyItems,
+@widgetbook.UseCase(name: "Graph", type: PagePage)
+Widget pagePageGraphUseCase(BuildContext context) {
+  final direction = context.knobs.object.dropdown(
+    label: "Graph direction",
+    options: GraphDirection.values,
+    initialOption: GraphDirection.leftToRight,
+    labelBuilder: (value) => value.name.formatted,
   );
-  final entriesState = context.knobs.displayState(
-    label: "Entries State",
-    initialOption: DisplayState.manyItems,
+  final count = context.knobs.int.slider(
+    label: "Entry count",
+    initialValue: 12,
+    min: 0,
+    max: 32,
   );
-
-  final servicesState = context.knobs.displayState(
-    label: "Services State",
-    initialOption: DisplayState.manyItems,
-  );
-
+  final elements = graphPageStoryElements(count: count, direction: direction);
   return pagePageStory(
-    pageType: pageType,
-    pagesState: pagesState,
-    entriesState: entriesState,
-    servicesState: servicesState,
-    overwriteElements: overwriteElements,
+    definition: graphPageStoryDefinition(direction, elements),
+    elements: elements,
+    pagesState: context.knobs.displayState(
+      label: "Pages state",
+      initialOption: DisplayState.manyItems,
+    ),
+    entriesState: context.knobs.displayState(
+      label: "Entries state",
+      initialOption: DisplayState.manyItems,
+    ),
+    servicesState: context.knobs.displayState(
+      label: "Services state",
+      initialOption: DisplayState.manyItems,
+    ),
+  );
+}
+
+@widgetbook.UseCase(name: "Timeline", type: PagePage)
+Widget pagePageTimelineUseCase(BuildContext context) {
+  final elements = generateTimelinePageElements(
+    trackCount: context.knobs.int.slider(
+      label: "Track count",
+      initialValue: 4,
+      min: 1,
+      max: 8,
+    ),
+    segmentsPerTrack: context.knobs.int.slider(
+      label: "Segments per track",
+      initialValue: 2,
+      min: 1,
+      max: 6,
+    ),
+    keyframesPerSegment: context.knobs.int.slider(
+      label: "Keyframes per segment",
+      initialValue: 2,
+      min: 0,
+      max: 8,
+    ),
+    nestingDepth: context.knobs.int.slider(
+      label: "Nesting depth",
+      initialValue: 1,
+      min: 0,
+      max: 2,
+    ),
+  );
+  return pagePageStory(
+    definition: timelinePageStoryDefinition(elements),
+    elements: elements,
+    pagesState: context.knobs.displayState(
+      label: "Pages state",
+      initialOption: DisplayState.manyItems,
+    ),
+    entriesState: context.knobs.displayState(
+      label: "Entries state",
+      initialOption: DisplayState.manyItems,
+    ),
+    servicesState: context.knobs.displayState(
+      label: "Services state",
+      initialOption: DisplayState.manyItems,
+    ),
   );
 }
 
 Widget pagePageStory({
-  required PageType pageType,
+  required RealmPageDefinition definition,
+  required List<PageElement> elements,
   DisplayState pagesState = DisplayState.fewItems,
   DisplayState entriesState = DisplayState.fewItems,
   DisplayState servicesState = DisplayState.fewItems,
-  List<PageElement>? overwriteElements,
 }) {
-  final storyElements = pageStoryElements(
-    pageType: pageType,
-    state: entriesState,
-    overwriteElements: overwriteElements,
-  );
+  final storyElements = switch (entriesState) {
+    DisplayState.loading || DisplayState.error => null,
+    DisplayState.noItems => const <PageElement>[],
+    DisplayState.fewItems || DisplayState.manyItems => elements,
+  };
   final storyEntryIndex = {
     for (final element in storyElements ?? const <PageElement>[])
       if (element case PageElementEntry(
@@ -62,10 +112,19 @@ Widget pagePageStory({
           definition: definition,
         ),
   };
+  final page = Page(
+    pageId: recordId("page:example-page-id"),
+    bookId: recordId("book:example-book-id"),
+    name: "Example",
+    kind: definition.kind,
+    chapter: "",
+    priority: 0,
+  );
+
   return FakeApp(
     overrides: [
       ...authoringSessionMockOverrides(
-        initial: pageStoryAuthoring(pageType, storyElements ?? const []),
+        initial: pageStoryAuthoring(definition, storyElements ?? const []),
       ),
       authoringEntryIndexProvider.overrideWith(
         (ref, scope) =>
@@ -88,7 +147,7 @@ Widget pagePageStory({
       ),
       realmEditorCatalogProvider.overrideWith(
         (ref) => Stream.value(
-          pageStoryPageCatalog(pageType, storyElements ?? const []),
+          pageStoryPageCatalog(definition, storyElements ?? const []),
         ),
       ),
       realmEditorCatalogLeaseProvider.overrideWith((ref, request) => null),
@@ -96,11 +155,10 @@ Widget pagePageStory({
       ...entryProviderOverrides(),
       ...pageElementsProviderOverrides(
         state: entriesState,
-        pageType: pageType,
-        overwriteElements: storyElements,
+        elements: storyElements,
       ),
       ...bookPagesProviderOverrides(state: pagesState),
-      ...pagesProviderOverrides(pageType: pageType),
+      ...pagesProviderOverrides(page: page),
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: pagesState),
@@ -118,198 +176,4 @@ Widget pagePageStory({
     ],
     child: BookScaffold(child: PagePage(pageId: "example-page-id")),
   );
-}
-
-@widgetbook.UseCase(name: "Sequence", type: PagePage)
-Widget pagePageSequenceUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.sequence);
-}
-
-@widgetbook.UseCase(name: "Static", type: PagePage)
-Widget pagePageStaticUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.static);
-}
-
-List<PageElement> pagePageSceneElements() {
-  final demoScene = sceneElements()
-      .entry(
-        id: "entry_npc",
-        name: "Entity",
-        color: Colors.pinkAccent,
-        children: [
-          .segment(
-            "NPC",
-            start: 0,
-            end: 50,
-            color: Colors.pinkAccent,
-            children: [
-              for (var i = 0; i < 50; i += 2)
-                .keyframe("$i", frame: i, color: Colors.pinkAccent.shade100),
-              .segment(
-                "Equipment",
-                start: 10,
-                end: 30,
-                color: Colors.pink.shade200,
-              ),
-              .segment(
-                "Sneaking",
-                start: 20,
-                end: 40,
-                color: Colors.pink.shade300,
-              ),
-            ],
-          ),
-        ],
-      )
-      .entry(
-        id: "entry_dialogue",
-        name: "Dialogue",
-        color: Colors.greenAccent,
-        children: [
-          .segment(
-            "Winston Dialogue",
-            start: 0,
-            end: 130,
-            color: Colors.greenAccent,
-            children: [
-              .segment(
-                "So...",
-                start: 0,
-                end: 30,
-                color: Colors.greenAccent.shade100,
-              ),
-              .segment(
-                "You like the new features?",
-                start: 50,
-                end: 110,
-                color: Colors.greenAccent.shade100,
-              ),
-            ],
-          ),
-          .segment(
-            "Player Dialogue",
-            start: 131,
-            end: 200,
-            color: Colors.greenAccent,
-          ),
-        ],
-      )
-      .entry(
-        id: "entry_game_time",
-        name: "Game Time",
-        color: Colors.redAccent,
-        children: [
-          .segment(
-            "Time Distortion",
-            start: 0,
-            end: 99,
-            color: Colors.redAccent,
-            children: [
-              .segment(
-                "Forward Animation",
-                start: 0,
-                end: 30,
-                color: Colors.redAccent.shade100,
-              ),
-              .segment(
-                "Reverse Animation",
-                start: 70,
-                end: 99,
-                color: Colors.redAccent.shade100,
-              ),
-            ],
-          ),
-        ],
-      )
-      .entry(
-        id: "world_border",
-        name: "World Border",
-        color: Colors.yellowAccent,
-        children: [
-          .segment(
-            "Border",
-            start: 120,
-            end: 180,
-            color: Colors.yellowAccent,
-            children: [
-              .segment(
-                "Move Closer",
-                start: 0,
-                end: 20,
-                color: Colors.yellowAccent.shade100,
-              ),
-              .segment(
-                "Move Farther",
-                start: 45,
-                end: 60,
-                color: Colors.yellowAccent.shade100,
-              ),
-            ],
-          ),
-        ],
-      )
-      .entry(
-        id: "entry_camera",
-        name: "Camera",
-        color: Colors.blueAccent,
-        children: [
-          .segment(
-            "Close up",
-            start: 0,
-            end: 99,
-            color: Colors.blueAccent,
-            children: [
-              .segment(
-                "Zoom in",
-                start: 0,
-                end: 29,
-                color: Colors.blueAccent.shade100,
-              ),
-              .segment(
-                "Move sideways",
-                start: 30,
-                end: 70,
-                color: Colors.blueAccent.shade100,
-              ),
-              .segment(
-                "Zoom out",
-                start: 71,
-                end: 99,
-                color: Colors.blueAccent.shade100,
-              ),
-            ],
-          ),
-          .segment(
-            "Wide angle",
-            start: 100,
-            end: 199,
-            color: Colors.blueAccent,
-            children: [
-              .segment(
-                "Slide right",
-                start: 0,
-                end: 99,
-                color: Colors.blueAccent.shade100,
-              ),
-            ],
-          ),
-        ],
-      )
-      .build();
-
-  return demoScene;
-}
-
-@widgetbook.UseCase(name: "Scene", type: PagePage)
-Widget pagePageSceneUseCase(BuildContext context) {
-  return _buildPagePageUseCase(
-    context,
-    PageType.scene,
-    overwriteElements: pagePageSceneElements(),
-  );
-}
-
-@widgetbook.UseCase(name: "Manifest", type: PagePage)
-Widget pagePageManifestUseCase(BuildContext context) {
-  return _buildPagePageUseCase(context, PageType.manifest);
 }

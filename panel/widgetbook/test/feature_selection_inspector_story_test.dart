@@ -202,66 +202,76 @@ void main() {
     expect(find.text("Direct Tags"), findsOneWidget);
   });
 
-  testWidgetsWithNetworkImages(
-    "sequence page story opens the Entry inspector",
-    (tester) async {
-      await _prepareStory(tester);
-      await tester.pumpWidget(
-        pagePageStory(
-          pageType: PageType.sequence,
-          pagesState: DisplayState.manyItems,
-          entriesState: DisplayState.manyItems,
-          servicesState: DisplayState.manyItems,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final entryTapTarget = find
-          .descendant(
-            of: find.byType(EntryNode).first,
-            matching: find.byType(GestureDetector),
-          )
-          .hitTestable()
-          .first;
-      await tester.tap(entryTapTarget);
-      await tester.pumpAndSettle();
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(PagePage)),
-      );
-      final resolvedSelection = container.read(selectedProvider);
-
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pumpAndSettle();
-
-      expect(
-        container.read(selectionProvider),
-        contains(isA<EntryIdentifier>()),
-      );
-      expect(
-        resolvedSelection.hasError,
-        isFalse,
-        reason: "${resolvedSelection.error}",
-      );
-      expect(resolvedSelection.value, hasLength(1));
-      expect(find.byType(ComposedEditor), findsOneWidget);
-      expect(find.byType(EntryHeader), findsOneWidget);
-      expect(find.text("Priority"), findsOneWidget);
-      expect(find.text("Weight"), findsOneWidget);
-    },
-  );
-
-  testWidgetsWithNetworkImages("scene page story opens the Cue inspector", (
+  testWidgetsWithNetworkImages("graph page story opens the Entry inspector", (
     tester,
   ) async {
     await _prepareStory(tester);
+    final elements = graphPageStoryElements(
+      count: 12,
+      direction: GraphDirection.leftToRight,
+    );
     await tester.pumpWidget(
       pagePageStory(
-        pageType: PageType.scene,
+        definition: graphPageStoryDefinition(
+          GraphDirection.leftToRight,
+          elements,
+        ),
+        elements: elements,
         pagesState: DisplayState.manyItems,
         entriesState: DisplayState.manyItems,
         servicesState: DisplayState.manyItems,
-        overwriteElements: pagePageSceneElements(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final entryTapTarget = find
+        .descendant(
+          of: find.byType(EntryNode).first,
+          matching: find.byType(GestureDetector),
+        )
+        .hitTestable()
+        .first;
+    await tester.tap(entryTapTarget);
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(PagePage)),
+    );
+    final resolvedSelection = container.read(selectedProvider);
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(container.read(selectionProvider), contains(isA<EntryIdentifier>()));
+    expect(
+      resolvedSelection.hasError,
+      isFalse,
+      reason: "${resolvedSelection.error}",
+    );
+    expect(resolvedSelection.value, hasLength(1));
+    expect(find.byType(ComposedEditor), findsOneWidget);
+    expect(find.byType(EntryHeader), findsOneWidget);
+    expect(find.text("Priority"), findsOneWidget);
+    expect(find.text("Weight"), findsOneWidget);
+  });
+
+  testWidgetsWithNetworkImages("timeline page story opens the Cue inspector", (
+    tester,
+  ) async {
+    await _prepareStory(tester);
+    final elements = generateTimelinePageElements(
+      trackCount: 4,
+      segmentsPerTrack: 2,
+      keyframesPerSegment: 2,
+      nestingDepth: 1,
+    );
+    await tester.pumpWidget(
+      pagePageStory(
+        definition: timelinePageStoryDefinition(elements),
+        elements: elements,
+        pagesState: DisplayState.manyItems,
+        entriesState: DisplayState.manyItems,
+        servicesState: DisplayState.manyItems,
       ),
     );
     await tester.pumpAndSettle();
