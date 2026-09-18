@@ -39,9 +39,8 @@ typewriter {
 }
 
 dependencies {
-    add("commonImplementation", project(":typewriter-api"))
     imprintExtensionApi(project(":typewriter-api"))
-    imprintExtensionApi(libs.kotlin.coroutines.core)
+
     testImplementation(project(":typewriter-api"))
-    testImplementation(libs.kotlin.coroutines.core)
+    testImplementation(libs.kotlin.coroutines.test)
 }
