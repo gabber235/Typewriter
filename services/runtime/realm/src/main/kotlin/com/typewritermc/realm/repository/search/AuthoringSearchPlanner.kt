@@ -5,16 +5,16 @@ import com.typewritermc.library.ChapterPath
 internal object AuthoringSearchPlanner {
     fun rankDefaults(
         candidates: List<AuthoringSearchHit>,
-        context: AuthoringSearchContext?,
+        contexts: List<AuthoringSearchContext>,
     ): List<AuthoringSearchHit> =
         candidates.sortedWith(
-            compareByDescending<AuthoringSearchHit> { it.contextBoost(context) }
+            compareByDescending<AuthoringSearchHit> { it.contextBoost(contexts) }
                 .thenBy(AuthoringSearchHit::title),
         )
 
     fun rank(
         candidates: List<AuthoringSearchCandidate>,
-        context: AuthoringSearchContext?,
+        contexts: List<AuthoringSearchContext>,
         limit: Int,
     ): List<AuthoringSearchHit> =
         candidates
@@ -24,7 +24,7 @@ internal object AuthoringSearchPlanner {
                 val coverage = evidence.mapNotNull { it.evidence.term }.distinct().size * TERM_COVERAGE_BOOST
                 RankedHit(
                     strongest.hit,
-                    strongest.evidence.score + coverage + strongest.hit.contextBoost(context),
+                    strongest.evidence.score + coverage + strongest.hit.contextBoost(contexts),
                 )
             }.sortedWith(compareByDescending<RankedHit>(RankedHit::score).thenBy { it.hit.title })
             .map(RankedHit::hit)
@@ -36,8 +36,13 @@ private data class RankedHit(
     val score: Double,
 )
 
-private fun AuthoringSearchHit.contextBoost(context: AuthoringSearchContext?): Double {
-    if (context == null || contextBook != context.book) return 0.0
+private fun AuthoringSearchHit.contextBoost(contexts: List<AuthoringSearchContext>): Double {
+    if (contexts.isEmpty()) return 0.0
+    return contexts.sumOf(::contextBoost) / contexts.size
+}
+
+private fun AuthoringSearchHit.contextBoost(context: AuthoringSearchContext): Double {
+    if (contextBook != context.book) return 0.0
     val pageBoost = if (contextPage == context.page) CURRENT_PAGE_BOOST else 0.0
     val chapterBoost =
         contextChapter?.let { candidate ->

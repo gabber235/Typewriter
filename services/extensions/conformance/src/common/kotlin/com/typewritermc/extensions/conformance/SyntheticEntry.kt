@@ -28,6 +28,7 @@ import com.typewritermc.pages.page
 import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.TypewriterPresentation
 import com.typewritermc.presentation.presentation
+import com.typewritermc.types.Color
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -65,7 +66,7 @@ interface ConformanceEntry : Entry
     name = "Synthetic Entry",
     description = "Verifies Typewriter discovery",
     icon = "material-symbols:science",
-    color = "#7C4DFF",
+    color = Color.Hex.PURPLE,
 )
 data class SyntheticEntry(
     override val id: ElementInstanceId,

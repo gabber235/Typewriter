@@ -251,6 +251,10 @@ private fun ConversionScope.encode(expression: TypeExpression): SkirTypeExpressi
             SkirTypeExpression.NamedWrapper(encode(expression.reference))
         }
 
+        is TypeExpression.Reference -> {
+            SkirTypeExpression.createReference(targetType = encode(expression.target))
+        }
+
         is TypeExpression.Parameter -> {
             SkirTypeExpression.ParameterWrapper(expression.name)
         }
@@ -377,6 +381,10 @@ private fun ConversionScope.decode(expression: SkirTypeExpression): TypeExpressi
 
         is SkirTypeExpression.NamedWrapper -> {
             TypeExpression.Named(decode(expression.value))
+        }
+
+        is SkirTypeExpression.ReferenceWrapper -> {
+            TypeExpression.Reference(decode(expression.value.targetType))
         }
 
         else -> {

@@ -41,9 +41,6 @@ DEFINE FIELD OVERWRITE placement.height ON tag TYPE int
         RETURN true;
     };
 
-DEFINE FIELD OVERWRITE parent_tags ON tag
-    COMPUTED ->inherits->tag;
-
 DEFINE INDEX OVERWRITE tag_name_search ON tag
     FIELDS name FULLTEXT ANALYZER authoring_text BM25 HIGHLIGHTS;
 DEFINE INDEX OVERWRITE tag_name_prefix ON tag

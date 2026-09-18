@@ -20,6 +20,8 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.Icon
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
 
@@ -35,9 +37,15 @@ internal class RepositoryFixture : AutoCloseable {
         linkedMapOf(
             TEST_ELEMENT_TYPE to ElementSearchCatalogEntry(graphs.getValue(TEST_ELEMENT_TYPE), null, "Test element"),
         )
+    private val typeDefinitions = mutableListOf<TypeDefinition>()
     val elementTypeGraphs = { graphs.toMap() }
     val pageDocuments = SurrealPageDocumentRepository(database) { null }
-    val search = SurrealAuthoringSearchRepository(database, catalog = { searchCatalog.toMap() })
+    val search =
+        SurrealAuthoringSearchRepository(
+            database,
+            catalog = { searchCatalog.toMap() },
+            typeCatalog = { TypeCatalog(typeDefinitions.toList()) },
+        )
     val authoring = SurrealAuthoringRepository(database, pageDocuments, elementTypeGraphs, search)
 
     init {
@@ -107,6 +115,10 @@ internal class RepositoryFixture : AutoCloseable {
     ) {
         graphs[type] = graph
         searchCatalog[type] = ElementSearchCatalogEntry(graph, searchDefinition, displayName)
+    }
+
+    fun registerTypeDefinitions(vararg definitions: TypeDefinition) {
+        typeDefinitions += definitions
     }
 
     override fun close() {

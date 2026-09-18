@@ -11,11 +11,15 @@ import com.typewritermc.library.TagId
 import com.typewritermc.realm.repository.AuthoringResourceRef
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
+import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 
 internal interface AuthoringSearchRepository {
     fun search(request: AuthoringSearchRequest): AuthoringSearchResult
 
     fun suggest(request: AuthoringSelectorSuggestionRequest): AuthoringSelectorSuggestions
+
+    fun resolve(request: AuthoringReferenceResolutionRequest): List<AuthoringReferenceSummary>
 }
 
 internal data class AuthoringSearchRequest(
@@ -23,6 +27,25 @@ internal data class AuthoringSearchRequest(
     val terms: List<String>,
     val filter: SearchFilterExpression<AuthoringSearchFilter>? = null,
     val contextPage: PageId? = null,
+    val referenceScope: AuthoringReferenceScope? = null,
+)
+
+internal data class AuthoringReferenceScope(
+    val origins: List<ResourceId>,
+    val target: ResolvedTypeRef,
+)
+
+internal data class AuthoringReferenceResolutionRequest(
+    val ids: List<ResourceId>,
+    val target: ResolvedTypeRef,
+)
+
+internal data class AuthoringReferenceSummary(
+    val id: ResourceId,
+    val title: String?,
+    val subtitle: String?,
+    val compatibleTypes: List<ResolvedTypeRef>,
+    val exists: Boolean,
 )
 
 internal data class AuthoringSearchFilter(

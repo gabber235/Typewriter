@@ -104,6 +104,12 @@ class TypewriterDataFormat internal constructor(
                 materializeNamed(expression.reference, parameters)
             }
 
+            is TypeExpression.Reference -> {
+                expression.copy(
+                    target = expression.target.withArguments(expression.target.arguments.map { materialize(it, parameters) }),
+                )
+            }
+
             else -> {
                 expression
             }
@@ -251,6 +257,10 @@ class TypewriterDataFormat internal constructor(
                 }
             }
 
+            is TypeExpression.Reference -> {
+                require(descriptor.kind == PrimitiveKind.STRING) { "$path: Expected a resource reference serializer." }
+            }
+
             is TypeExpression.Parameter -> {}
         }
     }
@@ -339,6 +349,7 @@ private open class DataValueEncoder(
                 is TypeExpression.Duration -> DataValue.Duration(Duration.parse(value))
                 is TypeExpression.Integer -> DataValue.Integer(requireIntegerRange(value.toBigInteger(), type.width, path))
                 is TypeExpression.Enumeration -> DataValue.StringValue(value)
+                is TypeExpression.Reference -> DataValue.Reference(ResourceId.parse(value))
                 else -> mismatch("string", type)
             }
         emit(encoded)
@@ -652,6 +663,7 @@ private open class DataValueDecoder(
             is DataValue.Timestamp -> current.value.toString()
             is DataValue.Duration -> current.value.toString()
             is DataValue.Integer -> current.value.toString()
+            is DataValue.Reference -> current.id.referenceString()
             else -> mismatch("string compatible value")
         }
 

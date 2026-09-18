@@ -31,6 +31,7 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
 import kotlinx.coroutines.CompletableDeferred
@@ -134,7 +135,12 @@ class Realm(
                     compiledContentEvents::publishActivated,
                     compiledContentEvents::publishBlocked,
                 )
-            val authoringSearch = SurrealAuthoringSearchRepository(connected, elementSearchCatalog)
+            val authoringSearch =
+                SurrealAuthoringSearchRepository(
+                    connected,
+                    elementSearchCatalog,
+                    typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) },
+                )
             val authoring = SurrealAuthoringRepository(connected, pageDocuments, elementTypeGraphs, authoringSearch)
             val compiler =
                 RealmCompileCoordinator(

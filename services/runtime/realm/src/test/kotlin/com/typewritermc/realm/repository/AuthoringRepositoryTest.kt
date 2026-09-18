@@ -417,8 +417,12 @@ val AuthoringRepositoryTest by testSuite {
                                 placement: { kind: 'graph_v1', x: 0, y: 0, width: 1, height: 1 }
                             };
                             RELATE page:source_page->contains_element:[page:source_page, element:referrer]->element:referrer;
-                            RELATE element:referrer->element_reference:[element:referrer, 'target']->page:target_page
-                                SET slot = 'target', expected_type = 'test/Page';
+                            CREATE resource_reference:[element:referrer, 'target'] CONTENT {
+                                source: element:referrer,
+                                target: page:target_page,
+                                slot: 'target',
+                                expected_type: 'test/Page'
+                            };
                             """.trimIndent(),
                         )
                 for (index in 0 until fixtureResponse.size()) fixtureResponse.take(index)

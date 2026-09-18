@@ -3,6 +3,7 @@ package com.typewritermc.elements
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
@@ -14,7 +15,7 @@ import io.kotest.matchers.shouldBe
 
 val ReferenceProjectionTest by testSuite {
     test("direct references decompose and assemble without duplicate target ownership") {
-        val value = DataValue.StringValue("element:target")
+        val value = DataValue.Reference(ResourceId.parse("element:target"))
         val stored = decomposer().decompose(TypeGraph(refTo(elementType), emptyList()), value)
 
         stored.references
@@ -60,7 +61,7 @@ val ReferenceProjectionTest by testSuite {
         val logical =
             DataValue.Polymorphic(
                 pageBranch,
-                DataValue.Record(mapOf("page" to DataValue.StringValue("page:intro"))),
+                DataValue.Record(mapOf("page" to DataValue.Reference(ResourceId.parse("page:intro")))),
             )
         val stored = decomposer().decompose(graph, logical)
 
@@ -73,14 +74,7 @@ private fun decomposer(): ReferenceDecomposer {
     return ReferenceDecomposer { ReferenceSlotId("slot_${next++}") }
 }
 
-private fun refTo(target: ResolvedTypeRef): TypeExpression.Named =
-    TypeExpression.Named(
-        ResolvedTypeRef(
-            id = TypeId.Qualified("typewriter/v1", "Ref"),
-            revision = 1,
-            arguments = listOf(TypeExpression.Named(target)),
-        ),
-    )
+private fun refTo(target: ResolvedTypeRef): TypeExpression.Reference = TypeExpression.Reference(target)
 
 private fun optionalReference(target: String): DataValue =
     DataValue.Record(
@@ -88,7 +82,7 @@ private fun optionalReference(target: String): DataValue =
             "next" to
                 DataValue.Polymorphic(
                     StandardTypes.someOf(refTo(elementType)),
-                    DataValue.Record(mapOf("value" to DataValue.StringValue(target))),
+                    DataValue.Record(mapOf("value" to DataValue.Reference(ResourceId.parse(target)))),
                 ),
         ),
     )

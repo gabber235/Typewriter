@@ -99,7 +99,7 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
 
     test("references remain excluded under explicit text modes") {
         val root = reference("Entry")
-        val ref = ResolvedTypeRef(TypeId.Qualified("typewriter/v1", "Ref"), 1)
+        val target = ResolvedTypeRef(TypeId.Qualified("test", "Target"), 1)
         val graph =
             TypeGraph(
                 TypeExpression.Named(root),
@@ -107,9 +107,8 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
                     TypeDefinition(
                         root,
                         NominalTypeKind.CONCRETE,
-                        TypeExpression.Record(listOf(TypeField("target", TypeExpression.Named(ref)))),
+                        TypeExpression.Record(listOf(TypeField("target", TypeExpression.Reference(target)))),
                     ),
-                    TypeDefinition(ref, NominalTypeKind.CONCRETE, TypeExpression.StringType()),
                 ),
             )
         val override = ElementSearchPropertyOverride(root, "target", ElementSearchMode.KEYWORD)

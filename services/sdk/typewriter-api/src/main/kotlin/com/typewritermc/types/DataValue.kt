@@ -113,6 +113,13 @@ sealed interface DataValue {
         val concreteType: ResolvedTypeRef,
         val value: DataValue,
     ) : DataValue
+
+    /** Retains a resource address even when the target cannot currently be loaded. */
+    @Serializable
+    @SerialName("reference")
+    data class Reference(
+        val id: ResourceId,
+    ) : DataValue
 }
 
 /**

@@ -200,7 +200,8 @@ class SurrealPageDocumentRepository(
                 .query(
                     "LET \$page = SELECT * FROM ONLY \$page_id; " +
                         "LET \$elements = SELECT * FROM element WHERE page = \$page_id ORDER BY id; " +
-                        "LET \$references = SELECT * FROM element_reference WHERE in INSIDE \$elements.id ORDER BY in, slot; " +
+                        "LET \$references = SELECT * FROM resource_reference " +
+                        "WHERE source INSIDE \$elements.id ORDER BY source, slot; " +
                         "RETURN { page: \$page, elements: \$elements, references: \$references };",
                     mapOf("page_id" to pageId.surrealId()),
                 ).takeTransaction(3)
@@ -234,7 +235,8 @@ class SurrealPageDocumentRepository(
         if (localIds.isEmpty()) return emptyList()
         return transaction
             .query(
-                "SELECT VALUE in FROM element_reference WHERE out INSIDE \$targets AND in NOTINSIDE \$targets;",
+                "SELECT VALUE source FROM resource_reference " +
+                    "WHERE target INSIDE \$targets AND source NOTINSIDE \$targets;",
                 mapOf("targets" to localIds.map(ElementInstanceId::surrealId)),
             ).take(0)
             .getArray()

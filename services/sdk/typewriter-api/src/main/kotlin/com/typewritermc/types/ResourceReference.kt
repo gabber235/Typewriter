@@ -55,7 +55,6 @@ data class ResourceId(
  * must verify the target table and expected type; construction does not establish existence.
  */
 @Serializable(with = RefSerializer::class)
-@TypewriterString
 data class Ref<out T : Referenceable>(
     val id: ResourceId,
 ) {

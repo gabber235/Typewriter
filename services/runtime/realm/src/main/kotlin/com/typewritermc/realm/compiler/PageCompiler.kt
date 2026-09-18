@@ -194,6 +194,10 @@ private fun DataValue.canonical(): String =
             "r:$value"
         }
 
+        is DataValue.Reference -> {
+            "x:${id.referenceString()}"
+        }
+
         is DataValue.ListValue -> {
             values.joinToString(prefix = "l:[", postfix = "]") { it.canonical() }
         }

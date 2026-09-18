@@ -72,6 +72,7 @@ private fun TypeExpression.hasExplicitTextLeaf(
         is TypeExpression.Float,
         is TypeExpression.Integer,
         is TypeExpression.Timestamp,
+        is TypeExpression.Reference,
         -> {
             false
         }
@@ -110,7 +111,6 @@ private fun ResolvedTypeRef.hasExplicitTextLeaf(
     definitions: Map<ResolvedTypeRef, TypeDefinition>,
     visiting: Set<ResolvedTypeRef>,
 ): Boolean {
-    if (id == CANONICAL_REF_ID) return false
     val definitionId = copy(arguments = emptyList())
     if (definitionId in visiting) return false
     val definition = definitions[definitionId] ?: return false
@@ -149,5 +149,3 @@ private val searchOverrideComparator =
 
 private val ResolvedTypeRef.sortKey: String
     get() = "$id:$revision:${arguments.joinToString()}"
-
-private val CANONICAL_REF_ID = TypeId.Qualified("typewriter/v1", "Ref")

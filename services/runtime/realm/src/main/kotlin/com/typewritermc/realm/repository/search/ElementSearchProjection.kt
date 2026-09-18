@@ -125,6 +125,7 @@ private class ProjectionTraversal(
             is TypeExpression.Duration,
             is TypeExpression.Float,
             is TypeExpression.Integer,
+            is TypeExpression.Reference,
             is TypeExpression.Timestamp,
             -> {
                 return
@@ -194,7 +195,6 @@ private class ProjectionTraversal(
     ) {
         val arguments = reference.arguments.map { materialize(it, parameters) }
         val resolved = reference.withArguments(arguments)
-        if (resolved.id == REFERENCE_TYPE_ID) return
         val definition = definitions[resolved.withoutArguments()] ?: error("Missing type definition")
         if (definition.kind != NominalTypeKind.CONCRETE) {
             val polymorphic = value as DataValue.Polymorphic
@@ -271,6 +271,12 @@ private class ProjectionTraversal(
                 )
             }
 
+            is TypeExpression.Reference -> {
+                expression.copy(
+                    target = expression.target.withArguments(expression.target.arguments.map { materialize(it, parameters) }),
+                )
+            }
+
             else -> {
                 expression
             }
@@ -298,4 +304,3 @@ private fun String.sha256(): String =
     }
 
 private val canonicalJson = Json { encodeDefaults = true }
-private val REFERENCE_TYPE_ID = TypeId.Qualified("typewriter/v1", "Ref")

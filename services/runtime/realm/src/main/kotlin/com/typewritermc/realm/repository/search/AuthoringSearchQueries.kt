@@ -20,16 +20,22 @@ import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.toBookId
 import com.typewritermc.realm.repository.utils.toElementInstanceId
 import com.typewritermc.realm.repository.utils.toPageId
+import com.typewritermc.realm.repository.utils.toResourceId
 import com.typewritermc.realm.repository.utils.toTagId
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
+import com.typewritermc.types.ReferenceFamily
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.acceptsReferenceCandidate
+import com.typewritermc.types.referenceFamily
 
 internal fun Surreal.searchAuthoring(
     request: AuthoringSearchRequest,
     catalog: Map<ElementTypeId, ElementSearchCatalogEntry>,
+    typeCatalog: TypeCatalog,
 ): AuthoringSearchResult {
     val textQuery =
         AuthoringTextQuery(
@@ -39,12 +45,12 @@ internal fun Surreal.searchAuthoring(
                 .take(MAX_QUERY_TERMS)
                 .toSet(),
         )
-    val scope = resolveScope(request.filter, catalog)
+    val scope = resolveScope(request, catalog, typeCatalog)
     if (textQuery.terms.isEmpty()) {
         val defaults = searchDefaults(scope, DEFAULT_SEARCH_LIMIT)
-        val context = request.contextPage?.let(::searchContext)
+        val contexts = searchContexts(request, scope)
         return AuthoringSearchResult(
-            resolveBookTags(AuthoringSearchPlanner.rankDefaults(defaults, context)),
+            resolveBookTags(AuthoringSearchPlanner.rankDefaults(defaults, contexts)),
             scope.selectorValidations,
         )
     }
@@ -80,8 +86,8 @@ internal fun Surreal.searchAuthoring(
     }
     batch.execute()
     val candidates = pendingCandidates.flatMap(PendingSearchResult<List<AuthoringSearchCandidate>>::value)
-    val context = request.contextPage?.let(::searchContext)
-    val ranked = AuthoringSearchPlanner.rank(candidates, context, limit)
+    val contexts = searchContexts(request, scope)
+    val ranked = AuthoringSearchPlanner.rank(candidates, contexts, limit)
     return AuthoringSearchResult(resolveBookTags(ranked), scope.selectorValidations)
 }
 
@@ -89,7 +95,7 @@ internal fun Surreal.suggestAuthoring(
     request: AuthoringSelectorSuggestionRequest,
     catalog: Map<ElementTypeId, ElementSearchCatalogEntry>,
 ): AuthoringSelectorSuggestions {
-    val scope = resolveScope(request.filter, catalog)
+    val scope = resolveGeneralScope(request.filter, catalog)
     if (request.kind == AuthoringSelectorKind.ELEMENT_TYPE) {
         val partial = request.partial.trim().lowercase()
         return catalog
@@ -152,12 +158,36 @@ private fun Surreal.searchContext(page: PageId): AuthoringSearchContext? {
     )
 }
 
+private fun Surreal.searchContexts(
+    request: AuthoringSearchRequest,
+    scope: ResolvedSearchScope,
+): List<AuthoringSearchContext> {
+    request.contextPage?.let(::searchContext)?.let { return listOf(it) }
+    return scope.reference
+        ?.origins
+        .orEmpty()
+        .mapNotNull(::originPage)
+        .distinct()
+        .mapNotNull(::searchContext)
+}
+
 private data class ResolvedSearchScope(
     val expression: SearchFilterExpression<ResolvedAuthoringSearchFilter>?,
     val selectorValidations: List<AuthoringSelectorValidation> = emptyList(),
+    val reference: ResolvedReferenceScope? = null,
 ) {
-    fun allows(kind: AuthoringResultKind): Boolean = expression?.resultKinds()?.contains(kind) ?: true
+    fun allows(kind: AuthoringResultKind): Boolean =
+        (expression?.resultKinds()?.contains(kind) ?: true) &&
+            (reference?.kind == null || reference.kind == kind)
 }
+
+private data class ResolvedReferenceScope(
+    val kind: AuthoringResultKind,
+    val origins: List<ResourceId>,
+    val allowedBook: RecordId? = null,
+    val allowedPageKinds: Set<PageKindRef> = emptySet(),
+    val allowedElementTypes: Set<ElementTypeId> = emptySet(),
+)
 
 private enum class AuthoringResultKind {
     BOOK,
@@ -177,6 +207,16 @@ private data class ResolvedAuthoringSearchFilter(
 }
 
 private fun Surreal.resolveScope(
+    request: AuthoringSearchRequest,
+    catalog: Map<ElementTypeId, ElementSearchCatalogEntry>,
+    typeCatalog: TypeCatalog,
+): ResolvedSearchScope {
+    val reference = request.referenceScope?.let { resolveReferenceScope(it, catalog, typeCatalog) }
+    val general = resolveGeneralScope(request.filter, catalog)
+    return general.copy(reference = reference)
+}
+
+private fun Surreal.resolveGeneralScope(
     filter: SearchFilterExpression<AuthoringSearchFilter>?,
     catalog: Map<ElementTypeId, ElementSearchCatalogEntry>,
 ): ResolvedSearchScope {
@@ -190,6 +230,87 @@ private fun Surreal.resolveScope(
                 AuthoringSelectorValidation(source.kind, source.value, value.accepted)
             },
     )
+}
+
+private fun Surreal.resolveReferenceScope(
+    scope: AuthoringReferenceScope,
+    catalog: Map<ElementTypeId, ElementSearchCatalogEntry>,
+    typeCatalog: TypeCatalog,
+): ResolvedReferenceScope {
+    val family = typeCatalog.referenceFamily(scope.target)
+    val kind =
+        when (family) {
+            ReferenceFamily.BOOK -> AuthoringResultKind.BOOK
+            ReferenceFamily.PAGE -> AuthoringResultKind.PAGE
+            ReferenceFamily.TAG -> AuthoringResultKind.TAG
+            ReferenceFamily.ELEMENT -> AuthoringResultKind.ELEMENT
+        }
+    val allowedBook =
+        if (family == ReferenceFamily.PAGE || family == ReferenceFamily.ELEMENT) {
+            require(scope.origins.isNotEmpty()) { "Page and element references require an origin." }
+            val books = scope.origins.mapNotNull(::originBook)
+            require(books.size == scope.origins.size && books.distinct().size == 1) {
+                "Every reference origin must resolve to one shared Book."
+            }
+            books.first()
+        } else {
+            null
+        }
+    val acceptsBroadPage = typeCatalog.acceptsReferenceCandidate(scope.target, listOf(PAGE_TYPE))
+    val allowedPageKinds =
+        if (family == ReferenceFamily.PAGE && !acceptsBroadPage) {
+            typeCatalog.definitions
+                .map { it.id }
+                .filter { typeCatalog.acceptsReferenceCandidate(scope.target, listOf(it)) }
+                .mapNotNullTo(linkedSetOf()) { reference ->
+                    val id = reference.id as? com.typewritermc.types.TypeId.Declared ?: return@mapNotNullTo null
+                    PageKindRef(com.typewritermc.library.PageKindId(id.id), reference.revision)
+                }
+        } else {
+            emptySet()
+        }
+    val allowedElementTypes =
+        if (family == ReferenceFamily.ELEMENT) {
+            catalog
+                .filterValues { entry ->
+                    entry.rootType()?.let { typeCatalog.acceptsReferenceCandidate(scope.target, listOf(it)) } == true
+                }.keys
+        } else {
+            emptySet()
+        }
+    require(family != ReferenceFamily.ELEMENT || allowedElementTypes.isNotEmpty()) {
+        "Reference target has no compatible element types."
+    }
+    return ResolvedReferenceScope(kind, scope.origins, allowedBook, allowedPageKinds, allowedElementTypes)
+}
+
+private fun Surreal.originPage(origin: ResourceId): PageId? =
+    when (origin.table) {
+        "page" -> {
+            origin.surrealId().toPageId()
+        }
+
+        "element" -> {
+            val value = query("SELECT VALUE page FROM ONLY \$origin;", mapOf("origin" to origin.surrealId())).take(0)
+            value.takeUnless { it.isNone || it.isNull }?.getRecordId()?.toPageId()
+        }
+
+        else -> {
+            null
+        }
+    }
+
+private fun Surreal.originBook(origin: ResourceId): RecordId? {
+    val id = origin.surrealId()
+    val expression =
+        when (origin.table) {
+            "book" -> "IF record::exists(\$origin) { RETURN \$origin; }; RETURN NONE;"
+            "page" -> "SELECT VALUE book FROM ONLY \$origin;"
+            "element" -> "SELECT VALUE page.book FROM ONLY \$origin;"
+            else -> return null
+        }
+    val value = query(expression, mapOf("origin" to id)).take(0)
+    return value.takeUnless { it.isNone || it.isNull }?.getRecordId()
 }
 
 private fun Surreal.resolveFilter(
@@ -240,7 +361,7 @@ private fun Surreal.resolveFilter(
     }
 }
 
-private fun ElementSearchCatalogEntry.rootType(): ResolvedTypeRef? = (graph.root as? TypeExpression.Named)?.reference
+internal fun ElementSearchCatalogEntry.rootType(): ResolvedTypeRef? = (graph.root as? TypeExpression.Named)?.reference
 
 private fun ElementSearchCatalogEntry.isTypeOrSubtypeOf(target: ResolvedTypeRef): Boolean {
     val candidate = rootType() ?: return false
@@ -300,12 +421,12 @@ private fun Surreal.resolveNamedRecords(
 private fun Surreal.booksWithEffectiveTags(selected: Set<RecordId>): Set<RecordId> {
     if (selected.isEmpty()) return emptySet()
     val parentsByChild =
-        query("SELECT in, out FROM inherits;")
+        query("SELECT source, target FROM resource_reference WHERE string::starts_with(slot, 'parents:');")
             .take(0)
             .array
             .associate { row ->
                 val value = row.getObject()
-                value.get("in").recordId to value.get("out").recordId
+                value.get("source").recordId to value.get("target").recordId
             }.entries
             .groupBy({ it.key }, { it.value })
 
@@ -319,12 +440,12 @@ private fun Surreal.booksWithEffectiveTags(selected: Set<RecordId>): Set<RecordI
         }
         return effective
     }
-    return query("SELECT in, out FROM bears;")
+    return query("SELECT source, target FROM resource_reference WHERE string::starts_with(slot, 'tags:');")
         .take(0)
         .array
         .map(Value::getObject)
-        .filter { edge -> effectiveTags(edge.get("out").recordId).any(selected::contains) }
-        .mapTo(linkedSetOf()) { edge -> edge.get("in").recordId }
+        .filter { edge -> effectiveTags(edge.get("target").recordId).any(selected::contains) }
+        .mapTo(linkedSetOf()) { edge -> edge.get("source").recordId }
 }
 
 private data class SearchResourceFields(
@@ -332,6 +453,7 @@ private data class SearchResourceFields(
     val page: String? = null,
     val tag: String? = null,
     val elementType: String? = null,
+    val pageKind: String? = null,
 )
 
 private data class SearchSqlFilter(
@@ -419,6 +541,25 @@ private fun ResolvedSearchScope.addSqlFilter(
         conditions += filter.condition
         bindings += filter.bindings
     }
+    reference?.allowedBook?.let { book ->
+        fields.book?.let { field ->
+            conditions += "$field = \$reference_book"
+            bindings["reference_book"] = book
+        }
+    }
+    if (reference?.allowedElementTypes?.isNotEmpty() == true) {
+        fields.elementType?.let { field ->
+            conditions += "$field INSIDE \$reference_element_types"
+            bindings["reference_element_types"] = reference.allowedElementTypes.map { it.value.toString() }
+        }
+    }
+    if (reference?.allowedPageKinds?.isNotEmpty() == true) {
+        fields.pageKind?.let { field ->
+            conditions += "$field INSIDE \$reference_page_kinds"
+            bindings["reference_page_kinds"] =
+                reference.allowedPageKinds.map { mapOf("id" to it.id.value.toString(), "revision" to it.revision) }
+        }
+    }
 }
 
 private fun Surreal.searchDefaults(
@@ -443,8 +584,10 @@ private fun Surreal.searchDefaultBooks(
     val bindings = mutableMapOf<String, Any>("limit" to limit)
     scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "id"))
     val where = conditions.takeIf(List<String>::isNotEmpty)?.joinToString(" AND ", prefix = " WHERE ").orEmpty()
-    return query("SELECT id, title, icon, color, tags FROM book$where ORDER BY title LIMIT \$limit;", bindings)
-        .take(0)
+    return query(
+        "SELECT id, title, icon, color FROM book$where ORDER BY title LIMIT \$limit;",
+        bindings,
+    ).take(0)
         .array
         .map { row ->
             val value = row.getObject()
@@ -453,7 +596,7 @@ private fun Surreal.searchDefaultBooks(
                 title = value.get("title").string,
                 icon = Icon.parse(value.get("icon").string),
                 color = Color(value.get("color").long.toUInt()),
-                tagIds = value.get("tags").array.map { it.recordId.toTagId() },
+                tagIds = emptyList(),
             )
         }
 }
@@ -464,7 +607,7 @@ private fun Surreal.searchDefaultPages(
 ): List<AuthoringSearchHit> {
     val conditions = mutableListOf<String>()
     val bindings = mutableMapOf<String, Any>("limit" to limit)
-    scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "book", page = "id"))
+    scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "book", page = "id", pageKind = "kind"))
     val where = conditions.takeIf(List<String>::isNotEmpty)?.joinToString(" AND ", prefix = " WHERE ").orEmpty()
     return query(
         "SELECT id, name, book, book.title AS book_title, chapter, kind, priority FROM page$where " +
@@ -514,7 +657,12 @@ private fun exactElement(
     scope.addSqlFilter(
         conditions,
         bindings,
-        SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
+        SearchResourceFields(
+            book = "page.book",
+            page = "page",
+            elementType = "element_type",
+            pageKind = "page.kind",
+        ),
     )
     return batch.enqueue(
         "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.name AS page_name, page.book AS book, " +
@@ -570,7 +718,7 @@ private fun exactBook(
     val bindings = mutableMapOf<String, Any>("id" to id)
     scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "id"))
     return batch.enqueue(
-        "SELECT id, title, icon, color, tags FROM book WHERE ${conditions.joinToString(" AND ")} LIMIT 1;",
+        "SELECT id, title, icon, color FROM book WHERE ${conditions.joinToString(" AND ")} LIMIT 1;",
         bindings,
     ) { result ->
         val value = result.firstObjectOrNull() ?: return@enqueue emptyList()
@@ -582,7 +730,7 @@ private fun exactBook(
                         title = value.get("title").string,
                         icon = Icon.parse(value.get("icon").string),
                         color = Color(value.get("color").long.toUInt()),
-                        tagIds = value.get("tags").array.map { it.recordId.toTagId() },
+                        tagIds = emptyList(),
                     ),
                 term = queryText,
                 kind = AuthoringMatchKind.IDENTITY,
@@ -600,7 +748,7 @@ private fun exactPage(
     val id = RecordId("page", queryText.identityKey("page"))
     val conditions = mutableListOf($$"id = $id")
     val bindings = mutableMapOf<String, Any>("id" to id)
-    scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "book", page = "id"))
+    scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "book", page = "id", pageKind = "kind"))
     return batch.enqueue(
         "SELECT id, name, book, book.title AS book_title, chapter, kind FROM page " +
             "WHERE ${conditions.joinToString(" AND ")} LIMIT 1;",
@@ -667,7 +815,7 @@ private fun searchBookNames(
     val conditions = mutableListOf(lane.condition("title", queryText, bindings))
     scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "id"))
     return batch.enqueue(
-        "SELECT id, title, icon, color, tags, ${lane.scoreProjection("title")} " +
+        "SELECT id, title, icon, color, ${lane.scoreProjection("title")} " +
             "FROM book WITH INDEX book_title_${lane.indexSuffix} " +
             $$"WHERE $${conditions.joinToString(
                 " AND ",
@@ -683,7 +831,7 @@ private fun searchBookNames(
                         title = value.get("title").string,
                         icon = Icon.parse(value.get("icon").string),
                         color = Color(value.get("color").long.toUInt()),
-                        tagIds = value.get("tags").array.map { it.recordId.toTagId() },
+                        tagIds = emptyList(),
                     ),
                 term = queryText,
                 kind = value.nameMatchKind("title", queryText, lane),
@@ -702,7 +850,7 @@ private fun searchPageNames(
 ): PendingSearchResult<List<AuthoringSearchCandidate>> {
     val bindings = mutableMapOf<String, Any>("query" to queryText, "limit" to limit)
     val conditions = mutableListOf(lane.condition("name", queryText, bindings))
-    scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "book", page = "id"))
+    scope.addSqlFilter(conditions, bindings, SearchResourceFields(book = "book", page = "id", pageKind = "kind"))
     return batch.enqueue(
         "SELECT id, name, book, book.title AS book_title, chapter, kind, ${lane.scoreProjection("name")} " +
             "FROM page WITH INDEX page_name_${lane.indexSuffix} " +
@@ -778,7 +926,12 @@ private fun searchElementNames(
     scope.addSqlFilter(
         conditions,
         bindings,
-        SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
+        SearchResourceFields(
+            book = "page.book",
+            page = "page",
+            elementType = "element_type",
+            pageKind = "page.kind",
+        ),
     )
     return batch.enqueue(
         "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
@@ -849,7 +1002,12 @@ private fun searchExactElementContent(
     scope.addSqlFilter(
         conditions,
         bindings,
-        SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
+        SearchResourceFields(
+            book = "page.book",
+            page = "page",
+            elementType = "element_type",
+            pageKind = "page.kind",
+        ),
     )
     return batch.enqueue(
         "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
@@ -895,7 +1053,12 @@ private fun searchApproximateElementContent(
     scope.addSqlFilter(
         conditions,
         bindings,
-        SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
+        SearchResourceFields(
+            book = "page.book",
+            page = "page",
+            elementType = "element_type",
+            pageKind = "page.kind",
+        ),
     )
     return batch.enqueue(
         "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
@@ -962,7 +1125,12 @@ private fun Surreal.searchElementRows(
     scope.addSqlFilter(
         conditions,
         bindings,
-        SearchResourceFields(book = "page.book", page = "page", elementType = "element_type"),
+        SearchResourceFields(
+            book = "page.book",
+            page = "page",
+            elementType = "element_type",
+            pageKind = "page.kind",
+        ),
     )
     return query(
         "SELECT id, $ELEMENT_NAME_VALUE AS name, page, page.book AS book, page.name AS page_name, " +
@@ -1142,7 +1310,21 @@ private fun jaroWinkler(
 }
 
 private fun Surreal.resolveBookTags(hits: List<AuthoringSearchHit>): List<AuthoringSearchHit> {
-    val tagIds = hits.filterIsInstance<AuthoringSearchHit.Book>().flatMap(AuthoringSearchHit.Book::tagIds).distinct()
+    val bookIds = hits.filterIsInstance<AuthoringSearchHit.Book>().map { it.id.surrealId() }
+    if (bookIds.isEmpty()) return hits
+    val tagsByBook =
+        query(
+            "SELECT source, target FROM resource_reference " +
+                "WHERE source INSIDE \$books AND string::starts_with(slot, 'tags:');",
+            mapOf("books" to bookIds),
+        ).take(0)
+            .array
+            .map(Value::getObject)
+            .groupBy(
+                { it.get("source").recordId.toBookId() },
+                { it.get("target").recordId.toTagId() },
+            )
+    val tagIds = tagsByBook.values.flatten().distinct()
     if (tagIds.isEmpty()) return hits
     val tags =
         query(
@@ -1160,7 +1342,8 @@ private fun Surreal.resolveBookTags(hits: List<AuthoringSearchHit>): List<Author
         }
     return hits.map { hit ->
         if (hit is AuthoringSearchHit.Book) {
-            hit.copy(tags = hit.tagIds.mapNotNull(tags::get))
+            val ids = tagsByBook[hit.id].orEmpty()
+            hit.copy(tagIds = ids, tags = ids.mapNotNull(tags::get))
         } else {
             hit
         }
@@ -1339,6 +1522,12 @@ private const val MAX_APPROXIMATE_QUERY_NGRAMS = 24
 private val SEARCH_CONTENT_MODES =
     listOf(ElementSearchMode.SUMMARY, ElementSearchMode.BODY, ElementSearchMode.KEYWORD)
 private val SEARCH_WORD = Regex("[\\p{L}\\p{N}_]+")
+private val PAGE_TYPE =
+    ResolvedTypeRef(
+        com.typewritermc.types.TypeId
+            .Qualified("com.typewritermc.library", "Page"),
+        revision = 1,
+    )
 private const val MAX_JARO_WINKLER_PREFIX = 4
 private const val JARO_WINKLER_SCALING = 0.1
 private const val FUZZY_THRESHOLD = 0.84

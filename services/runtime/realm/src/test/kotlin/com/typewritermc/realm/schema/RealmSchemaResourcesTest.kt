@@ -21,11 +21,9 @@ val RealmSchemaResourcesTest by testSuite {
                 "kernel/color.surql",
                 "kernel/id.surql",
                 "page/page.surql",
-                "relations/bears.surql",
                 "relations/contains_element.surql",
                 "relations/contains_page.surql",
-                "relations/element_reference.surql",
-                "relations/inherits.surql",
+                "relations/resource_reference.surql",
                 "tag/tag.surql",
             )
     }

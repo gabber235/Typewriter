@@ -46,8 +46,12 @@ import com.typewritermc.realm.repository.utils.toPageId
 import com.typewritermc.realm.repository.utils.toTagId
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceFamily
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
+import com.typewritermc.types.referenceFamily
 
 /**
  * Enforces authoring invariants inside a caller owned transaction and accumulates resulting changes.
@@ -120,7 +124,11 @@ internal class AuthoringMutation(
                     "color" to operation.color.argb.toLong(),
                 ),
             ).take(0)
-        transaction.replaceRelations("bears", operation.id.surrealId(), operation.tags.map { it.surrealId() })
+        transaction.replaceResourceReferences(
+            operation.id.surrealId(),
+            "tags",
+            operation.tags.map { it.surrealId() },
+        )
         changes += AuthoringResourceChange.UpsertBook(transaction.loadBooks(listOf(operation.id)).single())
         affectedPages += transaction.referringPages(listOf(operation.id.surrealId()))
         affectsCompilation = true
@@ -177,7 +185,11 @@ internal class AuthoringMutation(
                 ).take(0)
         }
         operation.tags?.let {
-            transaction.replaceRelations("bears", operation.id.surrealId(), it.value.map(Ref<Tag>::surrealId))
+            transaction.replaceResourceReferences(
+                operation.id.surrealId(),
+                "tags",
+                it.value.map(Ref<Tag>::surrealId),
+            )
         }
         changes += AuthoringResourceChange.UpsertBook(transaction.loadBooks(listOf(operation.id)).single())
         affectedPages += transaction.pagesInBooks(listOf(operation.id))
@@ -212,7 +224,11 @@ internal class AuthoringMutation(
         if (transaction.loadTags(listOf(operation.id)).isNotEmpty()) invalid("tag-already-exists", operation.resource)
         requireRecords(operation.parents.map(Ref<Tag>::id), "tag-parent-not-found", operation.resource)
         transaction.createTag(operation)
-        transaction.replaceRelations("inherits", operation.id.surrealId(), operation.parents.map(Ref<Tag>::surrealId))
+        transaction.replaceResourceReferences(
+            operation.id.surrealId(),
+            "parents",
+            operation.parents.map(Ref<Tag>::surrealId),
+        )
         validateTagGraph(operation.resource)
         changes += AuthoringResourceChange.UpsertTag(transaction.loadTags(listOf(operation.id)).single())
         affectedPages += transaction.referringPages(listOf(operation.id.surrealId()))
@@ -285,7 +301,11 @@ internal class AuthoringMutation(
                 ).take(0)
         }
         operation.parents?.let {
-            transaction.replaceRelations("inherits", operation.id.surrealId(), it.value.map(Ref<Tag>::surrealId))
+            transaction.replaceResourceReferences(
+                operation.id.surrealId(),
+                "parents",
+                it.value.map(Ref<Tag>::surrealId),
+            )
         }
         validateTagGraph(operation.resource)
         changes += AuthoringResourceChange.UpsertTag(transaction.loadTags(listOf(operation.id)).single())
@@ -294,10 +314,16 @@ internal class AuthoringMutation(
 
     private fun deleteTag(operation: AuthoringOperation.DeleteTag) {
         val tag = operation.id.surrealId()
-        val children = transaction.relatedSources("inherits", tag).map(RecordId::toTagId)
-        val books = transaction.relatedSources("bears", tag).map(RecordId::toBookId)
+        val children = transaction.relatedSources("parents", tag).map(RecordId::toTagId)
+        val books = transaction.relatedSources("tags", tag).map(RecordId::toBookId)
         affectedPages += transaction.referringPages(listOf(tag))
-        transaction.query("DELETE ONLY \$tag;", mapOf("tag" to tag)).take(0)
+        transaction
+            .query(
+                "DELETE resource_reference WHERE target = \$tag AND " +
+                    "(string::starts_with(slot, 'parents:') OR string::starts_with(slot, 'tags:')); " +
+                    "DELETE ONLY \$tag;",
+                mapOf("tag" to tag),
+            ).consumeAll()
         val changedChildren = transaction.loadTags(children)
         val changedBooks = transaction.loadBooks(books)
         changes += changedChildren.map(AuthoringResourceChange::UpsertTag)
@@ -421,6 +447,12 @@ internal class AuthoringMutation(
                 value = decomposer.decompose(graph, element.value.withElementId(element.id)),
                 placement = element.placement,
             )
+        validateElementReferences(
+            operation.resource,
+            element.page.pageId(),
+            graph,
+            stored.value.references,
+        )
         transaction.createElement(element.page.pageId(), stored)
         markElementDirty(element.id)
         changes += AuthoringResourceChange.UpsertElement(transaction.authoringElement(element.id, typeGraphs))
@@ -474,6 +506,13 @@ internal class AuthoringMutation(
         rejectConflicts(conflicts)
         operation.page?.let { requireRecords(listOf(it.value.id), "page-not-found", operation.resource) }
         val nextPage = operation.page?.value ?: currentPage
+        validateElementReferences(
+            operation.resource,
+            nextPage.pageId(),
+            graph,
+            projectedValue.references,
+            if (operation.page == null) current.value.references else emptyList(),
+        )
         operation.page?.let {
             transaction
                 .query(
@@ -547,6 +586,12 @@ internal class AuthoringMutation(
                             reference.copy(target = operation.referenceRewrites[reference.target] ?: reference.target)
                         },
                 )
+        validateElementReferences(
+            operation.resource,
+            operation.page.pageId(),
+            graph,
+            value.references,
+        )
         transaction.createElement(
             operation.page.pageId(),
             source.copy(
@@ -590,6 +635,36 @@ internal class AuthoringMutation(
         resource: AuthoringResourceRef,
     ) {
         if (transaction.missing(ids.map(ResourceId::surrealId)).isNotEmpty()) invalid(code, resource)
+    }
+
+    private fun validateElementReferences(
+        resource: AuthoringResourceRef,
+        sourcePage: PageId,
+        graph: TypeGraph,
+        references: List<StoredReference>,
+        retained: List<StoredReference> = emptyList(),
+    ) {
+        val retainedBySlot = retained.associateBy(StoredReference::slot)
+        val changed = references.filter { retainedBySlot[it.slot] != it }
+        if (changed.isEmpty()) return
+        val catalog = TypeCatalog(graph.definitions)
+        val sourceBook = transaction.pageBook(sourcePage) ?: invalid("page-not-found", resource)
+        changed.forEach { reference ->
+            val targetType =
+                (reference.expectedType as? TypeExpression.Named)?.reference
+                    ?: invalid("reference-target-type-invalid", resource)
+            val family =
+                runCatching { catalog.referenceFamily(targetType) }
+                    .getOrElse { invalid("reference-target-type-invalid", resource) }
+            if (reference.target.table != family.table) invalid("reference-target-type-mismatch", resource)
+            val target = reference.target.surrealId()
+            if (transaction.missing(listOf(target)).isNotEmpty()) invalid("reference-target-not-found", resource)
+            if (family == ReferenceFamily.PAGE || family == ReferenceFamily.ELEMENT) {
+                val targetBook =
+                    transaction.targetBook(target, family) ?: invalid("reference-target-not-found", resource)
+                if (targetBook != sourceBook) invalid("reference-cross-book", resource)
+            }
+        }
     }
 
     private fun rejectConflicts(conflicts: List<PropertyConflict>) {
@@ -649,7 +724,9 @@ private fun Transaction.loadBooks(ids: Collection<BookId>): List<Book> {
     return BookRecord
         .parseList(
             query(
-                "SELECT * FROM book WHERE id INSIDE \$ids ORDER BY id;",
+                "SELECT *, (SELECT VALUE target FROM resource_reference " +
+                    "WHERE source = \$parent.id AND string::starts_with(slot, 'tags:')) AS tags " +
+                    "FROM book WHERE id INSIDE \$ids ORDER BY id;",
                 mapOf("ids" to ids.map(BookId::surrealId)),
             ).take(0),
         ).map(BookRecord::toBook)
@@ -671,7 +748,9 @@ private fun Transaction.loadTags(ids: Collection<TagId>): List<Tag> {
     return TagRecord
         .parseList(
             query(
-                "SELECT * FROM tag WHERE id INSIDE \$ids ORDER BY id;",
+                "SELECT *, (SELECT VALUE target FROM resource_reference " +
+                    "WHERE source = \$parent.id AND string::starts_with(slot, 'parents:')) AS parent_tags " +
+                    "FROM tag WHERE id INSIDE \$ids ORDER BY id;",
                 mapOf("ids" to ids.map(TagId::surrealId)),
             ).take(0),
         ).map(TagRecord::toTag)
@@ -682,7 +761,7 @@ private fun Transaction.loadElements(ids: Collection<ElementInstanceId>): Stored
     val result =
         query(
             "LET \$elements = SELECT * FROM element WHERE id INSIDE \$ids ORDER BY id; " +
-                "LET \$references = SELECT * FROM element_reference WHERE in INSIDE \$ids ORDER BY in, slot; " +
+                "LET \$references = SELECT * FROM resource_reference WHERE source INSIDE \$ids ORDER BY source, slot; " +
                 "RETURN { elements: \$elements, references: \$references };",
             mapOf("ids" to ids.map(ElementInstanceId::surrealId)),
         ).takeTransaction(2)
@@ -750,13 +829,14 @@ private fun Transaction.replaceElementReferences(
     source: ElementInstanceId,
     references: List<StoredReference>,
 ) {
-    query("DELETE element_reference WHERE in = \$source;", mapOf("source" to source.surrealId())).take(0)
+    query("DELETE resource_reference WHERE source = \$source;", mapOf("source" to source.surrealId())).take(0)
     references.forEach { reference ->
         query(
-            "RELATE \$source->\$edge->\$target SET slot = \$slot, expected_type = \$expected_type;",
+            "CREATE ONLY \$reference CONTENT { source: \$source, target: \$target, " +
+                "slot: \$slot, expected_type: \$expected_type };",
             mapOf(
                 "source" to source.surrealId(),
-                "edge" to referenceEdgeId(source, reference.slot),
+                "reference" to resourceReferenceId(source.surrealId(), reference.slot.value),
                 "target" to reference.target.surrealId(),
                 "slot" to reference.slot.value,
                 "expected_type" to reference.expectedTypeDatabaseValue(),
@@ -783,16 +863,26 @@ private fun Transaction.createTag(operation: AuthoringOperation.CreateTag) {
     ).take(0)
 }
 
-private fun Transaction.replaceRelations(
-    table: String,
+private fun Transaction.replaceResourceReferences(
     source: RecordId,
+    slotPrefix: String,
     targets: Collection<RecordId>,
 ) {
-    query("DELETE type::table(\$table) WHERE in = \$source;", mapOf("table" to table, "source" to source)).take(0)
+    query(
+        "DELETE resource_reference WHERE source = \$source AND string::starts_with(slot, \$prefix);",
+        mapOf("source" to source, "prefix" to "$slotPrefix:"),
+    ).take(0)
     targets.distinct().forEach { target ->
+        val slot = "$slotPrefix:$target"
         query(
-            "RELATE \$source->\$edge->\$target;",
-            mapOf("source" to source, "edge" to relationId(table, source, target), "target" to target),
+            "CREATE ONLY \$reference CONTENT { source: \$source, target: \$target, " +
+                "slot: \$slot, expected_type: 'tag' };",
+            mapOf(
+                "reference" to resourceReferenceId(source, slot),
+                "source" to source,
+                "target" to target,
+                "slot" to slot,
+            ),
         ).take(0)
     }
 }
@@ -805,6 +895,20 @@ private fun Transaction.missing(ids: Collection<RecordId>): Set<RecordId> {
             .getArray()
             .mapTo(linkedSetOf()) { it.getRecordId() }
     return ids.toSet() - existing
+}
+
+private fun Transaction.pageBook(page: PageId): RecordId? {
+    val value = query("SELECT VALUE book FROM ONLY \$page;", mapOf("page" to page.surrealId())).take(0)
+    return value.takeUnless { it.isNone || it.isNull }?.getRecordId()
+}
+
+private fun Transaction.targetBook(
+    target: RecordId,
+    family: ReferenceFamily,
+): RecordId? {
+    val field = if (family == ReferenceFamily.PAGE) "book" else "page.book"
+    val value = query("SELECT VALUE $field FROM ONLY \$target;", mapOf("target" to target)).take(0)
+    return value.takeUnless { it.isNone || it.isNull }?.getRecordId()
 }
 
 private fun Transaction.pagesInBooks(ids: Collection<BookId>): Set<PageId> {
@@ -829,8 +933,11 @@ private fun Transaction.elementIdsInPages(ids: Collection<PageId>): List<Element
 
 private fun Transaction.referringPages(targets: Collection<RecordId>): Set<PageId> {
     if (targets.isEmpty()) return emptySet()
-    return query("SELECT VALUE in.page FROM element_reference WHERE out INSIDE \$targets;", mapOf("targets" to targets))
-        .take(0)
+    return query(
+        "SELECT VALUE source.page FROM resource_reference " +
+            "WHERE target INSIDE \$targets;",
+        mapOf("targets" to targets),
+    ).take(0)
         .getArray()
         .filterNot { it.isNone || it.isNull }
         .mapTo(linkedSetOf()) { it.getRecordId().toPageId() }
@@ -845,12 +952,13 @@ private fun Transaction.deleteElements(ids: Collection<ElementInstanceId>) {
 }
 
 private fun Transaction.relatedSources(
-    table: String,
+    slotPrefix: String,
     target: RecordId,
 ): List<RecordId> =
     query(
-        "SELECT VALUE in FROM type::table(\$table) WHERE out = \$target;",
-        mapOf("table" to table, "target" to target),
+        "SELECT VALUE source FROM resource_reference " +
+            "WHERE target = \$target AND string::starts_with(slot, \$prefix);",
+        mapOf("target" to target, "prefix" to "$slotPrefix:"),
     ).take(0)
         .getArray()
         .map { it.getRecordId() }
@@ -885,10 +993,10 @@ private fun containmentEdgeId(
     elementId: ElementInstanceId,
 ): RecordId = RecordId("contains_element", Array.fromList(listOf(pageId.surrealId(), elementId.surrealId())))
 
-private fun referenceEdgeId(
-    source: ElementInstanceId,
-    slot: ReferenceSlotId,
-): RecordId = RecordId("element_reference", Array.fromList(listOf(source.surrealId(), slot.value)))
+private fun resourceReferenceId(
+    source: RecordId,
+    slot: String,
+): RecordId = RecordId("resource_reference", Array.fromList(listOf(source, slot)))
 
 private fun com.surrealdb.Response.consumeAll() {
     for (index in 0 until size()) take(index)

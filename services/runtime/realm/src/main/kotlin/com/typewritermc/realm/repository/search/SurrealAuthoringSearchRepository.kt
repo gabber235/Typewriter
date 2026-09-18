@@ -13,6 +13,7 @@ import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
 import com.typewritermc.realm.repository.utils.toElementInstanceId
+import com.typewritermc.types.TypeCatalog
 import kotlinx.serialization.json.Json
 
 /**
@@ -24,12 +25,19 @@ import kotlinx.serialization.json.Json
 internal class SurrealAuthoringSearchRepository(
     private val database: Surreal,
     private val catalog: () -> Map<ElementTypeId, ElementSearchCatalogEntry>,
+    private val typeCatalog: () -> TypeCatalog = {
+        TypeCatalog(catalog().values.flatMap { it.graph.definitions }.distinctBy { it.id })
+    },
     private val projector: ElementSearchProjector = ElementSearchProjector(),
 ) : AuthoringSearchRepository {
-    override fun search(request: AuthoringSearchRequest): AuthoringSearchResult = database.searchAuthoring(request, catalog())
+    override fun search(request: AuthoringSearchRequest): AuthoringSearchResult =
+        database.searchAuthoring(request, catalog(), typeCatalog())
 
     override fun suggest(request: AuthoringSelectorSuggestionRequest): AuthoringSelectorSuggestions =
         database.suggestAuthoring(request, catalog())
+
+    override fun resolve(request: AuthoringReferenceResolutionRequest): List<AuthoringReferenceSummary> =
+        database.resolveAuthoringReferences(request, catalog(), typeCatalog())
 
     internal fun update(
         transaction: Transaction,
@@ -137,7 +145,7 @@ private fun Transaction.loadSearchElements(ids: Collection<ElementInstanceId>): 
         query(
             $$"""
                 LET $elements = SELECT * FROM element WHERE id INSIDE $ids ORDER BY id;
-                LET $references = SELECT * FROM element_reference WHERE in INSIDE $ids ORDER BY in, slot;
+                LET $references = SELECT * FROM resource_reference WHERE source INSIDE $ids ORDER BY source, slot;
                 RETURN { elements: $elements, references: $references };
             """.trimIndent(),
             mapOf("ids" to ids.map(ElementInstanceId::surrealId)),

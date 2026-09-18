@@ -1,5 +1,8 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.repository.search.AuthoringReferenceResolutionRequest
+import com.typewritermc.realm.repository.search.AuthoringReferenceScope
+import com.typewritermc.realm.repository.search.AuthoringReferenceSummary
 import com.typewritermc.realm.repository.search.AuthoringSearchFilter
 import com.typewritermc.realm.repository.search.AuthoringSearchRepository
 import com.typewritermc.realm.repository.search.AuthoringSearchRequest
@@ -8,12 +11,18 @@ import com.typewritermc.realm.repository.search.AuthoringSelectorSuggestionReque
 import com.typewritermc.realm.repository.search.SearchFilterExpression
 import com.typewritermc.realm.repository.search.conjunction
 import com.typewritermc.realm.repository.utils.toPageId
+import com.typewritermc.realm.repository.utils.toResourceId
+import com.typewritermc.realm.repository.utils.toSkirRecordId
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.search.RealmSearchSelector
 import skirout.editor.v1.search.RealmSearchSelectorExpression
 import skirout.library.v1.authoring.AuthoringDiagnostic
 import skirout.library.v1.authoring.AuthoringInvalid
 import skirout.library.v1.authoring.AuthoringSelectorSuggestions
+import skirout.library.v1.authoring.ReferenceResourceSummary
+import skirout.library.v1.authoring.ResolveAuthoringResourcesResponse
 import skirout.library.v1.authoring.SearchAuthoringContentRequest
 import skirout.library.v1.authoring.SearchAuthoringContentResponse
 import skirout.library.v1.authoring.SuggestAuthoringSelectorValuesRequest
@@ -60,6 +69,33 @@ internal class AuthoringSearchRoutes(
                     )
                 }
             }
+            unary(contracts.resolveAuthoringResources) { call ->
+                try {
+                    val request = call.request
+                    ResolveAuthoringResourcesResponse.createSuccess(
+                        resources =
+                            repository
+                                .resolve(
+                                    AuthoringReferenceResolutionRequest(
+                                        request.ids.map { it.toResourceId() },
+                                        SkirTypeCodec.decode(request.referenceTarget).getOrThrow(),
+                                    ),
+                                ).map(AuthoringReferenceSummary::toWire),
+                    )
+                } catch (invalid: IllegalArgumentException) {
+                    ResolveAuthoringResourcesResponse.createInvalid(
+                        diagnostics =
+                            listOf(
+                                AuthoringDiagnostic(
+                                    code = "invalid-reference-resolution-request",
+                                    message = invalid.message ?: "Invalid reference resolution request.",
+                                    resource = null,
+                                    path = null,
+                                ),
+                            ),
+                    )
+                }
+            }
         }
 }
 
@@ -71,6 +107,26 @@ internal fun SearchAuthoringContentRequest.toAuthoringSearchRequest(): Authoring
             query.selectorExpression?.toAuthoringFilterExpression()
                 ?: query.selectors.mapNotNull(RealmSearchSelector::toAuthoringFilter).conjunction(),
         contextPage = contextPage?.toPageId(),
+        referenceScope =
+            referenceScope?.let { scope ->
+                require(contextPage == null) { "Reference search cannot use context_page." }
+                require(query.selectors.isEmpty() && query.selectorExpression == null) {
+                    "Reference search cannot use selectors."
+                }
+                AuthoringReferenceScope(
+                    origins = scope.origins.map { it.toResourceId() },
+                    target = SkirTypeCodec.decode(scope.target).getOrThrow(),
+                )
+            },
+    )
+
+private fun AuthoringReferenceSummary.toWire(): ReferenceResourceSummary =
+    ReferenceResourceSummary(
+        id = id.toSkirRecordId(),
+        title = title,
+        subtitle = subtitle,
+        compatibleTypes = compatibleTypes.map { SkirTypeCodec.encode(it).getOrThrow() },
+        exists = exists,
     )
 
 private fun SuggestAuthoringSelectorValuesRequest.toSuggestionRequest() =

@@ -255,6 +255,10 @@ private class TypeClosureCollector(
             is TypeExpression.Named -> {
                 includeReference(expression.reference)
             }
+
+            is TypeExpression.Reference -> {
+                includeReference(expression.target)
+            }
         }
     }
 

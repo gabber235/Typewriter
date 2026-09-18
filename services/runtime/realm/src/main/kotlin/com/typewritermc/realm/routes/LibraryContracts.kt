@@ -35,6 +35,8 @@ import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
 import skirout.library.v1.authoring.AuthoringChanged
 import skirout.library.v1.authoring.GetAuthoringSnapshot
 import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
+import skirout.library.v1.authoring.ResolveAuthoringResources
+import skirout.library.v1.authoring.ResolveAuthoringResourcesResponse
 import skirout.library.v1.authoring.SearchAuthoringContent
 import skirout.library.v1.authoring.SearchAuthoringContentResponse
 import skirout.library.v1.authoring.SuggestAuthoringSelectorValues
@@ -114,6 +116,12 @@ internal class LibraryContracts(
             SearchAuthoringContent,
             "library.authoring.content.search",
             SearchAuthoringContentResponse.createInternalError(),
+        )
+    val resolveAuthoringResources =
+        unary(
+            ResolveAuthoringResources,
+            "library.authoring.resources.resolve",
+            ResolveAuthoringResourcesResponse.createInternalError(),
         )
     val suggestAuthoringSelectorValues =
         unary(

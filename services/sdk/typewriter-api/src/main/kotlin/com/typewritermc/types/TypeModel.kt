@@ -330,6 +330,13 @@ sealed interface TypeExpression {
         val reference: ResolvedTypeRef,
     ) : TypeExpression
 
+    /** A resource address constrained by the nominal target type. */
+    @Serializable
+    @SerialName("reference")
+    data class Reference(
+        val target: ResolvedTypeRef,
+    ) : TypeExpression
+
     /** A generic parameter placeholder resolved from its enclosing definition. */
     @Serializable
     @SerialName("parameter")

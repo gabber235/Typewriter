@@ -1,5 +1,6 @@
 package com.typewritermc.types.ksp
 
+import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -160,12 +161,38 @@ private class ConversionContext(
             classDeclaration.qualifiedName?.asString()
                 ?: return failure(path, "Local and anonymous types require an explicit nominal identity.")
 
+        if (qualifiedName == REF_TYPE) return reference(type, path)
         if (classDeclaration.hasAnnotation(TYPEWRITER_STRING_ANNOTATION)) {
             return logicalString(type, classDeclaration, path)
         }
         primitive(qualifiedName)?.let { return it }
         collection(type, qualifiedName, path)?.let { return it }
         return nominal(type, classDeclaration, path)
+    }
+
+    private fun reference(
+        type: KSType,
+        path: List<String>,
+    ): TypeExpression? {
+        if (type.arguments.size != 1) return failure(path, "Ref requires exactly one target type argument.")
+        val targetType =
+            type.arguments
+                .single()
+                .type
+                ?.resolve() ?: return failure(path, "Ref target cannot be a star projection.")
+        val targetDeclaration =
+            targetType.declaration as? KSClassDeclaration
+                ?: return failure(path, "Ref target must be a nominal type.")
+        val referenceable =
+            targetDeclaration.qualifiedName?.asString() == REFERENCEABLE_TYPE ||
+                targetDeclaration.getAllSuperTypes().any {
+                    it.declaration.qualifiedName?.asString() == REFERENCEABLE_TYPE
+                }
+        if (!referenceable) return failure(path, "Ref target must inherit Referenceable.")
+        val target =
+            expression(targetType, path + "reference target") as? TypeExpression.Named
+                ?: return failure(path, "Ref target must resolve to a named type.")
+        return TypeExpression.Reference(target.reference)
     }
 
     private fun alias(
@@ -266,11 +293,7 @@ private class ConversionContext(
         return TypeExpression.Named(identity.withArguments(arguments.filterNotNull()))
     }
 
-    private fun identity(declaration: KSClassDeclaration): ResolvedTypeRef =
-        when (declaration.qualifiedName?.asString()) {
-            CANONICAL_REF_TYPE -> CANONICAL_REF_REFERENCE
-            else -> identityPolicy.identity(declaration)
-        }
+    private fun identity(declaration: KSClassDeclaration): ResolvedTypeRef = identityPolicy.identity(declaration)
 
     private fun buildDefinition(
         declaration: KSClassDeclaration,
@@ -496,8 +519,8 @@ private val ResolvedTypeRef.sortKey: String
         }
 
 private const val TYPEWRITER_STRING_ANNOTATION = "com.typewritermc.types.TypewriterString"
-private const val CANONICAL_REF_TYPE = "com.typewritermc.types.Ref"
-private val CANONICAL_REF_REFERENCE = ResolvedTypeRef(TypeId.Qualified("typewriter/v1", "Ref"), revision = 1)
+private const val REF_TYPE = "com.typewritermc.types.Ref"
+private const val REFERENCEABLE_TYPE = "com.typewritermc.types.Referenceable"
 
 private val PRIMITIVE_ARRAYS =
     mapOf(

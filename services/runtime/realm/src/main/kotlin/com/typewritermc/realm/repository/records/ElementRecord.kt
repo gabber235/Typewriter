@@ -68,11 +68,11 @@ internal object ElementRecordParser {
     private fun parseReference(value: Value): ParsedReference {
         val objectValue = value.getObject()
         return ParsedReference(
-            source = objectValue.get("in").getRecordId().toElementInstanceId(),
+            source = objectValue.get("source").getRecordId().toElementInstanceId(),
             reference =
                 StoredReference(
                     slot = ReferenceSlotId(objectValue.get("slot").getString()),
-                    target = objectValue.get("out").getRecordId().toResourceId(),
+                    target = objectValue.get("target").getRecordId().toResourceId(),
                     expectedType =
                         json.decodeFromString(
                             TypeExpression.serializer(),

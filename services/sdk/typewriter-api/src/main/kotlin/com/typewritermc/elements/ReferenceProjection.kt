@@ -9,7 +9,6 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
-import com.typewritermc.types.TypeId
 import java.util.UUID
 
 /**
@@ -47,7 +46,7 @@ class ReferenceDecomposer(
         val references = mutableListOf<StoredReference>()
         val valueWithSlots =
             context.transform(expression, logicalValue, reference = { expectedType, value ->
-                val reference = value.requireStringReference()
+                val reference = (value as DataValue.Reference).id
                 val slot = slotAllocator.allocate()
                 references += StoredReference(slot, reference, expectedType)
                 slot.marker()
@@ -97,7 +96,7 @@ class ReferenceAssembler {
                                 target = reference.target,
                             )
                     }
-                    DataValue.StringValue(reference.target.referenceString())
+                    DataValue.Reference(reference.target)
                 })
             }.getOrElse {
                 diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.VALUE_SHAPE_MISMATCH)
@@ -178,6 +177,10 @@ internal class ProjectionContext(
                 transformNamed(expression.reference, value, reference, parameters)
             }
 
+            is TypeExpression.Reference -> {
+                reference(TypeExpression.Named(expression.target), value)
+            }
+
             is TypeExpression.ListType -> {
                 DataValue.ListValue(
                     (value as DataValue.ListValue).values.map {
@@ -219,7 +222,6 @@ internal class ProjectionContext(
         parameters: Map<String, TypeExpression>,
     ): DataValue {
         val arguments = referenceType.arguments.map { materialize(it, parameters) }
-        if (referenceType.id == REF_TYPE_ID && arguments.size == 1) return reference(arguments.single(), value)
         val resolvedReference = referenceType.withArguments(arguments)
         val definition = definitions[resolvedReference.withArguments(emptyList())] ?: return value
         if (definition.kind != NominalTypeKind.CONCRETE) {
@@ -262,6 +264,12 @@ internal class ProjectionContext(
                 )
             }
 
+            is TypeExpression.Reference -> {
+                expression.copy(
+                    target = expression.target.withArguments(expression.target.arguments.map { materialize(it, parameters) }),
+                )
+            }
+
             else -> {
                 expression
             }
@@ -270,8 +278,6 @@ internal class ProjectionContext(
 
 internal fun TypeDefinition.bind(arguments: List<TypeExpression>): Map<String, TypeExpression> =
     parameters.mapIndexed { index, parameter -> parameter.name to arguments.getOrElse(index) { TypeExpression.Any } }.toMap()
-
-private fun DataValue.requireStringReference(): ResourceId = ResourceId.parse((this as DataValue.StringValue).value)
 
 private fun ReferenceSlotId.marker(): DataValue =
     DataValue.Record(
@@ -288,7 +294,6 @@ private fun DataValue.referenceSlot(): ReferenceSlotId? {
     return if (kind.value == SLOT_MARKER_KIND) ReferenceSlotId(slot.value) else null
 }
 
-private val REF_TYPE_ID = TypeId.Qualified("typewriter/v1", "Ref")
 private const val SLOT_MARKER_KIND_FIELD = "_kind"
 private const val SLOT_MARKER_ID_FIELD = "slot"
 private const val SLOT_MARKER_KIND = "ref_slot"

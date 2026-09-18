@@ -192,6 +192,29 @@ val KspTypeGraphConverterTest by testSuite {
             .representation shouldBe TypeExpression.StringType()
     }
 
+    test("Ref preserves its single Referenceable target as a reference expression") {
+        val referenceable = classDeclaration("com.typewritermc.types.Referenceable")
+        val target = classDeclaration("example.Target")
+        val referenceableType = type(referenceable)
+        every { target.superTypes } returns
+            sequenceOf(mockk { every { resolve() } returns referenceableType })
+        val ref =
+            classType(
+                "com.typewritermc.types.Ref",
+                arguments = listOf(argument(type(target))),
+            )
+
+        val result = KspTypeGraphConverter().convert(ref) as KspTypeConversionResult.Success
+
+        result.graph.root shouldBe
+            TypeExpression.Reference(
+                com.typewritermc.types.ResolvedTypeRef(
+                    TypeId.Qualified("example", "Target"),
+                    revision = 1,
+                ),
+            )
+    }
+
     test("extension API converts KSP types and extracts successful graphs") {
         val result = classType("kotlin.String").toTypewriterGraph()
 

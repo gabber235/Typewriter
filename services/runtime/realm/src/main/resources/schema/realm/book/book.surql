@@ -26,9 +26,6 @@ DEFINE FIELD OVERWRITE color ON book TYPE int
         RETURN true;
     };
 
-DEFINE FIELD OVERWRITE tags ON book
-    COMPUTED ->bears->tag;
-
 DEFINE INDEX OVERWRITE book_title_search ON book
     FIELDS title FULLTEXT ANALYZER authoring_text BM25 HIGHLIGHTS;
 DEFINE INDEX OVERWRITE book_title_prefix ON book

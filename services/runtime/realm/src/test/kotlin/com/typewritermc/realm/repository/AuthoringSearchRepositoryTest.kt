@@ -16,6 +16,8 @@ import com.typewritermc.library.PageId
 import com.typewritermc.library.TagId
 import com.typewritermc.library.ref
 import com.typewritermc.realm.TestPageKinds
+import com.typewritermc.realm.repository.search.AuthoringReferenceResolutionRequest
+import com.typewritermc.realm.repository.search.AuthoringReferenceScope
 import com.typewritermc.realm.repository.search.AuthoringSearchFilter
 import com.typewritermc.realm.repository.search.AuthoringSearchHit
 import com.typewritermc.realm.repository.search.AuthoringSearchRequest
@@ -29,6 +31,7 @@ import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.Icon
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeField
@@ -445,7 +448,129 @@ val AuthoringSearchRepositoryTest by testSuite {
             }
         }
     }
+
+    test("reference search excludes pages from another Book before ranking") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                fixture.registerTypeDefinitions(REFERENCEABLE_DEFINITION, PAGE_DEFINITION)
+                val harbor = fixture.createBook("harbor", "harbor")
+                val forest = fixture.createBook("forest", "forest")
+                val origin = fixture.createPage("origin", harbor.id, TestPageKinds.STATIC.toLibrary(), "origin")
+                val local = fixture.createPage("harbor_arrival", harbor.id, TestPageKinds.STATIC.toLibrary(), "arrival")
+                fixture.createPage("forest_arrival", forest.id, TestPageKinds.STATIC.toLibrary(), "arrival")
+
+                val result =
+                    fixture.search.search(
+                        AuthoringSearchRequest(
+                            query = "arrival",
+                            terms = listOf("arrival"),
+                            referenceScope = AuthoringReferenceScope(listOf(origin.id.ref().id), PAGE_TYPE_REF),
+                        ),
+                    )
+
+                result.hits.map(AuthoringSearchHit::resource).toSet() shouldBe
+                    setOf(AuthoringResourceRef.Page(local.id), AuthoringResourceRef.Page(origin.id))
+            }
+        }
+    }
+
+    test("reference search averages every origin without selection order bias") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                fixture.registerTypeDefinitions(REFERENCEABLE_DEFINITION, PAGE_DEFINITION)
+                val harbor = fixture.createBook("harbor", "harbor")
+                val forest = fixture.createBook("forest", "forest")
+                val zulu = fixture.createPage("zulu", harbor.id, TestPageKinds.STATIC.toLibrary(), "zulu")
+                val alpha = fixture.createPage("alpha", harbor.id, TestPageKinds.STATIC.toLibrary(), "alpha")
+                val middle = fixture.createPage("middle", harbor.id, TestPageKinds.STATIC.toLibrary(), "middle")
+                fixture.createPage("other", forest.id, TestPageKinds.STATIC.toLibrary(), "other")
+
+                fun search(origins: List<ResourceId>) =
+                    fixture.search
+                        .search(
+                            AuthoringSearchRequest(
+                                query = "",
+                                terms = emptyList(),
+                                referenceScope = AuthoringReferenceScope(origins, PAGE_TYPE_REF),
+                            ),
+                        ).hits
+                        .map(AuthoringSearchHit::resource)
+
+                val forward = search(listOf(zulu.id.ref().id, alpha.id.ref().id))
+                val reversed = search(listOf(alpha.id.ref().id, zulu.id.ref().id))
+
+                forward shouldContainExactly
+                    listOf(
+                        AuthoringResourceRef.Page(alpha.id),
+                        AuthoringResourceRef.Page(zulu.id),
+                        AuthoringResourceRef.Page(middle.id),
+                    )
+                reversed shouldContainExactly forward
+            }
+        }
+    }
+
+    test("reference resolution preserves request order and missing ids") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                fixture.registerTypeDefinitions(REFERENCEABLE_DEFINITION, BOOK_DEFINITION)
+                fixture.createBook("harbor", "harbor")
+
+                val result =
+                    fixture.search.resolve(
+                        AuthoringReferenceResolutionRequest(
+                            ids = listOf(ResourceId("book", "missing"), ResourceId("book", "harbor")),
+                            target = BOOK_TYPE_REF,
+                        ),
+                    )
+
+                result.map { it.id.referenceString() to it.exists } shouldContainExactly
+                    listOf("book:missing" to false, "book:harbor" to true)
+            }
+        }
+    }
+
+    test("reference resolution treats an incompatible concrete target as broken") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                val specialPage =
+                    ResolvedTypeRef(TypeId.Qualified("example", "SpecialPage"), 1)
+                fixture.registerTypeDefinitions(
+                    REFERENCEABLE_DEFINITION,
+                    PAGE_DEFINITION,
+                    TypeDefinition(
+                        specialPage,
+                        NominalTypeKind.OPEN_ABSTRACT,
+                        parents = listOf(PAGE_TYPE_REF),
+                    ),
+                )
+                val book = fixture.createBook("harbor", "harbor")
+                val page = fixture.createPage("arrival", book.id, TestPageKinds.STATIC.toLibrary(), "arrival")
+
+                val result =
+                    fixture.search.resolve(
+                        AuthoringReferenceResolutionRequest(
+                            ids = listOf(page.id.ref().id),
+                            target = specialPage,
+                        ),
+                    )
+
+                result.single().exists shouldBe false
+            }
+        }
+    }
 }
+
+private val REFERENCEABLE_TYPE_REF =
+    ResolvedTypeRef(TypeId.Qualified("com.typewritermc.types", "Referenceable"), 1)
+private val BOOK_TYPE_REF = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.library", "Book"), 1)
+private val PAGE_TYPE_REF = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.library", "Page"), 1)
+private val REFERENCEABLE_DEFINITION =
+    TypeDefinition(REFERENCEABLE_TYPE_REF, NominalTypeKind.OPEN_ABSTRACT)
+private val BOOK_DEFINITION =
+    TypeDefinition(BOOK_TYPE_REF, NominalTypeKind.CONCRETE, parents = listOf(REFERENCEABLE_TYPE_REF))
+private val PAGE_DEFINITION =
+    TypeDefinition(PAGE_TYPE_REF, NominalTypeKind.CONCRETE, parents = listOf(REFERENCEABLE_TYPE_REF))
 
 private fun filter(
     selectorId: String,

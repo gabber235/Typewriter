@@ -59,6 +59,7 @@ private fun request(
             selectorExpression = expression,
         ),
     contextPage = null,
+    referenceScope = null,
 )
 
 private fun selector(

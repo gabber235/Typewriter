@@ -33,7 +33,7 @@ interface ManifestEntry : Entry
 interface SceneEntry : Entry
 
 @TypewriterPage(
-    id = "019d3a87001070008000000000000010",
+    id = "01a0b185-85cd-75c3-86c5-1fa6706bed6a",
 )
 fun sequencePage() =
     page(
@@ -44,7 +44,7 @@ fun sequencePage() =
     )
 
 @TypewriterPage(
-    id = "019d3a87001170008000000000000011",
+    id = "01a0b185-a1d5-743c-a86b-82d4d61e1041",
 )
 fun staticPage() =
     page(
@@ -55,7 +55,7 @@ fun staticPage() =
     )
 
 @TypewriterPage(
-    id = "019d3a87001270008000000000000012",
+    id = "01a0b185-e711-7769-92ee-044c4f6a4f3c",
 )
 fun scenePage() =
     page(
@@ -71,7 +71,7 @@ fun scenePage() =
     )
 
 @TypewriterPage(
-    id = "019d3a87001370008000000000000013",
+    id = "01a0b185-fe81-77cf-b98a-6e32e03d155c",
 )
 fun manifestPage() =
     page(

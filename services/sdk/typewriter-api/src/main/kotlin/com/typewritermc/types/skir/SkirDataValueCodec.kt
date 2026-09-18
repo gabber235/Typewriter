@@ -106,6 +106,10 @@ internal fun ConversionScope.encodeDataValue(value: DataValue): SkirTypedValue =
                 payload = at("payload") { encodeDataValue(value.value) },
             )
         }
+
+        is DataValue.Reference -> {
+            SkirTypedValue.ReferenceWrapper(value.id.toSkirRecordId())
+        }
     }
 
 internal fun ConversionScope.decodeDataValue(value: SkirTypedValue): DataValue =
@@ -207,6 +211,10 @@ internal fun ConversionScope.decodeDataValue(value: SkirTypedValue): DataValue =
                     is SkirConversionResult.Failure -> fail(reference.diagnostics.joinToString())
                 }
             DataValue.Polymorphic(decodedReference, at("payload") { decodeDataValue(value.value.payload) })
+        }
+
+        is SkirTypedValue.ReferenceWrapper -> {
+            DataValue.Reference(value.value.toResourceId())
         }
 
         else -> {

@@ -84,9 +84,22 @@ internal class SurrealAuthoringRepository(
                 AuthoringSnapshotSlice.Library(
                     books =
                         BookRecord
-                            .parseList(query("SELECT * FROM book ORDER BY id;").take(0))
-                            .map(BookRecord::toBook),
-                    tags = TagRecord.parseList(query("SELECT * FROM tag ORDER BY id;").take(0)).map(TagRecord::toTag),
+                            .parseList(
+                                query(
+                                    "SELECT *, (SELECT VALUE target FROM resource_reference " +
+                                        "WHERE source = \$parent.id AND string::starts_with(slot, 'tags:')) AS tags " +
+                                        "FROM book ORDER BY id;",
+                                ).take(0),
+                            ).map(BookRecord::toBook),
+                    tags =
+                        TagRecord
+                            .parseList(
+                                query(
+                                    "SELECT *, (SELECT VALUE target FROM resource_reference " +
+                                        "WHERE source = \$parent.id AND string::starts_with(slot, 'parents:')) " +
+                                        "AS parent_tags FROM tag ORDER BY id;",
+                                ).take(0),
+                            ).map(TagRecord::toTag),
                 )
             }
 
@@ -115,7 +128,12 @@ private fun Transaction.currentCollaborationSequence(): Long =
 private fun Transaction.loadBook(id: BookId) =
     BookRecord
         .parseList(
-            query("SELECT * FROM book WHERE id = \$id;", mapOf("id" to id.surrealId())).take(0),
+            query(
+                "SELECT *, (SELECT VALUE target FROM resource_reference " +
+                    "WHERE source = \$parent.id AND string::starts_with(slot, 'tags:')) AS tags " +
+                    "FROM book WHERE id = \$id;",
+                mapOf("id" to id.surrealId()),
+            ).take(0),
         ).singleOrNull()
         ?.toBook()
 

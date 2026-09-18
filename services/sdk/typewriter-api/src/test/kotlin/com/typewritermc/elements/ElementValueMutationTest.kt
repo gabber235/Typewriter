@@ -4,6 +4,7 @@ import com.typewritermc.types.DataMapEntry
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeField
@@ -113,8 +114,8 @@ val ElementValueMutationTest by testSuite {
         val logical =
             DataValue.Record(
                 mapOf(
-                    "left" to DataValue.StringValue("element:left"),
-                    "right" to DataValue.StringValue("element:right"),
+                    "left" to DataValue.Reference(ResourceId.parse("element:left")),
+                    "right" to DataValue.Reference(ResourceId.parse("element:right")),
                 ),
             )
         val stored = decomposer().decompose(graph, logical)
@@ -128,7 +129,7 @@ val ElementValueMutationTest by testSuite {
                     listOf(
                         ElementValueMutation.SetValue(
                             ElementValuePath(listOf(ElementValuePathSegment.Field("left"))),
-                            DataValue.StringValue("element:new"),
+                            DataValue.Reference(ResourceId.parse("element:new")),
                         ),
                     ),
                 ).success()
@@ -136,7 +137,7 @@ val ElementValueMutationTest by testSuite {
         result.references.single { it.target.referenceString() == "element:right" }.slot shouldBe rightSlot
         ReferenceAssembler().assemble(graph, result) shouldBe
             ReferenceAssemblyResult.Success(
-                logical.copy(fields = logical.fields + ("left" to DataValue.StringValue("element:new"))),
+                logical.copy(fields = logical.fields + ("left" to DataValue.Reference(ResourceId.parse("element:new")))),
             )
     }
 
@@ -148,8 +149,8 @@ val ElementValueMutationTest by testSuite {
                 DataValue.MapValue(
                     listOf(
                         DataMapEntry(
-                            DataValue.StringValue("element:key"),
-                            DataValue.StringValue("element:value"),
+                            DataValue.Reference(ResourceId.parse("element:key")),
+                            DataValue.Reference(ResourceId.parse("element:value")),
                         ),
                     ),
                 ),
@@ -165,8 +166,8 @@ val ElementValueMutationTest by testSuite {
                             ElementValuePath(),
                             listOf(
                                 DataMapEntry(
-                                    DataValue.StringValue("element:key"),
-                                    DataValue.StringValue("element:replacement"),
+                                    DataValue.Reference(ResourceId.parse("element:key")),
+                                    DataValue.Reference(ResourceId.parse("element:replacement")),
                                 ),
                             ),
                         ),
@@ -180,7 +181,8 @@ val ElementValueMutationTest by testSuite {
 
 private fun ElementValueMutationResult.success(): StoredElementValue = (this as ElementValueMutationResult.Success).value
 
-private fun references(vararg targets: String): DataValue.ListValue = DataValue.ListValue(targets.map(DataValue::StringValue))
+private fun references(vararg targets: String): DataValue.ListValue =
+    DataValue.ListValue(targets.map { DataValue.Reference(ResourceId.parse(it)) })
 
 private fun literalMessage(
     type: ResolvedTypeRef,
@@ -198,13 +200,6 @@ private fun decomposer(): ReferenceDecomposer {
     return ReferenceDecomposer { ReferenceSlotId("mutation_slot_${next++}") }
 }
 
-private fun refTo(target: ResolvedTypeRef): TypeExpression.Named =
-    TypeExpression.Named(
-        ResolvedTypeRef(
-            id = TypeId.Qualified("typewriter/v1", "Ref"),
-            revision = 1,
-            arguments = listOf(TypeExpression.Named(target)),
-        ),
-    )
+private fun refTo(target: ResolvedTypeRef): TypeExpression.Reference = TypeExpression.Reference(target)
 
 private val elementType = ResolvedTypeRef(TypeId.Qualified("test", "MutationEntry"), 1)
