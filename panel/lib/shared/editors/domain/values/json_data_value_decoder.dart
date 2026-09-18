@@ -132,6 +132,12 @@ DataValue _decode(
     source,
   ),
   NamedType() => _decodeResolved(source, type, registry, path),
+  ReferenceType() when source is String => ReferenceValue(recordId(source)),
+  ReferenceType() => throw _invalidJsonValue(
+    path,
+    "a resource reference string",
+    source,
+  ),
   ParameterType(:final name) => throw FormatException(
     "Expected a resolved type at $path, got unresolved parameter $name",
   ),

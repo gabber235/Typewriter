@@ -9,9 +9,11 @@ skir.TypedValue _initialElementValue(
   String name,
   TypeRegistry registry,
   SkirEditorCodec codec,
+  DataValue? prepared,
 ) {
-  final initial = NamedType(definition.rootType)
-      .createInitialValue(registry: registry);
+  final initial = prepared == null
+      ? materializeReadyValue(NamedType(definition.rootType), registry)
+      : TypeResult.success(prepared);
   final value = initial.valueOrNull;
   if (value == null) {
     throw ApiException.badRequest(initial.diagnostics.join("; "));

@@ -51,9 +51,7 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
     return ref.watchRequest(
       subject: route.invalidationRequestSubject,
       listenSubject: route.invalidationSubject,
-      requestBytes: skir.WatchEditorCatalogRequest.serializer.toBytes(
-        request,
-      ),
+      requestBytes: skir.WatchEditorCatalogRequest.serializer.toBytes(request),
       serializer: skir.CatalogWatchUpdate.serializer,
       transformer: (previous, response) => response._decodeDomain(),
     );
@@ -199,10 +197,7 @@ extension on skir.ElementEligibility {
       false,
       value.reasons.toList(),
     ),
-    skir.ElementEligibility_unknown() => (
-      false,
-      const ["Unknown eligibility"],
-    ),
+    skir.ElementEligibility_unknown() => (false, const ["Unknown eligibility"]),
   };
 }
 
@@ -238,12 +233,11 @@ extension on skir.CatalogFetchResult {
       ),
     skir.CatalogFetchResult_unavailableWrapper(:final value) =>
       RealmEditorCatalogFetchUnavailable(value._decodeDiagnostics()),
-    skir.CatalogFetchResult_unknown() =>
-      RealmEditorCatalogFetchUnavailable([
-        realmEditorCatalogUnavailableDiagnostic(
-          "Realm returned an unknown editor catalog response",
-        ),
-      ]),
+    skir.CatalogFetchResult_unknown() => RealmEditorCatalogFetchUnavailable([
+      realmEditorCatalogUnavailableDiagnostic(
+        "Realm returned an unknown editor catalog response",
+      ),
+    ]),
   };
 }
 
@@ -305,12 +299,11 @@ extension on skir.CatalogWatchUpdate {
       RealmEditorCatalogInvalidated(CatalogGeneration(value.value)),
     skir.CatalogWatchUpdate_invalidatedWrapper(:final value) =>
       RealmEditorCatalogInvalidated(CatalogGeneration(value.generation.value)),
-    skir.CatalogWatchUpdate_unknown() =>
-      RealmEditorCatalogWatchUnavailable([
-        realmEditorCatalogUnavailableDiagnostic(
-          "Realm returned an unknown editor catalog invalidation",
-        ),
-      ]),
+    skir.CatalogWatchUpdate_unknown() => RealmEditorCatalogWatchUnavailable([
+      realmEditorCatalogUnavailableDiagnostic(
+        "Realm returned an unknown editor catalog invalidation",
+      ),
+    ]),
   };
 }
 

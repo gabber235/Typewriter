@@ -110,10 +110,8 @@ void main() {
         .resolve(document.rootType as NamedType);
     final root = inspector.presentations.single.root.element as ColumnElement;
     final direct =
-        root.children
-                .singleWhere((node) => node.id == "book.tags.search")
-                .element
-            as SearchInputElement;
+        root.children.singleWhere((node) => node.id == "book.tags").element
+            as ReferenceInputElement;
 
     final effectiveVisibility =
         root.children
@@ -125,11 +123,6 @@ void main() {
     final effectiveSection =
         effectiveVisibility.whenTrue.element as SectionElement;
     final effective = effectiveSection.child.element as CollectionGraphElement;
-    final directSummary = direct.summary!.element as RepeatedElement;
-    final summaryLookup =
-        directSummary.presentation.item.element as CollectionLookupElement;
-    final summaryChip = summaryLookup.found.element as ChipElement;
-
     expect(document.revision, 1);
     expect(resolved.diagnostics, isEmpty);
     expect(resolved.valueOrNull, isNotNull);
@@ -137,14 +130,8 @@ void main() {
     expect(document.mergePolicies, {
       DataPath.root.field("tags"): EditorMergePolicy.set,
     });
-    expect(direct.selectionMode, SearchSelectionMode.multiple);
-
-    expect(direct.provider, isA<CollectionSearchProvider>());
-    final summaryLayout =
-        directSummary.presentation.layout as PresentationStandardSequenceLayout;
-    expect(summaryLayout.layout, isA<PresentationWrapLayout>());
-    expect(directSummary.presentation.empty, isNotNull);
-    _expectTagChip(summaryChip);
+    expect(direct.allowReorder, isFalse);
+    expect(direct.candidatePolicy, isNull);
     expect(effective.sourceId, tagCollectionSourceId);
 
     expect(effective.relation, tagInheritsRelationId);
@@ -209,7 +196,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Direct Tags"), findsOneWidget);
-      expect(find.text("None selected"), findsOneWidget);
+      expect(find.text("Reference search is unavailable"), findsOneWidget);
       expect(find.text("Effective Tags"), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -267,13 +254,6 @@ Tag _tag(String id, Color color) => Tag(
   parentIds: const [],
   placement: const Placement(x: 0, y: 0, width: 4, height: 1),
 );
-
-void _expectTagChip(ChipElement chip) {
-  expect(chip.color, isNotNull);
-  final color = chip.color!.expression as BindingExpression;
-  expect(color.binding.bindingId, tagCollectionRowBindingId);
-  expect(color.binding.path, DataPath.root.field("color"));
-}
 
 EditorProtocolRenderer _render(EditableSelectable inspector) =>
     EditorProtocolRenderer(

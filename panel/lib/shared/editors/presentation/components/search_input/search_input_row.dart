@@ -140,8 +140,8 @@ class _PresentationSearchResultRow extends HookWidget {
 /// A summary presentation receives a virtual, read only binding containing the
 /// current canonical value. It can therefore use the same presentation
 /// expressions as an ordinary node without gaining a write path into the
-/// editor. A null value is shown as mixed because no single value can be
-/// presented as the current selection.
+/// editor. Missing and mixed values remain distinct because only mixed input
+/// has replacement semantics across several owners.
 class _SearchInputSummary extends HookWidget {
   const _SearchInputSummary({
     required this.element,
@@ -149,6 +149,7 @@ class _SearchInputSummary extends HookWidget {
     required this.scope,
     required this.inputController,
     required this.onStartEditing,
+    required this.summaryBuilder,
   });
 
   final SearchInputElement element;
@@ -156,30 +157,35 @@ class _SearchInputSummary extends HookWidget {
   final PresentationRenderScope scope;
   final InputFieldController inputController;
   final VoidCallback onStartEditing;
+  final PresentationSearchSummaryBuilder? summaryBuilder;
 
   @override
   Widget build(BuildContext context) {
     final current = binding.value.valueOrNull;
+    final mixed = binding.value is MixedEditorValue;
     final presentation = element.summary;
-    final summary = current == null
+    final summary = mixed
         ? const Text("Multiple values")
-        : presentation == null
-        ? Text(current.expressionDisplayText)
-        : PresentationNodeRenderer(
-            node: presentation,
-            scope: scope.withVirtualBinding(
-              VirtualBindingHost(
-                id: element.summaryBindingId,
-                snapshot: BindingSnapshot(
-                  type: binding.type,
-                  value: current,
-                  revision: binding.revision,
-                  writable: false,
-                ),
-                onChanged: (_) {},
-              ),
-            ),
-          );
+        : summaryBuilder?.call(context, current) ??
+              (current == null
+                  ? const Text("No value")
+                  : presentation == null
+                  ? Text(current.expressionDisplayText)
+                  : PresentationNodeRenderer(
+                      node: presentation,
+                      scope: scope.withVirtualBinding(
+                        VirtualBindingHost(
+                          id: element.summaryBindingId,
+                          snapshot: BindingSnapshot(
+                            type: binding.type,
+                            value: current,
+                            revision: binding.revision,
+                            writable: false,
+                          ),
+                          onChanged: (_) {},
+                        ),
+                      ),
+                    ));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -217,7 +223,7 @@ class _SearchInputSummary extends HookWidget {
             ),
           ),
         ),
-        if (current == null) const MixedValueMessage(),
+        if (mixed) const MixedValueMessage(),
       ],
     );
   }

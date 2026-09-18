@@ -62,8 +62,11 @@ void main() {
 
       final snapshot = await source
           .watch(
-            const PresentationCollectionQuery.graph(
-              roots: [StringValue("story"), StringValue("combat")],
+            PresentationCollectionQuery.graph(
+              roots: [
+                ReferenceValue(recordId("tag:story")),
+                ReferenceValue(recordId("tag:combat")),
+              ],
               relation: tagInheritsRelationId,
               direction: CollectionGraphDirection.forward,
             ),
@@ -71,14 +74,20 @@ void main() {
           .first;
 
       expect(snapshot.diagnostics, isEmpty);
-      expect(snapshot.rows.map((row) => row.key), const [
-        StringValue("shared"),
+      expect(snapshot.rows.map((row) => row.key), [
+        ReferenceValue(recordId("tag:shared")),
       ]);
       expect(
         snapshot.paths.map((path) => path.keys),
         containsAll([
-          const [StringValue("story"), StringValue("shared")],
-          const [StringValue("combat"), StringValue("shared")],
+          [
+            ReferenceValue(recordId("tag:story")),
+            ReferenceValue(recordId("tag:shared")),
+          ],
+          [
+            ReferenceValue(recordId("tag:combat")),
+            ReferenceValue(recordId("tag:shared")),
+          ],
         ]),
       );
     },
@@ -160,13 +169,8 @@ void main() {
       final layout = layoutNode.element as SectionElement;
       final layoutGrid = layout.child.element as GridElement;
       final directParents =
-          root.children
-                  .singleWhere((node) => node.id == "tag.parents.search")
-                  .element
-              as SearchInputElement;
-      final summary = directParents.summary!.element as RepeatedElement;
-      final summaryLookup =
-          summary.presentation.item.element as CollectionLookupElement;
+          root.children.singleWhere((node) => node.id == "tag.parents").element
+              as ReferenceInputElement;
       final inheritance =
           root.children
                   .singleWhere(
@@ -184,16 +188,16 @@ void main() {
       expect(document.mergePolicies, {
         DataPath.root.field("parents"): EditorMergePolicy.set,
       });
+      expect(directParents.candidatePolicy, tagParentReferencePolicyId);
+      expect(directParents.allowReorder, isFalse);
+      expect(
+        directParents.rejectionDisplay,
+        ReferenceRejectionDisplay.disabled,
+      );
       expect(
         root.children.map((node) => node.id),
         contains("tag.inheritance.visibility"),
       );
-      final summaryLayout =
-          summary.presentation.layout as PresentationStandardSequenceLayout;
-
-      expect(summaryLayout.layout, isA<PresentationWrapLayout>());
-      expect(summary.presentation.empty, isNotNull);
-      _expectTagChip(summaryLookup.found.element as ChipElement);
       expect(graph.childrenBindingId, const BindingId(45));
       expect(graph.childBindingId, const BindingId(46));
       final rootSequence =
@@ -265,7 +269,7 @@ void main() {
       await tester.pump();
 
       expect(find.text("Direct Parents"), findsOneWidget);
-      expect(find.text("None selected"), findsOneWidget);
+      expect(find.text("Reference search is unavailable"), findsOneWidget);
       expect(find.text("Inheritance"), findsNothing);
 
       await tester.tap(find.text("Layout"));
@@ -327,13 +331,6 @@ TagSelectable _tagSelection(
   tagCollection: tagCollection,
 );
 
-void _expectTagChip(ChipElement chip) {
-  expect(chip.color, isNotNull);
-  final color = chip.color!.expression as BindingExpression;
-  expect(color.binding.bindingId, tagCollectionRowBindingId);
-  expect(color.binding.path, DataPath.root.field("color"));
-}
-
 void _expectPositionControl(
   GridElement grid,
   String field,
@@ -376,7 +373,7 @@ DataValue _field(
   String id,
   String name,
 ) {
-  final row = snapshot.row(StringValue(id));
+  final row = snapshot.row(ReferenceValue(recordId("tag:$id")));
   if (row == null) throw StateError("Missing Tag row: $id");
   return (row.value as RecordValue).fields[name]!;
 }

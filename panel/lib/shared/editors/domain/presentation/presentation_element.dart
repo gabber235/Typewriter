@@ -186,6 +186,13 @@ sealed class PresentationElement with _$PresentationElement {
   @Implements<SimpleInputElement>()
   const factory PresentationElement.namedInput(BoundControl control) =
       NamedInputElement;
+  const factory PresentationElement.referenceInput({
+    required BoundControl control,
+    @Default(false) bool allowReorder,
+    ReferencePolicyId? candidatePolicy,
+    @Default(ReferenceRejectionDisplay.hidden)
+    ReferenceRejectionDisplay rejectionDisplay,
+  }) = ReferenceInputElement;
   const factory PresentationElement.listInput({
     required BoundControl control,
     PresentationNode? itemPresentation,

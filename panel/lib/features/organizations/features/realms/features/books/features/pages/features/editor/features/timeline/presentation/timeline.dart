@@ -7,7 +7,6 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-
 /// The frame values a timeline caller must apply to one source element.
 ///
 /// This is an outcome, not a persistence command. The callback receives all

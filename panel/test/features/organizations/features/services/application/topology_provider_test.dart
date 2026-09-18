@@ -65,47 +65,44 @@ Future<void> _waitFor(bool Function() condition) async {
 void main() {
   topologyStateTests();
   topologyLifecycleTests();
-  test(
-    "runtime reports cannot publish configuration early or revive removed children",
-    () {
-      final initial = OrganizationTopology(
-        hosts: [TopologyHost.fromSkir(_host())],
-        realmInstances: [TopologyRealm.fromSkir(_realm())],
-        engineInstances: [],
-      );
-      final early = initial.applyHostObservation(
-        TopologyHost.fromSkir(
-          _host(
-            revision: 2,
-            state: skir.HostRuntimeState(
-              status: skir.HostRuntimeStatus.active,
-              message: null,
-              updatedAt: DateTime.utc(2026),
-            ),
+  test("runtime reports cannot publish configuration early or revive removed children", () {
+    final initial = OrganizationTopology(
+      hosts: [TopologyHost.fromSkir(_host())],
+      realmInstances: [TopologyRealm.fromSkir(_realm())],
+      engineInstances: [],
+    );
+    final early = initial.applyHostObservation(
+      TopologyHost.fromSkir(
+        _host(
+          revision: 2,
+          state: skir.HostRuntimeState(
+            status: skir.HostRuntimeStatus.active,
+            message: null,
+            updatedAt: DateTime.utc(2026),
           ),
         ),
-      );
-      expect(early.hosts.single.revision, 1);
-      expect(early.hosts.single.state.status, TopologyHostStatus.active);
-      final removed = early.applyConfiguration(
-        skir.HostConfigurationChange(
-          host: _host(revision: 2),
-          realm: null,
-          engine: null,
-          removedResources: [_realm().realmId],
-        ),
-      );
-      expect(removed.hosts.single.revision, 2);
+      ),
+    );
+    expect(early.hosts.single.revision, 1);
+    expect(early.hosts.single.state.status, TopologyHostStatus.active);
+    final removed = early.applyConfiguration(
+      skir.HostConfigurationChange(
+        host: _host(revision: 2),
+        realm: null,
+        engine: null,
+        removedResources: [_realm().realmId],
+      ),
+    );
+    expect(removed.hosts.single.revision, 2);
 
-      expect(removed.hosts.single.state.status, TopologyHostStatus.active);
-      expect(
-        removed
-            .applyRealmObservation(TopologyRealm.fromSkir(_realm()))
-            .realmInstances,
-        isEmpty,
-      );
-    },
-  );
+    expect(removed.hosts.single.state.status, TopologyHostStatus.active);
+    expect(
+      removed
+          .applyRealmObservation(TopologyRealm.fromSkir(_realm()))
+          .realmInstances,
+      isEmpty,
+    );
+  });
 
   test("topology watch reduces lists, updates, and removals", () async {
     final nats = FakeNatsClient()

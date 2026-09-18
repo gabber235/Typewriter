@@ -56,12 +56,6 @@ void main() {
       contains(standardTypeRefs.icon),
     );
     expect(
-      registry
-          .resolveExact(standardTypeRefs.refTo(const StringType()))
-          .diagnostics,
-      isEmpty,
-    );
-    expect(
       registry.definition(standardTypeRefs.color)!.defaultPresentationId,
       standardColorPresentationId,
     );

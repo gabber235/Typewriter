@@ -45,9 +45,8 @@ PresentationNode searchTestPresentation({
       provider:
           provider ??
           SearchProvider.staticValues(
-            values: ListValue(
-              values.map(StringValue.new).toList(),
-            ).asLiteral(const ListType(element: StringType())),
+            values: ListValue(values.map(StringValue.new).toList())
+                .asLiteral(const ListType(element: StringType())),
             result: searchTestResultMapping,
           ),
     ),

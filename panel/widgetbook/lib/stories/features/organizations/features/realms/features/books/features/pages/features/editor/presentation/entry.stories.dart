@@ -54,7 +54,10 @@ Widget entryNodeDefinitionUseCase(BuildContext context) {
         child: SizedBox(
           width: definition.placement.width * entryGraphCellSize,
           height: definition.placement.height * entryGraphCellSize,
-          child: EntryNode(entry: PageEntry.definition(definition: definition)),
+          child: EntryNode(
+            pageId: "page",
+            entry: PageEntry.definition(definition: definition),
+          ),
         ),
       ),
     ),
@@ -105,7 +108,10 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
         child: SizedBox(
           width: definition.placement.width * entryGraphCellSize,
           height: definition.placement.height * entryGraphCellSize,
-          child: EntryNode(entry: PageEntry.definition(definition: definition)),
+          child: EntryNode(
+            pageId: "page",
+            entry: PageEntry.definition(definition: definition),
+          ),
         ),
       ),
     ),
@@ -141,6 +147,7 @@ Widget entryNodeReferenceUseCase(BuildContext context) {
         width: width * entryGraphCellSize,
         height: height * entryGraphCellSize,
         child: EntryNode(
+          pageId: "page",
           entry: PageEntry.reference(
             id: "reference-entry-id",
             name: "Referenced Entry",
@@ -175,6 +182,7 @@ Widget entryNodeNonexistentUseCase(BuildContext context) {
         width: width * entryGraphCellSize,
         height: height * entryGraphCellSize,
         child: EntryNode(
+          pageId: "page",
           entry: const PageEntry.nonexistent(id: "missing-entry-id"),
         ),
       ),
@@ -206,6 +214,7 @@ Widget entryNodeMissingElementDefinitionUseCase(BuildContext context) {
         width: placement.width * entryGraphCellSize,
         height: placement.height * entryGraphCellSize,
         child: EntryNode(
+          pageId: "page",
           entry: PageEntry.missingElementDefinition(
             id: "no-elementDefinition-entry-id",
             name: "Entry Without Element Definition",

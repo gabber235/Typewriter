@@ -2,6 +2,7 @@ import "dart:convert";
 import "dart:typed_data";
 
 import "package:json_annotation/json_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_value_json_cursor.dart";
@@ -61,6 +62,10 @@ class DataValueJsonConverter
       "type": _encodeReference(concreteType),
       "value": toJson(value),
     },
+    ReferenceValue(:final id) => {
+      "kind": "reference",
+      "value": base64Encode(RecordId.serializer.toBytes(id)),
+    },
   };
 
   Map<String, Object?> _encodeReference(ResolvedTypeRef reference) => {
@@ -106,6 +111,7 @@ final class _DataValueDecoder {
         concreteType: _decodeReference(json.required("type")),
         value: decode(json.required("value")),
       ),
+      "reference" => ReferenceValue(_decodeRecordId(json.required("value"))),
       _ => throw FormatException(
         "Expected a known data value kind at ${json.required("kind").path}, "
         "got ${jsonEncode(kind)}",
@@ -142,6 +148,14 @@ final class _DataValueDecoder {
       return DateTime.parse(value);
     } on FormatException {
       throw json.invalid("an ISO 8601 timestamp string");
+    }
+  }
+
+  RecordId _decodeRecordId(_JsonValue json) {
+    try {
+      return RecordId.serializer.fromBytes(base64Decode(json.string()));
+    } on Object {
+      throw json.invalid("a base64 encoded record identity");
     }
   }
 

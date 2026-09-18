@@ -182,6 +182,7 @@ extension RendererStoryElementKind on PresentationElement {
     BytesInputElement() => RendererStoryKind.bytesInput,
     EnumInputElement() => RendererStoryKind.enumInput,
     NamedInputElement() => RendererStoryKind.namedInput,
+    ReferenceInputElement() => RendererStoryKind.namedInput,
     ListInputElement() => RendererStoryKind.listInput,
     MapInputElement() => RendererStoryKind.mapInput,
     RecordInputElement() => RendererStoryKind.recordInput,

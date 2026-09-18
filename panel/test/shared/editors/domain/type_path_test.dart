@@ -113,13 +113,13 @@ void main() {
   });
 
   group("queryReferences", () {
-    test("finds exact nominal references with structured paths", () {
+    test("finds exact references with structured paths", () {
       final entry = NamedType(_typeRef("Entry"));
       final root = RecordType(
         fields: {
           "target": TypeField(
             name: "target",
-            type: NamedType(standardTypeRefs.refTo(entry)),
+            type: ReferenceType(target: entry.reference),
           ),
         },
       );
@@ -128,7 +128,7 @@ void main() {
 
       expect(references, hasLength(1));
       expect(references.single.path, const [TypeFieldQuerySegment("target")]);
-      expect(typeExpressionsEqual(references.single.target, entry), isTrue);
+      expect(references.single.target, entry.reference);
     });
   });
 }

@@ -189,7 +189,14 @@ PresentationNode _singlePresentationRoot(
             definition.id == selected && definition.inputs.length == 1,
       )
       .firstOrNull;
-  if (definition == null) return resolved.generateDefaultPresentation();
+  if (definition == null) {
+    final generated =
+        declared is NamedType &&
+            registry.resolve(declared).valueOrNull?.isConcrete == false
+        ? declared
+        : resolved;
+    return generated.generateDefaultPresentation(registry: registry);
+  }
   return PresentationNode(
     id: "editor",
     element: PresentationInvocationElement(

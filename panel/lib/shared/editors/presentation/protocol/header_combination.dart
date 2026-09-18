@@ -70,10 +70,7 @@ extension PresentationNodeHeaderCombination on PresentationNode {
   }
 
   PresentationHeader? _ownHeader(PresentationRenderScope scope) {
-    final contribution = element.contributeHeader(
-      scope.expressions,
-      registry: scope.registry,
-    );
+    final contribution = element.contributeHeader(scope);
     return switch ((header, contribution)) {
       (final PresentationHeader outer, final PresentationHeader inner) =>
         outer.mergeInner(inner),

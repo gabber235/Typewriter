@@ -5,7 +5,8 @@ part of "books.dart";
 /// Selection resolves this identity against the current organization and realm
 /// session. It is therefore safe to retain as a key, but it is not a snapshot
 /// of the book and must be resolved again after session state changes.
-class BookIdentifier extends SelectableIdentifier {
+class BookIdentifier extends SelectableIdentifier
+    implements ReferenceResourceDragData {
   const BookIdentifier(this.bookId);
 
   final skir.RecordId bookId;
@@ -15,6 +16,12 @@ class BookIdentifier extends SelectableIdentifier {
 
   @override
   Object get resourceId => bookId;
+
+  @override
+  skir.RecordId get referenceId => bookId;
+
+  @override
+  List<ResolvedTypeRef> get referenceTypes => const [];
 
   /// Resolves the current book and builds its editor and navigation boundary.
   ///
@@ -154,7 +161,7 @@ extension BookInspectorValue on Book {
     "title": title.asValue,
     "icon": IconValue.from(icon).typedValue,
     "color": color.asValue,
-    "tags": ListValue(tagIds.map((tagId) => tagId.id.asValue).toList()),
+    "tags": ListValue(tagIds.map(ReferenceValue.new).toList()),
   });
 
   /// Reconstructs a book only when the complete inspector record is valid.
@@ -173,8 +180,8 @@ extension BookInspectorValue on Book {
     }
     final decodedColor = color.asColorOrNull;
     final tagIds = tags.values
-        .whereType<StringValue>()
-        .map((tag) => recordId("tag:${tag.value}"))
+        .whereType<ReferenceValue>()
+        .map((tag) => tag.id)
         .toList();
     if (decodedColor == null || tagIds.length != tags.values.length) {
       return null;

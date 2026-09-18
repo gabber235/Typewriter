@@ -109,9 +109,8 @@ void main() {
         locality: ConversionLocality.realm,
       );
 
-      final result = ConversionGraph([
-        conversion,
-      ]).apply(const StringValue("value"), [conversion]);
+      final result = ConversionGraph([conversion])
+          .apply(const StringValue("value"), [conversion]);
 
       expect(result, isA<ConversionUnavailable>());
     });

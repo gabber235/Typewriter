@@ -10,3 +10,21 @@ typedef PresentationSearchSourceBuilder = SearchSource Function(
   Ref ref,
   Stream<PresentationSearchSelectionEvent> selections,
 );
+
+typedef PresentationSearchSelectionMapper = DataValue Function(
+  DataValue selected,
+);
+
+typedef PresentationSearchSelectionMatcher = bool Function(
+  EditorValue current,
+  DataValue selected,
+);
+
+typedef PresentationSearchSummaryBuilder = Widget Function(
+  BuildContext context,
+  DataValue? current,
+);
+
+typedef PresentationSearchCandidateEvaluator = SearchActivationState Function(
+  SearchResult result,
+);

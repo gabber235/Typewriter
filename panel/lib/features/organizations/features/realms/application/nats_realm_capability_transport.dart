@@ -70,9 +70,7 @@ final class NatsRealmCapabilityTransport {
         skir.CapabilityInvocationRequest(
           invocationId: skir.InvocationId(value: invocationId),
           generation: skir.CatalogGeneration(value: generation.value),
-          capabilityId: skir.CapabilityId(
-            value: command.capabilityId.value,
-          ),
+          capabilityId: skir.CapabilityId(value: command.capabilityId.value),
           payload: encoded.valueOrNull!,
           expectedResultType: null,
         ),

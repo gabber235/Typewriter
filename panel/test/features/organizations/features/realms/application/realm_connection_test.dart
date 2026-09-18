@@ -11,9 +11,8 @@ void main() {
     final container =
         ProviderContainer.test(
           overrides: [
-            hostConnectedProvider(
-              recordId("service_host:host"),
-            ).overrideWithValue(true),
+            hostConnectedProvider(recordId("service_host:host"))
+                .overrideWithValue(true),
             routeParamProvider("realmId").overrideWithValue("test"),
             organizationTopologyStreamProvider.overrideWith(
               (ref) => Stream.value(
@@ -63,9 +62,8 @@ void main() {
     final states = <RealmConnectionState>[];
     final container = ProviderContainer(
       overrides: [
-        hostConnectedProvider(
-          recordId("service_host:host"),
-        ).overrideWithValue(true),
+        hostConnectedProvider(recordId("service_host:host"))
+            .overrideWithValue(true),
         realmIdProvider.overrideWithValue(null),
       ],
     );
@@ -142,9 +140,8 @@ void main() {
     final id = recordId("realm_instance:test");
     final container = ProviderContainer(
       overrides: [
-        hostConnectedProvider(
-          recordId("service_host:host"),
-        ).overrideWithValue(true),
+        hostConnectedProvider(recordId("service_host:host"))
+            .overrideWithValue(true),
         realmIdProvider.overrideWithValue(id),
         selectedRealmProvider.overrideWith(
           (ref) => Future<TopologyRealm?>.error(StateError("Unavailable")),
@@ -171,9 +168,8 @@ void main() {
     var selected = _realm(status: TopologyRuntimeStatus.failed);
     final container = ProviderContainer(
       overrides: [
-        hostConnectedProvider(
-          recordId("service_host:host"),
-        ).overrideWithValue(true),
+        hostConnectedProvider(recordId("service_host:host"))
+            .overrideWithValue(true),
         realmIdProvider.overrideWithValue(id),
         selectedRealmProvider.overrideWith((ref) async => selected),
       ],
@@ -206,9 +202,8 @@ ProviderContainer _containerWithRealm(TopologyRealm? realm) {
   final id = recordId("realm_instance:test");
   return ProviderContainer(
     overrides: [
-      hostConnectedProvider(
-        recordId("service_host:host"),
-      ).overrideWithValue(true),
+      hostConnectedProvider(recordId("service_host:host"))
+          .overrideWithValue(true),
       realmIdProvider.overrideWithValue(id),
       selectedRealmProvider.overrideWith((ref) async => realm),
     ],

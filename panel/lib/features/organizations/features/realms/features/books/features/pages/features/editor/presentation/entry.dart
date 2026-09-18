@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -16,14 +18,17 @@ const _entryFocusColor = Colors.white;
 /// This widget only chooses the visual variant and passes its state to the
 /// variant renderer.
 class EntryNode extends HookConsumerWidget {
-  const EntryNode({required this.entry, super.key});
+  const EntryNode({required this.pageId, required this.entry, super.key});
 
+  /// Page coordinator that owns mutations for a local entry definition.
+  final String pageId;
   final PageEntry entry;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (entry) {
       DefinitionPageEntry(definition: final definition) => _DefinitionEntryNode(
+        pageId: pageId,
         definition: definition,
       ),
       ReferencePageEntry(
@@ -46,19 +51,33 @@ class EntryNode extends HookConsumerWidget {
 }
 
 class _DefinitionEntryNode extends HookConsumerWidget {
-  const _DefinitionEntryNode({required this.definition});
+  const _DefinitionEntryNode({required this.pageId, required this.definition});
 
+  final String pageId;
   final EntryDefinition definition;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
 
-    final entryIdentifier = EntryIdentifier(definition.id);
+    final entryIdentifier = EntryIdentifier(
+      definition.id,
+      pageId: pageId,
+      elementType: definition.elementDefinition.rootType,
+    );
     final isDeprecated = _isEntryDeprecated(definition);
 
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
+    final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
+    final registry = catalog == null
+        ? null
+        : TypeRegistry(bootstrapTypeCatalog(catalog.catalog.definitions));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    final entryIndex = organizationId == null || realmId == null
+        ? null
+        : ref.watch(realmEntryIndexProvider(organizationId, realmId)).value;
 
     return Selector(
       focusNode: focusNode,
@@ -96,13 +115,30 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                 ),
           child: GraphDragTargetRegion(
             targetId: entryIdentifier.graphId,
-            child: DragTarget<EntryIdentifier>(
-              onWillAcceptWithDetails: (_) {
-                // TODO: Evaluate accepting paths for linking on drop.
-                return false;
-              },
-              onAcceptWithDetails: (_) async {
-                // TODO: Implement linking flow on drop.
+            child: DragTarget<Object>(
+              onWillAcceptWithDetails: (details) =>
+                  details.data is EntryIdentifier &&
+                  registry != null &&
+                  entryIndex != null &&
+                  _referenceDropValues(
+                    entryIndex,
+                    details.data as EntryIdentifier,
+                    definition,
+                    registry,
+                  ).isNotEmpty,
+              onAcceptWithDetails: (details) {
+                final source = details.data;
+                if (source is! EntryIdentifier || entryIndex == null) return;
+                unawaited(
+                  _acceptReferenceDrop(
+                    context,
+                    ref,
+                    entryIndex,
+                    source,
+                    definition.id,
+                    registry!,
+                  ),
+                );
               },
               builder: (context, candidateData, rejectedData) {
                 final isAccepting = candidateData.isNotEmpty;
@@ -209,6 +245,104 @@ class _DefinitionEntryNode extends HookConsumerWidget {
     return definition.elementDefinition.isDeprecated;
   }
 }
+
+Future<void> _acceptReferenceDrop(
+  BuildContext context,
+  WidgetRef ref,
+  Map<String, CachedPageEntry> entryIndex,
+  EntryIdentifier sourceIdentifier,
+  String targetId,
+  TypeRegistry registry,
+) async {
+  final source = entryIndex[sourceIdentifier.id];
+  final target = entryIndex[targetId];
+  if (source == null || target == null || sourceIdentifier.id == targetId) {
+    return;
+  }
+  final candidates = source.definition.referenceDropValues(
+    _referenceIdentity(target.definition),
+    registry,
+  );
+  if (candidates.isEmpty) return;
+  final selected = candidates.length == 1
+      ? candidates.entries.single
+      : await showAdvancedDialog<MapEntry<DataPath, DataValue>>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Choose reference field"),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final candidate in candidates.entries)
+                    ListTile(
+                      dense: true,
+                      title: Text(candidate.key.toString()),
+                      onTap: () => Navigator.of(context).pop(candidate),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+  if (selected == null || !context.mounted) return;
+  await ref
+      .withReadyPageElements(source.pageId, (elements) {
+        final organizationId = ref.read(organizationIdProvider);
+        final realmId = ref.read(realmIdProvider);
+        if (organizationId == null) throw ApiException.noOrganization();
+        if (realmId == null) {
+          throw ApiException.badRequest("No realm selected");
+        }
+
+        final currentIndex = ref
+            .read(realmEntryIndexProvider(organizationId, realmId))
+            .requireValue;
+        final currentSource = currentIndex[sourceIdentifier.id];
+        final currentTarget = currentIndex[targetId];
+        if (currentSource == null || currentTarget == null) {
+          throw ApiException.notFound("Entry");
+        }
+        if (currentSource.pageId != source.pageId) {
+          throw ApiException.conflict("The entry moved to another page");
+        }
+        final currentValues = currentSource.definition.referenceDropValues(
+          _referenceIdentity(currentTarget.definition),
+          registry,
+        );
+        final currentValue = currentValues[selected.key];
+        if (currentValue == null) {
+          throw ApiException.conflict("The reference field changed");
+        }
+        return elements.updateEntryFieldValue(
+          sourceIdentifier.id,
+          selected.key,
+          currentValue,
+        );
+      })
+      .catchApiExceptionsAndDisplay(context);
+}
+
+Map<DataPath, DataValue> _referenceDropValues(
+  Map<String, CachedPageEntry> entryIndex,
+  EntryIdentifier source,
+  EntryDefinition target,
+  TypeRegistry registry,
+) {
+  if (source.id == target.id) return const {};
+  return entryIndex[source.id]?.definition.referenceDropValues(
+        _referenceIdentity(target),
+        registry,
+      ) ??
+      const {};
+}
+
+EntryIdentifier _referenceIdentity(EntryDefinition definition) =>
+    EntryIdentifier(
+      definition.id,
+      elementType: definition.elementDefinition.rootType,
+    );
 
 class _ReferenceEntryNode extends HookConsumerWidget {
   const _ReferenceEntryNode({

@@ -22,63 +22,58 @@ void main() {
     OrganizationMember memberWithRole(OrganizationRole role) =>
         createMember(roles: [role], email: "", avatarUrl: "");
 
-    test(
-      "updateMemberRoles maps unassignable roles and restores state",
-      () async {
-        final oldRole = createRole(
-          id: "old",
-          name: "Member",
-          color: Colors.grey,
-          assignable: true,
-        );
-        final newRole = createRole(
-          id: "new",
-          name: "Admin",
-          color: Colors.red,
-          assignable: true,
-        );
-        final container = ProviderContainer.test(
-          overrides: [
-            userIdProvider.overrideWith((ref) async => testUserId),
-            organizationIdProvider.overrideWith((ref) => testOrganizationId),
-            natsProvider.overrideWithValue(mockNats),
-            organizationMembersProvider.overrideWith(
-              () => MockMembersNotifier([memberWithRole(oldRole)]),
-            ),
-          ],
-        );
-        final subscription = await retainUntilReady<List<OrganizationMember>>(
-          (listener) => container.listen(
-            organizationMembersProvider,
-            listener,
-            fireImmediately: true,
+    test("updateMemberRoles maps unassignable roles and restores state", () async {
+      final oldRole = createRole(
+        id: "old",
+        name: "Member",
+        color: Colors.grey,
+        assignable: true,
+      );
+      final newRole = createRole(
+        id: "new",
+        name: "Admin",
+        color: Colors.red,
+        assignable: true,
+      );
+      final container = ProviderContainer.test(
+        overrides: [
+          userIdProvider.overrideWith((ref) async => testUserId),
+          organizationIdProvider.overrideWith((ref) => testOrganizationId),
+          natsProvider.overrideWithValue(mockNats),
+          organizationMembersProvider.overrideWith(
+            () => MockMembersNotifier([memberWithRole(oldRole)]),
           ),
-        );
-        addTearDown(subscription.close);
-        mockNats.registerHandler(
-          memberUpdateSubject,
-          (
-            data,
-          ) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
-            skir.UpdateOrganizationMemberRolesResponse.createRolesNotAssignableError(
-              userIds: [testMemberId],
-              roleIds: [newRole.roleId],
-            ),
+        ],
+      );
+      final subscription = await retainUntilReady<List<OrganizationMember>>(
+        (listener) => container.listen(
+          organizationMembersProvider,
+          listener,
+          fireImmediately: true,
+        ),
+      );
+      addTearDown(subscription.close);
+      mockNats.registerHandler(
+        memberUpdateSubject,
+        (data) => skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
+          skir.UpdateOrganizationMemberRolesResponse.createRolesNotAssignableError(
+            userIds: [testMemberId],
+            roleIds: [newRole.roleId],
           ),
-        );
+        ),
+      );
 
-        await expectLater(
-          container
-              .read(organizationMembersProvider.notifier)
-              .updateMemberRoles([recordId("user:m1")], [newRole]),
-          throwsA(apiException(400, "One or more roles cannot be assigned")),
-        );
-        expect(
-          container.read(organizationMembersProvider).requireValue.single.roles,
-          [oldRole],
-        );
-      },
-    );
+      await expectLater(
+        container
+            .read(organizationMembersProvider.notifier)
+            .updateMemberRoles([recordId("user:m1")], [newRole]),
+        throwsA(apiException(400, "One or more roles cannot be assigned")),
+      );
+      expect(
+        container.read(organizationMembersProvider).requireValue.single.roles,
+        [oldRole],
+      );
+    });
 
     test("updateMemberRoles maps founder role requirement to conflict", () async {
       final role = createRole(
@@ -122,52 +117,49 @@ void main() {
       );
     });
 
-    test(
-      "removeMember maps founder removal conflict and restores state",
-      () async {
-        final role = OrganizationRole(
-          roleId: recordId("organization_role:founder"),
-          name: "Founder",
-          color: Colors.red,
-        );
-        final member = memberWithRole(role);
-        final container = ProviderContainer.test(
-          overrides: [
-            userIdProvider.overrideWith((ref) async => testUserId),
-            organizationIdProvider.overrideWith((ref) => testOrganizationId),
-            natsProvider.overrideWithValue(mockNats),
-            organizationMembersProvider.overrideWith(
-              () => MockMembersNotifier([member]),
-            ),
-          ],
-        );
-        final subscription = await retainUntilReady<List<OrganizationMember>>(
-          (listener) => container.listen(
-            organizationMembersProvider,
-            listener,
-            fireImmediately: true,
+    test("removeMember maps founder removal conflict and restores state", () async {
+      final role = OrganizationRole(
+        roleId: recordId("organization_role:founder"),
+        name: "Founder",
+        color: Colors.red,
+      );
+      final member = memberWithRole(role);
+      final container = ProviderContainer.test(
+        overrides: [
+          userIdProvider.overrideWith((ref) async => testUserId),
+          organizationIdProvider.overrideWith((ref) => testOrganizationId),
+          natsProvider.overrideWithValue(mockNats),
+          organizationMembersProvider.overrideWith(
+            () => MockMembersNotifier([member]),
           ),
-        );
-        addTearDown(subscription.close);
-        mockNats.registerHandler(
-          memberRemoveSubject,
-          (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
-            skir.RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
-              userId: member.userId,
-            ),
+        ],
+      );
+      final subscription = await retainUntilReady<List<OrganizationMember>>(
+        (listener) => container.listen(
+          organizationMembersProvider,
+          listener,
+          fireImmediately: true,
+        ),
+      );
+      addTearDown(subscription.close);
+      mockNats.registerHandler(
+        memberRemoveSubject,
+        (data) => skir.RemoveOrganizationMemberResponse.serializer.toBytes(
+          skir.RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
+            userId: member.userId,
           ),
-        );
+        ),
+      );
 
-        await expectLater(
-          container
-              .read(organizationMembersProvider.notifier)
-              .removeMember(member.userId),
-          throwsA(apiException(409, "Organization founder cannot be removed")),
-        );
-        expect(container.read(organizationMembersProvider).requireValue, [
-          member,
-        ]);
-      },
-    );
+      await expectLater(
+        container
+            .read(organizationMembersProvider.notifier)
+            .removeMember(member.userId),
+        throwsA(apiException(409, "Organization founder cannot be removed")),
+      );
+      expect(container.read(organizationMembersProvider).requireValue, [
+        member,
+      ]);
+    });
   });
 }

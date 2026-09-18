@@ -18,15 +18,19 @@ ThemeData applyComponentThemes(
   TypewriterShapes shapes,
   TypewriterStateTokens states,
 ) {
+  final surfaceColor = colors.surface;
   final input = InputDecorationTheme(
     contentPadding: EdgeInsets.symmetric(horizontal: spacing.space3),
     border: OutlineInputBorder(
       borderRadius: shapes.mediumBorderRadius,
       borderSide: BorderSide.none,
     ),
-    fillColor: base.brightness == Brightness.light
-        ? colors.contentPrimary.withValues(alpha: 0.05)
-        : colors.shadow.withValues(alpha: 0.2),
+    fillColor: Color.alphaBlend(
+      base.brightness == Brightness.light
+          ? colors.contentPrimary.withValues(alpha: 0.05)
+          : colors.shadow.withValues(alpha: 0.2),
+      surfaceColor,
+    ),
     filled: true,
     hoverColor: colors.shadow.withValues(alpha: 0.1),
     errorStyle: base.textTheme.bodySmall?.copyWith(color: colors.danger),

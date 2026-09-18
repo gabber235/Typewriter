@@ -28,6 +28,11 @@ class PresentationSearchInput extends HookConsumerWidget {
     required this.scope,
     required this.maximumExtent,
     this.sourceBuilder,
+    this.mapSelection,
+    this.selectionMatcher,
+    this.summaryBuilder,
+    this.candidateEvaluator,
+    this.hideRejectedCandidates = false,
     super.key,
   });
 
@@ -44,6 +49,11 @@ class PresentationSearchInput extends HookConsumerWidget {
   /// [SearchController] created for this widget and must follow the
   /// [SearchSource] disposal contract.
   final PresentationSearchSourceBuilder? sourceBuilder;
+  final PresentationSearchSelectionMapper? mapSelection;
+  final PresentationSearchSelectionMatcher? selectionMatcher;
+  final PresentationSearchSummaryBuilder? summaryBuilder;
+  final PresentationSearchCandidateEvaluator? candidateEvaluator;
+  final bool hideRejectedCandidates;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,6 +64,8 @@ class PresentationSearchInput extends HookConsumerWidget {
     final editing = useState(false);
     final original = useRef(binding.value);
     final explicitExit = useRef(false);
+    final currentBinding = useRef(binding)..value = binding;
+    final currentScope = useRef(scope)..value = scope;
 
     final interaction = useEditorFieldInteraction(scope, binding.reference);
 
@@ -77,10 +89,10 @@ class PresentationSearchInput extends HookConsumerWidget {
     );
 
     void restoreOriginal() {
-      final current = binding.value.valueOrNull;
+      final current = currentBinding.value.value.valueOrNull;
       final previous = original.value.valueOrNull;
       if (current != previous && previous != null) {
-        scope.update(binding.reference, previous);
+        currentScope.value.update(currentBinding.value.reference, previous);
       }
     }
 
@@ -107,8 +119,10 @@ class PresentationSearchInput extends HookConsumerWidget {
     }
 
     DataValue? nextValue(DataValue selected, {required bool toggle}) {
-      if (element.selectionMode == SearchSelectionMode.single) return selected;
-      final current = binding.value.valueOrNull;
+      if (element.selectionMode == SearchSelectionMode.single) {
+        return mapSelection?.call(selected) ?? selected;
+      }
+      final current = currentBinding.value.value.valueOrNull;
       final values = current is ListValue ? [...current.values] : <DataValue>[];
 
       final index = values.indexOf(selected);
@@ -127,10 +141,16 @@ class PresentationSearchInput extends HookConsumerWidget {
     }) {
       final next = nextValue(selected, toggle: toggle);
       if (next == null) return false;
-      final diagnostics = next.validateAgainst(
-        binding.type,
-        registry: scope.registry,
-      );
+      final activeBinding = currentBinding.value;
+      final activeScope = currentScope.value;
+      final reference = activeScope.canonical(activeBinding.reference);
+      final owner = activeScope.editOwnerFor?.call(reference);
+      final diagnostics = owner is EditorStructureOwner
+          ? const <TypeDiagnostic>[]
+          : next.validateAgainst(
+              activeBinding.type,
+              registry: activeScope.registry,
+            );
       if (diagnostics.isNotEmpty) {
         validationMessage.value = diagnostics.first.message;
         return false;
@@ -138,7 +158,7 @@ class PresentationSearchInput extends HookConsumerWidget {
 
       validationMessage.value = null;
 
-      scope.update(binding.reference, next);
+      activeScope.update(activeBinding.reference, next);
 
       if (finishAfterUpdate) finish();
       return true;
@@ -229,14 +249,33 @@ class PresentationSearchInput extends HookConsumerWidget {
         return SearchController(
           session: SearchSession<void>(
             source: source,
+            scope: candidateEvaluator == null || !hideRejectedCandidates
+                ? const AllSearchScope()
+                : PredicateSearchScope(
+                    evaluate: (result, query) =>
+                        candidateEvaluator!(result) is SearchActivationEnabled
+                        ? const SearchResultVisibility.visible()
+                        : const SearchResultVisibility.hidden(),
+                  ),
             interaction: SearchInteraction<void>(
               activation: SearchActivation.custom(
                 dependencies: const [],
-                evaluate: (context, result) =>
-                    result.payload is PresentationSearchResultPayload
-                    ? const SearchActivationState.enabled()
-                    : const SearchActivationState.hidden(),
+                evaluate: (context, result) {
+                  if (result.payload is! PresentationSearchResultPayload) {
+                    return const SearchActivationState.hidden();
+                  }
+                  return candidateEvaluator?.call(result) ??
+                      const SearchActivationState.enabled();
+                },
                 activate: (context, result) async {
+                  final state = candidateEvaluator?.call(result);
+                  if (state case SearchActivationDisabled(:final reason)) {
+                    validationMessage.value = reason;
+                    return const SearchActivationResult.keepOpen();
+                  }
+                  if (state is SearchActivationHidden) {
+                    return const SearchActivationResult.keepOpen();
+                  }
                   selectResult(result, commit: true);
                   return const SearchActivationResult.keepOpen();
                 },
@@ -256,6 +295,8 @@ class PresentationSearchInput extends HookConsumerWidget {
         editing: editing.value,
         inputController: inputController,
         validationMessage: validationMessage.value,
+        selectionMatcher: selectionMatcher,
+        summaryBuilder: summaryBuilder,
         onStartEditing: (controller) {
           if (!scope.enabled || scope.readOnly || !binding.writable) return;
           original.value = binding.value;

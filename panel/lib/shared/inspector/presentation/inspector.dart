@@ -37,7 +37,8 @@ class InspectorSize extends _$InspectorSize {
 /// Places the inspector beside or below [child] according to available width.
 ///
 /// The scaffold creates the inspector's provider scope, including the optional
-/// realm runtime used by editor actions. It does not own selection or focus.
+/// realm runtime used by editor capabilities. It does not own selection or
+/// focus.
 class InspectorScaffold extends HookConsumerWidget {
   const InspectorScaffold({
     required this.child,
@@ -409,9 +410,7 @@ class _InspectorContent extends HookConsumerWidget {
               ComposedEditor(
                 key: ValueKey(ref.watch(selectionProvider)),
                 model: model,
-                runtime: runtime?.executeAction,
-                realmSearchSourceBuilder: runtime?.searchSourceBuilder,
-                executePanelInstruction: runtime?.executePanelInstruction,
+                host: runtime?.host() ?? const EditorHostCapabilities(),
               ),
             const SizedBox(height: 5),
             InspectorOperations(),

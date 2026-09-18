@@ -10,10 +10,9 @@ part of "tags.dart";
 const tagCollectionSourceId = PresentationCollectionSourceId("realm.tags");
 const tagInheritsRelationId = PresentationCollectionRelationId("inherits");
 const tagCollectionRowBindingId = BindingId(40);
+const tagParentReferencePolicyId = ReferencePolicyId("tag.parents.acyclic");
 
-final tagReferenceType = NamedType(
-  standardTypeRefs.refTo(NamedType(tagInspectorTypeRef)),
-);
+final tagReferenceType = ReferenceType(target: referenceResourceTypes.tag);
 
 final tagCollectionRowType = RecordType(
   fields: {
@@ -63,7 +62,12 @@ extension TagPresentationCollection on Iterable<Tag> {
       id: tagCollectionSourceId,
       schema: tagCollectionSchema,
       rows: rows,
-      registry: TypeRegistry(TypeCatalog([tagInspectorTypeDefinition])),
+      registry: TypeRegistry(
+        TypeCatalog([
+          ...referenceResourceTypes.definitions,
+          tagInspectorTypeDefinition,
+        ]),
+      ),
       searchPredicate: (row, query) {
         if (row is! RecordValue) return false;
         final name = row.fields["name"];
@@ -78,10 +82,10 @@ extension TagPresentationCollection on Iterable<Tag> {
 
 extension on Tag {
   RecordValue _collectionRow({required bool selectable}) => RecordValue({
-    "key": tagId.id.asValue,
+    "key": ReferenceValue(tagId),
     "name": name.asValue,
     "color": color.asValue,
-    "parents": ListValue(parentIds.map((parent) => parent.id.asValue).toList()),
+    "parents": ListValue(parentIds.map(ReferenceValue.new).toList()),
     "selectable": selectable.asValue,
   });
 }
@@ -108,6 +112,73 @@ extension TagParentCandidate on Tag {
     );
     if (descendant ?? true) return "A descendant cannot become a parent";
     return null;
+  }
+}
+
+ReferenceCandidatePolicy tagParentReferencePolicy(Ref ref) =>
+    CallbackReferenceCandidatePolicy((context) {
+      final tags = ref.read(projectedTagsProvider).value;
+      if (tags == null) {
+        return const ReferenceCandidateDecision.unavailable(
+          ReferencePolicyIssue(
+            code: "tag.parents.loading",
+            message: "Tag ancestry is unavailable",
+          ),
+        );
+      }
+      final ownerIds = _tagOwnerIds(context.owner).toList(growable: false);
+      if (ownerIds.isEmpty) {
+        return const ReferenceCandidateDecision.unavailable(
+          ReferencePolicyIssue(
+            code: "tag.parents.ownerUnavailable",
+            message: "The edited Tag is unavailable",
+          ),
+        );
+      }
+      final byId = {for (final tag in tags) tag.tagId: tag};
+      final candidate = byId[context.candidate.id];
+      if (candidate == null) {
+        return const ReferenceCandidateDecision.rejected(
+          ReferencePolicyIssue(
+            code: "tag.parents.candidateMissing",
+            message: "The candidate Tag no longer exists",
+          ),
+        );
+      }
+      for (final ownerId in ownerIds) {
+        final owner = byId[ownerId];
+        if (owner == null) {
+          return const ReferenceCandidateDecision.unavailable(
+            ReferencePolicyIssue(
+              code: "tag.parents.ownerMissing",
+              message: "The edited Tag no longer exists",
+            ),
+          );
+        }
+        final reason = candidate.unavailableParentReason(
+          tags,
+          editingTagId: ownerId,
+          existingParents: owner.parentIds.toSet(),
+        );
+        if (reason != null) {
+          return ReferenceCandidateDecision.rejected(
+            ReferencePolicyIssue(code: "tag.parents.cycle", message: reason),
+          );
+        }
+      }
+      return const ReferenceCandidateDecision.allowed();
+    });
+
+Iterable<skir.RecordId> _tagOwnerIds(EditOwner? owner) sync* {
+  if (owner case MultiEditOwner(:final owners)) {
+    for (final member in owners) {
+      yield* _tagOwnerIds(member);
+    }
+    return;
+  }
+  if (owner case TransactionalEditorSource(resource: final resource?)) {
+    final identity = resource.key.identity;
+    if (identity is skir.RecordId && identity.table == "tag") yield identity;
   }
 }
 

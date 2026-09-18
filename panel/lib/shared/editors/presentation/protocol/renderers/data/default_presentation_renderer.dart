@@ -30,6 +30,7 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
       final generated = resolvedBinding.type.generateDefaultPresentation(
         binding: binding,
         nodeId: "default.${binding.bindingId.value}",
+        registry: scope.registry,
       );
       return PresentationNodeRenderer(node: generated, scope: scope);
     }

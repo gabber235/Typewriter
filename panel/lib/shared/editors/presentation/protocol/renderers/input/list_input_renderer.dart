@@ -18,6 +18,141 @@ extension ListInputElementRendering on ListInputElement {
   }
 }
 
+final class _DraftListInputRenderer extends StatelessWidget {
+  const _DraftListInputRenderer({
+    required this.element,
+    required this.binding,
+    required this.scope,
+    required this.structure,
+    required this.editable,
+  });
+
+  final ListInputElement element;
+  final InspectedBinding binding;
+  final PresentationRenderScope scope;
+  final EditorListStructure structure;
+  final bool editable;
+
+  @override
+  Widget build(BuildContext context) {
+    final type = binding.type as ListType;
+    if (structure.items.isEmpty) {
+      return const _CollectionEmptyState(message: "No items found");
+    }
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      buildDefaultDragHandles: false,
+      itemCount: structure.items.length,
+      onReorderItem: element.allowReorder && editable
+          ? (source, destination) => scope.invoke(
+              LocalEditorAction(
+                ReorderListItemAction(
+                  source: scope
+                      .canonical(element.control.binding)
+                      .at(DataPath.root.index(source)),
+                  newIndex: destination.asSigned64Literal,
+                ),
+              ),
+            )
+          : (source, destination) {},
+      itemBuilder: (context, index) {
+        final identity = structure.items[index];
+        final reference = scope
+            .canonical(element.control.binding)
+            .at(DataPath.root.index(index));
+        final items = [
+          if (element.allowRemove)
+            HeaderButtonItem(
+              id: listItemRemoveHeaderItemId,
+              icon: HeroiconsSolid.trash.asIconLiteral,
+              label: "Remove item".asStringLiteral,
+              priority: (-0x8000000000000000).asSigned64Literal,
+              tone: HeaderActionTone.destructive,
+              action: LocalEditorAction(
+                RemoveListItemAction(
+                  target: scope.canonical(element.control.binding),
+                  index: index.asSigned64Literal,
+                ),
+              ),
+            ),
+          HeaderButtonItem(
+            id: listItemDuplicateHeaderItemId,
+            icon: Ion.duplicate.asIconLiteral,
+            label: "Duplicate item".asStringLiteral,
+            priority: 70.asSigned64Literal,
+            action: LocalEditorAction(
+              DuplicateListItemAction(source: reference),
+            ),
+          ),
+          if (element.allowReorder)
+            HeaderReorderHandleItem(
+              id: listItemReorderHeaderItemId,
+              label: "Reorder item".asStringLiteral,
+              source: reference,
+            ),
+        ];
+        return Padding(
+          key: ValueKey(identity),
+          padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
+          child: PresentationHeaderChrome(
+            nodeId: "${element.control.binding}.draft.${identity.value}",
+            expansionKey: HeaderExpansionKey.instance(identity.value),
+            header: PresentationHeader(
+              binding: reference,
+              title: "Item ${index + 1}".asStringLiteral.asHeaderTitle,
+              initiallyExpanded: true,
+              items: items,
+            ),
+            scope: scope,
+            child: _item(type, index),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _item(ListType type, int index) {
+    final reference = element.control.binding.at(DataPath.root.index(index));
+    final inspected = scope.inspect(reference).valueOrNull;
+    if (inspected == null) return const SizedBox.shrink();
+    if (element.itemPresentation case final presentation?) {
+      final source = scope.expressions.bindings
+          .project(reference, registry: scope.registry)
+          .valueOrNull;
+      if (source == null) return const SizedBox.shrink();
+      final childScope = scope
+          .withAlias(element.itemBindingId, reference, source)
+          .withVirtualBinding(
+            VirtualBindingHost(
+              id: element.indexBindingId,
+              snapshot: BindingSnapshot(
+                type: const IntegerType(width: IntegerWidth.signed64),
+                value: IntegerValue(BigInt.from(index)),
+                revision: binding.revision,
+                writable: false,
+              ),
+              onChanged: (value) {},
+            ),
+          );
+      return PresentationNodeRenderer(
+        node: presentation.localizeFailures(
+          childScope.expressions,
+          registry: childScope.registry,
+          budget: childScope.budget,
+        ),
+        scope: childScope,
+      );
+    }
+    return inspected.renderDefaultPresentation(
+      scope,
+      nodeId: "list.${element.control.binding.bindingId.value}.$index",
+      root: true,
+      label: "",
+    );
+  }
+}
+
 class _ListInputRenderer extends StatefulWidget {
   const _ListInputRenderer({
     required this.element,

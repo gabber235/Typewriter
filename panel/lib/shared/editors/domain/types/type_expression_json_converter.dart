@@ -78,6 +78,13 @@ class TypeExpressionJsonConverter
           arguments: json["arguments"].asObjectMaps.map(fromJson).toList(),
         ),
       ),
+      "reference" => ReferenceType(
+        target: ResolvedTypeRef(
+          id: json["id"].asObjectMap.decodeTypeId(),
+          revision: json["revision"]! as int,
+          arguments: json["arguments"].asObjectMaps.map(fromJson).toList(),
+        ),
+      ),
       "parameter" => ParameterType(json["name"]! as String),
       _ => throw FormatException("Unknown type expression kind '$kind'"),
     };
@@ -167,6 +174,12 @@ class TypeExpressionJsonConverter
       "id": type.reference.id.encodeTypeId(),
       "revision": type.reference.revision,
       "arguments": type.reference.arguments.map(toJson).toList(),
+    },
+    ReferenceType() => {
+      "kind": "reference",
+      "id": type.target.id.encodeTypeId(),
+      "revision": type.target.revision,
+      "arguments": type.target.arguments.map(toJson).toList(),
     },
     ParameterType() => {"kind": "parameter", "name": type.name},
   };

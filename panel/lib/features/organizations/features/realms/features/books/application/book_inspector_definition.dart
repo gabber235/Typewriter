@@ -26,9 +26,7 @@ final _bookInspectorType = TypeDefinition(
       "tags": TypeField(
         name: "tags",
         type: ListType(
-          element: NamedType(
-            standardTypeRefs.refTo(NamedType(tagInspectorTypeRef)),
-          ),
+          element: ReferenceType(target: referenceResourceTypes.tag),
           unique: true,
         ),
       ),
@@ -36,7 +34,10 @@ final _bookInspectorType = TypeDefinition(
   ),
 );
 
-final _bookInspectorCatalog = TypeCatalog([_bookInspectorType]);
+final _bookInspectorCatalog = TypeCatalog([
+  ...referenceResourceTypes.definitions,
+  _bookInspectorType,
+]);
 
 final _bookInspectorPresentation = PresentationDefinition.single(
   id: _bookInspectorPresentationId,
@@ -86,10 +87,15 @@ final _bookInspectorPresentation = PresentationDefinition.single(
             ),
           ),
         ),
-        tagReferenceSearch(
+        PresentationNode(
           id: "book.tags",
-          label: "Direct Tags",
-          binding: _bookField("tags"),
+          element: ReferenceInputElement(
+            control: BoundControl(
+              binding: _bookField("tags"),
+              label: "Direct Tags".asStringLiteral,
+            ),
+            allowReorder: false,
+          ),
         ),
         effectiveTagGraph(
           id: "book.effectiveTags",

@@ -63,8 +63,9 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   }
 
   void _onCompiledMessage(NatsMessage message) {
-    final event = skir.WatchCompiledContentResponse.serializer
-        .fromBytes(message.payload);
+    final event = skir.WatchCompiledContentResponse.serializer.fromBytes(
+      message.payload,
+    );
     switch (event) {
       case skir.WatchCompiledContentResponse_activatedWrapper() ||
           skir.WatchCompiledContentResponse_blockedWrapper():

@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -179,14 +178,11 @@ class InputFieldContainer extends HookConsumerWidget {
         child: ManagedActionSet(
           shortcuts: [
             if (surroundingNode.hasPrimaryFocus) ...[
-              ActionShortcut(
+              ActionShortcut.intent(
                 id: "focus_input",
                 label: "Focus Input",
                 description: "Focus the input field",
-                activators: [
-                  const SingleActivator(LogicalKeyboardKey.enter),
-                  const SingleActivator(LogicalKeyboardKey.space),
-                ],
+                intent: ActivateIntent,
                 priority: 100,
               ),
               ...?surroundingActions,

@@ -118,12 +118,11 @@ void main() {
         isTrue,
       );
       expect(
-        NamedType(
-          contravariant.withArguments([broad]),
-        ).isStructurallyAssignableTo(
-          NamedType(contravariant.withArguments([narrow])),
-          registry,
-        ),
+        NamedType(contravariant.withArguments([broad]))
+            .isStructurallyAssignableTo(
+              NamedType(contravariant.withArguments([narrow])),
+              registry,
+            ),
         isTrue,
       );
     });

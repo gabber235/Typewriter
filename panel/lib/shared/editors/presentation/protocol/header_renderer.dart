@@ -3,6 +3,7 @@ import "dart:math" as math;
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
+import "package:flutter_animate/flutter_animate.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/ic.dart";
@@ -29,6 +30,8 @@ class PresentationHeaderChrome extends StatefulWidget {
     required this.scope,
     required this.child,
     this.contained = false,
+    this.showDirectDiagnostics = true,
+    this.subtreeDiagnostics,
     super.key,
   });
 
@@ -38,6 +41,11 @@ class PresentationHeaderChrome extends StatefulWidget {
   final PresentationRenderScope scope;
   final Widget child;
   final bool contained;
+  final bool showDirectDiagnostics;
+
+  /// Overrides binding based diagnostics when this header represents a
+  /// structural draft node with its own stable identity.
+  final List<TypeDiagnostic>? subtreeDiagnostics;
 
   @override
   State<PresentationHeaderChrome> createState() =>
@@ -109,38 +117,74 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
   @override
   Widget build(BuildContext context) {
     final resolved = widget.header.resolve(widget.scope);
+    final reference = widget.header.binding == null
+        ? null
+        : widget.scope.canonical(widget.header.binding!);
+
+    final diagnosticScope = PresentationFieldDiagnostics.maybeOf(context);
+
+    final directDiagnostics =
+        widget.subtreeDiagnostics != null ||
+            !widget.showDirectDiagnostics ||
+            reference == null
+        ? const <TypeDiagnostic>[]
+        : diagnosticScope?.exact(reference) ?? const <TypeDiagnostic>[];
+
+    final descendantDiagnostics =
+        widget.subtreeDiagnostics ??
+        (reference == null
+            ? const <TypeDiagnostic>[]
+            : diagnosticScope?.atOrBelow(reference) ??
+                  const <TypeDiagnostic>[]);
+
+    final hasErrors = descendantDiagnostics.any(
+      (diagnostic) => diagnostic.severity == TypeDiagnosticSeverity.error,
+    );
+
     final items = resolved.items.where((item) => item.visible).toList();
     final shortcuts = [
       for (final item in items) ...item.shortcuts(context, widget.scope),
     ];
+
     final headerRow = _HeaderRow(
       title: resolved.title,
       items: items,
       scope: widget.scope,
       collapsible: widget.header.initiallyExpanded != null,
       expanded: _expansibleController.isExpanded,
+      hasErrors: hasErrors,
     );
+
+    final spacing = context.spacing;
 
     final collapsible = widget.header.initiallyExpanded != null;
     final headerContent = ManagedActionSet(
       shortcuts: shortcuts,
       child: Material(
+        animationDuration: 120.ms,
         color: Colors.transparent,
-        borderRadius: context.shapes.smallBorderRadius,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.vertical(
+            top: context.shapes.mediumRadius,
+            bottom: _expansibleController.isExpanded
+                ? Radius.zero
+                : context.shapes.mediumRadius,
+          ),
+        ),
         child: InkWell(
           focusNode: _headerFocusNode,
           onTap: collapsible ? _toggle : null,
-          borderRadius: context.shapes.smallBorderRadius,
+          borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
             padding: widget.header.headerPadding.resolve(
               fallback: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space1,
+                horizontal: spacing.space2,
+                vertical: spacing.space1,
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: context.spacing.space1,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: spacing.space1,
               children: [
                 headerRow,
                 if (resolved.description.isNotEmpty) ...[
@@ -157,12 +201,35 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
                     ),
                   ),
                 ],
+                ElasticMessageSwitcher(
+                  child: directDiagnostics.isNotEmpty
+                      ? Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: spacing.space2,
+                            vertical: spacing.space1,
+                          ),
+                          child: Semantics(
+                            liveRegion: true,
+                            child: Text(
+                              directDiagnostics
+                                  .map((diagnostic) => diagnostic.message)
+                                  .join("\n"),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+
     final bodyContent = Padding(
       padding: widget.header.contentPadding.resolve(
         fallback: EdgeInsets.symmetric(
@@ -177,27 +244,50 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
         child: widget.child,
       ),
     );
-    final content = collapsible
-        ? Expansible(
-            controller: _expansibleController,
-            animationStyle: const AnimationStyle(
-              duration: Duration(milliseconds: 240),
-              curve: Curves.easeOut,
-            ),
-            maintainState: true,
-            headerBuilder: (context, animation) => headerContent,
-            bodyBuilder: (context, animation) => bodyContent,
-            expansibleBuilder: (context, header, body, animation) => Column(
+
+    final content = AnimatedContainer(
+      duration: 120.ms,
+      decoration: BoxDecoration(
+        color: hasErrors
+            ? Theme.of(context).colorScheme.errorContainer
+                  .withValues(alpha: 0.18)
+            : Colors.transparent,
+        borderRadius: context.shapes.mediumBorderRadius,
+        border: hasErrors && !_expansibleController.isExpanded
+            ? Border.all(
+                color: Theme.of(context).colorScheme.error
+                    .withValues(alpha: 0.8),
+              )
+            : null,
+      ),
+      padding: EdgeInsets.only(
+        bottom: hasErrors && _expansibleController.isExpanded
+            ? context.spacing.space1
+            : 0,
+      ),
+      child: collapsible
+          ? Expansible(
+              controller: _expansibleController,
+              animationStyle: const AnimationStyle(
+                duration: Duration(milliseconds: 240),
+                curve: Curves.easeOut,
+              ),
+              maintainState: true,
+              headerBuilder: (context, animation) => headerContent,
+              bodyBuilder: (context, animation) => bodyContent,
+              expansibleBuilder: (context, header, body, animation) => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [header, body],
+              ),
+            )
+          : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [header, body],
+              children: [headerContent, bodyContent],
             ),
-          )
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [headerContent, bodyContent],
-          );
+    );
+
     return widget.contained
         ? content
         : DepthBox(enabled: collapsible, child: content);
@@ -230,6 +320,7 @@ class _HeaderRow extends StatefulWidget {
     required this.scope,
     required this.collapsible,
     required this.expanded,
+    required this.hasErrors,
   });
 
   final PresentationHeaderTitle? title;
@@ -237,6 +328,7 @@ class _HeaderRow extends StatefulWidget {
   final PresentationRenderScope scope;
   final bool collapsible;
   final bool expanded;
+  final bool hasErrors;
 
   @override
   State<_HeaderRow> createState() => _HeaderRowState();
@@ -255,6 +347,18 @@ class _HeaderRowState extends State<_HeaderRow> {
     final end = widget.items.at(HeaderActionPlacement.end);
     final beforeTitleWidgets = <Widget>[
       if (widget.collapsible) _collapseAffordance(widget.expanded),
+      ElasticSwitcher(
+        child: widget.hasErrors
+            ? Padding(
+                padding: EdgeInsets.only(right: context.spacing.space3),
+                child: Icon(
+                  Icons.error_outline,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              )
+            : null,
+      ),
       for (final item in reorderHandles)
         item.inlineWidget(context, widget.scope),
       for (final item in beforeTitle) item.inlineWidget(context, widget.scope),

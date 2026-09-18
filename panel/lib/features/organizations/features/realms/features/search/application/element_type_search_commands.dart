@@ -79,9 +79,10 @@ SearchCommand createElementCommand({
               )
               .value;
 
-    skir.RecordId targetPageId;
+    skir.RecordId? targetPageId;
     skir.RecordId targetBookId;
     PageEntryCreationPolicy targetPolicy;
+    PageCreationInput? pendingPage;
     if (preferredPage != null &&
         preferredPolicy?.accepts(definition.rootType) == true) {
       targetPageId = preferredPage.pageId;
@@ -108,17 +109,30 @@ SearchCommand createElementCommand({
           targetPageId = pageId;
           targetBookId = bookId;
         case NewElementPageSelection(:final bookId, :final input):
-          final page = await ref
-              .readAuthoringSession()
-              .notifier
-              .createPageFromInput(bookId, input);
-          targetPageId = page.pageId;
           targetBookId = bookId;
+          pendingPage = input;
       }
     }
 
+    final initialValue = await _prepareElementValue(
+      ref: ref,
+      execution: execution,
+      definition: definition,
+      origin: targetPageId ?? targetBookId,
+    );
+    if (initialValue == null || !ref.mounted) {
+      return const SearchCommandResult.cancelled();
+    }
+    if (pendingPage case final input?) {
+      final page = await ref
+          .readAuthoringSession()
+          .notifier
+          .createPageFromInput(targetBookId, input);
+      targetPageId = page.pageId;
+    }
+
     final livePolicy = ref
-        .read(pageEntryCreationPolicyForPageProvider(targetPageId))
+        .read(pageEntryCreationPolicyForPageProvider(targetPageId!))
         .value;
     final policy = livePolicy ?? targetPolicy;
     if (!policy.accepts(definition.rootType)) {
@@ -131,6 +145,7 @@ SearchCommand createElementCommand({
       pageId: targetPageId,
       definition: definition,
       policy: policy,
+      initialValue: initialValue,
       preferredGraphAnchor: null,
     );
     return SearchCommandResult.completed(
@@ -215,7 +230,17 @@ SearchCommand createElementOnPageCommand({
       );
     }
 
+    final initialValue = await _prepareElementValue(
+      ref: ref,
+      execution: execution,
+      definition: definition,
+      origin: pageId,
+    );
+    if (initialValue == null || !ref.mounted) {
+      return const SearchCommandResult.cancelled();
+    }
     final elementId = await _createElementOnPage(
+      initialValue: initialValue,
       ref: ref,
       pageId: pageId,
       definition: definition,
@@ -238,6 +263,7 @@ Future<String> _createElementOnPage({
   required skir.RecordId pageId,
   required ElementDefinition definition,
   required PageEntryCreationPolicy policy,
+  required DataValue initialValue,
   Offset? preferredGraphAnchor,
 }) async {
   final elementIds = await ref.withReadyPageElements(
@@ -250,7 +276,54 @@ Future<String> _createElementOnPage({
           EntryPlacementKind.timelineEntry,
       },
       preferredGraphAnchor: preferredGraphAnchor,
+      initialValues: [initialValue],
     ),
   );
   return elementIds.single;
+}
+
+Future<DataValue?> _prepareElementValue({
+  required Ref ref,
+  required SearchCommandExecutionContext execution,
+  required ElementDefinition definition,
+  required skir.RecordId origin,
+}) async {
+  final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
+  if (snapshot == null) {
+    throw ApiException.badRequest("The editor catalog is unavailable");
+  }
+  final registry = TypeRegistry(
+    bootstrapTypeCatalog(snapshot.catalog.definitions),
+  );
+  final draft = CreationDraft(
+    rootType: NamedType(definition.rootType),
+    registry: registry,
+    fixedValues: {
+      const MaterializationLocation(["field:id"]): const StringValue("pending"),
+      const MaterializationLocation(["field:name"]): StringValue(
+        definition.name,
+      ),
+    },
+  );
+  try {
+    final initial = draft.finalize().valueOrNull;
+    final value =
+        initial ??
+        await execution.prompts.show(
+          (context) => promptElementCreationEditor(
+            context: context,
+            title: "Create ${definition.name}",
+            draft: draft,
+            presentations: snapshot.presentations.values.toList(),
+            origins: [origin],
+          ),
+        );
+    if (value == null || !ref.mounted) return null;
+    if (value is! RecordValue) {
+      throw ApiException.badRequest("Element values must be records");
+    }
+    return value;
+  } finally {
+    draft.dispose();
+  }
 }

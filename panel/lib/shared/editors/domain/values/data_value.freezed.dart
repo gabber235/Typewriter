@@ -796,6 +796,74 @@ $DataValueCopyWith<$Res> get value {
 }
 
 /// @nodoc
+
+
+class ReferenceValue extends DataValue {
+  const ReferenceValue(this.id): super._();
+  
+
+ final  RecordId id;
+
+/// Create a copy of DataValue
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReferenceValueCopyWith<ReferenceValue> get copyWith => _$ReferenceValueCopyWithImpl<ReferenceValue>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceValue&&(identical(other.id, id) || other.id == id));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id);
+}
+
+@override
+String toString() {
+    return 'DataValue.reference(id: $id)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReferenceValueCopyWith<$Res> implements $DataValueCopyWith<$Res> {
+  factory $ReferenceValueCopyWith(ReferenceValue value, $Res Function(ReferenceValue) _then) = _$ReferenceValueCopyWithImpl;
+@useResult
+$Res call({
+ RecordId id
+});
+
+
+
+
+}
+/// @nodoc
+class _$ReferenceValueCopyWithImpl<$Res>
+    implements $ReferenceValueCopyWith<$Res> {
+  _$ReferenceValueCopyWithImpl(this._self, this._then);
+
+  final ReferenceValue _self;
+  final $Res Function(ReferenceValue) _then;
+
+/// Create a copy of DataValue
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
+  return _then(ReferenceValue(
+null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as RecordId,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$BytesValue {
 
 

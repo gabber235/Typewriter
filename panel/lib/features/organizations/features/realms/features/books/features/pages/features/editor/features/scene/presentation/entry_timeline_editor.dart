@@ -164,7 +164,7 @@ class _TimelineViewData {
       for (final entry in entries)
         TimelineTrack(
           id: TimelineIdentifier(entry.id),
-          header: (context) => EntryNode(entry: entry.entry),
+          header: (context) => EntryNode(pageId: pageId, entry: entry.entry),
           elements: entry.entry.links.$2
               .map(
                 (link) => _buildTimelineElement(

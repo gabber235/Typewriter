@@ -12,6 +12,7 @@ extension TextInputElementRendering on TextInputElement {
       shapeMismatch: (binding) =>
           binding.type is StringType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is StringValue)
           ? null
           : "Text control requires a string binding",

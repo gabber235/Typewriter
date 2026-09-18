@@ -56,7 +56,7 @@ extension TypeExpressionPatterns on TypeExpression {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AnyType value)?  any,TResult Function( UnitType value)?  unit,TResult Function( BooleanType value)?  boolean,TResult Function( StringType value)?  string,TResult Function( BytesType value)?  bytes,TResult Function( IntegerType value)?  integer,TResult Function( FloatType value)?  float,TResult Function( DecimalType value)?  decimal,TResult Function( TimestampType value)?  timestamp,TResult Function( DurationType value)?  duration,TResult Function( EnumType value)?  enumeration,TResult Function( ListType value)?  list,TResult Function( MapType value)?  map,TResult Function( RecordType value)?  record,TResult Function( NamedType value)?  named,TResult Function( ParameterType value)?  parameter,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AnyType value)?  any,TResult Function( UnitType value)?  unit,TResult Function( BooleanType value)?  boolean,TResult Function( StringType value)?  string,TResult Function( BytesType value)?  bytes,TResult Function( IntegerType value)?  integer,TResult Function( FloatType value)?  float,TResult Function( DecimalType value)?  decimal,TResult Function( TimestampType value)?  timestamp,TResult Function( DurationType value)?  duration,TResult Function( EnumType value)?  enumeration,TResult Function( ListType value)?  list,TResult Function( MapType value)?  map,TResult Function( RecordType value)?  record,TResult Function( NamedType value)?  named,TResult Function( ReferenceType value)?  reference,TResult Function( ParameterType value)?  parameter,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AnyType() when any != null:
@@ -74,7 +74,8 @@ return enumeration(_that);case ListType() when list != null:
 return list(_that);case MapType() when map != null:
 return map(_that);case RecordType() when record != null:
 return record(_that);case NamedType() when named != null:
-return named(_that);case ParameterType() when parameter != null:
+return named(_that);case ReferenceType() when reference != null:
+return reference(_that);case ParameterType() when parameter != null:
 return parameter(_that);case _:
   return orElse();
 
@@ -93,7 +94,7 @@ return parameter(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AnyType value)  any,required TResult Function( UnitType value)  unit,required TResult Function( BooleanType value)  boolean,required TResult Function( StringType value)  string,required TResult Function( BytesType value)  bytes,required TResult Function( IntegerType value)  integer,required TResult Function( FloatType value)  float,required TResult Function( DecimalType value)  decimal,required TResult Function( TimestampType value)  timestamp,required TResult Function( DurationType value)  duration,required TResult Function( EnumType value)  enumeration,required TResult Function( ListType value)  list,required TResult Function( MapType value)  map,required TResult Function( RecordType value)  record,required TResult Function( NamedType value)  named,required TResult Function( ParameterType value)  parameter,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AnyType value)  any,required TResult Function( UnitType value)  unit,required TResult Function( BooleanType value)  boolean,required TResult Function( StringType value)  string,required TResult Function( BytesType value)  bytes,required TResult Function( IntegerType value)  integer,required TResult Function( FloatType value)  float,required TResult Function( DecimalType value)  decimal,required TResult Function( TimestampType value)  timestamp,required TResult Function( DurationType value)  duration,required TResult Function( EnumType value)  enumeration,required TResult Function( ListType value)  list,required TResult Function( MapType value)  map,required TResult Function( RecordType value)  record,required TResult Function( NamedType value)  named,required TResult Function( ReferenceType value)  reference,required TResult Function( ParameterType value)  parameter,}){
 final _that = this;
 switch (_that) {
 case AnyType():
@@ -111,7 +112,8 @@ return enumeration(_that);case ListType():
 return list(_that);case MapType():
 return map(_that);case RecordType():
 return record(_that);case NamedType():
-return named(_that);case ParameterType():
+return named(_that);case ReferenceType():
+return reference(_that);case ParameterType():
 return parameter(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -126,7 +128,7 @@ return parameter(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AnyType value)?  any,TResult? Function( UnitType value)?  unit,TResult? Function( BooleanType value)?  boolean,TResult? Function( StringType value)?  string,TResult? Function( BytesType value)?  bytes,TResult? Function( IntegerType value)?  integer,TResult? Function( FloatType value)?  float,TResult? Function( DecimalType value)?  decimal,TResult? Function( TimestampType value)?  timestamp,TResult? Function( DurationType value)?  duration,TResult? Function( EnumType value)?  enumeration,TResult? Function( ListType value)?  list,TResult? Function( MapType value)?  map,TResult? Function( RecordType value)?  record,TResult? Function( NamedType value)?  named,TResult? Function( ParameterType value)?  parameter,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AnyType value)?  any,TResult? Function( UnitType value)?  unit,TResult? Function( BooleanType value)?  boolean,TResult? Function( StringType value)?  string,TResult? Function( BytesType value)?  bytes,TResult? Function( IntegerType value)?  integer,TResult? Function( FloatType value)?  float,TResult? Function( DecimalType value)?  decimal,TResult? Function( TimestampType value)?  timestamp,TResult? Function( DurationType value)?  duration,TResult? Function( EnumType value)?  enumeration,TResult? Function( ListType value)?  list,TResult? Function( MapType value)?  map,TResult? Function( RecordType value)?  record,TResult? Function( NamedType value)?  named,TResult? Function( ReferenceType value)?  reference,TResult? Function( ParameterType value)?  parameter,}){
 final _that = this;
 switch (_that) {
 case AnyType() when any != null:
@@ -144,7 +146,8 @@ return enumeration(_that);case ListType() when list != null:
 return list(_that);case MapType() when map != null:
 return map(_that);case RecordType() when record != null:
 return record(_that);case NamedType() when named != null:
-return named(_that);case ParameterType() when parameter != null:
+return named(_that);case ReferenceType() when reference != null:
+return reference(_that);case ParameterType() when parameter != null:
 return parameter(_that);case _:
   return null;
 
@@ -162,7 +165,7 @@ return parameter(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  any,TResult Function()?  unit,TResult Function()?  boolean,TResult Function( int? minimumLength,  int? maximumLength,  List<String> patterns)?  string,TResult Function( int? minimumLength,  int? maximumLength)?  bytes,TResult Function( IntegerWidth width,  BigInt? minimum,  BigInt? maximum)?  integer,TResult Function( FloatWidth width,  double? minimum,  double? maximum)?  float,TResult Function( String? minimum,  String? maximum,  int? scale)?  decimal,TResult Function( DateTime? minimum,  DateTime? maximum)?  timestamp,TResult Function( Duration? minimum,  Duration? maximum)?  duration,TResult Function( TypeExpression valueType,  List<DataValue> values)?  enumeration,TResult Function( TypeExpression element,  int? minimumLength,  int? maximumLength,  bool unique)?  list,TResult Function( TypeExpression key,  TypeExpression value,  int? minimumLength,  int? maximumLength)?  map,TResult Function( Map<String, TypeField> fields,  bool closed)?  record,TResult Function( ResolvedTypeRef reference)?  named,TResult Function( String name)?  parameter,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  any,TResult Function()?  unit,TResult Function()?  boolean,TResult Function( int? minimumLength,  int? maximumLength,  List<String> patterns)?  string,TResult Function( int? minimumLength,  int? maximumLength)?  bytes,TResult Function( IntegerWidth width,  BigInt? minimum,  BigInt? maximum)?  integer,TResult Function( FloatWidth width,  double? minimum,  double? maximum)?  float,TResult Function( String? minimum,  String? maximum,  int? scale)?  decimal,TResult Function( DateTime? minimum,  DateTime? maximum)?  timestamp,TResult Function( Duration? minimum,  Duration? maximum)?  duration,TResult Function( TypeExpression valueType,  List<DataValue> values)?  enumeration,TResult Function( TypeExpression element,  int? minimumLength,  int? maximumLength,  bool unique)?  list,TResult Function( TypeExpression key,  TypeExpression value,  int? minimumLength,  int? maximumLength)?  map,TResult Function( Map<String, TypeField> fields,  bool closed)?  record,TResult Function( ResolvedTypeRef reference)?  named,TResult Function( ResolvedTypeRef target)?  reference,TResult Function( String name)?  parameter,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AnyType() when any != null:
 return any();case UnitType() when unit != null:
@@ -179,7 +182,8 @@ return enumeration(_that.valueType,_that.values);case ListType() when list != nu
 return list(_that.element,_that.minimumLength,_that.maximumLength,_that.unique);case MapType() when map != null:
 return map(_that.key,_that.value,_that.minimumLength,_that.maximumLength);case RecordType() when record != null:
 return record(_that.fields,_that.closed);case NamedType() when named != null:
-return named(_that.reference);case ParameterType() when parameter != null:
+return named(_that.reference);case ReferenceType() when reference != null:
+return reference(_that.target);case ParameterType() when parameter != null:
 return parameter(_that.name);case _:
   return orElse();
 
@@ -198,7 +202,7 @@ return parameter(_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  any,required TResult Function()  unit,required TResult Function()  boolean,required TResult Function( int? minimumLength,  int? maximumLength,  List<String> patterns)  string,required TResult Function( int? minimumLength,  int? maximumLength)  bytes,required TResult Function( IntegerWidth width,  BigInt? minimum,  BigInt? maximum)  integer,required TResult Function( FloatWidth width,  double? minimum,  double? maximum)  float,required TResult Function( String? minimum,  String? maximum,  int? scale)  decimal,required TResult Function( DateTime? minimum,  DateTime? maximum)  timestamp,required TResult Function( Duration? minimum,  Duration? maximum)  duration,required TResult Function( TypeExpression valueType,  List<DataValue> values)  enumeration,required TResult Function( TypeExpression element,  int? minimumLength,  int? maximumLength,  bool unique)  list,required TResult Function( TypeExpression key,  TypeExpression value,  int? minimumLength,  int? maximumLength)  map,required TResult Function( Map<String, TypeField> fields,  bool closed)  record,required TResult Function( ResolvedTypeRef reference)  named,required TResult Function( String name)  parameter,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  any,required TResult Function()  unit,required TResult Function()  boolean,required TResult Function( int? minimumLength,  int? maximumLength,  List<String> patterns)  string,required TResult Function( int? minimumLength,  int? maximumLength)  bytes,required TResult Function( IntegerWidth width,  BigInt? minimum,  BigInt? maximum)  integer,required TResult Function( FloatWidth width,  double? minimum,  double? maximum)  float,required TResult Function( String? minimum,  String? maximum,  int? scale)  decimal,required TResult Function( DateTime? minimum,  DateTime? maximum)  timestamp,required TResult Function( Duration? minimum,  Duration? maximum)  duration,required TResult Function( TypeExpression valueType,  List<DataValue> values)  enumeration,required TResult Function( TypeExpression element,  int? minimumLength,  int? maximumLength,  bool unique)  list,required TResult Function( TypeExpression key,  TypeExpression value,  int? minimumLength,  int? maximumLength)  map,required TResult Function( Map<String, TypeField> fields,  bool closed)  record,required TResult Function( ResolvedTypeRef reference)  named,required TResult Function( ResolvedTypeRef target)  reference,required TResult Function( String name)  parameter,}) {final _that = this;
 switch (_that) {
 case AnyType():
 return any();case UnitType():
@@ -215,7 +219,8 @@ return enumeration(_that.valueType,_that.values);case ListType():
 return list(_that.element,_that.minimumLength,_that.maximumLength,_that.unique);case MapType():
 return map(_that.key,_that.value,_that.minimumLength,_that.maximumLength);case RecordType():
 return record(_that.fields,_that.closed);case NamedType():
-return named(_that.reference);case ParameterType():
+return named(_that.reference);case ReferenceType():
+return reference(_that.target);case ParameterType():
 return parameter(_that.name);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -230,7 +235,7 @@ return parameter(_that.name);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  any,TResult? Function()?  unit,TResult? Function()?  boolean,TResult? Function( int? minimumLength,  int? maximumLength,  List<String> patterns)?  string,TResult? Function( int? minimumLength,  int? maximumLength)?  bytes,TResult? Function( IntegerWidth width,  BigInt? minimum,  BigInt? maximum)?  integer,TResult? Function( FloatWidth width,  double? minimum,  double? maximum)?  float,TResult? Function( String? minimum,  String? maximum,  int? scale)?  decimal,TResult? Function( DateTime? minimum,  DateTime? maximum)?  timestamp,TResult? Function( Duration? minimum,  Duration? maximum)?  duration,TResult? Function( TypeExpression valueType,  List<DataValue> values)?  enumeration,TResult? Function( TypeExpression element,  int? minimumLength,  int? maximumLength,  bool unique)?  list,TResult? Function( TypeExpression key,  TypeExpression value,  int? minimumLength,  int? maximumLength)?  map,TResult? Function( Map<String, TypeField> fields,  bool closed)?  record,TResult? Function( ResolvedTypeRef reference)?  named,TResult? Function( String name)?  parameter,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  any,TResult? Function()?  unit,TResult? Function()?  boolean,TResult? Function( int? minimumLength,  int? maximumLength,  List<String> patterns)?  string,TResult? Function( int? minimumLength,  int? maximumLength)?  bytes,TResult? Function( IntegerWidth width,  BigInt? minimum,  BigInt? maximum)?  integer,TResult? Function( FloatWidth width,  double? minimum,  double? maximum)?  float,TResult? Function( String? minimum,  String? maximum,  int? scale)?  decimal,TResult? Function( DateTime? minimum,  DateTime? maximum)?  timestamp,TResult? Function( Duration? minimum,  Duration? maximum)?  duration,TResult? Function( TypeExpression valueType,  List<DataValue> values)?  enumeration,TResult? Function( TypeExpression element,  int? minimumLength,  int? maximumLength,  bool unique)?  list,TResult? Function( TypeExpression key,  TypeExpression value,  int? minimumLength,  int? maximumLength)?  map,TResult? Function( Map<String, TypeField> fields,  bool closed)?  record,TResult? Function( ResolvedTypeRef reference)?  named,TResult? Function( ResolvedTypeRef target)?  reference,TResult? Function( String name)?  parameter,}) {final _that = this;
 switch (_that) {
 case AnyType() when any != null:
 return any();case UnitType() when unit != null:
@@ -247,7 +252,8 @@ return enumeration(_that.valueType,_that.values);case ListType() when list != nu
 return list(_that.element,_that.minimumLength,_that.maximumLength,_that.unique);case MapType() when map != null:
 return map(_that.key,_that.value,_that.minimumLength,_that.maximumLength);case RecordType() when record != null:
 return record(_that.fields,_that.closed);case NamedType() when named != null:
-return named(_that.reference);case ParameterType() when parameter != null:
+return named(_that.reference);case ReferenceType() when reference != null:
+return reference(_that.target);case ParameterType() when parameter != null:
 return parameter(_that.name);case _:
   return null;
 
@@ -1265,6 +1271,83 @@ $ResolvedTypeRefCopyWith<$Res> get reference {
   
   return $ResolvedTypeRefCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class ReferenceType extends TypeExpression {
+  const ReferenceType({required this.target}): super._();
+  
+
+ final  ResolvedTypeRef target;
+
+/// Create a copy of TypeExpression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReferenceTypeCopyWith<ReferenceType> get copyWith => _$ReferenceTypeCopyWithImpl<ReferenceType>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceType&&(identical(other.target, target) || other.target == target));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,target);
+}
+
+@override
+String toString() {
+    return 'TypeExpression.reference(target: $target)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReferenceTypeCopyWith<$Res> implements $TypeExpressionCopyWith<$Res> {
+  factory $ReferenceTypeCopyWith(ReferenceType value, $Res Function(ReferenceType) _then) = _$ReferenceTypeCopyWithImpl;
+@useResult
+$Res call({
+ ResolvedTypeRef target
+});
+
+
+$ResolvedTypeRefCopyWith<$Res> get target;
+
+}
+/// @nodoc
+class _$ReferenceTypeCopyWithImpl<$Res>
+    implements $ReferenceTypeCopyWith<$Res> {
+  _$ReferenceTypeCopyWithImpl(this._self, this._then);
+
+  final ReferenceType _self;
+  final $Res Function(ReferenceType) _then;
+
+/// Create a copy of TypeExpression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
+  return _then(ReferenceType(
+target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as ResolvedTypeRef,
+  ));
+}
+
+/// Create a copy of TypeExpression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResolvedTypeRefCopyWith<$Res> get target {
+  
+  return $ResolvedTypeRefCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
   });
 }
 }

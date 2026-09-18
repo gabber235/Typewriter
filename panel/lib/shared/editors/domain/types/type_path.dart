@@ -84,12 +84,14 @@ sealed class TypeQuerySegment with _$TypeQuerySegment {
 abstract class TypeReferenceLocation with _$TypeReferenceLocation {
   const factory TypeReferenceLocation({
     required List<TypeQuerySegment> path,
-    required NamedType type,
+    required ReferenceType type,
+    @Default(false) bool collection,
+    @Default(false) bool optional,
   }) = _TypeReferenceLocation;
 
   const TypeReferenceLocation._();
 
-  TypeExpression get target => type.reference.arguments.single;
+  ResolvedTypeRef get target => type.target;
 }
 
 /// Finds standard reference fields nested in records and collections.
@@ -111,11 +113,20 @@ extension on TypeExpression {
     List<TypeReferenceLocation> locations,
   ) {
     final type = this;
-    if (type case NamedType(:final reference)
-        when reference.id == standardTypeRefs.ref.id &&
-            reference.arguments.length == 1) {
-      if (reference.arguments.single._matchesReferenceRelation(relation)) {
+    if (type case ReferenceType(:final target)) {
+      if (NamedType(target)._matchesReferenceRelation(relation)) {
         locations.add(TypeReferenceLocation(path: path, type: type));
+      }
+      return;
+    }
+    if (type case NamedType(:final reference)) {
+      final argument = reference.arguments.singleOrNull;
+      if (reference.id == const TypeId.option() &&
+          argument is ReferenceType &&
+          NamedType(argument.target)._matchesReferenceRelation(relation)) {
+        locations.add(
+          TypeReferenceLocation(path: path, type: argument, optional: true),
+        );
       }
       return;
     }
@@ -126,6 +137,16 @@ extension on TypeExpression {
             [...path, TypeFieldQuerySegment(field.name)],
             relation,
             locations,
+          );
+        }
+      case ListType(element: final ReferenceType reference):
+        if (NamedType(reference.target)._matchesReferenceRelation(relation)) {
+          locations.add(
+            TypeReferenceLocation(
+              path: path,
+              type: reference,
+              collection: true,
+            ),
           );
         }
       case ListType(:final element):

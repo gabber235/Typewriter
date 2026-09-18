@@ -1,6 +1,5 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Bridges an [EditorSource] to the presentation renderer.
@@ -19,9 +18,8 @@ class EditorSurface extends StatelessWidget {
     this.presentations = const [],
     this.collections = const [],
     this.conversions = const [],
-    this.runtime,
-    this.realmSearchSourceBuilder,
-    this.executePanelInstruction,
+    this.host = const EditorHostCapabilities(),
+    this.referenceOrigins = const [],
     this.headerShortcuts = const {},
     this.historyNamespace = "local",
     this.readOnly = false,
@@ -35,10 +33,8 @@ class EditorSurface extends StatelessWidget {
   final List<PresentationDefinition> presentations;
   final List<PresentationCollectionSource> collections;
   final List<ConversionDefinition> conversions;
-  final EditorRealmActionExecutor? runtime;
-  final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
-  final FutureOr<void> Function(PanelInstruction instruction)?
-  executePanelInstruction;
+  final EditorHostCapabilities host;
+  final List<RecordId> referenceOrigins;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;
@@ -73,10 +69,9 @@ class EditorSurface extends StatelessWidget {
       }
       return ComposedEditor(
         model: model,
-        runtime: runtime,
+        host: host,
         conversions: conversions,
-        realmSearchSourceBuilder: realmSearchSourceBuilder,
-        executePanelInstruction: executePanelInstruction,
+        referenceOrigins: referenceOrigins,
         headerShortcuts: headerShortcuts,
         historyNamespace: historyNamespace,
         readOnly: readOnly || source.readOnly,

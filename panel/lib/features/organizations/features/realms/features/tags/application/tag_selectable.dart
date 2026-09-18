@@ -12,7 +12,8 @@ part "tag_inspector_definition.dart";
 ///
 /// The record ID is also the editor resource identity, so selection, graph
 /// nodes, local drafts, and authoring reservations address the same resource.
-class TagIdentifier extends SelectableIdentifier implements GraphDragData {
+class TagIdentifier extends SelectableIdentifier
+    implements GraphDragData, ReferenceResourceDragData {
   const TagIdentifier(this.tagId);
 
   final skir.RecordId tagId;
@@ -25,6 +26,12 @@ class TagIdentifier extends SelectableIdentifier implements GraphDragData {
 
   @override
   Object get resourceId => tagId;
+
+  @override
+  skir.RecordId get referenceId => tagId;
+
+  @override
+  List<ResolvedTypeRef> get referenceTypes => const [];
 
   @override
   AsyncValue<Selectable> create(Ref ref) {

@@ -25,17 +25,18 @@ class TypedEditor extends ConsumerWidget {
     final source = ref.watch(editorProvider);
     if (source == null) return const SizedBox.shrink();
     final realmRuntime = ref.watch(editorRealmRuntimeProvider);
+    final host = realmRuntime == null
+        ? const EditorHostCapabilities()
+        : realmRuntime.host(
+            executePanelInstruction: (instruction) =>
+                _executePanelInstruction(context, realmRuntime, instruction),
+          );
     return EditorSurface(
       source: source,
-      runtime: realmRuntime?.executeAction,
       path: path,
       registry: registry,
       readOnly: readOnly,
-      realmSearchSourceBuilder: realmRuntime?.searchSourceBuilder,
-      executePanelInstruction: realmRuntime == null
-          ? null
-          : (instruction) =>
-                _executePanelInstruction(context, realmRuntime, instruction),
+      host: host,
     );
   }
 }
@@ -45,7 +46,7 @@ Future<void> _executePanelInstruction(
   EditorRealmRuntime runtime,
   PanelInstruction instruction,
 ) async {
-  final executor = runtime.executePanelInstruction;
+  final executor = runtime.actions.executePanelInstruction;
   if (executor != null) {
     await executor(instruction);
     return;

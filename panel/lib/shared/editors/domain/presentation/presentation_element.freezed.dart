@@ -56,7 +56,7 @@ extension PresentationElementPatterns on PresentationElement {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( PresentationInvocationElement value)?  invocation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ChipElement value)?  chip,TResult Function( ProgressElement value)?  progress,TResult Function( StatusElement value)?  status,TResult Function( DateTimeElement value)?  dateTime,TResult Function( RelativeTimeElement value)?  relativeTime,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( CollectionLookupElement value)?  collectionLookup,TResult Function( CollectionGraphElement value)?  collectionGraph,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( SearchInputElement value)?  searchInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult Function( CommitControlsElement value)?  commitControls,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( SectionElement value)?  section,TResult Function( ContainerElement value)?  container,TResult Function( PresentationAnchorElement value)?  anchor,TResult Function( ConnectionLayerElement value)?  connectionLayer,TResult Function( PaddingElement value)?  padding,TResult Function( PresentationSlotElement value)?  slot,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( PresentationInvocationElement value)?  invocation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ChipElement value)?  chip,TResult Function( ProgressElement value)?  progress,TResult Function( StatusElement value)?  status,TResult Function( DateTimeElement value)?  dateTime,TResult Function( RelativeTimeElement value)?  relativeTime,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( CollectionLookupElement value)?  collectionLookup,TResult Function( CollectionGraphElement value)?  collectionGraph,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( SearchInputElement value)?  searchInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ReferenceInputElement value)?  referenceInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult Function( CommitControlsElement value)?  commitControls,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( SectionElement value)?  section,TResult Function( ContainerElement value)?  container,TResult Function( PresentationAnchorElement value)?  anchor,TResult Function( ConnectionLayerElement value)?  connectionLayer,TResult Function( PaddingElement value)?  padding,TResult Function( PresentationSlotElement value)?  slot,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -90,7 +90,8 @@ return colorInput(_that);case SearchInputElement() when searchInput != null:
 return searchInput(_that);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that);case EnumInputElement() when enumInput != null:
 return enumInput(_that);case NamedInputElement() when namedInput != null:
-return namedInput(_that);case ListInputElement() when listInput != null:
+return namedInput(_that);case ReferenceInputElement() when referenceInput != null:
+return referenceInput(_that);case ListInputElement() when listInput != null:
 return listInput(_that);case MapInputElement() when mapInput != null:
 return mapInput(_that);case RecordInputElement() when recordInput != null:
 return recordInput(_that);case PolymorphicInputElement() when polymorphicInput != null:
@@ -132,7 +133,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( PresentationInvocationElement value)  invocation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ChipElement value)  chip,required TResult Function( ProgressElement value)  progress,required TResult Function( StatusElement value)  status,required TResult Function( DateTimeElement value)  dateTime,required TResult Function( RelativeTimeElement value)  relativeTime,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( CollectionLookupElement value)  collectionLookup,required TResult Function( CollectionGraphElement value)  collectionGraph,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( SearchInputElement value)  searchInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( PolymorphicMatchElement value)  polymorphicMatch,required TResult Function( CommitControlsElement value)  commitControls,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( SectionElement value)  section,required TResult Function( ContainerElement value)  container,required TResult Function( PresentationAnchorElement value)  anchor,required TResult Function( ConnectionLayerElement value)  connectionLayer,required TResult Function( PaddingElement value)  padding,required TResult Function( PresentationSlotElement value)  slot,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( PresentationInvocationElement value)  invocation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ChipElement value)  chip,required TResult Function( ProgressElement value)  progress,required TResult Function( StatusElement value)  status,required TResult Function( DateTimeElement value)  dateTime,required TResult Function( RelativeTimeElement value)  relativeTime,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( CollectionLookupElement value)  collectionLookup,required TResult Function( CollectionGraphElement value)  collectionGraph,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( SearchInputElement value)  searchInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ReferenceInputElement value)  referenceInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( PolymorphicMatchElement value)  polymorphicMatch,required TResult Function( CommitControlsElement value)  commitControls,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( SectionElement value)  section,required TResult Function( ContainerElement value)  container,required TResult Function( PresentationAnchorElement value)  anchor,required TResult Function( ConnectionLayerElement value)  connectionLayer,required TResult Function( PaddingElement value)  padding,required TResult Function( PresentationSlotElement value)  slot,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement():
@@ -166,7 +167,8 @@ return colorInput(_that);case SearchInputElement():
 return searchInput(_that);case BytesInputElement():
 return bytesInput(_that);case EnumInputElement():
 return enumInput(_that);case NamedInputElement():
-return namedInput(_that);case ListInputElement():
+return namedInput(_that);case ReferenceInputElement():
+return referenceInput(_that);case ListInputElement():
 return listInput(_that);case MapInputElement():
 return mapInput(_that);case RecordInputElement():
 return recordInput(_that);case PolymorphicInputElement():
@@ -204,7 +206,7 @@ return spacer(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( PresentationInvocationElement value)?  invocation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ChipElement value)?  chip,TResult? Function( ProgressElement value)?  progress,TResult? Function( StatusElement value)?  status,TResult? Function( DateTimeElement value)?  dateTime,TResult? Function( RelativeTimeElement value)?  relativeTime,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( CollectionLookupElement value)?  collectionLookup,TResult? Function( CollectionGraphElement value)?  collectionGraph,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( SearchInputElement value)?  searchInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult? Function( CommitControlsElement value)?  commitControls,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( SectionElement value)?  section,TResult? Function( ContainerElement value)?  container,TResult? Function( PresentationAnchorElement value)?  anchor,TResult? Function( ConnectionLayerElement value)?  connectionLayer,TResult? Function( PaddingElement value)?  padding,TResult? Function( PresentationSlotElement value)?  slot,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( PresentationInvocationElement value)?  invocation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ChipElement value)?  chip,TResult? Function( ProgressElement value)?  progress,TResult? Function( StatusElement value)?  status,TResult? Function( DateTimeElement value)?  dateTime,TResult? Function( RelativeTimeElement value)?  relativeTime,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( CollectionLookupElement value)?  collectionLookup,TResult? Function( CollectionGraphElement value)?  collectionGraph,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( SearchInputElement value)?  searchInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ReferenceInputElement value)?  referenceInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( PolymorphicMatchElement value)?  polymorphicMatch,TResult? Function( CommitControlsElement value)?  commitControls,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( SectionElement value)?  section,TResult? Function( ContainerElement value)?  container,TResult? Function( PresentationAnchorElement value)?  anchor,TResult? Function( ConnectionLayerElement value)?  connectionLayer,TResult? Function( PaddingElement value)?  padding,TResult? Function( PresentationSlotElement value)?  slot,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -238,7 +240,8 @@ return colorInput(_that);case SearchInputElement() when searchInput != null:
 return searchInput(_that);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that);case EnumInputElement() when enumInput != null:
 return enumInput(_that);case NamedInputElement() when namedInput != null:
-return namedInput(_that);case ListInputElement() when listInput != null:
+return namedInput(_that);case ReferenceInputElement() when referenceInput != null:
+return referenceInput(_that);case ListInputElement() when listInput != null:
 return listInput(_that);case MapInputElement() when mapInput != null:
 return mapInput(_that);case RecordInputElement() when recordInput != null:
 return recordInput(_that);case PolymorphicInputElement() when polymorphicInput != null:
@@ -279,7 +282,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( PresentationId presentationId,  Map<BindingId, BindingReference> arguments)?  invocation,TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression label,  TypedExpression? color)?  chip,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)?  status,TResult Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)?  dateTime,TResult Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)?  relativeTime,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue,  TypedExpression? defaultValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult Function( BindingReference binding)?  commitControls,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  PresentationBorder? border)?  section,TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult Function( String slotId)?  slot,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( PresentationId presentationId,  Map<BindingId, BindingReference> arguments)?  invocation,TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression label,  TypedExpression? color)?  chip,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)?  status,TResult Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)?  dateTime,TResult Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)?  relativeTime,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue,  TypedExpression? defaultValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  bool allowReorder,  ReferencePolicyId? candidatePolicy,  ReferenceRejectionDisplay rejectionDisplay)?  referenceInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult Function( BindingReference binding)?  commitControls,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  PresentationBorder? border)?  section,TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult Function( String slotId)?  slot,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -312,7 +315,8 @@ return colorInput(_that.control,_that.includeAlpha);case SearchInputElement() wh
 return searchInput(_that.control,_that.selectionMode,_that.queryBindingId,_that.summaryBindingId,_that.maximumExtent,_that.provider,_that.summary,_that.placeholder,_that.customValue,_that.initialQuery);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that.control);case EnumInputElement() when enumInput != null:
 return enumInput(_that.control);case NamedInputElement() when namedInput != null:
-return namedInput(_that.control);case ListInputElement() when listInput != null:
+return namedInput(_that.control);case ReferenceInputElement() when referenceInput != null:
+return referenceInput(_that.control,_that.allowReorder,_that.candidatePolicy,_that.rejectionDisplay);case ListInputElement() when listInput != null:
 return listInput(_that.control,_that.itemPresentation,_that.allowAdd,_that.allowRemove,_that.allowReorder,_that.itemBindingId,_that.indexBindingId);case MapInputElement() when mapInput != null:
 return mapInput(_that.control,_that.keyPresentation,_that.valuePresentation,_that.allowAdd,_that.allowRemove,_that.keyBindingId,_that.valueBindingId);case RecordInputElement() when recordInput != null:
 return recordInput(_that.control,_that.fieldPresentation);case PolymorphicInputElement() when polymorphicInput != null:
@@ -354,7 +358,7 @@ return spacer(_that.width,_that.height);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( PresentationId presentationId,  Map<BindingId, BindingReference> arguments)  invocation,required TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)  text,required TResult Function( TypedExpression value,  TypedExpression? color)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression label,  TypedExpression? color)  chip,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)  status,required TResult Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)  dateTime,required TResult Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)  relativeTime,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)  collectionLookup,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)  collectionGraph,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue,  TypedExpression? defaultValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)  searchInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)  polymorphicMatch,required TResult Function( BindingReference binding)  commitControls,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  PresentationBorder? border)  section,required TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)  container,required TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)  anchor,required TResult Function( PresentationNode child,  List<PresentationConnection> connections)  connectionLayer,required TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)  padding,required TResult Function( String slotId)  slot,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( PresentationId presentationId,  Map<BindingId, BindingReference> arguments)  invocation,required TResult Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)  text,required TResult Function( TypedExpression value,  TypedExpression? color)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression label,  TypedExpression? color)  chip,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)  status,required TResult Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)  dateTime,required TResult Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)  relativeTime,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)  collectionLookup,required TResult Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)  collectionGraph,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue,  TypedExpression? defaultValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)  searchInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  bool allowReorder,  ReferencePolicyId? candidatePolicy,  ReferenceRejectionDisplay rejectionDisplay)  referenceInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)  polymorphicMatch,required TResult Function( BindingReference binding)  commitControls,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  PresentationBorder? border)  section,required TResult Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)  container,required TResult Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)  anchor,required TResult Function( PresentationNode child,  List<PresentationConnection> connections)  connectionLayer,required TResult Function( PresentationNode child,  double top,  double start,  double end,  double bottom)  padding,required TResult Function( String slotId)  slot,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement():
 return diagnostic(_that.diagnostics);case DefaultPresentationElement():
@@ -387,7 +391,8 @@ return colorInput(_that.control,_that.includeAlpha);case SearchInputElement():
 return searchInput(_that.control,_that.selectionMode,_that.queryBindingId,_that.summaryBindingId,_that.maximumExtent,_that.provider,_that.summary,_that.placeholder,_that.customValue,_that.initialQuery);case BytesInputElement():
 return bytesInput(_that.control);case EnumInputElement():
 return enumInput(_that.control);case NamedInputElement():
-return namedInput(_that.control);case ListInputElement():
+return namedInput(_that.control);case ReferenceInputElement():
+return referenceInput(_that.control,_that.allowReorder,_that.candidatePolicy,_that.rejectionDisplay);case ListInputElement():
 return listInput(_that.control,_that.itemPresentation,_that.allowAdd,_that.allowRemove,_that.allowReorder,_that.itemBindingId,_that.indexBindingId);case MapInputElement():
 return mapInput(_that.control,_that.keyPresentation,_that.valuePresentation,_that.allowAdd,_that.allowRemove,_that.keyBindingId,_that.valueBindingId);case RecordInputElement():
 return recordInput(_that.control,_that.fieldPresentation);case PolymorphicInputElement():
@@ -425,7 +430,7 @@ return spacer(_that.width,_that.height);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( PresentationId presentationId,  Map<BindingId, BindingReference> arguments)?  invocation,TResult? Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult? Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression label,  TypedExpression? color)?  chip,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)?  status,TResult? Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)?  dateTime,TResult? Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)?  relativeTime,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue,  TypedExpression? defaultValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult? Function( BindingReference binding)?  commitControls,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  PresentationBorder? border)?  section,TResult? Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult? Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult? Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult? Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult? Function( String slotId)?  slot,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( PresentationId presentationId,  Map<BindingId, BindingReference> arguments)?  invocation,TResult? Function( TypedExpression value,  TypedExpression? color,  TypedExpression? fontSize,  TypedExpression? fontWeight,  TypedExpression? fontItalic,  TypedExpression? fontOpticalSize,  TypedExpression? fontSlant,  TypedExpression? fontWidth,  TypedExpression? textAlignment,  TypedExpression? lineHeight,  TypedExpression? letterSpacing,  TypedExpression? decoration,  TypedExpression? semanticLabel)?  text,TResult? Function( TypedExpression value,  TypedExpression? color)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel,  TypedExpression? color,  TypedExpression? size)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression label,  TypedExpression? color)?  chip,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( TypedExpression value,  List<StatusCase> cases,  StatusAppearance? fallback)?  status,TResult? Function( TypedExpression value,  TypedExpression format,  DateTimeZone timeZone)?  dateTime,TResult? Function( TypedExpression value,  RelativeTimeStyle style,  DateTimeZone timeZone)?  relativeTime,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  SequencePresentation presentation)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference key,  PresentationNode found,  PresentationNode missing,  PresentationNode? loading)?  collectionLookup,TResult? Function( PresentationCollectionSourceId sourceId,  BindingReference roots,  SequencePresentation rootSequence,  PresentationCollectionRelationId relation,  CollectionGraphDirection direction,  PresentationNode node,  BindingId childrenBindingId,  BindingId childBindingId,  SequencePresentation children,  int? maximumDepth)?  collectionGraph,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder,  List<TextInputFormat> inputFormatters)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue,  TypedExpression? defaultValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue,  TypedExpression? initialQuery)?  searchInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  bool allowReorder,  ReferencePolicyId? candidatePolicy,  ReferenceRejectionDisplay rejectionDisplay)?  referenceInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  List<PolymorphicMatchCase> cases,  PresentationNode? fallback)?  polymorphicMatch,TResult? Function( BindingReference binding)?  commitControls,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  double runSpacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  PresentationBorder? border)?  section,TResult? Function( PresentationNode child,  PresentationBorder? border,  TypedExpression? backgroundColor,  PresentationRadius radius)?  container,TResult? Function( PresentationNode child,  List<PresentationAnchorPoint> anchors)?  anchor,TResult? Function( PresentationNode child,  List<PresentationConnection> connections)?  connectionLayer,TResult? Function( PresentationNode child,  double top,  double start,  double end,  double bottom)?  padding,TResult? Function( String slotId)?  slot,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -458,7 +463,8 @@ return colorInput(_that.control,_that.includeAlpha);case SearchInputElement() wh
 return searchInput(_that.control,_that.selectionMode,_that.queryBindingId,_that.summaryBindingId,_that.maximumExtent,_that.provider,_that.summary,_that.placeholder,_that.customValue,_that.initialQuery);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that.control);case EnumInputElement() when enumInput != null:
 return enumInput(_that.control);case NamedInputElement() when namedInput != null:
-return namedInput(_that.control);case ListInputElement() when listInput != null:
+return namedInput(_that.control);case ReferenceInputElement() when referenceInput != null:
+return referenceInput(_that.control,_that.allowReorder,_that.candidatePolicy,_that.rejectionDisplay);case ListInputElement() when listInput != null:
 return listInput(_that.control,_that.itemPresentation,_that.allowAdd,_that.allowRemove,_that.allowReorder,_that.itemBindingId,_that.indexBindingId);case MapInputElement() when mapInput != null:
 return mapInput(_that.control,_that.keyPresentation,_that.valuePresentation,_that.allowAdd,_that.allowRemove,_that.keyBindingId,_that.valueBindingId);case RecordInputElement() when recordInput != null:
 return recordInput(_that.control,_that.fieldPresentation);case PolymorphicInputElement() when polymorphicInput != null:
@@ -3624,6 +3630,101 @@ $BoundControlCopyWith<$Res> get control {
   
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class ReferenceInputElement implements PresentationElement {
+  const ReferenceInputElement({required this.control, this.allowReorder = false, this.candidatePolicy, this.rejectionDisplay = ReferenceRejectionDisplay.hidden});
+  
+
+ final  BoundControl control;
+@JsonKey() final  bool allowReorder;
+ final  ReferencePolicyId? candidatePolicy;
+@JsonKey() final  ReferenceRejectionDisplay rejectionDisplay;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReferenceInputElementCopyWith<ReferenceInputElement> get copyWith => _$ReferenceInputElementCopyWithImpl<ReferenceInputElement>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceInputElement&&(identical(other.control, control) || other.control == control)&&(identical(other.allowReorder, allowReorder) || other.allowReorder == allowReorder)&&(identical(other.candidatePolicy, candidatePolicy) || other.candidatePolicy == candidatePolicy)&&(identical(other.rejectionDisplay, rejectionDisplay) || other.rejectionDisplay == rejectionDisplay));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,control,allowReorder,candidatePolicy,rejectionDisplay);
+}
+
+@override
+String toString() {
+    return 'PresentationElement.referenceInput(control: $control, allowReorder: $allowReorder, candidatePolicy: $candidatePolicy, rejectionDisplay: $rejectionDisplay)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReferenceInputElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
+  factory $ReferenceInputElementCopyWith(ReferenceInputElement value, $Res Function(ReferenceInputElement) _then) = _$ReferenceInputElementCopyWithImpl;
+@useResult
+$Res call({
+ BoundControl control, bool allowReorder, ReferencePolicyId? candidatePolicy, ReferenceRejectionDisplay rejectionDisplay
+});
+
+
+$BoundControlCopyWith<$Res> get control;$ReferencePolicyIdCopyWith<$Res>? get candidatePolicy;
+
+}
+/// @nodoc
+class _$ReferenceInputElementCopyWithImpl<$Res>
+    implements $ReferenceInputElementCopyWith<$Res> {
+  _$ReferenceInputElementCopyWithImpl(this._self, this._then);
+
+  final ReferenceInputElement _self;
+  final $Res Function(ReferenceInputElement) _then;
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? control = null,Object? allowReorder = null,Object? candidatePolicy = freezed,Object? rejectionDisplay = null,}) {
+  return _then(ReferenceInputElement(
+control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
+as BoundControl,allowReorder: null == allowReorder ? _self.allowReorder : allowReorder // ignore: cast_nullable_to_non_nullable
+as bool,candidatePolicy: freezed == candidatePolicy ? _self.candidatePolicy : candidatePolicy // ignore: cast_nullable_to_non_nullable
+as ReferencePolicyId?,rejectionDisplay: null == rejectionDisplay ? _self.rejectionDisplay : rejectionDisplay // ignore: cast_nullable_to_non_nullable
+as ReferenceRejectionDisplay,
+  ));
+}
+
+/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BoundControlCopyWith<$Res> get control {
+  
+  return $BoundControlCopyWith<$Res>(_self.control, (value) {
+    return _then(_self.copyWith(control: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReferencePolicyIdCopyWith<$Res>? get candidatePolicy {
+    if (_self.candidatePolicy == null) {
+    return null;
+  }
+
+  return $ReferencePolicyIdCopyWith<$Res>(_self.candidatePolicy!, (value) {
+    return _then(_self.copyWith(candidatePolicy: value));
   });
 }
 }
@@ -12024,6 +12125,270 @@ $PresentationNodeCopyWith<$Res> get child {
     return _then(_self.copyWith(child: value));
   });
 }
+}
+
+/// @nodoc
+mixin _$ReferencePolicyId {
+
+ String get value;
+/// Create a copy of ReferencePolicyId
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReferencePolicyIdCopyWith<ReferencePolicyId> get copyWith => _$ReferencePolicyIdCopyWithImpl<ReferencePolicyId>(this as ReferencePolicyId, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ReferencePolicyId;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferencePolicyId&&(identical(other.value, _this.value) || other.value == _this.value));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as ReferencePolicyId;
+  return Object.hash(runtimeType,_this.value);
+}
+
+@override
+String toString() {
+  final _this = this as ReferencePolicyId;
+  return 'ReferencePolicyId(value: ${_this.value})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReferencePolicyIdCopyWith<$Res>  {
+  factory $ReferencePolicyIdCopyWith(ReferencePolicyId value, $Res Function(ReferencePolicyId) _then) = _$ReferencePolicyIdCopyWithImpl;
+@useResult
+$Res call({
+ String value
+});
+
+
+
+
+}
+/// @nodoc
+class _$ReferencePolicyIdCopyWithImpl<$Res>
+    implements $ReferencePolicyIdCopyWith<$Res> {
+  _$ReferencePolicyIdCopyWithImpl(this._self, this._then);
+
+  final ReferencePolicyId _self;
+  final $Res Function(ReferencePolicyId) _then;
+
+/// Create a copy of ReferencePolicyId
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? value = null,}) {
+  return _then(ReferencePolicyId(
+null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ReferencePolicyId].
+extension ReferencePolicyIdPatterns on ReferencePolicyId {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReferencePolicyId value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ReferencePolicyId() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReferencePolicyId value)  $default,){
+final _that = this;
+switch (_that) {
+case _ReferencePolicyId():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReferencePolicyId value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ReferencePolicyId() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String value)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ReferencePolicyId() when $default != null:
+return $default(_that.value);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String value)  $default,) {final _that = this;
+switch (_that) {
+case _ReferencePolicyId():
+return $default(_that.value);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String value)?  $default,) {final _that = this;
+switch (_that) {
+case _ReferencePolicyId() when $default != null:
+return $default(_that.value);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ReferencePolicyId implements ReferencePolicyId {
+  const _ReferencePolicyId(this.value): assert(value != "", 'Reference policy ID must not be empty.');
+  
+
+@override final  String value;
+
+/// Create a copy of ReferencePolicyId
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReferencePolicyIdCopyWith<_ReferencePolicyId> get copyWith => __$ReferencePolicyIdCopyWithImpl<_ReferencePolicyId>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReferencePolicyId&&(identical(other.value, value) || other.value == value));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,value);
+}
+
+@override
+String toString() {
+    return 'ReferencePolicyId(value: $value)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReferencePolicyIdCopyWith<$Res> implements $ReferencePolicyIdCopyWith<$Res> {
+  factory _$ReferencePolicyIdCopyWith(_ReferencePolicyId value, $Res Function(_ReferencePolicyId) _then) = __$ReferencePolicyIdCopyWithImpl;
+@override @useResult
+$Res call({
+ String value
+});
+
+
+
+
+}
+/// @nodoc
+class __$ReferencePolicyIdCopyWithImpl<$Res>
+    implements _$ReferencePolicyIdCopyWith<$Res> {
+  __$ReferencePolicyIdCopyWithImpl(this._self, this._then);
+
+  final _ReferencePolicyId _self;
+  final $Res Function(_ReferencePolicyId) _then;
+
+/// Create a copy of ReferencePolicyId
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
+  return _then(_ReferencePolicyId(
+null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 /// @nodoc

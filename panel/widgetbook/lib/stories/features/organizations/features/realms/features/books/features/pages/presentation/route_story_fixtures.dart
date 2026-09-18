@@ -195,4 +195,5 @@ TypeExpression _valueType(DataValue value) => switch (value) {
     value: entries.isEmpty ? const AnyType() : _valueType(entries.first.value),
   ),
   PolymorphicValue(:final concreteType) => NamedType(concreteType),
+  ReferenceValue() => const AnyType(),
 };

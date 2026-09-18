@@ -5,16 +5,23 @@ part of "entries.dart";
 /// The resource identity uses the authoring element record, allowing shared
 /// selection infrastructure to resolve the entry without owning its data.
 class EntryIdentifier extends SelectableIdentifier
-    implements GraphDragData, GraphIdentifier {
-  const EntryIdentifier(this.id, {this.pageId});
+    implements GraphDragData, GraphIdentifier, ReferenceResourceDragData {
+  const EntryIdentifier(this.id, {this.pageId, this.elementType});
 
   final String? pageId;
+  final ResolvedTypeRef? elementType;
 
   @override
   final String id;
 
   @override
   Object get resourceId => recordId("element:$id");
+
+  @override
+  skir.RecordId get referenceId => recordId("element:$id");
+
+  @override
+  List<ResolvedTypeRef> get referenceTypes => [?elementType];
 
   @override
   AsyncValue<Selectable<EntryIdentifier>> create(Ref ref) {
@@ -45,7 +52,11 @@ class EntryIdentifier extends SelectableIdentifier
         .authoring(organizationId, realmId);
 
     final value = location.definition;
-    final identity = EntryIdentifier(id, pageId: location.pageId);
+    final identity = EntryIdentifier(
+      id,
+      pageId: location.pageId,
+      elementType: value.elementDefinition.rootType,
+    );
 
     final catalogState = ref.watch(
       realmEditorCatalogForTypeProvider(value.elementDefinition.rootType),
@@ -163,11 +174,32 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
 
   @override
   PresentationModel buildPresentation(EditorOwnerScope owners) {
-    final model = super.buildPresentation(owners);
+    return super.buildPresentation(owners).withEntryIdentityEditor();
+  }
+
+  @override
+  Widget? buildInspectorHeader(EditOwner owner) => EntryHeader(
+    id: id.id,
+    name: name,
+    color: definition.elementDefinition.color,
+    owner: ProjectedEditOwner(owner, elementValuePath),
+  );
+
+  @override
+  EditableResource get resource => target.resource;
+  @override
+  EditorSnapshot get snapshot => target.snapshot;
+
+  @override
+  String toString() => "EntrySelection($id)";
+}
+
+extension EntryPresentationModel on PresentationModel {
+  PresentationModel withEntryIdentityEditor() {
     final nameBinding = const BindingReference(bindingId: BindingId(0))
         .at(DataPath.root.field("name"));
-    final content = model.root.withoutEntryIdentityFields();
-    return model.copyWith(
+    final content = root.withoutEntryIdentityFields();
+    return copyWith(
       root: PresentationNode(
         id: "entry.editor",
         element: ColumnElement(
@@ -196,22 +228,6 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
       ),
     );
   }
-
-  @override
-  Widget? buildInspectorHeader(EditOwner owner) => EntryHeader(
-    id: id.id,
-    name: name,
-    color: definition.elementDefinition.color,
-    owner: ProjectedEditOwner(owner, elementValuePath),
-  );
-
-  @override
-  EditableResource get resource => target.resource;
-  @override
-  EditorSnapshot get snapshot => target.snapshot;
-
-  @override
-  String toString() => "EntrySelection($id)";
 }
 
 extension PresentationNodeIdentityFields on PresentationNode {

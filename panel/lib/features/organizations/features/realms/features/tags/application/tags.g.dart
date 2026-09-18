@@ -54,7 +54,7 @@ final class CanonicalTagsProvider
   CanonicalTags create() => CanonicalTags();
 }
 
-String _$canonicalTagsHash() => r'30b0ff811890a895024d4e222b62190da2904898';
+String _$canonicalTagsHash() => r'3ada2203bc148a9e8d4228f1b3a2250451b5069b';
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
@@ -222,7 +222,7 @@ final class ProjectedTagsProvider
   }
 }
 
-String _$projectedTagsHash() => r'e025a4a4a186a9194d8b0bf3661cbe47813a147a';
+String _$projectedTagsHash() => r'3e3386aecdcda929315fde5b5243dd490a935c3c';
 
 /// Projects one tag for graph nodes that rebuild independently.
 

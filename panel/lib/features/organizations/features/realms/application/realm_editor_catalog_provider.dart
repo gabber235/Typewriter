@@ -140,39 +140,68 @@ final activeRealmEditorRuntimeProvider = Provider<EditorRealmRuntime?>((ref) {
     registry: registry,
   );
   return EditorRealmRuntime(
-    executeAction: (action, context) => _executeRealmAction(
-      action: action,
-      context: context,
-      snapshot: snapshot,
-      registry: registry,
-      transport: commandTransport,
+    actions: RealmActionCapabilities(
+      execute: (action, context) => _executeRealmAction(
+        action: action,
+        context: context,
+        snapshot: snapshot,
+        registry: registry,
+        transport: commandTransport,
+      ),
     ),
-    searchSourceBuilder:
-        ({
-          required provider,
-          required queryBindingId,
-          required expressions,
-          required registry,
-          required budget,
-          required providerKey,
-        }) {
-          final definition = snapshot.capabilities[provider.capabilityId];
-          if (definition is! SearchCapabilityDefinition) {
-            return UnavailableRealmPresentationSearchSource(provider: provider);
-          }
-          return RealmPresentationSearchSource(
-            provider: provider,
-            generation: snapshot.generation,
-            payloadType: NamedType(definition.requestType),
-            resultType: NamedType(definition.resultType),
-            transport: searchTransport.watch,
-            queryBindingId: queryBindingId,
-            expressions: expressions,
+    presentationSearch: RealmPresentationSearchCapabilities(
+      source:
+          ({
+            required provider,
+            required queryBindingId,
+            required expressions,
+            required registry,
+            required budget,
+            required providerKey,
+          }) {
+            final definition = snapshot.capabilities[provider.capabilityId];
+            if (definition is! SearchCapabilityDefinition) {
+              return UnavailableRealmPresentationSearchSource(
+                provider: provider,
+              );
+            }
+            return RealmPresentationSearchSource(
+              provider: provider,
+              generation: snapshot.generation,
+              payloadType: NamedType(definition.requestType),
+              resultType: NamedType(definition.resultType),
+              transport: searchTransport.watch,
+              queryBindingId: queryBindingId,
+              expressions: expressions,
+              registry: registry,
+              budget: budget,
+              providerKey: providerKey,
+            );
+          },
+    ),
+    references: ReferenceAuthoringCapabilities(
+      search: ({required target, required origins, required registry}) =>
+          RealmAuthoringSearchSource(
+            ref: ref,
+            organizationId: organizationId,
+            realmId: realmId,
+            referenceTarget: target,
+            referenceOrigins: origins,
+            typeRegistry: registry,
+          ),
+      resolve: ({required target, required ids, required registry}) =>
+          resolveAuthoringReferences(
+            ref: ref,
+            organizationId: organizationId,
+            realmId: realmId,
+            target: target,
+            ids: ids,
             registry: registry,
-            budget: budget,
-            providerKey: providerKey,
-          );
-        },
+          ),
+      policies: ReferenceCandidatePolicyRegistry({
+        tagParentReferencePolicyId: tagParentReferencePolicy(ref),
+      }),
+    ),
   );
 });
 

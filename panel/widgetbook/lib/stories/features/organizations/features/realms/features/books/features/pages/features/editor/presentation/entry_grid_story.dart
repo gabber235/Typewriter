@@ -51,6 +51,7 @@ Widget entryNodeMultipleEntriesStory(BuildContext context) {
                   width: definition.placement.width * entryGraphCellSize,
                   height: definition.placement.height * entryGraphCellSize,
                   child: EntryNode(
+                    pageId: "page",
                     entry: PageEntry.definition(definition: definition),
                   ),
                 ),
@@ -58,6 +59,7 @@ Widget entryNodeMultipleEntriesStory(BuildContext context) {
                 width: bigWidth * entryGraphCellSize,
                 height: bigHeight * entryGraphCellSize,
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.reference(
                     id: "external-entry",
                     name: "External Entry",

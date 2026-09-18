@@ -10,9 +10,8 @@ void main() {
       resultType: NamedType(standardTypeRefs.color),
       expression: ColorOperationExpression(
         operation: ColorOperation.withAlpha,
-        color: IntegerValue(
-          BigInt.from(0xFF336699),
-        ).asLiteral(NamedType(standardTypeRefs.color)),
+        color: IntegerValue(BigInt.from(0xFF336699))
+            .asLiteral(NamedType(standardTypeRefs.color)),
         alpha: 46.asIntegerLiteral,
       ),
     );
@@ -31,9 +30,8 @@ void main() {
       resultType: NamedType(standardTypeRefs.color),
       expression: ColorOperationExpression(
         operation: ColorOperation.withAlpha,
-        color: IntegerValue(
-          BigInt.from(0xFF336699),
-        ).asLiteral(NamedType(standardTypeRefs.color)),
+        color: IntegerValue(BigInt.from(0xFF336699))
+            .asLiteral(NamedType(standardTypeRefs.color)),
         alpha: 256.asIntegerLiteral,
       ),
     );

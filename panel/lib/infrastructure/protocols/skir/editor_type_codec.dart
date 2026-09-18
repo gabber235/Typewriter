@@ -93,6 +93,9 @@ final class SkirTypeCodec {
         NamedType() => encodeReference(
           value.reference,
         ).mapValue(wire.TypeExpression.wrapNamed),
+        ReferenceType() => encodeReference(value.target).mapValue(
+          (target) => wire.TypeExpression.createReference(targetType: target),
+        ),
         ParameterType() => TypeResult.success(
           wire.TypeExpression.wrapParameter(value.name),
         ),
@@ -145,6 +148,9 @@ final class SkirTypeCodec {
       wire.TypeExpression_namedWrapper(:final value) => decodeReference(
         value,
       ).mapValue(NamedType.new),
+      wire.TypeExpression_referenceWrapper(:final value) => decodeReference(
+        value.targetType,
+      ).mapValue((target) => ReferenceType(target: target)),
     };
   }
 

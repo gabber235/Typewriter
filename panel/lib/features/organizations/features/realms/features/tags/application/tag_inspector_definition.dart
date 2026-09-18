@@ -29,9 +29,7 @@ final tagInspectorTypeDefinition = TypeDefinition(
       "parents": TypeField(
         name: "parents",
         type: ListType(
-          element: NamedType(
-            standardTypeRefs.refTo(NamedType(tagInspectorTypeRef)),
-          ),
+          element: ReferenceType(target: referenceResourceTypes.tag),
           unique: true,
         ),
       ),
@@ -62,7 +60,10 @@ final tagInspectorTypeDefinition = TypeDefinition(
   ),
 );
 
-final _tagInspectorCatalog = TypeCatalog([tagInspectorTypeDefinition]);
+final _tagInspectorCatalog = TypeCatalog([
+  ...referenceResourceTypes.definitions,
+  tagInspectorTypeDefinition,
+]);
 
 /// Presentation shared by single and compatible multi tag inspection.
 final _tagInspectorPresentation = PresentationDefinition.single(
@@ -94,10 +95,17 @@ final _tagInspectorPresentation = PresentationDefinition.single(
             ),
           ),
         ),
-        tagReferenceSearch(
+        PresentationNode(
           id: "tag.parents",
-          label: "Direct Parents",
-          binding: _tagInspectorField("parents"),
+          element: ReferenceInputElement(
+            control: BoundControl(
+              binding: _tagInspectorField("parents"),
+              label: "Direct Parents".asStringLiteral,
+            ),
+            allowReorder: false,
+            candidatePolicy: tagParentReferencePolicyId,
+            rejectionDisplay: ReferenceRejectionDisplay.disabled,
+          ),
         ),
         effectiveTagGraph(
           id: "tag.inheritance",

@@ -125,6 +125,7 @@ final class EditorValueBindingSource implements BindingSource {
     required this.type,
     required this.value,
     required this.revision,
+    this.writable = false,
   });
 
   final TypeExpression type;
@@ -132,7 +133,7 @@ final class EditorValueBindingSource implements BindingSource {
   @override
   final int revision;
   @override
-  bool get writable => false;
+  final bool writable;
 
   @override
   TypeResult<BindingSourceState> inspect(
@@ -206,6 +207,7 @@ abstract class BindingEnvironment with _$BindingEnvironment {
         ),
       ),
       LoadingEditorValue() => _failure("Binding is loading"),
+      MissingEditorValue() => _failure("Binding has no value yet"),
       MixedEditorValue() => _failure("Binding has different values"),
       InvalidEditorValue(:final diagnostics) => TypeResult.failure(diagnostics),
     };
@@ -323,6 +325,7 @@ extension BindingSourceInspection on EditorValue {
     final inspected = switch (this) {
       ReadyEditorValue(:final value) => value.readEditorValue(path),
       LoadingEditorValue() => const EditorValue.loading(),
+      MissingEditorValue() => const EditorValue.missing(),
       MixedEditorValue() => const EditorValue.mixed(),
       InvalidEditorValue(:final diagnostics) => EditorValue.invalid(
         diagnostics,

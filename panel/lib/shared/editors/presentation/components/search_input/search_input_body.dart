@@ -17,6 +17,8 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
     required this.editing,
     required this.inputController,
     required this.validationMessage,
+    required this.selectionMatcher,
+    required this.summaryBuilder,
     required this.onStartEditing,
     required this.onPreview,
     required this.onSelectionPointerDown,
@@ -35,6 +37,8 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
   final bool editing;
   final InputFieldController inputController;
   final String? validationMessage;
+  final PresentationSearchSelectionMatcher? selectionMatcher;
+  final PresentationSearchSummaryBuilder? summaryBuilder;
   final ValueChanged<SearchController<dynamic>> onStartEditing;
   final ValueChanged<SearchResult> onPreview;
   final VoidCallback onSelectionPointerDown;
@@ -112,6 +116,7 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
               scope: scope,
               inputController: inputController,
               onStartEditing: () => onStartEditing(controller),
+              summaryBuilder: summaryBuilder,
             )
           else
             ClipRRect(
@@ -152,7 +157,8 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
             scope: scope,
             maximumExtent: maximumExtent,
             controller: scrollController,
-            isSelected: (result) => _isSelected(binding.value, result),
+            isSelected: (result) =>
+                _isSelected(binding.value, result, selectionMatcher),
             onSelectionPointerDown: onSelectionPointerDown,
             onSelectionPointerEnd: onSelectionPointerEnd,
           ),
@@ -168,9 +174,14 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
 /// selected. A list binding uses value equality for each member, which keeps
 /// row highlighting derived from the canonical editor value rather than a
 /// second selection store.
-bool _isSelected(EditorValue value, SearchResult result) {
+bool _isSelected(
+  EditorValue value,
+  SearchResult result,
+  PresentationSearchSelectionMatcher? matcher,
+) {
   final payload = result.payload;
   if (payload is! PresentationSearchResultPayload) return false;
+  if (matcher != null) return matcher(value, payload.selectedValue);
   final current = value.valueOrNull;
   if (current is ListValue) {
     return current.values.contains(payload.selectedValue);

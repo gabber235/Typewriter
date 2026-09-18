@@ -5,15 +5,16 @@ part "editor_value.freezed.dart";
 
 /// Describes whether a path can currently provide one usable editor value.
 ///
-/// [loading] means the source has not produced an observation, [mixed] means
-/// selected owners disagree, and [invalid] preserves path diagnostics. Only
-/// [ready] exposes a value through [valueOrNull], so presentation code cannot
-/// accidentally render a placeholder as editable content.
+/// [loading] means the source has not produced an observation. [missing]
+/// means an editable creation draft has no value at this path yet. [mixed]
+/// means selected owners disagree, and [invalid] preserves path diagnostics.
+/// Only [ready] exposes a value through [valueOrNull].
 @freezed
 sealed class EditorValue with _$EditorValue {
   const EditorValue._();
 
   const factory EditorValue.loading() = LoadingEditorValue;
+  const factory EditorValue.missing() = MissingEditorValue;
   const factory EditorValue.mixed() = MixedEditorValue;
   const factory EditorValue.invalid(List<TypeDiagnostic> diagnostics) =
       InvalidEditorValue;
@@ -21,7 +22,10 @@ sealed class EditorValue with _$EditorValue {
 
   DataValue? get valueOrNull => switch (this) {
     ReadyEditorValue(:final value) => value,
-    LoadingEditorValue() || MixedEditorValue() || InvalidEditorValue() => null,
+    LoadingEditorValue() ||
+    MissingEditorValue() ||
+    MixedEditorValue() ||
+    InvalidEditorValue() => null,
   };
 }
 

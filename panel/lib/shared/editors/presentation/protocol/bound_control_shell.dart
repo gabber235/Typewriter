@@ -21,6 +21,7 @@ class BoundControlShell extends HookWidget {
     this.shapeMismatch,
     this.labeled = true,
     this.nominal = false,
+    this.synthesizeMissingDiagnostic = true,
     super.key,
   });
 
@@ -35,6 +36,10 @@ class BoundControlShell extends HookWidget {
   /// Whether shape checks use the declared nominal type instead of its
   /// representation type.
   final bool nominal;
+
+  /// Whether a missing binding without a placed diagnostic receives the
+  /// generic required value message.
+  final bool synthesizeMissingDiagnostic;
 
   /// Returns a diagnostic message when the resolved binding does not have
   /// the shape this control requires.
@@ -82,7 +87,12 @@ class BoundControlShell extends HookWidget {
     final child = builder(context, field);
 
     if (!labeled) return child;
-    return LabeledControl(control: control, scope: scope, child: child);
+    return LabeledControl(
+      control: control,
+      scope: scope,
+      missing: synthesizeMissingDiagnostic && field.missing,
+      child: child,
+    );
   }
 }
 
@@ -110,6 +120,7 @@ final class BoundControlField {
   bool get editable => enabled && !readOnly;
   bool get locked => !editable;
   bool get mixed => binding.value is MixedEditorValue;
+  bool get missing => binding.value is MissingEditorValue;
 
   /// The concrete value when the binding is ready. Loading, mixed, and invalid
   /// states are intentionally represented by [binding] instead.

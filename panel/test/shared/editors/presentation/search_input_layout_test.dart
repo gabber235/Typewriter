@@ -56,9 +56,8 @@ Finder _resultRow(String label) {
 final _mixedHeightProvider = SearchProvider.merge(
   children: [
     SearchProvider.staticValues(
-      values: const ListValue([
-        StringValue("Alpha"),
-      ]).asLiteral(const ListType(element: StringType())),
+      values: const ListValue([StringValue("Alpha")])
+          .asLiteral(const ListType(element: StringType())),
       result: searchTestResultMapping,
     ),
     SearchProvider.staticValues(

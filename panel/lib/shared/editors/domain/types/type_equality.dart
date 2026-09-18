@@ -81,6 +81,10 @@ bool typeExpressionsEqual(TypeExpression left, TypeExpression right) {
     return left.reference == right.reference;
   }
 
+  if (left is ReferenceType && right is ReferenceType) {
+    return left.target == right.target;
+  }
+
   if (left is ParameterType && right is ParameterType) {
     return left.name == right.name;
   }
@@ -180,6 +184,7 @@ extension TypeExpressionStructuralHash on TypeExpression {
       ),
     ),
     NamedType(:final reference) => Object.hash(runtimeType, reference),
+    ReferenceType(:final target) => Object.hash(runtimeType, target),
     ParameterType(:final name) => Object.hash(runtimeType, name),
   };
 }

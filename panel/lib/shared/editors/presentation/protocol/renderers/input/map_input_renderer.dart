@@ -12,6 +12,170 @@ extension MapInputElementRendering on MapInputElement {
   }) => _MapInput(element: this, binding: binding, scope: scope);
 }
 
+final class _DraftMapInput extends StatelessWidget {
+  const _DraftMapInput({
+    required this.element,
+    required this.binding,
+    required this.scope,
+    required this.owner,
+    required this.structure,
+  });
+
+  final MapInputElement element;
+  final InspectedBinding binding;
+  final PresentationRenderScope scope;
+  final EditorStructureOwner owner;
+  final EditorMapStructure structure;
+
+  @override
+  Widget build(BuildContext context) {
+    final type = binding.type as MapType;
+    final mapReference = scope.canonical(element.control.binding);
+    if (structure.entries.isEmpty) {
+      return const _CollectionEmptyState(message: "No entries found");
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final indexed in structure.entries.indexed)
+          Padding(
+            key: ValueKey(indexed.$2.id),
+            padding: EdgeInsets.only(bottom: context.spacing.space2),
+            child: PresentationHeaderChrome(
+              nodeId: "${element.control.binding}.draft.${indexed.$2.id.value}",
+              expansionKey: HeaderExpansionKey.instance(indexed.$2.id.value),
+              header: PresentationHeader(
+                binding: element.control.binding,
+                title:
+                    "Map entry ${indexed.$1 + 1}".asStringLiteral.asHeaderTitle,
+                initiallyExpanded: true,
+                items: element.allowRemove
+                    ? [
+                        HeaderButtonItem(
+                          id: mapEntryRemoveHeaderItemId,
+                          icon: HeroiconsSolid.trash.asIconLiteral,
+                          label: "Remove entry".asStringLiteral,
+                          priority: (-0x8000000000000000).asSigned64Literal,
+                          tone: HeaderActionTone.destructive,
+                          action: LocalEditorAction(
+                            RemoveMapEntryAction(
+                              target: element.control.binding,
+                              key: indexed.$2.id.value.asSigned64Literal,
+                            ),
+                          ),
+                        ),
+                      ]
+                    : const [],
+              ),
+              scope: scope,
+              subtreeDiagnostics: indexed.$2.diagnostics,
+              child: _entry(type, mapReference.path, indexed.$2),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _entry(MapType type, DataPath mapPath, EditorMapEntryStructure entry) {
+    const keyId = BindingId(2147483645);
+    const valueId = BindingId(2147483646);
+    final keyHost = VirtualBindingHost.editorValue(
+      id: keyId,
+      type: type.key,
+      value: entry.key,
+      revision: binding.revision,
+      writable: binding.writable,
+      onChanged: (next) => owner.updateMapKey(mapPath, entry.id, next),
+      interactionTarget: scope.canonical(element.control.binding),
+    );
+    final valueHost = VirtualBindingHost.editorValue(
+      id: valueId,
+      type: type.value,
+      value: entry.value,
+      revision: binding.revision,
+      writable: binding.writable,
+      onChanged: (next) => owner.updateMapValue(mapPath, entry.id, next),
+      interactionTarget: scope.canonical(element.control.binding),
+    );
+    final childScope = scope
+        .withVirtualBinding(keyHost, source: element.control.binding)
+        .withVirtualBinding(valueHost, source: element.control.binding);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 8,
+      children: [
+        _MapEntryField(
+          label: element.keyPresentation == null ? null : "Key",
+          value: false,
+          child: PresentationFieldDiagnostics(
+            bindingId: keyId,
+            sourcePath: DataPath.root,
+            diagnostics: entry.keyDiagnostics,
+            child: element.keyPresentation != null
+                ? PresentationNodeRenderer(
+                    node: element.keyPresentation!.localizeFailures(
+                      childScope.expressions,
+                      registry: childScope.registry,
+                      budget: childScope.budget,
+                    ),
+                    scope: childScope.withAlias(
+                      element.keyBindingId,
+                      const BindingReference(bindingId: keyId),
+                      keyHost,
+                    ),
+                  )
+                : InspectedBinding(
+                    reference: const BindingReference(bindingId: keyId),
+                    type: type.key,
+                    value: entry.key,
+                    revision: binding.revision,
+                    writable: binding.writable,
+                  ).renderDefaultPresentation(
+                    childScope,
+                    nodeId: "map.key.${entry.id.value}",
+                    label: "Key",
+                  ),
+          ),
+        ),
+        _MapEntryField(
+          label: element.valuePresentation == null ? null : "Value",
+          value: true,
+          child: PresentationFieldDiagnostics(
+            bindingId: valueId,
+            sourcePath: DataPath.root,
+            diagnostics: entry.valueDiagnostics,
+            child: element.valuePresentation != null
+                ? PresentationNodeRenderer(
+                    node: element.valuePresentation!.localizeFailures(
+                      childScope.expressions,
+                      registry: childScope.registry,
+                      budget: childScope.budget,
+                    ),
+                    scope: childScope.withAlias(
+                      element.valueBindingId,
+                      const BindingReference(bindingId: valueId),
+                      valueHost,
+                    ),
+                  )
+                : InspectedBinding(
+                    reference: const BindingReference(bindingId: valueId),
+                    type: type.value,
+                    value: entry.value,
+                    revision: binding.revision,
+                    writable: binding.writable,
+                  ).renderDefaultPresentation(
+                    childScope,
+                    nodeId: "map.value.${entry.id.value}",
+                    root: true,
+                    label: "Value",
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MapInput extends StatefulWidget {
   const _MapInput({
     required this.element,

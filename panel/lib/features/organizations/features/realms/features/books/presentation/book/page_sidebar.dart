@@ -93,14 +93,18 @@ class BookSidebarContent extends HookConsumerWidget {
               shrink: true,
               builder: (data) {
                 return Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _PagesTree(pages: data, expanded: expanded),
-                        SizedBox(height: context.spacing.space3),
-                        if (expanded) const _AddPageButton(),
-                      ],
+                  child: ClipPath(
+                    clipper: VerticalClipper(additionalWidth: 10),
+                    child: SingleChildScrollView(
+                      clipBehavior: .none,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _PagesTree(pages: data, expanded: expanded),
+                          SizedBox(height: context.spacing.space3),
+                          if (expanded) const _AddPageButton(),
+                        ],
+                      ),
                     ),
                   ),
                 );

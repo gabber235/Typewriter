@@ -122,6 +122,7 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+
     final definition = ref
         .watch(realmEditorCatalogProvider)
         .value
@@ -130,7 +131,13 @@ class _PageTile extends HookConsumerWidget {
         .definitions[page.kind];
     final elementTypes = ref.watch(pageElementTypesProvider(page.kind)).value;
 
-    final color = Theme.of(context).colorScheme.onSurface;
+    final backgroundColor = isSelected
+        ? context.theme.colorScheme.primaryContainer
+        : Surface.colorOf(context);
+
+    final foregroundColor = isSelected
+        ? context.theme.colorScheme.onPrimaryContainer
+        : context.theme.colorScheme.onSurface;
 
     final child = Padding(
       padding: EdgeInsets.all(context.spacing.space2),
@@ -138,103 +145,152 @@ class _PageTile extends HookConsumerWidget {
         children: [
           SizedBox(width: context.spacing.space1),
           if (definition == null)
-            Icon(Icons.warning_rounded, size: 11, color: color)
+            Icon(Icons.warning_rounded, size: 11, color: foregroundColor)
           else
-            Icones.value(definition.icon, size: 11, color: color),
+            Icones.value(definition.icon, size: 11, color: foregroundColor),
           SizedBox(width: context.spacing.space2),
           Expanded(
             child: Text(
               page.name.formatted,
               style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: color),
+                  ?.copyWith(color: foregroundColor),
             ),
           ),
           SizedBox(width: context.spacing.space2),
-          Icon(Icons.chevron_right, size: 16, color: color),
+          Icon(Icons.chevron_right, size: 16, color: foregroundColor),
         ],
       ),
     );
 
-    return DragTarget<EntryIdentifier>(
-      onWillAcceptWithDetails: (details) {
-        final entryId = details.data.id;
-        final definition = ref.read(entryProvider(entryId)).value;
-        if (definition == null) return false;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return DragTarget<EntryIdentifier>(
+          onWillAcceptWithDetails: (details) {
+            final entryId = details.data.id;
+            final definition = ref.read(entryProvider(entryId)).value;
+            if (definition == null) return false;
 
-        return switch (elementTypes) {
-          PageElementTypesReady(:final types) => types.contains(
-            definition.elementDefinition.rootType,
-          ),
-          _ => false,
-        };
-      },
-      onAcceptWithDetails: (details) {
-        final entryId = details.data.id;
-        ref.read(entryProvider(entryId).notifier).moveToPage(pageId.id);
-      },
-      builder: (context, entryCandidateData, entryRejectedData) {
-        return DragTarget<PageDrag>(
-          onWillAcceptWithDetails: (details) => true,
-          onAcceptWithDetails: (details) async {
-            final result = await ref.editPage(
-              id: details.data.pageId,
-              chapter: skir.StringChange(
-                expected: details.data.chapter,
-                value: chapter,
+            return switch (elementTypes) {
+              PageElementTypesReady(:final types) => types.contains(
+                definition.elementDefinition.rootType,
               ),
-            );
-            result.requireApplied(conflictMessage: "The page chapter changed");
+              _ => false,
+            };
           },
-          builder: (context, pageCandidateData, rejectedData) {
-            final isAccepting =
-                entryCandidateData.isNotEmpty || pageCandidateData.isNotEmpty;
-            final isRejecting =
-                entryRejectedData.isNotEmpty || rejectedData.isNotEmpty;
-            return Surface(
-              color: isSelected ? Surface.colorOf(context) : Colors.transparent,
-              child: Material(
-                color: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: context.shapes.mediumBorderRadius,
-                  side: isAccepting || isRejecting
-                      ? BorderSide(
-                          color: isAccepting
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.error,
-                          width: 2,
-                        )
-                      : BorderSide.none,
-                ),
-                child: ManagedActionSet(
+          onAcceptWithDetails: (details) {
+            final entryId = details.data.id;
+            ref.read(entryProvider(entryId).notifier).moveToPage(pageId.id);
+          },
+          builder: (context, entryCandidateData, entryRejectedData) {
+            return DragTarget<PageDrag>(
+              onWillAcceptWithDetails: (details) =>
+                  details.data.pageId != pageId,
+              onAcceptWithDetails: (details) async {
+                final result = await ref.editPage(
+                  id: details.data.pageId,
+                  chapter: skir.StringChange(
+                    expected: details.data.chapter,
+                    value: chapter,
+                  ),
+                );
+                result.requireApplied(
+                  conflictMessage: "The page chapter changed",
+                );
+              },
+              builder: (context, pageCandidateData, rejectedData) {
+                final isAccepting =
+                    entryCandidateData.isNotEmpty ||
+                    pageCandidateData.isNotEmpty;
+                final isRejecting =
+                    entryRejectedData.isNotEmpty || rejectedData.isNotEmpty;
+
+                return ManagedActionSet(
                   shortcuts: _shortcuts(ref),
                   child: ContextMenuRegion(
                     items: _contextMenuItems(ref),
-                    child: Draggable<PageDrag>(
-                      data: PageDrag(pageId: pageId, chapter: chapter),
-                      feedback: Surface(
-                        color: Surface.colorOf(context),
-                        child: Material(
-                          color: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: context.shapes.mediumBorderRadius,
+                    child: AnimatedSize(
+                      duration: 150.ms,
+                      curve: Curves.easeOutCubic,
+                      child: Draggable<PageDrag>(
+                        data: PageDrag(pageId: pageId, chapter: chapter),
+                        feedback: Surface(
+                          color: backgroundColor,
+                          child: Material(
+                            color: backgroundColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: context.shapes.mediumBorderRadius,
+                            ),
+                            child: ConstrainedBox(
+                              constraints: constraints,
+                              child: child,
+                            ),
                           ),
-                          child: child,
                         ),
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          if (isSelected) return;
-                          ref
-                              .read(appRouterProvider)
-                              .push(RouteRoute(pageId: pageId.id));
-                        },
-                        borderRadius: context.shapes.mediumBorderRadius,
-                        child: child,
+                        childWhenDragging: Opacity(
+                          opacity: 0.5,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: context.spacing.space1,
+                            ),
+                            child: DottedBorder(
+                              options: RoundedRectDottedBorderOptions(
+                                radius: context.shapes.mediumRadius,
+                                color: isRejecting
+                                    ? context.theme.colorScheme.error
+                                    : foregroundColor,
+                                strokeWidth: 2,
+                                dashPattern: [8, 6],
+                                padding: EdgeInsets.zero,
+                              ),
+                              childOnTop: false,
+                              child: Surface(
+                                color: backgroundColor,
+                                child: Material(
+                                  color: backgroundColor.withValues(alpha: 0.5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        context.shapes.mediumBorderRadius,
+                                  ),
+                                  child: child,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        child: Surface(
+                          color: backgroundColor,
+                          child: Material(
+                            color: backgroundColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: context.shapes.mediumBorderRadius,
+                              side: isAccepting || isRejecting
+                                  ? BorderSide(
+                                      color: isAccepting
+                                          ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                          : Theme.of(context).colorScheme.error,
+                                      width: 2,
+                                    )
+                                  : BorderSide.none,
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                if (isSelected) return;
+                                ref
+                                    .read(appRouterProvider)
+                                    .push(RouteRoute(pageId: pageId.id));
+                              },
+                              borderRadius: context.shapes.mediumBorderRadius,
+                              child: child,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         );

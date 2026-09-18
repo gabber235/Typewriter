@@ -1,6 +1,5 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Coordinates one presentation tree over its independently owned edit sources.
@@ -10,15 +9,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// expansion state, and commit placement bookkeeping. It does not own drafts:
 /// mutations and save decisions are routed to the [EditorSource] owners.
 /// Local actions update that session immediately. Realm actions cross the
-/// supplied runtime and surface diagnostics when execution or instruction
+/// supplied host and surface diagnostics when execution or instruction
 /// handling cannot continue.
 class ComposedEditor extends StatefulWidget {
   const ComposedEditor({
     required this.model,
     this.conversions = const [],
-    this.runtime,
-    this.executePanelInstruction,
-    this.realmSearchSourceBuilder,
+    this.host = const EditorHostCapabilities(),
+    this.referenceOrigins = const [],
     this.headerShortcuts = const {},
     this.historyNamespace = "local",
     this.readOnly = false,
@@ -27,9 +25,8 @@ class ComposedEditor extends StatefulWidget {
 
   final PresentationModel model;
   final List<ConversionDefinition> conversions;
-  final EditorRealmActionExecutor? runtime;
-  final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
-  final FutureOr<void> Function(PanelInstruction)? executePanelInstruction;
+  final EditorHostCapabilities host;
+  final List<RecordId> referenceOrigins;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;
@@ -69,6 +66,7 @@ class _ComposedEditorState extends State<ComposedEditor> {
   @override
   Widget build(BuildContext context) {
     final registry = _registry;
+    final references = widget.host.references;
     final scope = PresentationRenderScope(
       expressions: ExpressionContext(
         bindings: _session.bindings,
@@ -82,7 +80,21 @@ class _ComposedEditorState extends State<ComposedEditor> {
       inputAccess: widget.model.inputAccess,
       ownerBindings: widget.model.ownerBindings,
       collections: widget.model.collections.byId,
-      realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
+      realmSearchSourceBuilder: widget.host.presentationSearch?.source,
+      referenceSearchSourceBuilder: references?.search,
+      resolveReferences: references?.resolve,
+      referenceOrigins: [
+        ...widget.referenceOrigins,
+        for (final input in widget.model.inputs.values)
+          if (input case PresentationEditInput(:final owner))
+            for (final source in _resources(owner))
+              if (source case TransactionalEditorSource(:final resource?))
+                if (resource.key.identity case final RecordId identity)
+                  identity,
+      ],
+      referencePolicies:
+          references?.policies ?? const ReferenceCandidatePolicyRegistry(),
+      editOwnerFor: _session.owner,
       headerShortcuts: widget.headerShortcuts,
       startInteraction: _session.beginInteraction,
       setBinding: (reference, value, context, aliases) {
@@ -103,6 +115,13 @@ class _ComposedEditorState extends State<ComposedEditor> {
         .toList();
 
     final candidate = applyOwners.length == 1 ? applyOwners.single : null;
+    final diagnosticInput = widget.model.inputs.length == 1
+        ? widget.model.inputs.entries.single
+        : null;
+    final diagnosticSourcePath = switch (diagnosticInput?.value) {
+      PresentationEditInput(:final path) => path,
+      _ => DataPath.root,
+    };
     final primaryOwner =
         !widget.readOnly &&
             candidate != null &&
@@ -154,7 +173,10 @@ class _ComposedEditorState extends State<ComposedEditor> {
               budget: scope.budget,
             ),
             scope: scope,
-            diagnostics: [...widget.model.diagnostics, ..._diagnostics],
+            diagnostics: _diagnostics,
+            inputDiagnostics: widget.model.diagnostics,
+            diagnosticBindingId: diagnosticInput?.key,
+            diagnosticSourcePath: diagnosticSourcePath,
           ),
           for (final owner in owners)
             if (owner.commitPolicy == EditorCommitPolicy.applyResource &&
@@ -213,8 +235,11 @@ class _ComposedEditorState extends State<ComposedEditor> {
 
   void _accept(EditorMutationResult result) {
     if (!mounted) return;
+    final diagnostics = result is InvalidEditorMutation
+        ? result.diagnostics
+        : const <TypeDiagnostic>[];
     setState(() {
-      _diagnostics = result is InvalidEditorMutation ? result.diagnostics : [];
+      _diagnostics = diagnostics;
     });
   }
 
@@ -229,12 +254,12 @@ class _ComposedEditorState extends State<ComposedEditor> {
       }
       return;
     }
-    final executor = widget.runtime;
-    if (executor == null) {
+    final realmActions = widget.host.realmActions;
+    if (realmActions == null) {
       _failure("Realm capability runtime is unavailable");
       return;
     }
-    final result = await executor(
+    final result = await realmActions.execute(
       (action as RealmEditorAction).action,
       context,
     );
@@ -243,7 +268,7 @@ class _ComposedEditorState extends State<ComposedEditor> {
     switch (result) {
       case RealmCommandSuccess(:final instructions):
         for (final instruction in instructions) {
-          final execute = widget.executePanelInstruction;
+          final execute = realmActions.executePanelInstruction;
           if (execute == null) {
             _failure("Panel instruction executor is unavailable");
             return;

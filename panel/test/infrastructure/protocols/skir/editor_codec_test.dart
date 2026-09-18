@@ -90,10 +90,7 @@ void main() {
         skir.TypeExpression_kind.recordWrapper,
       ),
       (NamedType(reference), skir.TypeExpression_kind.namedWrapper),
-      (
-        const ParameterType("item"),
-        skir.TypeExpression_kind.parameterWrapper,
-      ),
+      (const ParameterType("item"), skir.TypeExpression_kind.parameterWrapper),
     ];
 
     for (final (expression, expectedKind) in expressions) {
@@ -257,29 +254,19 @@ void main() {
         ),
       ]),
     ];
-    expect(
-      outcomes[0].kind,
-      skir.BindingResolution_kind.resolvedWrapper,
-    );
+    expect(outcomes[0].kind, skir.BindingResolution_kind.resolvedWrapper);
     final resolved =
         (outcomes[0] as skir.BindingResolution_resolvedWrapper).value;
     expect(resolved.reference, binding);
 
-    expect(
-      resolved.valueType.kind,
-      skir.TypeExpression_kind.stringWrapper,
-    );
+    expect(resolved.valueType.kind, skir.TypeExpression_kind.stringWrapper);
     expect(resolved.value, skir.TypedValue.wrapString("value"));
     expect(resolved.writable, isTrue);
     expect(resolved.revision, 2);
 
-    expect(
-      outcomes[1].kind,
-      skir.BindingResolution_kind.diagnosticsWrapper,
-    );
+    expect(outcomes[1].kind, skir.BindingResolution_kind.diagnosticsWrapper);
     final diagnostics =
-        (outcomes[1] as skir.BindingResolution_diagnosticsWrapper)
-            .value;
+        (outcomes[1] as skir.BindingResolution_diagnosticsWrapper).value;
     expect(diagnostics, hasLength(1));
     expect(diagnostics.single.code, skir.DiagnosticCode.invalidPath);
     expect(diagnostics.single.message, "Invalid binding");

@@ -64,12 +64,7 @@ void main() {
           ],
           representation: RecordType(
             fields: {
-              "entry": TypeField(
-                name: "entry",
-                type: NamedType(
-                  standardTypeRefs.refTo(const ParameterType("V")),
-                ),
-              ),
+              "entry": TypeField(name: "entry", type: const ParameterType("V")),
               "data": const TypeField(name: "data", type: ParameterType("D")),
             },
           ),

@@ -6,6 +6,7 @@
 library;
 
 export "editors/editors.dart";
+export "eligibility/eligibility.dart";
 export "graph/graph.dart";
 export "hooks/hooks.dart";
 export "inspector/inspector.dart";

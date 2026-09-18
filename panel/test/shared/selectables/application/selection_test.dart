@@ -51,22 +51,19 @@ void main() {
       expect(container.read(selectionProvider), isEmpty);
     });
 
-    test(
-      "single select on already selected item with multiple keeps only that item",
-      () {
-        final container = ProviderContainer.test();
+    test("single select on already selected item with multiple keeps only that item", () {
+      final container = ProviderContainer.test();
 
-        final idA = MockSelectableIdentifier("A");
-        final idB = MockSelectableIdentifier("B");
+      final idA = MockSelectableIdentifier("A");
+      final idB = MockSelectableIdentifier("B");
 
-        container.read(selectionProvider.notifier).selectAll([idA, idB]);
-        container
-            .read(selectionProvider.notifier)
-            .select(idA, isMultiSelect: false);
+      container.read(selectionProvider.notifier).selectAll([idA, idB]);
+      container
+          .read(selectionProvider.notifier)
+          .select(idA, isMultiSelect: false);
 
-        expect(container.read(selectionProvider), [idA]);
-      },
-    );
+      expect(container.read(selectionProvider), [idA]);
+    });
 
     test("multi-select adds to existing selection", () {
       final container = ProviderContainer.test();

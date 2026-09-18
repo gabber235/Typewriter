@@ -49,7 +49,7 @@ void main() {
     );
   });
 
-  test("abstract fields use the first concrete descendant", () {
+  test("abstract fields require an explicit concrete descendant", () {
     final abstract = ResolvedTypeRef(
       id: QualifiedTypeId(namespace: "test", name: "Abstract"),
       revision: 1,
@@ -95,7 +95,10 @@ void main() {
       ]),
     );
 
-    final result = NamedType(root).createInitialValue(registry: types);
+    final draft = CreationDraft(rootType: NamedType(root), registry: types);
+    addTearDown(draft.dispose);
+    draft.selectConcreteType(DataPath.root.field("choice"), first);
+    final result = draft.finalize();
 
     expect(
       result.valueOrNull,

@@ -98,9 +98,17 @@ mixin _PageElementMutations
     List<ElementDefinition> definitions,
     EntryPlacementKind placementKind, {
     Offset? preferredGraphAnchor,
+    List<DataValue>? initialValues,
   }) async {
     state.ensureReady();
     if (definitions.isEmpty) return const [];
+    if (initialValues != null && initialValues.length != definitions.length) {
+      throw ArgumentError.value(
+        initialValues.length,
+        "initialValues",
+        "Expected one initial value per definition",
+      );
+    }
     final codec = _codec();
     final registry = codec.registry;
     final ids = [
@@ -128,6 +136,7 @@ mixin _PageElementMutations
               indexed.$2.name,
               registry,
               codec.codec,
+              initialValues?[indexed.$1],
             ),
             placement: switch (placementKind) {
               EntryPlacementKind.graph => skir.ElementPlacement.createGraph(

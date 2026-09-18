@@ -313,7 +313,7 @@ String toString() {
 /// @nodoc
 mixin _$TypeReferenceLocation {
 
- List<TypeQuerySegment> get path; NamedType get type;
+ List<TypeQuerySegment> get path; ReferenceType get type; bool get collection; bool get optional;
 /// Create a copy of TypeReferenceLocation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -325,20 +325,20 @@ $TypeReferenceLocationCopyWith<TypeReferenceLocation> get copyWith => _$TypeRefe
 @override
 bool operator ==(Object other) {
   final _this = this as TypeReferenceLocation;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeReferenceLocation&&const DeepCollectionEquality().equals(other.path, _this.path)&&const DeepCollectionEquality().equals(other.type, _this.type));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeReferenceLocation&&const DeepCollectionEquality().equals(other.path, _this.path)&&const DeepCollectionEquality().equals(other.type, _this.type)&&(identical(other.collection, _this.collection) || other.collection == _this.collection)&&(identical(other.optional, _this.optional) || other.optional == _this.optional));
 }
 
 
 @override
 int get hashCode {
   final _this = this as TypeReferenceLocation;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.path),const DeepCollectionEquality().hash(_this.type));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.path),const DeepCollectionEquality().hash(_this.type),_this.collection,_this.optional);
 }
 
 @override
 String toString() {
   final _this = this as TypeReferenceLocation;
-  return 'TypeReferenceLocation(path: ${_this.path}, type: ${_this.type})';
+  return 'TypeReferenceLocation(path: ${_this.path}, type: ${_this.type}, collection: ${_this.collection}, optional: ${_this.optional})';
 }
 
 
@@ -349,7 +349,7 @@ abstract mixin class $TypeReferenceLocationCopyWith<$Res>  {
   factory $TypeReferenceLocationCopyWith(TypeReferenceLocation value, $Res Function(TypeReferenceLocation) _then) = _$TypeReferenceLocationCopyWithImpl;
 @useResult
 $Res call({
- List<TypeQuerySegment> path, NamedType type
+ List<TypeQuerySegment> path, ReferenceType type, bool collection, bool optional
 });
 
 
@@ -366,11 +366,13 @@ class _$TypeReferenceLocationCopyWithImpl<$Res>
 
 /// Create a copy of TypeReferenceLocation
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? path = null,Object? type = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? path = null,Object? type = freezed,Object? collection = null,Object? optional = null,}) {
   return _then(TypeReferenceLocation(
 path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as List<TypeQuerySegment>,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as NamedType,
+as ReferenceType,collection: null == collection ? _self.collection : collection // ignore: cast_nullable_to_non_nullable
+as bool,optional: null == optional ? _self.optional : optional // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -455,10 +457,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<TypeQuerySegment> path,  NamedType type)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<TypeQuerySegment> path,  ReferenceType type,  bool collection,  bool optional)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TypeReferenceLocation() when $default != null:
-return $default(_that.path,_that.type);case _:
+return $default(_that.path,_that.type,_that.collection,_that.optional);case _:
   return orElse();
 
 }
@@ -476,10 +478,10 @@ return $default(_that.path,_that.type);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<TypeQuerySegment> path,  NamedType type)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<TypeQuerySegment> path,  ReferenceType type,  bool collection,  bool optional)  $default,) {final _that = this;
 switch (_that) {
 case _TypeReferenceLocation():
-return $default(_that.path,_that.type);case _:
+return $default(_that.path,_that.type,_that.collection,_that.optional);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -496,10 +498,10 @@ return $default(_that.path,_that.type);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<TypeQuerySegment> path,  NamedType type)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<TypeQuerySegment> path,  ReferenceType type,  bool collection,  bool optional)?  $default,) {final _that = this;
 switch (_that) {
 case _TypeReferenceLocation() when $default != null:
-return $default(_that.path,_that.type);case _:
+return $default(_that.path,_that.type,_that.collection,_that.optional);case _:
   return null;
 
 }
@@ -511,7 +513,7 @@ return $default(_that.path,_that.type);case _:
 
 
 class _TypeReferenceLocation extends TypeReferenceLocation {
-  const _TypeReferenceLocation({required  List<TypeQuerySegment> path, required this.type}): _path = path,super._();
+  const _TypeReferenceLocation({required  List<TypeQuerySegment> path, required this.type, this.collection = false, this.optional = false}): _path = path,super._();
   
 
  final  List<TypeQuerySegment> _path;
@@ -521,7 +523,9 @@ class _TypeReferenceLocation extends TypeReferenceLocation {
   return EqualUnmodifiableListView(_path);
 }
 
-@override final  NamedType type;
+@override final  ReferenceType type;
+@override@JsonKey() final  bool collection;
+@override@JsonKey() final  bool optional;
 
 /// Create a copy of TypeReferenceLocation
 /// with the given fields replaced by the non-null parameter values.
@@ -533,18 +537,18 @@ _$TypeReferenceLocationCopyWith<_TypeReferenceLocation> get copyWith => __$TypeR
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeReferenceLocation&&const DeepCollectionEquality().equals(other.path, _path)&&const DeepCollectionEquality().equals(other.type, type));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeReferenceLocation&&const DeepCollectionEquality().equals(other.path, _path)&&const DeepCollectionEquality().equals(other.type, type)&&(identical(other.collection, collection) || other.collection == collection)&&(identical(other.optional, optional) || other.optional == optional));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_path),const DeepCollectionEquality().hash(type));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_path),const DeepCollectionEquality().hash(type),collection,optional);
 }
 
 @override
 String toString() {
-    return 'TypeReferenceLocation(path: $path, type: $type)';
+    return 'TypeReferenceLocation(path: $path, type: $type, collection: $collection, optional: $optional)';
 }
 
 
@@ -555,7 +559,7 @@ abstract mixin class _$TypeReferenceLocationCopyWith<$Res> implements $TypeRefer
   factory _$TypeReferenceLocationCopyWith(_TypeReferenceLocation value, $Res Function(_TypeReferenceLocation) _then) = __$TypeReferenceLocationCopyWithImpl;
 @override @useResult
 $Res call({
- List<TypeQuerySegment> path, NamedType type
+ List<TypeQuerySegment> path, ReferenceType type, bool collection, bool optional
 });
 
 
@@ -572,11 +576,13 @@ class __$TypeReferenceLocationCopyWithImpl<$Res>
 
 /// Create a copy of TypeReferenceLocation
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? path = null,Object? type = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? path = null,Object? type = freezed,Object? collection = null,Object? optional = null,}) {
   return _then(_TypeReferenceLocation(
 path: null == path ? _self._path : path // ignore: cast_nullable_to_non_nullable
 as List<TypeQuerySegment>,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as NamedType,
+as ReferenceType,collection: null == collection ? _self.collection : collection // ignore: cast_nullable_to_non_nullable
+as bool,optional: null == optional ? _self.optional : optional // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

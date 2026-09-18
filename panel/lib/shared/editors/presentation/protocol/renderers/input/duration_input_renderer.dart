@@ -12,6 +12,7 @@ extension DurationInputElementRendering on DurationInputElement {
       shapeMismatch: (binding) =>
           binding.type is DurationType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is DurationValue)
           ? null
           : "Duration control requires a duration binding",

@@ -67,6 +67,12 @@ class PresentationNodeRenderer extends StatelessWidget {
             header: header,
             scope: renderScope,
             contained: node.element is SectionElement,
+            showDirectDiagnostics: switch (node.element) {
+              ListInputElement() ||
+              MapInputElement() ||
+              RecordInputElement() => true,
+              _ => false,
+            },
             child: child,
           );
     final decoratedSurface = switch (node.element) {
@@ -149,6 +155,7 @@ extension on PresentationElement {
       final EnumInputElement element => element.render(context, scope),
       final ColorInputElement element => element.render(context, scope),
       final NamedInputElement element => element.render(context, scope),
+      final ReferenceInputElement element => element.render(context, scope),
       final SearchInputElement element => element.render(context, scope),
       final PolymorphicInputElement element => element.render(context, scope),
       final ListInputElement element => element.renderInput(context, scope),

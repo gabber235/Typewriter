@@ -185,6 +185,67 @@ void main() {
     });
   });
 
+  group("Entry reference drops", () {
+    final registry = _referenceDropRegistry();
+    final source = EntryDefinition(
+      id: "source",
+      elementDefinition: _elementDefinition(rootType: _sourceEntryType),
+      placement: const EntryPlacement(x: 0, y: 0, width: 10, height: 10),
+      data: RecordValue({
+        "id": const StringValue("source"),
+        "name": const StringValue("Source"),
+        "child": ReferenceValue(recordId("element:previous")),
+      }),
+      inwardEdges: const [],
+      outwardEdges: const [],
+    );
+    final target = EntryDefinition(
+      id: "target",
+      elementDefinition: _elementDefinition(rootType: _targetEntryType),
+      placement: const EntryPlacement(x: 20, y: 0, width: 10, height: 10),
+      data: RecordValue(const {
+        "id": StringValue("target"),
+        "name": StringValue("Target"),
+      }),
+      inwardEdges: const [],
+      outwardEdges: const [],
+    );
+
+    test("derives the update from the dragged source", () {
+      const targetIdentity = EntryIdentifier(
+        "target",
+        elementType: _targetEntryType,
+      );
+      expect(registry.resolveExact(_sourceEntryType).diagnostics, isEmpty);
+      expect(targetIdentity.isAcceptedBy(_targetEntryType, registry), isTrue);
+      final values = source.referenceDropValues(targetIdentity, registry);
+
+      expect(values, {
+        DataPath.root.field("child"): ReferenceValue(
+          recordId("element:target"),
+        ),
+      });
+    });
+
+    test("does not derive the reverse update from the drop target", () {
+      final values = target.referenceDropValues(
+        const EntryIdentifier("source", elementType: _sourceEntryType),
+        registry,
+      );
+
+      expect(values, isEmpty);
+    });
+
+    test("rejects a target outside the source reference type", () {
+      final values = source.referenceDropValues(
+        const EntryIdentifier("other", elementType: _otherEntryType),
+        registry,
+      );
+
+      expect(values, isEmpty);
+    });
+  });
+
   test("entry presentation always starts with the editable name", () {
     const presentationId = PresentationId(namespace: "example", name: "editor");
     const rootBinding = BindingReference(bindingId: BindingId(0));
@@ -265,15 +326,17 @@ void main() {
   });
 }
 
-ElementDefinition _elementDefinition({ElementDeprecation? deprecation}) =>
-    ElementDefinition(
-      rootType: _rootType,
-      name: "Example",
-      description: "Typed entry",
-      color: Colors.blue,
-      icon: const IconValue.iconify("fa-solid:star"),
-      deprecation: deprecation,
-    );
+ElementDefinition _elementDefinition({
+  ElementDeprecation? deprecation,
+  ResolvedTypeRef? rootType,
+}) => ElementDefinition(
+  rootType: rootType ?? _rootType,
+  name: "Example",
+  description: "Typed entry",
+  color: Colors.blue,
+  icon: const IconValue.iconify("fa-solid:star"),
+  deprecation: deprecation,
+);
 
 TypeRegistry _registry({
   required NominalTypeKind kind,
@@ -285,5 +348,46 @@ TypeRegistry _registry({
 );
 
 final _rootType = ResolvedTypeRef(id: DeclaredTypeId(_rootTypeId), revision: 1);
+
+const _sourceEntryType = ResolvedTypeRef(
+  id: TypeId.qualified(namespace: "example", name: "SourceEntry"),
+  revision: 1,
+);
+const _targetEntryType = ResolvedTypeRef(
+  id: TypeId.qualified(namespace: "example", name: "TargetEntry"),
+  revision: 1,
+);
+const _otherEntryType = ResolvedTypeRef(
+  id: TypeId.qualified(namespace: "example", name: "OtherEntry"),
+  revision: 1,
+);
+
+TypeRegistry _referenceDropRegistry() => TypeRegistry(
+  TypeCatalog([
+    ...referenceResourceTypes.definitions,
+    TypeDefinition(
+      id: _sourceEntryType,
+      kind: NominalTypeKind.concrete,
+      representation: RecordType(
+        fields: {
+          "child": TypeField(
+            name: "child",
+            type: const ReferenceType(target: _targetEntryType),
+          ),
+        },
+      ),
+    ),
+    TypeDefinition(
+      id: _targetEntryType,
+      kind: NominalTypeKind.concrete,
+      parents: [referenceResourceTypes.element],
+    ),
+    TypeDefinition(
+      id: _otherEntryType,
+      kind: NominalTypeKind.concrete,
+      parents: [referenceResourceTypes.element],
+    ),
+  ]),
+);
 
 const _rootTypeId = "0123456789abcdef0123456789abcdef";

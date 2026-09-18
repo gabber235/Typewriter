@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "render_scope.freezed.dart";
@@ -40,24 +41,66 @@ typedef EditorInteractionStarter = EditorInteractionSession? Function(
 /// resource value. This host keeps the projected snapshot locally, translates
 /// edits back into the parent value, and reports replacements through
 /// [onChanged]. It does not become the owner of the parent draft or revision.
-final class VirtualBindingHost {
+final class VirtualBindingHost implements BindingSource {
   VirtualBindingHost({
     required this.id,
-    required this._snapshot,
+    required BindingSnapshot snapshot,
     required this.onChanged,
     this.interactionTarget,
-  });
+  }) : _type = snapshot.type,
+       _value = EditorValue.ready(snapshot.value),
+       _revision = snapshot.revision,
+       _writable = snapshot.writable;
+
+  factory VirtualBindingHost.editorValue({
+    required BindingId id,
+    required TypeExpression type,
+    required EditorValue value,
+    required int revision,
+    required bool writable,
+    required ValueChanged<DataValue> onChanged,
+    BindingReference? interactionTarget,
+  }) => VirtualBindingHost._editorValue(
+    id,
+    type,
+    value,
+    revision,
+    writable,
+    onChanged,
+    interactionTarget,
+  );
+
+  VirtualBindingHost._editorValue(
+    this.id,
+    this._type,
+    this._value,
+    this._revision,
+    this._writable,
+    this.onChanged,
+    this.interactionTarget,
+  );
 
   final BindingId id;
   final ValueChanged<DataValue> onChanged;
   final BindingReference? interactionTarget;
-  BindingSnapshot _snapshot;
-
-  BindingSnapshot get snapshot => _snapshot;
+  final TypeExpression _type;
+  EditorValue _value;
+  int _revision;
+  final bool _writable;
+  @override
+  bool get writable => _writable;
+  @override
+  int get revision => _revision;
 
   ExpressionContext bind(ExpressionContext context) {
-    return context.withBinding(id, _snapshot);
+    return context.withBinding(id, this);
   }
+
+  @override
+  TypeResult<BindingSourceState> inspect(
+    DataPath path, {
+    TypeRegistry? registry,
+  }) => _value.inspectBindingValue(_type, path, registry: registry);
 
   BindingReference interactionReference(BindingReference reference) {
     if (reference.bindingId != id || interactionTarget == null) {
@@ -72,7 +115,12 @@ final class VirtualBindingHost {
   /// only this host's projection; the callback forwards the replacement to the
   /// parent input, which remains authoritative for the actual draft.
   bool update(DataPath path, DataValue value) {
-    final updated = path.replace(_snapshot.value, value).valueOrNull;
+    final current = _value.valueOrNull;
+    final updated = path.segments.isEmpty
+        ? value
+        : current == null
+        ? null
+        : path.replace(current, value).valueOrNull;
     if (updated == null) return false;
 
     _replace(updated);
@@ -96,7 +144,8 @@ final class VirtualBindingHost {
       final address = BindingReference(bindingId: entry.key)
           .canonicalizedWith(aliases);
       if (address.bindingId != id) continue;
-      final value = address.path.read(_snapshot.value).valueOrNull;
+      final root = _value.valueOrNull;
+      final value = root == null ? null : address.path.read(root).valueOrNull;
       if (value == null) continue;
       final inspected = context.bindings.inspect(
         BindingReference(bindingId: entry.key),
@@ -111,7 +160,7 @@ final class VirtualBindingHost {
         BindingSnapshot(
           type: binding.type,
           value: value,
-          revision: _snapshot.revision,
+          revision: _revision,
           writable: binding.writable,
         ),
       );
@@ -126,7 +175,8 @@ final class VirtualBindingHost {
   }
 
   void _replace(DataValue value) {
-    _snapshot = _snapshot.withValue(value);
+    _value = EditorValue.ready(value);
+    _revision++;
     onChanged(value);
   }
 }
@@ -214,6 +264,12 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     required HeaderExpansionStore expansionStore,
     EditorInteractionStarter? startInteraction,
     RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,
+    ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,
+    ReferenceResourceResolver? resolveReferences,
+    @Default([]) List<RecordId> referenceOrigins,
+    @Default(ReferenceCandidatePolicyRegistry())
+    ReferenceCandidatePolicyRegistry referencePolicies,
+    EditOwner? Function(BindingReference reference)? editOwnerFor,
     @Default({})
     Map<PresentationCollectionSourceId, PresentationCollectionSource>
     collections,
@@ -316,7 +372,7 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
       inputAccess: {
         ...inputAccess,
         host.id: source == null
-            ? (host._snapshot.writable
+            ? (host.writable
                   ? PresentationInputAccess.edit
                   : PresentationInputAccess.read)
             : accessOf(source),

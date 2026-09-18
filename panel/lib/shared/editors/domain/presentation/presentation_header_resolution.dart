@@ -33,28 +33,20 @@ extension PresentationHeaderComposition on PresentationHeader {
 /// action only when its binding resolves to a boolean. Missing or non ready
 /// bindings return no contribution, leaving the declared presentation intact.
 extension PresentationElementHeaderContribution on PresentationElement {
-  PresentationHeader? contributeHeader(
-    ExpressionContext context, {
-    required TypeRegistry registry,
-  }) {
+  PresentationHeader? contributeHeader(PresentationRenderScope scope) {
     final element = this;
     return switch (element) {
-      ToggleInputElement() => element._toggleHeader(context, registry),
-      ListInputElement() => element._listHeader(context, registry),
-      MapInputElement() => element._mapHeader(context, registry),
+      ToggleInputElement() => element._toggleHeader(scope),
+      ListInputElement() => element._listHeader(scope),
+      MapInputElement() => element._mapHeader(scope),
       _ => null,
     };
   }
 }
 
 extension on ToggleInputElement {
-  PresentationHeader? _toggleHeader(
-    ExpressionContext context,
-    TypeRegistry registry,
-  ) {
-    final resolved = context.bindings
-        .resolve(control.binding, registry: registry)
-        .valueOrNull;
+  PresentationHeader? _toggleHeader(PresentationRenderScope scope) {
+    final resolved = scope.resolve(control.binding).valueOrNull;
     if (resolved case ResolvedBinding(
       value: BooleanValue(:final value),
       :final writable,
@@ -90,21 +82,18 @@ extension on ToggleInputElement {
 }
 
 extension on ListInputElement {
-  PresentationHeader? _listHeader(
-    ExpressionContext context,
-    TypeRegistry registry,
-  ) {
+  PresentationHeader? _listHeader(PresentationRenderScope scope) {
     if (!allowAdd) return null;
-    final resolved = context.bindings
-        .resolve(control.binding, registry: registry)
-        .valueOrNull;
-    if (resolved?.type.bindingRepresentation(registry) case ListType(
+    final inspected = scope.inspect(control.binding).valueOrNull;
+    if (inspected?.type.bindingRepresentation(scope.registry) case ListType(
       :final element,
     )) {
+      final reference = scope.canonical(control.binding);
+      final structural = scope.editOwnerFor?.call(reference);
       final initial = element
-          .createInitialValue(registry: registry)
+          .createInitialValue(registry: scope.registry)
           .valueOrNull;
-      if (initial == null) return null;
+      if (initial == null && structural is! EditorStructureOwner) return null;
       return PresentationHeader(
         binding: control.binding,
         title: control.label?.asHeaderTitle,
@@ -121,7 +110,7 @@ extension on ListInputElement {
                 target: control.binding,
                 value: TypedExpression(
                   resultType: element,
-                  expression: LiteralExpression(initial),
+                  expression: LiteralExpression(initial ?? const UnitValue()),
                 ),
               ),
             ),
@@ -134,23 +123,25 @@ extension on ListInputElement {
 }
 
 extension on MapInputElement {
-  PresentationHeader? _mapHeader(
-    ExpressionContext context,
-    TypeRegistry registry,
-  ) {
+  PresentationHeader? _mapHeader(PresentationRenderScope scope) {
     if (!allowAdd) return null;
-    final resolved = context.bindings
-        .resolve(control.binding, registry: registry)
-        .valueOrNull;
-    if (resolved?.type.bindingRepresentation(registry) case MapType(
+    final inspected = scope.inspect(control.binding).valueOrNull;
+    if (inspected?.type.bindingRepresentation(scope.registry) case MapType(
       :final key,
       :final value,
     )) {
-      final initialKey = key.createInitialValue(registry: registry).valueOrNull;
-      final initialValue = value
-          .createInitialValue(registry: registry)
+      final reference = scope.canonical(control.binding);
+      final structural = scope.editOwnerFor?.call(reference);
+      final initialKey = key
+          .createInitialValue(registry: scope.registry)
           .valueOrNull;
-      if (initialKey == null || initialValue == null) return null;
+      final initialValue = value
+          .createInitialValue(registry: scope.registry)
+          .valueOrNull;
+      if ((initialKey == null || initialValue == null) &&
+          structural is! EditorStructureOwner) {
+        return null;
+      }
       return PresentationHeader(
         binding: control.binding,
         title: control.label?.asHeaderTitle,
@@ -167,11 +158,15 @@ extension on MapInputElement {
                 target: control.binding,
                 key: TypedExpression(
                   resultType: key,
-                  expression: LiteralExpression(initialKey),
+                  expression: LiteralExpression(
+                    initialKey ?? const UnitValue(),
+                  ),
                 ),
                 value: TypedExpression(
                   resultType: value,
-                  expression: LiteralExpression(initialValue),
+                  expression: LiteralExpression(
+                    initialValue ?? const UnitValue(),
+                  ),
                 ),
               ),
             ),

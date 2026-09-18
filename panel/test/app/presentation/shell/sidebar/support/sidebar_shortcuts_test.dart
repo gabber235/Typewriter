@@ -36,9 +36,9 @@ void main() {
       final initial = container.read(sidebarSizeProvider);
       expect(initial, equals(kSidebarDefaultSize));
 
-      final sidebarWidth = MediaQuery.of(
-        tester.element(find.byType(Sidebar)),
-      ).size.width;
+      final sidebarWidth = MediaQuery.of(tester.element(find.byType(Sidebar)))
+          .size
+          .width;
       final sidebarMax =
           (sidebarWidth * kSidebarMaxFactor).floorToDouble() - 1.0;
       final sidebarMin = min(kSidebarMinSize, sidebarMax);
@@ -79,9 +79,9 @@ void main() {
       final container = tester.container();
       final initial = container.read(sidebarSizeProvider);
 
-      final sidebarWidth = MediaQuery.of(
-        tester.element(find.byType(Sidebar)),
-      ).size.width;
+      final sidebarWidth = MediaQuery.of(tester.element(find.byType(Sidebar)))
+          .size
+          .width;
       final sidebarMax =
           (sidebarWidth * kSidebarMaxFactor).floorToDouble() - 1.0;
       final sidebarMin = min(kSidebarMinSize, sidebarMax);

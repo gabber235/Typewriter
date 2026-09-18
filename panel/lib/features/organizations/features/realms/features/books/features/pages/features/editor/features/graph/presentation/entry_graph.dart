@@ -64,7 +64,9 @@ class EntryGraph extends HookConsumerWidget {
           width: definition.placement.width,
           height: definition.placement.height,
           builder: (context) {
-            return SizedBox.expand(child: EntryNode(entry: entry));
+            return SizedBox.expand(
+              child: EntryNode(pageId: pageId, entry: entry),
+            );
           },
         ),
         [
@@ -88,7 +90,9 @@ class EntryGraph extends HookConsumerWidget {
               width: placement.width,
               height: placement.height,
               builder: (context) {
-                return SizedBox.expand(child: EntryNode(entry: entry));
+                return SizedBox.expand(
+                  child: EntryNode(pageId: pageId, entry: entry),
+                );
               },
             ),
             <GraphEdge>[],
@@ -101,7 +105,9 @@ class EntryGraph extends HookConsumerWidget {
           width: 5,
           height: 5,
           builder: (context) {
-            return SizedBox.expand(child: EntryNode(entry: entry));
+            return SizedBox.expand(
+              child: EntryNode(pageId: pageId, entry: entry),
+            );
           },
         ),
         <GraphEdge>[],

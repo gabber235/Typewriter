@@ -17,6 +17,7 @@ extension DateTimeInputElementRendering on DateTimeInputElement {
       shapeMismatch: (binding) =>
           binding.type is TimestampType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is TimestampValue)
           ? null
           : "Date and time control requires a timestamp",

@@ -98,6 +98,10 @@ extension TypeExpressionConstraintValidation on TypeExpression {
         for (final argument in (this as NamedType).reference.arguments)
           ...argument._validateConstraintTree(parameters, path, active),
       ],
+      ReferenceType() => [
+        for (final argument in (this as ReferenceType).target.arguments)
+          ...argument._validateConstraintTree(parameters, path, active),
+      ],
       ParameterType() =>
         parameters.contains((this as ParameterType).name)
             ? const <TypeDiagnostic>[]
@@ -127,12 +131,15 @@ extension TypeExpressionConstraintValidation on TypeExpression {
     NamedType(:final reference) => reference.arguments.any(
       (argument) => argument.containsParameter,
     ),
+    ReferenceType(:final target) => target.arguments.any(
+      (argument) => argument.containsParameter,
+    ),
     EnumType(:final valueType) => valueType.containsParameter,
     _ => false,
   };
 
   bool get requiresRegistry => switch (this) {
-    NamedType() => true,
+    NamedType() || ReferenceType() => true,
     ListType(:final element) => element.requiresRegistry,
     MapType(:final key, :final value) =>
       key.requiresRegistry || value.requiresRegistry,
@@ -157,6 +164,9 @@ extension TypeExpressionConstraintValidation on TypeExpression {
     EnumType(:final valueType) => valueType.parameterUses,
     NamedType(:final reference) => {
       for (final argument in reference.arguments) ...argument.parameterUses,
+    },
+    ReferenceType(:final target) => {
+      for (final argument in target.arguments) ...argument.parameterUses,
     },
     _ => const {},
   };
@@ -200,6 +210,10 @@ extension TypeExpressionConstraintValidation on TypeExpression {
     ],
     NamedType(:final reference) => [
       for (final argument in reference.arguments)
+        ...argument.validateResolvedValues(registry, path: path),
+    ],
+    ReferenceType(:final target) => [
+      for (final argument in target.arguments)
         ...argument.validateResolvedValues(registry, path: path),
     ],
     _ => const [],

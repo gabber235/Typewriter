@@ -8,6 +8,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// inspector fields and rename dialogs so identifiers have one input contract.
 const identifierInputFormats = [
   TextInputFormat.lowercase(),
-  TextInputFormat.deny("[^a-z0-9_]+"),
   TextInputFormat.replace(pattern: r"[\s\-]+", replacement: "_"),
+  TextInputFormat.allow("[a-z0-9_]"),
 ];

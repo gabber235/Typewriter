@@ -15,11 +15,12 @@ extension ToggleInputElementRendering on ToggleInputElement {
       shapeMismatch: (binding) =>
           binding.type is BooleanType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is BooleanValue)
           ? null
           : "Toggle control requires a boolean binding",
       builder: (context, field) {
-        if (!field.mixed) return const SizedBox.shrink();
+        if (!field.mixed && !field.missing) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -39,7 +40,7 @@ extension ToggleInputElementRendering on ToggleInputElement {
                     }
                   : null,
             ),
-            const MixedValueMessage(),
+            if (field.mixed) const MixedValueMessage(),
           ],
         );
       },

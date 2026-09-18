@@ -241,6 +241,12 @@ extension on PresentationElement {
       NamedInputElement() => NamedInputElement(
         value.control._substituteTypes(substitutions),
       ),
+      ReferenceInputElement() => ReferenceInputElement(
+        control: value.control._substituteTypes(substitutions),
+        allowReorder: value.allowReorder,
+        candidatePolicy: value.candidatePolicy,
+        rejectionDisplay: value.rejectionDisplay,
+      ),
       ListInputElement() => ListInputElement(
         control: value.control._substituteTypes(substitutions),
         itemPresentation: value.itemPresentation._substituteTypes(

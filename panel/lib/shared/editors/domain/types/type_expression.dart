@@ -82,6 +82,9 @@ sealed class TypeExpression with _$TypeExpression {
 
   const factory TypeExpression.named(ResolvedTypeRef reference) = NamedType;
 
+  const factory TypeExpression.reference({required ResolvedTypeRef target}) =
+      ReferenceType;
+
   @Assert("name != \"\"", "Parameter name must not be empty.")
   const factory TypeExpression.parameter(String name) = ParameterType;
 }

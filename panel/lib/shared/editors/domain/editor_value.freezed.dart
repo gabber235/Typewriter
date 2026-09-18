@@ -56,11 +56,12 @@ extension EditorValuePatterns on EditorValue {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LoadingEditorValue value)?  loading,TResult Function( MixedEditorValue value)?  mixed,TResult Function( InvalidEditorValue value)?  invalid,TResult Function( ReadyEditorValue value)?  ready,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LoadingEditorValue value)?  loading,TResult Function( MissingEditorValue value)?  missing,TResult Function( MixedEditorValue value)?  mixed,TResult Function( InvalidEditorValue value)?  invalid,TResult Function( ReadyEditorValue value)?  ready,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LoadingEditorValue() when loading != null:
-return loading(_that);case MixedEditorValue() when mixed != null:
+return loading(_that);case MissingEditorValue() when missing != null:
+return missing(_that);case MixedEditorValue() when mixed != null:
 return mixed(_that);case InvalidEditorValue() when invalid != null:
 return invalid(_that);case ReadyEditorValue() when ready != null:
 return ready(_that);case _:
@@ -81,11 +82,12 @@ return ready(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LoadingEditorValue value)  loading,required TResult Function( MixedEditorValue value)  mixed,required TResult Function( InvalidEditorValue value)  invalid,required TResult Function( ReadyEditorValue value)  ready,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LoadingEditorValue value)  loading,required TResult Function( MissingEditorValue value)  missing,required TResult Function( MixedEditorValue value)  mixed,required TResult Function( InvalidEditorValue value)  invalid,required TResult Function( ReadyEditorValue value)  ready,}){
 final _that = this;
 switch (_that) {
 case LoadingEditorValue():
-return loading(_that);case MixedEditorValue():
+return loading(_that);case MissingEditorValue():
+return missing(_that);case MixedEditorValue():
 return mixed(_that);case InvalidEditorValue():
 return invalid(_that);case ReadyEditorValue():
 return ready(_that);}
@@ -102,11 +104,12 @@ return ready(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LoadingEditorValue value)?  loading,TResult? Function( MixedEditorValue value)?  mixed,TResult? Function( InvalidEditorValue value)?  invalid,TResult? Function( ReadyEditorValue value)?  ready,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LoadingEditorValue value)?  loading,TResult? Function( MissingEditorValue value)?  missing,TResult? Function( MixedEditorValue value)?  mixed,TResult? Function( InvalidEditorValue value)?  invalid,TResult? Function( ReadyEditorValue value)?  ready,}){
 final _that = this;
 switch (_that) {
 case LoadingEditorValue() when loading != null:
-return loading(_that);case MixedEditorValue() when mixed != null:
+return loading(_that);case MissingEditorValue() when missing != null:
+return missing(_that);case MixedEditorValue() when mixed != null:
 return mixed(_that);case InvalidEditorValue() when invalid != null:
 return invalid(_that);case ReadyEditorValue() when ready != null:
 return ready(_that);case _:
@@ -126,10 +129,11 @@ return ready(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function()?  mixed,TResult Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult Function( DataValue value)?  ready,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function()?  missing,TResult Function()?  mixed,TResult Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult Function( DataValue value)?  ready,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LoadingEditorValue() when loading != null:
-return loading();case MixedEditorValue() when mixed != null:
+return loading();case MissingEditorValue() when missing != null:
+return missing();case MixedEditorValue() when mixed != null:
 return mixed();case InvalidEditorValue() when invalid != null:
 return invalid(_that.diagnostics);case ReadyEditorValue() when ready != null:
 return ready(_that.value);case _:
@@ -150,10 +154,11 @@ return ready(_that.value);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function()  mixed,required TResult Function( List<TypeDiagnostic> diagnostics)  invalid,required TResult Function( DataValue value)  ready,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function()  missing,required TResult Function()  mixed,required TResult Function( List<TypeDiagnostic> diagnostics)  invalid,required TResult Function( DataValue value)  ready,}) {final _that = this;
 switch (_that) {
 case LoadingEditorValue():
-return loading();case MixedEditorValue():
+return loading();case MissingEditorValue():
+return missing();case MixedEditorValue():
 return mixed();case InvalidEditorValue():
 return invalid(_that.diagnostics);case ReadyEditorValue():
 return ready(_that.value);}
@@ -170,10 +175,11 @@ return ready(_that.value);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function()?  mixed,TResult? Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult? Function( DataValue value)?  ready,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function()?  missing,TResult? Function()?  mixed,TResult? Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult? Function( DataValue value)?  ready,}) {final _that = this;
 switch (_that) {
 case LoadingEditorValue() when loading != null:
-return loading();case MixedEditorValue() when mixed != null:
+return loading();case MissingEditorValue() when missing != null:
+return missing();case MixedEditorValue() when mixed != null:
 return mixed();case InvalidEditorValue() when invalid != null:
 return invalid(_that.diagnostics);case ReadyEditorValue() when ready != null:
 return ready(_that.value);case _:
@@ -208,6 +214,38 @@ int get hashCode => runtimeType.hashCode;
 @override
 String toString() {
     return 'EditorValue.loading()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class MissingEditorValue extends EditorValue {
+  const MissingEditorValue(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is MissingEditorValue);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'EditorValue.missing()';
 }
 
 

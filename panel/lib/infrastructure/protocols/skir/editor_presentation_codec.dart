@@ -162,6 +162,8 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_namedInputWrapper(:final value) => _bound(
       value,
     ).mapValue(NamedInputElement.new),
+    wire.PresentationElement_referenceInputWrapper(:final value) =>
+      _referenceInput(value),
     wire.PresentationElement_invocationWrapper(:final value) => _invocation(
       value,
     ),

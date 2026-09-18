@@ -21,6 +21,7 @@ extension ListInputElementResolvedRendering on ListInputElement {
       shapeMismatch: (binding) =>
           binding.type is ListType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is ListValue)
           ? null
           : "List control does not match its binding",
@@ -35,6 +36,21 @@ extension ListInputElementResolvedRendering on ListInputElement {
                   : null,
             ),
           );
+        }
+        final reference = scope.canonical(control.binding);
+        final owner = scope.editOwnerFor?.call(reference);
+        if (owner is EditorStructureOwner) {
+          final structuralOwner = owner;
+          final structure = structuralOwner.listStructure(reference.path);
+          if (structure != null) {
+            return _DraftListInputRenderer(
+              element: this,
+              binding: field.binding,
+              scope: scope,
+              structure: structure,
+              editable: field.editable,
+            );
+          }
         }
         return render(
           binding: field.binding.resolvedOrNull!,
@@ -58,6 +74,7 @@ extension MapInputElementResolvedRendering on MapInputElement {
       shapeMismatch: (binding) =>
           binding.type is MapType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is MapValue)
           ? null
           : "Map control does not match its binding",
@@ -72,6 +89,21 @@ extension MapInputElementResolvedRendering on MapInputElement {
                   : null,
             ),
           );
+        }
+        final reference = scope.canonical(control.binding);
+        final owner = scope.editOwnerFor?.call(reference);
+        if (owner is EditorStructureOwner) {
+          final structuralOwner = owner;
+          final structure = structuralOwner.mapStructure(reference.path);
+          if (structure != null) {
+            return _DraftMapInput(
+              element: this,
+              binding: field.binding,
+              scope: scope,
+              owner: structuralOwner,
+              structure: structure,
+            );
+          }
         }
         return render(binding: field.binding.resolvedOrNull!, scope: scope);
       },
@@ -90,6 +122,7 @@ extension RecordInputElementResolvedRendering on RecordInputElement {
       shapeMismatch: (binding) =>
           binding.type is RecordType &&
               (binding.value is MixedEditorValue ||
+                  binding.value is MissingEditorValue ||
                   binding.value.valueOrNull is RecordValue)
           ? null
           : "Record control does not match its binding",

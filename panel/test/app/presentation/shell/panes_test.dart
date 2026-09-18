@@ -265,9 +265,8 @@ void main() {
       isNotNull,
     );
     expect(
-      Actions.find<NavigatePaneIntent>(
-        context.currentContext!,
-      ).isEnabled(intent),
+      Actions.find<NavigatePaneIntent>(context.currentContext!)
+          .isEnabled(intent),
       isTrue,
     );
 
@@ -275,9 +274,8 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(
-      Actions.find<NavigatePaneIntent>(
-        context.currentContext!,
-      ).isEnabled(intent),
+      Actions.find<NavigatePaneIntent>(context.currentContext!)
+          .isEnabled(intent),
       isFalse,
     );
 
@@ -285,9 +283,8 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(
-      Actions.find<NavigatePaneIntent>(
-        context.currentContext!,
-      ).isEnabled(intent),
+      Actions.find<NavigatePaneIntent>(context.currentContext!)
+          .isEnabled(intent),
       isTrue,
     );
     showTarget.value = false;
@@ -295,9 +292,8 @@ void main() {
 
     await tester.pump();
     expect(
-      Actions.find<NavigatePaneIntent>(
-        context.currentContext!,
-      ).isEnabled(intent),
+      Actions.find<NavigatePaneIntent>(context.currentContext!)
+          .isEnabled(intent),
       isFalse,
     );
   });

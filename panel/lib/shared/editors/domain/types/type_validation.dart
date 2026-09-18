@@ -70,6 +70,26 @@ extension DataValueValidation on DataValue {
       return _validateComparable(value.value, type.minimum, type.maximum, path);
     }
 
+    if (value is ReferenceValue && type is ReferenceType) {
+      if (registry == null) {
+        return [
+          _invalid(path, "A registry is required to validate a reference"),
+        ];
+      }
+      final family = registry.referenceFamily(type.target);
+      if (family case TypeFailure(:final diagnostics)) return diagnostics;
+      final expectedTable = family.valueOrNull!.name;
+      if (value.id.table != expectedTable) {
+        return [
+          _invalid(
+            path,
+            "Reference targets '${value.id.table}' but '$expectedTable' is required",
+          ),
+        ];
+      }
+      return const [];
+    }
+
     if (value is ListValue && type is ListType) {
       return value._validateAgainst(type, path, registry);
     }

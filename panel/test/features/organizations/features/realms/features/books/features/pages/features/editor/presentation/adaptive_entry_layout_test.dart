@@ -43,6 +43,7 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
@@ -80,6 +81,7 @@ void main() {
               height: 40,
               child: Material(
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
@@ -118,6 +120,7 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.reference(
                     id: "ref-entry",
                     name: "Reference Entry",
@@ -149,6 +152,7 @@ void main() {
               child: Material(
                 color: Colors.green,
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
@@ -198,6 +202,7 @@ void main() {
               child: Material(
                 color: Colors.green,
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
@@ -251,6 +256,7 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.definition(
                     definition: EntryDefinition(
                       id: "test-entry",
@@ -293,6 +299,7 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
+                  pageId: "page",
                   entry: const PageEntry.nonexistent(id: "missing"),
                 ),
               ),
@@ -315,6 +322,7 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
+                  pageId: "page",
                   entry: PageEntry.missingElementDefinition(
                     id: "no-elementDefinition",
                     name: "Entry Without Element Definition",
@@ -349,6 +357,7 @@ void main() {
                   child: Material(
                     color: Colors.green,
                     child: EntryNode(
+                      pageId: "page",
                       entry: PageEntry.definition(
                         definition: EntryDefinition(
                           id: "test-entry",

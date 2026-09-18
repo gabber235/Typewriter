@@ -51,7 +51,7 @@ class BookWidget extends HookConsumerWidget {
                 .read(appRouterProvider)
                 .navigate(selectableId.routeFor(organization, realm)),
       builder: (isSelected, isFocused, isHovered) {
-        return Surface(
+        final book = Surface(
           color: Theme.of(context).colorScheme.surface,
           child:
               OutlineDecorator(
@@ -74,6 +74,59 @@ class BookWidget extends HookConsumerWidget {
                   .animate(target: isHovered ? 1 : 0)
                   .hoverScale(isHovered)
                   .hoverRotate(isHovered),
+        );
+        return DragTarget<Object>(
+          onWillAcceptWithDetails: (details) =>
+              details.data is ReferenceResourceDragData &&
+              (details.data as ReferenceResourceDragData).referenceId.table ==
+                  "tag",
+          onAcceptWithDetails: (details) async {
+            final data = details.data as ReferenceResourceDragData;
+            final current = ref.read(projectedBookProvider(id)).value;
+            if (current == null) return;
+            final tags = [...current.tagIds];
+            final index = tags.indexOf(data.referenceId);
+            if (index < 0) {
+              tags.add(data.referenceId);
+            } else {
+              tags.removeAt(index);
+            }
+            await ref
+                .read(canonicalBooksProvider.notifier)
+                .updateBook(current.copyWith(tagIds: tags), expected: current);
+          },
+          builder: (context, accepted, rejected) => AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            decoration: BoxDecoration(
+              borderRadius: context.shapes.largeBorderRadius,
+              border: accepted.isEmpty && rejected.isEmpty
+                  ? null
+                  : Border.all(
+                      color: accepted.isNotEmpty
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.error,
+                      width: 2,
+                    ),
+            ),
+            child: Draggable<BookIdentifier>(
+              data: selectableId,
+              feedback: Material(
+                color: Colors.transparent,
+                child: Surface(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: SizedBox(
+                    width: bookWidth,
+                    child: Padding(
+                      padding: EdgeInsets.all(context.spacing.space4),
+                      child: Text(title),
+                    ),
+                  ),
+                ),
+              ),
+              childWhenDragging: Opacity(opacity: 0.35, child: book),
+              child: book,
+            ),
+          ),
         );
       },
     );

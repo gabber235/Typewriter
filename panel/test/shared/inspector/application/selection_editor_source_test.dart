@@ -31,9 +31,8 @@ void main() {
       final container = ProviderContainer.test();
       container.read(selectionProvider.notifier).selectAll([first, second]);
 
-      final state = _owner(
-        container.read(_sourceProvider),
-      ).value(DataPath.root);
+      final state = _owner(container.read(_sourceProvider))
+          .value(DataPath.root);
 
       expect(state, isA<ReadyEditorValue>());
       expect(state.valueOrNull, ListValue([const StringValue("same")]));
@@ -57,9 +56,8 @@ void main() {
       final container = ProviderContainer.test();
       container.read(selectionProvider.notifier).selectAll([first, second]);
 
-      final state = _owner(
-        container.read(_sourceProvider),
-      ).value(DataPath.root.field("missing"));
+      final state = _owner(container.read(_sourceProvider))
+          .value(DataPath.root.field("missing"));
 
       expect((state as InvalidEditorValue).diagnostics, isNotEmpty);
     });
@@ -198,9 +196,8 @@ void main() {
       container.read(selectionProvider.notifier).selectAll([first, second]);
       const path = DataPath.root;
 
-      final result = _owner(
-        container.read(_sourceProvider),
-      ).update(path, const StringValue("requested"));
+      final result = _owner(container.read(_sourceProvider))
+          .update(path, const StringValue("requested"));
 
       expect(
         (result as AppliedEditorMutation).value,
@@ -236,9 +233,8 @@ void main() {
       final container = ProviderContainer.test();
       container.read(selectionProvider.notifier).selectAll([first, second]);
 
-      final result = _owner(
-        container.read(_sourceProvider),
-      ).update(DataPath.root, const StringValue("requested"));
+      final result = _owner(container.read(_sourceProvider))
+          .update(DataPath.root, const StringValue("requested"));
 
       expect(result, isA<ConflictingEditorMutation>());
     });
@@ -257,9 +253,8 @@ void main() {
       final container = ProviderContainer.test();
       container.read(selectionProvider.notifier).selectAll([first, second]);
 
-      final result = _owner(
-        container.read(_sourceProvider),
-      ).update(DataPath.root, const StringValue("requested"));
+      final result = _owner(container.read(_sourceProvider))
+          .update(DataPath.root, const StringValue("requested"));
 
       expect((result as InvalidEditorMutation).diagnostics, hasLength(2));
     });
@@ -278,9 +273,8 @@ void main() {
       final container = ProviderContainer.test();
       container.read(selectionProvider.notifier).selectAll([first, second]);
 
-      final result = _owner(
-        container.read(_sourceProvider),
-      ).update(DataPath.root, const StringValue("after"));
+      final result = _owner(container.read(_sourceProvider))
+          .update(DataPath.root, const StringValue("after"));
 
       expect(result, isA<InvalidEditorMutation>());
       expect(first.latest!.latestCommit, isNull);

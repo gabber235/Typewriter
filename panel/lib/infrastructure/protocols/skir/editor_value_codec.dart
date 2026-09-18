@@ -58,6 +58,9 @@ final class SkirDataValueCodec {
       concreteType,
       value,
     ),
+    ReferenceValue(:final id) => TypeResult.success(
+      wire.TypedValue.wrapReference(id),
+    ),
   };
 
   /// Decodes a tagged wire value and validates its payload constraints.
@@ -129,6 +132,9 @@ final class SkirDataValueCodec {
       wire.TypedValue_recordWrapper(:final value) =>
         SkirDataValueCollectionCodec(this).decodeRecord(value.fields),
       wire.TypedValue_namedWrapper(:final value) => _decodeNamed(value),
+      wire.TypedValue_referenceWrapper(:final value) => TypeResult.success(
+        ReferenceValue(value),
+      ),
     };
   }
 

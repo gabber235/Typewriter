@@ -23,9 +23,9 @@ void main() {
 
       expect((const StringValue("日本")).validateAgainst(type), isEmpty);
       expect(
-        (const StringValue(
-          "日",
-        )).validateAgainst(type).map((diagnostic) => diagnostic.message),
+        (const StringValue("日"))
+            .validateAgainst(type)
+            .map((diagnostic) => diagnostic.message),
         contains(contains("at least 2")),
       );
     });

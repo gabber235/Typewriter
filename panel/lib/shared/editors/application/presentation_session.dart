@@ -143,6 +143,16 @@ final class PresentationSession extends ChangeNotifier {
       aliases,
     );
     final target = owner(destination);
+    if (target is EditorStructureOwner) {
+      final structural = _executeStructuralDraftAction(
+        target,
+        destination,
+        action.action,
+        context,
+        aliases,
+      );
+      if (structural != null) return structural;
+    }
     if (target is MultiEditOwner) {
       final input =
           model.inputs[destination.bindingId]! as PresentationEditInput;
@@ -255,6 +265,71 @@ final class PresentationSession extends ChangeNotifier {
     );
   }
 
+  EditorMutationResult? _executeStructuralDraftAction(
+    EditorStructureOwner owner,
+    BindingReference destination,
+    LocalAction action,
+    ExpressionContext context,
+    Map<BindingId, BindingReference> aliases,
+  ) {
+    final input = model.inputs[destination.bindingId];
+    if (input is! PresentationEditInput) return null;
+    final path = input.path.followedBy(destination.path);
+    DataValue? evaluate(TypedExpression expression) => expression
+        .evaluate(context, registry: TypeRegistry(model.catalog))
+        .valueOrNull;
+
+    int? integer(TypedExpression expression) {
+      final value = evaluate(expression);
+      return value is IntegerValue ? value.value.toInt() : null;
+    }
+
+    return switch (action) {
+      AppendListItemAction(:final value) => _appendDraftList(
+        owner,
+        path,
+        evaluate(value),
+      ),
+      RemoveListItemAction(:final index) => _withInteger(
+        integer(index),
+        (value) => owner.removeListItem(path, value),
+      ),
+      DuplicateListItemAction(:final source) => _draftListSource(
+        source.canonicalizedWith(aliases),
+        input.path,
+        owner.duplicateListItem,
+      ),
+      ReorderListItemAction(:final source, :final newIndex) => _withInteger(
+        integer(newIndex),
+        (destinationIndex) => _draftListSource(
+          source.canonicalizedWith(aliases),
+          input.path,
+          (path, sourceIndex) =>
+              owner.reorderListItem(path, sourceIndex, destinationIndex),
+        ),
+      ),
+      PutMapEntryAction(key: final key, value: final value) => _putDraftMap(
+        owner,
+        path,
+        evaluate(key),
+        evaluate(value),
+      ),
+      RemoveMapEntryAction(:final key) => _removeDraftMap(
+        owner,
+        path,
+        evaluate(key),
+      ),
+      ReplaceConcreteTypeAction(:final concreteType, :final initialValue) =>
+        _replaceDraftConcrete(
+          owner,
+          path,
+          concreteType,
+          evaluate(initialValue),
+        ),
+      SetValueAction() || InsertListItemAction() => null,
+    };
+  }
+
   @override
   void dispose() {
     for (final owner in _owners) {
@@ -265,6 +340,79 @@ final class PresentationSession extends ChangeNotifier {
     super.dispose();
   }
 }
+
+EditorMutationResult _appendDraftList(
+  EditorStructureOwner owner,
+  DataPath path,
+  DataValue? value,
+) {
+  final index = owner.listStructure(path)?.items.length;
+  final appended = owner.appendListItem(path);
+  if (appended is! AppliedEditorMutation || index == null || value == null) {
+    return appended;
+  }
+  return owner.update(path.index(index), value);
+}
+
+EditorMutationResult _putDraftMap(
+  EditorStructureOwner owner,
+  DataPath path,
+  DataValue? key,
+  DataValue? value,
+) {
+  final appended = owner.appendMapEntry(path);
+  if (appended is! AppliedEditorMutation) return appended;
+  final entry = owner.mapStructure(path)?.entries.lastOrNull;
+  if (entry == null) return appended;
+  if (key != null) owner.updateMapKey(path, entry.id, key);
+  if (value != null) owner.updateMapValue(path, entry.id, value);
+  return appended;
+}
+
+EditorMutationResult? _removeDraftMap(
+  EditorStructureOwner owner,
+  DataPath path,
+  DataValue? key,
+) {
+  if (key == null) return null;
+  final entries = owner.mapStructure(path)?.entries;
+  if (entries == null) return null;
+  final byId = key is IntegerValue
+      ? entries
+            .where((entry) => entry.id.value == key.value.toInt())
+            .firstOrNull
+      : null;
+  final entry =
+      byId ??
+      entries.where((entry) => entry.key.valueOrNull == key).firstOrNull;
+  return entry == null ? null : owner.removeMapEntry(path, entry.id);
+}
+
+EditorMutationResult _replaceDraftConcrete(
+  EditorStructureOwner owner,
+  DataPath path,
+  ResolvedTypeRef type,
+  DataValue? value,
+) {
+  final selected = owner.selectConcreteType(path, type);
+  if (selected is! AppliedEditorMutation || value == null) return selected;
+  return owner.updateConcretePayload(path, value);
+}
+
+EditorMutationResult? _draftListSource(
+  BindingReference source,
+  DataPath inputPrefix,
+  EditorMutationResult Function(DataPath path, int index) apply,
+) {
+  final segments = source.path.segments;
+  if (segments.isEmpty || segments.last is! IndexPathSegment) return null;
+  final index = (segments.last as IndexPathSegment).index;
+  final parent = DataPath(segments.sublist(0, segments.length - 1));
+  return apply(inputPrefix.followedBy(parent), index);
+}
+
+T? _withInteger<T>(int? value, T? Function(int value) apply) =>
+    value == null ? null : apply(value);
 
 extension LocalActionDestination on LocalAction {
   BindingReference get mutationReference => switch (this) {

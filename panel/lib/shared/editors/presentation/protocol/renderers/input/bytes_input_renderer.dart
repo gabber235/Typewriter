@@ -12,6 +12,7 @@ extension BytesInputElementRendering on BytesInputElement {
       scope: scope,
       shapeMismatch: (binding) =>
           binding.value is MixedEditorValue ||
+              binding.value is MissingEditorValue ||
               binding.value.valueOrNull is BytesValue
           ? null
           : "Bytes control requires base64 content",

@@ -42,6 +42,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/library/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_library_route_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/application/element_value_materialization.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_application_element_value_materialization_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_result_items.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/route.stories.dart'
@@ -540,6 +542,22 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook.WidgetbookFolder(
                         name: 'search',
                         children: [
+                          _widgetbook.WidgetbookFolder(
+                            name: 'application',
+                            children: [
+                              _widgetbook.WidgetbookComponent(
+                                name: 'ElementCreationDialog',
+                                useCases: [
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Complete editor',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_search_application_element_value_materialization_stories
+                                            .materializationPromptUseCase,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                           _widgetbook.WidgetbookFolder(
                             name: 'presentation',
                             children: [

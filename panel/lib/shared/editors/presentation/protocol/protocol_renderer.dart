@@ -133,10 +133,18 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
     return ComposedEditor(
       key: ObjectKey(_local ?? widget.envelope),
       model: model,
-      runtime: _executeRealm,
+      host: EditorHostCapabilities(
+        realmActions: RealmActionCapabilities(
+          execute: _executeRealm,
+          executePanelInstruction: widget.executePanelInstruction,
+        ),
+        presentationSearch: widget.realmSearchSourceBuilder == null
+            ? null
+            : RealmPresentationSearchCapabilities(
+                source: widget.realmSearchSourceBuilder!,
+              ),
+      ),
       conversions: widget.conversions,
-      realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
-      executePanelInstruction: widget.executePanelInstruction,
       headerShortcuts: {
         ..._defaultEditorHeaderShortcuts,
         ...widget.headerShortcuts,

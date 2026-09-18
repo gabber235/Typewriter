@@ -72,9 +72,7 @@ extension TagInspectorValue on Tag {
   RecordValue get inspectorValue => RecordValue({
     "name": name.asValue,
     "color": color.asValue,
-    "parents": ListValue(
-      parentIds.map((parentId) => parentId.id.asValue).toList(),
-    ),
+    "parents": ListValue(parentIds.map(ReferenceValue.new).toList()),
     "layout": RecordValue({
       "x": placement.x.asValue,
       "y": placement.y.asValue,
@@ -99,8 +97,8 @@ extension TagInspectorValue on Tag {
 
     final decodedColor = color.asColorOrNull;
     final parentIds = parents.values
-        .whereType<StringValue>()
-        .map((parent) => recordId("tag:${parent.value}"))
+        .whereType<ReferenceValue>()
+        .map((parent) => parent.id)
         .toList();
     final x = layout.fields["x"];
     final y = layout.fields["y"];

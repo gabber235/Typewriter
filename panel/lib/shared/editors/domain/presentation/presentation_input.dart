@@ -41,3 +41,11 @@ abstract class PolymorphicMatchCase with _$PolymorphicMatchCase {
 abstract interface class SimpleInputElement {
   BoundControl get control;
 }
+
+@freezed
+abstract class ReferencePolicyId with _$ReferencePolicyId {
+  @Assert("value != \"\"", "Reference policy ID must not be empty.")
+  const factory ReferencePolicyId(String value) = _ReferencePolicyId;
+}
+
+enum ReferenceRejectionDisplay { hidden, disabled }

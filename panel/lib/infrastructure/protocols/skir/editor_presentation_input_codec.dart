@@ -106,6 +106,25 @@ extension SkirPresentationInputDecoder on SkirPresentationDecoder {
         ),
       );
 
+  TypeResult<PresentationElement> _referenceInput(
+    wire.ReferenceControl value,
+  ) => _bound(value.control).mapValue(
+    (control) => ReferenceInputElement(
+      control: control,
+      allowReorder: value.allowReorder,
+      candidatePolicy: value.candidatePolicy == null
+          ? null
+          : ReferencePolicyId(value.candidatePolicy!.value),
+      rejectionDisplay: switch (value.rejectionDisplay) {
+        wire.ReferenceRejectionDisplay.hidden =>
+          ReferenceRejectionDisplay.hidden,
+        wire.ReferenceRejectionDisplay.disabled =>
+          ReferenceRejectionDisplay.disabled,
+        _ => ReferenceRejectionDisplay.hidden,
+      },
+    ),
+  );
+
   TypeResult<PresentationElement> _select(wire.SelectControl value) {
     final control = _bound(value.control);
     final defaultValue = _optionalExpression(value.defaultValue);

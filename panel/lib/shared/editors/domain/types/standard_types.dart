@@ -48,10 +48,6 @@ final class StandardTypeReferences {
     id: const QualifiedTypeId(namespace: "panel/v1", name: "SvgIcon"),
     revision: 1,
   );
-  final ref = ResolvedTypeRef(
-    id: const QualifiedTypeId(namespace: "typewriter/v1", name: "Ref"),
-    revision: 1,
-  );
 
   /// Applies the option type constructor to [type].
   ResolvedTypeRef optionOf(TypeExpression type) => option.withArguments([type]);
@@ -61,9 +57,6 @@ final class StandardTypeReferences {
 
   /// Applies the empty option constructor to [type].
   ResolvedTypeRef noneOf(TypeExpression type) => none.withArguments([type]);
-
-  /// Applies the reference constructor to [type].
-  ResolvedTypeRef refTo(TypeExpression type) => ref.withArguments([type]);
 }
 
 /// Adds the panel's standard definitions before catalog supplied definitions.
@@ -128,13 +121,5 @@ final _standardDefinitions = <TypeDefinition>[
     parents: [standardTypeRefs.icon],
     representation: const StringType(minimumLength: 1),
     defaultPresentationId: standardSvgIconPresentationId,
-  ),
-  TypeDefinition(
-    id: standardTypeRefs.ref,
-    kind: NominalTypeKind.concrete,
-    parameters: const [
-      TypeParameter(name: "T", variance: TypeVariance.covariant),
-    ],
-    representation: const StringType(minimumLength: 1),
   ),
 ];

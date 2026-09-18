@@ -89,6 +89,24 @@ extension SkirPresentationInputEncoder on SkirPresentationEncoder {
     ),
   );
 
+  TypeResult<wire.PresentationElement> _referenceInput(
+    ReferenceInputElement value,
+  ) => _bound(value.control).mapValue(
+    (control) => wire.PresentationElement.createReferenceInput(
+      control: control,
+      allowReorder: value.allowReorder,
+      candidatePolicy: value.candidatePolicy == null
+          ? null
+          : wire.ReferencePolicyId(value: value.candidatePolicy!.value),
+      rejectionDisplay: switch (value.rejectionDisplay) {
+        ReferenceRejectionDisplay.hidden =>
+          wire.ReferenceRejectionDisplay.hidden,
+        ReferenceRejectionDisplay.disabled =>
+          wire.ReferenceRejectionDisplay.disabled,
+      },
+    ),
+  );
+
   TypeResult<wire.PresentationElement> _select(SelectInputElement value) {
     final control = _bound(value.control);
     final defaultValue = _optional(value.defaultValue);

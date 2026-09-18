@@ -37,9 +37,8 @@ void main() {
       isEmpty,
     );
     expect(
-      RecordValue({
-        "state": const StringValue("unknown"),
-      }).validateAgainst(record),
+      RecordValue({"state": const StringValue("unknown")})
+          .validateAgainst(record),
       isNotEmpty,
     );
   });
@@ -140,9 +139,8 @@ void main() {
         isEmpty,
       );
       expect(
-        (const DurationValue(
-          Duration(microseconds: 1001),
-        )).validateAgainst(type),
+        (const DurationValue(Duration(microseconds: 1001)))
+            .validateAgainst(type),
         isNotEmpty,
       );
       expect(invalidType.validateConstraints(const {}), isNotEmpty);

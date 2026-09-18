@@ -49,10 +49,7 @@ void main() {
 
     expect(encodedType.typeId.kind, skir.TypeId_kind.qualifiedWrapper);
     expect(encodedType.revision, 1);
-    expect(
-      encodedType.kind.kind,
-      skir.TypeDefinitionKind_kind.concreteConst,
-    );
+    expect(encodedType.kind.kind, skir.TypeDefinitionKind_kind.concreteConst);
     expect(
       encodedType.representation.kind,
       skir.TypeExpression_kind.recordWrapper,
@@ -113,10 +110,7 @@ void main() {
       encodedEnvelope.rootType,
       types.encodeReference(reference).valueOrNull,
     );
-    expect(
-      encodedEnvelope.rootValue.kind,
-      skir.TypedValue_kind.recordWrapper,
-    );
+    expect(encodedEnvelope.rootValue.kind, skir.TypedValue_kind.recordWrapper);
     expect(definitions.decodeEnvelope(encodedEnvelope).valueOrNull, envelope);
   });
 }

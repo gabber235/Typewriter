@@ -391,7 +391,7 @@ void _requireEntriesOnPage(
 }
 
 Future<Page?> _selectTargetPage(BuildContext context, List<Page> pages) {
-  return showDialog<Page>(
+  return showAdvancedDialog<Page>(
     context: context,
     builder: (context) => SimpleDialog(
       title: const Text("Move to page"),

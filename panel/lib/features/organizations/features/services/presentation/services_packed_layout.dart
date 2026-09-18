@@ -1,6 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-
 /// Adapts service topology nodes and relationships to [GraphData].
 ///
 /// This boundary copies and sorts caller collections, drops relationships whose

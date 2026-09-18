@@ -61,12 +61,18 @@ final class RealmAuthoringSearchSource
     required this.organizationId,
     required this.realmId,
     this.contextPage,
+    this.referenceTarget,
+    this.referenceOrigins = const [],
+    this.typeRegistry,
   });
 
   final Ref ref;
   final skir.RecordId organizationId;
   final skir.RecordId realmId;
   final skir.RecordId? contextPage;
+  final ResolvedTypeRef? referenceTarget;
+  final List<skir.RecordId> referenceOrigins;
+  final TypeRegistry? typeRegistry;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -78,7 +84,8 @@ final class RealmAuthoringSearchSource
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  List<QuerySelectorDefinition> get selectors => authoringSearchSelectors;
+  List<QuerySelectorDefinition> get selectors =>
+      referenceTarget == null ? authoringSearchSelectors : const [];
 
   @override
   void initialize(SearchQueryContext context) => search(context);
@@ -97,12 +104,26 @@ final class RealmAuthoringSearchSource
         organizationId: organizationId,
         realmId: realmId,
       );
+      final target = referenceTarget;
+      final registry = typeRegistry;
+      final encodedTarget = target == null || registry == null
+          ? null
+          : SkirTypeCodec(registry).encodeReference(target).valueOrNull;
+      if (target != null && encodedTarget == null) {
+        throw StateError("Reference target could not be encoded");
+      }
       final response = await ref.requestSkir(
         address.request("library.authoring.content.search"),
         skir.SearchAuthoringContentRequest.serializer.toBytes(
           skir.SearchAuthoringContentRequest(
             query: encodeRealmSearchQuery(context),
             contextPage: contextPage,
+            referenceScope: encodedTarget == null
+                ? null
+                : skir.ReferenceSearchScope(
+                    origins: referenceOrigins,
+                    target: encodedTarget,
+                  ),
           ),
         ),
         skir.SearchAuthoringContentResponse.serializer,
@@ -181,38 +202,100 @@ final class RealmAuthoringSearchSource
     );
   }
 
-  SearchResult? _result(skir.AuthoringSearchHit hit) => switch (hit) {
-    skir.AuthoringSearchHit_bookWrapper(:final value) => SearchResult(
-      id: "book:${value.id.toSurrealQl()}",
-      type: authoringBookSearchResultType,
-      payload: value,
-      title: value.title,
-    ),
-    skir.AuthoringSearchHit_tagWrapper(:final value) => SearchResult(
-      id: "tag:${value.id.toSurrealQl()}",
-      type: authoringTagSearchResultType,
-      payload: value,
-      title: value.name,
-    ),
-    skir.AuthoringSearchHit_pageWrapper(:final value) => SearchResult(
-      id: "page:${value.id.toSurrealQl()}",
-      type: authoringPageSearchResultType,
-      payload: value,
-      title: value.name,
-      subtitle: [
-        value.chapter,
-        value.book.title,
-      ].where((part) => part.isNotEmpty).join(" / "),
-    ),
-    skir.AuthoringSearchHit_elementWrapper(:final value) => SearchResult(
-      id: "element:${value.id.toSurrealQl()}",
-      type: authoringElementSearchResultType,
-      payload: value,
-      title: value.name,
-      subtitle: value.page.name,
-    ),
-    skir.AuthoringSearchHit_unknown() => null,
-  };
+  SearchResult? _result(skir.AuthoringSearchHit hit) {
+    if (referenceTarget != null) return _referenceResult(hit);
+    return switch (hit) {
+      skir.AuthoringSearchHit_bookWrapper(:final value) => SearchResult(
+        id: "book:${value.id.toSurrealQl()}",
+        type: authoringBookSearchResultType,
+        payload: value,
+        title: value.title,
+      ),
+      skir.AuthoringSearchHit_tagWrapper(:final value) => SearchResult(
+        id: "tag:${value.id.toSurrealQl()}",
+        type: authoringTagSearchResultType,
+        payload: value,
+        title: value.name,
+      ),
+      skir.AuthoringSearchHit_pageWrapper(:final value) => SearchResult(
+        id: "page:${value.id.toSurrealQl()}",
+        type: authoringPageSearchResultType,
+        payload: value,
+        title: value.name,
+        subtitle: [
+          value.chapter,
+          value.book.title,
+        ].where((part) => part.isNotEmpty).join(" / "),
+      ),
+      skir.AuthoringSearchHit_elementWrapper(:final value) => SearchResult(
+        id: "element:${value.id.toSurrealQl()}",
+        type: authoringElementSearchResultType,
+        payload: value,
+        title: value.name,
+        subtitle: value.page.name,
+      ),
+      skir.AuthoringSearchHit_unknown() => null,
+    };
+  }
+
+  SearchResult? _referenceResult(skir.AuthoringSearchHit hit) {
+    final data = switch (hit) {
+      skir.AuthoringSearchHit_bookWrapper(:final value) => (
+        value.id,
+        value.title,
+        null,
+      ),
+      skir.AuthoringSearchHit_tagWrapper(:final value) => (
+        value.id,
+        value.name,
+        null,
+      ),
+      skir.AuthoringSearchHit_pageWrapper(:final value) => (
+        value.id,
+        value.name,
+        [
+          value.chapter,
+          value.book.title,
+        ].where((part) => part.isNotEmpty).join(" / "),
+      ),
+      skir.AuthoringSearchHit_elementWrapper(:final value) => (
+        value.id,
+        value.name,
+        value.page.name,
+      ),
+      skir.AuthoringSearchHit_unknown() => null,
+    };
+    if (data == null) return null;
+    final subtitle = data.$3;
+    return SearchResult(
+      id: "reference:${data.$1.toSurrealQl()}",
+      type: presentationSearchResultType,
+      title: data.$2,
+      subtitle: subtitle,
+      payload: PresentationSearchResultPayload(
+        selectedValue: ReferenceValue(data.$1),
+        providerKey: "authoring.reference",
+        expressions: const ExpressionContext(bindings: BindingEnvironment({})),
+        presentation: PresentationNode(
+          id: "authoring.reference.result",
+          element: ColumnElement(
+            spacing: 2,
+            children: [
+              PresentationNode(
+                id: "authoring.reference.result.title",
+                element: TextElement(data.$2.asStringLiteral),
+              ),
+              if (subtitle != null && subtitle.isNotEmpty)
+                PresentationNode(
+                  id: "authoring.reference.result.subtitle",
+                  element: TextElement(subtitle.asStringLiteral),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
@@ -280,6 +363,59 @@ const _selectorKinds = <String, skir.AuthoringSelectorKind>{
   "tag": skir.AuthoringSelectorKind.tag,
   "type": skir.AuthoringSelectorKind.elementType,
 };
+
+Future<List<ReferenceResourceSummary>> resolveAuthoringReferences({
+  required Ref ref,
+  required skir.RecordId organizationId,
+  required skir.RecordId realmId,
+  required ResolvedTypeRef target,
+  required List<skir.RecordId> ids,
+  required TypeRegistry registry,
+}) async {
+  if (ids.isEmpty) return const [];
+  final encodedTarget = SkirTypeCodec(registry).encodeReference(target);
+  if (encodedTarget.valueOrNull == null) {
+    throw StateError(
+      encodedTarget.diagnostics.map((item) => item.message).join(", "),
+    );
+  }
+  final address = RealmServiceAddress(
+    organizationId: organizationId,
+    realmId: realmId,
+  );
+  final response = await ref.requestSkir(
+    address.request("library.authoring.resources.resolve"),
+    skir.ResolveAuthoringResourcesRequest.serializer.toBytes(
+      skir.ResolveAuthoringResourcesRequest(
+        ids: ids,
+        referenceTarget: encodedTarget.valueOrNull!,
+      ),
+    ),
+    skir.ResolveAuthoringResourcesResponse.serializer,
+  );
+  return switch (response) {
+    skir.ResolveAuthoringResourcesResponse_successWrapper(:final value) =>
+      value.resources
+          .map(
+            (resource) => ReferenceResourceSummary(
+              id: resource.id,
+              exists: resource.exists,
+              title: resource.title,
+              subtitle: resource.subtitle,
+            ),
+          )
+          .toList(growable: false),
+    skir.ResolveAuthoringResourcesResponse_invalidWrapper(:final value) =>
+      throw StateError(
+        value.diagnostics.map((item) => item.message).join(", "),
+      ),
+    skir.ResolveAuthoringResourcesResponse_internalErrorWrapper() =>
+      throw StateError("Realm could not resolve references"),
+    skir.ResolveAuthoringResourcesResponse_unknown() => throw StateError(
+      "Realm returned an unknown reference response",
+    ),
+  };
+}
 
 extension on skir.AuthoringSelectorKind {
   String get selectorId => switch (this) {

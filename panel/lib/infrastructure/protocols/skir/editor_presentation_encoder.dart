@@ -150,6 +150,7 @@ final class SkirPresentationEncoder {
           value.control,
           wire.PresentationElement.wrapNamedInput,
         ),
+        ReferenceInputElement() => _referenceInput(value),
         ButtonElement() => _button(value),
         IconButtonElement() => _iconButton(value),
         MenuElement() => _menu(value),

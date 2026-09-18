@@ -4,6 +4,8 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "entries.freezed.dart";
@@ -133,6 +135,62 @@ abstract class EntryDefinition with _$EntryDefinition {
 
   String get name => data.requiredStringField("name");
 }
+
+/// Derives field updates that make this entry reference a dropped resource.
+///
+/// This entry is the source and mutation owner. [target] is the resource it
+/// will reference. An empty map means the resource cannot be dropped on this
+/// entry's behalf.
+extension EntryDefinitionReferenceDrop on EntryDefinition {
+  Map<DataPath, DataValue> referenceDropValues(
+    ReferenceResourceDragData target,
+    TypeRegistry registry,
+  ) {
+    final resolved = registry
+        .resolveExact(elementDefinition.rootType)
+        .valueOrNull;
+    if (resolved == null) return const {};
+
+    final values = <DataPath, DataValue>{};
+    for (final location in resolved.representation.queryReferences()) {
+      if (!target.isAcceptedBy(location.target, registry)) continue;
+      for (final path in data.expandTypeQueryPath(location.path)) {
+        final current = path.read(data).valueOrNull;
+        final selected = ReferenceValue(target.referenceId);
+        final next = location.collection
+            ? _toggleReference(current, selected)
+            : location.optional
+            ? _someReference(location.type, selected)
+            : selected;
+        final expected = resolved.representation
+            .resolvePath(path, registry: registry)
+            .valueOrNull;
+        if (expected != null &&
+            next.validateAgainst(expected, registry: registry).isEmpty) {
+          values[path] = next;
+        }
+      }
+    }
+    return Map.unmodifiable(values);
+  }
+}
+
+ListValue _toggleReference(DataValue? current, ReferenceValue selected) {
+  final values = current is ListValue ? [...current.values] : <DataValue>[];
+  final index = values.indexOf(selected);
+  if (index < 0) {
+    values.add(selected);
+  } else {
+    values.removeAt(index);
+  }
+  return ListValue(values);
+}
+
+PolymorphicValue _someReference(ReferenceType type, ReferenceValue selected) =>
+    PolymorphicValue(
+      concreteType: standardTypeRefs.someOf(type),
+      value: RecordValue({"value": selected}),
+    );
 
 /// Position and size of an entry in its owning page projection.
 ///

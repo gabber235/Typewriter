@@ -18,7 +18,7 @@ class _ActivityDetails extends StatelessWidget {
     if (source == null) return;
     controller.retain(resource.key);
     try {
-      await showDialog<void>(
+      await showAdvancedDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
           title: Text(resource.label),
