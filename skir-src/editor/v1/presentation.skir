@@ -880,6 +880,22 @@ struct TooltipElement(810800127) {
   child: PresentationNode = 1;
 }
 
+struct ReferenceControl(810800135) {
+  control: BoundControl = 0;
+  allow_reorder: bool = 1;
+  candidate_policy: ReferencePolicyId? = 2;
+  rejection_display: ReferenceRejectionDisplay = 3;
+}
+
+struct ReferencePolicyId(810800136) {
+  value: string = 0;
+}
+
+enum ReferenceRejectionDisplay(810800137) {
+  hidden = 1;
+  disabled = 2;
+}
+
 enum PresentationElement(810800128) {
   children: ChildrenElement = 1;
   section: SectionLayout = 2;
@@ -931,6 +947,7 @@ enum PresentationElement(810800128) {
   connection_layer: ConnectionLayerLayout = 48;
   polymorphic_match: PolymorphicMatchElement = 49;
   invocation: PresentationInvocation = 50;
+  reference_input: ReferenceControl = 51;
 }
 
 struct PresentationDefinition(810800129) {

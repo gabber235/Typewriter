@@ -4,6 +4,7 @@
 // capabilities, and conversions. A resolved reference identifies a declaration revision plus its type arguments.
 
 import { Duration } from "kernel/v1/duration.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
 
 enum BuiltinTypeId(810100001) {
   option = 1;
@@ -120,6 +121,7 @@ enum TypedValue(810200007) {
   record: TypedRecordValue = 19;
   named: TypedNamedValue = 20;
   duration: TypedDurationValue = 21;
+  reference: RecordId = 22;
 }
 
 struct ListType(810100012) {
@@ -159,6 +161,10 @@ struct EnumType(810100018) {
   canonical_values: [TypedValue] = 1;
 }
 
+struct ReferenceType(810100029) {
+  target_type: ResolvedTypeRef = 0;
+}
+
 enum TypeExpression(810100019) {
   any = 1;
   unit = 2;
@@ -177,6 +183,7 @@ enum TypeExpression(810100019) {
   enum_type: EnumType = 15;
   parameter: string = 16;
   named: ResolvedTypeRef = 17;
+  reference: ReferenceType = 18;
 }
 
 struct TypeParameter(810100020) {

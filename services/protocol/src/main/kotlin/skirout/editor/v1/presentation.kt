@@ -26622,6 +26622,466 @@ class TooltipElement private constructor(
     }
 }
 
+sealed interface ReferenceControl_OrMutable {
+    val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
+    val allowReorder: kotlin.Boolean;
+    val candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId_OrMutable?;
+    val rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay;
+
+    fun toFrozen(): skirout.editor.v1.presentation.ReferenceControl;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ReferenceControl private constructor(
+    override val control: skirout.editor.v1.presentation.BoundControl,
+    override val allowReorder: kotlin.Boolean,
+    override val candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId?,
+    override val rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReferenceControl>? =
+        null,
+): skirout.editor.v1.presentation.ReferenceControl_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+        allowReorder: kotlin.Boolean,
+        candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId_OrMutable?,
+        rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReferenceControl>? =
+            null,
+    ): this(
+        control.toFrozen(),
+        allowReorder,
+        if (candidatePolicy != null) candidatePolicy.toFrozen() else null,
+        rejectionDisplay,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        control = this.control,
+        allowReorder = this.allowReorder,
+        candidatePolicy = this.candidatePolicy,
+        rejectionDisplay = this.rejectionDisplay,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            this.control,
+        allowReorder: kotlin.Boolean =
+            this.allowReorder,
+        candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId_OrMutable? =
+            this.candidatePolicy,
+        rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay =
+            this.rejectionDisplay,
+    ) = skirout.editor.v1.presentation.ReferenceControl(
+        control.toFrozen(),
+        allowReorder,
+        if (candidatePolicy != null) candidatePolicy.toFrozen() else null,
+        rejectionDisplay,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.ReferenceControl && this.control == other.control && this.allowReorder == other.allowReorder && this.candidatePolicy == other.candidatePolicy && this.rejectionDisplay == other.rejectionDisplay);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.allowReorder, this.candidatePolicy, this.rejectionDisplay).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.ReferenceControl.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ReferenceControl]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var control: skirout.editor.v1.presentation.BoundControl =
+            skirout.editor.v1.presentation.BoundControl.partial(),
+        override var allowReorder: kotlin.Boolean =
+            false,
+        override var candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId_OrMutable? =
+            null,
+        override var rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay =
+            skirout.editor.v1.presentation.ReferenceRejectionDisplay.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReferenceControl>? =
+            null,
+    ): skirout.editor.v1.presentation.ReferenceControl_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.ReferenceControl(
+            control = this.control,
+            allowReorder = this.allowReorder,
+            candidatePolicy = this.candidatePolicy,
+            rejectionDisplay = this.rejectionDisplay,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.ReferenceControl(
+                skirout.editor.v1.presentation.BoundControl.partial(),
+                false,
+                null,
+                skirout.editor.v1.presentation.ReferenceRejectionDisplay.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ReferenceControl].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+                skirout.editor.v1.presentation.BoundControl.partial(),
+            allowReorder: kotlin.Boolean =
+                false,
+            candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId_OrMutable? =
+                null,
+            rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay =
+                skirout.editor.v1.presentation.ReferenceRejectionDisplay.UNKNOWN,
+        ) = skirout.editor.v1.presentation.ReferenceControl(
+            control = control,
+            allowReorder = allowReorder,
+            candidatePolicy = candidatePolicy,
+            rejectionDisplay = rejectionDisplay,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:ReferenceControl",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ReferenceControl] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ReferenceControl] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "control",
+                "control",
+                0,
+                skirout.editor.v1.presentation.BoundControl.serializer,
+                "",
+                { it.control },
+                { mut, v -> mut.control = v },
+            );
+            serializerImpl.addField(
+                "allow_reorder",
+                "allowReorder",
+                1,
+                build.skir.Serializers.bool,
+                "",
+                { it.allowReorder },
+                { mut, v -> mut.allowReorder = v },
+            );
+            serializerImpl.addField(
+                "candidate_policy",
+                "candidatePolicy",
+                2,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.ReferencePolicyId.serializer,
+                ),
+                "",
+                { it.candidatePolicy },
+                { mut, v -> mut.candidatePolicy = v },
+            );
+            serializerImpl.addField(
+                "rejection_display",
+                "rejectionDisplay",
+                3,
+                skirout.editor.v1.presentation.ReferenceRejectionDisplay.serializer,
+                "",
+                { it.rejectionDisplay },
+                { mut, v -> mut.rejectionDisplay = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface ReferencePolicyId_OrMutable {
+    val value: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.presentation.ReferencePolicyId;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ReferencePolicyId private constructor(
+    override val value: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReferencePolicyId>? =
+        null,
+): skirout.editor.v1.presentation.ReferencePolicyId_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReferencePolicyId>? =
+            null,
+    ): this(
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.presentation.ReferencePolicyId(
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.ReferencePolicyId && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.ReferencePolicyId.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ReferencePolicyId]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReferencePolicyId>? =
+            null,
+    ): skirout.editor.v1.presentation.ReferencePolicyId_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.ReferencePolicyId(
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.ReferencePolicyId(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ReferencePolicyId].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.presentation.ReferencePolicyId(
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:ReferencePolicyId",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ReferencePolicyId] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ReferencePolicyId] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "value",
+                "value",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class ReferenceRejectionDisplay private constructor() {
+    /** The kind of variant held by a `ReferenceRejectionDisplay`. */
+    enum class Kind {
+        UNKNOWN,
+        HIDDEN_CONST,
+        DISABLED_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.ReferenceRejectionDisplay.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.ReferenceRejectionDisplay>?,
+    ) : skirout.editor.v1.presentation.ReferenceRejectionDisplay() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ReferenceRejectionDisplay && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object HIDDEN : skirout.editor.v1.presentation.ReferenceRejectionDisplay() {
+        override val kind get() = Kind.HIDDEN_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ReferenceRejectionDisplay && other.kind == Kind.HIDDEN_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.HIDDEN_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object DISABLED : skirout.editor.v1.presentation.ReferenceRejectionDisplay() {
+        override val kind get() = Kind.DISABLED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.ReferenceRejectionDisplay && other.kind == Kind.DISABLED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.DISABLED_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.ReferenceRejectionDisplay>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.ReferenceRejectionDisplay._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ReferenceRejectionDisplay].
+         * Default value for fields of type [ReferenceRejectionDisplay].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.ReferenceRejectionDisplay, Unknown>(
+                recordId = "editor/v1/presentation.skir:ReferenceRejectionDisplay",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [ReferenceRejectionDisplay] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [ReferenceRejectionDisplay] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            HIDDEN;
+            DISABLED;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 3) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "hidden",
+                    Kind.HIDDEN_CONST.ordinal,
+                    "",
+                    HIDDEN,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "disabled",
+                    Kind.DISABLED_CONST.ordinal,
+                    "",
+                    DISABLED,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
 /** Deeply immutable. */
 sealed class PresentationElement private constructor() {
     /** The kind of variant held by a `PresentationElement`. */
@@ -26677,6 +27137,7 @@ sealed class PresentationElement private constructor() {
         CONNECTION_LAYER_WRAPPER,
         POLYMORPHIC_MATCH_WRAPPER,
         INVOCATION_WRAPPER,
+        REFERENCE_INPUT_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationElement.UNKNOWN")) internal constructor(
@@ -27592,6 +28053,24 @@ sealed class PresentationElement private constructor() {
         }
     }
 
+    class ReferenceInputWrapper private constructor (
+        val value: skirout.editor.v1.presentation.ReferenceControl,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.ReferenceControl_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.REFERENCE_INPUT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.ReferenceInputWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1220220374;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationElement>? get() = null;
 
     abstract val kind: Kind;
@@ -28480,6 +28959,24 @@ sealed class PresentationElement private constructor() {
             )
         );
 
+        /** Shortcut for `ReferenceInputWrapper(skirout.editor.v1.presentation.ReferenceControl(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReferenceInput(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            allowReorder: kotlin.Boolean,
+            candidatePolicy: skirout.editor.v1.presentation.ReferencePolicyId_OrMutable?,
+            rejectionDisplay: skirout.editor.v1.presentation.ReferenceRejectionDisplay,
+        ) = ReferenceInputWrapper(
+            skirout.editor.v1.presentation.ReferenceControl(
+                control = control,
+                allowReorder = allowReorder,
+                candidatePolicy = candidatePolicy,
+                rejectionDisplay = rejectionDisplay,
+            )
+        );
+
         private val _serializerImpl =
             build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationElement, Unknown>(
                 recordId = "editor/v1/presentation.skir:PresentationElement",
@@ -28953,6 +29450,15 @@ sealed class PresentationElement private constructor() {
                     skirout.editor.v1.presentation.PresentationInvocation.serializer,
                     "",
                     { InvocationWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    51,
+                    "reference_input",
+                    Kind.REFERENCE_INPUT_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.ReferenceControl.serializer,
+                    "",
+                    { ReferenceInputWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();

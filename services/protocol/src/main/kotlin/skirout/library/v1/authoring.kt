@@ -16896,9 +16896,616 @@ class AuthoringSearchSnapshot private constructor(
     }
 }
 
+sealed interface ReferenceSearchScope_OrMutable {
+    val origins: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
+    val target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+
+    fun toFrozen(): skirout.library.v1.authoring.ReferenceSearchScope;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ReferenceSearchScope private constructor(
+    override val origins: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
+    override val target: skirout.editor.v1.type_catalog.ResolvedTypeRef,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ReferenceSearchScope>? =
+        null,
+): skirout.library.v1.authoring.ReferenceSearchScope_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        origins: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
+        target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ReferenceSearchScope>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(origins, { it.toFrozen() }),
+        target.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        origins = this.origins,
+        target = this.target,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        origins: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+            this.origins,
+        target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            this.target,
+    ) = skirout.library.v1.authoring.ReferenceSearchScope(
+        build.skir.internal.toFrozenList(origins, { it.toFrozen() }),
+        target.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.ReferenceSearchScope && this.origins == other.origins && this.target == other.target);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.origins, this.target).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.ReferenceSearchScope.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ReferenceSearchScope]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var origins: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+        override var target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ReferenceSearchScope>? =
+            null,
+    ): skirout.library.v1.authoring.ReferenceSearchScope_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.ReferenceSearchScope(
+            origins = this.origins,
+            target = this.target,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [origins] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [origins] and returns it.
+         */
+        val mutableOrigins: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
+            var value = this.origins;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.origins = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [target] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+         */
+        val mutableTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
+            var value = this.target;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
+                    value = value.toMutable();
+                    this.target = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.ReferenceSearchScope(
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ReferenceSearchScope].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            origins: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+            target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        ) = skirout.library.v1.authoring.ReferenceSearchScope(
+            origins = origins,
+            target = target,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:ReferenceSearchScope",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ReferenceSearchScope] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ReferenceSearchScope] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "origins",
+                "origins",
+                0,
+                build.skir.Serializers.list(
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                ),
+                "",
+                { it.origins },
+                { mut, v -> mut.origins = v },
+            );
+            serializerImpl.addField(
+                "target",
+                "target",
+                1,
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
+                "",
+                { it.target },
+                { mut, v -> mut.target = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface ReferenceResourceSummary_OrMutable {
+    val id: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val title: kotlin.String?;
+    val subtitle: kotlin.String?;
+    val compatibleTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
+    val exists: kotlin.Boolean;
+
+    fun toFrozen(): skirout.library.v1.authoring.ReferenceResourceSummary;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ReferenceResourceSummary private constructor(
+    override val id: skirout.kernel.v1.record_id.RecordId,
+    override val title: kotlin.String?,
+    override val subtitle: kotlin.String?,
+    override val compatibleTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
+    override val exists: kotlin.Boolean,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ReferenceResourceSummary>? =
+        null,
+): skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        id: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        title: kotlin.String?,
+        subtitle: kotlin.String?,
+        compatibleTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
+        exists: kotlin.Boolean,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ReferenceResourceSummary>? =
+            null,
+    ): this(
+        id.toFrozen(),
+        title,
+        subtitle,
+        build.skir.internal.toFrozenList(compatibleTypes, { it.toFrozen() }),
+        exists,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        id = this.id,
+        title = this.title,
+        subtitle = this.subtitle,
+        compatibleTypes = this.compatibleTypes,
+        exists = this.exists,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        id: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            this.id,
+        title: kotlin.String? =
+            this.title,
+        subtitle: kotlin.String? =
+            this.subtitle,
+        compatibleTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
+            this.compatibleTypes,
+        exists: kotlin.Boolean =
+            this.exists,
+    ) = skirout.library.v1.authoring.ReferenceResourceSummary(
+        id.toFrozen(),
+        title,
+        subtitle,
+        build.skir.internal.toFrozenList(compatibleTypes, { it.toFrozen() }),
+        exists,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.ReferenceResourceSummary && this.id == other.id && this.title == other.title && this.subtitle == other.subtitle && this.compatibleTypes == other.compatibleTypes && this.exists == other.exists);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.title, this.subtitle, this.compatibleTypes, this.exists).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.ReferenceResourceSummary.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ReferenceResourceSummary]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var id: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            skirout.kernel.v1.record_id.RecordId.partial(),
+        override var title: kotlin.String? =
+            null,
+        override var subtitle: kotlin.String? =
+            null,
+        override var compatibleTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
+        override var exists: kotlin.Boolean =
+            false,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ReferenceResourceSummary>? =
+            null,
+    ): skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.ReferenceResourceSummary(
+            id = this.id,
+            title = this.title,
+            subtitle = this.subtitle,
+            compatibleTypes = this.compatibleTypes,
+            exists = this.exists,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [id] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+         */
+        val mutableId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+            var value = this.id;
+            return when (value) {
+                is skirout.kernel.v1.record_id.RecordId -> {
+                    value = value.toMutable();
+                    this.id = value;
+                    return value;
+                }
+                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [compatibleTypes] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [compatibleTypes] and returns it.
+         */
+        val mutableCompatibleTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> get() {
+            var value = this.compatibleTypes;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.compatibleTypes = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.ReferenceResourceSummary(
+                skirout.kernel.v1.record_id.RecordId.partial(),
+                null,
+                null,
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
+                false,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ReferenceResourceSummary].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            id: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            title: kotlin.String? =
+                null,
+            subtitle: kotlin.String? =
+                null,
+            compatibleTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
+            exists: kotlin.Boolean =
+                false,
+        ) = skirout.library.v1.authoring.ReferenceResourceSummary(
+            id = id,
+            title = title,
+            subtitle = subtitle,
+            compatibleTypes = compatibleTypes,
+            exists = exists,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:ReferenceResourceSummary",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ReferenceResourceSummary] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ReferenceResourceSummary] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "id",
+                "id",
+                0,
+                skirout.kernel.v1.record_id.RecordId.serializer,
+                "",
+                { it.id },
+                { mut, v -> mut.id = v },
+            );
+            serializerImpl.addField(
+                "title",
+                "title",
+                1,
+                build.skir.Serializers.optional(
+                    build.skir.Serializers.string,
+                ),
+                "",
+                { it.title },
+                { mut, v -> mut.title = v },
+            );
+            serializerImpl.addField(
+                "subtitle",
+                "subtitle",
+                2,
+                build.skir.Serializers.optional(
+                    build.skir.Serializers.string,
+                ),
+                "",
+                { it.subtitle },
+                { mut, v -> mut.subtitle = v },
+            );
+            serializerImpl.addField(
+                "compatible_types",
+                "compatibleTypes",
+                3,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
+                ),
+                "",
+                { it.compatibleTypes },
+                { mut, v -> mut.compatibleTypes = v },
+            );
+            serializerImpl.addField(
+                "exists",
+                "exists",
+                4,
+                build.skir.Serializers.bool,
+                "",
+                { it.exists },
+                { mut, v -> mut.exists = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface AuthoringReferenceResolution_OrMutable {
+    val resources: kotlin.collections.List<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable>;
+
+    fun toFrozen(): skirout.library.v1.authoring.AuthoringReferenceResolution;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class AuthoringReferenceResolution private constructor(
+    override val resources: kotlin.collections.List<skirout.library.v1.authoring.ReferenceResourceSummary>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.AuthoringReferenceResolution>? =
+        null,
+): skirout.library.v1.authoring.AuthoringReferenceResolution_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        resources: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.AuthoringReferenceResolution>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(resources, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        resources = this.resources,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        resources: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable> =
+            this.resources,
+    ) = skirout.library.v1.authoring.AuthoringReferenceResolution(
+        build.skir.internal.toFrozenList(resources, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.AuthoringReferenceResolution && this.resources == other.resources);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.resources).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.AuthoringReferenceResolution.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [AuthoringReferenceResolution]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var resources: kotlin.collections.List<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceResourceSummary>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.AuthoringReferenceResolution>? =
+            null,
+    ): skirout.library.v1.authoring.AuthoringReferenceResolution_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.AuthoringReferenceResolution(
+            resources = this.resources,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [resources] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [resources] and returns it.
+         */
+        val mutableResources: kotlin.collections.MutableList<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable> get() {
+            var value = this.resources;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.resources = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.AuthoringReferenceResolution(
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceResourceSummary>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [AuthoringReferenceResolution].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            resources: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceResourceSummary>(),
+        ) = skirout.library.v1.authoring.AuthoringReferenceResolution(
+            resources = resources,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:AuthoringReferenceResolution",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [AuthoringReferenceResolution] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [AuthoringReferenceResolution] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "resources",
+                "resources",
+                0,
+                build.skir.Serializers.list(
+                    skirout.library.v1.authoring.ReferenceResourceSummary.serializer,
+                ),
+                "",
+                { it.resources },
+                { mut, v -> mut.resources = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface SearchAuthoringContentRequest_OrMutable {
     val query: skirout.editor.v1.search.RealmSearchQuery_OrMutable;
     val contextPage: skirout.kernel.v1.record_id.RecordId_OrMutable?;
+    val referenceScope: skirout.library.v1.authoring.ReferenceSearchScope_OrMutable?;
 
     fun toFrozen(): skirout.library.v1.authoring.SearchAuthoringContentRequest;
 }
@@ -16908,6 +17515,7 @@ sealed interface SearchAuthoringContentRequest_OrMutable {
 class SearchAuthoringContentRequest private constructor(
     override val query: skirout.editor.v1.search.RealmSearchQuery,
     override val contextPage: skirout.kernel.v1.record_id.RecordId?,
+    override val referenceScope: skirout.library.v1.authoring.ReferenceSearchScope?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.SearchAuthoringContentRequest>? =
         null,
 ): skirout.library.v1.authoring.SearchAuthoringContentRequest_OrMutable {
@@ -16916,11 +17524,13 @@ class SearchAuthoringContentRequest private constructor(
             _MustNameArguments,
         query: skirout.editor.v1.search.RealmSearchQuery_OrMutable,
         contextPage: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+        referenceScope: skirout.library.v1.authoring.ReferenceSearchScope_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.SearchAuthoringContentRequest>? =
             null,
     ): this(
         query.toFrozen(),
         if (contextPage != null) contextPage.toFrozen() else null,
+        if (referenceScope != null) referenceScope.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -16931,6 +17541,7 @@ class SearchAuthoringContentRequest private constructor(
     fun toMutable() = Mutable(
         query = this.query,
         contextPage = this.contextPage,
+        referenceScope = this.referenceScope,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -16941,9 +17552,12 @@ class SearchAuthoringContentRequest private constructor(
             this.query,
         contextPage: skirout.kernel.v1.record_id.RecordId_OrMutable? =
             this.contextPage,
+        referenceScope: skirout.library.v1.authoring.ReferenceSearchScope_OrMutable? =
+            this.referenceScope,
     ) = skirout.library.v1.authoring.SearchAuthoringContentRequest(
         query.toFrozen(),
         if (contextPage != null) contextPage.toFrozen() else null,
+        if (referenceScope != null) referenceScope.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -16951,11 +17565,11 @@ class SearchAuthoringContentRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.authoring.SearchAuthoringContentRequest && this.query == other.query && this.contextPage == other.contextPage);
+        return this === other || (other is skirout.library.v1.authoring.SearchAuthoringContentRequest && this.query == other.query && this.contextPage == other.contextPage && this.referenceScope == other.referenceScope);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.query, this.contextPage).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.query, this.contextPage, this.referenceScope).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -16973,6 +17587,8 @@ class SearchAuthoringContentRequest private constructor(
             skirout.editor.v1.search.RealmSearchQuery.partial(),
         override var contextPage: skirout.kernel.v1.record_id.RecordId_OrMutable? =
             null,
+        override var referenceScope: skirout.library.v1.authoring.ReferenceSearchScope_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.SearchAuthoringContentRequest>? =
             null,
     ): skirout.library.v1.authoring.SearchAuthoringContentRequest_OrMutable {
@@ -16980,6 +17596,7 @@ class SearchAuthoringContentRequest private constructor(
         override fun toFrozen() = skirout.library.v1.authoring.SearchAuthoringContentRequest(
             query = this.query,
             contextPage = this.contextPage,
+            referenceScope = this.referenceScope,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -17005,6 +17622,7 @@ class SearchAuthoringContentRequest private constructor(
             skirout.library.v1.authoring.SearchAuthoringContentRequest(
                 skirout.editor.v1.search.RealmSearchQuery.partial(),
                 null,
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -17022,9 +17640,12 @@ class SearchAuthoringContentRequest private constructor(
                 skirout.editor.v1.search.RealmSearchQuery.partial(),
             contextPage: skirout.kernel.v1.record_id.RecordId_OrMutable? =
                 null,
+            referenceScope: skirout.library.v1.authoring.ReferenceSearchScope_OrMutable? =
+                null,
         ) = skirout.library.v1.authoring.SearchAuthoringContentRequest(
             query = query,
             contextPage = contextPage,
+            referenceScope = referenceScope,
             _unrecognizedFields = null,
         );
 
@@ -17064,6 +17685,17 @@ class SearchAuthoringContentRequest private constructor(
                 "",
                 { it.contextPage },
                 { mut, v -> mut.contextPage = v },
+            );
+            serializerImpl.addField(
+                "reference_scope",
+                "referenceScope",
+                2,
+                build.skir.Serializers.optional(
+                    skirout.library.v1.authoring.ReferenceSearchScope.serializer,
+                ),
+                "",
+                { it.referenceScope },
+                { mut, v -> mut.referenceScope = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -17660,6 +18292,385 @@ sealed class SuggestAuthoringSelectorValuesResponse private constructor() {
     }
 }
 
+sealed interface ResolveAuthoringResourcesRequest_OrMutable {
+    val ids: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
+    val referenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+
+    fun toFrozen(): skirout.library.v1.authoring.ResolveAuthoringResourcesRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ResolveAuthoringResourcesRequest private constructor(
+    override val ids: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
+    override val referenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ResolveAuthoringResourcesRequest>? =
+        null,
+): skirout.library.v1.authoring.ResolveAuthoringResourcesRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        ids: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
+        referenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ResolveAuthoringResourcesRequest>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(ids, { it.toFrozen() }),
+        referenceTarget.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        ids = this.ids,
+        referenceTarget = this.referenceTarget,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        ids: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+            this.ids,
+        referenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            this.referenceTarget,
+    ) = skirout.library.v1.authoring.ResolveAuthoringResourcesRequest(
+        build.skir.internal.toFrozenList(ids, { it.toFrozen() }),
+        referenceTarget.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.ResolveAuthoringResourcesRequest && this.ids == other.ids && this.referenceTarget == other.referenceTarget);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.ids, this.referenceTarget).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.ResolveAuthoringResourcesRequest.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ResolveAuthoringResourcesRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var ids: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+        override var referenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ResolveAuthoringResourcesRequest>? =
+            null,
+    ): skirout.library.v1.authoring.ResolveAuthoringResourcesRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.ResolveAuthoringResourcesRequest(
+            ids = this.ids,
+            referenceTarget = this.referenceTarget,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [ids] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [ids] and returns it.
+         */
+        val mutableIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
+            var value = this.ids;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.ids = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [referenceTarget] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [referenceTarget] and returns it.
+         */
+        val mutableReferenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
+            var value = this.referenceTarget;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
+                    value = value.toMutable();
+                    this.referenceTarget = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.ResolveAuthoringResourcesRequest(
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ResolveAuthoringResourcesRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            ids: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+            referenceTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        ) = skirout.library.v1.authoring.ResolveAuthoringResourcesRequest(
+            ids = ids,
+            referenceTarget = referenceTarget,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:ResolveAuthoringResourcesRequest",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ResolveAuthoringResourcesRequest] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ResolveAuthoringResourcesRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "ids",
+                "ids",
+                0,
+                build.skir.Serializers.list(
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                ),
+                "",
+                { it.ids },
+                { mut, v -> mut.ids = v },
+            );
+            serializerImpl.addField(
+                "reference_target",
+                "referenceTarget",
+                1,
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
+                "",
+                { it.referenceTarget },
+                { mut, v -> mut.referenceTarget = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class ResolveAuthoringResourcesResponse private constructor() {
+    /** The kind of variant held by a `ResolveAuthoringResourcesResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        SUCCESS_WRAPPER,
+        INVALID_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.authoring.ResolveAuthoringResourcesResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.authoring.ResolveAuthoringResourcesResponse>?,
+    ) : skirout.library.v1.authoring.ResolveAuthoringResourcesResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.ResolveAuthoringResourcesResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class SuccessWrapper private constructor (
+        val value: skirout.library.v1.authoring.AuthoringReferenceResolution,
+    ) : skirout.library.v1.authoring.ResolveAuthoringResourcesResponse() {
+        constructor(
+            value: skirout.library.v1.authoring.AuthoringReferenceResolution_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SUCCESS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.ResolveAuthoringResourcesResponse.SuccessWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class InvalidWrapper private constructor (
+        val value: skirout.library.v1.authoring.AuthoringInvalid,
+    ) : skirout.library.v1.authoring.ResolveAuthoringResourcesResponse() {
+        constructor(
+            value: skirout.library.v1.authoring.AuthoringInvalid_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.ResolveAuthoringResourcesResponse.InvalidWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1959784951;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.library.v1.authoring.ResolveAuthoringResourcesResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.ResolveAuthoringResourcesResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.authoring.ResolveAuthoringResourcesResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.ResolveAuthoringResourcesResponse._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ResolveAuthoringResourcesResponse].
+         * Default value for fields of type [ResolveAuthoringResourcesResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `SuccessWrapper(skirout.library.v1.authoring.AuthoringReferenceResolution(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSuccess(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            resources: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceResourceSummary_OrMutable>,
+        ) = SuccessWrapper(
+            skirout.library.v1.authoring.AuthoringReferenceResolution(
+                resources = resources,
+            )
+        );
+
+        /** Shortcut for `InvalidWrapper(skirout.library.v1.authoring.AuthoringInvalid(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalid(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            diagnostics: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringDiagnostic_OrMutable>,
+        ) = InvalidWrapper(
+            skirout.library.v1.authoring.AuthoringInvalid(
+                diagnostics = diagnostics,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.library.v1.authoring.ResolveAuthoringResourcesResponse, Unknown>(
+                recordId = "library/v1/authoring.skir:ResolveAuthoringResourcesResponse",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [ResolveAuthoringResourcesResponse] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [ResolveAuthoringResourcesResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "success",
+                    Kind.SUCCESS_WRAPPER.ordinal,
+                    skirout.library.v1.authoring.AuthoringReferenceResolution.serializer,
+                    "",
+                    { SuccessWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "invalid",
+                    Kind.INVALID_WRAPPER.ordinal,
+                    skirout.library.v1.authoring.AuthoringInvalid.serializer,
+                    "",
+                    { InvalidWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "internal_error",
+                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InternalError.serializer,
+                    "",
+                    { InternalErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
 /** Repeated scopes are read once. An empty scope list returns only the sequence. */
 val GetAuthoringSnapshot: build.skir.service.Method<
     skirout.library.v1.authoring.GetAuthoringSnapshotRequest,
@@ -17713,6 +18724,19 @@ val SuggestAuthoringSelectorValues: build.skir.service.Method<
         920005,
         skirout.library.v1.authoring.SuggestAuthoringSelectorValuesRequest.serializer,
         skirout.library.v1.authoring.SuggestAuthoringSelectorValuesResponse.serializer,
+        "",
+    )
+}
+
+val ResolveAuthoringResources: build.skir.service.Method<
+    skirout.library.v1.authoring.ResolveAuthoringResourcesRequest,
+    skirout.library.v1.authoring.ResolveAuthoringResourcesResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "ResolveAuthoringResources",
+        920006,
+        skirout.library.v1.authoring.ResolveAuthoringResourcesRequest.serializer,
+        skirout.library.v1.authoring.ResolveAuthoringResourcesResponse.serializer,
         "",
     )
 }

@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./action.dart" as _lib_editor_v1_action;
@@ -55,27 +56,9 @@ sealed class MainAxisAlignment {
   /// Serializer for `MainAxisAlignment` instances.
   static _skir.EnumSerializer<MainAxisAlignment> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "start",
-        "start",
-        "",
-        start,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "center",
-        "center",
-        "",
-        center,
-      );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "end",
-        "end",
-        "",
-        end,
-      );
+      _serializerBuilder.addConstantVariant(1, "start", "start", "", start);
+      _serializerBuilder.addConstantVariant(2, "center", "center", "", center);
+      _serializerBuilder.addConstantVariant(3, "end", "end", "", end);
       _serializerBuilder.addConstantVariant(
         4,
         "space_between",
@@ -102,15 +85,16 @@ sealed class MainAxisAlignment {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:MainAxisAlignment",
-    doc: "",
-    unknownInstance: MainAxisAlignment_unknown._instance,
-    enumInstance: MainAxisAlignment.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: MainAxisAlignment_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:MainAxisAlignment",
+        doc: "",
+        unknownInstance: MainAxisAlignment_unknown._instance,
+        enumInstance: MainAxisAlignment.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: MainAxisAlignment_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `MainAxisAlignment`.
@@ -143,7 +127,8 @@ final class MainAxisAlignment_unknown implements MainAxisAlignment {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, MainAxisAlignment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, MainAxisAlignment.serializer);
 }
 
 enum _MainAxisAlignment_consts implements MainAxisAlignment {
@@ -160,7 +145,8 @@ enum _MainAxisAlignment_consts implements MainAxisAlignment {
   const _MainAxisAlignment_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, MainAxisAlignment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, MainAxisAlignment.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -182,7 +168,8 @@ enum _MainAxisAlignment_consts implements MainAxisAlignment {
 sealed class CrossAxisAlignment {
   /// Constant indicating an unknown `CrossAxisAlignment`.
   /// Default value for fields of type `CrossAxisAlignment`.
-  static const CrossAxisAlignment unknown = CrossAxisAlignment_unknown._instance;
+  static const CrossAxisAlignment unknown =
+      CrossAxisAlignment_unknown._instance;
 
   static const start = _CrossAxisAlignment_consts.startConst;
   static const center = _CrossAxisAlignment_consts.centerConst;
@@ -195,27 +182,9 @@ sealed class CrossAxisAlignment {
   /// Serializer for `CrossAxisAlignment` instances.
   static _skir.EnumSerializer<CrossAxisAlignment> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "start",
-        "start",
-        "",
-        start,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "center",
-        "center",
-        "",
-        center,
-      );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "end",
-        "end",
-        "",
-        end,
-      );
+      _serializerBuilder.addConstantVariant(1, "start", "start", "", start);
+      _serializerBuilder.addConstantVariant(2, "center", "center", "", center);
+      _serializerBuilder.addConstantVariant(3, "end", "end", "", end);
       _serializerBuilder.addConstantVariant(
         4,
         "stretch",
@@ -228,15 +197,16 @@ sealed class CrossAxisAlignment {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:CrossAxisAlignment",
-    doc: "",
-    unknownInstance: CrossAxisAlignment_unknown._instance,
-    enumInstance: CrossAxisAlignment.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CrossAxisAlignment_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:CrossAxisAlignment",
+        doc: "",
+        unknownInstance: CrossAxisAlignment_unknown._instance,
+        enumInstance: CrossAxisAlignment.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CrossAxisAlignment_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CrossAxisAlignment`.
@@ -267,7 +237,8 @@ final class CrossAxisAlignment_unknown implements CrossAxisAlignment {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CrossAxisAlignment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CrossAxisAlignment.serializer);
 }
 
 enum _CrossAxisAlignment_consts implements CrossAxisAlignment {
@@ -282,7 +253,8 @@ enum _CrossAxisAlignment_consts implements CrossAxisAlignment {
   const _CrossAxisAlignment_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CrossAxisAlignment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CrossAxisAlignment.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -312,23 +284,15 @@ final class PresentationProperties implements PresentationProperties_orMutable {
     readOnly,
   );
 
-  PresentationProperties._(
-    this.enabledIf,
-    this.readOnly,
-  );
+  PresentationProperties._(this.enabledIf, this.readOnly);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PresentationProperties._(
-    null,
-    false,
-  );
+  static final defaultInstance = PresentationProperties._(null, false);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationProperties_mutable mutable() => PresentationProperties_mutable._(
-    null,
-    false,
-  );
+  static PresentationProperties_mutable mutable() =>
+      PresentationProperties_mutable._(null, false);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -336,31 +300,33 @@ final class PresentationProperties implements PresentationProperties_orMutable {
   PresentationProperties toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationProperties_mutable toMutable() => PresentationProperties_mutable._(
-    this.enabledIf,
-    this.readOnly,
-  );
+  PresentationProperties_mutable toMutable() =>
+      PresentationProperties_mutable._(this.enabledIf, this.readOnly);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationProperties) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.enabledIf,
-    this.readOnly,
-  ];
+  _core.List get _equality_proxy => [this.enabledIf, this.readOnly];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationProperties` instances.
-  static _skir.StructSerializer<PresentationProperties, PresentationProperties_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationProperties,
+    PresentationProperties_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "enabled_if",
@@ -399,22 +365,19 @@ final class PresentationProperties implements PresentationProperties_orMutable {
 }
 
 /// Mutable version of [PresentationProperties].
-final class PresentationProperties_mutable implements PresentationProperties_orMutable {
+final class PresentationProperties_mutable
+    implements PresentationProperties_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
   _core.bool readOnly;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationProperties_mutable._(
-    this.enabledIf,
-    this.readOnly,
-  );
+  PresentationProperties_mutable._(this.enabledIf, this.readOnly);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationProperties toFrozen() => PresentationProperties(
-    enabledIf: this.enabledIf,
-    readOnly: this.readOnly,
-  ).._u = this._u;
+  PresentationProperties toFrozen() =>
+      PresentationProperties(enabledIf: this.enabledIf, readOnly: this.readOnly)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -439,28 +402,16 @@ final class HeaderItemId implements HeaderItemId_orMutable {
   factory HeaderItemId({
     required _core.String namespace,
     required _core.String name,
-  }) => HeaderItemId._(
-    namespace,
-    name,
-  );
+  }) => HeaderItemId._(namespace, name);
 
-  HeaderItemId._(
-    this.namespace,
-    this.name,
-  );
+  HeaderItemId._(this.namespace, this.name);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = HeaderItemId._(
-    "",
-    "",
-  );
+  static final defaultInstance = HeaderItemId._("", "");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HeaderItemId_mutable mutable() => HeaderItemId_mutable._(
-    "",
-    "",
-  );
+  static HeaderItemId_mutable mutable() => HeaderItemId_mutable._("", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -468,31 +419,30 @@ final class HeaderItemId implements HeaderItemId_orMutable {
   HeaderItemId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HeaderItemId_mutable toMutable() => HeaderItemId_mutable._(
-    this.namespace,
-    this.name,
-  );
+  HeaderItemId_mutable toMutable() =>
+      HeaderItemId_mutable._(this.namespace, this.name);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HeaderItemId) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.namespace,
-    this.name,
-  ];
+  _core.List get _equality_proxy => [this.namespace, this.name];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HeaderItemId` instances.
-  static _skir.StructSerializer<HeaderItemId, HeaderItemId_mutable> get serializer {
+  static _skir.StructSerializer<HeaderItemId, HeaderItemId_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "namespace",
@@ -534,17 +484,12 @@ final class HeaderItemId_mutable implements HeaderItemId_orMutable {
   _core.String name;
   _skir.internal__UnrecognizedFields? _u;
 
-  HeaderItemId_mutable._(
-    this.namespace,
-    this.name,
-  );
+  HeaderItemId_mutable._(this.namespace, this.name);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  HeaderItemId toFrozen() => HeaderItemId(
-    namespace: this.namespace,
-    name: this.name,
-  ).._u = this._u;
+  HeaderItemId toFrozen() =>
+      HeaderItemId(namespace: this.namespace, name: this.name).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -594,15 +539,16 @@ sealed class HeaderActionTone {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:HeaderActionTone",
-    doc: "",
-    unknownInstance: HeaderActionTone_unknown._instance,
-    enumInstance: HeaderActionTone.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: HeaderActionTone_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:HeaderActionTone",
+        doc: "",
+        unknownInstance: HeaderActionTone_unknown._instance,
+        enumInstance: HeaderActionTone.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: HeaderActionTone_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `HeaderActionTone`.
@@ -631,7 +577,8 @@ final class HeaderActionTone_unknown implements HeaderActionTone {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderActionTone.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HeaderActionTone.serializer);
 }
 
 enum _HeaderActionTone_consts implements HeaderActionTone {
@@ -644,7 +591,8 @@ enum _HeaderActionTone_consts implements HeaderActionTone {
   const _HeaderActionTone_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderActionTone.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HeaderActionTone.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -665,7 +613,8 @@ enum _HeaderActionTone_consts implements HeaderActionTone {
 sealed class HeaderActionPlacement {
   /// Constant indicating an unknown `HeaderActionPlacement`.
   /// Default value for fields of type `HeaderActionPlacement`.
-  static const HeaderActionPlacement unknown = HeaderActionPlacement_unknown._instance;
+  static const HeaderActionPlacement unknown =
+      HeaderActionPlacement_unknown._instance;
 
   static const beforeTitle = _HeaderActionPlacement_consts.beforeTitleConst;
   static const afterTitle = _HeaderActionPlacement_consts.afterTitleConst;
@@ -691,27 +640,22 @@ sealed class HeaderActionPlacement {
         "",
         afterTitle,
       );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "end",
-        "end",
-        "",
-        end,
-      );
+      _serializerBuilder.addConstantVariant(3, "end", "end", "", end);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:HeaderActionPlacement",
-    doc: "",
-    unknownInstance: HeaderActionPlacement_unknown._instance,
-    enumInstance: HeaderActionPlacement.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: HeaderActionPlacement_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:HeaderActionPlacement",
+        doc: "",
+        unknownInstance: HeaderActionPlacement_unknown._instance,
+        enumInstance: HeaderActionPlacement.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: HeaderActionPlacement_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `HeaderActionPlacement`.
@@ -741,7 +685,8 @@ final class HeaderActionPlacement_unknown implements HeaderActionPlacement {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderActionPlacement.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HeaderActionPlacement.serializer);
 }
 
 enum _HeaderActionPlacement_consts implements HeaderActionPlacement {
@@ -755,7 +700,8 @@ enum _HeaderActionPlacement_consts implements HeaderActionPlacement {
   const _HeaderActionPlacement_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderActionPlacement.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HeaderActionPlacement.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -771,7 +717,8 @@ sealed class HeaderActionConfirmation_orMutable {
 }
 
 /// Deeply immutable.
-final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutable {
+final class HeaderActionConfirmation
+    implements HeaderActionConfirmation_orMutable {
   @_core.override
   final _lib_editor_v1_expression.TypedExpression title;
   @_core.override
@@ -783,18 +730,15 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
   factory HeaderActionConfirmation({
     required _lib_editor_v1_expression.TypedExpression_orMutable title,
     required _lib_editor_v1_expression.TypedExpression_orMutable message,
-    required _lib_editor_v1_expression.TypedExpression_orMutable confirmationLabel,
+    required _lib_editor_v1_expression.TypedExpression_orMutable
+    confirmationLabel,
   }) => HeaderActionConfirmation._(
     title.toFrozen(),
     message.toFrozen(),
     confirmationLabel.toFrozen(),
   );
 
-  HeaderActionConfirmation._(
-    this.title,
-    this.message,
-    this.confirmationLabel,
-  );
+  HeaderActionConfirmation._(this.title, this.message, this.confirmationLabel);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HeaderActionConfirmation._(
@@ -805,11 +749,12 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HeaderActionConfirmation_mutable mutable() => HeaderActionConfirmation_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-  );
+  static HeaderActionConfirmation_mutable mutable() =>
+      HeaderActionConfirmation_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -817,17 +762,21 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
   HeaderActionConfirmation toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HeaderActionConfirmation_mutable toMutable() => HeaderActionConfirmation_mutable._(
-    this.title,
-    this.message,
-    this.confirmationLabel,
-  );
+  HeaderActionConfirmation_mutable toMutable() =>
+      HeaderActionConfirmation_mutable._(
+        this.title,
+        this.message,
+        this.confirmationLabel,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HeaderActionConfirmation) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -843,7 +792,11 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HeaderActionConfirmation` instances.
-  static _skir.StructSerializer<HeaderActionConfirmation, HeaderActionConfirmation_mutable> get serializer {
+  static _skir.StructSerializer<
+    HeaderActionConfirmation,
+    HeaderActionConfirmation_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "title",
@@ -889,7 +842,8 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
 }
 
 /// Mutable version of [HeaderActionConfirmation].
-final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation_orMutable {
+final class HeaderActionConfirmation_mutable
+    implements HeaderActionConfirmation_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable title;
   _lib_editor_v1_expression.TypedExpression_orMutable message;
   _lib_editor_v1_expression.TypedExpression_orMutable confirmationLabel;
@@ -908,7 +862,8 @@ final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.title = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.title = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -919,18 +874,21 @@ final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.message = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.message = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// If the value of [confirmationLabel] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [confirmationLabel] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableConfirmationLabel {
+  _lib_editor_v1_expression.TypedExpression_mutable
+  get mutableConfirmationLabel {
     final value = this.confirmationLabel;
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.confirmationLabel = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.confirmationLabel =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -1084,7 +1042,10 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HeaderButtonItem) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1108,7 +1069,8 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HeaderButtonItem` instances.
-  static _skir.StructSerializer<HeaderButtonItem, HeaderButtonItem_mutable> get serializer {
+  static _skir.StructSerializer<HeaderButtonItem, HeaderButtonItem_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "item_id",
@@ -1203,9 +1165,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "confirmation",
         "confirmation",
         9,
-        _skir.Serializers.optional(
-          HeaderActionConfirmation.serializer,
-        ),
+        _skir.Serializers.optional(HeaderActionConfirmation.serializer),
         "",
         (it) => it.confirmation,
         (it, v) => it.confirmation = v,
@@ -1282,7 +1242,8 @@ final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.icon = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.icon = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -1293,7 +1254,8 @@ final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -1334,7 +1296,8 @@ sealed class HeaderBooleanToggleItem_orMutable {
 }
 
 /// Deeply immutable.
-final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable {
+final class HeaderBooleanToggleItem
+    implements HeaderBooleanToggleItem_orMutable {
   @_core.override
   final HeaderItemId itemId;
   @_core.override
@@ -1410,18 +1373,19 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HeaderBooleanToggleItem_mutable mutable() => HeaderBooleanToggleItem_mutable._(
-    HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_action.EditorAction.unknown,
-    null,
-    null,
-    null,
-    null,
-    null,
-    HeaderActionPlacement.unknown,
-  );
+  static HeaderBooleanToggleItem_mutable mutable() =>
+      HeaderBooleanToggleItem_mutable._(
+        HeaderItemId.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_action.EditorAction.unknown,
+        null,
+        null,
+        null,
+        null,
+        null,
+        HeaderActionPlacement.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1429,24 +1393,28 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
   HeaderBooleanToggleItem toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HeaderBooleanToggleItem_mutable toMutable() => HeaderBooleanToggleItem_mutable._(
-    this.itemId,
-    this.label,
-    this.checked,
-    this.action,
-    this.tooltip,
-    this.priority,
-    this.visibleIf,
-    this.enabledIf,
-    this.confirmation,
-    this.placement,
-  );
+  HeaderBooleanToggleItem_mutable toMutable() =>
+      HeaderBooleanToggleItem_mutable._(
+        this.itemId,
+        this.label,
+        this.checked,
+        this.action,
+        this.tooltip,
+        this.priority,
+        this.visibleIf,
+        this.enabledIf,
+        this.confirmation,
+        this.placement,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HeaderBooleanToggleItem) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1469,7 +1437,11 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HeaderBooleanToggleItem` instances.
-  static _skir.StructSerializer<HeaderBooleanToggleItem, HeaderBooleanToggleItem_mutable> get serializer {
+  static _skir.StructSerializer<
+    HeaderBooleanToggleItem,
+    HeaderBooleanToggleItem_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "item_id",
@@ -1555,9 +1527,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "confirmation",
         "confirmation",
         8,
-        _skir.Serializers.optional(
-          HeaderActionConfirmation.serializer,
-        ),
+        _skir.Serializers.optional(HeaderActionConfirmation.serializer),
         "",
         (it) => it.confirmation,
         (it, v) => it.confirmation = v,
@@ -1588,7 +1558,8 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
 }
 
 /// Mutable version of [HeaderBooleanToggleItem].
-final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_orMutable {
+final class HeaderBooleanToggleItem_mutable
+    implements HeaderBooleanToggleItem_orMutable {
   HeaderItemId_orMutable itemId;
   _lib_editor_v1_expression.TypedExpression_orMutable label;
   _lib_editor_v1_expression.TypedExpression_orMutable checked;
@@ -1632,7 +1603,8 @@ final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_o
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -1643,7 +1615,8 @@ final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_o
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.checked = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.checked = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -1679,7 +1652,8 @@ sealed class HeaderReorderHandleItem_orMutable {
 }
 
 /// Deeply immutable.
-final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable {
+final class HeaderReorderHandleItem
+    implements HeaderReorderHandleItem_orMutable {
   @_core.override
   final HeaderItemId itemId;
   @_core.override
@@ -1731,14 +1705,15 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HeaderReorderHandleItem_mutable mutable() => HeaderReorderHandleItem_mutable._(
-    HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    null,
-    null,
-    null,
-  );
+  static HeaderReorderHandleItem_mutable mutable() =>
+      HeaderReorderHandleItem_mutable._(
+        HeaderItemId.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        null,
+        null,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1746,20 +1721,24 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
   HeaderReorderHandleItem toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HeaderReorderHandleItem_mutable toMutable() => HeaderReorderHandleItem_mutable._(
-    this.itemId,
-    this.label,
-    this.source,
-    this.tooltip,
-    this.visibleIf,
-    this.enabledIf,
-  );
+  HeaderReorderHandleItem_mutable toMutable() =>
+      HeaderReorderHandleItem_mutable._(
+        this.itemId,
+        this.label,
+        this.source,
+        this.tooltip,
+        this.visibleIf,
+        this.enabledIf,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HeaderReorderHandleItem) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1778,7 +1757,11 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HeaderReorderHandleItem` instances.
-  static _skir.StructSerializer<HeaderReorderHandleItem, HeaderReorderHandleItem_mutable> get serializer {
+  static _skir.StructSerializer<
+    HeaderReorderHandleItem,
+    HeaderReorderHandleItem_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "item_id",
@@ -1857,7 +1840,8 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
 }
 
 /// Mutable version of [HeaderReorderHandleItem].
-final class HeaderReorderHandleItem_mutable implements HeaderReorderHandleItem_orMutable {
+final class HeaderReorderHandleItem_mutable
+    implements HeaderReorderHandleItem_orMutable {
   HeaderItemId_orMutable itemId;
   _lib_editor_v1_expression.TypedExpression_orMutable label;
   _lib_editor_v1_binding.BindingRef_orMutable source;
@@ -1893,7 +1877,8 @@ final class HeaderReorderHandleItem_mutable implements HeaderReorderHandleItem_o
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -1904,7 +1889,8 @@ final class HeaderReorderHandleItem_mutable implements HeaderReorderHandleItem_o
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.source = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -1941,9 +1927,8 @@ sealed class HeaderItem {
   static const HeaderItem unknown = HeaderItem_unknown._instance;
 
   /// Create a 'button' variant wrapping around the given value.
-  factory HeaderItem.wrapButton(
-    HeaderButtonItem value
-  ) => HeaderItem_buttonWrapper._(value);
+  factory HeaderItem.wrapButton(HeaderButtonItem value) =>
+      HeaderItem_buttonWrapper._(value);
 
   /// Same as `wrapButton(HeaderButtonItem(...))`.
   factory HeaderItem.createButton({
@@ -1971,13 +1956,12 @@ sealed class HeaderItem {
       tone: tone,
       confirmation: confirmation,
       placement: placement,
-    )
+    ),
   );
 
   /// Create a 'boolean_toggle' variant wrapping around the given value.
-  factory HeaderItem.wrapBooleanToggle(
-    HeaderBooleanToggleItem value
-  ) => HeaderItem_booleanToggleWrapper._(value);
+  factory HeaderItem.wrapBooleanToggle(HeaderBooleanToggleItem value) =>
+      HeaderItem_booleanToggleWrapper._(value);
 
   /// Same as `wrapBooleanToggle(HeaderBooleanToggleItem(...))`.
   factory HeaderItem.createBooleanToggle({
@@ -2003,13 +1987,12 @@ sealed class HeaderItem {
       enabledIf: enabledIf,
       confirmation: confirmation,
       placement: placement,
-    )
+    ),
   );
 
   /// Create a 'reorder_handle' variant wrapping around the given value.
-  factory HeaderItem.wrapReorderHandle(
-    HeaderReorderHandleItem value
-  ) => HeaderItem_reorderHandleWrapper._(value);
+  factory HeaderItem.wrapReorderHandle(HeaderReorderHandleItem value) =>
+      HeaderItem_reorderHandleWrapper._(value);
 
   /// Same as `wrapReorderHandle(HeaderReorderHandleItem(...))`.
   factory HeaderItem.createReorderHandle({
@@ -2027,7 +2010,7 @@ sealed class HeaderItem {
       tooltip: tooltip,
       visibleIf: visibleIf,
       enabledIf: enabledIf,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this HeaderItem.
@@ -2071,15 +2054,16 @@ sealed class HeaderItem {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:HeaderItem",
-    doc: "",
-    unknownInstance: HeaderItem_unknown._instance,
-    enumInstance: HeaderItem.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: HeaderItem_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:HeaderItem",
+        doc: "",
+        unknownInstance: HeaderItem_unknown._instance,
+        enumInstance: HeaderItem.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: HeaderItem_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `HeaderItem`.
@@ -2109,7 +2093,8 @@ final class HeaderItem_unknown implements HeaderItem {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderItem.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HeaderItem.serializer);
 }
 
 sealed class _HeaderItem_wrapper implements HeaderItem {
@@ -2125,7 +2110,8 @@ sealed class _HeaderItem_wrapper implements HeaderItem {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderItem.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HeaderItem.serializer);
 }
 
 final class HeaderItem_buttonWrapper extends _HeaderItem_wrapper {
@@ -2172,11 +2158,12 @@ final class HeaderItem_reorderHandleWrapper extends _HeaderItem_wrapper {
 sealed class PresentationHeaderTitle {
   /// Constant indicating an unknown `PresentationHeaderTitle`.
   /// Default value for fields of type `PresentationHeaderTitle`.
-  static const PresentationHeaderTitle unknown = PresentationHeaderTitle_unknown._instance;
+  static const PresentationHeaderTitle unknown =
+      PresentationHeaderTitle_unknown._instance;
 
   /// Create a 'text' variant wrapping around the given value.
   factory PresentationHeaderTitle.wrapText(
-    _lib_editor_v1_expression.TypedExpression value
+    _lib_editor_v1_expression.TypedExpression value,
   ) => PresentationHeaderTitle_textWrapper._(value);
 
   /// Same as `wrapText(_lib_editor_v1_expression.TypedExpression(...))`.
@@ -2187,13 +2174,12 @@ sealed class PresentationHeaderTitle {
     _lib_editor_v1_expression.TypedExpression(
       resultType: resultType,
       expression: expression,
-    )
+    ),
   );
 
   /// Create a 'presentation' variant wrapping around the given value.
-  factory PresentationHeaderTitle.wrapPresentation(
-    PresentationNode value
-  ) => PresentationHeaderTitle_presentationWrapper._(value);
+  factory PresentationHeaderTitle.wrapPresentation(PresentationNode value) =>
+      PresentationHeaderTitle_presentationWrapper._(value);
 
   /// Same as `wrapPresentation(PresentationNode(...))`.
   factory PresentationHeaderTitle.createPresentation({
@@ -2207,7 +2193,7 @@ sealed class PresentationHeaderTitle {
       properties: properties,
       element: element,
       header: header,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationHeaderTitle.
@@ -2241,15 +2227,16 @@ sealed class PresentationHeaderTitle {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationHeaderTitle",
-    doc: "",
-    unknownInstance: PresentationHeaderTitle_unknown._instance,
-    enumInstance: PresentationHeaderTitle.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationHeaderTitle_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationHeaderTitle",
+        doc: "",
+        unknownInstance: PresentationHeaderTitle_unknown._instance,
+        enumInstance: PresentationHeaderTitle.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationHeaderTitle_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationHeaderTitle`.
@@ -2278,10 +2265,12 @@ final class PresentationHeaderTitle_unknown implements PresentationHeaderTitle {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationHeaderTitle.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationHeaderTitle.serializer);
 }
 
-sealed class _PresentationHeaderTitle_wrapper implements PresentationHeaderTitle {
+sealed class _PresentationHeaderTitle_wrapper
+    implements PresentationHeaderTitle {
   _core.dynamic get value;
 
   @_core.override
@@ -2294,25 +2283,30 @@ sealed class _PresentationHeaderTitle_wrapper implements PresentationHeaderTitle
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationHeaderTitle.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationHeaderTitle.serializer);
 }
 
-final class PresentationHeaderTitle_textWrapper extends _PresentationHeaderTitle_wrapper {
+final class PresentationHeaderTitle_textWrapper
+    extends _PresentationHeaderTitle_wrapper {
   final _lib_editor_v1_expression.TypedExpression value;
 
   PresentationHeaderTitle_textWrapper._(this.value);
 
   @_core.override
-  PresentationHeaderTitle_kind get kind => PresentationHeaderTitle_kind.textWrapper;
+  PresentationHeaderTitle_kind get kind =>
+      PresentationHeaderTitle_kind.textWrapper;
 }
 
-final class PresentationHeaderTitle_presentationWrapper extends _PresentationHeaderTitle_wrapper {
+final class PresentationHeaderTitle_presentationWrapper
+    extends _PresentationHeaderTitle_wrapper {
   final PresentationNode value;
 
   PresentationHeaderTitle_presentationWrapper._(this.value);
 
   @_core.override
-  PresentationHeaderTitle_kind get kind => PresentationHeaderTitle_kind.presentationWrapper;
+  PresentationHeaderTitle_kind get kind =>
+      PresentationHeaderTitle_kind.presentationWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2327,7 +2321,8 @@ sealed class SymmetricPresentationInsets_orMutable {
 }
 
 /// Deeply immutable.
-final class SymmetricPresentationInsets implements SymmetricPresentationInsets_orMutable {
+final class SymmetricPresentationInsets
+    implements SymmetricPresentationInsets_orMutable {
   @_core.override
   final _core.double horizontal;
   @_core.override
@@ -2337,28 +2332,17 @@ final class SymmetricPresentationInsets implements SymmetricPresentationInsets_o
   factory SymmetricPresentationInsets({
     required _core.double horizontal,
     required _core.double vertical,
-  }) => SymmetricPresentationInsets._(
-    horizontal,
-    vertical,
-  );
+  }) => SymmetricPresentationInsets._(horizontal, vertical);
 
-  SymmetricPresentationInsets._(
-    this.horizontal,
-    this.vertical,
-  );
+  SymmetricPresentationInsets._(this.horizontal, this.vertical);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SymmetricPresentationInsets._(
-    0.0,
-    0.0,
-  );
+  static final defaultInstance = SymmetricPresentationInsets._(0.0, 0.0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SymmetricPresentationInsets_mutable mutable() => SymmetricPresentationInsets_mutable._(
-    0.0,
-    0.0,
-  );
+  static SymmetricPresentationInsets_mutable mutable() =>
+      SymmetricPresentationInsets_mutable._(0.0, 0.0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2366,31 +2350,33 @@ final class SymmetricPresentationInsets implements SymmetricPresentationInsets_o
   SymmetricPresentationInsets toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SymmetricPresentationInsets_mutable toMutable() => SymmetricPresentationInsets_mutable._(
-    this.horizontal,
-    this.vertical,
-  );
+  SymmetricPresentationInsets_mutable toMutable() =>
+      SymmetricPresentationInsets_mutable._(this.horizontal, this.vertical);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SymmetricPresentationInsets) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.horizontal,
-    this.vertical,
-  ];
+  _core.List get _equality_proxy => [this.horizontal, this.vertical];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SymmetricPresentationInsets` instances.
-  static _skir.StructSerializer<SymmetricPresentationInsets, SymmetricPresentationInsets_mutable> get serializer {
+  static _skir.StructSerializer<
+    SymmetricPresentationInsets,
+    SymmetricPresentationInsets_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "horizontal",
@@ -2427,15 +2413,13 @@ final class SymmetricPresentationInsets implements SymmetricPresentationInsets_o
 }
 
 /// Mutable version of [SymmetricPresentationInsets].
-final class SymmetricPresentationInsets_mutable implements SymmetricPresentationInsets_orMutable {
+final class SymmetricPresentationInsets_mutable
+    implements SymmetricPresentationInsets_orMutable {
   _core.double horizontal;
   _core.double vertical;
   _skir.internal__UnrecognizedFields? _u;
 
-  SymmetricPresentationInsets_mutable._(
-    this.horizontal,
-    this.vertical,
-  );
+  SymmetricPresentationInsets_mutable._(this.horizontal, this.vertical);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -2475,36 +2459,17 @@ final class OnlyPresentationInsets implements OnlyPresentationInsets_orMutable {
     required _core.double left,
     required _core.double right,
     required _core.double bottom,
-  }) => OnlyPresentationInsets._(
-    top,
-    left,
-    right,
-    bottom,
-  );
+  }) => OnlyPresentationInsets._(top, left, right, bottom);
 
-  OnlyPresentationInsets._(
-    this.top,
-    this.left,
-    this.right,
-    this.bottom,
-  );
+  OnlyPresentationInsets._(this.top, this.left, this.right, this.bottom);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = OnlyPresentationInsets._(
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-  );
+  static final defaultInstance = OnlyPresentationInsets._(0.0, 0.0, 0.0, 0.0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static OnlyPresentationInsets_mutable mutable() => OnlyPresentationInsets_mutable._(
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-  );
+  static OnlyPresentationInsets_mutable mutable() =>
+      OnlyPresentationInsets_mutable._(0.0, 0.0, 0.0, 0.0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2512,18 +2477,22 @@ final class OnlyPresentationInsets implements OnlyPresentationInsets_orMutable {
   OnlyPresentationInsets toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  OnlyPresentationInsets_mutable toMutable() => OnlyPresentationInsets_mutable._(
-    this.top,
-    this.left,
-    this.right,
-    this.bottom,
-  );
+  OnlyPresentationInsets_mutable toMutable() =>
+      OnlyPresentationInsets_mutable._(
+        this.top,
+        this.left,
+        this.right,
+        this.bottom,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OnlyPresentationInsets) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2540,7 +2509,11 @@ final class OnlyPresentationInsets implements OnlyPresentationInsets_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OnlyPresentationInsets` instances.
-  static _skir.StructSerializer<OnlyPresentationInsets, OnlyPresentationInsets_mutable> get serializer {
+  static _skir.StructSerializer<
+    OnlyPresentationInsets,
+    OnlyPresentationInsets_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "top",
@@ -2595,7 +2568,8 @@ final class OnlyPresentationInsets implements OnlyPresentationInsets_orMutable {
 }
 
 /// Mutable version of [OnlyPresentationInsets].
-final class OnlyPresentationInsets_mutable implements OnlyPresentationInsets_orMutable {
+final class OnlyPresentationInsets_mutable
+    implements OnlyPresentationInsets_orMutable {
   _core.double top;
   _core.double left;
   _core.double right;
@@ -2637,33 +2611,28 @@ final class OnlyPresentationInsets_mutable implements OnlyPresentationInsets_orM
 sealed class PresentationInsets {
   /// Constant indicating an unknown `PresentationInsets`.
   /// Default value for fields of type `PresentationInsets`.
-  static const PresentationInsets unknown = PresentationInsets_unknown._instance;
+  static const PresentationInsets unknown =
+      PresentationInsets_unknown._instance;
 
   /// Create a 'all' variant wrapping around the given value.
-  factory PresentationInsets.wrapAll(
-    _core.double value
-  ) => PresentationInsets_allWrapper._(value);
+  factory PresentationInsets.wrapAll(_core.double value) =>
+      PresentationInsets_allWrapper._(value);
 
   /// Create a 'symmetric' variant wrapping around the given value.
-  factory PresentationInsets.wrapSymmetric(
-    SymmetricPresentationInsets value
-  ) => PresentationInsets_symmetricWrapper._(value);
+  factory PresentationInsets.wrapSymmetric(SymmetricPresentationInsets value) =>
+      PresentationInsets_symmetricWrapper._(value);
 
   /// Same as `wrapSymmetric(SymmetricPresentationInsets(...))`.
   factory PresentationInsets.createSymmetric({
     required _core.double horizontal,
     required _core.double vertical,
   }) => PresentationInsets.wrapSymmetric(
-    SymmetricPresentationInsets(
-      horizontal: horizontal,
-      vertical: vertical,
-    )
+    SymmetricPresentationInsets(horizontal: horizontal, vertical: vertical),
   );
 
   /// Create a 'only' variant wrapping around the given value.
-  factory PresentationInsets.wrapOnly(
-    OnlyPresentationInsets value
-  ) => PresentationInsets_onlyWrapper._(value);
+  factory PresentationInsets.wrapOnly(OnlyPresentationInsets value) =>
+      PresentationInsets_onlyWrapper._(value);
 
   /// Same as `wrapOnly(OnlyPresentationInsets(...))`.
   factory PresentationInsets.createOnly({
@@ -2672,12 +2641,7 @@ sealed class PresentationInsets {
     required _core.double right,
     required _core.double bottom,
   }) => PresentationInsets.wrapOnly(
-    OnlyPresentationInsets(
-      top: top,
-      left: left,
-      right: right,
-      bottom: bottom,
-    )
+    OnlyPresentationInsets(top: top, left: left, right: right, bottom: bottom),
   );
 
   /// Returns the kind of variant held by this PresentationInsets.
@@ -2721,15 +2685,16 @@ sealed class PresentationInsets {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationInsets",
-    doc: "",
-    unknownInstance: PresentationInsets_unknown._instance,
-    enumInstance: PresentationInsets.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationInsets_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationInsets",
+        doc: "",
+        unknownInstance: PresentationInsets_unknown._instance,
+        enumInstance: PresentationInsets.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationInsets_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationInsets`.
@@ -2759,7 +2724,8 @@ final class PresentationInsets_unknown implements PresentationInsets {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationInsets.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationInsets.serializer);
 }
 
 sealed class _PresentationInsets_wrapper implements PresentationInsets {
@@ -2775,7 +2741,8 @@ sealed class _PresentationInsets_wrapper implements PresentationInsets {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationInsets.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationInsets.serializer);
 }
 
 final class PresentationInsets_allWrapper extends _PresentationInsets_wrapper {
@@ -2787,7 +2754,8 @@ final class PresentationInsets_allWrapper extends _PresentationInsets_wrapper {
   PresentationInsets_kind get kind => PresentationInsets_kind.allWrapper;
 }
 
-final class PresentationInsets_symmetricWrapper extends _PresentationInsets_wrapper {
+final class PresentationInsets_symmetricWrapper
+    extends _PresentationInsets_wrapper {
   final SymmetricPresentationInsets value;
 
   PresentationInsets_symmetricWrapper._(this.value);
@@ -2910,7 +2878,10 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationHeader) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2930,7 +2901,8 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationHeader` instances.
-  static _skir.StructSerializer<PresentationHeader, PresentationHeader_mutable> get serializer {
+  static _skir.StructSerializer<PresentationHeader, PresentationHeader_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -2947,9 +2919,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "title",
         "title",
         1,
-        _skir.Serializers.optional(
-          PresentationHeaderTitle.serializer,
-        ),
+        _skir.Serializers.optional(PresentationHeaderTitle.serializer),
         "",
         (it) => it.title,
         (it, v) => it.title = v,
@@ -2969,9 +2939,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "initially_expanded",
         "initiallyExpanded",
         3,
-        _skir.Serializers.optional(
-          _skir.Serializers.bool,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.bool),
         "",
         (it) => it.initiallyExpanded,
         (it, v) => it.initiallyExpanded = v,
@@ -2980,9 +2948,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "items",
         "items",
         4,
-        _skir.Serializers.iterable(
-          HeaderItem.serializer,
-        ),
+        _skir.Serializers.iterable(HeaderItem.serializer),
         "",
         (it) => it.items,
         (it, v) => it.items = v,
@@ -2991,9 +2957,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "header_padding",
         "headerPadding",
         5,
-        _skir.Serializers.optional(
-          PresentationInsets.serializer,
-        ),
+        _skir.Serializers.optional(PresentationInsets.serializer),
         "",
         (it) => it.headerPadding,
         (it, v) => it.headerPadding = v,
@@ -3002,9 +2966,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "content_padding",
         "contentPadding",
         6,
-        _skir.Serializers.optional(
-          PresentationInsets.serializer,
-        ),
+        _skir.Serializers.optional(PresentationInsets.serializer),
         "",
         (it) => it.contentPadding,
         (it, v) => it.contentPadding = v,
@@ -3107,12 +3069,7 @@ final class PresentationNode implements PresentationNode_orMutable {
     (header != null) ? header.toFrozen() : null,
   );
 
-  PresentationNode._(
-    this.nodeId,
-    this.properties,
-    this.element,
-    this.header,
-  );
+  PresentationNode._(this.nodeId, this.properties, this.element, this.header);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationNode._(
@@ -3148,7 +3105,10 @@ final class PresentationNode implements PresentationNode_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationNode) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -3165,7 +3125,8 @@ final class PresentationNode implements PresentationNode_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationNode` instances.
-  static _skir.StructSerializer<PresentationNode, PresentationNode_mutable> get serializer {
+  static _skir.StructSerializer<PresentationNode, PresentationNode_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "node_id",
@@ -3189,9 +3150,7 @@ final class PresentationNode implements PresentationNode_orMutable {
         "element",
         "element",
         2,
-        _skir.Serializers.optional(
-          PresentationElement.serializer,
-        ),
+        _skir.Serializers.optional(PresentationElement.serializer),
         "",
         (it) => it.element,
         (it, v) => it.element = v,
@@ -3200,9 +3159,7 @@ final class PresentationNode implements PresentationNode_orMutable {
         "header",
         "header",
         3,
-        _skir.Serializers.optional(
-          PresentationHeader.serializer,
-        ),
+        _skir.Serializers.optional(PresentationHeader.serializer),
         "",
         (it) => it.header,
         (it, v) => it.header = v,
@@ -3285,11 +3242,7 @@ final class AxisChildrenLayout implements AxisChildrenLayout_orMutable {
     required _core.double spacing,
     required MainAxisAlignment mainAxisAlignment,
     required CrossAxisAlignment crossAxisAlignment,
-  }) => AxisChildrenLayout._(
-    spacing,
-    mainAxisAlignment,
-    crossAxisAlignment,
-  );
+  }) => AxisChildrenLayout._(spacing, mainAxisAlignment, crossAxisAlignment);
 
   AxisChildrenLayout._(
     this.spacing,
@@ -3328,7 +3281,10 @@ final class AxisChildrenLayout implements AxisChildrenLayout_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AxisChildrenLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -3344,7 +3300,8 @@ final class AxisChildrenLayout implements AxisChildrenLayout_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AxisChildrenLayout` instances.
-  static _skir.StructSerializer<AxisChildrenLayout, AxisChildrenLayout_mutable> get serializer {
+  static _skir.StructSerializer<AxisChildrenLayout, AxisChildrenLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "spacing",
@@ -3489,7 +3446,10 @@ final class WrapChildrenLayout implements WrapChildrenLayout_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WrapChildrenLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -3506,7 +3466,8 @@ final class WrapChildrenLayout implements WrapChildrenLayout_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WrapChildrenLayout` instances.
-  static _skir.StructSerializer<WrapChildrenLayout, WrapChildrenLayout_mutable> get serializer {
+  static _skir.StructSerializer<WrapChildrenLayout, WrapChildrenLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "spacing",
@@ -3611,11 +3572,7 @@ final class GridChildrenLayout implements GridChildrenLayout_orMutable {
     required _core.int columns,
     required _core.double horizontalSpacing,
     required _core.double verticalSpacing,
-  }) => GridChildrenLayout._(
-    columns,
-    horizontalSpacing,
-    verticalSpacing,
-  );
+  }) => GridChildrenLayout._(columns, horizontalSpacing, verticalSpacing);
 
   GridChildrenLayout._(
     this.columns,
@@ -3624,19 +3581,12 @@ final class GridChildrenLayout implements GridChildrenLayout_orMutable {
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = GridChildrenLayout._(
-    0,
-    0.0,
-    0.0,
-  );
+  static final defaultInstance = GridChildrenLayout._(0, 0.0, 0.0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static GridChildrenLayout_mutable mutable() => GridChildrenLayout_mutable._(
-    0,
-    0.0,
-    0.0,
-  );
+  static GridChildrenLayout_mutable mutable() =>
+      GridChildrenLayout_mutable._(0, 0.0, 0.0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3654,7 +3604,10 @@ final class GridChildrenLayout implements GridChildrenLayout_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! GridChildrenLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -3670,7 +3623,8 @@ final class GridChildrenLayout implements GridChildrenLayout_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `GridChildrenLayout` instances.
-  static _skir.StructSerializer<GridChildrenLayout, GridChildrenLayout_mutable> get serializer {
+  static _skir.StructSerializer<GridChildrenLayout, GridChildrenLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "columns",
@@ -3762,9 +3716,8 @@ sealed class ChildrenLayout {
   static const stack = _ChildrenLayout_consts.stackConst;
 
   /// Create a 'column' variant wrapping around the given value.
-  factory ChildrenLayout.wrapColumn(
-    AxisChildrenLayout value
-  ) => ChildrenLayout_columnWrapper._(value);
+  factory ChildrenLayout.wrapColumn(AxisChildrenLayout value) =>
+      ChildrenLayout_columnWrapper._(value);
 
   /// Same as `wrapColumn(AxisChildrenLayout(...))`.
   factory ChildrenLayout.createColumn({
@@ -3776,13 +3729,12 @@ sealed class ChildrenLayout {
       spacing: spacing,
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: crossAxisAlignment,
-    )
+    ),
   );
 
   /// Create a 'row' variant wrapping around the given value.
-  factory ChildrenLayout.wrapRow(
-    AxisChildrenLayout value
-  ) => ChildrenLayout_rowWrapper._(value);
+  factory ChildrenLayout.wrapRow(AxisChildrenLayout value) =>
+      ChildrenLayout_rowWrapper._(value);
 
   /// Same as `wrapRow(AxisChildrenLayout(...))`.
   factory ChildrenLayout.createRow({
@@ -3794,13 +3746,12 @@ sealed class ChildrenLayout {
       spacing: spacing,
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: crossAxisAlignment,
-    )
+    ),
   );
 
   /// Create a 'wrap' variant wrapping around the given value.
-  factory ChildrenLayout.wrapWrap(
-    WrapChildrenLayout value
-  ) => ChildrenLayout_wrapWrapper._(value);
+  factory ChildrenLayout.wrapWrap(WrapChildrenLayout value) =>
+      ChildrenLayout_wrapWrapper._(value);
 
   /// Same as `wrapWrap(WrapChildrenLayout(...))`.
   factory ChildrenLayout.createWrap({
@@ -3814,13 +3765,12 @@ sealed class ChildrenLayout {
       runSpacing: runSpacing,
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: crossAxisAlignment,
-    )
+    ),
   );
 
   /// Create a 'grid' variant wrapping around the given value.
-  factory ChildrenLayout.wrapGrid(
-    GridChildrenLayout value
-  ) => ChildrenLayout_gridWrapper._(value);
+  factory ChildrenLayout.wrapGrid(GridChildrenLayout value) =>
+      ChildrenLayout_gridWrapper._(value);
 
   /// Same as `wrapGrid(GridChildrenLayout(...))`.
   factory ChildrenLayout.createGrid({
@@ -3832,7 +3782,7 @@ sealed class ChildrenLayout {
       columns: columns,
       horizontalSpacing: horizontalSpacing,
       verticalSpacing: verticalSpacing,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this ChildrenLayout.
@@ -3841,13 +3791,7 @@ sealed class ChildrenLayout {
   /// Serializer for `ChildrenLayout` instances.
   static _skir.EnumSerializer<ChildrenLayout> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        5,
-        "stack",
-        "stack",
-        "",
-        stack,
-      );
+      _serializerBuilder.addConstantVariant(5, "stack", "stack", "", stack);
       _serializerBuilder.addWrapperVariant(
         1,
         "column",
@@ -3893,15 +3837,16 @@ sealed class ChildrenLayout {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ChildrenLayout",
-    doc: "",
-    unknownInstance: ChildrenLayout_unknown._instance,
-    enumInstance: ChildrenLayout.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ChildrenLayout_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ChildrenLayout",
+        doc: "",
+        unknownInstance: ChildrenLayout_unknown._instance,
+        enumInstance: ChildrenLayout.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ChildrenLayout_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ChildrenLayout`.
@@ -3933,7 +3878,8 @@ final class ChildrenLayout_unknown implements ChildrenLayout {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ChildrenLayout.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ChildrenLayout.serializer);
 }
 
 enum _ChildrenLayout_consts implements ChildrenLayout {
@@ -3945,7 +3891,8 @@ enum _ChildrenLayout_consts implements ChildrenLayout {
   const _ChildrenLayout_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ChildrenLayout.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ChildrenLayout.serializer);
 }
 
 sealed class _ChildrenLayout_wrapper implements ChildrenLayout {
@@ -3961,7 +3908,8 @@ sealed class _ChildrenLayout_wrapper implements ChildrenLayout {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ChildrenLayout.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ChildrenLayout.serializer);
 }
 
 final class ChildrenLayout_columnWrapper extends _ChildrenLayout_wrapper {
@@ -4027,10 +3975,7 @@ final class ChildrenElement implements ChildrenElement_orMutable {
     layout,
   );
 
-  ChildrenElement._(
-    this.children,
-    this.layout,
-  );
+  ChildrenElement._(this.children, this.layout);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ChildrenElement._(
@@ -4051,39 +3996,36 @@ final class ChildrenElement implements ChildrenElement_orMutable {
   ChildrenElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ChildrenElement_mutable toMutable() => ChildrenElement_mutable._(
-    this.children,
-    this.layout,
-  );
+  ChildrenElement_mutable toMutable() =>
+      ChildrenElement_mutable._(this.children, this.layout);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ChildrenElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.children,
-    this.layout,
-  ];
+  _core.List get _equality_proxy => [this.children, this.layout];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ChildrenElement` instances.
-  static _skir.StructSerializer<ChildrenElement, ChildrenElement_mutable> get serializer {
+  static _skir.StructSerializer<ChildrenElement, ChildrenElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "children",
         "children",
         0,
-        _skir.Serializers.iterable(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.iterable(PresentationNode.serializer),
         "",
         (it) => it.children,
         (it, v) => it.children = v,
@@ -4119,17 +4061,13 @@ final class ChildrenElement_mutable implements ChildrenElement_orMutable {
   ChildrenLayout layout;
   _skir.internal__UnrecognizedFields? _u;
 
-  ChildrenElement_mutable._(
-    this.children,
-    this.layout,
-  );
+  ChildrenElement_mutable._(this.children, this.layout);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ChildrenElement toFrozen() => ChildrenElement(
-    children: this.children,
-    layout: this.layout,
-  ).._u = this._u;
+  ChildrenElement toFrozen() =>
+      ChildrenElement(children: this.children, layout: this.layout)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4159,23 +4097,15 @@ final class PresentationBorderSide implements PresentationBorderSide_orMutable {
     width,
   );
 
-  PresentationBorderSide._(
-    this.color,
-    this.width,
-  );
+  PresentationBorderSide._(this.color, this.width);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PresentationBorderSide._(
-    null,
-    0.0,
-  );
+  static final defaultInstance = PresentationBorderSide._(null, 0.0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationBorderSide_mutable mutable() => PresentationBorderSide_mutable._(
-    null,
-    0.0,
-  );
+  static PresentationBorderSide_mutable mutable() =>
+      PresentationBorderSide_mutable._(null, 0.0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4183,31 +4113,33 @@ final class PresentationBorderSide implements PresentationBorderSide_orMutable {
   PresentationBorderSide toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationBorderSide_mutable toMutable() => PresentationBorderSide_mutable._(
-    this.color,
-    this.width,
-  );
+  PresentationBorderSide_mutable toMutable() =>
+      PresentationBorderSide_mutable._(this.color, this.width);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationBorderSide) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.color,
-    this.width,
-  ];
+  _core.List get _equality_proxy => [this.color, this.width];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationBorderSide` instances.
-  static _skir.StructSerializer<PresentationBorderSide, PresentationBorderSide_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationBorderSide,
+    PresentationBorderSide_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "color",
@@ -4246,22 +4178,19 @@ final class PresentationBorderSide implements PresentationBorderSide_orMutable {
 }
 
 /// Mutable version of [PresentationBorderSide].
-final class PresentationBorderSide_mutable implements PresentationBorderSide_orMutable {
+final class PresentationBorderSide_mutable
+    implements PresentationBorderSide_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? color;
   _core.double width;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationBorderSide_mutable._(
-    this.color,
-    this.width,
-  );
+  PresentationBorderSide_mutable._(this.color, this.width);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationBorderSide toFrozen() => PresentationBorderSide(
-    color: this.color,
-    width: this.width,
-  ).._u = this._u;
+  PresentationBorderSide toFrozen() =>
+      PresentationBorderSide(color: this.color, width: this.width)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4278,7 +4207,8 @@ sealed class DirectionalPresentationBorder_orMutable {
 }
 
 /// Deeply immutable.
-final class DirectionalPresentationBorder implements DirectionalPresentationBorder_orMutable {
+final class DirectionalPresentationBorder
+    implements DirectionalPresentationBorder_orMutable {
   @_core.override
   final PresentationBorderSide? top;
   @_core.override
@@ -4301,12 +4231,7 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
     (bottom != null) ? bottom.toFrozen() : null,
   );
 
-  DirectionalPresentationBorder._(
-    this.top,
-    this.start,
-    this.end,
-    this.bottom,
-  );
+  DirectionalPresentationBorder._(this.top, this.start, this.end, this.bottom);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DirectionalPresentationBorder._(
@@ -4318,12 +4243,8 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DirectionalPresentationBorder_mutable mutable() => DirectionalPresentationBorder_mutable._(
-    null,
-    null,
-    null,
-    null,
-  );
+  static DirectionalPresentationBorder_mutable mutable() =>
+      DirectionalPresentationBorder_mutable._(null, null, null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4331,18 +4252,22 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
   DirectionalPresentationBorder toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DirectionalPresentationBorder_mutable toMutable() => DirectionalPresentationBorder_mutable._(
-    this.top,
-    this.start,
-    this.end,
-    this.bottom,
-  );
+  DirectionalPresentationBorder_mutable toMutable() =>
+      DirectionalPresentationBorder_mutable._(
+        this.top,
+        this.start,
+        this.end,
+        this.bottom,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DirectionalPresentationBorder) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -4359,15 +4284,17 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DirectionalPresentationBorder` instances.
-  static _skir.StructSerializer<DirectionalPresentationBorder, DirectionalPresentationBorder_mutable> get serializer {
+  static _skir.StructSerializer<
+    DirectionalPresentationBorder,
+    DirectionalPresentationBorder_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "top",
         "top",
         0,
-        _skir.Serializers.optional(
-          PresentationBorderSide.serializer,
-        ),
+        _skir.Serializers.optional(PresentationBorderSide.serializer),
         "",
         (it) => it.top,
         (it, v) => it.top = v,
@@ -4376,9 +4303,7 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
         "start",
         "start",
         1,
-        _skir.Serializers.optional(
-          PresentationBorderSide.serializer,
-        ),
+        _skir.Serializers.optional(PresentationBorderSide.serializer),
         "",
         (it) => it.start,
         (it, v) => it.start = v,
@@ -4387,9 +4312,7 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
         "end",
         "end",
         2,
-        _skir.Serializers.optional(
-          PresentationBorderSide.serializer,
-        ),
+        _skir.Serializers.optional(PresentationBorderSide.serializer),
         "",
         (it) => it.end,
         (it, v) => it.end = v,
@@ -4398,9 +4321,7 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
         "bottom",
         "bottom",
         3,
-        _skir.Serializers.optional(
-          PresentationBorderSide.serializer,
-        ),
+        _skir.Serializers.optional(PresentationBorderSide.serializer),
         "",
         (it) => it.bottom,
         (it, v) => it.bottom = v,
@@ -4422,7 +4343,8 @@ final class DirectionalPresentationBorder implements DirectionalPresentationBord
 }
 
 /// Mutable version of [DirectionalPresentationBorder].
-final class DirectionalPresentationBorder_mutable implements DirectionalPresentationBorder_orMutable {
+final class DirectionalPresentationBorder_mutable
+    implements DirectionalPresentationBorder_orMutable {
   PresentationBorderSide_orMutable? top;
   PresentationBorderSide_orMutable? start;
   PresentationBorderSide_orMutable? end;
@@ -4463,28 +4385,24 @@ final class DirectionalPresentationBorder_mutable implements DirectionalPresenta
 sealed class PresentationBorder {
   /// Constant indicating an unknown `PresentationBorder`.
   /// Default value for fields of type `PresentationBorder`.
-  static const PresentationBorder unknown = PresentationBorder_unknown._instance;
+  static const PresentationBorder unknown =
+      PresentationBorder_unknown._instance;
 
   /// Create a 'all' variant wrapping around the given value.
-  factory PresentationBorder.wrapAll(
-    PresentationBorderSide value
-  ) => PresentationBorder_allWrapper._(value);
+  factory PresentationBorder.wrapAll(PresentationBorderSide value) =>
+      PresentationBorder_allWrapper._(value);
 
   /// Same as `wrapAll(PresentationBorderSide(...))`.
   factory PresentationBorder.createAll({
     required _lib_editor_v1_expression.TypedExpression_orMutable? color,
     required _core.double width,
   }) => PresentationBorder.wrapAll(
-    PresentationBorderSide(
-      color: color,
-      width: width,
-    )
+    PresentationBorderSide(color: color, width: width),
   );
 
   /// Create a 'sides' variant wrapping around the given value.
-  factory PresentationBorder.wrapSides(
-    DirectionalPresentationBorder value
-  ) => PresentationBorder_sidesWrapper._(value);
+  factory PresentationBorder.wrapSides(DirectionalPresentationBorder value) =>
+      PresentationBorder_sidesWrapper._(value);
 
   /// Same as `wrapSides(DirectionalPresentationBorder(...))`.
   factory PresentationBorder.createSides({
@@ -4498,7 +4416,7 @@ sealed class PresentationBorder {
       start: start,
       end: end,
       bottom: bottom,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationBorder.
@@ -4532,15 +4450,16 @@ sealed class PresentationBorder {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationBorder",
-    doc: "",
-    unknownInstance: PresentationBorder_unknown._instance,
-    enumInstance: PresentationBorder.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationBorder_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationBorder",
+        doc: "",
+        unknownInstance: PresentationBorder_unknown._instance,
+        enumInstance: PresentationBorder.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationBorder_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationBorder`.
@@ -4569,7 +4488,8 @@ final class PresentationBorder_unknown implements PresentationBorder {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationBorder.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationBorder.serializer);
 }
 
 sealed class _PresentationBorder_wrapper implements PresentationBorder {
@@ -4585,7 +4505,8 @@ sealed class _PresentationBorder_wrapper implements PresentationBorder {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationBorder.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationBorder.serializer);
 }
 
 final class PresentationBorder_allWrapper extends _PresentationBorder_wrapper {
@@ -4597,7 +4518,8 @@ final class PresentationBorder_allWrapper extends _PresentationBorder_wrapper {
   PresentationBorder_kind get kind => PresentationBorder_kind.allWrapper;
 }
 
-final class PresentationBorder_sidesWrapper extends _PresentationBorder_wrapper {
+final class PresentationBorder_sidesWrapper
+    extends _PresentationBorder_wrapper {
   final DirectionalPresentationBorder value;
 
   PresentationBorder_sidesWrapper._(this.value);
@@ -4628,15 +4550,9 @@ final class SectionLayout implements SectionLayout_orMutable {
   factory SectionLayout({
     required PresentationNode_orMutable child,
     required PresentationBorder? border,
-  }) => SectionLayout._(
-    child.toFrozen(),
-    border,
-  );
+  }) => SectionLayout._(child.toFrozen(), border);
 
-  SectionLayout._(
-    this.child,
-    this.border,
-  );
+  SectionLayout._(this.child, this.border);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SectionLayout._(
@@ -4646,10 +4562,8 @@ final class SectionLayout implements SectionLayout_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SectionLayout_mutable mutable() => SectionLayout_mutable._(
-    PresentationNode.defaultInstance,
-    null,
-  );
+  static SectionLayout_mutable mutable() =>
+      SectionLayout_mutable._(PresentationNode.defaultInstance, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4657,31 +4571,30 @@ final class SectionLayout implements SectionLayout_orMutable {
   SectionLayout toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SectionLayout_mutable toMutable() => SectionLayout_mutable._(
-    this.child,
-    this.border,
-  );
+  SectionLayout_mutable toMutable() =>
+      SectionLayout_mutable._(this.child, this.border);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SectionLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.child,
-    this.border,
-  ];
+  _core.List get _equality_proxy => [this.child, this.border];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SectionLayout` instances.
-  static _skir.StructSerializer<SectionLayout, SectionLayout_mutable> get serializer {
+  static _skir.StructSerializer<SectionLayout, SectionLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "child",
@@ -4696,9 +4609,7 @@ final class SectionLayout implements SectionLayout_orMutable {
         "border",
         "border",
         1,
-        _skir.Serializers.optional(
-          PresentationBorder.serializer,
-        ),
+        _skir.Serializers.optional(PresentationBorder.serializer),
         "",
         (it) => it.border,
         (it, v) => it.border = v,
@@ -4725,17 +4636,12 @@ final class SectionLayout_mutable implements SectionLayout_orMutable {
   PresentationBorder? border;
   _skir.internal__UnrecognizedFields? _u;
 
-  SectionLayout_mutable._(
-    this.child,
-    this.border,
-  );
+  SectionLayout_mutable._(this.child, this.border);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SectionLayout toFrozen() => SectionLayout(
-    child: this.child,
-    border: this.border,
-  ).._u = this._u;
+  SectionLayout toFrozen() =>
+      SectionLayout(child: this.child, border: this.border).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4772,21 +4678,9 @@ final class PaddingLayout implements PaddingLayout_orMutable {
     required _core.double start,
     required _core.double end,
     required _core.double bottom,
-  }) => PaddingLayout._(
-    child.toFrozen(),
-    top,
-    start,
-    end,
-    bottom,
-  );
+  }) => PaddingLayout._(child.toFrozen(), top, start, end, bottom);
 
-  PaddingLayout._(
-    this.child,
-    this.top,
-    this.start,
-    this.end,
-    this.bottom,
-  );
+  PaddingLayout._(this.child, this.top, this.start, this.end, this.bottom);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PaddingLayout._(
@@ -4825,7 +4719,10 @@ final class PaddingLayout implements PaddingLayout_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PaddingLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -4843,7 +4740,8 @@ final class PaddingLayout implements PaddingLayout_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PaddingLayout` instances.
-  static _skir.StructSerializer<PaddingLayout, PaddingLayout_mutable> get serializer {
+  static _skir.StructSerializer<PaddingLayout, PaddingLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "child",
@@ -4945,31 +4843,24 @@ sealed class PresentationSlotElement_orMutable {
 }
 
 /// Deeply immutable.
-final class PresentationSlotElement implements PresentationSlotElement_orMutable {
+final class PresentationSlotElement
+    implements PresentationSlotElement_orMutable {
   @_core.override
   final _core.String slotId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PresentationSlotElement({
-    required _core.String slotId,
-  }) => PresentationSlotElement._(
-    slotId,
-  );
+  factory PresentationSlotElement({required _core.String slotId}) =>
+      PresentationSlotElement._(slotId);
 
-  PresentationSlotElement._(
-    this.slotId,
-  );
+  PresentationSlotElement._(this.slotId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PresentationSlotElement._(
-    "",
-  );
+  static final defaultInstance = PresentationSlotElement._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationSlotElement_mutable mutable() => PresentationSlotElement_mutable._(
-    "",
-  );
+  static PresentationSlotElement_mutable mutable() =>
+      PresentationSlotElement_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4977,29 +4868,33 @@ final class PresentationSlotElement implements PresentationSlotElement_orMutable
   PresentationSlotElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationSlotElement_mutable toMutable() => PresentationSlotElement_mutable._(
-    this.slotId,
-  );
+  PresentationSlotElement_mutable toMutable() =>
+      PresentationSlotElement_mutable._(this.slotId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationSlotElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.slotId,
-  ];
+  _core.List get _equality_proxy => [this.slotId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationSlotElement` instances.
-  static _skir.StructSerializer<PresentationSlotElement, PresentationSlotElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationSlotElement,
+    PresentationSlotElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "slot_id",
@@ -5027,19 +4922,17 @@ final class PresentationSlotElement implements PresentationSlotElement_orMutable
 }
 
 /// Mutable version of [PresentationSlotElement].
-final class PresentationSlotElement_mutable implements PresentationSlotElement_orMutable {
+final class PresentationSlotElement_mutable
+    implements PresentationSlotElement_orMutable {
   _core.String slotId;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationSlotElement_mutable._(
-    this.slotId,
-  );
+  PresentationSlotElement_mutable._(this.slotId);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationSlotElement toFrozen() => PresentationSlotElement(
-    slotId: this.slotId,
-  ).._u = this._u;
+  PresentationSlotElement toFrozen() =>
+      PresentationSlotElement(slotId: this.slotId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5068,17 +4961,9 @@ final class TabItem implements TabItem_orMutable {
     required _core.String tabId,
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required PresentationNode_orMutable child,
-  }) => TabItem._(
-    tabId,
-    label.toFrozen(),
-    child.toFrozen(),
-  );
+  }) => TabItem._(tabId, label.toFrozen(), child.toFrozen());
 
-  TabItem._(
-    this.tabId,
-    this.label,
-    this.child,
-  );
+  TabItem._(this.tabId, this.label, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TabItem._(
@@ -5101,27 +4986,23 @@ final class TabItem implements TabItem_orMutable {
   TabItem toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TabItem_mutable toMutable() => TabItem_mutable._(
-    this.tabId,
-    this.label,
-    this.child,
-  );
+  TabItem_mutable toMutable() =>
+      TabItem_mutable._(this.tabId, this.label, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TabItem) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.tabId,
-    this.label,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.tabId, this.label, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -5179,11 +5060,7 @@ final class TabItem_mutable implements TabItem_orMutable {
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
-  TabItem_mutable._(
-    this.tabId,
-    this.label,
-    this.child,
-  );
+  TabItem_mutable._(this.tabId, this.label, this.child);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -5192,17 +5069,16 @@ final class TabItem_mutable implements TabItem_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TabItem toFrozen() => TabItem(
-    tabId: this.tabId,
-    label: this.label,
-    child: this.child,
-  ).._u = this._u;
+  TabItem toFrozen() =>
+      TabItem(tabId: this.tabId, label: this.label, child: this.child)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5228,27 +5104,24 @@ final class TabsLayout implements TabsLayout_orMutable {
     required _core.Iterable<TabItem_orMutable> tabs,
     required _core.String? initiallySelectedTabId,
   }) => TabsLayout._(
-    _skir.internal__keyedMappedCopy(tabs, "tabId", (it) => it.tabId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      tabs,
+      "tabId",
+      (it) => it.tabId,
+      (it) => it.toFrozen(),
+    ),
     initiallySelectedTabId,
   );
 
-  TabsLayout._(
-    this.tabs,
-    this.initiallySelectedTabId,
-  );
+  TabsLayout._(this.tabs, this.initiallySelectedTabId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = TabsLayout._(
-    _skir.KeyedIterable.empty,
-    null,
-  );
+  static final defaultInstance = TabsLayout._(_skir.KeyedIterable.empty, null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static TabsLayout_mutable mutable() => TabsLayout_mutable._(
-    _skir.KeyedIterable.empty,
-    null,
-  );
+  static TabsLayout_mutable mutable() =>
+      TabsLayout_mutable._(_skir.KeyedIterable.empty, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5256,25 +5129,23 @@ final class TabsLayout implements TabsLayout_orMutable {
   TabsLayout toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TabsLayout_mutable toMutable() => TabsLayout_mutable._(
-    this.tabs,
-    this.initiallySelectedTabId,
-  );
+  TabsLayout_mutable toMutable() =>
+      TabsLayout_mutable._(this.tabs, this.initiallySelectedTabId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TabsLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.tabs,
-    this.initiallySelectedTabId,
-  ];
+  _core.List get _equality_proxy => [this.tabs, this.initiallySelectedTabId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -5299,9 +5170,7 @@ final class TabsLayout implements TabsLayout_orMutable {
         "initially_selected_tab_id",
         "initiallySelectedTabId",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.initiallySelectedTabId,
         (it, v) => it.initiallySelectedTabId = v,
@@ -5328,10 +5197,7 @@ final class TabsLayout_mutable implements TabsLayout_orMutable {
   _core.String? initiallySelectedTabId;
   _skir.internal__UnrecognizedFields? _u;
 
-  TabsLayout_mutable._(
-    this.tabs,
-    this.initiallySelectedTabId,
-  );
+  TabsLayout_mutable._(this.tabs, this.initiallySelectedTabId);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -5368,23 +5234,14 @@ final class SpacerLayout implements SpacerLayout_orMutable {
     (height != null) ? height.toFrozen() : null,
   );
 
-  SpacerLayout._(
-    this.width,
-    this.height,
-  );
+  SpacerLayout._(this.width, this.height);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SpacerLayout._(
-    null,
-    null,
-  );
+  static final defaultInstance = SpacerLayout._(null, null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SpacerLayout_mutable mutable() => SpacerLayout_mutable._(
-    null,
-    null,
-  );
+  static SpacerLayout_mutable mutable() => SpacerLayout_mutable._(null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5392,31 +5249,30 @@ final class SpacerLayout implements SpacerLayout_orMutable {
   SpacerLayout toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SpacerLayout_mutable toMutable() => SpacerLayout_mutable._(
-    this.width,
-    this.height,
-  );
+  SpacerLayout_mutable toMutable() =>
+      SpacerLayout_mutable._(this.width, this.height);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SpacerLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.width,
-    this.height,
-  ];
+  _core.List get _equality_proxy => [this.width, this.height];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SpacerLayout` instances.
-  static _skir.StructSerializer<SpacerLayout, SpacerLayout_mutable> get serializer {
+  static _skir.StructSerializer<SpacerLayout, SpacerLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "width",
@@ -5462,17 +5318,12 @@ final class SpacerLayout_mutable implements SpacerLayout_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? height;
   _skir.internal__UnrecognizedFields? _u;
 
-  SpacerLayout_mutable._(
-    this.width,
-    this.height,
-  );
+  SpacerLayout_mutable._(this.width, this.height);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SpacerLayout toFrozen() => SpacerLayout(
-    width: this.width,
-    height: this.height,
-  ).._u = this._u;
+  SpacerLayout toFrozen() =>
+      SpacerLayout(width: this.width, height: this.height).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5533,7 +5384,8 @@ final class TextContent implements TextContent_orMutable {
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontSize,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize,
+    required _lib_editor_v1_expression.TypedExpression_orMutable?
+    fontOpticalSize,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth,
     required _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment,
@@ -5634,7 +5486,10 @@ final class TextContent implements TextContent_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TextContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -5660,7 +5515,8 @@ final class TextContent implements TextContent_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TextContent` instances.
-  static _skir.StructSerializer<TextContent, TextContent_mutable> get serializer {
+  static _skir.StructSerializer<TextContent, TextContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -5859,7 +5715,8 @@ final class TextContent_mutable implements TextContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -5919,12 +5776,7 @@ final class IconContent implements IconContent_orMutable {
     (size != null) ? size.toFrozen() : null,
   );
 
-  IconContent._(
-    this.name,
-    this.semanticLabel,
-    this.color,
-    this.size,
-  );
+  IconContent._(this.name, this.semanticLabel, this.color, this.size);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = IconContent._(
@@ -5960,7 +5812,10 @@ final class IconContent implements IconContent_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! IconContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -5977,7 +5832,8 @@ final class IconContent implements IconContent_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IconContent` instances.
-  static _skir.StructSerializer<IconContent, IconContent_mutable> get serializer {
+  static _skir.StructSerializer<IconContent, IconContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "name",
@@ -6045,12 +5901,7 @@ final class IconContent_mutable implements IconContent_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? size;
   _skir.internal__UnrecognizedFields? _u;
 
-  IconContent_mutable._(
-    this.name,
-    this.semanticLabel,
-    this.color,
-    this.size,
-  );
+  IconContent_mutable._(this.name, this.semanticLabel, this.color, this.size);
 
   /// If the value of [name] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [name] and returns it.
@@ -6059,7 +5910,8 @@ final class IconContent_mutable implements IconContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.name = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.name = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -6100,10 +5952,7 @@ final class ImageContent implements ImageContent_orMutable {
     (semanticLabel != null) ? semanticLabel.toFrozen() : null,
   );
 
-  ImageContent._(
-    this.source,
-    this.semanticLabel,
-  );
+  ImageContent._(this.source, this.semanticLabel);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ImageContent._(
@@ -6124,31 +5973,30 @@ final class ImageContent implements ImageContent_orMutable {
   ImageContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ImageContent_mutable toMutable() => ImageContent_mutable._(
-    this.source,
-    this.semanticLabel,
-  );
+  ImageContent_mutable toMutable() =>
+      ImageContent_mutable._(this.source, this.semanticLabel);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ImageContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.source,
-    this.semanticLabel,
-  ];
+  _core.List get _equality_proxy => [this.source, this.semanticLabel];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ImageContent` instances.
-  static _skir.StructSerializer<ImageContent, ImageContent_mutable> get serializer {
+  static _skir.StructSerializer<ImageContent, ImageContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source",
@@ -6192,10 +6040,7 @@ final class ImageContent_mutable implements ImageContent_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel;
   _skir.internal__UnrecognizedFields? _u;
 
-  ImageContent_mutable._(
-    this.source,
-    this.semanticLabel,
-  );
+  ImageContent_mutable._(this.source, this.semanticLabel);
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
@@ -6204,16 +6049,16 @@ final class ImageContent_mutable implements ImageContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.source = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ImageContent toFrozen() => ImageContent(
-    source: this.source,
-    semanticLabel: this.semanticLabel,
-  ).._u = this._u;
+  ImageContent toFrozen() =>
+      ImageContent(source: this.source, semanticLabel: this.semanticLabel)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6238,15 +6083,9 @@ final class BadgeContent implements BadgeContent_orMutable {
   factory BadgeContent({
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _core.String tone,
-  }) => BadgeContent._(
-    label.toFrozen(),
-    tone,
-  );
+  }) => BadgeContent._(label.toFrozen(), tone);
 
-  BadgeContent._(
-    this.label,
-    this.tone,
-  );
+  BadgeContent._(this.label, this.tone);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BadgeContent._(
@@ -6267,31 +6106,30 @@ final class BadgeContent implements BadgeContent_orMutable {
   BadgeContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BadgeContent_mutable toMutable() => BadgeContent_mutable._(
-    this.label,
-    this.tone,
-  );
+  BadgeContent_mutable toMutable() =>
+      BadgeContent_mutable._(this.label, this.tone);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BadgeContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.label,
-    this.tone,
-  ];
+  _core.List get _equality_proxy => [this.label, this.tone];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BadgeContent` instances.
-  static _skir.StructSerializer<BadgeContent, BadgeContent_mutable> get serializer {
+  static _skir.StructSerializer<BadgeContent, BadgeContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "label",
@@ -6333,10 +6171,7 @@ final class BadgeContent_mutable implements BadgeContent_orMutable {
   _core.String tone;
   _skir.internal__UnrecognizedFields? _u;
 
-  BadgeContent_mutable._(
-    this.label,
-    this.tone,
-  );
+  BadgeContent_mutable._(this.label, this.tone);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -6345,16 +6180,15 @@ final class BadgeContent_mutable implements BadgeContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BadgeContent toFrozen() => BadgeContent(
-    label: this.label,
-    tone: this.tone,
-  ).._u = this._u;
+  BadgeContent toFrozen() =>
+      BadgeContent(label: this.label, tone: this.tone).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6384,10 +6218,7 @@ final class ChipContent implements ChipContent_orMutable {
     (color != null) ? color.toFrozen() : null,
   );
 
-  ChipContent._(
-    this.label,
-    this.color,
-  );
+  ChipContent._(this.label, this.color);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ChipContent._(
@@ -6408,31 +6239,30 @@ final class ChipContent implements ChipContent_orMutable {
   ChipContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ChipContent_mutable toMutable() => ChipContent_mutable._(
-    this.label,
-    this.color,
-  );
+  ChipContent_mutable toMutable() =>
+      ChipContent_mutable._(this.label, this.color);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ChipContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.label,
-    this.color,
-  ];
+  _core.List get _equality_proxy => [this.label, this.color];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ChipContent` instances.
-  static _skir.StructSerializer<ChipContent, ChipContent_mutable> get serializer {
+  static _skir.StructSerializer<ChipContent, ChipContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "label",
@@ -6476,10 +6306,7 @@ final class ChipContent_mutable implements ChipContent_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? color;
   _skir.internal__UnrecognizedFields? _u;
 
-  ChipContent_mutable._(
-    this.label,
-    this.color,
-  );
+  ChipContent_mutable._(this.label, this.color);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -6488,16 +6315,15 @@ final class ChipContent_mutable implements ChipContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ChipContent toFrozen() => ChipContent(
-    label: this.label,
-    color: this.color,
-  ).._u = this._u;
+  ChipContent toFrozen() =>
+      ChipContent(label: this.label, color: this.color).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6532,11 +6358,7 @@ final class ProgressContent implements ProgressContent_orMutable {
     (label != null) ? label.toFrozen() : null,
   );
 
-  ProgressContent._(
-    this.value,
-    this.maximum,
-    this.label,
-  );
+  ProgressContent._(this.value, this.maximum, this.label);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ProgressContent._(
@@ -6559,33 +6381,30 @@ final class ProgressContent implements ProgressContent_orMutable {
   ProgressContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ProgressContent_mutable toMutable() => ProgressContent_mutable._(
-    this.value,
-    this.maximum,
-    this.label,
-  );
+  ProgressContent_mutable toMutable() =>
+      ProgressContent_mutable._(this.value, this.maximum, this.label);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ProgressContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.value,
-    this.maximum,
-    this.label,
-  ];
+  _core.List get _equality_proxy => [this.value, this.maximum, this.label];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ProgressContent` instances.
-  static _skir.StructSerializer<ProgressContent, ProgressContent_mutable> get serializer {
+  static _skir.StructSerializer<ProgressContent, ProgressContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -6639,11 +6458,7 @@ final class ProgressContent_mutable implements ProgressContent_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? label;
   _skir.internal__UnrecognizedFields? _u;
 
-  ProgressContent_mutable._(
-    this.value,
-    this.maximum,
-    this.label,
-  );
+  ProgressContent_mutable._(this.value, this.maximum, this.label);
 
   /// If the value of [value] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
@@ -6652,7 +6467,8 @@ final class ProgressContent_mutable implements ProgressContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -6663,7 +6479,8 @@ final class ProgressContent_mutable implements ProgressContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -6761,20 +6578,8 @@ sealed class StatusTone {
         "",
         warning,
       );
-      _serializerBuilder.addConstantVariant(
-        6,
-        "danger",
-        "danger",
-        "",
-        danger,
-      );
-      _serializerBuilder.addConstantVariant(
-        7,
-        "active",
-        "active",
-        "",
-        active,
-      );
+      _serializerBuilder.addConstantVariant(6, "danger", "danger", "", danger);
+      _serializerBuilder.addConstantVariant(7, "active", "active", "", active);
       _serializerBuilder.addConstantVariant(
         8,
         "inactive",
@@ -6782,13 +6587,7 @@ sealed class StatusTone {
         "",
         inactive,
       );
-      _serializerBuilder.addConstantVariant(
-        9,
-        "online",
-        "online",
-        "",
-        online,
-      );
+      _serializerBuilder.addConstantVariant(9, "online", "online", "", online);
       _serializerBuilder.addConstantVariant(
         10,
         "offline",
@@ -6810,27 +6609,22 @@ sealed class StatusTone {
         "",
         inProgress,
       );
-      _serializerBuilder.addConstantVariant(
-        13,
-        "paused",
-        "paused",
-        "",
-        paused,
-      );
+      _serializerBuilder.addConstantVariant(13, "paused", "paused", "", paused);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:StatusTone",
-    doc: "",
-    unknownInstance: StatusTone_unknown._instance,
-    enumInstance: StatusTone.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: StatusTone_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:StatusTone",
+        doc: "",
+        unknownInstance: StatusTone_unknown._instance,
+        enumInstance: StatusTone.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: StatusTone_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `StatusTone`.
@@ -6870,7 +6664,8 @@ final class StatusTone_unknown implements StatusTone {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, StatusTone.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, StatusTone.serializer);
 }
 
 enum _StatusTone_consts implements StatusTone {
@@ -6894,7 +6689,8 @@ enum _StatusTone_consts implements StatusTone {
   const _StatusTone_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, StatusTone.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, StatusTone.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -6919,28 +6715,17 @@ final class StatusAppearance implements StatusAppearance_orMutable {
   factory StatusAppearance({
     required StatusTone tone,
     required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-  }) => StatusAppearance._(
-    tone,
-    (label != null) ? label.toFrozen() : null,
-  );
+  }) => StatusAppearance._(tone, (label != null) ? label.toFrozen() : null);
 
-  StatusAppearance._(
-    this.tone,
-    this.label,
-  );
+  StatusAppearance._(this.tone, this.label);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = StatusAppearance._(
-    StatusTone.unknown,
-    null,
-  );
+  static final defaultInstance = StatusAppearance._(StatusTone.unknown, null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static StatusAppearance_mutable mutable() => StatusAppearance_mutable._(
-    StatusTone.unknown,
-    null,
-  );
+  static StatusAppearance_mutable mutable() =>
+      StatusAppearance_mutable._(StatusTone.unknown, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -6948,31 +6733,30 @@ final class StatusAppearance implements StatusAppearance_orMutable {
   StatusAppearance toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  StatusAppearance_mutable toMutable() => StatusAppearance_mutable._(
-    this.tone,
-    this.label,
-  );
+  StatusAppearance_mutable toMutable() =>
+      StatusAppearance_mutable._(this.tone, this.label);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! StatusAppearance) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.tone,
-    this.label,
-  ];
+  _core.List get _equality_proxy => [this.tone, this.label];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `StatusAppearance` instances.
-  static _skir.StructSerializer<StatusAppearance, StatusAppearance_mutable> get serializer {
+  static _skir.StructSerializer<StatusAppearance, StatusAppearance_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tone",
@@ -7016,17 +6800,12 @@ final class StatusAppearance_mutable implements StatusAppearance_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? label;
   _skir.internal__UnrecognizedFields? _u;
 
-  StatusAppearance_mutable._(
-    this.tone,
-    this.label,
-  );
+  StatusAppearance_mutable._(this.tone, this.label);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  StatusAppearance toFrozen() => StatusAppearance(
-    tone: this.tone,
-    label: this.label,
-  ).._u = this._u;
+  StatusAppearance toFrozen() =>
+      StatusAppearance(tone: this.tone, label: this.label).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -7051,15 +6830,9 @@ final class StatusCase implements StatusCase_orMutable {
   factory StatusCase({
     required _lib_editor_v1_type_catalog.TypedValue match,
     required StatusAppearance_orMutable appearance,
-  }) => StatusCase._(
-    match,
-    appearance.toFrozen(),
-  );
+  }) => StatusCase._(match, appearance.toFrozen());
 
-  StatusCase._(
-    this.match,
-    this.appearance,
-  );
+  StatusCase._(this.match, this.appearance);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StatusCase._(
@@ -7080,25 +6853,23 @@ final class StatusCase implements StatusCase_orMutable {
   StatusCase toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  StatusCase_mutable toMutable() => StatusCase_mutable._(
-    this.match,
-    this.appearance,
-  );
+  StatusCase_mutable toMutable() =>
+      StatusCase_mutable._(this.match, this.appearance);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! StatusCase) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.match,
-    this.appearance,
-  ];
+  _core.List get _equality_proxy => [this.match, this.appearance];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -7146,10 +6917,7 @@ final class StatusCase_mutable implements StatusCase_orMutable {
   StatusAppearance_orMutable appearance;
   _skir.internal__UnrecognizedFields? _u;
 
-  StatusCase_mutable._(
-    this.match,
-    this.appearance,
-  );
+  StatusCase_mutable._(this.match, this.appearance);
 
   /// If the value of [appearance] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [appearance] and returns it.
@@ -7164,10 +6932,8 @@ final class StatusCase_mutable implements StatusCase_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  StatusCase toFrozen() => StatusCase(
-    match: this.match,
-    appearance: this.appearance,
-  ).._u = this._u;
+  StatusCase toFrozen() =>
+      StatusCase(match: this.match, appearance: this.appearance).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -7202,11 +6968,7 @@ final class StatusContent implements StatusContent_orMutable {
     (fallback != null) ? fallback.toFrozen() : null,
   );
 
-  StatusContent._(
-    this.value,
-    this.cases,
-    this.fallback,
-  );
+  StatusContent._(this.value, this.cases, this.fallback);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StatusContent._(
@@ -7229,33 +6991,30 @@ final class StatusContent implements StatusContent_orMutable {
   StatusContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  StatusContent_mutable toMutable() => StatusContent_mutable._(
-    this.value,
-    this.cases,
-    this.fallback,
-  );
+  StatusContent_mutable toMutable() =>
+      StatusContent_mutable._(this.value, this.cases, this.fallback);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! StatusContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.value,
-    this.cases,
-    this.fallback,
-  ];
+  _core.List get _equality_proxy => [this.value, this.cases, this.fallback];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `StatusContent` instances.
-  static _skir.StructSerializer<StatusContent, StatusContent_mutable> get serializer {
+  static _skir.StructSerializer<StatusContent, StatusContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -7270,9 +7029,7 @@ final class StatusContent implements StatusContent_orMutable {
         "cases",
         "cases",
         1,
-        _skir.Serializers.iterable(
-          StatusCase.serializer,
-        ),
+        _skir.Serializers.iterable(StatusCase.serializer),
         "",
         (it) => it.cases,
         (it, v) => it.cases = v,
@@ -7281,9 +7038,7 @@ final class StatusContent implements StatusContent_orMutable {
         "fallback",
         "fallback",
         2,
-        _skir.Serializers.optional(
-          StatusAppearance.serializer,
-        ),
+        _skir.Serializers.optional(StatusAppearance.serializer),
         "",
         (it) => it.fallback,
         (it, v) => it.fallback = v,
@@ -7311,11 +7066,7 @@ final class StatusContent_mutable implements StatusContent_orMutable {
   StatusAppearance_orMutable? fallback;
   _skir.internal__UnrecognizedFields? _u;
 
-  StatusContent_mutable._(
-    this.value,
-    this.cases,
-    this.fallback,
-  );
+  StatusContent_mutable._(this.value, this.cases, this.fallback);
 
   /// If the value of [value] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
@@ -7324,7 +7075,8 @@ final class StatusContent_mutable implements StatusContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -7376,34 +7128,23 @@ sealed class DateTimeZone {
   /// Serializer for `DateTimeZone` instances.
   static _skir.EnumSerializer<DateTimeZone> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "local",
-        "local",
-        "",
-        local,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "utc",
-        "utc",
-        "",
-        utc,
-      );
+      _serializerBuilder.addConstantVariant(1, "local", "local", "", local);
+      _serializerBuilder.addConstantVariant(2, "utc", "utc", "", utc);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:DateTimeZone",
-    doc: "",
-    unknownInstance: DateTimeZone_unknown._instance,
-    enumInstance: DateTimeZone.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: DateTimeZone_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:DateTimeZone",
+        doc: "",
+        unknownInstance: DateTimeZone_unknown._instance,
+        enumInstance: DateTimeZone.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: DateTimeZone_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `DateTimeZone`.
@@ -7432,7 +7173,8 @@ final class DateTimeZone_unknown implements DateTimeZone {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, DateTimeZone.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, DateTimeZone.serializer);
 }
 
 enum _DateTimeZone_consts implements DateTimeZone {
@@ -7445,7 +7187,8 @@ enum _DateTimeZone_consts implements DateTimeZone {
   const _DateTimeZone_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, DateTimeZone.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, DateTimeZone.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -7474,17 +7217,9 @@ final class DateTimeContent implements DateTimeContent_orMutable {
     required _lib_editor_v1_expression.TypedExpression_orMutable value,
     required _lib_editor_v1_expression.TypedExpression_orMutable format,
     required DateTimeZone timeZone,
-  }) => DateTimeContent._(
-    value.toFrozen(),
-    format.toFrozen(),
-    timeZone,
-  );
+  }) => DateTimeContent._(value.toFrozen(), format.toFrozen(), timeZone);
 
-  DateTimeContent._(
-    this.value,
-    this.format,
-    this.timeZone,
-  );
+  DateTimeContent._(this.value, this.format, this.timeZone);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DateTimeContent._(
@@ -7507,33 +7242,30 @@ final class DateTimeContent implements DateTimeContent_orMutable {
   DateTimeContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DateTimeContent_mutable toMutable() => DateTimeContent_mutable._(
-    this.value,
-    this.format,
-    this.timeZone,
-  );
+  DateTimeContent_mutable toMutable() =>
+      DateTimeContent_mutable._(this.value, this.format, this.timeZone);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DateTimeContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.value,
-    this.format,
-    this.timeZone,
-  ];
+  _core.List get _equality_proxy => [this.value, this.format, this.timeZone];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DateTimeContent` instances.
-  static _skir.StructSerializer<DateTimeContent, DateTimeContent_mutable> get serializer {
+  static _skir.StructSerializer<DateTimeContent, DateTimeContent_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -7585,11 +7317,7 @@ final class DateTimeContent_mutable implements DateTimeContent_orMutable {
   DateTimeZone timeZone;
   _skir.internal__UnrecognizedFields? _u;
 
-  DateTimeContent_mutable._(
-    this.value,
-    this.format,
-    this.timeZone,
-  );
+  DateTimeContent_mutable._(this.value, this.format, this.timeZone);
 
   /// If the value of [value] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
@@ -7598,7 +7326,8 @@ final class DateTimeContent_mutable implements DateTimeContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -7609,7 +7338,8 @@ final class DateTimeContent_mutable implements DateTimeContent_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.format = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.format = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -7669,15 +7399,16 @@ sealed class RelativeTimeStyle {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:RelativeTimeStyle",
-    doc: "",
-    unknownInstance: RelativeTimeStyle_unknown._instance,
-    enumInstance: RelativeTimeStyle.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: RelativeTimeStyle_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:RelativeTimeStyle",
+        doc: "",
+        unknownInstance: RelativeTimeStyle_unknown._instance,
+        enumInstance: RelativeTimeStyle.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RelativeTimeStyle_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `RelativeTimeStyle`.
@@ -7706,7 +7437,8 @@ final class RelativeTimeStyle_unknown implements RelativeTimeStyle {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RelativeTimeStyle.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RelativeTimeStyle.serializer);
 }
 
 enum _RelativeTimeStyle_consts implements RelativeTimeStyle {
@@ -7719,7 +7451,8 @@ enum _RelativeTimeStyle_consts implements RelativeTimeStyle {
   const _RelativeTimeStyle_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RelativeTimeStyle.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RelativeTimeStyle.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -7748,17 +7481,9 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
     required _lib_editor_v1_expression.TypedExpression_orMutable value,
     required RelativeTimeStyle style,
     required DateTimeZone timeZone,
-  }) => RelativeTimeContent._(
-    value.toFrozen(),
-    style,
-    timeZone,
-  );
+  }) => RelativeTimeContent._(value.toFrozen(), style, timeZone);
 
-  RelativeTimeContent._(
-    this.value,
-    this.style,
-    this.timeZone,
-  );
+  RelativeTimeContent._(this.value, this.style, this.timeZone);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RelativeTimeContent._(
@@ -7781,33 +7506,33 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
   RelativeTimeContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RelativeTimeContent_mutable toMutable() => RelativeTimeContent_mutable._(
-    this.value,
-    this.style,
-    this.timeZone,
-  );
+  RelativeTimeContent_mutable toMutable() =>
+      RelativeTimeContent_mutable._(this.value, this.style, this.timeZone);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RelativeTimeContent) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.value,
-    this.style,
-    this.timeZone,
-  ];
+  _core.List get _equality_proxy => [this.value, this.style, this.timeZone];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RelativeTimeContent` instances.
-  static _skir.StructSerializer<RelativeTimeContent, RelativeTimeContent_mutable> get serializer {
+  static _skir.StructSerializer<
+    RelativeTimeContent,
+    RelativeTimeContent_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -7853,17 +7578,14 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
 }
 
 /// Mutable version of [RelativeTimeContent].
-final class RelativeTimeContent_mutable implements RelativeTimeContent_orMutable {
+final class RelativeTimeContent_mutable
+    implements RelativeTimeContent_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable value;
   RelativeTimeStyle style;
   DateTimeZone timeZone;
   _skir.internal__UnrecognizedFields? _u;
 
-  RelativeTimeContent_mutable._(
-    this.value,
-    this.style,
-    this.timeZone,
-  );
+  RelativeTimeContent_mutable._(this.value, this.style, this.timeZone);
 
   /// If the value of [value] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
@@ -7872,7 +7594,8 @@ final class RelativeTimeContent_mutable implements RelativeTimeContent_orMutable
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -7917,11 +7640,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
     (presentation != null) ? presentation.toFrozen() : null,
   );
 
-  TypedFieldElement._(
-    this.binding,
-    this.expectedType,
-    this.presentation,
-  );
+  TypedFieldElement._(this.binding, this.expectedType, this.presentation);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypedFieldElement._(
@@ -7954,7 +7673,10 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TypedFieldElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -7970,7 +7692,8 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TypedFieldElement` instances.
-  static _skir.StructSerializer<TypedFieldElement, TypedFieldElement_mutable> get serializer {
+  static _skir.StructSerializer<TypedFieldElement, TypedFieldElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -7994,9 +7717,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
         "presentation",
         "presentation",
         2,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.presentation,
         (it, v) => it.presentation = v,
@@ -8037,7 +7758,8 @@ final class TypedFieldElement_mutable implements TypedFieldElement_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -8082,11 +7804,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
     (whenFalse != null) ? whenFalse.toFrozen() : null,
   );
 
-  ConditionalElement._(
-    this.condition,
-    this.whenTrue,
-    this.whenFalse,
-  );
+  ConditionalElement._(this.condition, this.whenTrue, this.whenFalse);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConditionalElement._(
@@ -8119,7 +7837,10 @@ final class ConditionalElement implements ConditionalElement_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConditionalElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -8135,7 +7856,8 @@ final class ConditionalElement implements ConditionalElement_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConditionalElement` instances.
-  static _skir.StructSerializer<ConditionalElement, ConditionalElement_mutable> get serializer {
+  static _skir.StructSerializer<ConditionalElement, ConditionalElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "condition",
@@ -8159,9 +7881,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
         "when_false",
         "whenFalse",
         2,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.whenFalse,
         (it, v) => it.whenFalse = v,
@@ -8189,11 +7909,7 @@ final class ConditionalElement_mutable implements ConditionalElement_orMutable {
   PresentationNode_orMutable? whenFalse;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConditionalElement_mutable._(
-    this.condition,
-    this.whenTrue,
-    this.whenFalse,
-  );
+  ConditionalElement_mutable._(this.condition, this.whenTrue, this.whenFalse);
 
   /// If the value of [condition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [condition] and returns it.
@@ -8202,7 +7918,8 @@ final class ConditionalElement_mutable implements ConditionalElement_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.condition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.condition =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -8252,12 +7969,7 @@ final class SequencePresentation implements SequencePresentation_orMutable {
     layout,
   );
 
-  SequencePresentation._(
-    this.item,
-    this.empty,
-    this.separator,
-    this.layout,
-  );
+  SequencePresentation._(this.item, this.empty, this.separator, this.layout);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SequencePresentation._(
@@ -8269,12 +7981,13 @@ final class SequencePresentation implements SequencePresentation_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SequencePresentation_mutable mutable() => SequencePresentation_mutable._(
-    PresentationNode.defaultInstance,
-    null,
-    null,
-    SequenceLayout.unknown,
-  );
+  static SequencePresentation_mutable mutable() =>
+      SequencePresentation_mutable._(
+        PresentationNode.defaultInstance,
+        null,
+        null,
+        SequenceLayout.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -8293,7 +8006,10 @@ final class SequencePresentation implements SequencePresentation_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SequencePresentation) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -8310,7 +8026,11 @@ final class SequencePresentation implements SequencePresentation_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SequencePresentation` instances.
-  static _skir.StructSerializer<SequencePresentation, SequencePresentation_mutable> get serializer {
+  static _skir.StructSerializer<
+    SequencePresentation,
+    SequencePresentation_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "item",
@@ -8325,9 +8045,7 @@ final class SequencePresentation implements SequencePresentation_orMutable {
         "empty",
         "empty",
         1,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.empty,
         (it, v) => it.empty = v,
@@ -8336,9 +8054,7 @@ final class SequencePresentation implements SequencePresentation_orMutable {
         "separator",
         "separator",
         2,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.separator,
         (it, v) => it.separator = v,
@@ -8369,7 +8085,8 @@ final class SequencePresentation implements SequencePresentation_orMutable {
 }
 
 /// Mutable version of [SequencePresentation].
-final class SequencePresentation_mutable implements SequencePresentation_orMutable {
+final class SequencePresentation_mutable
+    implements SequencePresentation_orMutable {
   PresentationNode_orMutable item;
   PresentationNode_orMutable? empty;
   PresentationNode_orMutable? separator;
@@ -8425,11 +8142,7 @@ final class RepeatedElement implements RepeatedElement_orMutable {
     presentation.toFrozen(),
   );
 
-  RepeatedElement._(
-    this.source,
-    this.itemBindingId,
-    this.presentation,
-  );
+  RepeatedElement._(this.source, this.itemBindingId, this.presentation);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RepeatedElement._(
@@ -8462,7 +8175,10 @@ final class RepeatedElement implements RepeatedElement_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RepeatedElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -8478,7 +8194,8 @@ final class RepeatedElement implements RepeatedElement_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RepeatedElement` instances.
-  static _skir.StructSerializer<RepeatedElement, RepeatedElement_mutable> get serializer {
+  static _skir.StructSerializer<RepeatedElement, RepeatedElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source",
@@ -8530,11 +8247,7 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
   SequencePresentation_orMutable presentation;
   _skir.internal__UnrecognizedFields? _u;
 
-  RepeatedElement_mutable._(
-    this.source,
-    this.itemBindingId,
-    this.presentation,
-  );
+  RepeatedElement_mutable._(this.source, this.itemBindingId, this.presentation);
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
@@ -8543,7 +8256,8 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.source = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -8554,7 +8268,8 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -8599,11 +8314,7 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
     child.toFrozen(),
   );
 
-  ScopedBindingElement._(
-    this.binding,
-    this.scopeBindingId,
-    this.child,
-  );
+  ScopedBindingElement._(this.binding, this.scopeBindingId, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ScopedBindingElement._(
@@ -8614,11 +8325,12 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ScopedBindingElement_mutable mutable() => ScopedBindingElement_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    PresentationNode.defaultInstance,
-  );
+  static ScopedBindingElement_mutable mutable() =>
+      ScopedBindingElement_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        PresentationNode.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -8636,7 +8348,10 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ScopedBindingElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -8652,7 +8367,11 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ScopedBindingElement` instances.
-  static _skir.StructSerializer<ScopedBindingElement, ScopedBindingElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    ScopedBindingElement,
+    ScopedBindingElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -8698,17 +8417,14 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
 }
 
 /// Mutable version of [ScopedBindingElement].
-final class ScopedBindingElement_mutable implements ScopedBindingElement_orMutable {
+final class ScopedBindingElement_mutable
+    implements ScopedBindingElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
   _lib_editor_v1_binding.BindingId_orMutable scopeBindingId;
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
-  ScopedBindingElement_mutable._(
-    this.binding,
-    this.scopeBindingId,
-    this.child,
-  );
+  ScopedBindingElement_mutable._(this.binding, this.scopeBindingId, this.child);
 
   /// If the value of [binding] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
@@ -8717,7 +8433,8 @@ final class ScopedBindingElement_mutable implements ScopedBindingElement_orMutab
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -8728,7 +8445,8 @@ final class ScopedBindingElement_mutable implements ScopedBindingElement_orMutab
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.scopeBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.scopeBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -8758,7 +8476,8 @@ final class ScopedBindingElement_mutable implements ScopedBindingElement_orMutab
 sealed class CollectionGraphDirection {
   /// Constant indicating an unknown `CollectionGraphDirection`.
   /// Default value for fields of type `CollectionGraphDirection`.
-  static const CollectionGraphDirection unknown = CollectionGraphDirection_unknown._instance;
+  static const CollectionGraphDirection unknown =
+      CollectionGraphDirection_unknown._instance;
 
   static const forward = _CollectionGraphDirection_consts.forwardConst;
   static const reverse = _CollectionGraphDirection_consts.reverseConst;
@@ -8788,15 +8507,16 @@ sealed class CollectionGraphDirection {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:CollectionGraphDirection",
-    doc: "",
-    unknownInstance: CollectionGraphDirection_unknown._instance,
-    enumInstance: CollectionGraphDirection.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CollectionGraphDirection_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:CollectionGraphDirection",
+        doc: "",
+        unknownInstance: CollectionGraphDirection_unknown._instance,
+        enumInstance: CollectionGraphDirection.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CollectionGraphDirection_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CollectionGraphDirection`.
@@ -8810,7 +8530,8 @@ enum CollectionGraphDirection_kind {
   const CollectionGraphDirection_kind(this._ordinal);
 }
 
-final class CollectionGraphDirection_unknown implements CollectionGraphDirection {
+final class CollectionGraphDirection_unknown
+    implements CollectionGraphDirection {
   static const _instance = CollectionGraphDirection_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -8819,13 +8540,15 @@ final class CollectionGraphDirection_unknown implements CollectionGraphDirection
   CollectionGraphDirection_unknown._unrecognized(this._u);
 
   @_core.override
-  CollectionGraphDirection_kind get kind => CollectionGraphDirection_kind.unknown;
+  CollectionGraphDirection_kind get kind =>
+      CollectionGraphDirection_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is CollectionGraphDirection_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CollectionGraphDirection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CollectionGraphDirection.serializer);
 }
 
 enum _CollectionGraphDirection_consts implements CollectionGraphDirection {
@@ -8838,7 +8561,8 @@ enum _CollectionGraphDirection_consts implements CollectionGraphDirection {
   const _CollectionGraphDirection_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CollectionGraphDirection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CollectionGraphDirection.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -8856,7 +8580,8 @@ sealed class CollectionLookupElement_orMutable {
 }
 
 /// Deeply immutable.
-final class CollectionLookupElement implements CollectionLookupElement_orMutable {
+final class CollectionLookupElement
+    implements CollectionLookupElement_orMutable {
   @_core.override
   final _core.String sourceId;
   @_core.override
@@ -8902,13 +8627,14 @@ final class CollectionLookupElement implements CollectionLookupElement_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CollectionLookupElement_mutable mutable() => CollectionLookupElement_mutable._(
-    "",
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    PresentationNode.defaultInstance,
-    PresentationNode.defaultInstance,
-    null,
-  );
+  static CollectionLookupElement_mutable mutable() =>
+      CollectionLookupElement_mutable._(
+        "",
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        PresentationNode.defaultInstance,
+        PresentationNode.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -8916,19 +8642,23 @@ final class CollectionLookupElement implements CollectionLookupElement_orMutable
   CollectionLookupElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CollectionLookupElement_mutable toMutable() => CollectionLookupElement_mutable._(
-    this.sourceId,
-    this.key,
-    this.found,
-    this.missing,
-    this.loading,
-  );
+  CollectionLookupElement_mutable toMutable() =>
+      CollectionLookupElement_mutable._(
+        this.sourceId,
+        this.key,
+        this.found,
+        this.missing,
+        this.loading,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CollectionLookupElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -8946,7 +8676,11 @@ final class CollectionLookupElement implements CollectionLookupElement_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CollectionLookupElement` instances.
-  static _skir.StructSerializer<CollectionLookupElement, CollectionLookupElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    CollectionLookupElement,
+    CollectionLookupElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source_id",
@@ -8988,9 +8722,7 @@ final class CollectionLookupElement implements CollectionLookupElement_orMutable
         "loading",
         "loading",
         4,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.loading,
         (it, v) => it.loading = v,
@@ -9012,7 +8744,8 @@ final class CollectionLookupElement implements CollectionLookupElement_orMutable
 }
 
 /// Mutable version of [CollectionLookupElement].
-final class CollectionLookupElement_mutable implements CollectionLookupElement_orMutable {
+final class CollectionLookupElement_mutable
+    implements CollectionLookupElement_orMutable {
   _core.String sourceId;
   _lib_editor_v1_binding.BindingRef_orMutable key;
   PresentationNode_orMutable found;
@@ -9035,7 +8768,8 @@ final class CollectionLookupElement_mutable implements CollectionLookupElement_o
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.key = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.key = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -9146,18 +8880,19 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CollectionGraphElement_mutable mutable() => CollectionGraphElement_mutable._(
-    "",
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    SequencePresentation.defaultInstance,
-    "",
-    CollectionGraphDirection.unknown,
-    null,
-    PresentationNode.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    SequencePresentation.defaultInstance,
-  );
+  static CollectionGraphElement_mutable mutable() =>
+      CollectionGraphElement_mutable._(
+        "",
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        SequencePresentation.defaultInstance,
+        "",
+        CollectionGraphDirection.unknown,
+        null,
+        PresentationNode.defaultInstance,
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        SequencePresentation.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -9165,24 +8900,28 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   CollectionGraphElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CollectionGraphElement_mutable toMutable() => CollectionGraphElement_mutable._(
-    this.sourceId,
-    this.roots,
-    this.rootSequence,
-    this.relationId,
-    this.direction,
-    this.maximumDepth,
-    this.node,
-    this.childrenBindingId,
-    this.childBindingId,
-    this.children,
-  );
+  CollectionGraphElement_mutable toMutable() =>
+      CollectionGraphElement_mutable._(
+        this.sourceId,
+        this.roots,
+        this.rootSequence,
+        this.relationId,
+        this.direction,
+        this.maximumDepth,
+        this.node,
+        this.childrenBindingId,
+        this.childBindingId,
+        this.children,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CollectionGraphElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -9205,7 +8944,11 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CollectionGraphElement` instances.
-  static _skir.StructSerializer<CollectionGraphElement, CollectionGraphElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    CollectionGraphElement,
+    CollectionGraphElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source_id",
@@ -9256,9 +8999,7 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         "maximum_depth",
         "maximumDepth",
         5,
-        _skir.Serializers.optional(
-          _skir.Serializers.int32,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.int32),
         "",
         (it) => it.maximumDepth,
         (it, v) => it.maximumDepth = v,
@@ -9316,7 +9057,8 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
 }
 
 /// Mutable version of [CollectionGraphElement].
-final class CollectionGraphElement_mutable implements CollectionGraphElement_orMutable {
+final class CollectionGraphElement_mutable
+    implements CollectionGraphElement_orMutable {
   _core.String sourceId;
   _lib_editor_v1_binding.BindingRef_orMutable roots;
   SequencePresentation_orMutable rootSequence;
@@ -9349,7 +9091,8 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.roots = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.roots = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -9360,7 +9103,8 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.childrenBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.childrenBindingId =
+          (value as _lib_editor_v1_binding.BindingId).toMutable();
     }
   }
 
@@ -9371,7 +9115,8 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.childBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.childBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -9411,7 +9156,8 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
 sealed class PresentationRadius {
   /// Constant indicating an unknown `PresentationRadius`.
   /// Default value for fields of type `PresentationRadius`.
-  static const PresentationRadius unknown = PresentationRadius_unknown._instance;
+  static const PresentationRadius unknown =
+      PresentationRadius_unknown._instance;
 
   static const none = _PresentationRadius_consts.noneConst;
   static const small = _PresentationRadius_consts.smallConst;
@@ -9420,7 +9166,7 @@ sealed class PresentationRadius {
 
   /// Create a 'custom' variant wrapping around the given value.
   factory PresentationRadius.wrapCustom(
-    _lib_editor_v1_expression.TypedExpression value
+    _lib_editor_v1_expression.TypedExpression value,
   ) => PresentationRadius_customWrapper._(value);
 
   /// Same as `wrapCustom(_lib_editor_v1_expression.TypedExpression(...))`.
@@ -9431,7 +9177,7 @@ sealed class PresentationRadius {
     _lib_editor_v1_expression.TypedExpression(
       resultType: resultType,
       expression: expression,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationRadius.
@@ -9440,34 +9186,10 @@ sealed class PresentationRadius {
   /// Serializer for `PresentationRadius` instances.
   static _skir.EnumSerializer<PresentationRadius> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "none",
-        "none",
-        "",
-        none,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "small",
-        "small",
-        "",
-        small,
-      );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "medium",
-        "medium",
-        "",
-        medium,
-      );
-      _serializerBuilder.addConstantVariant(
-        4,
-        "large",
-        "large",
-        "",
-        large,
-      );
+      _serializerBuilder.addConstantVariant(1, "none", "none", "", none);
+      _serializerBuilder.addConstantVariant(2, "small", "small", "", small);
+      _serializerBuilder.addConstantVariant(3, "medium", "medium", "", medium);
+      _serializerBuilder.addConstantVariant(4, "large", "large", "", large);
       _serializerBuilder.addWrapperVariant(
         5,
         "custom",
@@ -9483,15 +9205,16 @@ sealed class PresentationRadius {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationRadius",
-    doc: "",
-    unknownInstance: PresentationRadius_unknown._instance,
-    enumInstance: PresentationRadius.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationRadius_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationRadius",
+        doc: "",
+        unknownInstance: PresentationRadius_unknown._instance,
+        enumInstance: PresentationRadius.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationRadius_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationRadius`.
@@ -9523,7 +9246,8 @@ final class PresentationRadius_unknown implements PresentationRadius {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationRadius.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationRadius.serializer);
 }
 
 enum _PresentationRadius_consts implements PresentationRadius {
@@ -9538,7 +9262,8 @@ enum _PresentationRadius_consts implements PresentationRadius {
   const _PresentationRadius_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationRadius.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationRadius.serializer);
 }
 
 sealed class _PresentationRadius_wrapper implements PresentationRadius {
@@ -9554,10 +9279,12 @@ sealed class _PresentationRadius_wrapper implements PresentationRadius {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationRadius.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationRadius.serializer);
 }
 
-final class PresentationRadius_customWrapper extends _PresentationRadius_wrapper {
+final class PresentationRadius_customWrapper
+    extends _PresentationRadius_wrapper {
   final _lib_editor_v1_expression.TypedExpression value;
 
   PresentationRadius_customWrapper._(this.value);
@@ -9594,7 +9321,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
   factory ContainerLayout({
     required PresentationNode_orMutable child,
     required PresentationBorder? border,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? backgroundColor,
+    required _lib_editor_v1_expression.TypedExpression_orMutable?
+    backgroundColor,
     required PresentationRadius radius,
   }) => ContainerLayout._(
     child.toFrozen(),
@@ -9603,12 +9331,7 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     radius,
   );
 
-  ContainerLayout._(
-    this.child,
-    this.border,
-    this.backgroundColor,
-    this.radius,
-  );
+  ContainerLayout._(this.child, this.border, this.backgroundColor, this.radius);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ContainerLayout._(
@@ -9644,7 +9367,10 @@ final class ContainerLayout implements ContainerLayout_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ContainerLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -9661,7 +9387,8 @@ final class ContainerLayout implements ContainerLayout_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ContainerLayout` instances.
-  static _skir.StructSerializer<ContainerLayout, ContainerLayout_mutable> get serializer {
+  static _skir.StructSerializer<ContainerLayout, ContainerLayout_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "child",
@@ -9676,9 +9403,7 @@ final class ContainerLayout implements ContainerLayout_orMutable {
         "border",
         "border",
         1,
-        _skir.Serializers.optional(
-          PresentationBorder.serializer,
-        ),
+        _skir.Serializers.optional(PresentationBorder.serializer),
         "",
         (it) => it.border,
         (it, v) => it.border = v,
@@ -9768,16 +9493,20 @@ final class ContainerLayout_mutable implements ContainerLayout_orMutable {
 sealed class PresentationAnchorAlignment {
   /// Constant indicating an unknown `PresentationAnchorAlignment`.
   /// Default value for fields of type `PresentationAnchorAlignment`.
-  static const PresentationAnchorAlignment unknown = PresentationAnchorAlignment_unknown._instance;
+  static const PresentationAnchorAlignment unknown =
+      PresentationAnchorAlignment_unknown._instance;
 
   static const topStart = _PresentationAnchorAlignment_consts.topStartConst;
   static const topCenter = _PresentationAnchorAlignment_consts.topCenterConst;
   static const topEnd = _PresentationAnchorAlignment_consts.topEndConst;
-  static const centerStart = _PresentationAnchorAlignment_consts.centerStartConst;
+  static const centerStart =
+      _PresentationAnchorAlignment_consts.centerStartConst;
   static const center = _PresentationAnchorAlignment_consts.centerConst;
   static const centerEnd = _PresentationAnchorAlignment_consts.centerEndConst;
-  static const bottomStart = _PresentationAnchorAlignment_consts.bottomStartConst;
-  static const bottomCenter = _PresentationAnchorAlignment_consts.bottomCenterConst;
+  static const bottomStart =
+      _PresentationAnchorAlignment_consts.bottomStartConst;
+  static const bottomCenter =
+      _PresentationAnchorAlignment_consts.bottomCenterConst;
   static const bottomEnd = _PresentationAnchorAlignment_consts.bottomEndConst;
 
   /// Returns the kind of variant held by this PresentationAnchorAlignment.
@@ -9800,13 +9529,7 @@ sealed class PresentationAnchorAlignment {
         "",
         topCenter,
       );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "top_end",
-        "topEnd",
-        "",
-        topEnd,
-      );
+      _serializerBuilder.addConstantVariant(3, "top_end", "topEnd", "", topEnd);
       _serializerBuilder.addConstantVariant(
         4,
         "center_start",
@@ -9814,13 +9537,7 @@ sealed class PresentationAnchorAlignment {
         "",
         centerStart,
       );
-      _serializerBuilder.addConstantVariant(
-        5,
-        "center",
-        "center",
-        "",
-        center,
-      );
+      _serializerBuilder.addConstantVariant(5, "center", "center", "", center);
       _serializerBuilder.addConstantVariant(
         6,
         "center_end",
@@ -9854,15 +9571,16 @@ sealed class PresentationAnchorAlignment {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationAnchorAlignment",
-    doc: "",
-    unknownInstance: PresentationAnchorAlignment_unknown._instance,
-    enumInstance: PresentationAnchorAlignment.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationAnchorAlignment_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationAnchorAlignment",
+        doc: "",
+        unknownInstance: PresentationAnchorAlignment_unknown._instance,
+        enumInstance: PresentationAnchorAlignment.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationAnchorAlignment_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationAnchorAlignment`.
@@ -9883,7 +9601,8 @@ enum PresentationAnchorAlignment_kind {
   const PresentationAnchorAlignment_kind(this._ordinal);
 }
 
-final class PresentationAnchorAlignment_unknown implements PresentationAnchorAlignment {
+final class PresentationAnchorAlignment_unknown
+    implements PresentationAnchorAlignment {
   static const _instance = PresentationAnchorAlignment_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -9892,16 +9611,19 @@ final class PresentationAnchorAlignment_unknown implements PresentationAnchorAli
   PresentationAnchorAlignment_unknown._unrecognized(this._u);
 
   @_core.override
-  PresentationAnchorAlignment_kind get kind => PresentationAnchorAlignment_kind.unknown;
+  PresentationAnchorAlignment_kind get kind =>
+      PresentationAnchorAlignment_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is PresentationAnchorAlignment_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationAnchorAlignment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationAnchorAlignment.serializer);
 }
 
-enum _PresentationAnchorAlignment_consts implements PresentationAnchorAlignment {
+enum _PresentationAnchorAlignment_consts
+    implements PresentationAnchorAlignment {
   topStartConst(PresentationAnchorAlignment_kind.topStartConst),
   topCenterConst(PresentationAnchorAlignment_kind.topCenterConst),
   topEndConst(PresentationAnchorAlignment_kind.topEndConst),
@@ -9918,7 +9640,8 @@ enum _PresentationAnchorAlignment_consts implements PresentationAnchorAlignment 
   const _PresentationAnchorAlignment_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationAnchorAlignment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationAnchorAlignment.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -9943,15 +9666,9 @@ final class PresentationOffset implements PresentationOffset_orMutable {
   factory PresentationOffset({
     required _lib_editor_v1_expression.TypedExpression_orMutable x,
     required _lib_editor_v1_expression.TypedExpression_orMutable y,
-  }) => PresentationOffset._(
-    x.toFrozen(),
-    y.toFrozen(),
-  );
+  }) => PresentationOffset._(x.toFrozen(), y.toFrozen());
 
-  PresentationOffset._(
-    this.x,
-    this.y,
-  );
+  PresentationOffset._(this.x, this.y);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationOffset._(
@@ -9972,31 +9689,30 @@ final class PresentationOffset implements PresentationOffset_orMutable {
   PresentationOffset toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationOffset_mutable toMutable() => PresentationOffset_mutable._(
-    this.x,
-    this.y,
-  );
+  PresentationOffset_mutable toMutable() =>
+      PresentationOffset_mutable._(this.x, this.y);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationOffset) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.x,
-    this.y,
-  ];
+  _core.List get _equality_proxy => [this.x, this.y];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationOffset` instances.
-  static _skir.StructSerializer<PresentationOffset, PresentationOffset_mutable> get serializer {
+  static _skir.StructSerializer<PresentationOffset, PresentationOffset_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "x",
@@ -10038,10 +9754,7 @@ final class PresentationOffset_mutable implements PresentationOffset_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable y;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationOffset_mutable._(
-    this.x,
-    this.y,
-  );
+  PresentationOffset_mutable._(this.x, this.y);
 
   /// If the value of [x] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [x] and returns it.
@@ -10050,7 +9763,8 @@ final class PresentationOffset_mutable implements PresentationOffset_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.x = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.x = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -10061,16 +9775,15 @@ final class PresentationOffset_mutable implements PresentationOffset_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.y = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.y = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationOffset toFrozen() => PresentationOffset(
-    x: this.x,
-    y: this.y,
-  ).._u = this._u;
+  PresentationOffset toFrozen() =>
+      PresentationOffset(x: this.x, y: this.y).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -10089,7 +9802,8 @@ sealed class PresentationAnchorPoint_orMutable {
 }
 
 /// Deeply immutable.
-final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable {
+final class PresentationAnchorPoint
+    implements PresentationAnchorPoint_orMutable {
   @_core.override
   final _core.String anchorId;
   @_core.override
@@ -10141,14 +9855,15 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationAnchorPoint_mutable mutable() => PresentationAnchorPoint_mutable._(
-    "",
-    _skir.KeyedIterable.empty,
-    PresentationAnchorAlignment.unknown,
-    null,
-    null,
-    false,
-  );
+  static PresentationAnchorPoint_mutable mutable() =>
+      PresentationAnchorPoint_mutable._(
+        "",
+        _skir.KeyedIterable.empty,
+        PresentationAnchorAlignment.unknown,
+        null,
+        null,
+        false,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -10156,20 +9871,24 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
   PresentationAnchorPoint toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationAnchorPoint_mutable toMutable() => PresentationAnchorPoint_mutable._(
-    this.anchorId,
-    this.groupIds,
-    this.alignment,
-    this.offset,
-    this.visibleIf,
-    this.exportToParent,
-  );
+  PresentationAnchorPoint_mutable toMutable() =>
+      PresentationAnchorPoint_mutable._(
+        this.anchorId,
+        this.groupIds,
+        this.alignment,
+        this.offset,
+        this.visibleIf,
+        this.exportToParent,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationAnchorPoint) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -10188,7 +9907,11 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationAnchorPoint` instances.
-  static _skir.StructSerializer<PresentationAnchorPoint, PresentationAnchorPoint_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationAnchorPoint,
+    PresentationAnchorPoint_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "anchor_id",
@@ -10203,9 +9926,7 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
         "group_ids",
         "groupIds",
         1,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.iterable(_skir.Serializers.string),
         "",
         (it) => it.groupIds,
         (it, v) => it.groupIds = v,
@@ -10223,9 +9944,7 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
         "offset",
         "offset",
         3,
-        _skir.Serializers.optional(
-          PresentationOffset.serializer,
-        ),
+        _skir.Serializers.optional(PresentationOffset.serializer),
         "",
         (it) => it.offset,
         (it, v) => it.offset = v,
@@ -10267,7 +9986,8 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
 }
 
 /// Mutable version of [PresentationAnchorPoint].
-final class PresentationAnchorPoint_mutable implements PresentationAnchorPoint_orMutable {
+final class PresentationAnchorPoint_mutable
+    implements PresentationAnchorPoint_orMutable {
   _core.String anchorId;
   _core.Iterable<_core.String> groupIds;
   PresentationAnchorAlignment alignment;
@@ -10320,7 +10040,8 @@ sealed class PresentationAnchorLayout_orMutable {
 }
 
 /// Deeply immutable.
-final class PresentationAnchorLayout implements PresentationAnchorLayout_orMutable {
+final class PresentationAnchorLayout
+    implements PresentationAnchorLayout_orMutable {
   @_core.override
   final PresentationNode child;
   @_core.override
@@ -10332,13 +10053,15 @@ final class PresentationAnchorLayout implements PresentationAnchorLayout_orMutab
     required _core.Iterable<PresentationAnchorPoint_orMutable> anchors,
   }) => PresentationAnchorLayout._(
     child.toFrozen(),
-    _skir.internal__keyedMappedCopy(anchors, "anchorId", (it) => it.anchorId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      anchors,
+      "anchorId",
+      (it) => it.anchorId,
+      (it) => it.toFrozen(),
+    ),
   );
 
-  PresentationAnchorLayout._(
-    this.child,
-    this.anchors,
-  );
+  PresentationAnchorLayout._(this.child, this.anchors);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationAnchorLayout._(
@@ -10348,10 +10071,11 @@ final class PresentationAnchorLayout implements PresentationAnchorLayout_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationAnchorLayout_mutable mutable() => PresentationAnchorLayout_mutable._(
-    PresentationNode.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
+  static PresentationAnchorLayout_mutable mutable() =>
+      PresentationAnchorLayout_mutable._(
+        PresentationNode.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -10359,31 +10083,33 @@ final class PresentationAnchorLayout implements PresentationAnchorLayout_orMutab
   PresentationAnchorLayout toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationAnchorLayout_mutable toMutable() => PresentationAnchorLayout_mutable._(
-    this.child,
-    this.anchors,
-  );
+  PresentationAnchorLayout_mutable toMutable() =>
+      PresentationAnchorLayout_mutable._(this.child, this.anchors);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationAnchorLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.child,
-    this.anchors,
-  ];
+  _core.List get _equality_proxy => [this.child, this.anchors];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationAnchorLayout` instances.
-  static _skir.StructSerializer<PresentationAnchorLayout, PresentationAnchorLayout_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationAnchorLayout,
+    PresentationAnchorLayout_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "child",
@@ -10424,21 +10150,20 @@ final class PresentationAnchorLayout implements PresentationAnchorLayout_orMutab
 }
 
 /// Mutable version of [PresentationAnchorLayout].
-final class PresentationAnchorLayout_mutable implements PresentationAnchorLayout_orMutable {
+final class PresentationAnchorLayout_mutable
+    implements PresentationAnchorLayout_orMutable {
   PresentationNode_orMutable child;
   _core.Iterable<PresentationAnchorPoint_orMutable> anchors;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationAnchorLayout_mutable._(
-    this.child,
-    this.anchors,
-  );
+  PresentationAnchorLayout_mutable._(this.child, this.anchors);
 
   /// If the value of [anchors] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [anchors] and returns it.
   _core.List<PresentationAnchorPoint_orMutable> get mutableAnchors {
     final value = this.anchors;
-    if (value is _skir.internal__MutableList<PresentationAnchorPoint_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<PresentationAnchorPoint_orMutable>) {
       return value;
     } else {
       return this.anchors = _skir.internal__MutableList([...value]);
@@ -10447,10 +10172,9 @@ final class PresentationAnchorLayout_mutable implements PresentationAnchorLayout
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationAnchorLayout toFrozen() => PresentationAnchorLayout(
-    child: this.child,
-    anchors: this.anchors,
-  ).._u = this._u;
+  PresentationAnchorLayout toFrozen() =>
+      PresentationAnchorLayout(child: this.child, anchors: this.anchors)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -10470,17 +10194,16 @@ final class PresentationAnchorLayout_mutable implements PresentationAnchorLayout
 sealed class PresentationAnchorSelector {
   /// Constant indicating an unknown `PresentationAnchorSelector`.
   /// Default value for fields of type `PresentationAnchorSelector`.
-  static const PresentationAnchorSelector unknown = PresentationAnchorSelector_unknown._instance;
+  static const PresentationAnchorSelector unknown =
+      PresentationAnchorSelector_unknown._instance;
 
   /// Create a 'local' variant wrapping around the given value.
-  factory PresentationAnchorSelector.wrapLocal(
-    _core.String value
-  ) => PresentationAnchorSelector_localWrapper._(value);
+  factory PresentationAnchorSelector.wrapLocal(_core.String value) =>
+      PresentationAnchorSelector_localWrapper._(value);
 
   /// Create a 'exported_group' variant wrapping around the given value.
-  factory PresentationAnchorSelector.wrapExportedGroup(
-    _core.String value
-  ) => PresentationAnchorSelector_exportedGroupWrapper._(value);
+  factory PresentationAnchorSelector.wrapExportedGroup(_core.String value) =>
+      PresentationAnchorSelector_exportedGroupWrapper._(value);
 
   /// Returns the kind of variant held by this PresentationAnchorSelector.
   PresentationAnchorSelector_kind get kind;
@@ -10513,15 +10236,16 @@ sealed class PresentationAnchorSelector {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationAnchorSelector",
-    doc: "",
-    unknownInstance: PresentationAnchorSelector_unknown._instance,
-    enumInstance: PresentationAnchorSelector.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationAnchorSelector_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationAnchorSelector",
+        doc: "",
+        unknownInstance: PresentationAnchorSelector_unknown._instance,
+        enumInstance: PresentationAnchorSelector.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationAnchorSelector_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationAnchorSelector`.
@@ -10535,7 +10259,8 @@ enum PresentationAnchorSelector_kind {
   const PresentationAnchorSelector_kind(this._ordinal);
 }
 
-final class PresentationAnchorSelector_unknown implements PresentationAnchorSelector {
+final class PresentationAnchorSelector_unknown
+    implements PresentationAnchorSelector {
   static const _instance = PresentationAnchorSelector_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -10544,16 +10269,19 @@ final class PresentationAnchorSelector_unknown implements PresentationAnchorSele
   PresentationAnchorSelector_unknown._unrecognized(this._u);
 
   @_core.override
-  PresentationAnchorSelector_kind get kind => PresentationAnchorSelector_kind.unknown;
+  PresentationAnchorSelector_kind get kind =>
+      PresentationAnchorSelector_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is PresentationAnchorSelector_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationAnchorSelector.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationAnchorSelector.serializer);
 }
 
-sealed class _PresentationAnchorSelector_wrapper implements PresentationAnchorSelector {
+sealed class _PresentationAnchorSelector_wrapper
+    implements PresentationAnchorSelector {
   _core.dynamic get value;
 
   @_core.override
@@ -10566,25 +10294,30 @@ sealed class _PresentationAnchorSelector_wrapper implements PresentationAnchorSe
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationAnchorSelector.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationAnchorSelector.serializer);
 }
 
-final class PresentationAnchorSelector_localWrapper extends _PresentationAnchorSelector_wrapper {
+final class PresentationAnchorSelector_localWrapper
+    extends _PresentationAnchorSelector_wrapper {
   final _core.String value;
 
   PresentationAnchorSelector_localWrapper._(this.value);
 
   @_core.override
-  PresentationAnchorSelector_kind get kind => PresentationAnchorSelector_kind.localWrapper;
+  PresentationAnchorSelector_kind get kind =>
+      PresentationAnchorSelector_kind.localWrapper;
 }
 
-final class PresentationAnchorSelector_exportedGroupWrapper extends _PresentationAnchorSelector_wrapper {
+final class PresentationAnchorSelector_exportedGroupWrapper
+    extends _PresentationAnchorSelector_wrapper {
   final _core.String value;
 
   PresentationAnchorSelector_exportedGroupWrapper._(this.value);
 
   @_core.override
-  PresentationAnchorSelector_kind get kind => PresentationAnchorSelector_kind.exportedGroupWrapper;
+  PresentationAnchorSelector_kind get kind =>
+      PresentationAnchorSelector_kind.exportedGroupWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -10605,7 +10338,8 @@ final class PresentationAnchorSelector_exportedGroupWrapper extends _Presentatio
 sealed class ConnectionExpressionScope {
   /// Constant indicating an unknown `ConnectionExpressionScope`.
   /// Default value for fields of type `ConnectionExpressionScope`.
-  static const ConnectionExpressionScope unknown = ConnectionExpressionScope_unknown._instance;
+  static const ConnectionExpressionScope unknown =
+      ConnectionExpressionScope_unknown._instance;
 
   static const layer = _ConnectionExpressionScope_consts.layerConst;
   static const source = _ConnectionExpressionScope_consts.sourceConst;
@@ -10617,41 +10351,24 @@ sealed class ConnectionExpressionScope {
   /// Serializer for `ConnectionExpressionScope` instances.
   static _skir.EnumSerializer<ConnectionExpressionScope> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "layer",
-        "layer",
-        "",
-        layer,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "source",
-        "source",
-        "",
-        source,
-      );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "target",
-        "target",
-        "",
-        target,
-      );
+      _serializerBuilder.addConstantVariant(1, "layer", "layer", "", layer);
+      _serializerBuilder.addConstantVariant(2, "source", "source", "", source);
+      _serializerBuilder.addConstantVariant(3, "target", "target", "", target);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ConnectionExpressionScope",
-    doc: "",
-    unknownInstance: ConnectionExpressionScope_unknown._instance,
-    enumInstance: ConnectionExpressionScope.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConnectionExpressionScope_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ConnectionExpressionScope",
+        doc: "",
+        unknownInstance: ConnectionExpressionScope_unknown._instance,
+        enumInstance: ConnectionExpressionScope.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConnectionExpressionScope_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConnectionExpressionScope`.
@@ -10666,7 +10383,8 @@ enum ConnectionExpressionScope_kind {
   const ConnectionExpressionScope_kind(this._ordinal);
 }
 
-final class ConnectionExpressionScope_unknown implements ConnectionExpressionScope {
+final class ConnectionExpressionScope_unknown
+    implements ConnectionExpressionScope {
   static const _instance = ConnectionExpressionScope_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -10675,13 +10393,15 @@ final class ConnectionExpressionScope_unknown implements ConnectionExpressionSco
   ConnectionExpressionScope_unknown._unrecognized(this._u);
 
   @_core.override
-  ConnectionExpressionScope_kind get kind => ConnectionExpressionScope_kind.unknown;
+  ConnectionExpressionScope_kind get kind =>
+      ConnectionExpressionScope_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is ConnectionExpressionScope_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionExpressionScope.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionExpressionScope.serializer);
 }
 
 enum _ConnectionExpressionScope_consts implements ConnectionExpressionScope {
@@ -10695,7 +10415,8 @@ enum _ConnectionExpressionScope_consts implements ConnectionExpressionScope {
   const _ConnectionExpressionScope_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionExpressionScope.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionExpressionScope.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -10720,15 +10441,9 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
   factory ConnectorStroke({
     required _lib_editor_v1_expression.TypedExpression_orMutable color,
     required _lib_editor_v1_expression.TypedExpression_orMutable width,
-  }) => ConnectorStroke._(
-    color.toFrozen(),
-    width.toFrozen(),
-  );
+  }) => ConnectorStroke._(color.toFrozen(), width.toFrozen());
 
-  ConnectorStroke._(
-    this.color,
-    this.width,
-  );
+  ConnectorStroke._(this.color, this.width);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectorStroke._(
@@ -10749,31 +10464,30 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
   ConnectorStroke toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConnectorStroke_mutable toMutable() => ConnectorStroke_mutable._(
-    this.color,
-    this.width,
-  );
+  ConnectorStroke_mutable toMutable() =>
+      ConnectorStroke_mutable._(this.color, this.width);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConnectorStroke) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.color,
-    this.width,
-  ];
+  _core.List get _equality_proxy => [this.color, this.width];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConnectorStroke` instances.
-  static _skir.StructSerializer<ConnectorStroke, ConnectorStroke_mutable> get serializer {
+  static _skir.StructSerializer<ConnectorStroke, ConnectorStroke_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "color",
@@ -10815,10 +10529,7 @@ final class ConnectorStroke_mutable implements ConnectorStroke_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable width;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConnectorStroke_mutable._(
-    this.color,
-    this.width,
-  );
+  ConnectorStroke_mutable._(this.color, this.width);
 
   /// If the value of [color] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
@@ -10827,7 +10538,8 @@ final class ConnectorStroke_mutable implements ConnectorStroke_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.color = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.color = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -10838,16 +10550,15 @@ final class ConnectorStroke_mutable implements ConnectorStroke_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.width = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.width = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConnectorStroke toFrozen() => ConnectorStroke(
-    color: this.color,
-    width: this.width,
-  ).._u = this._u;
+  ConnectorStroke toFrozen() =>
+      ConnectorStroke(color: this.color, width: this.width).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -10887,12 +10598,7 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
     scope,
   );
 
-  ConnectionMarker._(
-    this.node,
-    this.position,
-    this.alignToPath,
-    this.scope,
-  );
+  ConnectionMarker._(this.node, this.position, this.alignToPath, this.scope);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectionMarker._(
@@ -10928,7 +10634,10 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConnectionMarker) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -10945,7 +10654,8 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConnectionMarker` instances.
-  static _skir.StructSerializer<ConnectionMarker, ConnectionMarker_mutable> get serializer {
+  static _skir.StructSerializer<ConnectionMarker, ConnectionMarker_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "node",
@@ -11021,7 +10731,8 @@ final class ConnectionMarker_mutable implements ConnectionMarker_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.position = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.position =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -11032,7 +10743,8 @@ final class ConnectionMarker_mutable implements ConnectionMarker_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.alignToPath = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.alignToPath =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -11057,20 +10769,17 @@ sealed class OrthogonalConnectionPath_orMutable {
 }
 
 /// Deeply immutable.
-final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutable {
+final class OrthogonalConnectionPath
+    implements OrthogonalConnectionPath_orMutable {
   @_core.override
   final _lib_editor_v1_expression.TypedExpression bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OrthogonalConnectionPath({
     required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
-  }) => OrthogonalConnectionPath._(
-    bendPosition.toFrozen(),
-  );
+  }) => OrthogonalConnectionPath._(bendPosition.toFrozen());
 
-  OrthogonalConnectionPath._(
-    this.bendPosition,
-  );
+  OrthogonalConnectionPath._(this.bendPosition);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OrthogonalConnectionPath._(
@@ -11079,9 +10788,10 @@ final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static OrthogonalConnectionPath_mutable mutable() => OrthogonalConnectionPath_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-  );
+  static OrthogonalConnectionPath_mutable mutable() =>
+      OrthogonalConnectionPath_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -11089,29 +10799,33 @@ final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutab
   OrthogonalConnectionPath toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  OrthogonalConnectionPath_mutable toMutable() => OrthogonalConnectionPath_mutable._(
-    this.bendPosition,
-  );
+  OrthogonalConnectionPath_mutable toMutable() =>
+      OrthogonalConnectionPath_mutable._(this.bendPosition);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OrthogonalConnectionPath) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.bendPosition,
-  ];
+  _core.List get _equality_proxy => [this.bendPosition];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OrthogonalConnectionPath` instances.
-  static _skir.StructSerializer<OrthogonalConnectionPath, OrthogonalConnectionPath_mutable> get serializer {
+  static _skir.StructSerializer<
+    OrthogonalConnectionPath,
+    OrthogonalConnectionPath_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "bend_position",
@@ -11139,13 +10853,12 @@ final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutab
 }
 
 /// Mutable version of [OrthogonalConnectionPath].
-final class OrthogonalConnectionPath_mutable implements OrthogonalConnectionPath_orMutable {
+final class OrthogonalConnectionPath_mutable
+    implements OrthogonalConnectionPath_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
-  OrthogonalConnectionPath_mutable._(
-    this.bendPosition,
-  );
+  OrthogonalConnectionPath_mutable._(this.bendPosition);
 
   /// If the value of [bendPosition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bendPosition] and returns it.
@@ -11154,15 +10867,15 @@ final class OrthogonalConnectionPath_mutable implements OrthogonalConnectionPath
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.bendPosition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.bendPosition =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  OrthogonalConnectionPath toFrozen() => OrthogonalConnectionPath(
-    bendPosition: this.bendPosition,
-  ).._u = this._u;
+  OrthogonalConnectionPath toFrozen() =>
+      OrthogonalConnectionPath(bendPosition: this.bendPosition).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -11192,10 +10905,7 @@ final class CurvedConnectionPath implements CurvedConnectionPath_orMutable {
     targetControlOffset.toFrozen(),
   );
 
-  CurvedConnectionPath._(
-    this.sourceControlOffset,
-    this.targetControlOffset,
-  );
+  CurvedConnectionPath._(this.sourceControlOffset, this.targetControlOffset);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CurvedConnectionPath._(
@@ -11205,10 +10915,11 @@ final class CurvedConnectionPath implements CurvedConnectionPath_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CurvedConnectionPath_mutable mutable() => CurvedConnectionPath_mutable._(
-    PresentationOffset.defaultInstance,
-    PresentationOffset.defaultInstance,
-  );
+  static CurvedConnectionPath_mutable mutable() =>
+      CurvedConnectionPath_mutable._(
+        PresentationOffset.defaultInstance,
+        PresentationOffset.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -11225,7 +10936,10 @@ final class CurvedConnectionPath implements CurvedConnectionPath_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CurvedConnectionPath) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -11240,7 +10954,11 @@ final class CurvedConnectionPath implements CurvedConnectionPath_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CurvedConnectionPath` instances.
-  static _skir.StructSerializer<CurvedConnectionPath, CurvedConnectionPath_mutable> get serializer {
+  static _skir.StructSerializer<
+    CurvedConnectionPath,
+    CurvedConnectionPath_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source_control_offset",
@@ -11277,7 +10995,8 @@ final class CurvedConnectionPath implements CurvedConnectionPath_orMutable {
 }
 
 /// Mutable version of [CurvedConnectionPath].
-final class CurvedConnectionPath_mutable implements CurvedConnectionPath_orMutable {
+final class CurvedConnectionPath_mutable
+    implements CurvedConnectionPath_orMutable {
   PresentationOffset_orMutable sourceControlOffset;
   PresentationOffset_orMutable targetControlOffset;
   _skir.internal__UnrecognizedFields? _u;
@@ -11294,7 +11013,8 @@ final class CurvedConnectionPath_mutable implements CurvedConnectionPath_orMutab
     if (value is PresentationOffset_mutable) {
       return value;
     } else {
-      return this.sourceControlOffset = (value as PresentationOffset).toMutable();
+      return this.sourceControlOffset = (value as PresentationOffset)
+          .toMutable();
     }
   }
 
@@ -11305,7 +11025,8 @@ final class CurvedConnectionPath_mutable implements CurvedConnectionPath_orMutab
     if (value is PresentationOffset_mutable) {
       return value;
     } else {
-      return this.targetControlOffset = (value as PresentationOffset).toMutable();
+      return this.targetControlOffset = (value as PresentationOffset)
+          .toMutable();
     }
   }
 
@@ -11340,23 +11061,19 @@ sealed class ConnectionPath {
   static const straight = _ConnectionPath_consts.straightConst;
 
   /// Create a 'orthogonal' variant wrapping around the given value.
-  factory ConnectionPath.wrapOrthogonal(
-    OrthogonalConnectionPath value
-  ) => ConnectionPath_orthogonalWrapper._(value);
+  factory ConnectionPath.wrapOrthogonal(OrthogonalConnectionPath value) =>
+      ConnectionPath_orthogonalWrapper._(value);
 
   /// Same as `wrapOrthogonal(OrthogonalConnectionPath(...))`.
   factory ConnectionPath.createOrthogonal({
     required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
   }) => ConnectionPath.wrapOrthogonal(
-    OrthogonalConnectionPath(
-      bendPosition: bendPosition,
-    )
+    OrthogonalConnectionPath(bendPosition: bendPosition),
   );
 
   /// Create a 'curved' variant wrapping around the given value.
-  factory ConnectionPath.wrapCurved(
-    CurvedConnectionPath value
-  ) => ConnectionPath_curvedWrapper._(value);
+  factory ConnectionPath.wrapCurved(CurvedConnectionPath value) =>
+      ConnectionPath_curvedWrapper._(value);
 
   /// Same as `wrapCurved(CurvedConnectionPath(...))`.
   factory ConnectionPath.createCurved({
@@ -11366,7 +11083,7 @@ sealed class ConnectionPath {
     CurvedConnectionPath(
       sourceControlOffset: sourceControlOffset,
       targetControlOffset: targetControlOffset,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this ConnectionPath.
@@ -11407,15 +11124,16 @@ sealed class ConnectionPath {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ConnectionPath",
-    doc: "",
-    unknownInstance: ConnectionPath_unknown._instance,
-    enumInstance: ConnectionPath.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConnectionPath_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ConnectionPath",
+        doc: "",
+        unknownInstance: ConnectionPath_unknown._instance,
+        enumInstance: ConnectionPath.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConnectionPath_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConnectionPath`.
@@ -11445,7 +11163,8 @@ final class ConnectionPath_unknown implements ConnectionPath {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionPath.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionPath.serializer);
 }
 
 enum _ConnectionPath_consts implements ConnectionPath {
@@ -11457,7 +11176,8 @@ enum _ConnectionPath_consts implements ConnectionPath {
   const _ConnectionPath_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionPath.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionPath.serializer);
 }
 
 sealed class _ConnectionPath_wrapper implements ConnectionPath {
@@ -11473,7 +11193,8 @@ sealed class _ConnectionPath_wrapper implements ConnectionPath {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionPath.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionPath.serializer);
 }
 
 final class ConnectionPath_orthogonalWrapper extends _ConnectionPath_wrapper {
@@ -11541,15 +11262,16 @@ sealed class ConnectionAxis {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ConnectionAxis",
-    doc: "",
-    unknownInstance: ConnectionAxis_unknown._instance,
-    enumInstance: ConnectionAxis.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConnectionAxis_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ConnectionAxis",
+        doc: "",
+        unknownInstance: ConnectionAxis_unknown._instance,
+        enumInstance: ConnectionAxis.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConnectionAxis_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConnectionAxis`.
@@ -11578,7 +11300,8 @@ final class ConnectionAxis_unknown implements ConnectionAxis {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionAxis.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionAxis.serializer);
 }
 
 enum _ConnectionAxis_consts implements ConnectionAxis {
@@ -11591,7 +11314,8 @@ enum _ConnectionAxis_consts implements ConnectionAxis {
   const _ConnectionAxis_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionAxis.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionAxis.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -11606,7 +11330,8 @@ sealed class OrthogonalConnectionBundlePath_orMutable {
 }
 
 /// Deeply immutable.
-final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundlePath_orMutable {
+final class OrthogonalConnectionBundlePath
+    implements OrthogonalConnectionBundlePath_orMutable {
   @_core.override
   final ConnectionAxis axis;
   @_core.override
@@ -11616,15 +11341,9 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
   factory OrthogonalConnectionBundlePath({
     required ConnectionAxis axis,
     required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
-  }) => OrthogonalConnectionBundlePath._(
-    axis,
-    bendPosition.toFrozen(),
-  );
+  }) => OrthogonalConnectionBundlePath._(axis, bendPosition.toFrozen());
 
-  OrthogonalConnectionBundlePath._(
-    this.axis,
-    this.bendPosition,
-  );
+  OrthogonalConnectionBundlePath._(this.axis, this.bendPosition);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OrthogonalConnectionBundlePath._(
@@ -11634,10 +11353,11 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static OrthogonalConnectionBundlePath_mutable mutable() => OrthogonalConnectionBundlePath_mutable._(
-    ConnectionAxis.unknown,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-  );
+  static OrthogonalConnectionBundlePath_mutable mutable() =>
+      OrthogonalConnectionBundlePath_mutable._(
+        ConnectionAxis.unknown,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -11645,31 +11365,33 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
   OrthogonalConnectionBundlePath toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  OrthogonalConnectionBundlePath_mutable toMutable() => OrthogonalConnectionBundlePath_mutable._(
-    this.axis,
-    this.bendPosition,
-  );
+  OrthogonalConnectionBundlePath_mutable toMutable() =>
+      OrthogonalConnectionBundlePath_mutable._(this.axis, this.bendPosition);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OrthogonalConnectionBundlePath) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.axis,
-    this.bendPosition,
-  ];
+  _core.List get _equality_proxy => [this.axis, this.bendPosition];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OrthogonalConnectionBundlePath` instances.
-  static _skir.StructSerializer<OrthogonalConnectionBundlePath, OrthogonalConnectionBundlePath_mutable> get serializer {
+  static _skir.StructSerializer<
+    OrthogonalConnectionBundlePath,
+    OrthogonalConnectionBundlePath_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "axis",
@@ -11706,15 +11428,13 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
 }
 
 /// Mutable version of [OrthogonalConnectionBundlePath].
-final class OrthogonalConnectionBundlePath_mutable implements OrthogonalConnectionBundlePath_orMutable {
+final class OrthogonalConnectionBundlePath_mutable
+    implements OrthogonalConnectionBundlePath_orMutable {
   ConnectionAxis axis;
   _lib_editor_v1_expression.TypedExpression_orMutable bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
-  OrthogonalConnectionBundlePath_mutable._(
-    this.axis,
-    this.bendPosition,
-  );
+  OrthogonalConnectionBundlePath_mutable._(this.axis, this.bendPosition);
 
   /// If the value of [bendPosition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bendPosition] and returns it.
@@ -11723,7 +11443,8 @@ final class OrthogonalConnectionBundlePath_mutable implements OrthogonalConnecti
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.bendPosition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.bendPosition =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -11752,13 +11473,14 @@ final class OrthogonalConnectionBundlePath_mutable implements OrthogonalConnecti
 sealed class ConnectionBundlePath {
   /// Constant indicating an unknown `ConnectionBundlePath`.
   /// Default value for fields of type `ConnectionBundlePath`.
-  static const ConnectionBundlePath unknown = ConnectionBundlePath_unknown._instance;
+  static const ConnectionBundlePath unknown =
+      ConnectionBundlePath_unknown._instance;
 
   static const fan = _ConnectionBundlePath_consts.fanConst;
 
   /// Create a 'orthogonal' variant wrapping around the given value.
   factory ConnectionBundlePath.wrapOrthogonal(
-    OrthogonalConnectionBundlePath value
+    OrthogonalConnectionBundlePath value,
   ) => ConnectionBundlePath_orthogonalWrapper._(value);
 
   /// Same as `wrapOrthogonal(OrthogonalConnectionBundlePath(...))`.
@@ -11766,10 +11488,7 @@ sealed class ConnectionBundlePath {
     required ConnectionAxis axis,
     required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
   }) => ConnectionBundlePath.wrapOrthogonal(
-    OrthogonalConnectionBundlePath(
-      axis: axis,
-      bendPosition: bendPosition,
-    )
+    OrthogonalConnectionBundlePath(axis: axis, bendPosition: bendPosition),
   );
 
   /// Returns the kind of variant held by this ConnectionBundlePath.
@@ -11778,13 +11497,7 @@ sealed class ConnectionBundlePath {
   /// Serializer for `ConnectionBundlePath` instances.
   static _skir.EnumSerializer<ConnectionBundlePath> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        2,
-        "fan",
-        "fan",
-        "",
-        fan,
-      );
+      _serializerBuilder.addConstantVariant(2, "fan", "fan", "", fan);
       _serializerBuilder.addWrapperVariant(
         1,
         "orthogonal",
@@ -11800,15 +11513,16 @@ sealed class ConnectionBundlePath {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ConnectionBundlePath",
-    doc: "",
-    unknownInstance: ConnectionBundlePath_unknown._instance,
-    enumInstance: ConnectionBundlePath.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConnectionBundlePath_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ConnectionBundlePath",
+        doc: "",
+        unknownInstance: ConnectionBundlePath_unknown._instance,
+        enumInstance: ConnectionBundlePath.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConnectionBundlePath_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConnectionBundlePath`.
@@ -11837,7 +11551,8 @@ final class ConnectionBundlePath_unknown implements ConnectionBundlePath {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionBundlePath.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionBundlePath.serializer);
 }
 
 enum _ConnectionBundlePath_consts implements ConnectionBundlePath {
@@ -11849,7 +11564,8 @@ enum _ConnectionBundlePath_consts implements ConnectionBundlePath {
   const _ConnectionBundlePath_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionBundlePath.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionBundlePath.serializer);
 }
 
 sealed class _ConnectionBundlePath_wrapper implements ConnectionBundlePath {
@@ -11865,16 +11581,19 @@ sealed class _ConnectionBundlePath_wrapper implements ConnectionBundlePath {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectionBundlePath.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectionBundlePath.serializer);
 }
 
-final class ConnectionBundlePath_orthogonalWrapper extends _ConnectionBundlePath_wrapper {
+final class ConnectionBundlePath_orthogonalWrapper
+    extends _ConnectionBundlePath_wrapper {
   final OrthogonalConnectionBundlePath value;
 
   ConnectionBundlePath_orthogonalWrapper._(this.value);
 
   @_core.override
-  ConnectionBundlePath_kind get kind => ConnectionBundlePath_kind.orthogonalWrapper;
+  ConnectionBundlePath_kind get kind =>
+      ConnectionBundlePath_kind.orthogonalWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -11973,7 +11692,10 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AnchoredConnection) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -11992,7 +11714,8 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AnchoredConnection` instances.
-  static _skir.StructSerializer<AnchoredConnection, AnchoredConnection_mutable> get serializer {
+  static _skir.StructSerializer<AnchoredConnection, AnchoredConnection_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source",
@@ -12034,9 +11757,7 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
         "markers",
         "markers",
         4,
-        _skir.Serializers.iterable(
-          ConnectionMarker.serializer,
-        ),
+        _skir.Serializers.iterable(ConnectionMarker.serializer),
         "",
         (it) => it.markers,
         (it, v) => it.markers = v,
@@ -12128,7 +11849,8 @@ sealed class AnchoredConnectionBundle_orMutable {
 }
 
 /// Deeply immutable.
-final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutable {
+final class AnchoredConnectionBundle
+    implements AnchoredConnectionBundle_orMutable {
   @_core.override
   final PresentationAnchorSelector source;
   @_core.override
@@ -12192,16 +11914,17 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AnchoredConnectionBundle_mutable mutable() => AnchoredConnectionBundle_mutable._(
-    PresentationAnchorSelector.unknown,
-    PresentationAnchorSelector.unknown,
-    ConnectionBundlePath.unknown,
-    ConnectorStyle.defaultInstance,
-    ConnectorStyle.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    null,
-  );
+  static AnchoredConnectionBundle_mutable mutable() =>
+      AnchoredConnectionBundle_mutable._(
+        PresentationAnchorSelector.unknown,
+        PresentationAnchorSelector.unknown,
+        ConnectionBundlePath.unknown,
+        ConnectorStyle.defaultInstance,
+        ConnectorStyle.defaultInstance,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -12209,22 +11932,26 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
   AnchoredConnectionBundle toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AnchoredConnectionBundle_mutable toMutable() => AnchoredConnectionBundle_mutable._(
-    this.source,
-    this.targets,
-    this.path,
-    this.trunkStyle,
-    this.branchStyle,
-    this.trunkMarkers,
-    this.branchMarkers,
-    this.visibleIf,
-  );
+  AnchoredConnectionBundle_mutable toMutable() =>
+      AnchoredConnectionBundle_mutable._(
+        this.source,
+        this.targets,
+        this.path,
+        this.trunkStyle,
+        this.branchStyle,
+        this.trunkMarkers,
+        this.branchMarkers,
+        this.visibleIf,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AnchoredConnectionBundle) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -12245,7 +11972,11 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AnchoredConnectionBundle` instances.
-  static _skir.StructSerializer<AnchoredConnectionBundle, AnchoredConnectionBundle_mutable> get serializer {
+  static _skir.StructSerializer<
+    AnchoredConnectionBundle,
+    AnchoredConnectionBundle_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source",
@@ -12296,9 +12027,7 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
         "trunk_markers",
         "trunkMarkers",
         5,
-        _skir.Serializers.iterable(
-          ConnectionMarker.serializer,
-        ),
+        _skir.Serializers.iterable(ConnectionMarker.serializer),
         "",
         (it) => it.trunkMarkers,
         (it, v) => it.trunkMarkers = v,
@@ -12307,9 +12036,7 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
         "branch_markers",
         "branchMarkers",
         6,
-        _skir.Serializers.iterable(
-          ConnectionMarker.serializer,
-        ),
+        _skir.Serializers.iterable(ConnectionMarker.serializer),
         "",
         (it) => it.branchMarkers,
         (it, v) => it.branchMarkers = v,
@@ -12342,7 +12069,8 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
 }
 
 /// Mutable version of [AnchoredConnectionBundle].
-final class AnchoredConnectionBundle_mutable implements AnchoredConnectionBundle_orMutable {
+final class AnchoredConnectionBundle_mutable
+    implements AnchoredConnectionBundle_orMutable {
   PresentationAnchorSelector source;
   PresentationAnchorSelector targets;
   ConnectionBundlePath path;
@@ -12417,12 +12145,12 @@ final class AnchoredConnectionBundle_mutable implements AnchoredConnectionBundle
 sealed class PresentationConnection {
   /// Constant indicating an unknown `PresentationConnection`.
   /// Default value for fields of type `PresentationConnection`.
-  static const PresentationConnection unknown = PresentationConnection_unknown._instance;
+  static const PresentationConnection unknown =
+      PresentationConnection_unknown._instance;
 
   /// Create a 'connection' variant wrapping around the given value.
-  factory PresentationConnection.wrapConnection(
-    AnchoredConnection value
-  ) => PresentationConnection_connectionWrapper._(value);
+  factory PresentationConnection.wrapConnection(AnchoredConnection value) =>
+      PresentationConnection_connectionWrapper._(value);
 
   /// Same as `wrapConnection(AnchoredConnection(...))`.
   factory PresentationConnection.createConnection({
@@ -12440,13 +12168,12 @@ sealed class PresentationConnection {
       style: style,
       markers: markers,
       visibleIf: visibleIf,
-    )
+    ),
   );
 
   /// Create a 'bundle' variant wrapping around the given value.
-  factory PresentationConnection.wrapBundle(
-    AnchoredConnectionBundle value
-  ) => PresentationConnection_bundleWrapper._(value);
+  factory PresentationConnection.wrapBundle(AnchoredConnectionBundle value) =>
+      PresentationConnection_bundleWrapper._(value);
 
   /// Same as `wrapBundle(AnchoredConnectionBundle(...))`.
   factory PresentationConnection.createBundle({
@@ -12468,7 +12195,7 @@ sealed class PresentationConnection {
       trunkMarkers: trunkMarkers,
       branchMarkers: branchMarkers,
       visibleIf: visibleIf,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationConnection.
@@ -12502,15 +12229,16 @@ sealed class PresentationConnection {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationConnection",
-    doc: "",
-    unknownInstance: PresentationConnection_unknown._instance,
-    enumInstance: PresentationConnection.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationConnection_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationConnection",
+        doc: "",
+        unknownInstance: PresentationConnection_unknown._instance,
+        enumInstance: PresentationConnection.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationConnection_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationConnection`.
@@ -12539,7 +12267,8 @@ final class PresentationConnection_unknown implements PresentationConnection {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationConnection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationConnection.serializer);
 }
 
 sealed class _PresentationConnection_wrapper implements PresentationConnection {
@@ -12555,25 +12284,30 @@ sealed class _PresentationConnection_wrapper implements PresentationConnection {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationConnection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationConnection.serializer);
 }
 
-final class PresentationConnection_connectionWrapper extends _PresentationConnection_wrapper {
+final class PresentationConnection_connectionWrapper
+    extends _PresentationConnection_wrapper {
   final AnchoredConnection value;
 
   PresentationConnection_connectionWrapper._(this.value);
 
   @_core.override
-  PresentationConnection_kind get kind => PresentationConnection_kind.connectionWrapper;
+  PresentationConnection_kind get kind =>
+      PresentationConnection_kind.connectionWrapper;
 }
 
-final class PresentationConnection_bundleWrapper extends _PresentationConnection_wrapper {
+final class PresentationConnection_bundleWrapper
+    extends _PresentationConnection_wrapper {
   final AnchoredConnectionBundle value;
 
   PresentationConnection_bundleWrapper._(this.value);
 
   @_core.override
-  PresentationConnection_kind get kind => PresentationConnection_kind.bundleWrapper;
+  PresentationConnection_kind get kind =>
+      PresentationConnection_kind.bundleWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -12603,10 +12337,7 @@ final class ConnectionLayerLayout implements ConnectionLayerLayout_orMutable {
     _skir.internal__frozenCopy(connections),
   );
 
-  ConnectionLayerLayout._(
-    this.child,
-    this.connections,
-  );
+  ConnectionLayerLayout._(this.child, this.connections);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectionLayerLayout._(
@@ -12616,10 +12347,11 @@ final class ConnectionLayerLayout implements ConnectionLayerLayout_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConnectionLayerLayout_mutable mutable() => ConnectionLayerLayout_mutable._(
-    PresentationNode.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
+  static ConnectionLayerLayout_mutable mutable() =>
+      ConnectionLayerLayout_mutable._(
+        PresentationNode.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -12627,31 +12359,33 @@ final class ConnectionLayerLayout implements ConnectionLayerLayout_orMutable {
   ConnectionLayerLayout toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConnectionLayerLayout_mutable toMutable() => ConnectionLayerLayout_mutable._(
-    this.child,
-    this.connections,
-  );
+  ConnectionLayerLayout_mutable toMutable() =>
+      ConnectionLayerLayout_mutable._(this.child, this.connections);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConnectionLayerLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.child,
-    this.connections,
-  ];
+  _core.List get _equality_proxy => [this.child, this.connections];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConnectionLayerLayout` instances.
-  static _skir.StructSerializer<ConnectionLayerLayout, ConnectionLayerLayout_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConnectionLayerLayout,
+    ConnectionLayerLayout_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "child",
@@ -12666,9 +12400,7 @@ final class ConnectionLayerLayout implements ConnectionLayerLayout_orMutable {
         "connections",
         "connections",
         1,
-        _skir.Serializers.iterable(
-          PresentationConnection.serializer,
-        ),
+        _skir.Serializers.iterable(PresentationConnection.serializer),
         "",
         (it) => it.connections,
         (it, v) => it.connections = v,
@@ -12690,22 +12422,19 @@ final class ConnectionLayerLayout implements ConnectionLayerLayout_orMutable {
 }
 
 /// Mutable version of [ConnectionLayerLayout].
-final class ConnectionLayerLayout_mutable implements ConnectionLayerLayout_orMutable {
+final class ConnectionLayerLayout_mutable
+    implements ConnectionLayerLayout_orMutable {
   PresentationNode_orMutable child;
   _core.Iterable<PresentationConnection> connections;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConnectionLayerLayout_mutable._(
-    this.child,
-    this.connections,
-  );
+  ConnectionLayerLayout_mutable._(this.child, this.connections);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConnectionLayerLayout toFrozen() => ConnectionLayerLayout(
-    child: this.child,
-    connections: this.connections,
-  ).._u = this._u;
+  ConnectionLayerLayout toFrozen() =>
+      ConnectionLayerLayout(child: this.child, connections: this.connections)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -12726,13 +12455,9 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
 
   factory ArrowConnectorMarker({
     required _lib_editor_v1_expression.TypedExpression_orMutable size,
-  }) => ArrowConnectorMarker._(
-    size.toFrozen(),
-  );
+  }) => ArrowConnectorMarker._(size.toFrozen());
 
-  ArrowConnectorMarker._(
-    this.size,
-  );
+  ArrowConnectorMarker._(this.size);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ArrowConnectorMarker._(
@@ -12741,9 +12466,10 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ArrowConnectorMarker_mutable mutable() => ArrowConnectorMarker_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-  );
+  static ArrowConnectorMarker_mutable mutable() =>
+      ArrowConnectorMarker_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -12751,29 +12477,33 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
   ArrowConnectorMarker toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ArrowConnectorMarker_mutable toMutable() => ArrowConnectorMarker_mutable._(
-    this.size,
-  );
+  ArrowConnectorMarker_mutable toMutable() =>
+      ArrowConnectorMarker_mutable._(this.size);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ArrowConnectorMarker) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.size,
-  ];
+  _core.List get _equality_proxy => [this.size];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ArrowConnectorMarker` instances.
-  static _skir.StructSerializer<ArrowConnectorMarker, ArrowConnectorMarker_mutable> get serializer {
+  static _skir.StructSerializer<
+    ArrowConnectorMarker,
+    ArrowConnectorMarker_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "size",
@@ -12801,13 +12531,12 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
 }
 
 /// Mutable version of [ArrowConnectorMarker].
-final class ArrowConnectorMarker_mutable implements ArrowConnectorMarker_orMutable {
+final class ArrowConnectorMarker_mutable
+    implements ArrowConnectorMarker_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable size;
   _skir.internal__UnrecognizedFields? _u;
 
-  ArrowConnectorMarker_mutable._(
-    this.size,
-  );
+  ArrowConnectorMarker_mutable._(this.size);
 
   /// If the value of [size] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [size] and returns it.
@@ -12816,15 +12545,15 @@ final class ArrowConnectorMarker_mutable implements ArrowConnectorMarker_orMutab
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.size = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.size = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ArrowConnectorMarker toFrozen() => ArrowConnectorMarker(
-    size: this.size,
-  ).._u = this._u;
+  ArrowConnectorMarker toFrozen() =>
+      ArrowConnectorMarker(size: this.size).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -12845,13 +12574,9 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
 
   factory CircleConnectorMarker({
     required _lib_editor_v1_expression.TypedExpression_orMutable diameter,
-  }) => CircleConnectorMarker._(
-    diameter.toFrozen(),
-  );
+  }) => CircleConnectorMarker._(diameter.toFrozen());
 
-  CircleConnectorMarker._(
-    this.diameter,
-  );
+  CircleConnectorMarker._(this.diameter);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CircleConnectorMarker._(
@@ -12860,9 +12585,10 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CircleConnectorMarker_mutable mutable() => CircleConnectorMarker_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-  );
+  static CircleConnectorMarker_mutable mutable() =>
+      CircleConnectorMarker_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -12870,29 +12596,33 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
   CircleConnectorMarker toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CircleConnectorMarker_mutable toMutable() => CircleConnectorMarker_mutable._(
-    this.diameter,
-  );
+  CircleConnectorMarker_mutable toMutable() =>
+      CircleConnectorMarker_mutable._(this.diameter);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CircleConnectorMarker) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.diameter,
-  ];
+  _core.List get _equality_proxy => [this.diameter];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CircleConnectorMarker` instances.
-  static _skir.StructSerializer<CircleConnectorMarker, CircleConnectorMarker_mutable> get serializer {
+  static _skir.StructSerializer<
+    CircleConnectorMarker,
+    CircleConnectorMarker_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "diameter",
@@ -12920,13 +12650,12 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
 }
 
 /// Mutable version of [CircleConnectorMarker].
-final class CircleConnectorMarker_mutable implements CircleConnectorMarker_orMutable {
+final class CircleConnectorMarker_mutable
+    implements CircleConnectorMarker_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable diameter;
   _skir.internal__UnrecognizedFields? _u;
 
-  CircleConnectorMarker_mutable._(
-    this.diameter,
-  );
+  CircleConnectorMarker_mutable._(this.diameter);
 
   /// If the value of [diameter] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diameter] and returns it.
@@ -12935,15 +12664,15 @@ final class CircleConnectorMarker_mutable implements CircleConnectorMarker_orMut
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.diameter = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.diameter =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CircleConnectorMarker toFrozen() => CircleConnectorMarker(
-    diameter: this.diameter,
-  ).._u = this._u;
+  CircleConnectorMarker toFrozen() =>
+      CircleConnectorMarker(diameter: this.diameter).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -12963,34 +12692,27 @@ final class CircleConnectorMarker_mutable implements CircleConnectorMarker_orMut
 sealed class ConnectorEndpointMarker {
   /// Constant indicating an unknown `ConnectorEndpointMarker`.
   /// Default value for fields of type `ConnectorEndpointMarker`.
-  static const ConnectorEndpointMarker unknown = ConnectorEndpointMarker_unknown._instance;
+  static const ConnectorEndpointMarker unknown =
+      ConnectorEndpointMarker_unknown._instance;
 
   /// Create a 'arrow' variant wrapping around the given value.
-  factory ConnectorEndpointMarker.wrapArrow(
-    ArrowConnectorMarker value
-  ) => ConnectorEndpointMarker_arrowWrapper._(value);
+  factory ConnectorEndpointMarker.wrapArrow(ArrowConnectorMarker value) =>
+      ConnectorEndpointMarker_arrowWrapper._(value);
 
   /// Same as `wrapArrow(ArrowConnectorMarker(...))`.
   factory ConnectorEndpointMarker.createArrow({
     required _lib_editor_v1_expression.TypedExpression_orMutable size,
-  }) => ConnectorEndpointMarker.wrapArrow(
-    ArrowConnectorMarker(
-      size: size,
-    )
-  );
+  }) => ConnectorEndpointMarker.wrapArrow(ArrowConnectorMarker(size: size));
 
   /// Create a 'circle' variant wrapping around the given value.
-  factory ConnectorEndpointMarker.wrapCircle(
-    CircleConnectorMarker value
-  ) => ConnectorEndpointMarker_circleWrapper._(value);
+  factory ConnectorEndpointMarker.wrapCircle(CircleConnectorMarker value) =>
+      ConnectorEndpointMarker_circleWrapper._(value);
 
   /// Same as `wrapCircle(CircleConnectorMarker(...))`.
   factory ConnectorEndpointMarker.createCircle({
     required _lib_editor_v1_expression.TypedExpression_orMutable diameter,
   }) => ConnectorEndpointMarker.wrapCircle(
-    CircleConnectorMarker(
-      diameter: diameter,
-    )
+    CircleConnectorMarker(diameter: diameter),
   );
 
   /// Returns the kind of variant held by this ConnectorEndpointMarker.
@@ -13024,15 +12746,16 @@ sealed class ConnectorEndpointMarker {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ConnectorEndpointMarker",
-    doc: "",
-    unknownInstance: ConnectorEndpointMarker_unknown._instance,
-    enumInstance: ConnectorEndpointMarker.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConnectorEndpointMarker_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ConnectorEndpointMarker",
+        doc: "",
+        unknownInstance: ConnectorEndpointMarker_unknown._instance,
+        enumInstance: ConnectorEndpointMarker.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConnectorEndpointMarker_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConnectorEndpointMarker`.
@@ -13061,10 +12784,12 @@ final class ConnectorEndpointMarker_unknown implements ConnectorEndpointMarker {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectorEndpointMarker.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectorEndpointMarker.serializer);
 }
 
-sealed class _ConnectorEndpointMarker_wrapper implements ConnectorEndpointMarker {
+sealed class _ConnectorEndpointMarker_wrapper
+    implements ConnectorEndpointMarker {
   _core.dynamic get value;
 
   @_core.override
@@ -13077,25 +12802,30 @@ sealed class _ConnectorEndpointMarker_wrapper implements ConnectorEndpointMarker
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectorEndpointMarker.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectorEndpointMarker.serializer);
 }
 
-final class ConnectorEndpointMarker_arrowWrapper extends _ConnectorEndpointMarker_wrapper {
+final class ConnectorEndpointMarker_arrowWrapper
+    extends _ConnectorEndpointMarker_wrapper {
   final ArrowConnectorMarker value;
 
   ConnectorEndpointMarker_arrowWrapper._(this.value);
 
   @_core.override
-  ConnectorEndpointMarker_kind get kind => ConnectorEndpointMarker_kind.arrowWrapper;
+  ConnectorEndpointMarker_kind get kind =>
+      ConnectorEndpointMarker_kind.arrowWrapper;
 }
 
-final class ConnectorEndpointMarker_circleWrapper extends _ConnectorEndpointMarker_wrapper {
+final class ConnectorEndpointMarker_circleWrapper
+    extends _ConnectorEndpointMarker_wrapper {
   final CircleConnectorMarker value;
 
   ConnectorEndpointMarker_circleWrapper._(this.value);
 
   @_core.override
-  ConnectorEndpointMarker_kind get kind => ConnectorEndpointMarker_kind.circleWrapper;
+  ConnectorEndpointMarker_kind get kind =>
+      ConnectorEndpointMarker_kind.circleWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -13176,7 +12906,10 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConnectorStyle) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -13193,7 +12926,8 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConnectorStyle` instances.
-  static _skir.StructSerializer<ConnectorStyle, ConnectorStyle_mutable> get serializer {
+  static _skir.StructSerializer<ConnectorStyle, ConnectorStyle_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "stroke",
@@ -13217,9 +12951,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
         "start_marker",
         "startMarker",
         2,
-        _skir.Serializers.optional(
-          ConnectorEndpointMarker.serializer,
-        ),
+        _skir.Serializers.optional(ConnectorEndpointMarker.serializer),
         "",
         (it) => it.startMarker,
         (it, v) => it.startMarker = v,
@@ -13228,9 +12960,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
         "end_marker",
         "endMarker",
         3,
-        _skir.Serializers.optional(
-          ConnectorEndpointMarker.serializer,
-        ),
+        _skir.Serializers.optional(ConnectorEndpointMarker.serializer),
         "",
         (it) => it.endMarker,
         (it, v) => it.endMarker = v,
@@ -13284,7 +13014,8 @@ final class ConnectorStyle_mutable implements ConnectorStyle_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.cornerRadius = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.cornerRadius =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -13323,7 +13054,7 @@ sealed class ConnectorAnchor {
 
   /// Create a 'offset' variant wrapping around the given value.
   factory ConnectorAnchor.wrapOffset(
-    _lib_editor_v1_expression.TypedExpression value
+    _lib_editor_v1_expression.TypedExpression value,
   ) => ConnectorAnchor_offsetWrapper._(value);
 
   /// Same as `wrapOffset(_lib_editor_v1_expression.TypedExpression(...))`.
@@ -13334,7 +13065,7 @@ sealed class ConnectorAnchor {
     _lib_editor_v1_expression.TypedExpression(
       resultType: resultType,
       expression: expression,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this ConnectorAnchor.
@@ -13343,20 +13074,8 @@ sealed class ConnectorAnchor {
   /// Serializer for `ConnectorAnchor` instances.
   static _skir.EnumSerializer<ConnectorAnchor> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "start",
-        "start",
-        "",
-        start,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "center",
-        "center",
-        "",
-        center,
-      );
+      _serializerBuilder.addConstantVariant(1, "start", "start", "", start);
+      _serializerBuilder.addConstantVariant(2, "center", "center", "", center);
       _serializerBuilder.addWrapperVariant(
         3,
         "offset",
@@ -13372,15 +13091,16 @@ sealed class ConnectorAnchor {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ConnectorAnchor",
-    doc: "",
-    unknownInstance: ConnectorAnchor_unknown._instance,
-    enumInstance: ConnectorAnchor.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConnectorAnchor_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ConnectorAnchor",
+        doc: "",
+        unknownInstance: ConnectorAnchor_unknown._instance,
+        enumInstance: ConnectorAnchor.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConnectorAnchor_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConnectorAnchor`.
@@ -13410,7 +13130,8 @@ final class ConnectorAnchor_unknown implements ConnectorAnchor {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectorAnchor.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectorAnchor.serializer);
 }
 
 enum _ConnectorAnchor_consts implements ConnectorAnchor {
@@ -13423,7 +13144,8 @@ enum _ConnectorAnchor_consts implements ConnectorAnchor {
   const _ConnectorAnchor_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectorAnchor.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectorAnchor.serializer);
 }
 
 sealed class _ConnectorAnchor_wrapper implements ConnectorAnchor {
@@ -13439,7 +13161,8 @@ sealed class _ConnectorAnchor_wrapper implements ConnectorAnchor {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConnectorAnchor.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConnectorAnchor.serializer);
 }
 
 final class ConnectorAnchor_offsetWrapper extends _ConnectorAnchor_wrapper {
@@ -13470,7 +13193,8 @@ sealed class HierarchySequenceLayout_orMutable {
 }
 
 /// Deeply immutable.
-final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable {
+final class HierarchySequenceLayout
+    implements HierarchySequenceLayout_orMutable {
   @_core.override
   final ConnectorStyle unaryConnector;
   @_core.override
@@ -13499,7 +13223,8 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
     required _lib_editor_v1_expression.TypedExpression_orMutable indentation,
     required _lib_editor_v1_expression.TypedExpression_orMutable leadingSpacing,
     required ConnectorAnchor itemAnchor,
-    required _lib_editor_v1_expression.TypedExpression_orMutable flattenSingleItem,
+    required _lib_editor_v1_expression.TypedExpression_orMutable
+    flattenSingleItem,
     required CrossAxisAlignment crossAxisAlignment,
   }) => HierarchySequenceLayout._(
     unaryConnector.toFrozen(),
@@ -13540,17 +13265,18 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HierarchySequenceLayout_mutable mutable() => HierarchySequenceLayout_mutable._(
-    ConnectorStyle.defaultInstance,
-    ConnectorStyle.defaultInstance,
-    ConnectorStyle.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    ConnectorAnchor.unknown,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    CrossAxisAlignment.unknown,
-  );
+  static HierarchySequenceLayout_mutable mutable() =>
+      HierarchySequenceLayout_mutable._(
+        ConnectorStyle.defaultInstance,
+        ConnectorStyle.defaultInstance,
+        ConnectorStyle.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        ConnectorAnchor.unknown,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        CrossAxisAlignment.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -13558,23 +13284,27 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
   HierarchySequenceLayout toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HierarchySequenceLayout_mutable toMutable() => HierarchySequenceLayout_mutable._(
-    this.unaryConnector,
-    this.trunkConnector,
-    this.branchConnector,
-    this.itemSpacing,
-    this.indentation,
-    this.leadingSpacing,
-    this.itemAnchor,
-    this.flattenSingleItem,
-    this.crossAxisAlignment,
-  );
+  HierarchySequenceLayout_mutable toMutable() =>
+      HierarchySequenceLayout_mutable._(
+        this.unaryConnector,
+        this.trunkConnector,
+        this.branchConnector,
+        this.itemSpacing,
+        this.indentation,
+        this.leadingSpacing,
+        this.itemAnchor,
+        this.flattenSingleItem,
+        this.crossAxisAlignment,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HierarchySequenceLayout) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -13596,7 +13326,11 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HierarchySequenceLayout` instances.
-  static _skir.StructSerializer<HierarchySequenceLayout, HierarchySequenceLayout_mutable> get serializer {
+  static _skir.StructSerializer<
+    HierarchySequenceLayout,
+    HierarchySequenceLayout_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "unary_connector",
@@ -13696,7 +13430,8 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
 }
 
 /// Mutable version of [HierarchySequenceLayout].
-final class HierarchySequenceLayout_mutable implements HierarchySequenceLayout_orMutable {
+final class HierarchySequenceLayout_mutable
+    implements HierarchySequenceLayout_orMutable {
   ConnectorStyle_orMutable unaryConnector;
   ConnectorStyle_orMutable trunkConnector;
   ConnectorStyle_orMutable branchConnector;
@@ -13760,7 +13495,8 @@ final class HierarchySequenceLayout_mutable implements HierarchySequenceLayout_o
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.itemSpacing = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.itemSpacing =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -13771,7 +13507,8 @@ final class HierarchySequenceLayout_mutable implements HierarchySequenceLayout_o
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.indentation = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.indentation =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -13782,18 +13519,21 @@ final class HierarchySequenceLayout_mutable implements HierarchySequenceLayout_o
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.leadingSpacing = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.leadingSpacing =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
   /// If the value of [flattenSingleItem] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [flattenSingleItem] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableFlattenSingleItem {
+  _lib_editor_v1_expression.TypedExpression_mutable
+  get mutableFlattenSingleItem {
     final value = this.flattenSingleItem;
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.flattenSingleItem = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.flattenSingleItem =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -13832,14 +13572,12 @@ sealed class SequenceLayout {
   static const SequenceLayout unknown = SequenceLayout_unknown._instance;
 
   /// Create a 'children' variant wrapping around the given value.
-  factory SequenceLayout.wrapChildren(
-    ChildrenLayout value
-  ) => SequenceLayout_childrenWrapper._(value);
+  factory SequenceLayout.wrapChildren(ChildrenLayout value) =>
+      SequenceLayout_childrenWrapper._(value);
 
   /// Create a 'hierarchy' variant wrapping around the given value.
-  factory SequenceLayout.wrapHierarchy(
-    HierarchySequenceLayout value
-  ) => SequenceLayout_hierarchyWrapper._(value);
+  factory SequenceLayout.wrapHierarchy(HierarchySequenceLayout value) =>
+      SequenceLayout_hierarchyWrapper._(value);
 
   /// Same as `wrapHierarchy(HierarchySequenceLayout(...))`.
   factory SequenceLayout.createHierarchy({
@@ -13850,7 +13588,8 @@ sealed class SequenceLayout {
     required _lib_editor_v1_expression.TypedExpression_orMutable indentation,
     required _lib_editor_v1_expression.TypedExpression_orMutable leadingSpacing,
     required ConnectorAnchor itemAnchor,
-    required _lib_editor_v1_expression.TypedExpression_orMutable flattenSingleItem,
+    required _lib_editor_v1_expression.TypedExpression_orMutable
+    flattenSingleItem,
     required CrossAxisAlignment crossAxisAlignment,
   }) => SequenceLayout.wrapHierarchy(
     HierarchySequenceLayout(
@@ -13863,7 +13602,7 @@ sealed class SequenceLayout {
       itemAnchor: itemAnchor,
       flattenSingleItem: flattenSingleItem,
       crossAxisAlignment: crossAxisAlignment,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this SequenceLayout.
@@ -13897,15 +13636,16 @@ sealed class SequenceLayout {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:SequenceLayout",
-    doc: "",
-    unknownInstance: SequenceLayout_unknown._instance,
-    enumInstance: SequenceLayout.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: SequenceLayout_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SequenceLayout",
+        doc: "",
+        unknownInstance: SequenceLayout_unknown._instance,
+        enumInstance: SequenceLayout.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SequenceLayout_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `SequenceLayout`.
@@ -13934,7 +13674,8 @@ final class SequenceLayout_unknown implements SequenceLayout {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SequenceLayout.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SequenceLayout.serializer);
 }
 
 sealed class _SequenceLayout_wrapper implements SequenceLayout {
@@ -13950,7 +13691,8 @@ sealed class _SequenceLayout_wrapper implements SequenceLayout {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SequenceLayout.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SequenceLayout.serializer);
 }
 
 final class SequenceLayout_childrenWrapper extends _SequenceLayout_wrapper {
@@ -14058,7 +13800,10 @@ final class BoundControl implements BoundControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BoundControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -14076,7 +13821,8 @@ final class BoundControl implements BoundControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BoundControl` instances.
-  static _skir.StructSerializer<BoundControl, BoundControl_mutable> get serializer {
+  static _skir.StructSerializer<BoundControl, BoundControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -14113,9 +13859,7 @@ final class BoundControl implements BoundControl_orMutable {
         "prefix",
         "prefix",
         3,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.prefix,
         (it, v) => it.prefix = v,
@@ -14171,7 +13915,8 @@ final class BoundControl_mutable implements BoundControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -14208,28 +13953,17 @@ final class TextInputReplacement implements TextInputReplacement_orMutable {
   factory TextInputReplacement({
     required _core.String pattern,
     required _core.String replacement,
-  }) => TextInputReplacement._(
-    pattern,
-    replacement,
-  );
+  }) => TextInputReplacement._(pattern, replacement);
 
-  TextInputReplacement._(
-    this.pattern,
-    this.replacement,
-  );
+  TextInputReplacement._(this.pattern, this.replacement);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = TextInputReplacement._(
-    "",
-    "",
-  );
+  static final defaultInstance = TextInputReplacement._("", "");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static TextInputReplacement_mutable mutable() => TextInputReplacement_mutable._(
-    "",
-    "",
-  );
+  static TextInputReplacement_mutable mutable() =>
+      TextInputReplacement_mutable._("", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -14237,31 +13971,33 @@ final class TextInputReplacement implements TextInputReplacement_orMutable {
   TextInputReplacement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TextInputReplacement_mutable toMutable() => TextInputReplacement_mutable._(
-    this.pattern,
-    this.replacement,
-  );
+  TextInputReplacement_mutable toMutable() =>
+      TextInputReplacement_mutable._(this.pattern, this.replacement);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TextInputReplacement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.pattern,
-    this.replacement,
-  ];
+  _core.List get _equality_proxy => [this.pattern, this.replacement];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TextInputReplacement` instances.
-  static _skir.StructSerializer<TextInputReplacement, TextInputReplacement_mutable> get serializer {
+  static _skir.StructSerializer<
+    TextInputReplacement,
+    TextInputReplacement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "pattern",
@@ -14298,22 +14034,19 @@ final class TextInputReplacement implements TextInputReplacement_orMutable {
 }
 
 /// Mutable version of [TextInputReplacement].
-final class TextInputReplacement_mutable implements TextInputReplacement_orMutable {
+final class TextInputReplacement_mutable
+    implements TextInputReplacement_orMutable {
   _core.String pattern;
   _core.String replacement;
   _skir.internal__UnrecognizedFields? _u;
 
-  TextInputReplacement_mutable._(
-    this.pattern,
-    this.replacement,
-  );
+  TextInputReplacement_mutable._(this.pattern, this.replacement);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TextInputReplacement toFrozen() => TextInputReplacement(
-    pattern: this.pattern,
-    replacement: this.replacement,
-  ).._u = this._u;
+  TextInputReplacement toFrozen() =>
+      TextInputReplacement(pattern: this.pattern, replacement: this.replacement)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -14342,30 +14075,24 @@ sealed class TextInputFormat {
   static const uppercase = _TextInputFormat_consts.uppercaseConst;
 
   /// Create a 'replace' variant wrapping around the given value.
-  factory TextInputFormat.wrapReplace(
-    TextInputReplacement value
-  ) => TextInputFormat_replaceWrapper._(value);
+  factory TextInputFormat.wrapReplace(TextInputReplacement value) =>
+      TextInputFormat_replaceWrapper._(value);
 
   /// Same as `wrapReplace(TextInputReplacement(...))`.
   factory TextInputFormat.createReplace({
     required _core.String pattern,
     required _core.String replacement,
   }) => TextInputFormat.wrapReplace(
-    TextInputReplacement(
-      pattern: pattern,
-      replacement: replacement,
-    )
+    TextInputReplacement(pattern: pattern, replacement: replacement),
   );
 
   /// Create a 'allow' variant wrapping around the given value.
-  factory TextInputFormat.wrapAllow(
-    _core.String value
-  ) => TextInputFormat_allowWrapper._(value);
+  factory TextInputFormat.wrapAllow(_core.String value) =>
+      TextInputFormat_allowWrapper._(value);
 
   /// Create a 'deny' variant wrapping around the given value.
-  factory TextInputFormat.wrapDeny(
-    _core.String value
-  ) => TextInputFormat_denyWrapper._(value);
+  factory TextInputFormat.wrapDeny(_core.String value) =>
+      TextInputFormat_denyWrapper._(value);
 
   /// Returns the kind of variant held by this TextInputFormat.
   TextInputFormat_kind get kind;
@@ -14422,15 +14149,16 @@ sealed class TextInputFormat {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:TextInputFormat",
-    doc: "",
-    unknownInstance: TextInputFormat_unknown._instance,
-    enumInstance: TextInputFormat.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: TextInputFormat_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:TextInputFormat",
+        doc: "",
+        unknownInstance: TextInputFormat_unknown._instance,
+        enumInstance: TextInputFormat.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: TextInputFormat_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `TextInputFormat`.
@@ -14462,7 +14190,8 @@ final class TextInputFormat_unknown implements TextInputFormat {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TextInputFormat.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, TextInputFormat.serializer);
 }
 
 enum _TextInputFormat_consts implements TextInputFormat {
@@ -14475,7 +14204,8 @@ enum _TextInputFormat_consts implements TextInputFormat {
   const _TextInputFormat_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TextInputFormat.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, TextInputFormat.serializer);
 }
 
 sealed class _TextInputFormat_wrapper implements TextInputFormat {
@@ -14491,7 +14221,8 @@ sealed class _TextInputFormat_wrapper implements TextInputFormat {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TextInputFormat.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, TextInputFormat.serializer);
 }
 
 final class TextInputFormat_replaceWrapper extends _TextInputFormat_wrapper {
@@ -14599,7 +14330,10 @@ final class TextControl implements TextControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TextControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -14616,7 +14350,8 @@ final class TextControl implements TextControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TextControl` instances.
-  static _skir.StructSerializer<TextControl, TextControl_mutable> get serializer {
+  static _skir.StructSerializer<TextControl, TextControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -14631,9 +14366,7 @@ final class TextControl implements TextControl_orMutable {
         "multiline",
         "multiline",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.bool,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.bool),
         "",
         (it) => it.multiline,
         (it, v) => it.multiline = v,
@@ -14653,9 +14386,7 @@ final class TextControl implements TextControl_orMutable {
         "input_formatters",
         "inputFormatters",
         3,
-        _skir.Serializers.iterable(
-          TextInputFormat.serializer,
-        ),
+        _skir.Serializers.iterable(TextInputFormat.serializer),
         "",
         (it) => it.inputFormatters,
         (it, v) => it.inputFormatters = v,
@@ -14734,15 +14465,9 @@ final class ColorControl implements ColorControl_orMutable {
   factory ColorControl({
     required BoundControl_orMutable control,
     required _core.bool includeAlpha,
-  }) => ColorControl._(
-    control.toFrozen(),
-    includeAlpha,
-  );
+  }) => ColorControl._(control.toFrozen(), includeAlpha);
 
-  ColorControl._(
-    this.control,
-    this.includeAlpha,
-  );
+  ColorControl._(this.control, this.includeAlpha);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ColorControl._(
@@ -14752,10 +14477,8 @@ final class ColorControl implements ColorControl_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ColorControl_mutable mutable() => ColorControl_mutable._(
-    BoundControl.defaultInstance,
-    false,
-  );
+  static ColorControl_mutable mutable() =>
+      ColorControl_mutable._(BoundControl.defaultInstance, false);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -14763,31 +14486,30 @@ final class ColorControl implements ColorControl_orMutable {
   ColorControl toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ColorControl_mutable toMutable() => ColorControl_mutable._(
-    this.control,
-    this.includeAlpha,
-  );
+  ColorControl_mutable toMutable() =>
+      ColorControl_mutable._(this.control, this.includeAlpha);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ColorControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.control,
-    this.includeAlpha,
-  ];
+  _core.List get _equality_proxy => [this.control, this.includeAlpha];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ColorControl` instances.
-  static _skir.StructSerializer<ColorControl, ColorControl_mutable> get serializer {
+  static _skir.StructSerializer<ColorControl, ColorControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -14829,17 +14551,13 @@ final class ColorControl_mutable implements ColorControl_orMutable {
   _core.bool includeAlpha;
   _skir.internal__UnrecognizedFields? _u;
 
-  ColorControl_mutable._(
-    this.control,
-    this.includeAlpha,
-  );
+  ColorControl_mutable._(this.control, this.includeAlpha);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ColorControl toFrozen() => ColorControl(
-    control: this.control,
-    includeAlpha: this.includeAlpha,
-  ).._u = this._u;
+  ColorControl toFrozen() =>
+      ColorControl(control: this.control, includeAlpha: this.includeAlpha)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -14868,17 +14586,9 @@ final class DateTimeControl implements DateTimeControl_orMutable {
     required BoundControl_orMutable control,
     required _core.bool? includeDate,
     required _core.bool? includeTime,
-  }) => DateTimeControl._(
-    control.toFrozen(),
-    includeDate,
-    includeTime,
-  );
+  }) => DateTimeControl._(control.toFrozen(), includeDate, includeTime);
 
-  DateTimeControl._(
-    this.control,
-    this.includeDate,
-    this.includeTime,
-  );
+  DateTimeControl._(this.control, this.includeDate, this.includeTime);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DateTimeControl._(
@@ -14889,11 +14599,8 @@ final class DateTimeControl implements DateTimeControl_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DateTimeControl_mutable mutable() => DateTimeControl_mutable._(
-    BoundControl.defaultInstance,
-    null,
-    null,
-  );
+  static DateTimeControl_mutable mutable() =>
+      DateTimeControl_mutable._(BoundControl.defaultInstance, null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -14911,7 +14618,10 @@ final class DateTimeControl implements DateTimeControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DateTimeControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -14927,7 +14637,8 @@ final class DateTimeControl implements DateTimeControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DateTimeControl` instances.
-  static _skir.StructSerializer<DateTimeControl, DateTimeControl_mutable> get serializer {
+  static _skir.StructSerializer<DateTimeControl, DateTimeControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -14942,9 +14653,7 @@ final class DateTimeControl implements DateTimeControl_orMutable {
         "include_date",
         "includeDate",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.bool,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.bool),
         "",
         (it) => it.includeDate,
         (it, v) => it.includeDate = v,
@@ -14953,9 +14662,7 @@ final class DateTimeControl implements DateTimeControl_orMutable {
         "include_time",
         "includeTime",
         2,
-        _skir.Serializers.optional(
-          _skir.Serializers.bool,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.bool),
         "",
         (it) => it.includeTime,
         (it, v) => it.includeTime = v,
@@ -14983,11 +14690,7 @@ final class DateTimeControl_mutable implements DateTimeControl_orMutable {
   _core.bool? includeTime;
   _skir.internal__UnrecognizedFields? _u;
 
-  DateTimeControl_mutable._(
-    this.control,
-    this.includeDate,
-    this.includeTime,
-  );
+  DateTimeControl_mutable._(this.control, this.includeDate, this.includeTime);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -15024,17 +14727,9 @@ final class SelectOption implements SelectOption_orMutable {
     required _core.String optionId,
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _lib_editor_v1_expression.TypedExpression_orMutable value,
-  }) => SelectOption._(
-    optionId,
-    label.toFrozen(),
-    value.toFrozen(),
-  );
+  }) => SelectOption._(optionId, label.toFrozen(), value.toFrozen());
 
-  SelectOption._(
-    this.optionId,
-    this.label,
-    this.value,
-  );
+  SelectOption._(this.optionId, this.label, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SelectOption._(
@@ -15057,33 +14752,30 @@ final class SelectOption implements SelectOption_orMutable {
   SelectOption toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SelectOption_mutable toMutable() => SelectOption_mutable._(
-    this.optionId,
-    this.label,
-    this.value,
-  );
+  SelectOption_mutable toMutable() =>
+      SelectOption_mutable._(this.optionId, this.label, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SelectOption) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.optionId,
-    this.label,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.optionId, this.label, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SelectOption` instances.
-  static _skir.StructSerializer<SelectOption, SelectOption_mutable> get serializer {
+  static _skir.StructSerializer<SelectOption, SelectOption_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "option_id",
@@ -15135,11 +14827,7 @@ final class SelectOption_mutable implements SelectOption_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable value;
   _skir.internal__UnrecognizedFields? _u;
 
-  SelectOption_mutable._(
-    this.optionId,
-    this.label,
-    this.value,
-  );
+  SelectOption_mutable._(this.optionId, this.label, this.value);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -15148,7 +14836,8 @@ final class SelectOption_mutable implements SelectOption_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -15159,7 +14848,8 @@ final class SelectOption_mutable implements SelectOption_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -15204,7 +14894,12 @@ final class SelectControl implements SelectControl_orMutable {
     required _lib_editor_v1_expression.TypedExpression_orMutable? defaultValue,
   }) => SelectControl._(
     control.toFrozen(),
-    _skir.internal__keyedMappedCopy(options, "optionId", (it) => it.optionId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      options,
+      "optionId",
+      (it) => it.optionId,
+      (it) => it.toFrozen(),
+    ),
     allowCustomValue,
     (defaultValue != null) ? defaultValue.toFrozen() : null,
   );
@@ -15250,7 +14945,10 @@ final class SelectControl implements SelectControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SelectControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -15267,7 +14965,8 @@ final class SelectControl implements SelectControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SelectControl` instances.
-  static _skir.StructSerializer<SelectControl, SelectControl_mutable> get serializer {
+  static _skir.StructSerializer<SelectControl, SelectControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -15400,12 +15099,7 @@ final class SliderControl implements SliderControl_orMutable {
     (divisions != null) ? divisions.toFrozen() : null,
   );
 
-  SliderControl._(
-    this.control,
-    this.minimum,
-    this.maximum,
-    this.divisions,
-  );
+  SliderControl._(this.control, this.minimum, this.maximum, this.divisions);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SliderControl._(
@@ -15441,7 +15135,10 @@ final class SliderControl implements SliderControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SliderControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -15458,7 +15155,8 @@ final class SliderControl implements SliderControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SliderControl` instances.
-  static _skir.StructSerializer<SliderControl, SliderControl_mutable> get serializer {
+  static _skir.StructSerializer<SliderControl, SliderControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -15536,7 +15234,8 @@ final class SliderControl_mutable implements SliderControl_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.minimum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.minimum = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -15547,7 +15246,8 @@ final class SliderControl_mutable implements SliderControl_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -15666,7 +15366,10 @@ final class ListControl implements ListControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ListControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -15686,7 +15389,8 @@ final class ListControl implements ListControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ListControl` instances.
-  static _skir.StructSerializer<ListControl, ListControl_mutable> get serializer {
+  static _skir.StructSerializer<ListControl, ListControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -15701,9 +15405,7 @@ final class ListControl implements ListControl_orMutable {
         "item_presentation",
         "itemPresentation",
         1,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.itemPresentation,
         (it, v) => it.itemPresentation = v,
@@ -15797,7 +15499,8 @@ final class ListControl_mutable implements ListControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -15808,7 +15511,8 @@ final class ListControl_mutable implements ListControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.indexBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.indexBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -15930,7 +15634,10 @@ final class MapControl implements MapControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MapControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -15965,9 +15672,7 @@ final class MapControl implements MapControl_orMutable {
         "key_presentation",
         "keyPresentation",
         1,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.keyPresentation,
         (it, v) => it.keyPresentation = v,
@@ -15976,9 +15681,7 @@ final class MapControl implements MapControl_orMutable {
         "value_presentation",
         "valuePresentation",
         2,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.valuePresentation,
         (it, v) => it.valuePresentation = v,
@@ -16063,7 +15766,8 @@ final class MapControl_mutable implements MapControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.keyBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.keyBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -16074,7 +15778,8 @@ final class MapControl_mutable implements MapControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -16118,10 +15823,7 @@ final class RecordControl implements RecordControl_orMutable {
     (fieldPresentation != null) ? fieldPresentation.toFrozen() : null,
   );
 
-  RecordControl._(
-    this.control,
-    this.fieldPresentation,
-  );
+  RecordControl._(this.control, this.fieldPresentation);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordControl._(
@@ -16131,10 +15833,8 @@ final class RecordControl implements RecordControl_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RecordControl_mutable mutable() => RecordControl_mutable._(
-    BoundControl.defaultInstance,
-    null,
-  );
+  static RecordControl_mutable mutable() =>
+      RecordControl_mutable._(BoundControl.defaultInstance, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -16142,31 +15842,30 @@ final class RecordControl implements RecordControl_orMutable {
   RecordControl toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RecordControl_mutable toMutable() => RecordControl_mutable._(
-    this.control,
-    this.fieldPresentation,
-  );
+  RecordControl_mutable toMutable() =>
+      RecordControl_mutable._(this.control, this.fieldPresentation);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RecordControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.control,
-    this.fieldPresentation,
-  ];
+  _core.List get _equality_proxy => [this.control, this.fieldPresentation];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RecordControl` instances.
-  static _skir.StructSerializer<RecordControl, RecordControl_mutable> get serializer {
+  static _skir.StructSerializer<RecordControl, RecordControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -16181,9 +15880,7 @@ final class RecordControl implements RecordControl_orMutable {
         "field_presentation",
         "fieldPresentation",
         1,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.fieldPresentation,
         (it, v) => it.fieldPresentation = v,
@@ -16210,10 +15907,7 @@ final class RecordControl_mutable implements RecordControl_orMutable {
   PresentationNode_orMutable? fieldPresentation;
   _skir.internal__UnrecognizedFields? _u;
 
-  RecordControl_mutable._(
-    this.control,
-    this.fieldPresentation,
-  );
+  RecordControl_mutable._(this.control, this.fieldPresentation);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -16236,7 +15930,8 @@ sealed class ConcreteTypePresentation_orMutable {
 }
 
 /// Deeply immutable.
-final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutable {
+final class ConcreteTypePresentation
+    implements ConcreteTypePresentation_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResolvedTypeRef concreteType;
   @_core.override
@@ -16255,11 +15950,7 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
     (presentation != null) ? presentation.toFrozen() : null,
   );
 
-  ConcreteTypePresentation._(
-    this.concreteType,
-    this.label,
-    this.presentation,
-  );
+  ConcreteTypePresentation._(this.concreteType, this.label, this.presentation);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConcreteTypePresentation._(
@@ -16270,11 +15961,12 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConcreteTypePresentation_mutable mutable() => ConcreteTypePresentation_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    null,
-  );
+  static ConcreteTypePresentation_mutable mutable() =>
+      ConcreteTypePresentation_mutable._(
+        _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -16282,17 +15974,21 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
   ConcreteTypePresentation toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConcreteTypePresentation_mutable toMutable() => ConcreteTypePresentation_mutable._(
-    this.concreteType,
-    this.label,
-    this.presentation,
-  );
+  ConcreteTypePresentation_mutable toMutable() =>
+      ConcreteTypePresentation_mutable._(
+        this.concreteType,
+        this.label,
+        this.presentation,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConcreteTypePresentation) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -16308,7 +16004,11 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConcreteTypePresentation` instances.
-  static _skir.StructSerializer<ConcreteTypePresentation, ConcreteTypePresentation_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConcreteTypePresentation,
+    ConcreteTypePresentation_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "concrete_type",
@@ -16332,9 +16032,7 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
         "presentation",
         "presentation",
         2,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.presentation,
         (it, v) => it.presentation = v,
@@ -16356,7 +16054,8 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
 }
 
 /// Mutable version of [ConcreteTypePresentation].
-final class ConcreteTypePresentation_mutable implements ConcreteTypePresentation_orMutable {
+final class ConcreteTypePresentation_mutable
+    implements ConcreteTypePresentation_orMutable {
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType;
   _lib_editor_v1_expression.TypedExpression_orMutable label;
   PresentationNode_orMutable? presentation;
@@ -16375,7 +16074,8 @@ final class ConcreteTypePresentation_mutable implements ConcreteTypePresentation
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.concreteType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.concreteType =
+          (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
@@ -16386,7 +16086,8 @@ final class ConcreteTypePresentation_mutable implements ConcreteTypePresentation
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -16426,10 +16127,7 @@ final class PolymorphicControl implements PolymorphicControl_orMutable {
     _skir.internal__frozenMappedCopy(concreteTypes, (it) => it.toFrozen()),
   );
 
-  PolymorphicControl._(
-    this.control,
-    this.concreteTypes,
-  );
+  PolymorphicControl._(this.control, this.concreteTypes);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PolymorphicControl._(
@@ -16450,31 +16148,30 @@ final class PolymorphicControl implements PolymorphicControl_orMutable {
   PolymorphicControl toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PolymorphicControl_mutable toMutable() => PolymorphicControl_mutable._(
-    this.control,
-    this.concreteTypes,
-  );
+  PolymorphicControl_mutable toMutable() =>
+      PolymorphicControl_mutable._(this.control, this.concreteTypes);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PolymorphicControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.control,
-    this.concreteTypes,
-  ];
+  _core.List get _equality_proxy => [this.control, this.concreteTypes];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PolymorphicControl` instances.
-  static _skir.StructSerializer<PolymorphicControl, PolymorphicControl_mutable> get serializer {
+  static _skir.StructSerializer<PolymorphicControl, PolymorphicControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -16489,9 +16186,7 @@ final class PolymorphicControl implements PolymorphicControl_orMutable {
         "concrete_types",
         "concreteTypes",
         1,
-        _skir.Serializers.iterable(
-          ConcreteTypePresentation.serializer,
-        ),
+        _skir.Serializers.iterable(ConcreteTypePresentation.serializer),
         "",
         (it) => it.concreteTypes,
         (it, v) => it.concreteTypes = v,
@@ -16518,10 +16213,7 @@ final class PolymorphicControl_mutable implements PolymorphicControl_orMutable {
   _core.Iterable<ConcreteTypePresentation_orMutable> concreteTypes;
   _skir.internal__UnrecognizedFields? _u;
 
-  PolymorphicControl_mutable._(
-    this.control,
-    this.concreteTypes,
-  );
+  PolymorphicControl_mutable._(this.control, this.concreteTypes);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -16553,15 +16245,9 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
   factory PolymorphicMatchCase({
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType,
     required PresentationNode_orMutable child,
-  }) => PolymorphicMatchCase._(
-    concreteType.toFrozen(),
-    child.toFrozen(),
-  );
+  }) => PolymorphicMatchCase._(concreteType.toFrozen(), child.toFrozen());
 
-  PolymorphicMatchCase._(
-    this.concreteType,
-    this.child,
-  );
+  PolymorphicMatchCase._(this.concreteType, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PolymorphicMatchCase._(
@@ -16571,10 +16257,11 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PolymorphicMatchCase_mutable mutable() => PolymorphicMatchCase_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    PresentationNode.defaultInstance,
-  );
+  static PolymorphicMatchCase_mutable mutable() =>
+      PolymorphicMatchCase_mutable._(
+        _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+        PresentationNode.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -16582,31 +16269,33 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
   PolymorphicMatchCase toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PolymorphicMatchCase_mutable toMutable() => PolymorphicMatchCase_mutable._(
-    this.concreteType,
-    this.child,
-  );
+  PolymorphicMatchCase_mutable toMutable() =>
+      PolymorphicMatchCase_mutable._(this.concreteType, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PolymorphicMatchCase) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.concreteType,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.concreteType, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PolymorphicMatchCase` instances.
-  static _skir.StructSerializer<PolymorphicMatchCase, PolymorphicMatchCase_mutable> get serializer {
+  static _skir.StructSerializer<
+    PolymorphicMatchCase,
+    PolymorphicMatchCase_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "concrete_type",
@@ -16643,15 +16332,13 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
 }
 
 /// Mutable version of [PolymorphicMatchCase].
-final class PolymorphicMatchCase_mutable implements PolymorphicMatchCase_orMutable {
+final class PolymorphicMatchCase_mutable
+    implements PolymorphicMatchCase_orMutable {
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType;
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
-  PolymorphicMatchCase_mutable._(
-    this.concreteType,
-    this.child,
-  );
+  PolymorphicMatchCase_mutable._(this.concreteType, this.child);
 
   /// If the value of [concreteType] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [concreteType] and returns it.
@@ -16660,16 +16347,16 @@ final class PolymorphicMatchCase_mutable implements PolymorphicMatchCase_orMutab
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.concreteType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.concreteType =
+          (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PolymorphicMatchCase toFrozen() => PolymorphicMatchCase(
-    concreteType: this.concreteType,
-    child: this.child,
-  ).._u = this._u;
+  PolymorphicMatchCase toFrozen() =>
+      PolymorphicMatchCase(concreteType: this.concreteType, child: this.child)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -16686,7 +16373,8 @@ sealed class PolymorphicMatchElement_orMutable {
 }
 
 /// Deeply immutable.
-final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable {
+final class PolymorphicMatchElement
+    implements PolymorphicMatchElement_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   @_core.override
@@ -16726,12 +16414,13 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PolymorphicMatchElement_mutable mutable() => PolymorphicMatchElement_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _skir.KeyedIterable.empty,
-    null,
-  );
+  static PolymorphicMatchElement_mutable mutable() =>
+      PolymorphicMatchElement_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        _skir.KeyedIterable.empty,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -16739,18 +16428,22 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
   PolymorphicMatchElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PolymorphicMatchElement_mutable toMutable() => PolymorphicMatchElement_mutable._(
-    this.binding,
-    this.scopeBindingId,
-    this.cases,
-    this.fallback,
-  );
+  PolymorphicMatchElement_mutable toMutable() =>
+      PolymorphicMatchElement_mutable._(
+        this.binding,
+        this.scopeBindingId,
+        this.cases,
+        this.fallback,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PolymorphicMatchElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -16767,7 +16460,11 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PolymorphicMatchElement` instances.
-  static _skir.StructSerializer<PolymorphicMatchElement, PolymorphicMatchElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    PolymorphicMatchElement,
+    PolymorphicMatchElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -16791,9 +16488,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
         "cases",
         "cases",
         2,
-        _skir.Serializers.iterable(
-          PolymorphicMatchCase.serializer,
-        ),
+        _skir.Serializers.iterable(PolymorphicMatchCase.serializer),
         "",
         (it) => it.cases,
         (it, v) => it.cases = v,
@@ -16802,9 +16497,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
         "fallback",
         "fallback",
         3,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.fallback,
         (it, v) => it.fallback = v,
@@ -16826,7 +16519,8 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
 }
 
 /// Mutable version of [PolymorphicMatchElement].
-final class PolymorphicMatchElement_mutable implements PolymorphicMatchElement_orMutable {
+final class PolymorphicMatchElement_mutable
+    implements PolymorphicMatchElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
   _lib_editor_v1_binding.BindingId_orMutable scopeBindingId;
   _core.Iterable<PolymorphicMatchCase_orMutable> cases;
@@ -16847,7 +16541,8 @@ final class PolymorphicMatchElement_mutable implements PolymorphicMatchElement_o
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -16858,7 +16553,8 @@ final class PolymorphicMatchElement_mutable implements PolymorphicMatchElement_o
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.scopeBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.scopeBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -16889,7 +16585,8 @@ final class PolymorphicMatchElement_mutable implements PolymorphicMatchElement_o
 sealed class SearchSelectionMode {
   /// Constant indicating an unknown `SearchSelectionMode`.
   /// Default value for fields of type `SearchSelectionMode`.
-  static const SearchSelectionMode unknown = SearchSelectionMode_unknown._instance;
+  static const SearchSelectionMode unknown =
+      SearchSelectionMode_unknown._instance;
 
   static const single = _SearchSelectionMode_consts.singleConst;
   static const multiple = _SearchSelectionMode_consts.multipleConst;
@@ -16900,13 +16597,7 @@ sealed class SearchSelectionMode {
   /// Serializer for `SearchSelectionMode` instances.
   static _skir.EnumSerializer<SearchSelectionMode> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "single",
-        "single",
-        "",
-        single,
-      );
+      _serializerBuilder.addConstantVariant(1, "single", "single", "", single);
       _serializerBuilder.addConstantVariant(
         2,
         "multiple",
@@ -16919,15 +16610,16 @@ sealed class SearchSelectionMode {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:SearchSelectionMode",
-    doc: "",
-    unknownInstance: SearchSelectionMode_unknown._instance,
-    enumInstance: SearchSelectionMode.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: SearchSelectionMode_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchSelectionMode",
+        doc: "",
+        unknownInstance: SearchSelectionMode_unknown._instance,
+        enumInstance: SearchSelectionMode.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchSelectionMode_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `SearchSelectionMode`.
@@ -16956,7 +16648,8 @@ final class SearchSelectionMode_unknown implements SearchSelectionMode {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectionMode.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectionMode.serializer);
 }
 
 enum _SearchSelectionMode_consts implements SearchSelectionMode {
@@ -16969,7 +16662,8 @@ enum _SearchSelectionMode_consts implements SearchSelectionMode {
   const _SearchSelectionMode_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectionMode.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectionMode.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -16989,7 +16683,8 @@ enum _SearchSelectionMode_consts implements SearchSelectionMode {
 sealed class SearchSelectorMultiplicity {
   /// Constant indicating an unknown `SearchSelectorMultiplicity`.
   /// Default value for fields of type `SearchSelectorMultiplicity`.
-  static const SearchSelectorMultiplicity unknown = SearchSelectorMultiplicity_unknown._instance;
+  static const SearchSelectorMultiplicity unknown =
+      SearchSelectorMultiplicity_unknown._instance;
 
   static const single = _SearchSelectorMultiplicity_consts.singleConst;
   static const multiple = _SearchSelectorMultiplicity_consts.multipleConst;
@@ -17000,13 +16695,7 @@ sealed class SearchSelectorMultiplicity {
   /// Serializer for `SearchSelectorMultiplicity` instances.
   static _skir.EnumSerializer<SearchSelectorMultiplicity> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "single",
-        "single",
-        "",
-        single,
-      );
+      _serializerBuilder.addConstantVariant(1, "single", "single", "", single);
       _serializerBuilder.addConstantVariant(
         2,
         "multiple",
@@ -17019,15 +16708,16 @@ sealed class SearchSelectorMultiplicity {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:SearchSelectorMultiplicity",
-    doc: "",
-    unknownInstance: SearchSelectorMultiplicity_unknown._instance,
-    enumInstance: SearchSelectorMultiplicity.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: SearchSelectorMultiplicity_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchSelectorMultiplicity",
+        doc: "",
+        unknownInstance: SearchSelectorMultiplicity_unknown._instance,
+        enumInstance: SearchSelectorMultiplicity.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchSelectorMultiplicity_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `SearchSelectorMultiplicity`.
@@ -17041,7 +16731,8 @@ enum SearchSelectorMultiplicity_kind {
   const SearchSelectorMultiplicity_kind(this._ordinal);
 }
 
-final class SearchSelectorMultiplicity_unknown implements SearchSelectorMultiplicity {
+final class SearchSelectorMultiplicity_unknown
+    implements SearchSelectorMultiplicity {
   static const _instance = SearchSelectorMultiplicity_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -17050,13 +16741,15 @@ final class SearchSelectorMultiplicity_unknown implements SearchSelectorMultipli
   SearchSelectorMultiplicity_unknown._unrecognized(this._u);
 
   @_core.override
-  SearchSelectorMultiplicity_kind get kind => SearchSelectorMultiplicity_kind.unknown;
+  SearchSelectorMultiplicity_kind get kind =>
+      SearchSelectorMultiplicity_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is SearchSelectorMultiplicity_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
 }
 
 enum _SearchSelectorMultiplicity_consts implements SearchSelectorMultiplicity {
@@ -17069,7 +16762,8 @@ enum _SearchSelectorMultiplicity_consts implements SearchSelectorMultiplicity {
   const _SearchSelectorMultiplicity_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -17083,20 +16777,17 @@ sealed class SearchSelectorEnumValues_orMutable {
 }
 
 /// Deeply immutable.
-final class SearchSelectorEnumValues implements SearchSelectorEnumValues_orMutable {
+final class SearchSelectorEnumValues
+    implements SearchSelectorEnumValues_orMutable {
   @_core.override
   final _core.Iterable<_core.String> values;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchSelectorEnumValues({
     required _core.Iterable<_core.String> values,
-  }) => SearchSelectorEnumValues._(
-    _skir.internal__frozenCopy(values),
-  );
+  }) => SearchSelectorEnumValues._(_skir.internal__frozenCopy(values));
 
-  SearchSelectorEnumValues._(
-    this.values,
-  );
+  SearchSelectorEnumValues._(this.values);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchSelectorEnumValues._(
@@ -17105,9 +16796,8 @@ final class SearchSelectorEnumValues implements SearchSelectorEnumValues_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SearchSelectorEnumValues_mutable mutable() => SearchSelectorEnumValues_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static SearchSelectorEnumValues_mutable mutable() =>
+      SearchSelectorEnumValues_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -17115,37 +16805,39 @@ final class SearchSelectorEnumValues implements SearchSelectorEnumValues_orMutab
   SearchSelectorEnumValues toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SearchSelectorEnumValues_mutable toMutable() => SearchSelectorEnumValues_mutable._(
-    this.values,
-  );
+  SearchSelectorEnumValues_mutable toMutable() =>
+      SearchSelectorEnumValues_mutable._(this.values);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchSelectorEnumValues) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.values,
-  ];
+  _core.List get _equality_proxy => [this.values];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchSelectorEnumValues` instances.
-  static _skir.StructSerializer<SearchSelectorEnumValues, SearchSelectorEnumValues_mutable> get serializer {
+  static _skir.StructSerializer<
+    SearchSelectorEnumValues,
+    SearchSelectorEnumValues_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "values",
         "values",
         0,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.iterable(_skir.Serializers.string),
         "",
         (it) => it.values,
         (it, v) => it.values = v,
@@ -17167,13 +16859,12 @@ final class SearchSelectorEnumValues implements SearchSelectorEnumValues_orMutab
 }
 
 /// Mutable version of [SearchSelectorEnumValues].
-final class SearchSelectorEnumValues_mutable implements SearchSelectorEnumValues_orMutable {
+final class SearchSelectorEnumValues_mutable
+    implements SearchSelectorEnumValues_orMutable {
   _core.Iterable<_core.String> values;
   _skir.internal__UnrecognizedFields? _u;
 
-  SearchSelectorEnumValues_mutable._(
-    this.values,
-  );
+  SearchSelectorEnumValues_mutable._(this.values);
 
   /// If the value of [values] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
@@ -17188,9 +16879,8 @@ final class SearchSelectorEnumValues_mutable implements SearchSelectorEnumValues
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SearchSelectorEnumValues toFrozen() => SearchSelectorEnumValues(
-    values: this.values,
-  ).._u = this._u;
+  SearchSelectorEnumValues toFrozen() =>
+      SearchSelectorEnumValues(values: this.values).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -17210,22 +16900,21 @@ final class SearchSelectorEnumValues_mutable implements SearchSelectorEnumValues
 sealed class SearchSelectorValues {
   /// Constant indicating an unknown `SearchSelectorValues`.
   /// Default value for fields of type `SearchSelectorValues`.
-  static const SearchSelectorValues unknown = SearchSelectorValues_unknown._instance;
+  static const SearchSelectorValues unknown =
+      SearchSelectorValues_unknown._instance;
 
   static const freeText = _SearchSelectorValues_consts.freeTextConst;
 
   /// Create a 'enumeration' variant wrapping around the given value.
   factory SearchSelectorValues.wrapEnumeration(
-    SearchSelectorEnumValues value
+    SearchSelectorEnumValues value,
   ) => SearchSelectorValues_enumerationWrapper._(value);
 
   /// Same as `wrapEnumeration(SearchSelectorEnumValues(...))`.
   factory SearchSelectorValues.createEnumeration({
     required _core.Iterable<_core.String> values,
   }) => SearchSelectorValues.wrapEnumeration(
-    SearchSelectorEnumValues(
-      values: values,
-    )
+    SearchSelectorEnumValues(values: values),
   );
 
   /// Returns the kind of variant held by this SearchSelectorValues.
@@ -17256,15 +16945,16 @@ sealed class SearchSelectorValues {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:SearchSelectorValues",
-    doc: "",
-    unknownInstance: SearchSelectorValues_unknown._instance,
-    enumInstance: SearchSelectorValues.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: SearchSelectorValues_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchSelectorValues",
+        doc: "",
+        unknownInstance: SearchSelectorValues_unknown._instance,
+        enumInstance: SearchSelectorValues.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchSelectorValues_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `SearchSelectorValues`.
@@ -17293,7 +16983,8 @@ final class SearchSelectorValues_unknown implements SearchSelectorValues {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectorValues.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorValues.serializer);
 }
 
 enum _SearchSelectorValues_consts implements SearchSelectorValues {
@@ -17305,7 +16996,8 @@ enum _SearchSelectorValues_consts implements SearchSelectorValues {
   const _SearchSelectorValues_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectorValues.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorValues.serializer);
 }
 
 sealed class _SearchSelectorValues_wrapper implements SearchSelectorValues {
@@ -17321,16 +17013,19 @@ sealed class _SearchSelectorValues_wrapper implements SearchSelectorValues {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchSelectorValues.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorValues.serializer);
 }
 
-final class SearchSelectorValues_enumerationWrapper extends _SearchSelectorValues_wrapper {
+final class SearchSelectorValues_enumerationWrapper
+    extends _SearchSelectorValues_wrapper {
   final SearchSelectorEnumValues value;
 
   SearchSelectorValues_enumerationWrapper._(this.value);
 
   @_core.override
-  SearchSelectorValues_kind get kind => SearchSelectorValues_kind.enumerationWrapper;
+  SearchSelectorValues_kind get kind =>
+      SearchSelectorValues_kind.enumerationWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -17350,7 +17045,8 @@ sealed class SearchSelectorDefinition_orMutable {
 }
 
 /// Deeply immutable.
-final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutable {
+final class SearchSelectorDefinition
+    implements SearchSelectorDefinition_orMutable {
   @_core.override
   final _core.String selectorId;
   @_core.override
@@ -17408,15 +17104,16 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SearchSelectorDefinition_mutable mutable() => SearchSelectorDefinition_mutable._(
-    "",
-    "",
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    SearchSelectorValues.unknown,
-    false,
-    SearchSelectorMultiplicity.unknown,
-    null,
-  );
+  static SearchSelectorDefinition_mutable mutable() =>
+      SearchSelectorDefinition_mutable._(
+        "",
+        "",
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        SearchSelectorValues.unknown,
+        false,
+        SearchSelectorMultiplicity.unknown,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -17424,21 +17121,25 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
   SearchSelectorDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SearchSelectorDefinition_mutable toMutable() => SearchSelectorDefinition_mutable._(
-    this.selectorId,
-    this.key,
-    this.valueBindingId,
-    this.values,
-    this.caseSensitive,
-    this.multiplicity,
-    this.color,
-  );
+  SearchSelectorDefinition_mutable toMutable() =>
+      SearchSelectorDefinition_mutable._(
+        this.selectorId,
+        this.key,
+        this.valueBindingId,
+        this.values,
+        this.caseSensitive,
+        this.multiplicity,
+        this.color,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchSelectorDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -17458,7 +17159,11 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchSelectorDefinition` instances.
-  static _skir.StructSerializer<SearchSelectorDefinition, SearchSelectorDefinition_mutable> get serializer {
+  static _skir.StructSerializer<
+    SearchSelectorDefinition,
+    SearchSelectorDefinition_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "selector_id",
@@ -17518,9 +17223,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
         "color",
         "color",
         6,
-        _skir.Serializers.optional(
-          _skir.Serializers.int64,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.int64),
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -17542,7 +17245,8 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
 }
 
 /// Mutable version of [SearchSelectorDefinition].
-final class SearchSelectorDefinition_mutable implements SearchSelectorDefinition_orMutable {
+final class SearchSelectorDefinition_mutable
+    implements SearchSelectorDefinition_orMutable {
   _core.String selectorId;
   _core.String key;
   _lib_editor_v1_binding.BindingId_orMutable valueBindingId;
@@ -17569,7 +17273,8 @@ final class SearchSelectorDefinition_mutable implements SearchSelectorDefinition
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -17673,7 +17378,10 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchResultMapping) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -17691,7 +17399,11 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchResultMapping` instances.
-  static _skir.StructSerializer<SearchResultMapping, SearchResultMapping_mutable> get serializer {
+  static _skir.StructSerializer<
+    SearchResultMapping,
+    SearchResultMapping_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding_id",
@@ -17757,7 +17469,8 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
 }
 
 /// Mutable version of [SearchResultMapping].
-final class SearchResultMapping_mutable implements SearchResultMapping_orMutable {
+final class SearchResultMapping_mutable
+    implements SearchResultMapping_orMutable {
   _lib_editor_v1_binding.BindingId_orMutable bindingId;
   _lib_editor_v1_expression.TypedExpression_orMutable key;
   _lib_editor_v1_expression.TypedExpression_orMutable selectedValue;
@@ -17780,7 +17493,8 @@ final class SearchResultMapping_mutable implements SearchResultMapping_orMutable
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.bindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -17791,7 +17505,8 @@ final class SearchResultMapping_mutable implements SearchResultMapping_orMutable
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.key = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.key = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -17802,7 +17517,8 @@ final class SearchResultMapping_mutable implements SearchResultMapping_orMutable
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.selectedValue = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.selectedValue =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -17843,17 +17559,9 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
     required _core.String name,
     required _lib_editor_v1_expression.TypedExpression_orMutable value,
     required _core.bool omitIfEmpty,
-  }) => HttpQueryParameter._(
-    name,
-    value.toFrozen(),
-    omitIfEmpty,
-  );
+  }) => HttpQueryParameter._(name, value.toFrozen(), omitIfEmpty);
 
-  HttpQueryParameter._(
-    this.name,
-    this.value,
-    this.omitIfEmpty,
-  );
+  HttpQueryParameter._(this.name, this.value, this.omitIfEmpty);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HttpQueryParameter._(
@@ -17876,33 +17584,30 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
   HttpQueryParameter toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HttpQueryParameter_mutable toMutable() => HttpQueryParameter_mutable._(
-    this.name,
-    this.value,
-    this.omitIfEmpty,
-  );
+  HttpQueryParameter_mutable toMutable() =>
+      HttpQueryParameter_mutable._(this.name, this.value, this.omitIfEmpty);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HttpQueryParameter) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.name,
-    this.value,
-    this.omitIfEmpty,
-  ];
+  _core.List get _equality_proxy => [this.name, this.value, this.omitIfEmpty];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HttpQueryParameter` instances.
-  static _skir.StructSerializer<HttpQueryParameter, HttpQueryParameter_mutable> get serializer {
+  static _skir.StructSerializer<HttpQueryParameter, HttpQueryParameter_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "name",
@@ -17954,11 +17659,7 @@ final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
   _core.bool omitIfEmpty;
   _skir.internal__UnrecognizedFields? _u;
 
-  HttpQueryParameter_mutable._(
-    this.name,
-    this.value,
-    this.omitIfEmpty,
-  );
+  HttpQueryParameter_mutable._(this.name, this.value, this.omitIfEmpty);
 
   /// If the value of [value] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
@@ -17967,7 +17668,8 @@ final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -18006,17 +17708,9 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
     required _lib_editor_v1_binding.BindingId_orMutable bindingId,
     required _core.String path,
     required _lib_editor_v1_type_catalog.TypeExpression valueType,
-  }) => HttpJsonContextBinding._(
-    bindingId.toFrozen(),
-    path,
-    valueType,
-  );
+  }) => HttpJsonContextBinding._(bindingId.toFrozen(), path, valueType);
 
-  HttpJsonContextBinding._(
-    this.bindingId,
-    this.path,
-    this.valueType,
-  );
+  HttpJsonContextBinding._(this.bindingId, this.path, this.valueType);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HttpJsonContextBinding._(
@@ -18027,11 +17721,12 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HttpJsonContextBinding_mutable mutable() => HttpJsonContextBinding_mutable._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-  );
+  static HttpJsonContextBinding_mutable mutable() =>
+      HttpJsonContextBinding_mutable._(
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        "",
+        _lib_editor_v1_type_catalog.TypeExpression.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -18039,33 +17734,37 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
   HttpJsonContextBinding toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HttpJsonContextBinding_mutable toMutable() => HttpJsonContextBinding_mutable._(
-    this.bindingId,
-    this.path,
-    this.valueType,
-  );
+  HttpJsonContextBinding_mutable toMutable() =>
+      HttpJsonContextBinding_mutable._(
+        this.bindingId,
+        this.path,
+        this.valueType,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HttpJsonContextBinding) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.bindingId,
-    this.path,
-    this.valueType,
-  ];
+  _core.List get _equality_proxy => [this.bindingId, this.path, this.valueType];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HttpJsonContextBinding` instances.
-  static _skir.StructSerializer<HttpJsonContextBinding, HttpJsonContextBinding_mutable> get serializer {
+  static _skir.StructSerializer<
+    HttpJsonContextBinding,
+    HttpJsonContextBinding_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding_id",
@@ -18111,17 +17810,14 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
 }
 
 /// Mutable version of [HttpJsonContextBinding].
-final class HttpJsonContextBinding_mutable implements HttpJsonContextBinding_orMutable {
+final class HttpJsonContextBinding_mutable
+    implements HttpJsonContextBinding_orMutable {
   _lib_editor_v1_binding.BindingId_orMutable bindingId;
   _core.String path;
   _lib_editor_v1_type_catalog.TypeExpression valueType;
   _skir.internal__UnrecognizedFields? _u;
 
-  HttpJsonContextBinding_mutable._(
-    this.bindingId,
-    this.path,
-    this.valueType,
-  );
+  HttpJsonContextBinding_mutable._(this.bindingId, this.path, this.valueType);
 
   /// If the value of [bindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
@@ -18130,7 +17826,8 @@ final class HttpJsonContextBinding_mutable implements HttpJsonContextBinding_orM
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.bindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -18172,14 +17869,15 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
   }) => StaticSearchProvider._(
     values.toFrozen(),
     result.toFrozen(),
-    _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
   );
 
-  StaticSearchProvider._(
-    this.values,
-    this.result,
-    this.selectors,
-  );
+  StaticSearchProvider._(this.values, this.result, this.selectors);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StaticSearchProvider._(
@@ -18190,11 +17888,12 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static StaticSearchProvider_mutable mutable() => StaticSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    SearchResultMapping.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
+  static StaticSearchProvider_mutable mutable() =>
+      StaticSearchProvider_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchResultMapping.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -18202,33 +17901,33 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
   StaticSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  StaticSearchProvider_mutable toMutable() => StaticSearchProvider_mutable._(
-    this.values,
-    this.result,
-    this.selectors,
-  );
+  StaticSearchProvider_mutable toMutable() =>
+      StaticSearchProvider_mutable._(this.values, this.result, this.selectors);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! StaticSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.values,
-    this.result,
-    this.selectors,
-  ];
+  _core.List get _equality_proxy => [this.values, this.result, this.selectors];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `StaticSearchProvider` instances.
-  static _skir.StructSerializer<StaticSearchProvider, StaticSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    StaticSearchProvider,
+    StaticSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "values",
@@ -18278,17 +17977,14 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
 }
 
 /// Mutable version of [StaticSearchProvider].
-final class StaticSearchProvider_mutable implements StaticSearchProvider_orMutable {
+final class StaticSearchProvider_mutable
+    implements StaticSearchProvider_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable values;
   SearchResultMapping_orMutable result;
   _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
   _skir.internal__UnrecognizedFields? _u;
 
-  StaticSearchProvider_mutable._(
-    this.values,
-    this.result,
-    this.selectors,
-  );
+  StaticSearchProvider_mutable._(this.values, this.result, this.selectors);
 
   /// If the value of [values] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
@@ -18297,7 +17993,8 @@ final class StaticSearchProvider_mutable implements StaticSearchProvider_orMutab
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.values = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.values = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -18305,7 +18002,8 @@ final class StaticSearchProvider_mutable implements StaticSearchProvider_orMutab
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
-    if (value is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
       return value;
     } else {
       return this.selectors = _skir.internal__MutableList([...value]);
@@ -18335,7 +18033,8 @@ sealed class CollectionSearchProvider_orMutable {
 }
 
 /// Deeply immutable.
-final class CollectionSearchProvider implements CollectionSearchProvider_orMutable {
+final class CollectionSearchProvider
+    implements CollectionSearchProvider_orMutable {
   @_core.override
   final _core.String sourceId;
   @_core.override
@@ -18355,7 +18054,12 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
     sourceId,
     result.toFrozen(),
     (where != null) ? where.toFrozen() : null,
-    _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
   );
 
   CollectionSearchProvider._(
@@ -18375,12 +18079,13 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CollectionSearchProvider_mutable mutable() => CollectionSearchProvider_mutable._(
-    "",
-    SearchResultMapping.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
-  );
+  static CollectionSearchProvider_mutable mutable() =>
+      CollectionSearchProvider_mutable._(
+        "",
+        SearchResultMapping.defaultInstance,
+        null,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -18388,18 +18093,22 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
   CollectionSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CollectionSearchProvider_mutable toMutable() => CollectionSearchProvider_mutable._(
-    this.sourceId,
-    this.result,
-    this.where,
-    this.selectors,
-  );
+  CollectionSearchProvider_mutable toMutable() =>
+      CollectionSearchProvider_mutable._(
+        this.sourceId,
+        this.result,
+        this.where,
+        this.selectors,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CollectionSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -18416,7 +18125,11 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CollectionSearchProvider` instances.
-  static _skir.StructSerializer<CollectionSearchProvider, CollectionSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    CollectionSearchProvider,
+    CollectionSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source_id",
@@ -18477,7 +18190,8 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
 }
 
 /// Mutable version of [CollectionSearchProvider].
-final class CollectionSearchProvider_mutable implements CollectionSearchProvider_orMutable {
+final class CollectionSearchProvider_mutable
+    implements CollectionSearchProvider_orMutable {
   _core.String sourceId;
   SearchResultMapping_orMutable result;
   _lib_editor_v1_expression.TypedExpression_orMutable? where;
@@ -18495,7 +18209,8 @@ final class CollectionSearchProvider_mutable implements CollectionSearchProvider
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
-    if (value is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
       return value;
     } else {
       return this.selectors = _skir.internal__MutableList([...value]);
@@ -18560,12 +18275,22 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
     required _core.int timeoutMilliseconds,
   }) => HttpJsonSearchProvider._(
     uri.toFrozen(),
-    _skir.internal__keyedMappedCopy(parameters, "name", (it) => it.name, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      parameters,
+      "name",
+      (it) => it.name,
+      (it) => it.toFrozen(),
+    ),
     resultPath,
     resultType,
     result.toFrozen(),
     _skir.internal__frozenMappedCopy(contextBindings, (it) => it.toFrozen()),
-    _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
     timeoutMilliseconds,
   );
 
@@ -18594,16 +18319,17 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HttpJsonSearchProvider_mutable mutable() => HttpJsonSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _skir.KeyedIterable.empty,
-    "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-    SearchResultMapping.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    0,
-  );
+  static HttpJsonSearchProvider_mutable mutable() =>
+      HttpJsonSearchProvider_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _skir.KeyedIterable.empty,
+        "",
+        _lib_editor_v1_type_catalog.TypeExpression.unknown,
+        SearchResultMapping.defaultInstance,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        0,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -18611,22 +18337,26 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
   HttpJsonSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HttpJsonSearchProvider_mutable toMutable() => HttpJsonSearchProvider_mutable._(
-    this.uri,
-    this.parameters,
-    this.resultPath,
-    this.resultType,
-    this.result,
-    this.contextBindings,
-    this.selectors,
-    this.timeoutMilliseconds,
-  );
+  HttpJsonSearchProvider_mutable toMutable() =>
+      HttpJsonSearchProvider_mutable._(
+        this.uri,
+        this.parameters,
+        this.resultPath,
+        this.resultType,
+        this.result,
+        this.contextBindings,
+        this.selectors,
+        this.timeoutMilliseconds,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HttpJsonSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -18647,7 +18377,11 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HttpJsonSearchProvider` instances.
-  static _skir.StructSerializer<HttpJsonSearchProvider, HttpJsonSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    HttpJsonSearchProvider,
+    HttpJsonSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "uri",
@@ -18702,9 +18436,7 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
         "context_bindings",
         "contextBindings",
         5,
-        _skir.Serializers.iterable(
-          HttpJsonContextBinding.serializer,
-        ),
+        _skir.Serializers.iterable(HttpJsonContextBinding.serializer),
         "",
         (it) => it.contextBindings,
         (it, v) => it.contextBindings = v,
@@ -18748,7 +18480,8 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
 }
 
 /// Mutable version of [HttpJsonSearchProvider].
-final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orMutable {
+final class HttpJsonSearchProvider_mutable
+    implements HttpJsonSearchProvider_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable uri;
   _core.Iterable<HttpQueryParameter_orMutable> parameters;
   _core.String resultPath;
@@ -18777,7 +18510,8 @@ final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orM
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.uri = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.uri = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -18796,7 +18530,8 @@ final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orM
   /// Otherwise, makes a mutable copy, assigns it back to [contextBindings] and returns it.
   _core.List<HttpJsonContextBinding_orMutable> get mutableContextBindings {
     final value = this.contextBindings;
-    if (value is _skir.internal__MutableList<HttpJsonContextBinding_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<HttpJsonContextBinding_orMutable>) {
       return value;
     } else {
       return this.contextBindings = _skir.internal__MutableList([...value]);
@@ -18807,7 +18542,8 @@ final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orM
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
-    if (value is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
       return value;
     } else {
       return this.selectors = _skir.internal__MutableList([...value]);
@@ -18842,7 +18578,8 @@ sealed class RealmCallbackSearchProvider_orMutable {
 }
 
 /// Deeply immutable.
-final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_orMutable {
+final class RealmCallbackSearchProvider
+    implements RealmCallbackSearchProvider_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
@@ -18862,7 +18599,12 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
     capabilityId.toFrozen(),
     payload.toFrozen(),
     result.toFrozen(),
-    _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
   );
 
   RealmCallbackSearchProvider._(
@@ -18882,12 +18624,13 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmCallbackSearchProvider_mutable mutable() => RealmCallbackSearchProvider_mutable._(
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    SearchResultMapping.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
+  static RealmCallbackSearchProvider_mutable mutable() =>
+      RealmCallbackSearchProvider_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchResultMapping.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -18895,18 +18638,22 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   RealmCallbackSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmCallbackSearchProvider_mutable toMutable() => RealmCallbackSearchProvider_mutable._(
-    this.capabilityId,
-    this.payload,
-    this.result,
-    this.selectors,
-  );
+  RealmCallbackSearchProvider_mutable toMutable() =>
+      RealmCallbackSearchProvider_mutable._(
+        this.capabilityId,
+        this.payload,
+        this.result,
+        this.selectors,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmCallbackSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -18923,7 +18670,11 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmCallbackSearchProvider` instances.
-  static _skir.StructSerializer<RealmCallbackSearchProvider, RealmCallbackSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmCallbackSearchProvider,
+    RealmCallbackSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "capability_id",
@@ -18982,7 +18733,8 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 }
 
 /// Mutable version of [RealmCallbackSearchProvider].
-final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchProvider_orMutable {
+final class RealmCallbackSearchProvider_mutable
+    implements RealmCallbackSearchProvider_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
   _lib_editor_v1_expression.TypedExpression_orMutable payload;
   SearchResultMapping_orMutable result;
@@ -19003,7 +18755,8 @@ final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchPr
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -19014,7 +18767,8 @@ final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchPr
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.payload = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.payload = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -19022,7 +18776,8 @@ final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchPr
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
-    if (value is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
       return value;
     } else {
       return this.selectors = _skir.internal__MutableList([...value]);
@@ -19071,11 +18826,7 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
     child,
   );
 
-  GatedSearchProvider._(
-    this.condition,
-    this.guidance,
-    this.child,
-  );
+  GatedSearchProvider._(this.condition, this.guidance, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = GatedSearchProvider._(
@@ -19098,33 +18849,33 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
   GatedSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  GatedSearchProvider_mutable toMutable() => GatedSearchProvider_mutable._(
-    this.condition,
-    this.guidance,
-    this.child,
-  );
+  GatedSearchProvider_mutable toMutable() =>
+      GatedSearchProvider_mutable._(this.condition, this.guidance, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! GatedSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.condition,
-    this.guidance,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.condition, this.guidance, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `GatedSearchProvider` instances.
-  static _skir.StructSerializer<GatedSearchProvider, GatedSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    GatedSearchProvider,
+    GatedSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "condition",
@@ -19172,17 +18923,14 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
 }
 
 /// Mutable version of [GatedSearchProvider].
-final class GatedSearchProvider_mutable implements GatedSearchProvider_orMutable {
+final class GatedSearchProvider_mutable
+    implements GatedSearchProvider_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable condition;
   _lib_editor_v1_expression.TypedExpression_orMutable? guidance;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  GatedSearchProvider_mutable._(
-    this.condition,
-    this.guidance,
-    this.child,
-  );
+  GatedSearchProvider_mutable._(this.condition, this.guidance, this.child);
 
   /// If the value of [condition] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [condition] and returns it.
@@ -19191,7 +18939,8 @@ final class GatedSearchProvider_mutable implements GatedSearchProvider_orMutable
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.condition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.condition =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -19216,7 +18965,8 @@ sealed class DebouncedSearchProvider_orMutable {
 }
 
 /// Deeply immutable.
-final class DebouncedSearchProvider implements DebouncedSearchProvider_orMutable {
+final class DebouncedSearchProvider
+    implements DebouncedSearchProvider_orMutable {
   @_core.override
   final _core.int durationMilliseconds;
   @_core.override
@@ -19226,15 +18976,9 @@ final class DebouncedSearchProvider implements DebouncedSearchProvider_orMutable
   factory DebouncedSearchProvider({
     required _core.int durationMilliseconds,
     required SearchProvider child,
-  }) => DebouncedSearchProvider._(
-    durationMilliseconds,
-    child,
-  );
+  }) => DebouncedSearchProvider._(durationMilliseconds, child);
 
-  DebouncedSearchProvider._(
-    this.durationMilliseconds,
-    this.child,
-  );
+  DebouncedSearchProvider._(this.durationMilliseconds, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DebouncedSearchProvider._(
@@ -19244,10 +18988,8 @@ final class DebouncedSearchProvider implements DebouncedSearchProvider_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DebouncedSearchProvider_mutable mutable() => DebouncedSearchProvider_mutable._(
-    0,
-    SearchProvider.unknown,
-  );
+  static DebouncedSearchProvider_mutable mutable() =>
+      DebouncedSearchProvider_mutable._(0, SearchProvider.unknown);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -19255,31 +18997,33 @@ final class DebouncedSearchProvider implements DebouncedSearchProvider_orMutable
   DebouncedSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DebouncedSearchProvider_mutable toMutable() => DebouncedSearchProvider_mutable._(
-    this.durationMilliseconds,
-    this.child,
-  );
+  DebouncedSearchProvider_mutable toMutable() =>
+      DebouncedSearchProvider_mutable._(this.durationMilliseconds, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DebouncedSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.durationMilliseconds,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.durationMilliseconds, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DebouncedSearchProvider` instances.
-  static _skir.StructSerializer<DebouncedSearchProvider, DebouncedSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    DebouncedSearchProvider,
+    DebouncedSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "duration_milliseconds",
@@ -19316,15 +19060,13 @@ final class DebouncedSearchProvider implements DebouncedSearchProvider_orMutable
 }
 
 /// Mutable version of [DebouncedSearchProvider].
-final class DebouncedSearchProvider_mutable implements DebouncedSearchProvider_orMutable {
+final class DebouncedSearchProvider_mutable
+    implements DebouncedSearchProvider_orMutable {
   _core.int durationMilliseconds;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  DebouncedSearchProvider_mutable._(
-    this.durationMilliseconds,
-    this.child,
-  );
+  DebouncedSearchProvider_mutable._(this.durationMilliseconds, this.child);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -19360,17 +19102,9 @@ final class CachedSearchProvider implements CachedSearchProvider_orMutable {
     required _core.int capacity,
     required _core.bool retainStaleResults,
     required SearchProvider child,
-  }) => CachedSearchProvider._(
-    capacity,
-    retainStaleResults,
-    child,
-  );
+  }) => CachedSearchProvider._(capacity, retainStaleResults, child);
 
-  CachedSearchProvider._(
-    this.capacity,
-    this.retainStaleResults,
-    this.child,
-  );
+  CachedSearchProvider._(this.capacity, this.retainStaleResults, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CachedSearchProvider._(
@@ -19381,11 +19115,8 @@ final class CachedSearchProvider implements CachedSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CachedSearchProvider_mutable mutable() => CachedSearchProvider_mutable._(
-    0,
-    false,
-    SearchProvider.unknown,
-  );
+  static CachedSearchProvider_mutable mutable() =>
+      CachedSearchProvider_mutable._(0, false, SearchProvider.unknown);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -19403,7 +19134,10 @@ final class CachedSearchProvider implements CachedSearchProvider_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CachedSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -19419,7 +19153,11 @@ final class CachedSearchProvider implements CachedSearchProvider_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CachedSearchProvider` instances.
-  static _skir.StructSerializer<CachedSearchProvider, CachedSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    CachedSearchProvider,
+    CachedSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "capacity",
@@ -19465,7 +19203,8 @@ final class CachedSearchProvider implements CachedSearchProvider_orMutable {
 }
 
 /// Mutable version of [CachedSearchProvider].
-final class CachedSearchProvider_mutable implements CachedSearchProvider_orMutable {
+final class CachedSearchProvider_mutable
+    implements CachedSearchProvider_orMutable {
   _core.int capacity;
   _core.bool retainStaleResults;
   SearchProvider child;
@@ -19508,15 +19247,9 @@ final class SearchRankingField implements SearchRankingField_orMutable {
   factory SearchRankingField({
     required _lib_editor_v1_expression.TypedExpression_orMutable expression,
     required _core.int weight,
-  }) => SearchRankingField._(
-    expression.toFrozen(),
-    weight,
-  );
+  }) => SearchRankingField._(expression.toFrozen(), weight);
 
-  SearchRankingField._(
-    this.expression,
-    this.weight,
-  );
+  SearchRankingField._(this.expression, this.weight);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchRankingField._(
@@ -19537,31 +19270,30 @@ final class SearchRankingField implements SearchRankingField_orMutable {
   SearchRankingField toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SearchRankingField_mutable toMutable() => SearchRankingField_mutable._(
-    this.expression,
-    this.weight,
-  );
+  SearchRankingField_mutable toMutable() =>
+      SearchRankingField_mutable._(this.expression, this.weight);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchRankingField) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.expression,
-    this.weight,
-  ];
+  _core.List get _equality_proxy => [this.expression, this.weight];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchRankingField` instances.
-  static _skir.StructSerializer<SearchRankingField, SearchRankingField_mutable> get serializer {
+  static _skir.StructSerializer<SearchRankingField, SearchRankingField_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expression",
@@ -19603,10 +19335,7 @@ final class SearchRankingField_mutable implements SearchRankingField_orMutable {
   _core.int weight;
   _skir.internal__UnrecognizedFields? _u;
 
-  SearchRankingField_mutable._(
-    this.expression,
-    this.weight,
-  );
+  SearchRankingField_mutable._(this.expression, this.weight);
 
   /// If the value of [expression] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expression] and returns it.
@@ -19615,16 +19344,16 @@ final class SearchRankingField_mutable implements SearchRankingField_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.expression = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.expression =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SearchRankingField toFrozen() => SearchRankingField(
-    expression: this.expression,
-    weight: this.weight,
-  ).._u = this._u;
+  SearchRankingField toFrozen() =>
+      SearchRankingField(expression: this.expression, weight: this.weight)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -19654,10 +19383,7 @@ final class RankedSearchProvider implements RankedSearchProvider_orMutable {
     child,
   );
 
-  RankedSearchProvider._(
-    this.fields,
-    this.child,
-  );
+  RankedSearchProvider._(this.fields, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RankedSearchProvider._(
@@ -19667,10 +19393,11 @@ final class RankedSearchProvider implements RankedSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RankedSearchProvider_mutable mutable() => RankedSearchProvider_mutable._(
-    _skir.KeyedIterable.empty,
-    SearchProvider.unknown,
-  );
+  static RankedSearchProvider_mutable mutable() =>
+      RankedSearchProvider_mutable._(
+        _skir.KeyedIterable.empty,
+        SearchProvider.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -19678,39 +19405,39 @@ final class RankedSearchProvider implements RankedSearchProvider_orMutable {
   RankedSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RankedSearchProvider_mutable toMutable() => RankedSearchProvider_mutable._(
-    this.fields,
-    this.child,
-  );
+  RankedSearchProvider_mutable toMutable() =>
+      RankedSearchProvider_mutable._(this.fields, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RankedSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.fields,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.fields, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RankedSearchProvider` instances.
-  static _skir.StructSerializer<RankedSearchProvider, RankedSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    RankedSearchProvider,
+    RankedSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "fields",
         "fields",
         0,
-        _skir.Serializers.iterable(
-          SearchRankingField.serializer,
-        ),
+        _skir.Serializers.iterable(SearchRankingField.serializer),
         "",
         (it) => it.fields,
         (it, v) => it.fields = v,
@@ -19741,15 +19468,13 @@ final class RankedSearchProvider implements RankedSearchProvider_orMutable {
 }
 
 /// Mutable version of [RankedSearchProvider].
-final class RankedSearchProvider_mutable implements RankedSearchProvider_orMutable {
+final class RankedSearchProvider_mutable
+    implements RankedSearchProvider_orMutable {
   _core.Iterable<SearchRankingField_orMutable> fields;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  RankedSearchProvider_mutable._(
-    this.fields,
-    this.child,
-  );
+  RankedSearchProvider_mutable._(this.fields, this.child);
 
   /// If the value of [fields] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
@@ -19764,10 +19489,9 @@ final class RankedSearchProvider_mutable implements RankedSearchProvider_orMutab
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RankedSearchProvider toFrozen() => RankedSearchProvider(
-    fields: this.fields,
-    child: this.child,
-  ).._u = this._u;
+  RankedSearchProvider toFrozen() =>
+      RankedSearchProvider(fields: this.fields, child: this.child)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -19792,15 +19516,9 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
   factory LimitedSearchProvider({
     required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
     required SearchProvider child,
-  }) => LimitedSearchProvider._(
-    maximum.toFrozen(),
-    child,
-  );
+  }) => LimitedSearchProvider._(maximum.toFrozen(), child);
 
-  LimitedSearchProvider._(
-    this.maximum,
-    this.child,
-  );
+  LimitedSearchProvider._(this.maximum, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = LimitedSearchProvider._(
@@ -19810,10 +19528,11 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static LimitedSearchProvider_mutable mutable() => LimitedSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    SearchProvider.unknown,
-  );
+  static LimitedSearchProvider_mutable mutable() =>
+      LimitedSearchProvider_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchProvider.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -19821,31 +19540,33 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
   LimitedSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  LimitedSearchProvider_mutable toMutable() => LimitedSearchProvider_mutable._(
-    this.maximum,
-    this.child,
-  );
+  LimitedSearchProvider_mutable toMutable() =>
+      LimitedSearchProvider_mutable._(this.maximum, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! LimitedSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.maximum,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.maximum, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `LimitedSearchProvider` instances.
-  static _skir.StructSerializer<LimitedSearchProvider, LimitedSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    LimitedSearchProvider,
+    LimitedSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "maximum",
@@ -19882,15 +19603,13 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
 }
 
 /// Mutable version of [LimitedSearchProvider].
-final class LimitedSearchProvider_mutable implements LimitedSearchProvider_orMutable {
+final class LimitedSearchProvider_mutable
+    implements LimitedSearchProvider_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable maximum;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  LimitedSearchProvider_mutable._(
-    this.maximum,
-    this.child,
-  );
+  LimitedSearchProvider_mutable._(this.maximum, this.child);
 
   /// If the value of [maximum] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [maximum] and returns it.
@@ -19899,16 +19618,16 @@ final class LimitedSearchProvider_mutable implements LimitedSearchProvider_orMut
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  LimitedSearchProvider toFrozen() => LimitedSearchProvider(
-    maximum: this.maximum,
-    child: this.child,
-  ).._u = this._u;
+  LimitedSearchProvider toFrozen() =>
+      LimitedSearchProvider(maximum: this.maximum, child: this.child)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -19927,15 +19646,10 @@ final class DistinctSearchProvider implements DistinctSearchProvider_orMutable {
   final SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory DistinctSearchProvider({
-    required SearchProvider child,
-  }) => DistinctSearchProvider._(
-    child,
-  );
+  factory DistinctSearchProvider({required SearchProvider child}) =>
+      DistinctSearchProvider._(child);
 
-  DistinctSearchProvider._(
-    this.child,
-  );
+  DistinctSearchProvider._(this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DistinctSearchProvider._(
@@ -19944,9 +19658,8 @@ final class DistinctSearchProvider implements DistinctSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DistinctSearchProvider_mutable mutable() => DistinctSearchProvider_mutable._(
-    SearchProvider.unknown,
-  );
+  static DistinctSearchProvider_mutable mutable() =>
+      DistinctSearchProvider_mutable._(SearchProvider.unknown);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -19954,29 +19667,33 @@ final class DistinctSearchProvider implements DistinctSearchProvider_orMutable {
   DistinctSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DistinctSearchProvider_mutable toMutable() => DistinctSearchProvider_mutable._(
-    this.child,
-  );
+  DistinctSearchProvider_mutable toMutable() =>
+      DistinctSearchProvider_mutable._(this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DistinctSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DistinctSearchProvider` instances.
-  static _skir.StructSerializer<DistinctSearchProvider, DistinctSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    DistinctSearchProvider,
+    DistinctSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "child",
@@ -20004,19 +19721,17 @@ final class DistinctSearchProvider implements DistinctSearchProvider_orMutable {
 }
 
 /// Mutable version of [DistinctSearchProvider].
-final class DistinctSearchProvider_mutable implements DistinctSearchProvider_orMutable {
+final class DistinctSearchProvider_mutable
+    implements DistinctSearchProvider_orMutable {
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  DistinctSearchProvider_mutable._(
-    this.child,
-  );
+  DistinctSearchProvider_mutable._(this.child);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DistinctSearchProvider toFrozen() => DistinctSearchProvider(
-    child: this.child,
-  ).._u = this._u;
+  DistinctSearchProvider toFrozen() =>
+      DistinctSearchProvider(child: this.child).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -20033,7 +19748,8 @@ sealed class HistoricalSearchProvider_orMutable {
 }
 
 /// Deeply immutable.
-final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutable {
+final class HistoricalSearchProvider
+    implements HistoricalSearchProvider_orMutable {
   @_core.override
   final _core.String historyKey;
   @_core.override
@@ -20049,12 +19765,8 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _core.int capacity,
     required SearchProvider child,
-  }) => HistoricalSearchProvider._(
-    historyKey,
-    label.toFrozen(),
-    capacity,
-    child,
-  );
+  }) =>
+      HistoricalSearchProvider._(historyKey, label.toFrozen(), capacity, child);
 
   HistoricalSearchProvider._(
     this.historyKey,
@@ -20073,12 +19785,13 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HistoricalSearchProvider_mutable mutable() => HistoricalSearchProvider_mutable._(
-    "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    0,
-    SearchProvider.unknown,
-  );
+  static HistoricalSearchProvider_mutable mutable() =>
+      HistoricalSearchProvider_mutable._(
+        "",
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        0,
+        SearchProvider.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -20086,18 +19799,22 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
   HistoricalSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HistoricalSearchProvider_mutable toMutable() => HistoricalSearchProvider_mutable._(
-    this.historyKey,
-    this.label,
-    this.capacity,
-    this.child,
-  );
+  HistoricalSearchProvider_mutable toMutable() =>
+      HistoricalSearchProvider_mutable._(
+        this.historyKey,
+        this.label,
+        this.capacity,
+        this.child,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HistoricalSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -20114,7 +19831,11 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HistoricalSearchProvider` instances.
-  static _skir.StructSerializer<HistoricalSearchProvider, HistoricalSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    HistoricalSearchProvider,
+    HistoricalSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "history_key",
@@ -20169,7 +19890,8 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
 }
 
 /// Mutable version of [HistoricalSearchProvider].
-final class HistoricalSearchProvider_mutable implements HistoricalSearchProvider_orMutable {
+final class HistoricalSearchProvider_mutable
+    implements HistoricalSearchProvider_orMutable {
   _core.String historyKey;
   _lib_editor_v1_expression.TypedExpression_orMutable label;
   _core.int capacity;
@@ -20190,7 +19912,8 @@ final class HistoricalSearchProvider_mutable implements HistoricalSearchProvider
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -20230,17 +19953,9 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
     required _core.String sectionId,
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required SearchProvider child,
-  }) => SectionSearchProvider._(
-    sectionId,
-    label.toFrozen(),
-    child,
-  );
+  }) => SectionSearchProvider._(sectionId, label.toFrozen(), child);
 
-  SectionSearchProvider._(
-    this.sectionId,
-    this.label,
-    this.child,
-  );
+  SectionSearchProvider._(this.sectionId, this.label, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SectionSearchProvider._(
@@ -20251,11 +19966,12 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SectionSearchProvider_mutable mutable() => SectionSearchProvider_mutable._(
-    "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    SearchProvider.unknown,
-  );
+  static SectionSearchProvider_mutable mutable() =>
+      SectionSearchProvider_mutable._(
+        "",
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchProvider.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -20263,33 +19979,33 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
   SectionSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SectionSearchProvider_mutable toMutable() => SectionSearchProvider_mutable._(
-    this.sectionId,
-    this.label,
-    this.child,
-  );
+  SectionSearchProvider_mutable toMutable() =>
+      SectionSearchProvider_mutable._(this.sectionId, this.label, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SectionSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.sectionId,
-    this.label,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.sectionId, this.label, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SectionSearchProvider` instances.
-  static _skir.StructSerializer<SectionSearchProvider, SectionSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    SectionSearchProvider,
+    SectionSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "section_id",
@@ -20335,17 +20051,14 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
 }
 
 /// Mutable version of [SectionSearchProvider].
-final class SectionSearchProvider_mutable implements SectionSearchProvider_orMutable {
+final class SectionSearchProvider_mutable
+    implements SectionSearchProvider_orMutable {
   _core.String sectionId;
   _lib_editor_v1_expression.TypedExpression_orMutable label;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
-  SectionSearchProvider_mutable._(
-    this.sectionId,
-    this.label,
-    this.child,
-  );
+  SectionSearchProvider_mutable._(this.sectionId, this.label, this.child);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -20354,7 +20067,8 @@ final class SectionSearchProvider_mutable implements SectionSearchProvider_orMut
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -20385,13 +20099,9 @@ final class MergedSearchProvider implements MergedSearchProvider_orMutable {
 
   factory MergedSearchProvider({
     required _core.Iterable<SearchProvider> children,
-  }) => MergedSearchProvider._(
-    _skir.internal__frozenCopy(children),
-  );
+  }) => MergedSearchProvider._(_skir.internal__frozenCopy(children));
 
-  MergedSearchProvider._(
-    this.children,
-  );
+  MergedSearchProvider._(this.children);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = MergedSearchProvider._(
@@ -20400,9 +20110,8 @@ final class MergedSearchProvider implements MergedSearchProvider_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static MergedSearchProvider_mutable mutable() => MergedSearchProvider_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static MergedSearchProvider_mutable mutable() =>
+      MergedSearchProvider_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -20410,37 +20119,39 @@ final class MergedSearchProvider implements MergedSearchProvider_orMutable {
   MergedSearchProvider toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  MergedSearchProvider_mutable toMutable() => MergedSearchProvider_mutable._(
-    this.children,
-  );
+  MergedSearchProvider_mutable toMutable() =>
+      MergedSearchProvider_mutable._(this.children);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MergedSearchProvider) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.children,
-  ];
+  _core.List get _equality_proxy => [this.children];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `MergedSearchProvider` instances.
-  static _skir.StructSerializer<MergedSearchProvider, MergedSearchProvider_mutable> get serializer {
+  static _skir.StructSerializer<
+    MergedSearchProvider,
+    MergedSearchProvider_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "children",
         "children",
         0,
-        _skir.Serializers.iterable(
-          SearchProvider.serializer,
-        ),
+        _skir.Serializers.iterable(SearchProvider.serializer),
         "",
         (it) => it.children,
         (it, v) => it.children = v,
@@ -20462,19 +20173,17 @@ final class MergedSearchProvider implements MergedSearchProvider_orMutable {
 }
 
 /// Mutable version of [MergedSearchProvider].
-final class MergedSearchProvider_mutable implements MergedSearchProvider_orMutable {
+final class MergedSearchProvider_mutable
+    implements MergedSearchProvider_orMutable {
   _core.Iterable<SearchProvider> children;
   _skir.internal__UnrecognizedFields? _u;
 
-  MergedSearchProvider_mutable._(
-    this.children,
-  );
+  MergedSearchProvider_mutable._(this.children);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  MergedSearchProvider toFrozen() => MergedSearchProvider(
-    children: this.children,
-  ).._u = this._u;
+  MergedSearchProvider toFrozen() =>
+      MergedSearchProvider(children: this.children).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -20508,9 +20217,8 @@ sealed class SearchProvider {
   static const SearchProvider unknown = SearchProvider_unknown._instance;
 
   /// Create a 'static_values' variant wrapping around the given value.
-  factory SearchProvider.wrapStaticValues(
-    StaticSearchProvider value
-  ) => SearchProvider_staticValuesWrapper._(value);
+  factory SearchProvider.wrapStaticValues(StaticSearchProvider value) =>
+      SearchProvider_staticValuesWrapper._(value);
 
   /// Same as `wrapStaticValues(StaticSearchProvider(...))`.
   factory SearchProvider.createStaticValues({
@@ -20518,17 +20226,12 @@ sealed class SearchProvider {
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => SearchProvider.wrapStaticValues(
-    StaticSearchProvider(
-      values: values,
-      result: result,
-      selectors: selectors,
-    )
+    StaticSearchProvider(values: values, result: result, selectors: selectors),
   );
 
   /// Create a 'http_json' variant wrapping around the given value.
-  factory SearchProvider.wrapHttpJson(
-    HttpJsonSearchProvider value
-  ) => SearchProvider_httpJsonWrapper._(value);
+  factory SearchProvider.wrapHttpJson(HttpJsonSearchProvider value) =>
+      SearchProvider_httpJsonWrapper._(value);
 
   /// Same as `wrapHttpJson(HttpJsonSearchProvider(...))`.
   factory SearchProvider.createHttpJson({
@@ -20550,13 +20253,12 @@ sealed class SearchProvider {
       contextBindings: contextBindings,
       selectors: selectors,
       timeoutMilliseconds: timeoutMilliseconds,
-    )
+    ),
   );
 
   /// Create a 'realm_callback' variant wrapping around the given value.
-  factory SearchProvider.wrapRealmCallback(
-    RealmCallbackSearchProvider value
-  ) => SearchProvider_realmCallbackWrapper._(value);
+  factory SearchProvider.wrapRealmCallback(RealmCallbackSearchProvider value) =>
+      SearchProvider_realmCallbackWrapper._(value);
 
   /// Same as `wrapRealmCallback(RealmCallbackSearchProvider(...))`.
   factory SearchProvider.createRealmCallback({
@@ -20570,13 +20272,12 @@ sealed class SearchProvider {
       payload: payload,
       result: result,
       selectors: selectors,
-    )
+    ),
   );
 
   /// Create a 'gate' variant wrapping around the given value.
-  factory SearchProvider.wrapGate(
-    GatedSearchProvider value
-  ) => SearchProvider_gateWrapper._(value);
+  factory SearchProvider.wrapGate(GatedSearchProvider value) =>
+      SearchProvider_gateWrapper._(value);
 
   /// Same as `wrapGate(GatedSearchProvider(...))`.
   factory SearchProvider.createGate({
@@ -20584,17 +20285,12 @@ sealed class SearchProvider {
     required _lib_editor_v1_expression.TypedExpression_orMutable? guidance,
     required SearchProvider child,
   }) => SearchProvider.wrapGate(
-    GatedSearchProvider(
-      condition: condition,
-      guidance: guidance,
-      child: child,
-    )
+    GatedSearchProvider(condition: condition, guidance: guidance, child: child),
   );
 
   /// Create a 'debounce' variant wrapping around the given value.
-  factory SearchProvider.wrapDebounce(
-    DebouncedSearchProvider value
-  ) => SearchProvider_debounceWrapper._(value);
+  factory SearchProvider.wrapDebounce(DebouncedSearchProvider value) =>
+      SearchProvider_debounceWrapper._(value);
 
   /// Same as `wrapDebounce(DebouncedSearchProvider(...))`.
   factory SearchProvider.createDebounce({
@@ -20604,13 +20300,12 @@ sealed class SearchProvider {
     DebouncedSearchProvider(
       durationMilliseconds: durationMilliseconds,
       child: child,
-    )
+    ),
   );
 
   /// Create a 'cache' variant wrapping around the given value.
-  factory SearchProvider.wrapCache(
-    CachedSearchProvider value
-  ) => SearchProvider_cacheWrapper._(value);
+  factory SearchProvider.wrapCache(CachedSearchProvider value) =>
+      SearchProvider_cacheWrapper._(value);
 
   /// Same as `wrapCache(CachedSearchProvider(...))`.
   factory SearchProvider.createCache({
@@ -20622,59 +20317,44 @@ sealed class SearchProvider {
       capacity: capacity,
       retainStaleResults: retainStaleResults,
       child: child,
-    )
+    ),
   );
 
   /// Create a 'rank' variant wrapping around the given value.
-  factory SearchProvider.wrapRank(
-    RankedSearchProvider value
-  ) => SearchProvider_rankWrapper._(value);
+  factory SearchProvider.wrapRank(RankedSearchProvider value) =>
+      SearchProvider_rankWrapper._(value);
 
   /// Same as `wrapRank(RankedSearchProvider(...))`.
   factory SearchProvider.createRank({
     required _core.Iterable<SearchRankingField_orMutable> fields,
     required SearchProvider child,
   }) => SearchProvider.wrapRank(
-    RankedSearchProvider(
-      fields: fields,
-      child: child,
-    )
+    RankedSearchProvider(fields: fields, child: child),
   );
 
   /// Create a 'limit' variant wrapping around the given value.
-  factory SearchProvider.wrapLimit(
-    LimitedSearchProvider value
-  ) => SearchProvider_limitWrapper._(value);
+  factory SearchProvider.wrapLimit(LimitedSearchProvider value) =>
+      SearchProvider_limitWrapper._(value);
 
   /// Same as `wrapLimit(LimitedSearchProvider(...))`.
   factory SearchProvider.createLimit({
     required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
     required SearchProvider child,
   }) => SearchProvider.wrapLimit(
-    LimitedSearchProvider(
-      maximum: maximum,
-      child: child,
-    )
+    LimitedSearchProvider(maximum: maximum, child: child),
   );
 
   /// Create a 'distinct' variant wrapping around the given value.
-  factory SearchProvider.wrapDistinct(
-    DistinctSearchProvider value
-  ) => SearchProvider_distinctWrapper._(value);
+  factory SearchProvider.wrapDistinct(DistinctSearchProvider value) =>
+      SearchProvider_distinctWrapper._(value);
 
   /// Same as `wrapDistinct(DistinctSearchProvider(...))`.
-  factory SearchProvider.createDistinct({
-    required SearchProvider child,
-  }) => SearchProvider.wrapDistinct(
-    DistinctSearchProvider(
-      child: child,
-    )
-  );
+  factory SearchProvider.createDistinct({required SearchProvider child}) =>
+      SearchProvider.wrapDistinct(DistinctSearchProvider(child: child));
 
   /// Create a 'history' variant wrapping around the given value.
-  factory SearchProvider.wrapHistory(
-    HistoricalSearchProvider value
-  ) => SearchProvider_historyWrapper._(value);
+  factory SearchProvider.wrapHistory(HistoricalSearchProvider value) =>
+      SearchProvider_historyWrapper._(value);
 
   /// Same as `wrapHistory(HistoricalSearchProvider(...))`.
   factory SearchProvider.createHistory({
@@ -20688,13 +20368,12 @@ sealed class SearchProvider {
       label: label,
       capacity: capacity,
       child: child,
-    )
+    ),
   );
 
   /// Create a 'section' variant wrapping around the given value.
-  factory SearchProvider.wrapSection(
-    SectionSearchProvider value
-  ) => SearchProvider_sectionWrapper._(value);
+  factory SearchProvider.wrapSection(SectionSearchProvider value) =>
+      SearchProvider_sectionWrapper._(value);
 
   /// Same as `wrapSection(SectionSearchProvider(...))`.
   factory SearchProvider.createSection({
@@ -20702,31 +20381,21 @@ sealed class SearchProvider {
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required SearchProvider child,
   }) => SearchProvider.wrapSection(
-    SectionSearchProvider(
-      sectionId: sectionId,
-      label: label,
-      child: child,
-    )
+    SectionSearchProvider(sectionId: sectionId, label: label, child: child),
   );
 
   /// Create a 'merge' variant wrapping around the given value.
-  factory SearchProvider.wrapMerge(
-    MergedSearchProvider value
-  ) => SearchProvider_mergeWrapper._(value);
+  factory SearchProvider.wrapMerge(MergedSearchProvider value) =>
+      SearchProvider_mergeWrapper._(value);
 
   /// Same as `wrapMerge(MergedSearchProvider(...))`.
   factory SearchProvider.createMerge({
     required _core.Iterable<SearchProvider> children,
-  }) => SearchProvider.wrapMerge(
-    MergedSearchProvider(
-      children: children,
-    )
-  );
+  }) => SearchProvider.wrapMerge(MergedSearchProvider(children: children));
 
   /// Create a 'collection' variant wrapping around the given value.
-  factory SearchProvider.wrapCollection(
-    CollectionSearchProvider value
-  ) => SearchProvider_collectionWrapper._(value);
+  factory SearchProvider.wrapCollection(CollectionSearchProvider value) =>
+      SearchProvider_collectionWrapper._(value);
 
   /// Same as `wrapCollection(CollectionSearchProvider(...))`.
   factory SearchProvider.createCollection({
@@ -20740,7 +20409,7 @@ sealed class SearchProvider {
       result: result,
       where: where,
       selectors: selectors,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this SearchProvider.
@@ -20884,15 +20553,16 @@ sealed class SearchProvider {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:SearchProvider",
-    doc: "",
-    unknownInstance: SearchProvider_unknown._instance,
-    enumInstance: SearchProvider.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: SearchProvider_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchProvider",
+        doc: "",
+        unknownInstance: SearchProvider_unknown._instance,
+        enumInstance: SearchProvider.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchProvider_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `SearchProvider`.
@@ -20932,7 +20602,8 @@ final class SearchProvider_unknown implements SearchProvider {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchProvider.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchProvider.serializer);
 }
 
 sealed class _SearchProvider_wrapper implements SearchProvider {
@@ -20948,7 +20619,8 @@ sealed class _SearchProvider_wrapper implements SearchProvider {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, SearchProvider.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchProvider.serializer);
 }
 
 final class SearchProvider_staticValuesWrapper extends _SearchProvider_wrapper {
@@ -20969,7 +20641,8 @@ final class SearchProvider_httpJsonWrapper extends _SearchProvider_wrapper {
   SearchProvider_kind get kind => SearchProvider_kind.httpJsonWrapper;
 }
 
-final class SearchProvider_realmCallbackWrapper extends _SearchProvider_wrapper {
+final class SearchProvider_realmCallbackWrapper
+    extends _SearchProvider_wrapper {
   final RealmCallbackSearchProvider value;
 
   SearchProvider_realmCallbackWrapper._(this.value);
@@ -21200,7 +20873,10 @@ final class SearchControl implements SearchControl_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchControl) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -21223,7 +20899,8 @@ final class SearchControl implements SearchControl_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchControl` instances.
-  static _skir.StructSerializer<SearchControl, SearchControl_mutable> get serializer {
+  static _skir.StructSerializer<SearchControl, SearchControl_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -21283,9 +20960,7 @@ final class SearchControl implements SearchControl_orMutable {
         "summary",
         "summary",
         6,
-        _skir.Serializers.optional(
-          PresentationNode.serializer,
-        ),
+        _skir.Serializers.optional(PresentationNode.serializer),
         "",
         (it) => it.summary,
         (it, v) => it.summary = v,
@@ -21373,7 +21048,8 @@ final class SearchControl_mutable implements SearchControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.queryBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.queryBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -21384,7 +21060,8 @@ final class SearchControl_mutable implements SearchControl_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.summaryBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.summaryBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -21395,7 +21072,8 @@ final class SearchControl_mutable implements SearchControl_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.maximumExtent = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.maximumExtent =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -21427,7 +21105,8 @@ sealed class DefaultPresentationElement_orMutable {
 }
 
 /// Deeply immutable.
-final class DefaultPresentationElement implements DefaultPresentationElement_orMutable {
+final class DefaultPresentationElement
+    implements DefaultPresentationElement_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   @_core.override
@@ -21436,16 +21115,14 @@ final class DefaultPresentationElement implements DefaultPresentationElement_orM
 
   factory DefaultPresentationElement({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_type_catalog.PresentationId_orMutable? presentationId,
+    required _lib_editor_v1_type_catalog.PresentationId_orMutable?
+    presentationId,
   }) => DefaultPresentationElement._(
     binding.toFrozen(),
     (presentationId != null) ? presentationId.toFrozen() : null,
   );
 
-  DefaultPresentationElement._(
-    this.binding,
-    this.presentationId,
-  );
+  DefaultPresentationElement._(this.binding, this.presentationId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DefaultPresentationElement._(
@@ -21455,10 +21132,11 @@ final class DefaultPresentationElement implements DefaultPresentationElement_orM
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DefaultPresentationElement_mutable mutable() => DefaultPresentationElement_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    null,
-  );
+  static DefaultPresentationElement_mutable mutable() =>
+      DefaultPresentationElement_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -21466,31 +21144,33 @@ final class DefaultPresentationElement implements DefaultPresentationElement_orM
   DefaultPresentationElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DefaultPresentationElement_mutable toMutable() => DefaultPresentationElement_mutable._(
-    this.binding,
-    this.presentationId,
-  );
+  DefaultPresentationElement_mutable toMutable() =>
+      DefaultPresentationElement_mutable._(this.binding, this.presentationId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DefaultPresentationElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.binding,
-    this.presentationId,
-  ];
+  _core.List get _equality_proxy => [this.binding, this.presentationId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DefaultPresentationElement` instances.
-  static _skir.StructSerializer<DefaultPresentationElement, DefaultPresentationElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    DefaultPresentationElement,
+    DefaultPresentationElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -21529,15 +21209,13 @@ final class DefaultPresentationElement implements DefaultPresentationElement_orM
 }
 
 /// Mutable version of [DefaultPresentationElement].
-final class DefaultPresentationElement_mutable implements DefaultPresentationElement_orMutable {
+final class DefaultPresentationElement_mutable
+    implements DefaultPresentationElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
   _lib_editor_v1_type_catalog.PresentationId_orMutable? presentationId;
   _skir.internal__UnrecognizedFields? _u;
 
-  DefaultPresentationElement_mutable._(
-    this.binding,
-    this.presentationId,
-  );
+  DefaultPresentationElement_mutable._(this.binding, this.presentationId);
 
   /// If the value of [binding] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
@@ -21546,7 +21224,8 @@ final class DefaultPresentationElement_mutable implements DefaultPresentationEle
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -21576,13 +21255,9 @@ final class CommitControlsElement implements CommitControlsElement_orMutable {
 
   factory CommitControlsElement({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-  }) => CommitControlsElement._(
-    binding.toFrozen(),
-  );
+  }) => CommitControlsElement._(binding.toFrozen());
 
-  CommitControlsElement._(
-    this.binding,
-  );
+  CommitControlsElement._(this.binding);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CommitControlsElement._(
@@ -21591,9 +21266,10 @@ final class CommitControlsElement implements CommitControlsElement_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CommitControlsElement_mutable mutable() => CommitControlsElement_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-  );
+  static CommitControlsElement_mutable mutable() =>
+      CommitControlsElement_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -21601,29 +21277,33 @@ final class CommitControlsElement implements CommitControlsElement_orMutable {
   CommitControlsElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CommitControlsElement_mutable toMutable() => CommitControlsElement_mutable._(
-    this.binding,
-  );
+  CommitControlsElement_mutable toMutable() =>
+      CommitControlsElement_mutable._(this.binding);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CommitControlsElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.binding,
-  ];
+  _core.List get _equality_proxy => [this.binding];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CommitControlsElement` instances.
-  static _skir.StructSerializer<CommitControlsElement, CommitControlsElement_mutable> get serializer {
+  static _skir.StructSerializer<
+    CommitControlsElement,
+    CommitControlsElement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -21651,13 +21331,12 @@ final class CommitControlsElement implements CommitControlsElement_orMutable {
 }
 
 /// Mutable version of [CommitControlsElement].
-final class CommitControlsElement_mutable implements CommitControlsElement_orMutable {
+final class CommitControlsElement_mutable
+    implements CommitControlsElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
   _skir.internal__UnrecognizedFields? _u;
 
-  CommitControlsElement_mutable._(
-    this.binding,
-  );
+  CommitControlsElement_mutable._(this.binding);
 
   /// If the value of [binding] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
@@ -21666,15 +21345,15 @@ final class CommitControlsElement_mutable implements CommitControlsElement_orMut
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CommitControlsElement toFrozen() => CommitControlsElement(
-    binding: this.binding,
-  ).._u = this._u;
+  CommitControlsElement toFrozen() =>
+      CommitControlsElement(binding: this.binding).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -21699,15 +21378,9 @@ final class ButtonElement implements ButtonElement_orMutable {
   factory ButtonElement({
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _lib_editor_v1_action.EditorAction action,
-  }) => ButtonElement._(
-    label.toFrozen(),
-    action,
-  );
+  }) => ButtonElement._(label.toFrozen(), action);
 
-  ButtonElement._(
-    this.label,
-    this.action,
-  );
+  ButtonElement._(this.label, this.action);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ButtonElement._(
@@ -21728,31 +21401,30 @@ final class ButtonElement implements ButtonElement_orMutable {
   ButtonElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ButtonElement_mutable toMutable() => ButtonElement_mutable._(
-    this.label,
-    this.action,
-  );
+  ButtonElement_mutable toMutable() =>
+      ButtonElement_mutable._(this.label, this.action);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ButtonElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.label,
-    this.action,
-  ];
+  _core.List get _equality_proxy => [this.label, this.action];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ButtonElement` instances.
-  static _skir.StructSerializer<ButtonElement, ButtonElement_mutable> get serializer {
+  static _skir.StructSerializer<ButtonElement, ButtonElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "label",
@@ -21794,10 +21466,7 @@ final class ButtonElement_mutable implements ButtonElement_orMutable {
   _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
-  ButtonElement_mutable._(
-    this.label,
-    this.action,
-  );
+  ButtonElement_mutable._(this.label, this.action);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -21806,16 +21475,15 @@ final class ButtonElement_mutable implements ButtonElement_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ButtonElement toFrozen() => ButtonElement(
-    label: this.label,
-    action: this.action,
-  ).._u = this._u;
+  ButtonElement toFrozen() =>
+      ButtonElement(label: this.label, action: this.action).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -21844,17 +21512,9 @@ final class IconButtonElement implements IconButtonElement_orMutable {
     required _lib_editor_v1_expression.TypedExpression_orMutable icon,
     required _lib_editor_v1_expression.TypedExpression_orMutable semanticLabel,
     required _lib_editor_v1_action.EditorAction action,
-  }) => IconButtonElement._(
-    icon.toFrozen(),
-    semanticLabel.toFrozen(),
-    action,
-  );
+  }) => IconButtonElement._(icon.toFrozen(), semanticLabel.toFrozen(), action);
 
-  IconButtonElement._(
-    this.icon,
-    this.semanticLabel,
-    this.action,
-  );
+  IconButtonElement._(this.icon, this.semanticLabel, this.action);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = IconButtonElement._(
@@ -21877,17 +21537,17 @@ final class IconButtonElement implements IconButtonElement_orMutable {
   IconButtonElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IconButtonElement_mutable toMutable() => IconButtonElement_mutable._(
-    this.icon,
-    this.semanticLabel,
-    this.action,
-  );
+  IconButtonElement_mutable toMutable() =>
+      IconButtonElement_mutable._(this.icon, this.semanticLabel, this.action);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! IconButtonElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -21903,7 +21563,8 @@ final class IconButtonElement implements IconButtonElement_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IconButtonElement` instances.
-  static _skir.StructSerializer<IconButtonElement, IconButtonElement_mutable> get serializer {
+  static _skir.StructSerializer<IconButtonElement, IconButtonElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "icon",
@@ -21955,11 +21616,7 @@ final class IconButtonElement_mutable implements IconButtonElement_orMutable {
   _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
-  IconButtonElement_mutable._(
-    this.icon,
-    this.semanticLabel,
-    this.action,
-  );
+  IconButtonElement_mutable._(this.icon, this.semanticLabel, this.action);
 
   /// If the value of [icon] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [icon] and returns it.
@@ -21968,7 +21625,8 @@ final class IconButtonElement_mutable implements IconButtonElement_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.icon = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.icon = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
@@ -21979,7 +21637,8 @@ final class IconButtonElement_mutable implements IconButtonElement_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.semanticLabel = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.semanticLabel =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -22018,17 +21677,9 @@ final class MenuItem implements MenuItem_orMutable {
     required _core.String itemId,
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _lib_editor_v1_action.EditorAction action,
-  }) => MenuItem._(
-    itemId,
-    label.toFrozen(),
-    action,
-  );
+  }) => MenuItem._(itemId, label.toFrozen(), action);
 
-  MenuItem._(
-    this.itemId,
-    this.label,
-    this.action,
-  );
+  MenuItem._(this.itemId, this.label, this.action);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = MenuItem._(
@@ -22051,27 +21702,23 @@ final class MenuItem implements MenuItem_orMutable {
   MenuItem toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  MenuItem_mutable toMutable() => MenuItem_mutable._(
-    this.itemId,
-    this.label,
-    this.action,
-  );
+  MenuItem_mutable toMutable() =>
+      MenuItem_mutable._(this.itemId, this.label, this.action);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MenuItem) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.itemId,
-    this.label,
-    this.action,
-  ];
+  _core.List get _equality_proxy => [this.itemId, this.label, this.action];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -22129,11 +21776,7 @@ final class MenuItem_mutable implements MenuItem_orMutable {
   _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
-  MenuItem_mutable._(
-    this.itemId,
-    this.label,
-    this.action,
-  );
+  MenuItem_mutable._(this.itemId, this.label, this.action);
 
   /// If the value of [label] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
@@ -22142,17 +21785,16 @@ final class MenuItem_mutable implements MenuItem_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  MenuItem toFrozen() => MenuItem(
-    itemId: this.itemId,
-    label: this.label,
-    action: this.action,
-  ).._u = this._u;
+  MenuItem toFrozen() =>
+      MenuItem(itemId: this.itemId, label: this.label, action: this.action)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -22179,26 +21821,23 @@ final class MenuElement implements MenuElement_orMutable {
     required _core.Iterable<MenuItem_orMutable> items,
   }) => MenuElement._(
     (label != null) ? label.toFrozen() : null,
-    _skir.internal__keyedMappedCopy(items, "itemId", (it) => it.itemId, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      items,
+      "itemId",
+      (it) => it.itemId,
+      (it) => it.toFrozen(),
+    ),
   );
 
-  MenuElement._(
-    this.label,
-    this.items,
-  );
+  MenuElement._(this.label, this.items);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = MenuElement._(
-    null,
-    _skir.KeyedIterable.empty,
-  );
+  static final defaultInstance = MenuElement._(null, _skir.KeyedIterable.empty);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static MenuElement_mutable mutable() => MenuElement_mutable._(
-    null,
-    _skir.KeyedIterable.empty,
-  );
+  static MenuElement_mutable mutable() =>
+      MenuElement_mutable._(null, _skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -22206,31 +21845,30 @@ final class MenuElement implements MenuElement_orMutable {
   MenuElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  MenuElement_mutable toMutable() => MenuElement_mutable._(
-    this.label,
-    this.items,
-  );
+  MenuElement_mutable toMutable() =>
+      MenuElement_mutable._(this.label, this.items);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MenuElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.label,
-    this.items,
-  ];
+  _core.List get _equality_proxy => [this.label, this.items];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `MenuElement` instances.
-  static _skir.StructSerializer<MenuElement, MenuElement_mutable> get serializer {
+  static _skir.StructSerializer<MenuElement, MenuElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "label",
@@ -22278,10 +21916,7 @@ final class MenuElement_mutable implements MenuElement_orMutable {
   _core.Iterable<MenuItem_orMutable> items;
   _skir.internal__UnrecognizedFields? _u;
 
-  MenuElement_mutable._(
-    this.label,
-    this.items,
-  );
+  MenuElement_mutable._(this.label, this.items);
 
   /// If the value of [items] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [items] and returns it.
@@ -22296,10 +21931,8 @@ final class MenuElement_mutable implements MenuElement_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  MenuElement toFrozen() => MenuElement(
-    label: this.label,
-    items: this.items,
-  ).._u = this._u;
+  MenuElement toFrozen() =>
+      MenuElement(label: this.label, items: this.items).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -22324,15 +21957,9 @@ final class TooltipElement implements TooltipElement_orMutable {
   factory TooltipElement({
     required _lib_editor_v1_expression.TypedExpression_orMutable message,
     required PresentationNode_orMutable child,
-  }) => TooltipElement._(
-    message.toFrozen(),
-    child.toFrozen(),
-  );
+  }) => TooltipElement._(message.toFrozen(), child.toFrozen());
 
-  TooltipElement._(
-    this.message,
-    this.child,
-  );
+  TooltipElement._(this.message, this.child);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TooltipElement._(
@@ -22353,31 +21980,30 @@ final class TooltipElement implements TooltipElement_orMutable {
   TooltipElement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TooltipElement_mutable toMutable() => TooltipElement_mutable._(
-    this.message,
-    this.child,
-  );
+  TooltipElement_mutable toMutable() =>
+      TooltipElement_mutable._(this.message, this.child);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TooltipElement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.message,
-    this.child,
-  ];
+  _core.List get _equality_proxy => [this.message, this.child];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TooltipElement` instances.
-  static _skir.StructSerializer<TooltipElement, TooltipElement_mutable> get serializer {
+  static _skir.StructSerializer<TooltipElement, TooltipElement_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "message",
@@ -22419,10 +22045,7 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
-  TooltipElement_mutable._(
-    this.message,
-    this.child,
-  );
+  TooltipElement_mutable._(this.message, this.child);
 
   /// If the value of [message] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [message] and returns it.
@@ -22431,16 +22054,390 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
     if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
       return value;
     } else {
-      return this.message = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.message = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TooltipElement toFrozen() => TooltipElement(
-    message: this.message,
-    child: this.child,
+  TooltipElement toFrozen() =>
+      TooltipElement(message: this.message, child: this.child).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ReferenceControl
+// -----------------------------------------------------------------------------
+
+sealed class ReferenceControl_orMutable {
+  BoundControl_orMutable get control;
+  _core.bool get allowReorder;
+  ReferencePolicyId_orMutable? get candidatePolicy;
+  ReferenceRejectionDisplay get rejectionDisplay;
+
+  ReferenceControl toFrozen();
+}
+
+/// Deeply immutable.
+final class ReferenceControl implements ReferenceControl_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final _core.bool allowReorder;
+  @_core.override
+  final ReferencePolicyId? candidatePolicy;
+  @_core.override
+  final ReferenceRejectionDisplay rejectionDisplay;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ReferenceControl({
+    required BoundControl_orMutable control,
+    required _core.bool allowReorder,
+    required ReferencePolicyId_orMutable? candidatePolicy,
+    required ReferenceRejectionDisplay rejectionDisplay,
+  }) => ReferenceControl._(
+    control.toFrozen(),
+    allowReorder,
+    (candidatePolicy != null) ? candidatePolicy.toFrozen() : null,
+    rejectionDisplay,
+  );
+
+  ReferenceControl._(
+    this.control,
+    this.allowReorder,
+    this.candidatePolicy,
+    this.rejectionDisplay,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ReferenceControl._(
+    BoundControl.defaultInstance,
+    false,
+    null,
+    ReferenceRejectionDisplay.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ReferenceControl_mutable mutable() => ReferenceControl_mutable._(
+    BoundControl.defaultInstance,
+    false,
+    null,
+    ReferenceRejectionDisplay.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ReferenceControl toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ReferenceControl_mutable toMutable() => ReferenceControl_mutable._(
+    this.control,
+    this.allowReorder,
+    this.candidatePolicy,
+    this.rejectionDisplay,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ReferenceControl) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.allowReorder,
+    this.candidatePolicy,
+    this.rejectionDisplay,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ReferenceControl` instances.
+  static _skir.StructSerializer<ReferenceControl, ReferenceControl_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "allow_reorder",
+        "allowReorder",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.allowReorder,
+        (it, v) => it.allowReorder = v,
+      );
+      _serializerBuilder.addField(
+        "candidate_policy",
+        "candidatePolicy",
+        2,
+        _skir.Serializers.optional(ReferencePolicyId.serializer),
+        "",
+        (it) => it.candidatePolicy,
+        (it, v) => it.candidatePolicy = v,
+      );
+      _serializerBuilder.addField(
+        "rejection_display",
+        "rejectionDisplay",
+        3,
+        ReferenceRejectionDisplay.serializer,
+        "",
+        (it) => it.rejectionDisplay,
+        (it, v) => it.rejectionDisplay = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:ReferenceControl",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ReferenceControl_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ReferenceControl].
+final class ReferenceControl_mutable implements ReferenceControl_orMutable {
+  BoundControl_orMutable control;
+  _core.bool allowReorder;
+  ReferencePolicyId_orMutable? candidatePolicy;
+  ReferenceRejectionDisplay rejectionDisplay;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ReferenceControl_mutable._(
+    this.control,
+    this.allowReorder,
+    this.candidatePolicy,
+    this.rejectionDisplay,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ReferenceControl toFrozen() => ReferenceControl(
+    control: this.control,
+    allowReorder: this.allowReorder,
+    candidatePolicy: this.candidatePolicy,
+    rejectionDisplay: this.rejectionDisplay,
   ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ReferencePolicyId
+// -----------------------------------------------------------------------------
+
+sealed class ReferencePolicyId_orMutable {
+  _core.String get value;
+
+  ReferencePolicyId toFrozen();
+}
+
+/// Deeply immutable.
+final class ReferencePolicyId implements ReferencePolicyId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ReferencePolicyId({required _core.String value}) =>
+      ReferencePolicyId._(value);
+
+  ReferencePolicyId._(this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ReferencePolicyId._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ReferencePolicyId_mutable mutable() => ReferencePolicyId_mutable._("");
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ReferencePolicyId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ReferencePolicyId_mutable toMutable() =>
+      ReferencePolicyId_mutable._(this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ReferencePolicyId) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ReferencePolicyId` instances.
+  static _skir.StructSerializer<ReferencePolicyId, ReferencePolicyId_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:ReferencePolicyId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ReferencePolicyId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ReferencePolicyId].
+final class ReferencePolicyId_mutable implements ReferencePolicyId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ReferencePolicyId_mutable._(this.value);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ReferencePolicyId toFrozen() =>
+      ReferencePolicyId(value: this.value).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum ReferenceRejectionDisplay
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ReferenceRejectionDisplay_unknown(): { ... }
+///     case ReferenceRejectionDisplay.hidden: { ... }
+///     case ReferenceRejectionDisplay.disabled: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ReferenceRejectionDisplay {
+  /// Constant indicating an unknown `ReferenceRejectionDisplay`.
+  /// Default value for fields of type `ReferenceRejectionDisplay`.
+  static const ReferenceRejectionDisplay unknown =
+      ReferenceRejectionDisplay_unknown._instance;
+
+  static const hidden = _ReferenceRejectionDisplay_consts.hiddenConst;
+  static const disabled = _ReferenceRejectionDisplay_consts.disabledConst;
+
+  /// Returns the kind of variant held by this ReferenceRejectionDisplay.
+  ReferenceRejectionDisplay_kind get kind;
+
+  /// Serializer for `ReferenceRejectionDisplay` instances.
+  static _skir.EnumSerializer<ReferenceRejectionDisplay> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "hidden", "hidden", "", hidden);
+      _serializerBuilder.addConstantVariant(
+        2,
+        "disabled",
+        "disabled",
+        "",
+        disabled,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:ReferenceRejectionDisplay",
+        doc: "",
+        unknownInstance: ReferenceRejectionDisplay_unknown._instance,
+        enumInstance: ReferenceRejectionDisplay.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ReferenceRejectionDisplay_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `ReferenceRejectionDisplay`.
+enum ReferenceRejectionDisplay_kind {
+  unknown(0),
+  hiddenConst(1),
+  disabledConst(2);
+
+  final _core.int _ordinal;
+
+  const ReferenceRejectionDisplay_kind(this._ordinal);
+}
+
+final class ReferenceRejectionDisplay_unknown
+    implements ReferenceRejectionDisplay {
+  static const _instance = ReferenceRejectionDisplay_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ReferenceRejectionDisplay_unknown._() : _u = null;
+  ReferenceRejectionDisplay_unknown._unrecognized(this._u);
+
+  @_core.override
+  ReferenceRejectionDisplay_kind get kind =>
+      ReferenceRejectionDisplay_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ReferenceRejectionDisplay_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ReferenceRejectionDisplay.serializer);
+}
+
+enum _ReferenceRejectionDisplay_consts implements ReferenceRejectionDisplay {
+  hiddenConst(ReferenceRejectionDisplay_kind.hiddenConst),
+  disabledConst(ReferenceRejectionDisplay_kind.disabledConst);
+
+  @_core.override
+  final ReferenceRejectionDisplay_kind kind;
+
+  const _ReferenceRejectionDisplay_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ReferenceRejectionDisplay.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -22501,6 +22498,7 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_connectionLayer(:var value): { ... }
 ///     case PresentationElement_polymorphicMatch(:var value): { ... }
 ///     case PresentationElement_invocation(:var value): { ... }
+///     case PresentationElement_referenceInput(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -22508,46 +22506,38 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 sealed class PresentationElement {
   /// Constant indicating an unknown `PresentationElement`.
   /// Default value for fields of type `PresentationElement`.
-  static const PresentationElement unknown = PresentationElement_unknown._instance;
+  static const PresentationElement unknown =
+      PresentationElement_unknown._instance;
 
   static const divider = _PresentationElement_consts.dividerConst;
 
   /// Create a 'children' variant wrapping around the given value.
-  factory PresentationElement.wrapChildren(
-    ChildrenElement value
-  ) => PresentationElement_childrenWrapper._(value);
+  factory PresentationElement.wrapChildren(ChildrenElement value) =>
+      PresentationElement_childrenWrapper._(value);
 
   /// Same as `wrapChildren(ChildrenElement(...))`.
   factory PresentationElement.createChildren({
     required _core.Iterable<PresentationNode_orMutable> children,
     required ChildrenLayout layout,
   }) => PresentationElement.wrapChildren(
-    ChildrenElement(
-      children: children,
-      layout: layout,
-    )
+    ChildrenElement(children: children, layout: layout),
   );
 
   /// Create a 'section' variant wrapping around the given value.
-  factory PresentationElement.wrapSection(
-    SectionLayout value
-  ) => PresentationElement_sectionWrapper._(value);
+  factory PresentationElement.wrapSection(SectionLayout value) =>
+      PresentationElement_sectionWrapper._(value);
 
   /// Same as `wrapSection(SectionLayout(...))`.
   factory PresentationElement.createSection({
     required PresentationNode_orMutable child,
     required PresentationBorder? border,
   }) => PresentationElement.wrapSection(
-    SectionLayout(
-      child: child,
-      border: border,
-    )
+    SectionLayout(child: child, border: border),
   );
 
   /// Create a 'padding' variant wrapping around the given value.
-  factory PresentationElement.wrapPadding(
-    PaddingLayout value
-  ) => PresentationElement_paddingWrapper._(value);
+  factory PresentationElement.wrapPadding(PaddingLayout value) =>
+      PresentationElement_paddingWrapper._(value);
 
   /// Same as `wrapPadding(PaddingLayout(...))`.
   factory PresentationElement.createPadding({
@@ -22563,59 +22553,44 @@ sealed class PresentationElement {
       start: start,
       end: end,
       bottom: bottom,
-    )
+    ),
   );
 
   /// Create a 'slot' variant wrapping around the given value.
-  factory PresentationElement.wrapSlot(
-    PresentationSlotElement value
-  ) => PresentationElement_slotWrapper._(value);
+  factory PresentationElement.wrapSlot(PresentationSlotElement value) =>
+      PresentationElement_slotWrapper._(value);
 
   /// Same as `wrapSlot(PresentationSlotElement(...))`.
-  factory PresentationElement.createSlot({
-    required _core.String slotId,
-  }) => PresentationElement.wrapSlot(
-    PresentationSlotElement(
-      slotId: slotId,
-    )
-  );
+  factory PresentationElement.createSlot({required _core.String slotId}) =>
+      PresentationElement.wrapSlot(PresentationSlotElement(slotId: slotId));
 
   /// Create a 'tabs' variant wrapping around the given value.
-  factory PresentationElement.wrapTabs(
-    TabsLayout value
-  ) => PresentationElement_tabsWrapper._(value);
+  factory PresentationElement.wrapTabs(TabsLayout value) =>
+      PresentationElement_tabsWrapper._(value);
 
   /// Same as `wrapTabs(TabsLayout(...))`.
   factory PresentationElement.createTabs({
     required _core.Iterable<TabItem_orMutable> tabs,
     required _core.String? initiallySelectedTabId,
   }) => PresentationElement.wrapTabs(
-    TabsLayout(
-      tabs: tabs,
-      initiallySelectedTabId: initiallySelectedTabId,
-    )
+    TabsLayout(tabs: tabs, initiallySelectedTabId: initiallySelectedTabId),
   );
 
   /// Create a 'spacer' variant wrapping around the given value.
-  factory PresentationElement.wrapSpacer(
-    SpacerLayout value
-  ) => PresentationElement_spacerWrapper._(value);
+  factory PresentationElement.wrapSpacer(SpacerLayout value) =>
+      PresentationElement_spacerWrapper._(value);
 
   /// Same as `wrapSpacer(SpacerLayout(...))`.
   factory PresentationElement.createSpacer({
     required _lib_editor_v1_expression.TypedExpression_orMutable? width,
     required _lib_editor_v1_expression.TypedExpression_orMutable? height,
   }) => PresentationElement.wrapSpacer(
-    SpacerLayout(
-      width: width,
-      height: height,
-    )
+    SpacerLayout(width: width, height: height),
   );
 
   /// Create a 'text' variant wrapping around the given value.
-  factory PresentationElement.wrapText(
-    TextContent value
-  ) => PresentationElement_textWrapper._(value);
+  factory PresentationElement.wrapText(TextContent value) =>
+      PresentationElement_textWrapper._(value);
 
   /// Same as `wrapText(TextContent(...))`.
   factory PresentationElement.createText({
@@ -22624,7 +22599,8 @@ sealed class PresentationElement {
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontSize,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize,
+    required _lib_editor_v1_expression.TypedExpression_orMutable?
+    fontOpticalSize,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth,
     required _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment,
@@ -22647,13 +22623,12 @@ sealed class PresentationElement {
       letterSpacing: letterSpacing,
       decoration: decoration,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'markdown' variant wrapping around the given value.
-  factory PresentationElement.wrapMarkdown(
-    TextContent value
-  ) => PresentationElement_markdownWrapper._(value);
+  factory PresentationElement.wrapMarkdown(TextContent value) =>
+      PresentationElement_markdownWrapper._(value);
 
   /// Same as `wrapMarkdown(TextContent(...))`.
   factory PresentationElement.createMarkdown({
@@ -22662,7 +22637,8 @@ sealed class PresentationElement {
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontSize,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize,
+    required _lib_editor_v1_expression.TypedExpression_orMutable?
+    fontOpticalSize,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant,
     required _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth,
     required _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment,
@@ -22685,13 +22661,12 @@ sealed class PresentationElement {
       letterSpacing: letterSpacing,
       decoration: decoration,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'icon' variant wrapping around the given value.
-  factory PresentationElement.wrapIcon(
-    IconContent value
-  ) => PresentationElement_iconWrapper._(value);
+  factory PresentationElement.wrapIcon(IconContent value) =>
+      PresentationElement_iconWrapper._(value);
 
   /// Same as `wrapIcon(IconContent(...))`.
   factory PresentationElement.createIcon({
@@ -22705,61 +22680,44 @@ sealed class PresentationElement {
       semanticLabel: semanticLabel,
       color: color,
       size: size,
-    )
+    ),
   );
 
   /// Create a 'image' variant wrapping around the given value.
-  factory PresentationElement.wrapImage(
-    ImageContent value
-  ) => PresentationElement_imageWrapper._(value);
+  factory PresentationElement.wrapImage(ImageContent value) =>
+      PresentationElement_imageWrapper._(value);
 
   /// Same as `wrapImage(ImageContent(...))`.
   factory PresentationElement.createImage({
     required _lib_editor_v1_expression.TypedExpression_orMutable source,
     required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
   }) => PresentationElement.wrapImage(
-    ImageContent(
-      source: source,
-      semanticLabel: semanticLabel,
-    )
+    ImageContent(source: source, semanticLabel: semanticLabel),
   );
 
   /// Create a 'badge' variant wrapping around the given value.
-  factory PresentationElement.wrapBadge(
-    BadgeContent value
-  ) => PresentationElement_badgeWrapper._(value);
+  factory PresentationElement.wrapBadge(BadgeContent value) =>
+      PresentationElement_badgeWrapper._(value);
 
   /// Same as `wrapBadge(BadgeContent(...))`.
   factory PresentationElement.createBadge({
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _core.String tone,
-  }) => PresentationElement.wrapBadge(
-    BadgeContent(
-      label: label,
-      tone: tone,
-    )
-  );
+  }) => PresentationElement.wrapBadge(BadgeContent(label: label, tone: tone));
 
   /// Create a 'chip' variant wrapping around the given value.
-  factory PresentationElement.wrapChip(
-    ChipContent value
-  ) => PresentationElement_chipWrapper._(value);
+  factory PresentationElement.wrapChip(ChipContent value) =>
+      PresentationElement_chipWrapper._(value);
 
   /// Same as `wrapChip(ChipContent(...))`.
   factory PresentationElement.createChip({
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-  }) => PresentationElement.wrapChip(
-    ChipContent(
-      label: label,
-      color: color,
-    )
-  );
+  }) => PresentationElement.wrapChip(ChipContent(label: label, color: color));
 
   /// Create a 'progress' variant wrapping around the given value.
-  factory PresentationElement.wrapProgress(
-    ProgressContent value
-  ) => PresentationElement_progressWrapper._(value);
+  factory PresentationElement.wrapProgress(ProgressContent value) =>
+      PresentationElement_progressWrapper._(value);
 
   /// Same as `wrapProgress(ProgressContent(...))`.
   factory PresentationElement.createProgress({
@@ -22767,17 +22725,12 @@ sealed class PresentationElement {
     required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
     required _lib_editor_v1_expression.TypedExpression_orMutable? label,
   }) => PresentationElement.wrapProgress(
-    ProgressContent(
-      value: value,
-      maximum: maximum,
-      label: label,
-    )
+    ProgressContent(value: value, maximum: maximum, label: label),
   );
 
   /// Create a 'status' variant wrapping around the given value.
-  factory PresentationElement.wrapStatus(
-    StatusContent value
-  ) => PresentationElement_statusWrapper._(value);
+  factory PresentationElement.wrapStatus(StatusContent value) =>
+      PresentationElement_statusWrapper._(value);
 
   /// Same as `wrapStatus(StatusContent(...))`.
   factory PresentationElement.createStatus({
@@ -22785,17 +22738,12 @@ sealed class PresentationElement {
     required _core.Iterable<StatusCase_orMutable> cases,
     required StatusAppearance_orMutable? fallback,
   }) => PresentationElement.wrapStatus(
-    StatusContent(
-      value: value,
-      cases: cases,
-      fallback: fallback,
-    )
+    StatusContent(value: value, cases: cases, fallback: fallback),
   );
 
   /// Create a 'date_time' variant wrapping around the given value.
-  factory PresentationElement.wrapDateTime(
-    DateTimeContent value
-  ) => PresentationElement_dateTimeWrapper._(value);
+  factory PresentationElement.wrapDateTime(DateTimeContent value) =>
+      PresentationElement_dateTimeWrapper._(value);
 
   /// Same as `wrapDateTime(DateTimeContent(...))`.
   factory PresentationElement.createDateTime({
@@ -22803,17 +22751,12 @@ sealed class PresentationElement {
     required _lib_editor_v1_expression.TypedExpression_orMutable format,
     required DateTimeZone timeZone,
   }) => PresentationElement.wrapDateTime(
-    DateTimeContent(
-      value: value,
-      format: format,
-      timeZone: timeZone,
-    )
+    DateTimeContent(value: value, format: format, timeZone: timeZone),
   );
 
   /// Create a 'relative_time' variant wrapping around the given value.
-  factory PresentationElement.wrapRelativeTime(
-    RelativeTimeContent value
-  ) => PresentationElement_relativeTimeWrapper._(value);
+  factory PresentationElement.wrapRelativeTime(RelativeTimeContent value) =>
+      PresentationElement_relativeTimeWrapper._(value);
 
   /// Same as `wrapRelativeTime(RelativeTimeContent(...))`.
   factory PresentationElement.createRelativeTime({
@@ -22821,17 +22764,12 @@ sealed class PresentationElement {
     required RelativeTimeStyle style,
     required DateTimeZone timeZone,
   }) => PresentationElement.wrapRelativeTime(
-    RelativeTimeContent(
-      value: value,
-      style: style,
-      timeZone: timeZone,
-    )
+    RelativeTimeContent(value: value, style: style, timeZone: timeZone),
   );
 
   /// Create a 'typed_field' variant wrapping around the given value.
-  factory PresentationElement.wrapTypedField(
-    TypedFieldElement value
-  ) => PresentationElement_typedFieldWrapper._(value);
+  factory PresentationElement.wrapTypedField(TypedFieldElement value) =>
+      PresentationElement_typedFieldWrapper._(value);
 
   /// Same as `wrapTypedField(TypedFieldElement(...))`.
   factory PresentationElement.createTypedField({
@@ -22843,13 +22781,12 @@ sealed class PresentationElement {
       binding: binding,
       expectedType: expectedType,
       presentation: presentation,
-    )
+    ),
   );
 
   /// Create a 'conditional' variant wrapping around the given value.
-  factory PresentationElement.wrapConditional(
-    ConditionalElement value
-  ) => PresentationElement_conditionalWrapper._(value);
+  factory PresentationElement.wrapConditional(ConditionalElement value) =>
+      PresentationElement_conditionalWrapper._(value);
 
   /// Same as `wrapConditional(ConditionalElement(...))`.
   factory PresentationElement.createConditional({
@@ -22861,13 +22798,12 @@ sealed class PresentationElement {
       condition: condition,
       whenTrue: whenTrue,
       whenFalse: whenFalse,
-    )
+    ),
   );
 
   /// Create a 'repeated' variant wrapping around the given value.
-  factory PresentationElement.wrapRepeated(
-    RepeatedElement value
-  ) => PresentationElement_repeatedWrapper._(value);
+  factory PresentationElement.wrapRepeated(RepeatedElement value) =>
+      PresentationElement_repeatedWrapper._(value);
 
   /// Same as `wrapRepeated(RepeatedElement(...))`.
   factory PresentationElement.createRepeated({
@@ -22879,13 +22815,12 @@ sealed class PresentationElement {
       source: source,
       itemBindingId: itemBindingId,
       presentation: presentation,
-    )
+    ),
   );
 
   /// Create a 'scoped_binding' variant wrapping around the given value.
-  factory PresentationElement.wrapScopedBinding(
-    ScopedBindingElement value
-  ) => PresentationElement_scopedBindingWrapper._(value);
+  factory PresentationElement.wrapScopedBinding(ScopedBindingElement value) =>
+      PresentationElement_scopedBindingWrapper._(value);
 
   /// Same as `wrapScopedBinding(ScopedBindingElement(...))`.
   factory PresentationElement.createScopedBinding({
@@ -22897,13 +22832,12 @@ sealed class PresentationElement {
       binding: binding,
       scopeBindingId: scopeBindingId,
       child: child,
-    )
+    ),
   );
 
   /// Create a 'text_input' variant wrapping around the given value.
-  factory PresentationElement.wrapTextInput(
-    TextControl value
-  ) => PresentationElement_textInputWrapper._(value);
+  factory PresentationElement.wrapTextInput(TextControl value) =>
+      PresentationElement_textInputWrapper._(value);
 
   /// Same as `wrapTextInput(TextControl(...))`.
   factory PresentationElement.createTextInput({
@@ -22917,13 +22851,12 @@ sealed class PresentationElement {
       multiline: multiline,
       placeholder: placeholder,
       inputFormatters: inputFormatters,
-    )
+    ),
   );
 
   /// Create a 'numeric_input' variant wrapping around the given value.
-  factory PresentationElement.wrapNumericInput(
-    BoundControl value
-  ) => PresentationElement_numericInputWrapper._(value);
+  factory PresentationElement.wrapNumericInput(BoundControl value) =>
+      PresentationElement_numericInputWrapper._(value);
 
   /// Same as `wrapNumericInput(BoundControl(...))`.
   factory PresentationElement.createNumericInput({
@@ -22939,13 +22872,12 @@ sealed class PresentationElement {
       description: description,
       prefix: prefix,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'toggle_input' variant wrapping around the given value.
-  factory PresentationElement.wrapToggleInput(
-    BoundControl value
-  ) => PresentationElement_toggleInputWrapper._(value);
+  factory PresentationElement.wrapToggleInput(BoundControl value) =>
+      PresentationElement_toggleInputWrapper._(value);
 
   /// Same as `wrapToggleInput(BoundControl(...))`.
   factory PresentationElement.createToggleInput({
@@ -22961,13 +22893,12 @@ sealed class PresentationElement {
       description: description,
       prefix: prefix,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'select_input' variant wrapping around the given value.
-  factory PresentationElement.wrapSelectInput(
-    SelectControl value
-  ) => PresentationElement_selectInputWrapper._(value);
+  factory PresentationElement.wrapSelectInput(SelectControl value) =>
+      PresentationElement_selectInputWrapper._(value);
 
   /// Same as `wrapSelectInput(SelectControl(...))`.
   factory PresentationElement.createSelectInput({
@@ -22981,13 +22912,12 @@ sealed class PresentationElement {
       options: options,
       allowCustomValue: allowCustomValue,
       defaultValue: defaultValue,
-    )
+    ),
   );
 
   /// Create a 'slider_input' variant wrapping around the given value.
-  factory PresentationElement.wrapSliderInput(
-    SliderControl value
-  ) => PresentationElement_sliderInputWrapper._(value);
+  factory PresentationElement.wrapSliderInput(SliderControl value) =>
+      PresentationElement_sliderInputWrapper._(value);
 
   /// Same as `wrapSliderInput(SliderControl(...))`.
   factory PresentationElement.createSliderInput({
@@ -23001,13 +22931,12 @@ sealed class PresentationElement {
       minimum: minimum,
       maximum: maximum,
       divisions: divisions,
-    )
+    ),
   );
 
   /// Create a 'date_time_input' variant wrapping around the given value.
-  factory PresentationElement.wrapDateTimeInput(
-    DateTimeControl value
-  ) => PresentationElement_dateTimeInputWrapper._(value);
+  factory PresentationElement.wrapDateTimeInput(DateTimeControl value) =>
+      PresentationElement_dateTimeInputWrapper._(value);
 
   /// Same as `wrapDateTimeInput(DateTimeControl(...))`.
   factory PresentationElement.createDateTimeInput({
@@ -23019,13 +22948,12 @@ sealed class PresentationElement {
       control: control,
       includeDate: includeDate,
       includeTime: includeTime,
-    )
+    ),
   );
 
   /// Create a 'duration_input' variant wrapping around the given value.
-  factory PresentationElement.wrapDurationInput(
-    BoundControl value
-  ) => PresentationElement_durationInputWrapper._(value);
+  factory PresentationElement.wrapDurationInput(BoundControl value) =>
+      PresentationElement_durationInputWrapper._(value);
 
   /// Same as `wrapDurationInput(BoundControl(...))`.
   factory PresentationElement.createDurationInput({
@@ -23041,29 +22969,24 @@ sealed class PresentationElement {
       description: description,
       prefix: prefix,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'color_input' variant wrapping around the given value.
-  factory PresentationElement.wrapColorInput(
-    ColorControl value
-  ) => PresentationElement_colorInputWrapper._(value);
+  factory PresentationElement.wrapColorInput(ColorControl value) =>
+      PresentationElement_colorInputWrapper._(value);
 
   /// Same as `wrapColorInput(ColorControl(...))`.
   factory PresentationElement.createColorInput({
     required BoundControl_orMutable control,
     required _core.bool includeAlpha,
   }) => PresentationElement.wrapColorInput(
-    ColorControl(
-      control: control,
-      includeAlpha: includeAlpha,
-    )
+    ColorControl(control: control, includeAlpha: includeAlpha),
   );
 
   /// Create a 'bytes_input' variant wrapping around the given value.
-  factory PresentationElement.wrapBytesInput(
-    BoundControl value
-  ) => PresentationElement_bytesInputWrapper._(value);
+  factory PresentationElement.wrapBytesInput(BoundControl value) =>
+      PresentationElement_bytesInputWrapper._(value);
 
   /// Same as `wrapBytesInput(BoundControl(...))`.
   factory PresentationElement.createBytesInput({
@@ -23079,13 +23002,12 @@ sealed class PresentationElement {
       description: description,
       prefix: prefix,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'named_input' variant wrapping around the given value.
-  factory PresentationElement.wrapNamedInput(
-    BoundControl value
-  ) => PresentationElement_namedInputWrapper._(value);
+  factory PresentationElement.wrapNamedInput(BoundControl value) =>
+      PresentationElement_namedInputWrapper._(value);
 
   /// Same as `wrapNamedInput(BoundControl(...))`.
   factory PresentationElement.createNamedInput({
@@ -23101,43 +23023,35 @@ sealed class PresentationElement {
       description: description,
       prefix: prefix,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'commit_controls' variant wrapping around the given value.
-  factory PresentationElement.wrapCommitControls(
-    CommitControlsElement value
-  ) => PresentationElement_commitControlsWrapper._(value);
+  factory PresentationElement.wrapCommitControls(CommitControlsElement value) =>
+      PresentationElement_commitControlsWrapper._(value);
 
   /// Same as `wrapCommitControls(CommitControlsElement(...))`.
   factory PresentationElement.createCommitControls({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
   }) => PresentationElement.wrapCommitControls(
-    CommitControlsElement(
-      binding: binding,
-    )
+    CommitControlsElement(binding: binding),
   );
 
   /// Create a 'button' variant wrapping around the given value.
-  factory PresentationElement.wrapButton(
-    ButtonElement value
-  ) => PresentationElement_buttonWrapper._(value);
+  factory PresentationElement.wrapButton(ButtonElement value) =>
+      PresentationElement_buttonWrapper._(value);
 
   /// Same as `wrapButton(ButtonElement(...))`.
   factory PresentationElement.createButton({
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _lib_editor_v1_action.EditorAction action,
   }) => PresentationElement.wrapButton(
-    ButtonElement(
-      label: label,
-      action: action,
-    )
+    ButtonElement(label: label, action: action),
   );
 
   /// Create a 'icon_button' variant wrapping around the given value.
-  factory PresentationElement.wrapIconButton(
-    IconButtonElement value
-  ) => PresentationElement_iconButtonWrapper._(value);
+  factory PresentationElement.wrapIconButton(IconButtonElement value) =>
+      PresentationElement_iconButtonWrapper._(value);
 
   /// Same as `wrapIconButton(IconButtonElement(...))`.
   factory PresentationElement.createIconButton({
@@ -23145,49 +23059,34 @@ sealed class PresentationElement {
     required _lib_editor_v1_expression.TypedExpression_orMutable semanticLabel,
     required _lib_editor_v1_action.EditorAction action,
   }) => PresentationElement.wrapIconButton(
-    IconButtonElement(
-      icon: icon,
-      semanticLabel: semanticLabel,
-      action: action,
-    )
+    IconButtonElement(icon: icon, semanticLabel: semanticLabel, action: action),
   );
 
   /// Create a 'menu' variant wrapping around the given value.
-  factory PresentationElement.wrapMenu(
-    MenuElement value
-  ) => PresentationElement_menuWrapper._(value);
+  factory PresentationElement.wrapMenu(MenuElement value) =>
+      PresentationElement_menuWrapper._(value);
 
   /// Same as `wrapMenu(MenuElement(...))`.
   factory PresentationElement.createMenu({
     required _lib_editor_v1_expression.TypedExpression_orMutable? label,
     required _core.Iterable<MenuItem_orMutable> items,
-  }) => PresentationElement.wrapMenu(
-    MenuElement(
-      label: label,
-      items: items,
-    )
-  );
+  }) => PresentationElement.wrapMenu(MenuElement(label: label, items: items));
 
   /// Create a 'tooltip' variant wrapping around the given value.
-  factory PresentationElement.wrapTooltip(
-    TooltipElement value
-  ) => PresentationElement_tooltipWrapper._(value);
+  factory PresentationElement.wrapTooltip(TooltipElement value) =>
+      PresentationElement_tooltipWrapper._(value);
 
   /// Same as `wrapTooltip(TooltipElement(...))`.
   factory PresentationElement.createTooltip({
     required _lib_editor_v1_expression.TypedExpression_orMutable message,
     required PresentationNode_orMutable child,
   }) => PresentationElement.wrapTooltip(
-    TooltipElement(
-      message: message,
-      child: child,
-    )
+    TooltipElement(message: message, child: child),
   );
 
   /// Create a 'list_input' variant wrapping around the given value.
-  factory PresentationElement.wrapListInput(
-    ListControl value
-  ) => PresentationElement_listInputWrapper._(value);
+  factory PresentationElement.wrapListInput(ListControl value) =>
+      PresentationElement_listInputWrapper._(value);
 
   /// Same as `wrapListInput(ListControl(...))`.
   factory PresentationElement.createListInput({
@@ -23207,13 +23106,12 @@ sealed class PresentationElement {
       allowReorder: allowReorder,
       itemBindingId: itemBindingId,
       indexBindingId: indexBindingId,
-    )
+    ),
   );
 
   /// Create a 'map_input' variant wrapping around the given value.
-  factory PresentationElement.wrapMapInput(
-    MapControl value
-  ) => PresentationElement_mapInputWrapper._(value);
+  factory PresentationElement.wrapMapInput(MapControl value) =>
+      PresentationElement_mapInputWrapper._(value);
 
   /// Same as `wrapMapInput(MapControl(...))`.
   factory PresentationElement.createMapInput({
@@ -23233,29 +23131,24 @@ sealed class PresentationElement {
       allowRemove: allowRemove,
       keyBindingId: keyBindingId,
       valueBindingId: valueBindingId,
-    )
+    ),
   );
 
   /// Create a 'record_input' variant wrapping around the given value.
-  factory PresentationElement.wrapRecordInput(
-    RecordControl value
-  ) => PresentationElement_recordInputWrapper._(value);
+  factory PresentationElement.wrapRecordInput(RecordControl value) =>
+      PresentationElement_recordInputWrapper._(value);
 
   /// Same as `wrapRecordInput(RecordControl(...))`.
   factory PresentationElement.createRecordInput({
     required BoundControl_orMutable control,
     required PresentationNode_orMutable? fieldPresentation,
   }) => PresentationElement.wrapRecordInput(
-    RecordControl(
-      control: control,
-      fieldPresentation: fieldPresentation,
-    )
+    RecordControl(control: control, fieldPresentation: fieldPresentation),
   );
 
   /// Create a 'enum_input' variant wrapping around the given value.
-  factory PresentationElement.wrapEnumInput(
-    BoundControl value
-  ) => PresentationElement_enumInputWrapper._(value);
+  factory PresentationElement.wrapEnumInput(BoundControl value) =>
+      PresentationElement_enumInputWrapper._(value);
 
   /// Same as `wrapEnumInput(BoundControl(...))`.
   factory PresentationElement.createEnumInput({
@@ -23271,45 +23164,41 @@ sealed class PresentationElement {
       description: description,
       prefix: prefix,
       semanticLabel: semanticLabel,
-    )
+    ),
   );
 
   /// Create a 'polymorphic_input' variant wrapping around the given value.
-  factory PresentationElement.wrapPolymorphicInput(
-    PolymorphicControl value
-  ) => PresentationElement_polymorphicInputWrapper._(value);
+  factory PresentationElement.wrapPolymorphicInput(PolymorphicControl value) =>
+      PresentationElement_polymorphicInputWrapper._(value);
 
   /// Same as `wrapPolymorphicInput(PolymorphicControl(...))`.
   factory PresentationElement.createPolymorphicInput({
     required BoundControl_orMutable control,
     required _core.Iterable<ConcreteTypePresentation_orMutable> concreteTypes,
   }) => PresentationElement.wrapPolymorphicInput(
-    PolymorphicControl(
-      control: control,
-      concreteTypes: concreteTypes,
-    )
+    PolymorphicControl(control: control, concreteTypes: concreteTypes),
   );
 
   /// Create a 'default_presentation' variant wrapping around the given value.
   factory PresentationElement.wrapDefaultPresentation(
-    DefaultPresentationElement value
+    DefaultPresentationElement value,
   ) => PresentationElement_defaultPresentationWrapper._(value);
 
   /// Same as `wrapDefaultPresentation(DefaultPresentationElement(...))`.
   factory PresentationElement.createDefaultPresentation({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_type_catalog.PresentationId_orMutable? presentationId,
+    required _lib_editor_v1_type_catalog.PresentationId_orMutable?
+    presentationId,
   }) => PresentationElement.wrapDefaultPresentation(
     DefaultPresentationElement(
       binding: binding,
       presentationId: presentationId,
-    )
+    ),
   );
 
   /// Create a 'search_input' variant wrapping around the given value.
-  factory PresentationElement.wrapSearchInput(
-    SearchControl value
-  ) => PresentationElement_searchInputWrapper._(value);
+  factory PresentationElement.wrapSearchInput(SearchControl value) =>
+      PresentationElement_searchInputWrapper._(value);
 
   /// Same as `wrapSearchInput(SearchControl(...))`.
   factory PresentationElement.createSearchInput({
@@ -23335,12 +23224,12 @@ sealed class PresentationElement {
       placeholder: placeholder,
       customValue: customValue,
       initialQuery: initialQuery,
-    )
+    ),
   );
 
   /// Create a 'collection_lookup' variant wrapping around the given value.
   factory PresentationElement.wrapCollectionLookup(
-    CollectionLookupElement value
+    CollectionLookupElement value,
   ) => PresentationElement_collectionLookupWrapper._(value);
 
   /// Same as `wrapCollectionLookup(CollectionLookupElement(...))`.
@@ -23357,12 +23246,12 @@ sealed class PresentationElement {
       found: found,
       missing: missing,
       loading: loading,
-    )
+    ),
   );
 
   /// Create a 'collection_graph' variant wrapping around the given value.
   factory PresentationElement.wrapCollectionGraph(
-    CollectionGraphElement value
+    CollectionGraphElement value,
   ) => PresentationElement_collectionGraphWrapper._(value);
 
   /// Same as `wrapCollectionGraph(CollectionGraphElement(...))`.
@@ -23389,19 +23278,19 @@ sealed class PresentationElement {
       childrenBindingId: childrenBindingId,
       childBindingId: childBindingId,
       children: children,
-    )
+    ),
   );
 
   /// Create a 'container' variant wrapping around the given value.
-  factory PresentationElement.wrapContainer(
-    ContainerLayout value
-  ) => PresentationElement_containerWrapper._(value);
+  factory PresentationElement.wrapContainer(ContainerLayout value) =>
+      PresentationElement_containerWrapper._(value);
 
   /// Same as `wrapContainer(ContainerLayout(...))`.
   factory PresentationElement.createContainer({
     required PresentationNode_orMutable child,
     required PresentationBorder? border,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? backgroundColor,
+    required _lib_editor_v1_expression.TypedExpression_orMutable?
+    backgroundColor,
     required PresentationRadius radius,
   }) => PresentationElement.wrapContainer(
     ContainerLayout(
@@ -23409,28 +23298,24 @@ sealed class PresentationElement {
       border: border,
       backgroundColor: backgroundColor,
       radius: radius,
-    )
+    ),
   );
 
   /// Create a 'anchor' variant wrapping around the given value.
-  factory PresentationElement.wrapAnchor(
-    PresentationAnchorLayout value
-  ) => PresentationElement_anchorWrapper._(value);
+  factory PresentationElement.wrapAnchor(PresentationAnchorLayout value) =>
+      PresentationElement_anchorWrapper._(value);
 
   /// Same as `wrapAnchor(PresentationAnchorLayout(...))`.
   factory PresentationElement.createAnchor({
     required PresentationNode_orMutable child,
     required _core.Iterable<PresentationAnchorPoint_orMutable> anchors,
   }) => PresentationElement.wrapAnchor(
-    PresentationAnchorLayout(
-      child: child,
-      anchors: anchors,
-    )
+    PresentationAnchorLayout(child: child, anchors: anchors),
   );
 
   /// Create a 'connection_layer' variant wrapping around the given value.
   factory PresentationElement.wrapConnectionLayer(
-    ConnectionLayerLayout value
+    ConnectionLayerLayout value,
   ) => PresentationElement_connectionLayerWrapper._(value);
 
   /// Same as `wrapConnectionLayer(ConnectionLayerLayout(...))`.
@@ -23438,15 +23323,12 @@ sealed class PresentationElement {
     required PresentationNode_orMutable child,
     required _core.Iterable<PresentationConnection> connections,
   }) => PresentationElement.wrapConnectionLayer(
-    ConnectionLayerLayout(
-      child: child,
-      connections: connections,
-    )
+    ConnectionLayerLayout(child: child, connections: connections),
   );
 
   /// Create a 'polymorphic_match' variant wrapping around the given value.
   factory PresentationElement.wrapPolymorphicMatch(
-    PolymorphicMatchElement value
+    PolymorphicMatchElement value,
   ) => PresentationElement_polymorphicMatchWrapper._(value);
 
   /// Same as `wrapPolymorphicMatch(PolymorphicMatchElement(...))`.
@@ -23461,23 +23343,42 @@ sealed class PresentationElement {
       scopeBindingId: scopeBindingId,
       cases: cases,
       fallback: fallback,
-    )
+    ),
   );
 
   /// Create a 'invocation' variant wrapping around the given value.
-  factory PresentationElement.wrapInvocation(
-    PresentationInvocation value
-  ) => PresentationElement_invocationWrapper._(value);
+  factory PresentationElement.wrapInvocation(PresentationInvocation value) =>
+      PresentationElement_invocationWrapper._(value);
 
   /// Same as `wrapInvocation(PresentationInvocation(...))`.
   factory PresentationElement.createInvocation({
-    required _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId,
+    required _lib_editor_v1_type_catalog.PresentationId_orMutable
+    presentationId,
     required _core.Iterable<PresentationArgument_orMutable> arguments,
   }) => PresentationElement.wrapInvocation(
     PresentationInvocation(
       presentationId: presentationId,
       arguments: arguments,
-    )
+    ),
+  );
+
+  /// Create a 'reference_input' variant wrapping around the given value.
+  factory PresentationElement.wrapReferenceInput(ReferenceControl value) =>
+      PresentationElement_referenceInputWrapper._(value);
+
+  /// Same as `wrapReferenceInput(ReferenceControl(...))`.
+  factory PresentationElement.createReferenceInput({
+    required BoundControl_orMutable control,
+    required _core.bool allowReorder,
+    required ReferencePolicyId_orMutable? candidatePolicy,
+    required ReferenceRejectionDisplay rejectionDisplay,
+  }) => PresentationElement.wrapReferenceInput(
+    ReferenceControl(
+      control: control,
+      allowReorder: allowReorder,
+      candidatePolicy: candidatePolicy,
+      rejectionDisplay: rejectionDisplay,
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationElement.
@@ -23983,20 +23884,31 @@ sealed class PresentationElement {
         (it) => it.value,
         ordinal: PresentationElement_kind.invocationWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        51,
+        "reference_input",
+        "wrapReferenceInput",
+        ReferenceControl.serializer,
+        "",
+        PresentationElement_referenceInputWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.referenceInputWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationElement",
-    doc: "",
-    unknownInstance: PresentationElement_unknown._instance,
-    enumInstance: PresentationElement.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationElement_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationElement",
+        doc: "",
+        unknownInstance: PresentationElement_unknown._instance,
+        enumInstance: PresentationElement.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationElement_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationElement`.
@@ -24051,7 +23963,8 @@ enum PresentationElement_kind {
   anchorWrapper(47),
   connectionLayerWrapper(48),
   polymorphicMatchWrapper(49),
-  invocationWrapper(50);
+  invocationWrapper(50),
+  referenceInputWrapper(51);
 
   final _core.int _ordinal;
 
@@ -24073,7 +23986,8 @@ final class PresentationElement_unknown implements PresentationElement {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationElement.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationElement.serializer);
 }
 
 enum _PresentationElement_consts implements PresentationElement {
@@ -24085,7 +23999,8 @@ enum _PresentationElement_consts implements PresentationElement {
   const _PresentationElement_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationElement.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationElement.serializer);
 }
 
 sealed class _PresentationElement_wrapper implements PresentationElement {
@@ -24101,10 +24016,12 @@ sealed class _PresentationElement_wrapper implements PresentationElement {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationElement.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationElement.serializer);
 }
 
-final class PresentationElement_childrenWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_childrenWrapper
+    extends _PresentationElement_wrapper {
   final ChildrenElement value;
 
   PresentationElement_childrenWrapper._(this.value);
@@ -24113,7 +24030,8 @@ final class PresentationElement_childrenWrapper extends _PresentationElement_wra
   PresentationElement_kind get kind => PresentationElement_kind.childrenWrapper;
 }
 
-final class PresentationElement_sectionWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_sectionWrapper
+    extends _PresentationElement_wrapper {
   final SectionLayout value;
 
   PresentationElement_sectionWrapper._(this.value);
@@ -24122,7 +24040,8 @@ final class PresentationElement_sectionWrapper extends _PresentationElement_wrap
   PresentationElement_kind get kind => PresentationElement_kind.sectionWrapper;
 }
 
-final class PresentationElement_paddingWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_paddingWrapper
+    extends _PresentationElement_wrapper {
   final PaddingLayout value;
 
   PresentationElement_paddingWrapper._(this.value);
@@ -24131,7 +24050,8 @@ final class PresentationElement_paddingWrapper extends _PresentationElement_wrap
   PresentationElement_kind get kind => PresentationElement_kind.paddingWrapper;
 }
 
-final class PresentationElement_slotWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_slotWrapper
+    extends _PresentationElement_wrapper {
   final PresentationSlotElement value;
 
   PresentationElement_slotWrapper._(this.value);
@@ -24140,7 +24060,8 @@ final class PresentationElement_slotWrapper extends _PresentationElement_wrapper
   PresentationElement_kind get kind => PresentationElement_kind.slotWrapper;
 }
 
-final class PresentationElement_tabsWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_tabsWrapper
+    extends _PresentationElement_wrapper {
   final TabsLayout value;
 
   PresentationElement_tabsWrapper._(this.value);
@@ -24149,7 +24070,8 @@ final class PresentationElement_tabsWrapper extends _PresentationElement_wrapper
   PresentationElement_kind get kind => PresentationElement_kind.tabsWrapper;
 }
 
-final class PresentationElement_spacerWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_spacerWrapper
+    extends _PresentationElement_wrapper {
   final SpacerLayout value;
 
   PresentationElement_spacerWrapper._(this.value);
@@ -24158,7 +24080,8 @@ final class PresentationElement_spacerWrapper extends _PresentationElement_wrapp
   PresentationElement_kind get kind => PresentationElement_kind.spacerWrapper;
 }
 
-final class PresentationElement_textWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_textWrapper
+    extends _PresentationElement_wrapper {
   final TextContent value;
 
   PresentationElement_textWrapper._(this.value);
@@ -24167,7 +24090,8 @@ final class PresentationElement_textWrapper extends _PresentationElement_wrapper
   PresentationElement_kind get kind => PresentationElement_kind.textWrapper;
 }
 
-final class PresentationElement_markdownWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_markdownWrapper
+    extends _PresentationElement_wrapper {
   final TextContent value;
 
   PresentationElement_markdownWrapper._(this.value);
@@ -24176,7 +24100,8 @@ final class PresentationElement_markdownWrapper extends _PresentationElement_wra
   PresentationElement_kind get kind => PresentationElement_kind.markdownWrapper;
 }
 
-final class PresentationElement_iconWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_iconWrapper
+    extends _PresentationElement_wrapper {
   final IconContent value;
 
   PresentationElement_iconWrapper._(this.value);
@@ -24185,7 +24110,8 @@ final class PresentationElement_iconWrapper extends _PresentationElement_wrapper
   PresentationElement_kind get kind => PresentationElement_kind.iconWrapper;
 }
 
-final class PresentationElement_imageWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_imageWrapper
+    extends _PresentationElement_wrapper {
   final ImageContent value;
 
   PresentationElement_imageWrapper._(this.value);
@@ -24194,7 +24120,8 @@ final class PresentationElement_imageWrapper extends _PresentationElement_wrappe
   PresentationElement_kind get kind => PresentationElement_kind.imageWrapper;
 }
 
-final class PresentationElement_badgeWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_badgeWrapper
+    extends _PresentationElement_wrapper {
   final BadgeContent value;
 
   PresentationElement_badgeWrapper._(this.value);
@@ -24203,7 +24130,8 @@ final class PresentationElement_badgeWrapper extends _PresentationElement_wrappe
   PresentationElement_kind get kind => PresentationElement_kind.badgeWrapper;
 }
 
-final class PresentationElement_chipWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_chipWrapper
+    extends _PresentationElement_wrapper {
   final ChipContent value;
 
   PresentationElement_chipWrapper._(this.value);
@@ -24212,7 +24140,8 @@ final class PresentationElement_chipWrapper extends _PresentationElement_wrapper
   PresentationElement_kind get kind => PresentationElement_kind.chipWrapper;
 }
 
-final class PresentationElement_progressWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_progressWrapper
+    extends _PresentationElement_wrapper {
   final ProgressContent value;
 
   PresentationElement_progressWrapper._(this.value);
@@ -24221,7 +24150,8 @@ final class PresentationElement_progressWrapper extends _PresentationElement_wra
   PresentationElement_kind get kind => PresentationElement_kind.progressWrapper;
 }
 
-final class PresentationElement_statusWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_statusWrapper
+    extends _PresentationElement_wrapper {
   final StatusContent value;
 
   PresentationElement_statusWrapper._(this.value);
@@ -24230,7 +24160,8 @@ final class PresentationElement_statusWrapper extends _PresentationElement_wrapp
   PresentationElement_kind get kind => PresentationElement_kind.statusWrapper;
 }
 
-final class PresentationElement_dateTimeWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_dateTimeWrapper
+    extends _PresentationElement_wrapper {
   final DateTimeContent value;
 
   PresentationElement_dateTimeWrapper._(this.value);
@@ -24239,34 +24170,41 @@ final class PresentationElement_dateTimeWrapper extends _PresentationElement_wra
   PresentationElement_kind get kind => PresentationElement_kind.dateTimeWrapper;
 }
 
-final class PresentationElement_relativeTimeWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_relativeTimeWrapper
+    extends _PresentationElement_wrapper {
   final RelativeTimeContent value;
 
   PresentationElement_relativeTimeWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.relativeTimeWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.relativeTimeWrapper;
 }
 
-final class PresentationElement_typedFieldWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_typedFieldWrapper
+    extends _PresentationElement_wrapper {
   final TypedFieldElement value;
 
   PresentationElement_typedFieldWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.typedFieldWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.typedFieldWrapper;
 }
 
-final class PresentationElement_conditionalWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_conditionalWrapper
+    extends _PresentationElement_wrapper {
   final ConditionalElement value;
 
   PresentationElement_conditionalWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.conditionalWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.conditionalWrapper;
 }
 
-final class PresentationElement_repeatedWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_repeatedWrapper
+    extends _PresentationElement_wrapper {
   final RepeatedElement value;
 
   PresentationElement_repeatedWrapper._(this.value);
@@ -24275,115 +24213,140 @@ final class PresentationElement_repeatedWrapper extends _PresentationElement_wra
   PresentationElement_kind get kind => PresentationElement_kind.repeatedWrapper;
 }
 
-final class PresentationElement_scopedBindingWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_scopedBindingWrapper
+    extends _PresentationElement_wrapper {
   final ScopedBindingElement value;
 
   PresentationElement_scopedBindingWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.scopedBindingWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.scopedBindingWrapper;
 }
 
-final class PresentationElement_textInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_textInputWrapper
+    extends _PresentationElement_wrapper {
   final TextControl value;
 
   PresentationElement_textInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.textInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.textInputWrapper;
 }
 
-final class PresentationElement_numericInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_numericInputWrapper
+    extends _PresentationElement_wrapper {
   final BoundControl value;
 
   PresentationElement_numericInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.numericInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.numericInputWrapper;
 }
 
-final class PresentationElement_toggleInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_toggleInputWrapper
+    extends _PresentationElement_wrapper {
   final BoundControl value;
 
   PresentationElement_toggleInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.toggleInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.toggleInputWrapper;
 }
 
-final class PresentationElement_selectInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_selectInputWrapper
+    extends _PresentationElement_wrapper {
   final SelectControl value;
 
   PresentationElement_selectInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.selectInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.selectInputWrapper;
 }
 
-final class PresentationElement_sliderInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_sliderInputWrapper
+    extends _PresentationElement_wrapper {
   final SliderControl value;
 
   PresentationElement_sliderInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.sliderInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.sliderInputWrapper;
 }
 
-final class PresentationElement_dateTimeInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_dateTimeInputWrapper
+    extends _PresentationElement_wrapper {
   final DateTimeControl value;
 
   PresentationElement_dateTimeInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.dateTimeInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.dateTimeInputWrapper;
 }
 
-final class PresentationElement_durationInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_durationInputWrapper
+    extends _PresentationElement_wrapper {
   final BoundControl value;
 
   PresentationElement_durationInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.durationInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.durationInputWrapper;
 }
 
-final class PresentationElement_colorInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_colorInputWrapper
+    extends _PresentationElement_wrapper {
   final ColorControl value;
 
   PresentationElement_colorInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.colorInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.colorInputWrapper;
 }
 
-final class PresentationElement_bytesInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_bytesInputWrapper
+    extends _PresentationElement_wrapper {
   final BoundControl value;
 
   PresentationElement_bytesInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.bytesInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.bytesInputWrapper;
 }
 
-final class PresentationElement_namedInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_namedInputWrapper
+    extends _PresentationElement_wrapper {
   final BoundControl value;
 
   PresentationElement_namedInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.namedInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.namedInputWrapper;
 }
 
-final class PresentationElement_commitControlsWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_commitControlsWrapper
+    extends _PresentationElement_wrapper {
   final CommitControlsElement value;
 
   PresentationElement_commitControlsWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.commitControlsWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.commitControlsWrapper;
 }
 
-final class PresentationElement_buttonWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_buttonWrapper
+    extends _PresentationElement_wrapper {
   final ButtonElement value;
 
   PresentationElement_buttonWrapper._(this.value);
@@ -24392,16 +24355,19 @@ final class PresentationElement_buttonWrapper extends _PresentationElement_wrapp
   PresentationElement_kind get kind => PresentationElement_kind.buttonWrapper;
 }
 
-final class PresentationElement_iconButtonWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_iconButtonWrapper
+    extends _PresentationElement_wrapper {
   final IconButtonElement value;
 
   PresentationElement_iconButtonWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.iconButtonWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.iconButtonWrapper;
 }
 
-final class PresentationElement_menuWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_menuWrapper
+    extends _PresentationElement_wrapper {
   final MenuElement value;
 
   PresentationElement_menuWrapper._(this.value);
@@ -24410,7 +24376,8 @@ final class PresentationElement_menuWrapper extends _PresentationElement_wrapper
   PresentationElement_kind get kind => PresentationElement_kind.menuWrapper;
 }
 
-final class PresentationElement_tooltipWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_tooltipWrapper
+    extends _PresentationElement_wrapper {
   final TooltipElement value;
 
   PresentationElement_tooltipWrapper._(this.value);
@@ -24419,16 +24386,19 @@ final class PresentationElement_tooltipWrapper extends _PresentationElement_wrap
   PresentationElement_kind get kind => PresentationElement_kind.tooltipWrapper;
 }
 
-final class PresentationElement_listInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_listInputWrapper
+    extends _PresentationElement_wrapper {
   final ListControl value;
 
   PresentationElement_listInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.listInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.listInputWrapper;
 }
 
-final class PresentationElement_mapInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_mapInputWrapper
+    extends _PresentationElement_wrapper {
   final MapControl value;
 
   PresentationElement_mapInputWrapper._(this.value);
@@ -24437,79 +24407,96 @@ final class PresentationElement_mapInputWrapper extends _PresentationElement_wra
   PresentationElement_kind get kind => PresentationElement_kind.mapInputWrapper;
 }
 
-final class PresentationElement_recordInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_recordInputWrapper
+    extends _PresentationElement_wrapper {
   final RecordControl value;
 
   PresentationElement_recordInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.recordInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.recordInputWrapper;
 }
 
-final class PresentationElement_enumInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_enumInputWrapper
+    extends _PresentationElement_wrapper {
   final BoundControl value;
 
   PresentationElement_enumInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.enumInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.enumInputWrapper;
 }
 
-final class PresentationElement_polymorphicInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_polymorphicInputWrapper
+    extends _PresentationElement_wrapper {
   final PolymorphicControl value;
 
   PresentationElement_polymorphicInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.polymorphicInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.polymorphicInputWrapper;
 }
 
-final class PresentationElement_defaultPresentationWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_defaultPresentationWrapper
+    extends _PresentationElement_wrapper {
   final DefaultPresentationElement value;
 
   PresentationElement_defaultPresentationWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.defaultPresentationWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.defaultPresentationWrapper;
 }
 
-final class PresentationElement_searchInputWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_searchInputWrapper
+    extends _PresentationElement_wrapper {
   final SearchControl value;
 
   PresentationElement_searchInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.searchInputWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.searchInputWrapper;
 }
 
-final class PresentationElement_collectionLookupWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_collectionLookupWrapper
+    extends _PresentationElement_wrapper {
   final CollectionLookupElement value;
 
   PresentationElement_collectionLookupWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.collectionLookupWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.collectionLookupWrapper;
 }
 
-final class PresentationElement_collectionGraphWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_collectionGraphWrapper
+    extends _PresentationElement_wrapper {
   final CollectionGraphElement value;
 
   PresentationElement_collectionGraphWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.collectionGraphWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.collectionGraphWrapper;
 }
 
-final class PresentationElement_containerWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_containerWrapper
+    extends _PresentationElement_wrapper {
   final ContainerLayout value;
 
   PresentationElement_containerWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.containerWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.containerWrapper;
 }
 
-final class PresentationElement_anchorWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_anchorWrapper
+    extends _PresentationElement_wrapper {
   final PresentationAnchorLayout value;
 
   PresentationElement_anchorWrapper._(this.value);
@@ -24518,31 +24505,48 @@ final class PresentationElement_anchorWrapper extends _PresentationElement_wrapp
   PresentationElement_kind get kind => PresentationElement_kind.anchorWrapper;
 }
 
-final class PresentationElement_connectionLayerWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_connectionLayerWrapper
+    extends _PresentationElement_wrapper {
   final ConnectionLayerLayout value;
 
   PresentationElement_connectionLayerWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.connectionLayerWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.connectionLayerWrapper;
 }
 
-final class PresentationElement_polymorphicMatchWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_polymorphicMatchWrapper
+    extends _PresentationElement_wrapper {
   final PolymorphicMatchElement value;
 
   PresentationElement_polymorphicMatchWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.polymorphicMatchWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.polymorphicMatchWrapper;
 }
 
-final class PresentationElement_invocationWrapper extends _PresentationElement_wrapper {
+final class PresentationElement_invocationWrapper
+    extends _PresentationElement_wrapper {
   final PresentationInvocation value;
 
   PresentationElement_invocationWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.invocationWrapper;
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.invocationWrapper;
+}
+
+final class PresentationElement_referenceInputWrapper
+    extends _PresentationElement_wrapper {
+  final ReferenceControl value;
+
+  PresentationElement_referenceInputWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind =>
+      PresentationElement_kind.referenceInputWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -24574,7 +24578,8 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationDefinition({
-    required _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId,
+    required _lib_editor_v1_type_catalog.PresentationId_orMutable
+    presentationId,
     required _core.Iterable<PresentationInput_orMutable> inputs,
     required PresentationNode_orMutable root,
     required PresentationDependencies_orMutable dependencies,
@@ -24606,13 +24611,14 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationDefinition_mutable mutable() => PresentationDefinition_mutable._(
-    _lib_editor_v1_type_catalog.PresentationId.defaultInstance,
-    _skir.KeyedIterable.empty,
-    PresentationNode.defaultInstance,
-    PresentationDependencies.defaultInstance,
-    null,
-  );
+  static PresentationDefinition_mutable mutable() =>
+      PresentationDefinition_mutable._(
+        _lib_editor_v1_type_catalog.PresentationId.defaultInstance,
+        _skir.KeyedIterable.empty,
+        PresentationNode.defaultInstance,
+        PresentationDependencies.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -24620,19 +24626,23 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
   PresentationDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationDefinition_mutable toMutable() => PresentationDefinition_mutable._(
-    this.presentationId,
-    this.inputs,
-    this.root,
-    this.dependencies,
-    this.primaryInput,
-  );
+  PresentationDefinition_mutable toMutable() =>
+      PresentationDefinition_mutable._(
+        this.presentationId,
+        this.inputs,
+        this.root,
+        this.dependencies,
+        this.primaryInput,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -24650,7 +24660,11 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationDefinition` instances.
-  static _skir.StructSerializer<PresentationDefinition, PresentationDefinition_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationDefinition,
+    PresentationDefinition_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "presentation_id",
@@ -24665,9 +24679,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
         "inputs",
         "inputs",
         1,
-        _skir.Serializers.iterable(
-          PresentationInput.serializer,
-        ),
+        _skir.Serializers.iterable(PresentationInput.serializer),
         "",
         (it) => it.inputs,
         (it, v) => it.inputs = v,
@@ -24694,9 +24706,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
         "primary_input",
         "primaryInput",
         4,
-        _skir.Serializers.optional(
-          _lib_editor_v1_binding.BindingId.serializer,
-        ),
+        _skir.Serializers.optional(_lib_editor_v1_binding.BindingId.serializer),
         "",
         (it) => it.primaryInput,
         (it, v) => it.primaryInput = v,
@@ -24718,7 +24728,8 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
 }
 
 /// Mutable version of [PresentationDefinition].
-final class PresentationDefinition_mutable implements PresentationDefinition_orMutable {
+final class PresentationDefinition_mutable
+    implements PresentationDefinition_orMutable {
   _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId;
   _core.Iterable<PresentationInput_orMutable> inputs;
   PresentationNode_orMutable root;
@@ -24741,7 +24752,8 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
     if (value is _lib_editor_v1_type_catalog.PresentationId_mutable) {
       return value;
     } else {
-      return this.presentationId = (value as _lib_editor_v1_type_catalog.PresentationId).toMutable();
+      return this.presentationId =
+          (value as _lib_editor_v1_type_catalog.PresentationId).toMutable();
     }
   }
 
@@ -24774,7 +24786,8 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
     if (value is PresentationDependencies_mutable) {
       return value;
     } else {
-      return this.dependencies = (value as PresentationDependencies).toMutable();
+      return this.dependencies = (value as PresentationDependencies)
+          .toMutable();
     }
   }
 
@@ -24794,20 +24807,26 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
 // -----------------------------------------------------------------------------
 
 sealed class PresentationDependencies_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get types;
-  _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> get presentations;
-  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> get conversions;
-  _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> get capabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
+  get types;
+  _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable>
+  get presentations;
+  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+  get conversions;
+  _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable>
+  get capabilities;
 
   PresentationDependencies toFrozen();
 }
 
 /// Deeply immutable.
-final class PresentationDependencies implements PresentationDependencies_orMutable {
+final class PresentationDependencies
+    implements PresentationDependencies_orMutable {
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> types;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.PresentationId> presentations;
+  final _core.Iterable<_lib_editor_v1_type_catalog.PresentationId>
+  presentations;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.ConversionId> conversions;
   @_core.override
@@ -24815,10 +24834,18 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationDependencies({
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> types,
-    required _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentations,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversions,
-    required _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> capabilities,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
+    >
+    types,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.PresentationId_orMutable
+    >
+    presentations,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+    conversions,
+    required _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable>
+    capabilities,
   }) => PresentationDependencies._(
     _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(presentations, (it) => it.toFrozen()),
@@ -24843,12 +24870,13 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationDependencies_mutable mutable() => PresentationDependencies_mutable._(
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
+  static PresentationDependencies_mutable mutable() =>
+      PresentationDependencies_mutable._(
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -24856,18 +24884,22 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
   PresentationDependencies toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationDependencies_mutable toMutable() => PresentationDependencies_mutable._(
-    this.types,
-    this.presentations,
-    this.conversions,
-    this.capabilities,
-  );
+  PresentationDependencies_mutable toMutable() =>
+      PresentationDependencies_mutable._(
+        this.types,
+        this.presentations,
+        this.conversions,
+        this.capabilities,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationDependencies) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -24884,7 +24916,11 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationDependencies` instances.
-  static _skir.StructSerializer<PresentationDependencies, PresentationDependencies_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationDependencies,
+    PresentationDependencies_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "types",
@@ -24947,11 +24983,15 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
 }
 
 /// Mutable version of [PresentationDependencies].
-final class PresentationDependencies_mutable implements PresentationDependencies_orMutable {
+final class PresentationDependencies_mutable
+    implements PresentationDependencies_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> types;
-  _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentations;
-  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversions;
-  _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> capabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable>
+  presentations;
+  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+  conversions;
+  _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable>
+  capabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationDependencies_mutable._(
@@ -24963,9 +25003,13 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 
   /// If the value of [types] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get mutableTypes {
+  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
+  get mutableTypes {
     final value = this.types;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
+        >) {
       return value;
     } else {
       return this.types = _skir.internal__MutableList([...value]);
@@ -24974,9 +25018,13 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 
   /// If the value of [presentations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentations] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.PresentationId_orMutable> get mutablePresentations {
+  _core.List<_lib_editor_v1_type_catalog.PresentationId_orMutable>
+  get mutablePresentations {
     final value = this.presentations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.PresentationId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.PresentationId_orMutable
+        >) {
       return value;
     } else {
       return this.presentations = _skir.internal__MutableList([...value]);
@@ -24985,9 +25033,13 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 
   /// If the value of [conversions] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [conversions] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable> get mutableConversions {
+  _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+  get mutableConversions {
     final value = this.conversions;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ConversionId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ConversionId_orMutable
+        >) {
       return value;
     } else {
       return this.conversions = _skir.internal__MutableList([...value]);
@@ -24996,9 +25048,13 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 
   /// If the value of [capabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.CapabilityId_orMutable> get mutableCapabilities {
+  _core.List<_lib_editor_v1_type_catalog.CapabilityId_orMutable>
+  get mutableCapabilities {
     final value = this.capabilities;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.CapabilityId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.CapabilityId_orMutable
+        >) {
       return value;
     } else {
       return this.capabilities = _skir.internal__MutableList([...value]);
@@ -25032,7 +25088,8 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 sealed class PresentationInputAccess {
   /// Constant indicating an unknown `PresentationInputAccess`.
   /// Default value for fields of type `PresentationInputAccess`.
-  static const PresentationInputAccess unknown = PresentationInputAccess_unknown._instance;
+  static const PresentationInputAccess unknown =
+      PresentationInputAccess_unknown._instance;
 
   static const read = _PresentationInputAccess_consts.readConst;
   static const edit = _PresentationInputAccess_consts.editConst;
@@ -25043,34 +25100,23 @@ sealed class PresentationInputAccess {
   /// Serializer for `PresentationInputAccess` instances.
   static _skir.EnumSerializer<PresentationInputAccess> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "read",
-        "read",
-        "",
-        read,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "edit",
-        "edit",
-        "",
-        edit,
-      );
+      _serializerBuilder.addConstantVariant(1, "read", "read", "", read);
+      _serializerBuilder.addConstantVariant(2, "edit", "edit", "", edit);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:PresentationInputAccess",
-    doc: "",
-    unknownInstance: PresentationInputAccess_unknown._instance,
-    enumInstance: PresentationInputAccess.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresentationInputAccess_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:PresentationInputAccess",
+        doc: "",
+        unknownInstance: PresentationInputAccess_unknown._instance,
+        enumInstance: PresentationInputAccess.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresentationInputAccess_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresentationInputAccess`.
@@ -25099,7 +25145,8 @@ final class PresentationInputAccess_unknown implements PresentationInputAccess {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationInputAccess.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationInputAccess.serializer);
 }
 
 enum _PresentationInputAccess_consts implements PresentationInputAccess {
@@ -25112,7 +25159,8 @@ enum _PresentationInputAccess_consts implements PresentationInputAccess {
   const _PresentationInputAccess_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresentationInputAccess.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresentationInputAccess.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -25145,19 +25193,9 @@ final class PresentationInput implements PresentationInput_orMutable {
     required _core.String name,
     required _lib_editor_v1_type_catalog.TypeExpression valueType,
     required PresentationInputAccess access,
-  }) => PresentationInput._(
-    bindingId.toFrozen(),
-    name,
-    valueType,
-    access,
-  );
+  }) => PresentationInput._(bindingId.toFrozen(), name, valueType, access);
 
-  PresentationInput._(
-    this.bindingId,
-    this.name,
-    this.valueType,
-    this.access,
-  );
+  PresentationInput._(this.bindingId, this.name, this.valueType, this.access);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationInput._(
@@ -25193,7 +25231,10 @@ final class PresentationInput implements PresentationInput_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationInput) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -25210,7 +25251,8 @@ final class PresentationInput implements PresentationInput_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationInput` instances.
-  static _skir.StructSerializer<PresentationInput, PresentationInput_mutable> get serializer {
+  static _skir.StructSerializer<PresentationInput, PresentationInput_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding_id",
@@ -25286,7 +25328,8 @@ final class PresentationInput_mutable implements PresentationInput_orMutable {
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.bindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -25322,15 +25365,9 @@ final class PresentationArgument implements PresentationArgument_orMutable {
   factory PresentationArgument({
     required _lib_editor_v1_binding.BindingId_orMutable input,
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-  }) => PresentationArgument._(
-    input.toFrozen(),
-    binding.toFrozen(),
-  );
+  }) => PresentationArgument._(input.toFrozen(), binding.toFrozen());
 
-  PresentationArgument._(
-    this.input,
-    this.binding,
-  );
+  PresentationArgument._(this.input, this.binding);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationArgument._(
@@ -25340,10 +25377,11 @@ final class PresentationArgument implements PresentationArgument_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationArgument_mutable mutable() => PresentationArgument_mutable._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-  );
+  static PresentationArgument_mutable mutable() =>
+      PresentationArgument_mutable._(
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -25351,31 +25389,33 @@ final class PresentationArgument implements PresentationArgument_orMutable {
   PresentationArgument toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationArgument_mutable toMutable() => PresentationArgument_mutable._(
-    this.input,
-    this.binding,
-  );
+  PresentationArgument_mutable toMutable() =>
+      PresentationArgument_mutable._(this.input, this.binding);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationArgument) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.input,
-    this.binding,
-  ];
+  _core.List get _equality_proxy => [this.input, this.binding];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationArgument` instances.
-  static _skir.StructSerializer<PresentationArgument, PresentationArgument_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationArgument,
+    PresentationArgument_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "input",
@@ -25412,15 +25452,13 @@ final class PresentationArgument implements PresentationArgument_orMutable {
 }
 
 /// Mutable version of [PresentationArgument].
-final class PresentationArgument_mutable implements PresentationArgument_orMutable {
+final class PresentationArgument_mutable
+    implements PresentationArgument_orMutable {
   _lib_editor_v1_binding.BindingId_orMutable input;
   _lib_editor_v1_binding.BindingRef_orMutable binding;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationArgument_mutable._(
-    this.input,
-    this.binding,
-  );
+  PresentationArgument_mutable._(this.input, this.binding);
 
   /// If the value of [input] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [input] and returns it.
@@ -25429,7 +25467,8 @@ final class PresentationArgument_mutable implements PresentationArgument_orMutab
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.input = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.input = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
     }
   }
 
@@ -25440,16 +25479,16 @@ final class PresentationArgument_mutable implements PresentationArgument_orMutab
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.binding = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.binding = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresentationArgument toFrozen() => PresentationArgument(
-    input: this.input,
-    binding: this.binding,
-  ).._u = this._u;
+  PresentationArgument toFrozen() =>
+      PresentationArgument(input: this.input, binding: this.binding)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -25472,17 +25511,15 @@ final class PresentationInvocation implements PresentationInvocation_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationInvocation({
-    required _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId,
+    required _lib_editor_v1_type_catalog.PresentationId_orMutable
+    presentationId,
     required _core.Iterable<PresentationArgument_orMutable> arguments,
   }) => PresentationInvocation._(
     presentationId.toFrozen(),
     _skir.internal__frozenMappedCopy(arguments, (it) => it.toFrozen()),
   );
 
-  PresentationInvocation._(
-    this.presentationId,
-    this.arguments,
-  );
+  PresentationInvocation._(this.presentationId, this.arguments);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationInvocation._(
@@ -25492,10 +25529,11 @@ final class PresentationInvocation implements PresentationInvocation_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresentationInvocation_mutable mutable() => PresentationInvocation_mutable._(
-    _lib_editor_v1_type_catalog.PresentationId.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
+  static PresentationInvocation_mutable mutable() =>
+      PresentationInvocation_mutable._(
+        _lib_editor_v1_type_catalog.PresentationId.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -25503,31 +25541,33 @@ final class PresentationInvocation implements PresentationInvocation_orMutable {
   PresentationInvocation toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresentationInvocation_mutable toMutable() => PresentationInvocation_mutable._(
-    this.presentationId,
-    this.arguments,
-  );
+  PresentationInvocation_mutable toMutable() =>
+      PresentationInvocation_mutable._(this.presentationId, this.arguments);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresentationInvocation) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.presentationId,
-    this.arguments,
-  ];
+  _core.List get _equality_proxy => [this.presentationId, this.arguments];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresentationInvocation` instances.
-  static _skir.StructSerializer<PresentationInvocation, PresentationInvocation_mutable> get serializer {
+  static _skir.StructSerializer<
+    PresentationInvocation,
+    PresentationInvocation_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "presentation_id",
@@ -25542,9 +25582,7 @@ final class PresentationInvocation implements PresentationInvocation_orMutable {
         "arguments",
         "arguments",
         1,
-        _skir.Serializers.iterable(
-          PresentationArgument.serializer,
-        ),
+        _skir.Serializers.iterable(PresentationArgument.serializer),
         "",
         (it) => it.arguments,
         (it, v) => it.arguments = v,
@@ -25566,15 +25604,13 @@ final class PresentationInvocation implements PresentationInvocation_orMutable {
 }
 
 /// Mutable version of [PresentationInvocation].
-final class PresentationInvocation_mutable implements PresentationInvocation_orMutable {
+final class PresentationInvocation_mutable
+    implements PresentationInvocation_orMutable {
   _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId;
   _core.Iterable<PresentationArgument_orMutable> arguments;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresentationInvocation_mutable._(
-    this.presentationId,
-    this.arguments,
-  );
+  PresentationInvocation_mutable._(this.presentationId, this.arguments);
 
   /// If the value of [presentationId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentationId] and returns it.
@@ -25583,7 +25619,8 @@ final class PresentationInvocation_mutable implements PresentationInvocation_orM
     if (value is _lib_editor_v1_type_catalog.PresentationId_mutable) {
       return value;
     } else {
-      return this.presentationId = (value as _lib_editor_v1_type_catalog.PresentationId).toMutable();
+      return this.presentationId =
+          (value as _lib_editor_v1_type_catalog.PresentationId).toMutable();
     }
   }
 

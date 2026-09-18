@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
@@ -39,28 +40,17 @@ final class BindServiceRequest implements BindServiceRequest_orMutable {
   factory BindServiceRequest({
     required _core.String operationId,
     required _core.String registrationToken,
-  }) => BindServiceRequest._(
-    operationId,
-    registrationToken,
-  );
+  }) => BindServiceRequest._(operationId, registrationToken);
 
-  BindServiceRequest._(
-    this.operationId,
-    this.registrationToken,
-  );
+  BindServiceRequest._(this.operationId, this.registrationToken);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindServiceRequest._(
-    "",
-    "",
-  );
+  static final defaultInstance = BindServiceRequest._("", "");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindServiceRequest_mutable mutable() => BindServiceRequest_mutable._(
-    "",
-    "",
-  );
+  static BindServiceRequest_mutable mutable() =>
+      BindServiceRequest_mutable._("", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -68,31 +58,30 @@ final class BindServiceRequest implements BindServiceRequest_orMutable {
   BindServiceRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindServiceRequest_mutable toMutable() => BindServiceRequest_mutable._(
-    this.operationId,
-    this.registrationToken,
-  );
+  BindServiceRequest_mutable toMutable() =>
+      BindServiceRequest_mutable._(this.operationId, this.registrationToken);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindServiceRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.operationId,
-    this.registrationToken,
-  ];
+  _core.List get _equality_proxy => [this.operationId, this.registrationToken];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BindServiceRequest` instances.
-  static _skir.StructSerializer<BindServiceRequest, BindServiceRequest_mutable> get serializer {
+  static _skir.StructSerializer<BindServiceRequest, BindServiceRequest_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operation_id",
@@ -134,10 +123,7 @@ final class BindServiceRequest_mutable implements BindServiceRequest_orMutable {
   _core.String registrationToken;
   _skir.internal__UnrecognizedFields? _u;
 
-  BindServiceRequest_mutable._(
-    this.operationId,
-    this.registrationToken,
-  );
+  BindServiceRequest_mutable._(this.operationId, this.registrationToken);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -156,19 +142,23 @@ sealed class BindServiceResponse_InvalidOperationIdError_orMutable {
 }
 
 /// Deeply immutable.
-final class BindServiceResponse_InvalidOperationIdError implements BindServiceResponse_InvalidOperationIdError_orMutable {
+final class BindServiceResponse_InvalidOperationIdError
+    implements BindServiceResponse_InvalidOperationIdError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BindServiceResponse_InvalidOperationIdError() => BindServiceResponse_InvalidOperationIdError._();
+  factory BindServiceResponse_InvalidOperationIdError() =>
+      BindServiceResponse_InvalidOperationIdError._();
 
   BindServiceResponse_InvalidOperationIdError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindServiceResponse_InvalidOperationIdError._();
+  static final defaultInstance =
+      BindServiceResponse_InvalidOperationIdError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindServiceResponse_InvalidOperationIdError_mutable mutable() => BindServiceResponse_InvalidOperationIdError_mutable._();
+  static BindServiceResponse_InvalidOperationIdError_mutable mutable() =>
+      BindServiceResponse_InvalidOperationIdError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -176,13 +166,17 @@ final class BindServiceResponse_InvalidOperationIdError implements BindServiceRe
   BindServiceResponse_InvalidOperationIdError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindServiceResponse_InvalidOperationIdError_mutable toMutable() => BindServiceResponse_InvalidOperationIdError_mutable._();
+  BindServiceResponse_InvalidOperationIdError_mutable toMutable() =>
+      BindServiceResponse_InvalidOperationIdError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindServiceResponse_InvalidOperationIdError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -194,7 +188,11 @@ final class BindServiceResponse_InvalidOperationIdError implements BindServiceRe
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BindServiceResponse_InvalidOperationIdError` instances.
-  static _skir.StructSerializer<BindServiceResponse_InvalidOperationIdError, BindServiceResponse_InvalidOperationIdError_mutable> get serializer {
+  static _skir.StructSerializer<
+    BindServiceResponse_InvalidOperationIdError,
+    BindServiceResponse_InvalidOperationIdError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -206,21 +204,24 @@ final class BindServiceResponse_InvalidOperationIdError implements BindServiceRe
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BindServiceResponse_InvalidOperationIdError_mutable it) => it.toFrozen(),
+    toFrozen: (BindServiceResponse_InvalidOperationIdError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BindServiceResponse_InvalidOperationIdError].
-final class BindServiceResponse_InvalidOperationIdError_mutable implements BindServiceResponse_InvalidOperationIdError_orMutable {
+final class BindServiceResponse_InvalidOperationIdError_mutable
+    implements BindServiceResponse_InvalidOperationIdError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   BindServiceResponse_InvalidOperationIdError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindServiceResponse_InvalidOperationIdError toFrozen() => BindServiceResponse_InvalidOperationIdError().._u = this._u;
+  BindServiceResponse_InvalidOperationIdError toFrozen() =>
+      BindServiceResponse_InvalidOperationIdError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -232,19 +233,23 @@ sealed class BindServiceResponse_OperationIdentityReusedError_orMutable {
 }
 
 /// Deeply immutable.
-final class BindServiceResponse_OperationIdentityReusedError implements BindServiceResponse_OperationIdentityReusedError_orMutable {
+final class BindServiceResponse_OperationIdentityReusedError
+    implements BindServiceResponse_OperationIdentityReusedError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BindServiceResponse_OperationIdentityReusedError() => BindServiceResponse_OperationIdentityReusedError._();
+  factory BindServiceResponse_OperationIdentityReusedError() =>
+      BindServiceResponse_OperationIdentityReusedError._();
 
   BindServiceResponse_OperationIdentityReusedError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindServiceResponse_OperationIdentityReusedError._();
+  static final defaultInstance =
+      BindServiceResponse_OperationIdentityReusedError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindServiceResponse_OperationIdentityReusedError_mutable mutable() => BindServiceResponse_OperationIdentityReusedError_mutable._();
+  static BindServiceResponse_OperationIdentityReusedError_mutable mutable() =>
+      BindServiceResponse_OperationIdentityReusedError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -252,13 +257,18 @@ final class BindServiceResponse_OperationIdentityReusedError implements BindServ
   BindServiceResponse_OperationIdentityReusedError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindServiceResponse_OperationIdentityReusedError_mutable toMutable() => BindServiceResponse_OperationIdentityReusedError_mutable._();
+  BindServiceResponse_OperationIdentityReusedError_mutable toMutable() =>
+      BindServiceResponse_OperationIdentityReusedError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! BindServiceResponse_OperationIdentityReusedError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! BindServiceResponse_OperationIdentityReusedError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -270,7 +280,11 @@ final class BindServiceResponse_OperationIdentityReusedError implements BindServ
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BindServiceResponse_OperationIdentityReusedError` instances.
-  static _skir.StructSerializer<BindServiceResponse_OperationIdentityReusedError, BindServiceResponse_OperationIdentityReusedError_mutable> get serializer {
+  static _skir.StructSerializer<
+    BindServiceResponse_OperationIdentityReusedError,
+    BindServiceResponse_OperationIdentityReusedError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -282,21 +296,24 @@ final class BindServiceResponse_OperationIdentityReusedError implements BindServ
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BindServiceResponse_OperationIdentityReusedError_mutable it) => it.toFrozen(),
+    toFrozen: (BindServiceResponse_OperationIdentityReusedError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BindServiceResponse_OperationIdentityReusedError].
-final class BindServiceResponse_OperationIdentityReusedError_mutable implements BindServiceResponse_OperationIdentityReusedError_orMutable {
+final class BindServiceResponse_OperationIdentityReusedError_mutable
+    implements BindServiceResponse_OperationIdentityReusedError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   BindServiceResponse_OperationIdentityReusedError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindServiceResponse_OperationIdentityReusedError toFrozen() => BindServiceResponse_OperationIdentityReusedError().._u = this._u;
+  BindServiceResponse_OperationIdentityReusedError toFrozen() =>
+      BindServiceResponse_OperationIdentityReusedError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -312,7 +329,8 @@ sealed class BindServiceResponse_Success_orMutable {
 }
 
 /// Deeply immutable.
-final class BindServiceResponse_Success implements BindServiceResponse_Success_orMutable {
+final class BindServiceResponse_Success
+    implements BindServiceResponse_Success_orMutable {
   @_core.override
   final _core.String serviceId;
   @_core.override
@@ -325,11 +343,7 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
     required _core.String serviceId,
     required _core.String? serviceName,
     required _lib_service_v1_service.ServiceRole serviceRole,
-  }) => BindServiceResponse_Success._(
-    serviceId,
-    serviceName,
-    serviceRole,
-  );
+  }) => BindServiceResponse_Success._(serviceId, serviceName, serviceRole);
 
   BindServiceResponse_Success._(
     this.serviceId,
@@ -346,11 +360,12 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindServiceResponse_Success_mutable mutable() => BindServiceResponse_Success_mutable._(
-    "",
-    null,
-    _lib_service_v1_service.ServiceRole.unknown,
-  );
+  static BindServiceResponse_Success_mutable mutable() =>
+      BindServiceResponse_Success_mutable._(
+        "",
+        null,
+        _lib_service_v1_service.ServiceRole.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -358,17 +373,21 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
   BindServiceResponse_Success toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindServiceResponse_Success_mutable toMutable() => BindServiceResponse_Success_mutable._(
-    this.serviceId,
-    this.serviceName,
-    this.serviceRole,
-  );
+  BindServiceResponse_Success_mutable toMutable() =>
+      BindServiceResponse_Success_mutable._(
+        this.serviceId,
+        this.serviceName,
+        this.serviceRole,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindServiceResponse_Success) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -384,7 +403,11 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BindServiceResponse_Success` instances.
-  static _skir.StructSerializer<BindServiceResponse_Success, BindServiceResponse_Success_mutable> get serializer {
+  static _skir.StructSerializer<
+    BindServiceResponse_Success,
+    BindServiceResponse_Success_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "service_id",
@@ -399,9 +422,7 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
         "service_name",
         "serviceName",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.serviceName,
         (it, v) => it.serviceName = v,
@@ -432,7 +453,8 @@ final class BindServiceResponse_Success implements BindServiceResponse_Success_o
 }
 
 /// Mutable version of [BindServiceResponse_Success].
-final class BindServiceResponse_Success_mutable implements BindServiceResponse_Success_orMutable {
+final class BindServiceResponse_Success_mutable
+    implements BindServiceResponse_Success_orMutable {
   _core.String serviceId;
   _core.String? serviceName;
   _lib_service_v1_service.ServiceRole serviceRole;
@@ -462,19 +484,23 @@ sealed class BindServiceResponse_InvalidRegistrationTokenError_orMutable {
 }
 
 /// Deeply immutable.
-final class BindServiceResponse_InvalidRegistrationTokenError implements BindServiceResponse_InvalidRegistrationTokenError_orMutable {
+final class BindServiceResponse_InvalidRegistrationTokenError
+    implements BindServiceResponse_InvalidRegistrationTokenError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BindServiceResponse_InvalidRegistrationTokenError() => BindServiceResponse_InvalidRegistrationTokenError._();
+  factory BindServiceResponse_InvalidRegistrationTokenError() =>
+      BindServiceResponse_InvalidRegistrationTokenError._();
 
   BindServiceResponse_InvalidRegistrationTokenError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindServiceResponse_InvalidRegistrationTokenError._();
+  static final defaultInstance =
+      BindServiceResponse_InvalidRegistrationTokenError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindServiceResponse_InvalidRegistrationTokenError_mutable mutable() => BindServiceResponse_InvalidRegistrationTokenError_mutable._();
+  static BindServiceResponse_InvalidRegistrationTokenError_mutable mutable() =>
+      BindServiceResponse_InvalidRegistrationTokenError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -482,13 +508,18 @@ final class BindServiceResponse_InvalidRegistrationTokenError implements BindSer
   BindServiceResponse_InvalidRegistrationTokenError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindServiceResponse_InvalidRegistrationTokenError_mutable toMutable() => BindServiceResponse_InvalidRegistrationTokenError_mutable._();
+  BindServiceResponse_InvalidRegistrationTokenError_mutable toMutable() =>
+      BindServiceResponse_InvalidRegistrationTokenError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! BindServiceResponse_InvalidRegistrationTokenError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! BindServiceResponse_InvalidRegistrationTokenError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -500,7 +531,11 @@ final class BindServiceResponse_InvalidRegistrationTokenError implements BindSer
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BindServiceResponse_InvalidRegistrationTokenError` instances.
-  static _skir.StructSerializer<BindServiceResponse_InvalidRegistrationTokenError, BindServiceResponse_InvalidRegistrationTokenError_mutable> get serializer {
+  static _skir.StructSerializer<
+    BindServiceResponse_InvalidRegistrationTokenError,
+    BindServiceResponse_InvalidRegistrationTokenError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -512,21 +547,24 @@ final class BindServiceResponse_InvalidRegistrationTokenError implements BindSer
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BindServiceResponse_InvalidRegistrationTokenError_mutable it) => it.toFrozen(),
+    toFrozen: (BindServiceResponse_InvalidRegistrationTokenError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BindServiceResponse_InvalidRegistrationTokenError].
-final class BindServiceResponse_InvalidRegistrationTokenError_mutable implements BindServiceResponse_InvalidRegistrationTokenError_orMutable {
+final class BindServiceResponse_InvalidRegistrationTokenError_mutable
+    implements BindServiceResponse_InvalidRegistrationTokenError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   BindServiceResponse_InvalidRegistrationTokenError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindServiceResponse_InvalidRegistrationTokenError toFrozen() => BindServiceResponse_InvalidRegistrationTokenError().._u = this._u;
+  BindServiceResponse_InvalidRegistrationTokenError toFrozen() =>
+      BindServiceResponse_InvalidRegistrationTokenError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -538,19 +576,23 @@ sealed class BindServiceResponse_OrganizationNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class BindServiceResponse_OrganizationNotFoundError implements BindServiceResponse_OrganizationNotFoundError_orMutable {
+final class BindServiceResponse_OrganizationNotFoundError
+    implements BindServiceResponse_OrganizationNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BindServiceResponse_OrganizationNotFoundError() => BindServiceResponse_OrganizationNotFoundError._();
+  factory BindServiceResponse_OrganizationNotFoundError() =>
+      BindServiceResponse_OrganizationNotFoundError._();
 
   BindServiceResponse_OrganizationNotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindServiceResponse_OrganizationNotFoundError._();
+  static final defaultInstance =
+      BindServiceResponse_OrganizationNotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindServiceResponse_OrganizationNotFoundError_mutable mutable() => BindServiceResponse_OrganizationNotFoundError_mutable._();
+  static BindServiceResponse_OrganizationNotFoundError_mutable mutable() =>
+      BindServiceResponse_OrganizationNotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -558,13 +600,17 @@ final class BindServiceResponse_OrganizationNotFoundError implements BindService
   BindServiceResponse_OrganizationNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindServiceResponse_OrganizationNotFoundError_mutable toMutable() => BindServiceResponse_OrganizationNotFoundError_mutable._();
+  BindServiceResponse_OrganizationNotFoundError_mutable toMutable() =>
+      BindServiceResponse_OrganizationNotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindServiceResponse_OrganizationNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -576,7 +622,11 @@ final class BindServiceResponse_OrganizationNotFoundError implements BindService
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BindServiceResponse_OrganizationNotFoundError` instances.
-  static _skir.StructSerializer<BindServiceResponse_OrganizationNotFoundError, BindServiceResponse_OrganizationNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    BindServiceResponse_OrganizationNotFoundError,
+    BindServiceResponse_OrganizationNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -588,21 +638,24 @@ final class BindServiceResponse_OrganizationNotFoundError implements BindService
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BindServiceResponse_OrganizationNotFoundError_mutable it) => it.toFrozen(),
+    toFrozen: (BindServiceResponse_OrganizationNotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BindServiceResponse_OrganizationNotFoundError].
-final class BindServiceResponse_OrganizationNotFoundError_mutable implements BindServiceResponse_OrganizationNotFoundError_orMutable {
+final class BindServiceResponse_OrganizationNotFoundError_mutable
+    implements BindServiceResponse_OrganizationNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   BindServiceResponse_OrganizationNotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindServiceResponse_OrganizationNotFoundError toFrozen() => BindServiceResponse_OrganizationNotFoundError().._u = this._u;
+  BindServiceResponse_OrganizationNotFoundError toFrozen() =>
+      BindServiceResponse_OrganizationNotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -626,42 +679,45 @@ final class BindServiceResponse_OrganizationNotFoundError_mutable implements Bin
 sealed class BindServiceResponse {
   /// Constant indicating an unknown `BindServiceResponse`.
   /// Default value for fields of type `BindServiceResponse`.
-  static const BindServiceResponse unknown = BindServiceResponse_unknown._instance;
+  static const BindServiceResponse unknown =
+      BindServiceResponse_unknown._instance;
 
   /// Create a 'invalid_operation_id_error' variant wrapping around the given value.
   factory BindServiceResponse.wrapInvalidOperationIdError(
-    BindServiceResponse_InvalidOperationIdError value
+    BindServiceResponse_InvalidOperationIdError value,
   ) => BindServiceResponse_invalidOperationIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidOperationIdError(BindServiceResponse_InvalidOperationIdError(...))`.
-  factory BindServiceResponse.createInvalidOperationIdError() => BindServiceResponse.wrapInvalidOperationIdError(
-    BindServiceResponse_InvalidOperationIdError()
-  );
+  factory BindServiceResponse.createInvalidOperationIdError() =>
+      BindServiceResponse.wrapInvalidOperationIdError(
+        BindServiceResponse_InvalidOperationIdError(),
+      );
 
   /// Create a 'operation_identity_reused_error' variant wrapping around the given value.
   factory BindServiceResponse.wrapOperationIdentityReusedError(
-    BindServiceResponse_OperationIdentityReusedError value
+    BindServiceResponse_OperationIdentityReusedError value,
   ) => BindServiceResponse_operationIdentityReusedErrorWrapper._(value);
 
   /// Same as `wrapOperationIdentityReusedError(BindServiceResponse_OperationIdentityReusedError(...))`.
-  factory BindServiceResponse.createOperationIdentityReusedError() => BindServiceResponse.wrapOperationIdentityReusedError(
-    BindServiceResponse_OperationIdentityReusedError()
-  );
+  factory BindServiceResponse.createOperationIdentityReusedError() =>
+      BindServiceResponse.wrapOperationIdentityReusedError(
+        BindServiceResponse_OperationIdentityReusedError(),
+      );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory BindServiceResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => BindServiceResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory BindServiceResponse.createInternalError() => BindServiceResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory BindServiceResponse.createInternalError() =>
+      BindServiceResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory BindServiceResponse.wrapSuccess(
-    BindServiceResponse_Success value
-  ) => BindServiceResponse_successWrapper._(value);
+  factory BindServiceResponse.wrapSuccess(BindServiceResponse_Success value) =>
+      BindServiceResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(BindServiceResponse_Success(...))`.
   factory BindServiceResponse.createSuccess({
@@ -673,28 +729,30 @@ sealed class BindServiceResponse {
       serviceId: serviceId,
       serviceName: serviceName,
       serviceRole: serviceRole,
-    )
+    ),
   );
 
   /// Create a 'invalid_registration_token_error' variant wrapping around the given value.
   factory BindServiceResponse.wrapInvalidRegistrationTokenError(
-    BindServiceResponse_InvalidRegistrationTokenError value
+    BindServiceResponse_InvalidRegistrationTokenError value,
   ) => BindServiceResponse_invalidRegistrationTokenErrorWrapper._(value);
 
   /// Same as `wrapInvalidRegistrationTokenError(BindServiceResponse_InvalidRegistrationTokenError(...))`.
-  factory BindServiceResponse.createInvalidRegistrationTokenError() => BindServiceResponse.wrapInvalidRegistrationTokenError(
-    BindServiceResponse_InvalidRegistrationTokenError()
-  );
+  factory BindServiceResponse.createInvalidRegistrationTokenError() =>
+      BindServiceResponse.wrapInvalidRegistrationTokenError(
+        BindServiceResponse_InvalidRegistrationTokenError(),
+      );
 
   /// Create a 'organization_not_found_error' variant wrapping around the given value.
   factory BindServiceResponse.wrapOrganizationNotFoundError(
-    BindServiceResponse_OrganizationNotFoundError value
+    BindServiceResponse_OrganizationNotFoundError value,
   ) => BindServiceResponse_organizationNotFoundErrorWrapper._(value);
 
   /// Same as `wrapOrganizationNotFoundError(BindServiceResponse_OrganizationNotFoundError(...))`.
-  factory BindServiceResponse.createOrganizationNotFoundError() => BindServiceResponse.wrapOrganizationNotFoundError(
-    BindServiceResponse_OrganizationNotFoundError()
-  );
+  factory BindServiceResponse.createOrganizationNotFoundError() =>
+      BindServiceResponse.wrapOrganizationNotFoundError(
+        BindServiceResponse_OrganizationNotFoundError(),
+      );
 
   /// Returns the kind of variant held by this BindServiceResponse.
   BindServiceResponse_kind get kind;
@@ -710,7 +768,8 @@ sealed class BindServiceResponse {
         "",
         BindServiceResponse_invalidOperationIdErrorWrapper._,
         (it) => it.value,
-        ordinal: BindServiceResponse_kind.invalidOperationIdErrorWrapper._ordinal,
+        ordinal:
+            BindServiceResponse_kind.invalidOperationIdErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -720,7 +779,9 @@ sealed class BindServiceResponse {
         "",
         BindServiceResponse_operationIdentityReusedErrorWrapper._,
         (it) => it.value,
-        ordinal: BindServiceResponse_kind.operationIdentityReusedErrorWrapper._ordinal,
+        ordinal: BindServiceResponse_kind
+            .operationIdentityReusedErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -750,7 +811,9 @@ sealed class BindServiceResponse {
         "",
         BindServiceResponse_invalidRegistrationTokenErrorWrapper._,
         (it) => it.value,
-        ordinal: BindServiceResponse_kind.invalidRegistrationTokenErrorWrapper._ordinal,
+        ordinal: BindServiceResponse_kind
+            .invalidRegistrationTokenErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
@@ -760,22 +823,24 @@ sealed class BindServiceResponse {
         "",
         BindServiceResponse_organizationNotFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: BindServiceResponse_kind.organizationNotFoundErrorWrapper._ordinal,
+        ordinal:
+            BindServiceResponse_kind.organizationNotFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/registration.skir:BindServiceResponse",
-    doc: "",
-    unknownInstance: BindServiceResponse_unknown._instance,
-    enumInstance: BindServiceResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: BindServiceResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/registration.skir:BindServiceResponse",
+        doc: "",
+        unknownInstance: BindServiceResponse_unknown._instance,
+        enumInstance: BindServiceResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: BindServiceResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `BindServiceResponse`.
@@ -808,7 +873,8 @@ final class BindServiceResponse_unknown implements BindServiceResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, BindServiceResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, BindServiceResponse.serializer);
 }
 
 sealed class _BindServiceResponse_wrapper implements BindServiceResponse {
@@ -824,37 +890,45 @@ sealed class _BindServiceResponse_wrapper implements BindServiceResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, BindServiceResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, BindServiceResponse.serializer);
 }
 
-final class BindServiceResponse_invalidOperationIdErrorWrapper extends _BindServiceResponse_wrapper {
+final class BindServiceResponse_invalidOperationIdErrorWrapper
+    extends _BindServiceResponse_wrapper {
   final BindServiceResponse_InvalidOperationIdError value;
 
   BindServiceResponse_invalidOperationIdErrorWrapper._(this.value);
 
   @_core.override
-  BindServiceResponse_kind get kind => BindServiceResponse_kind.invalidOperationIdErrorWrapper;
+  BindServiceResponse_kind get kind =>
+      BindServiceResponse_kind.invalidOperationIdErrorWrapper;
 }
 
-final class BindServiceResponse_operationIdentityReusedErrorWrapper extends _BindServiceResponse_wrapper {
+final class BindServiceResponse_operationIdentityReusedErrorWrapper
+    extends _BindServiceResponse_wrapper {
   final BindServiceResponse_OperationIdentityReusedError value;
 
   BindServiceResponse_operationIdentityReusedErrorWrapper._(this.value);
 
   @_core.override
-  BindServiceResponse_kind get kind => BindServiceResponse_kind.operationIdentityReusedErrorWrapper;
+  BindServiceResponse_kind get kind =>
+      BindServiceResponse_kind.operationIdentityReusedErrorWrapper;
 }
 
-final class BindServiceResponse_internalErrorWrapper extends _BindServiceResponse_wrapper {
+final class BindServiceResponse_internalErrorWrapper
+    extends _BindServiceResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   BindServiceResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  BindServiceResponse_kind get kind => BindServiceResponse_kind.internalErrorWrapper;
+  BindServiceResponse_kind get kind =>
+      BindServiceResponse_kind.internalErrorWrapper;
 }
 
-final class BindServiceResponse_successWrapper extends _BindServiceResponse_wrapper {
+final class BindServiceResponse_successWrapper
+    extends _BindServiceResponse_wrapper {
   final BindServiceResponse_Success value;
 
   BindServiceResponse_successWrapper._(this.value);
@@ -863,22 +937,26 @@ final class BindServiceResponse_successWrapper extends _BindServiceResponse_wrap
   BindServiceResponse_kind get kind => BindServiceResponse_kind.successWrapper;
 }
 
-final class BindServiceResponse_invalidRegistrationTokenErrorWrapper extends _BindServiceResponse_wrapper {
+final class BindServiceResponse_invalidRegistrationTokenErrorWrapper
+    extends _BindServiceResponse_wrapper {
   final BindServiceResponse_InvalidRegistrationTokenError value;
 
   BindServiceResponse_invalidRegistrationTokenErrorWrapper._(this.value);
 
   @_core.override
-  BindServiceResponse_kind get kind => BindServiceResponse_kind.invalidRegistrationTokenErrorWrapper;
+  BindServiceResponse_kind get kind =>
+      BindServiceResponse_kind.invalidRegistrationTokenErrorWrapper;
 }
 
-final class BindServiceResponse_organizationNotFoundErrorWrapper extends _BindServiceResponse_wrapper {
+final class BindServiceResponse_organizationNotFoundErrorWrapper
+    extends _BindServiceResponse_wrapper {
   final BindServiceResponse_OrganizationNotFoundError value;
 
   BindServiceResponse_organizationNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  BindServiceResponse_kind get kind => BindServiceResponse_kind.organizationNotFoundErrorWrapper;
+  BindServiceResponse_kind get kind =>
+      BindServiceResponse_kind.organizationNotFoundErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -893,7 +971,8 @@ sealed class ServiceBoundNotification_orMutable {
 }
 
 /// Deeply immutable.
-final class ServiceBoundNotification implements ServiceBoundNotification_orMutable {
+final class ServiceBoundNotification
+    implements ServiceBoundNotification_orMutable {
   @_core.override
   final _core.String organizationId;
   @_core.override
@@ -903,28 +982,17 @@ final class ServiceBoundNotification implements ServiceBoundNotification_orMutab
   factory ServiceBoundNotification({
     required _core.String organizationId,
     required _core.String? organizationName,
-  }) => ServiceBoundNotification._(
-    organizationId,
-    organizationName,
-  );
+  }) => ServiceBoundNotification._(organizationId, organizationName);
 
-  ServiceBoundNotification._(
-    this.organizationId,
-    this.organizationName,
-  );
+  ServiceBoundNotification._(this.organizationId, this.organizationName);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceBoundNotification._(
-    "",
-    null,
-  );
+  static final defaultInstance = ServiceBoundNotification._("", null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceBoundNotification_mutable mutable() => ServiceBoundNotification_mutable._(
-    "",
-    null,
-  );
+  static ServiceBoundNotification_mutable mutable() =>
+      ServiceBoundNotification_mutable._("", null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -932,16 +1000,20 @@ final class ServiceBoundNotification implements ServiceBoundNotification_orMutab
   ServiceBoundNotification toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceBoundNotification_mutable toMutable() => ServiceBoundNotification_mutable._(
-    this.organizationId,
-    this.organizationName,
-  );
+  ServiceBoundNotification_mutable toMutable() =>
+      ServiceBoundNotification_mutable._(
+        this.organizationId,
+        this.organizationName,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceBoundNotification) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -956,7 +1028,11 @@ final class ServiceBoundNotification implements ServiceBoundNotification_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceBoundNotification` instances.
-  static _skir.StructSerializer<ServiceBoundNotification, ServiceBoundNotification_mutable> get serializer {
+  static _skir.StructSerializer<
+    ServiceBoundNotification,
+    ServiceBoundNotification_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "organization_id",
@@ -971,9 +1047,7 @@ final class ServiceBoundNotification implements ServiceBoundNotification_orMutab
         "organization_name",
         "organizationName",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.organizationName,
         (it, v) => it.organizationName = v,
@@ -995,7 +1069,8 @@ final class ServiceBoundNotification implements ServiceBoundNotification_orMutab
 }
 
 /// Mutable version of [ServiceBoundNotification].
-final class ServiceBoundNotification_mutable implements ServiceBoundNotification_orMutable {
+final class ServiceBoundNotification_mutable
+    implements ServiceBoundNotification_orMutable {
   _core.String organizationId;
   _core.String? organizationName;
   _skir.internal__UnrecognizedFields? _u;
@@ -1035,28 +1110,17 @@ final class UnbindServiceRequest implements UnbindServiceRequest_orMutable {
   factory UnbindServiceRequest({
     required _core.String operationId,
     required _core.String serviceId,
-  }) => UnbindServiceRequest._(
-    operationId,
-    serviceId,
-  );
+  }) => UnbindServiceRequest._(operationId, serviceId);
 
-  UnbindServiceRequest._(
-    this.operationId,
-    this.serviceId,
-  );
+  UnbindServiceRequest._(this.operationId, this.serviceId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = UnbindServiceRequest._(
-    "",
-    "",
-  );
+  static final defaultInstance = UnbindServiceRequest._("", "");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UnbindServiceRequest_mutable mutable() => UnbindServiceRequest_mutable._(
-    "",
-    "",
-  );
+  static UnbindServiceRequest_mutable mutable() =>
+      UnbindServiceRequest_mutable._("", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1064,31 +1128,33 @@ final class UnbindServiceRequest implements UnbindServiceRequest_orMutable {
   UnbindServiceRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UnbindServiceRequest_mutable toMutable() => UnbindServiceRequest_mutable._(
-    this.operationId,
-    this.serviceId,
-  );
+  UnbindServiceRequest_mutable toMutable() =>
+      UnbindServiceRequest_mutable._(this.operationId, this.serviceId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UnbindServiceRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.operationId,
-    this.serviceId,
-  ];
+  _core.List get _equality_proxy => [this.operationId, this.serviceId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UnbindServiceRequest` instances.
-  static _skir.StructSerializer<UnbindServiceRequest, UnbindServiceRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    UnbindServiceRequest,
+    UnbindServiceRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operation_id",
@@ -1125,15 +1191,13 @@ final class UnbindServiceRequest implements UnbindServiceRequest_orMutable {
 }
 
 /// Mutable version of [UnbindServiceRequest].
-final class UnbindServiceRequest_mutable implements UnbindServiceRequest_orMutable {
+final class UnbindServiceRequest_mutable
+    implements UnbindServiceRequest_orMutable {
   _core.String operationId;
   _core.String serviceId;
   _skir.internal__UnrecognizedFields? _u;
 
-  UnbindServiceRequest_mutable._(
-    this.operationId,
-    this.serviceId,
-  );
+  UnbindServiceRequest_mutable._(this.operationId, this.serviceId);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -1152,19 +1216,23 @@ sealed class UnbindServiceResponse_InvalidOperationIdError_orMutable {
 }
 
 /// Deeply immutable.
-final class UnbindServiceResponse_InvalidOperationIdError implements UnbindServiceResponse_InvalidOperationIdError_orMutable {
+final class UnbindServiceResponse_InvalidOperationIdError
+    implements UnbindServiceResponse_InvalidOperationIdError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UnbindServiceResponse_InvalidOperationIdError() => UnbindServiceResponse_InvalidOperationIdError._();
+  factory UnbindServiceResponse_InvalidOperationIdError() =>
+      UnbindServiceResponse_InvalidOperationIdError._();
 
   UnbindServiceResponse_InvalidOperationIdError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = UnbindServiceResponse_InvalidOperationIdError._();
+  static final defaultInstance =
+      UnbindServiceResponse_InvalidOperationIdError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UnbindServiceResponse_InvalidOperationIdError_mutable mutable() => UnbindServiceResponse_InvalidOperationIdError_mutable._();
+  static UnbindServiceResponse_InvalidOperationIdError_mutable mutable() =>
+      UnbindServiceResponse_InvalidOperationIdError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1172,13 +1240,17 @@ final class UnbindServiceResponse_InvalidOperationIdError implements UnbindServi
   UnbindServiceResponse_InvalidOperationIdError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UnbindServiceResponse_InvalidOperationIdError_mutable toMutable() => UnbindServiceResponse_InvalidOperationIdError_mutable._();
+  UnbindServiceResponse_InvalidOperationIdError_mutable toMutable() =>
+      UnbindServiceResponse_InvalidOperationIdError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UnbindServiceResponse_InvalidOperationIdError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1190,7 +1262,11 @@ final class UnbindServiceResponse_InvalidOperationIdError implements UnbindServi
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UnbindServiceResponse_InvalidOperationIdError` instances.
-  static _skir.StructSerializer<UnbindServiceResponse_InvalidOperationIdError, UnbindServiceResponse_InvalidOperationIdError_mutable> get serializer {
+  static _skir.StructSerializer<
+    UnbindServiceResponse_InvalidOperationIdError,
+    UnbindServiceResponse_InvalidOperationIdError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1202,21 +1278,24 @@ final class UnbindServiceResponse_InvalidOperationIdError implements UnbindServi
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UnbindServiceResponse_InvalidOperationIdError_mutable it) => it.toFrozen(),
+    toFrozen: (UnbindServiceResponse_InvalidOperationIdError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UnbindServiceResponse_InvalidOperationIdError].
-final class UnbindServiceResponse_InvalidOperationIdError_mutable implements UnbindServiceResponse_InvalidOperationIdError_orMutable {
+final class UnbindServiceResponse_InvalidOperationIdError_mutable
+    implements UnbindServiceResponse_InvalidOperationIdError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UnbindServiceResponse_InvalidOperationIdError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UnbindServiceResponse_InvalidOperationIdError toFrozen() => UnbindServiceResponse_InvalidOperationIdError().._u = this._u;
+  UnbindServiceResponse_InvalidOperationIdError toFrozen() =>
+      UnbindServiceResponse_InvalidOperationIdError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1228,19 +1307,23 @@ sealed class UnbindServiceResponse_OperationIdentityReusedError_orMutable {
 }
 
 /// Deeply immutable.
-final class UnbindServiceResponse_OperationIdentityReusedError implements UnbindServiceResponse_OperationIdentityReusedError_orMutable {
+final class UnbindServiceResponse_OperationIdentityReusedError
+    implements UnbindServiceResponse_OperationIdentityReusedError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UnbindServiceResponse_OperationIdentityReusedError() => UnbindServiceResponse_OperationIdentityReusedError._();
+  factory UnbindServiceResponse_OperationIdentityReusedError() =>
+      UnbindServiceResponse_OperationIdentityReusedError._();
 
   UnbindServiceResponse_OperationIdentityReusedError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = UnbindServiceResponse_OperationIdentityReusedError._();
+  static final defaultInstance =
+      UnbindServiceResponse_OperationIdentityReusedError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UnbindServiceResponse_OperationIdentityReusedError_mutable mutable() => UnbindServiceResponse_OperationIdentityReusedError_mutable._();
+  static UnbindServiceResponse_OperationIdentityReusedError_mutable mutable() =>
+      UnbindServiceResponse_OperationIdentityReusedError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1248,13 +1331,18 @@ final class UnbindServiceResponse_OperationIdentityReusedError implements Unbind
   UnbindServiceResponse_OperationIdentityReusedError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UnbindServiceResponse_OperationIdentityReusedError_mutable toMutable() => UnbindServiceResponse_OperationIdentityReusedError_mutable._();
+  UnbindServiceResponse_OperationIdentityReusedError_mutable toMutable() =>
+      UnbindServiceResponse_OperationIdentityReusedError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! UnbindServiceResponse_OperationIdentityReusedError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! UnbindServiceResponse_OperationIdentityReusedError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1266,7 +1354,11 @@ final class UnbindServiceResponse_OperationIdentityReusedError implements Unbind
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UnbindServiceResponse_OperationIdentityReusedError` instances.
-  static _skir.StructSerializer<UnbindServiceResponse_OperationIdentityReusedError, UnbindServiceResponse_OperationIdentityReusedError_mutable> get serializer {
+  static _skir.StructSerializer<
+    UnbindServiceResponse_OperationIdentityReusedError,
+    UnbindServiceResponse_OperationIdentityReusedError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1278,21 +1370,24 @@ final class UnbindServiceResponse_OperationIdentityReusedError implements Unbind
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UnbindServiceResponse_OperationIdentityReusedError_mutable it) => it.toFrozen(),
+    toFrozen: (UnbindServiceResponse_OperationIdentityReusedError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UnbindServiceResponse_OperationIdentityReusedError].
-final class UnbindServiceResponse_OperationIdentityReusedError_mutable implements UnbindServiceResponse_OperationIdentityReusedError_orMutable {
+final class UnbindServiceResponse_OperationIdentityReusedError_mutable
+    implements UnbindServiceResponse_OperationIdentityReusedError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UnbindServiceResponse_OperationIdentityReusedError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UnbindServiceResponse_OperationIdentityReusedError toFrozen() => UnbindServiceResponse_OperationIdentityReusedError().._u = this._u;
+  UnbindServiceResponse_OperationIdentityReusedError toFrozen() =>
+      UnbindServiceResponse_OperationIdentityReusedError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1304,7 +1399,8 @@ sealed class UnbindServiceResponse_Success_orMutable {
 }
 
 /// Deeply immutable.
-final class UnbindServiceResponse_Success implements UnbindServiceResponse_Success_orMutable {
+final class UnbindServiceResponse_Success
+    implements UnbindServiceResponse_Success_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory UnbindServiceResponse_Success() => UnbindServiceResponse_Success._();
@@ -1316,7 +1412,8 @@ final class UnbindServiceResponse_Success implements UnbindServiceResponse_Succe
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UnbindServiceResponse_Success_mutable mutable() => UnbindServiceResponse_Success_mutable._();
+  static UnbindServiceResponse_Success_mutable mutable() =>
+      UnbindServiceResponse_Success_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1324,13 +1421,17 @@ final class UnbindServiceResponse_Success implements UnbindServiceResponse_Succe
   UnbindServiceResponse_Success toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UnbindServiceResponse_Success_mutable toMutable() => UnbindServiceResponse_Success_mutable._();
+  UnbindServiceResponse_Success_mutable toMutable() =>
+      UnbindServiceResponse_Success_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UnbindServiceResponse_Success) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1342,7 +1443,11 @@ final class UnbindServiceResponse_Success implements UnbindServiceResponse_Succe
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UnbindServiceResponse_Success` instances.
-  static _skir.StructSerializer<UnbindServiceResponse_Success, UnbindServiceResponse_Success_mutable> get serializer {
+  static _skir.StructSerializer<
+    UnbindServiceResponse_Success,
+    UnbindServiceResponse_Success_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1361,14 +1466,16 @@ final class UnbindServiceResponse_Success implements UnbindServiceResponse_Succe
 }
 
 /// Mutable version of [UnbindServiceResponse_Success].
-final class UnbindServiceResponse_Success_mutable implements UnbindServiceResponse_Success_orMutable {
+final class UnbindServiceResponse_Success_mutable
+    implements UnbindServiceResponse_Success_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UnbindServiceResponse_Success_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UnbindServiceResponse_Success toFrozen() => UnbindServiceResponse_Success().._u = this._u;
+  UnbindServiceResponse_Success toFrozen() =>
+      UnbindServiceResponse_Success().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1380,10 +1487,12 @@ sealed class UnbindServiceResponse_ServiceNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class UnbindServiceResponse_ServiceNotFoundError implements UnbindServiceResponse_ServiceNotFoundError_orMutable {
+final class UnbindServiceResponse_ServiceNotFoundError
+    implements UnbindServiceResponse_ServiceNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UnbindServiceResponse_ServiceNotFoundError() => UnbindServiceResponse_ServiceNotFoundError._();
+  factory UnbindServiceResponse_ServiceNotFoundError() =>
+      UnbindServiceResponse_ServiceNotFoundError._();
 
   UnbindServiceResponse_ServiceNotFoundError._();
 
@@ -1392,7 +1501,8 @@ final class UnbindServiceResponse_ServiceNotFoundError implements UnbindServiceR
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UnbindServiceResponse_ServiceNotFoundError_mutable mutable() => UnbindServiceResponse_ServiceNotFoundError_mutable._();
+  static UnbindServiceResponse_ServiceNotFoundError_mutable mutable() =>
+      UnbindServiceResponse_ServiceNotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1400,13 +1510,17 @@ final class UnbindServiceResponse_ServiceNotFoundError implements UnbindServiceR
   UnbindServiceResponse_ServiceNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UnbindServiceResponse_ServiceNotFoundError_mutable toMutable() => UnbindServiceResponse_ServiceNotFoundError_mutable._();
+  UnbindServiceResponse_ServiceNotFoundError_mutable toMutable() =>
+      UnbindServiceResponse_ServiceNotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UnbindServiceResponse_ServiceNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1418,7 +1532,11 @@ final class UnbindServiceResponse_ServiceNotFoundError implements UnbindServiceR
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UnbindServiceResponse_ServiceNotFoundError` instances.
-  static _skir.StructSerializer<UnbindServiceResponse_ServiceNotFoundError, UnbindServiceResponse_ServiceNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    UnbindServiceResponse_ServiceNotFoundError,
+    UnbindServiceResponse_ServiceNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1430,21 +1548,24 @@ final class UnbindServiceResponse_ServiceNotFoundError implements UnbindServiceR
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UnbindServiceResponse_ServiceNotFoundError_mutable it) => it.toFrozen(),
+    toFrozen: (UnbindServiceResponse_ServiceNotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UnbindServiceResponse_ServiceNotFoundError].
-final class UnbindServiceResponse_ServiceNotFoundError_mutable implements UnbindServiceResponse_ServiceNotFoundError_orMutable {
+final class UnbindServiceResponse_ServiceNotFoundError_mutable
+    implements UnbindServiceResponse_ServiceNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UnbindServiceResponse_ServiceNotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UnbindServiceResponse_ServiceNotFoundError toFrozen() => UnbindServiceResponse_ServiceNotFoundError().._u = this._u;
+  UnbindServiceResponse_ServiceNotFoundError toFrozen() =>
+      UnbindServiceResponse_ServiceNotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1467,57 +1588,61 @@ final class UnbindServiceResponse_ServiceNotFoundError_mutable implements Unbind
 sealed class UnbindServiceResponse {
   /// Constant indicating an unknown `UnbindServiceResponse`.
   /// Default value for fields of type `UnbindServiceResponse`.
-  static const UnbindServiceResponse unknown = UnbindServiceResponse_unknown._instance;
+  static const UnbindServiceResponse unknown =
+      UnbindServiceResponse_unknown._instance;
 
   /// Create a 'invalid_operation_id_error' variant wrapping around the given value.
   factory UnbindServiceResponse.wrapInvalidOperationIdError(
-    UnbindServiceResponse_InvalidOperationIdError value
+    UnbindServiceResponse_InvalidOperationIdError value,
   ) => UnbindServiceResponse_invalidOperationIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidOperationIdError(UnbindServiceResponse_InvalidOperationIdError(...))`.
-  factory UnbindServiceResponse.createInvalidOperationIdError() => UnbindServiceResponse.wrapInvalidOperationIdError(
-    UnbindServiceResponse_InvalidOperationIdError()
-  );
+  factory UnbindServiceResponse.createInvalidOperationIdError() =>
+      UnbindServiceResponse.wrapInvalidOperationIdError(
+        UnbindServiceResponse_InvalidOperationIdError(),
+      );
 
   /// Create a 'operation_identity_reused_error' variant wrapping around the given value.
   factory UnbindServiceResponse.wrapOperationIdentityReusedError(
-    UnbindServiceResponse_OperationIdentityReusedError value
+    UnbindServiceResponse_OperationIdentityReusedError value,
   ) => UnbindServiceResponse_operationIdentityReusedErrorWrapper._(value);
 
   /// Same as `wrapOperationIdentityReusedError(UnbindServiceResponse_OperationIdentityReusedError(...))`.
-  factory UnbindServiceResponse.createOperationIdentityReusedError() => UnbindServiceResponse.wrapOperationIdentityReusedError(
-    UnbindServiceResponse_OperationIdentityReusedError()
-  );
+  factory UnbindServiceResponse.createOperationIdentityReusedError() =>
+      UnbindServiceResponse.wrapOperationIdentityReusedError(
+        UnbindServiceResponse_OperationIdentityReusedError(),
+      );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory UnbindServiceResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => UnbindServiceResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory UnbindServiceResponse.createInternalError() => UnbindServiceResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory UnbindServiceResponse.createInternalError() =>
+      UnbindServiceResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'success' variant wrapping around the given value.
   factory UnbindServiceResponse.wrapSuccess(
-    UnbindServiceResponse_Success value
+    UnbindServiceResponse_Success value,
   ) => UnbindServiceResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(UnbindServiceResponse_Success(...))`.
-  factory UnbindServiceResponse.createSuccess() => UnbindServiceResponse.wrapSuccess(
-    UnbindServiceResponse_Success()
-  );
+  factory UnbindServiceResponse.createSuccess() =>
+      UnbindServiceResponse.wrapSuccess(UnbindServiceResponse_Success());
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
   factory UnbindServiceResponse.wrapServiceNotFoundError(
-    UnbindServiceResponse_ServiceNotFoundError value
+    UnbindServiceResponse_ServiceNotFoundError value,
   ) => UnbindServiceResponse_serviceNotFoundErrorWrapper._(value);
 
   /// Same as `wrapServiceNotFoundError(UnbindServiceResponse_ServiceNotFoundError(...))`.
-  factory UnbindServiceResponse.createServiceNotFoundError() => UnbindServiceResponse.wrapServiceNotFoundError(
-    UnbindServiceResponse_ServiceNotFoundError()
-  );
+  factory UnbindServiceResponse.createServiceNotFoundError() =>
+      UnbindServiceResponse.wrapServiceNotFoundError(
+        UnbindServiceResponse_ServiceNotFoundError(),
+      );
 
   /// Returns the kind of variant held by this UnbindServiceResponse.
   UnbindServiceResponse_kind get kind;
@@ -1533,7 +1658,8 @@ sealed class UnbindServiceResponse {
         "",
         UnbindServiceResponse_invalidOperationIdErrorWrapper._,
         (it) => it.value,
-        ordinal: UnbindServiceResponse_kind.invalidOperationIdErrorWrapper._ordinal,
+        ordinal:
+            UnbindServiceResponse_kind.invalidOperationIdErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -1543,7 +1669,9 @@ sealed class UnbindServiceResponse {
         "",
         UnbindServiceResponse_operationIdentityReusedErrorWrapper._,
         (it) => it.value,
-        ordinal: UnbindServiceResponse_kind.operationIdentityReusedErrorWrapper._ordinal,
+        ordinal: UnbindServiceResponse_kind
+            .operationIdentityReusedErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -1573,22 +1701,24 @@ sealed class UnbindServiceResponse {
         "",
         UnbindServiceResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: UnbindServiceResponse_kind.serviceNotFoundErrorWrapper._ordinal,
+        ordinal:
+            UnbindServiceResponse_kind.serviceNotFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/registration.skir:UnbindServiceResponse",
-    doc: "",
-    unknownInstance: UnbindServiceResponse_unknown._instance,
-    enumInstance: UnbindServiceResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: UnbindServiceResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/registration.skir:UnbindServiceResponse",
+        doc: "",
+        unknownInstance: UnbindServiceResponse_unknown._instance,
+        enumInstance: UnbindServiceResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: UnbindServiceResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `UnbindServiceResponse`.
@@ -1620,7 +1750,8 @@ final class UnbindServiceResponse_unknown implements UnbindServiceResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, UnbindServiceResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, UnbindServiceResponse.serializer);
 }
 
 sealed class _UnbindServiceResponse_wrapper implements UnbindServiceResponse {
@@ -1636,74 +1767,79 @@ sealed class _UnbindServiceResponse_wrapper implements UnbindServiceResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, UnbindServiceResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, UnbindServiceResponse.serializer);
 }
 
-final class UnbindServiceResponse_invalidOperationIdErrorWrapper extends _UnbindServiceResponse_wrapper {
+final class UnbindServiceResponse_invalidOperationIdErrorWrapper
+    extends _UnbindServiceResponse_wrapper {
   final UnbindServiceResponse_InvalidOperationIdError value;
 
   UnbindServiceResponse_invalidOperationIdErrorWrapper._(this.value);
 
   @_core.override
-  UnbindServiceResponse_kind get kind => UnbindServiceResponse_kind.invalidOperationIdErrorWrapper;
+  UnbindServiceResponse_kind get kind =>
+      UnbindServiceResponse_kind.invalidOperationIdErrorWrapper;
 }
 
-final class UnbindServiceResponse_operationIdentityReusedErrorWrapper extends _UnbindServiceResponse_wrapper {
+final class UnbindServiceResponse_operationIdentityReusedErrorWrapper
+    extends _UnbindServiceResponse_wrapper {
   final UnbindServiceResponse_OperationIdentityReusedError value;
 
   UnbindServiceResponse_operationIdentityReusedErrorWrapper._(this.value);
 
   @_core.override
-  UnbindServiceResponse_kind get kind => UnbindServiceResponse_kind.operationIdentityReusedErrorWrapper;
+  UnbindServiceResponse_kind get kind =>
+      UnbindServiceResponse_kind.operationIdentityReusedErrorWrapper;
 }
 
-final class UnbindServiceResponse_internalErrorWrapper extends _UnbindServiceResponse_wrapper {
+final class UnbindServiceResponse_internalErrorWrapper
+    extends _UnbindServiceResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   UnbindServiceResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  UnbindServiceResponse_kind get kind => UnbindServiceResponse_kind.internalErrorWrapper;
+  UnbindServiceResponse_kind get kind =>
+      UnbindServiceResponse_kind.internalErrorWrapper;
 }
 
-final class UnbindServiceResponse_successWrapper extends _UnbindServiceResponse_wrapper {
+final class UnbindServiceResponse_successWrapper
+    extends _UnbindServiceResponse_wrapper {
   final UnbindServiceResponse_Success value;
 
   UnbindServiceResponse_successWrapper._(this.value);
 
   @_core.override
-  UnbindServiceResponse_kind get kind => UnbindServiceResponse_kind.successWrapper;
+  UnbindServiceResponse_kind get kind =>
+      UnbindServiceResponse_kind.successWrapper;
 }
 
-final class UnbindServiceResponse_serviceNotFoundErrorWrapper extends _UnbindServiceResponse_wrapper {
+final class UnbindServiceResponse_serviceNotFoundErrorWrapper
+    extends _UnbindServiceResponse_wrapper {
   final UnbindServiceResponse_ServiceNotFoundError value;
 
   UnbindServiceResponse_serviceNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  UnbindServiceResponse_kind get kind => UnbindServiceResponse_kind.serviceNotFoundErrorWrapper;
+  UnbindServiceResponse_kind get kind =>
+      UnbindServiceResponse_kind.serviceNotFoundErrorWrapper;
 }
 
-final _skir.Method<
-  BindServiceRequest,
-  BindServiceResponse
-> bindServiceMethod =
-  _skir.Method(
-    "BindService",
-    304691,
-    BindServiceRequest.serializer,
-    BindServiceResponse.serializer,
-    "",
-  );
+final _skir.Method<BindServiceRequest, BindServiceResponse> bindServiceMethod =
+    _skir.Method(
+      "BindService",
+      304691,
+      BindServiceRequest.serializer,
+      BindServiceResponse.serializer,
+      "",
+    );
 
-final _skir.Method<
-  UnbindServiceRequest,
-  UnbindServiceResponse
-> unbindServiceMethod =
-  _skir.Method(
-    "UnbindService",
-    950343,
-    UnbindServiceRequest.serializer,
-    UnbindServiceResponse.serializer,
-    "",
-  );
+final _skir.Method<UnbindServiceRequest, UnbindServiceResponse>
+unbindServiceMethod = _skir.Method(
+  "UnbindService",
+  950343,
+  UnbindServiceRequest.serializer,
+  UnbindServiceResponse.serializer,
+  "",
+);

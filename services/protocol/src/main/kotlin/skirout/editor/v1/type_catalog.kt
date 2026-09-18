@@ -2814,6 +2814,7 @@ sealed class TypedValue private constructor() {
         RECORD_WRAPPER,
         NAMED_WRAPPER,
         DURATION_WRAPPER,
+        REFERENCE_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.TypedValue.UNKNOWN")) internal constructor(
@@ -3147,6 +3148,24 @@ sealed class TypedValue private constructor() {
         }
     }
 
+    class ReferenceWrapper private constructor (
+        val value: skirout.kernel.v1.record_id.RecordId,
+    ) : skirout.editor.v1.type_catalog.TypedValue() {
+        constructor(
+            value: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.REFERENCE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.TypedValue.ReferenceWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -925155509;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.TypedValue>? get() = null;
 
     abstract val kind: Kind;
@@ -3212,6 +3231,20 @@ sealed class TypedValue private constructor() {
         ) = DurationWrapper(
             skirout.editor.v1.type_catalog.TypedDurationValue(
                 duration = duration,
+            )
+        );
+
+        /** Shortcut for `ReferenceWrapper(skirout.kernel.v1.record_id.RecordId(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReference(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            table: kotlin.String,
+            key: skirout.kernel.v1.record_id.RecordIdKey,
+        ) = ReferenceWrapper(
+            skirout.kernel.v1.record_id.RecordId(
+                table = table,
+                key = key,
             )
         );
 
@@ -3429,6 +3462,15 @@ sealed class TypedValue private constructor() {
                     skirout.editor.v1.type_catalog.TypedDurationValue.serializer,
                     "",
                     { DurationWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    22,
+                    "reference",
+                    Kind.REFERENCE_WRAPPER.ordinal,
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                    "",
+                    { ReferenceWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();
@@ -4649,6 +4691,138 @@ class EnumType private constructor(
     }
 }
 
+sealed interface ReferenceType_OrMutable {
+    val targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.type_catalog.ReferenceType;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ReferenceType private constructor(
+    override val targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ReferenceType>? =
+        null,
+): skirout.editor.v1.type_catalog.ReferenceType_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ReferenceType>? =
+            null,
+    ): this(
+        targetType.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        targetType = this.targetType,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            this.targetType,
+    ) = skirout.editor.v1.type_catalog.ReferenceType(
+        targetType.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.type_catalog.ReferenceType && this.targetType == other.targetType);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.targetType).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.ReferenceType.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ReferenceType]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef =
+            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ReferenceType>? =
+            null,
+    ): skirout.editor.v1.type_catalog.ReferenceType_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.type_catalog.ReferenceType(
+            targetType = this.targetType,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.type_catalog.ReferenceType(
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ReferenceType].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        ) = skirout.editor.v1.type_catalog.ReferenceType(
+            targetType = targetType,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/type_catalog.skir:ReferenceType",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ReferenceType] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ReferenceType] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "target_type",
+                "targetType",
+                0,
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
+                "",
+                { it.targetType },
+                { mut, v -> mut.targetType = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 /** Deeply immutable. */
 sealed class TypeExpression private constructor() {
     /** The kind of variant held by a `TypeExpression`. */
@@ -4671,6 +4845,7 @@ sealed class TypeExpression private constructor() {
         ENUM_TYPE_WRAPPER,
         PARAMETER_WRAPPER,
         NAMED_WRAPPER,
+        REFERENCE_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN")) internal constructor(
@@ -4980,6 +5155,24 @@ sealed class TypeExpression private constructor() {
         }
     }
 
+    class ReferenceWrapper private constructor (
+        val value: skirout.editor.v1.type_catalog.ReferenceType,
+    ) : skirout.editor.v1.type_catalog.TypeExpression() {
+        constructor(
+            value: skirout.editor.v1.type_catalog.ReferenceType_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.REFERENCE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.TypeExpression.ReferenceWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -925155509;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.TypeExpression>? get() = null;
 
     abstract val kind: Kind;
@@ -5168,6 +5361,18 @@ sealed class TypeExpression private constructor() {
             )
         );
 
+        /** Shortcut for `ReferenceWrapper(skirout.editor.v1.type_catalog.ReferenceType(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReference(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            targetType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        ) = ReferenceWrapper(
+            skirout.editor.v1.type_catalog.ReferenceType(
+                targetType = targetType,
+            )
+        );
+
         private val _serializerImpl =
             build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.TypeExpression, Unknown>(
                 recordId = "editor/v1/type_catalog.skir:TypeExpression",
@@ -5340,6 +5545,15 @@ sealed class TypeExpression private constructor() {
                     skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
                     "",
                     { NamedWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    18,
+                    "reference",
+                    Kind.REFERENCE_WRAPPER.ordinal,
+                    skirout.editor.v1.type_catalog.ReferenceType.serializer,
+                    "",
+                    { ReferenceWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();

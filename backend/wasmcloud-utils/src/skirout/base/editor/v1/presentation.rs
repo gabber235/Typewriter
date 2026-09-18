@@ -5410,6 +5410,127 @@ impl TooltipElement {
 }
 
 // ==============================================================================
+// struct ReferenceControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ReferenceControl {
+    pub control: BoundControl,
+    pub allow_reorder: bool,
+    pub candidate_policy: Option<ReferencePolicyId>,
+    pub rejection_display: ReferenceRejectionDisplay,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReferenceControl>>,
+}
+
+impl ReferenceControl {
+    pub fn default_ref() -> &'static ReferenceControl {
+        static D: std::sync::LazyLock<ReferenceControl> = std::sync::LazyLock::new(ReferenceControl::default);
+        &D
+    }
+}
+
+impl ReferenceControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReferenceControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReferenceControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "ReferenceControl",
+                    "",
+                    |x: &ReferenceControl| &x._unrecognized,
+                    |x: &mut ReferenceControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ReferenceControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ReferenceControl::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ReferencePolicyId
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ReferencePolicyId {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReferencePolicyId>>,
+}
+
+impl ReferencePolicyId {
+    pub fn default_ref() -> &'static ReferencePolicyId {
+        static D: std::sync::LazyLock<ReferencePolicyId> = std::sync::LazyLock::new(ReferencePolicyId::default);
+        &D
+    }
+}
+
+impl ReferencePolicyId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReferencePolicyId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReferencePolicyId>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "ReferencePolicyId",
+                    "",
+                    |x: &ReferencePolicyId| &x._unrecognized,
+                    |x: &mut ReferencePolicyId, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ReferencePolicyId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ReferencePolicyId::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum ReferenceRejectionDisplay
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ReferenceRejectionDisplay {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ReferenceRejectionDisplay>>),
+    Hidden,
+    Disabled,
+}
+
+impl Default for ReferenceRejectionDisplay {
+    fn default() -> Self {
+        ReferenceRejectionDisplay::Unknown(None)
+    }
+}
+
+impl ReferenceRejectionDisplay {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ReferenceRejectionDisplay> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ReferenceRejectionDisplay>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &ReferenceRejectionDisplay| match x {
+                        ReferenceRejectionDisplay::Unknown(_) => 0,
+                        ReferenceRejectionDisplay::Hidden => 1,
+                        ReferenceRejectionDisplay::Disabled => 2,
+                    },
+                    |u| ReferenceRejectionDisplay::Unknown(Some(u)),
+                    |x: &ReferenceRejectionDisplay| match x { ReferenceRejectionDisplay::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "ReferenceRejectionDisplay",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ReferenceRejectionDisplay> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ReferenceRejectionDisplay::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum PresentationElement
 // ==============================================================================
 
@@ -5466,6 +5587,7 @@ pub enum PresentationElement {
     ConnectionLayer(Box<ConnectionLayerLayout>),
     PolymorphicMatch(Box<PolymorphicMatchElement>),
     Invocation(Box<PresentationInvocation>),
+    ReferenceInput(Box<ReferenceControl>),
 }
 
 impl Default for PresentationElement {
@@ -5531,6 +5653,7 @@ impl PresentationElement {
                         PresentationElement::ConnectionLayer(_) => 48,
                         PresentationElement::PolymorphicMatch(_) => 49,
                         PresentationElement::Invocation(_) => 50,
+                        PresentationElement::ReferenceInput(_) => 51,
                     },
                     |u| PresentationElement::Unknown(Some(u)),
                     |x: &PresentationElement| match x { PresentationElement::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -6765,6 +6888,25 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ReferenceControl> = ReferenceControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &ReferenceControl| &x.control, |x: &mut ReferenceControl, v| x.control = v);
+                (*a).add_field("allow_reorder", 1, crate::skir_client::Serializer::bool(), "", |x: &ReferenceControl| &x.allow_reorder, |x: &mut ReferenceControl, v| x.allow_reorder = v);
+                (*a).add_field("candidate_policy", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ReferencePolicyId::_adapter())), "", |x: &ReferenceControl| &x.candidate_policy, |x: &mut ReferenceControl, v| x.candidate_policy = v);
+                (*a).add_field("rejection_display", 3, crate::skir_client::internal::enum_serializer_from_static(ReferenceRejectionDisplay::_adapter()), "", |x: &ReferenceControl| &x.rejection_display, |x: &mut ReferenceControl, v| x.rejection_display = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ReferencePolicyId> = ReferencePolicyId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &ReferencePolicyId| &x.value, |x: &mut ReferencePolicyId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<ReferenceRejectionDisplay> = ReferenceRejectionDisplay::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("hidden", 1, 1, "", ReferenceRejectionDisplay::Hidden);
+                (*a).add_constant_variant("disabled", 2, 2, "", ReferenceRejectionDisplay::Disabled);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<PresentationElement> = PresentationElement::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("children", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ChildrenElement::_adapter()), "", |v| PresentationElement::Children(Box::new(v)), |x| match x { PresentationElement::Children(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("section", 2, 2, crate::skir_client::internal::struct_serializer_from_static(SectionLayout::_adapter()), "", |v| PresentationElement::Section(Box::new(v)), |x| match x { PresentationElement::Section(b) => b.as_ref(), _ => unreachable!() });
@@ -6816,6 +6958,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("connection_layer", 48, 48, crate::skir_client::internal::struct_serializer_from_static(ConnectionLayerLayout::_adapter()), "", |v| PresentationElement::ConnectionLayer(Box::new(v)), |x| match x { PresentationElement::ConnectionLayer(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("polymorphic_match", 49, 49, crate::skir_client::internal::struct_serializer_from_static(PolymorphicMatchElement::_adapter()), "", |v| PresentationElement::PolymorphicMatch(Box::new(v)), |x| match x { PresentationElement::PolymorphicMatch(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invocation", 50, 50, crate::skir_client::internal::struct_serializer_from_static(PresentationInvocation::_adapter()), "", |v| PresentationElement::Invocation(Box::new(v)), |x| match x { PresentationElement::Invocation(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("reference_input", 51, 51, crate::skir_client::internal::struct_serializer_from_static(ReferenceControl::_adapter()), "", |v| PresentationElement::ReferenceInput(Box::new(v)), |x| match x { PresentationElement::ReferenceInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

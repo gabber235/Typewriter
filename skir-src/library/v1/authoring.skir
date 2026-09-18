@@ -521,10 +521,28 @@ struct AuthoringSearchSnapshot(812200068) {
   selector_validations: [AuthoringSelectorValidation] = 1;
 }
 
+struct ReferenceSearchScope(812200077) {
+  origins: [RecordId] = 0;
+  target: ResolvedTypeRef = 1;
+}
+
+struct ReferenceResourceSummary(812200078) {
+  id: RecordId = 0;
+  title: string? = 1;
+  subtitle: string? = 2;
+  compatible_types: [ResolvedTypeRef] = 3;
+  exists: bool = 4;
+}
+
+struct AuthoringReferenceResolution(812200079) {
+  resources: [ReferenceResourceSummary] = 0;
+}
+
 method SearchAuthoringContent(
   struct {
     query: RealmSearchQuery = 0;
     context_page: RecordId? = 1;
+    reference_scope: ReferenceSearchScope? = 2;
   }
 ): enum {
   success: AuthoringSearchSnapshot = 1;
@@ -544,3 +562,14 @@ method SuggestAuthoringSelectorValues(
   invalid: AuthoringInvalid = 2;
   internal_error: InternalError = 3;
 } = 920005;
+
+method ResolveAuthoringResources(
+  struct {
+    ids: [RecordId] = 0;
+    reference_target: ResolvedTypeRef = 1;
+  }
+): enum {
+  success: AuthoringReferenceResolution = 1;
+  invalid: AuthoringInvalid = 2;
+  internal_error: InternalError = 3;
+} = 920006;

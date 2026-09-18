@@ -749,6 +749,7 @@ pub enum TypedValue {
     Record(Box<TypedRecordValue>),
     Named(Box<TypedNamedValue>),
     Duration(Box<TypedDurationValue>),
+    Reference(Box<crate::skirout::base::kernel::v1::record_id::RecordId>),
 }
 
 impl Default for TypedValue {
@@ -785,6 +786,7 @@ impl TypedValue {
                         TypedValue::Record(_) => 19,
                         TypedValue::Named(_) => 20,
                         TypedValue::Duration(_) => 21,
+                        TypedValue::Reference(_) => 22,
                     },
                     |u| TypedValue::Unknown(Some(u)),
                     |x: &TypedValue| match x { TypedValue::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1094,6 +1096,44 @@ impl EnumType {
 }
 
 // ==============================================================================
+// struct ReferenceType
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ReferenceType {
+    pub target_type: ResolvedTypeRef,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReferenceType>>,
+}
+
+impl ReferenceType {
+    pub fn default_ref() -> &'static ReferenceType {
+        static D: std::sync::LazyLock<ReferenceType> = std::sync::LazyLock::new(ReferenceType::default);
+        &D
+    }
+}
+
+impl ReferenceType {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReferenceType> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReferenceType>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "ReferenceType",
+                    "",
+                    |x: &ReferenceType| &x._unrecognized,
+                    |x: &mut ReferenceType, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ReferenceType> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ReferenceType::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum TypeExpression
 // ==============================================================================
 
@@ -1117,6 +1157,7 @@ pub enum TypeExpression {
     EnumType(Box<EnumType>),
     Parameter(String),
     Named(Box<ResolvedTypeRef>),
+    Reference(Box<ReferenceType>),
 }
 
 impl Default for TypeExpression {
@@ -1149,6 +1190,7 @@ impl TypeExpression {
                         TypeExpression::EnumType(_) => 15,
                         TypeExpression::Parameter(_) => 16,
                         TypeExpression::Named(_) => 17,
+                        TypeExpression::Reference(_) => 18,
                     },
                     |u| TypeExpression::Unknown(Some(u)),
                     |x: &TypeExpression| match x { TypeExpression::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1701,6 +1743,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("record", 19, 19, crate::skir_client::internal::struct_serializer_from_static(TypedRecordValue::_adapter()), "", |v| TypedValue::Record(Box::new(v)), |x| match x { TypedValue::Record(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("named", 20, 20, crate::skir_client::internal::struct_serializer_from_static(TypedNamedValue::_adapter()), "", |v| TypedValue::Named(Box::new(v)), |x| match x { TypedValue::Named(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("duration", 21, 21, crate::skir_client::internal::struct_serializer_from_static(TypedDurationValue::_adapter()), "", |v| TypedValue::Duration(Box::new(v)), |x| match x { TypedValue::Duration(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("reference", 22, 22, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |v| TypedValue::Reference(Box::new(v)), |x| match x { TypedValue::Reference(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1748,6 +1791,11 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ReferenceType> = ReferenceType::_adapter() as *const _ as *mut _;
+                (*a).add_field("target_type", 0, crate::skir_client::internal::struct_serializer_from_static(ResolvedTypeRef::_adapter()), "", |x: &ReferenceType| &x.target_type, |x: &mut ReferenceType, v| x.target_type = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TypeExpression> = TypeExpression::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("any", 1, 1, "", TypeExpression::Any);
                 (*a).add_constant_variant("unit", 2, 2, "", TypeExpression::Unit);
@@ -1766,6 +1814,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("enum_type", 15, 15, crate::skir_client::internal::struct_serializer_from_static(EnumType::_adapter()), "", |v| TypeExpression::EnumType(Box::new(v)), |x| match x { TypeExpression::EnumType(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("parameter", 16, 16, crate::skir_client::Serializer::string(), "", |v| TypeExpression::Parameter(v), |x| match x { TypeExpression::Parameter(v) => v, _ => unreachable!() });
                 (*a).add_wrapper_variant("named", 17, 17, crate::skir_client::internal::struct_serializer_from_static(ResolvedTypeRef::_adapter()), "", |v| TypeExpression::Named(Box::new(v)), |x| match x { TypeExpression::Named(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("reference", 18, 18, crate::skir_client::internal::struct_serializer_from_static(ReferenceType::_adapter()), "", |v| TypeExpression::Reference(Box::new(v)), |x| match x { TypeExpression::Reference(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
