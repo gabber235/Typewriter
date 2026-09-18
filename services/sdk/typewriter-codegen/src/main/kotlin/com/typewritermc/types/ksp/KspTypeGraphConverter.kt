@@ -1,6 +1,7 @@
 package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -342,22 +343,63 @@ private class ConversionContext(
         path: List<String>,
     ): TypeExpression {
         val fields =
-            declaration
-                .getAllProperties()
-                .filter(KSPropertyDeclaration::isSerializedProperty)
+            orderedSerializedProperties(declaration)
                 .mapNotNull { property ->
                     val name = property.serialName ?: property.simpleName.asString()
                     expression(property.type.resolve(), path + name)?.let {
                         serializedProperties += KspSerializedProperty(identity, name, property)
                         TypeField(name, it)
                     }
-                }.sortedBy(TypeField::name)
-                .toList()
+                }
         return if (declaration.classKind == ClassKind.OBJECT && fields.isEmpty()) {
             TypeExpression.Unit
         } else {
             TypeExpression.Record(fields)
         }
+    }
+
+    /**
+     * Orders fields by Kotlin declaration semantics instead of relying on the unspecified order of [getAllProperties].
+     * Inherited declarations come first, followed by constructor properties and then properties declared in the
+     * class body. Body properties use source line locations when available. Any remaining compiler properties are
+     * appended in the order returned by KSP.
+     */
+    private fun orderedSerializedProperties(declaration: KSClassDeclaration): List<KSPropertyDeclaration> {
+        val properties = declaration.getAllProperties().filter(KSPropertyDeclaration::isSerializedProperty).toList()
+        val propertiesByName = properties.associateBy { it.simpleName.asString() }
+        val orderedNames = linkedSetOf<String>()
+        val visited = mutableSetOf<KSClassDeclaration>()
+
+        fun append(name: String?) {
+            if (name != null && name in propertiesByName) orderedNames += name
+        }
+
+        fun appendDeclarations(current: KSClassDeclaration) {
+            if (!visited.add(current)) return
+
+            current.superTypes
+                .mapNotNull { reference -> reference.resolve().declaration as? KSClassDeclaration }
+                .forEach(::appendDeclarations)
+            current.primaryConstructor?.parameters?.forEach { parameter ->
+                append(parameter.name?.asString())
+            }
+            current.declarations
+                .filterIsInstance<KSPropertyDeclaration>()
+                .filter(KSPropertyDeclaration::isSerializedProperty)
+                .withIndex()
+                .sortedWith(
+                    compareBy<IndexedValue<KSPropertyDeclaration>> {
+                        (it.value.location as? FileLocation)?.filePath ?: "\uFFFF"
+                    }.thenBy {
+                        (it.value.location as? FileLocation)?.lineNumber ?: Int.MAX_VALUE
+                    }.thenBy(IndexedValue<KSPropertyDeclaration>::index),
+                ).map(IndexedValue<KSPropertyDeclaration>::value)
+                .forEach { property -> append(property.simpleName.asString()) }
+        }
+
+        appendDeclarations(declaration)
+        properties.forEach { property -> append(property.simpleName.asString()) }
+        return orderedNames.mapNotNull(propertiesByName::get)
     }
 
     private fun enumRepresentation(

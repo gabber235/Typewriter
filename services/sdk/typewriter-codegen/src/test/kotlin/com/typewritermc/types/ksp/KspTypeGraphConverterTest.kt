@@ -1,9 +1,11 @@
 package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -11,7 +13,9 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Variance
 import com.typewritermc.types.IntegerWidth
@@ -70,8 +74,61 @@ val KspTypeGraphConverterTest by testSuite {
         (definition.representation as TypeExpression.Record).fields.single().type shouldBe TypeExpression.Parameter("T")
     }
 
+    test("records preserve nonalphabetical primary constructor order") {
+        val declaration = classDeclaration("example.NonAlphabeticalRecord")
+        val primaryConstructor = primaryConstructor("zebra", "alpha", "middle")
+        every { declaration.primaryConstructor } returns primaryConstructor
+        every { declaration.getAllProperties() } returns
+            sequenceOf(
+                property("alpha", classType("kotlin.String")),
+                property("zebra", classType("kotlin.String")),
+                property("middle", classType("kotlin.String")),
+            )
+
+        val result = KspTypeGraphConverter().convert(type(declaration)) as KspTypeConversionResult.Success
+        val definition = result.graph.definitions.single()
+
+        (definition.representation as TypeExpression.Record).fields.map(TypeField::name) shouldBe
+            listOf("zebra", "alpha", "middle")
+    }
+
+    test("records place inherited fields before body properties") {
+        val parent = classDeclaration("example.ParentRecord")
+        every { parent.declarations } returns sequenceOf(property("inherited", classType("kotlin.String")))
+        val declaration = classDeclaration("example.ChildRecord")
+        val primaryConstructor = primaryConstructor("constructorField")
+        every { declaration.primaryConstructor } returns primaryConstructor
+        every { declaration.superTypes } returns sequenceOf(mockk { every { resolve() } returns type(parent) })
+        every { declaration.declarations } returns
+            sequenceOf(
+                property("bodySecond", classType("kotlin.String"), sourceLine = 30),
+                property("bodyFirst", classType("kotlin.String"), sourceLine = 20),
+            )
+        every { declaration.getAllProperties() } returns
+            sequenceOf(
+                property("bodySecond", classType("kotlin.String")),
+                property("bodyFirst", classType("kotlin.String")),
+                property("inherited", classType("kotlin.String")),
+                property("constructorField", classType("kotlin.String")),
+            )
+
+        val result = KspTypeGraphConverter().convert(type(declaration)) as KspTypeConversionResult.Success
+        val definition = result.graph.definitions.single { it.id.id == TypeId.Qualified("example", "ChildRecord") }
+
+        (definition.representation as TypeExpression.Record).fields.map(TypeField::name) shouldBe
+            listOf("inherited", "constructorField", "bodyFirst", "bodySecond")
+    }
+
     test("records include private inherited fields and exclude properties without storage") {
+        val parent = classDeclaration("example.SerializableParent")
+        every { parent.declarations } returns
+            sequenceOf(property("inheritedValue", classType("kotlin.Int")))
         val declaration = classDeclaration("example.SerializableRecord")
+        every { declaration.superTypes } returns sequenceOf(mockk { every { resolve() } returns type(parent) })
+        every { declaration.declarations } returns
+            sequenceOf(
+                property("privateValue", classType("kotlin.String"), modifiers = setOf(Modifier.PRIVATE)),
+            )
         every { declaration.getAllProperties() } returns
             sequenceOf(
                 property("privateValue", classType("kotlin.String"), modifiers = setOf(Modifier.PRIVATE)),
@@ -81,7 +138,8 @@ val KspTypeGraphConverterTest by testSuite {
             )
 
         val result = KspTypeGraphConverter().convert(type(declaration)) as KspTypeConversionResult.Success
-        val definition = result.graph.definitions.single()
+        val definition =
+            result.graph.definitions.single { it.id.id == TypeId.Qualified("example", "SerializableRecord") }
 
         (definition.representation as TypeExpression.Record).fields.map(TypeField::name) shouldBe
             listOf("inheritedValue", "privateValue")
@@ -172,6 +230,7 @@ private fun classDeclaration(
         every { this@mockk.packageName } returns name(packageName)
         every { this@mockk.simpleName } returns name(simpleName)
         every { typeParameters } returns emptyList()
+        every { primaryConstructor } returns null
         every { superTypes } returns emptySequence()
         every { declarations } returns emptySequence()
         every { getAllProperties() } returns emptySequence()
@@ -210,6 +269,7 @@ private fun property(
     hasBackingField: Boolean = true,
     delegated: Boolean = false,
     annotations: List<KSAnnotation> = emptyList(),
+    sourceLine: Int? = null,
 ): KSPropertyDeclaration {
     val reference = mockk<KSTypeReference> { every { resolve() } returns propertyType }
     return mockk {
@@ -218,9 +278,18 @@ private fun property(
         every { extensionReceiver } returns null
         every { this@mockk.hasBackingField } returns hasBackingField
         every { isDelegated() } returns delegated
+        every { location } returns (sourceLine?.let { FileLocation("test.kt", it) } ?: NonExistLocation)
         every { this@mockk.modifiers } returns modifiers
         every { this@mockk.annotations } answers { annotations.asSequence() }
     }
+}
+
+private fun primaryConstructor(vararg parameterNames: String): KSFunctionDeclaration {
+    val constructorParameters =
+        parameterNames.map { parameterName ->
+            mockk<KSValueParameter> { every { name } returns name(parameterName) }
+        }
+    return mockk { every { parameters } returns constructorParameters }
 }
 
 private fun argument(type: KSType): KSTypeArgument {
