@@ -32,6 +32,20 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 
 val AuthoringRepositoryTest by testSuite {
+    test("preview executes the batch and always rolls it back") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                val batch = mixedCreateBatch("preview")
+
+                fixture.authoring.preview(batch.operations).shouldBeInstanceOf<AuthoringPreviewResult.Valid>()
+
+                val library = fixture.authoring.snapshot(setOf(AuthoringSnapshotScope.Library))
+                (library.slices.single() as AuthoringSnapshotSlice.Library).books shouldBe emptyList()
+                fixture.pageDocuments.getPageDocument(PageId("preview_page")) shouldBe null
+            }
+        }
+    }
+
     test("related creates persist opaque element identities and roll back together") {
         runTest {
             for (reject in listOf(false, true)) {
@@ -266,7 +280,7 @@ val AuthoringRepositoryTest by testSuite {
                     DataValue.Record(
                         mapOf(
                             "id" to DataValue.StringValue(duplicateId.value),
-                            "name" to DataValue.StringValue("Synthetic Entry Copy"),
+                            "name" to DataValue.StringValue("Synthetic Entry"),
                             "message" to editedMessage,
                         ),
                     )

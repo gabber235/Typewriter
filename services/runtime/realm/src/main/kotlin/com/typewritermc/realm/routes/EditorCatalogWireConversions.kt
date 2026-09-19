@@ -8,6 +8,7 @@ import com.typewritermc.elements.ElementSearchMode
 import com.typewritermc.elements.ElementSearchPolicy
 import com.typewritermc.elements.ElementSearchPropertyOverride
 import com.typewritermc.pages.GraphDirection
+import com.typewritermc.pages.PageAuthoringRuleRef
 import com.typewritermc.pages.PageCatalogEntry
 import com.typewritermc.pages.PageDescriptor
 import com.typewritermc.pages.PageDiagnostic
@@ -29,10 +30,12 @@ import skirout.editor.v1.element_catalog.ElementSearchMode as SkirElementSearchM
 import skirout.editor.v1.element_catalog.ElementSearchPolicy as SkirElementSearchPolicy
 import skirout.editor.v1.element_catalog.ElementSearchPropertyOverride as SkirElementSearchPropertyOverride
 import skirout.editor.v1.page_catalog.GraphDirection as SkirGraphDirection
+import skirout.editor.v1.page_catalog.PageAuthoringRuleRef as SkirPageAuthoringRuleRef
 import skirout.editor.v1.page_catalog.PageCatalogEntry as SkirPageCatalogEntry
 import skirout.editor.v1.page_catalog.PageDescriptor as SkirPageDescriptor
 import skirout.editor.v1.page_catalog.PageDiagnostic as SkirPageDiagnostic
 import skirout.editor.v1.page_catalog.PageEditorDefinition as SkirPageEditorDefinition
+import skirout.editor.v1.typed_value.TypedValueEnvelope as SkirTypedValueEnvelope
 
 /**
  * Preserves descriptor metadata, eligibility, and availability when exposing elements to the editor.
@@ -133,6 +136,20 @@ private fun PageDescriptor.toSkir(): SkirPageDescriptor =
         icon = icon.toSkir(),
         color = color.toSkir(),
         editor = editor.toSkir(),
+        authoringRules = authoringRules.map(PageAuthoringRuleRef::toSkir),
+    )
+
+private fun PageAuthoringRuleRef.toSkir(): SkirPageAuthoringRuleRef =
+    SkirPageAuthoringRuleRef(
+        id = id.value,
+        revision = revision,
+        configuration =
+            configuration?.let {
+                SkirTypedValueEnvelope(
+                    rootType = it.type.toSkir().getOrThrow(),
+                    rootValue = it.value.toSkir().getOrThrow(),
+                )
+            },
     )
 
 internal fun PageDiagnostic.toSkir(): SkirPageDiagnostic =

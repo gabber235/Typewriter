@@ -20,6 +20,7 @@ import com.typewritermc.realm.repository.AuthoringElement
 import com.typewritermc.realm.repository.AuthoringOperation
 import com.typewritermc.realm.repository.AuthoringSnapshotScope
 import com.typewritermc.realm.repository.BatchId
+import com.typewritermc.realm.repository.ElementTypeChange
 import com.typewritermc.realm.repository.ExpectedChange
 import com.typewritermc.realm.repository.ExpectedElementValueMutation
 import com.typewritermc.realm.repository.utils.toBookId
@@ -40,6 +41,7 @@ import skirout.library.v1.authoring.ApplyAuthoringBatchRequest
 import skirout.library.v1.authoring.ColorChange
 import skirout.library.v1.authoring.ElementPlacementChange
 import skirout.library.v1.authoring.Int32Change
+import skirout.library.v1.authoring.PreviewAuthoringBatchRequest
 import skirout.library.v1.authoring.RecordIdChange
 import skirout.library.v1.authoring.RecordIdListChange
 import skirout.library.v1.authoring.StringChange
@@ -81,6 +83,8 @@ internal fun Iterable<WireScope>.toDomain(): Set<AuthoringSnapshotScope> =
  */
 internal fun ApplyAuthoringBatchRequest.toDomain(): AuthoringBatch =
     AuthoringBatch(BatchId(batchId), operations.map(WireOperation::toDomain))
+
+internal fun PreviewAuthoringBatchRequest.toDomain(): List<AuthoringOperation> = operations.map(WireOperation::toDomain)
 
 private fun WireOperation.toDomain(): AuthoringOperation =
     when (this) {
@@ -157,6 +161,17 @@ private fun WireOperation.toDomain(): AuthoringOperation =
                             mutation = it.mutation.toDomain(),
                         )
                     },
+                elementType =
+                    value.elementType?.let {
+                        ElementTypeChange(
+                            expectedElementType = ElementTypeId(DeclaredTypeId.parse(it.expectedElementType)),
+                            expectedSchemaRevision = it.expectedSchemaRevision,
+                            expectedValue = SkirDataValueCodec.decode(it.expectedValue).getOrThrow(),
+                            elementType = ElementTypeId(DeclaredTypeId.parse(it.valueElementType)),
+                            schemaRevision = it.valueSchemaRevision,
+                            value = SkirDataValueCodec.decode(it.value).getOrThrow(),
+                        )
+                    },
             )
         }
 
@@ -171,6 +186,7 @@ private fun WireOperation.toDomain(): AuthoringOperation =
                     value.referenceRewrites.associate {
                         it.source.toResourceId() to it.target.toResourceId()
                     },
+                valueMutations = value.valueMutations.map(WireMutation::toDomain),
             )
         }
 

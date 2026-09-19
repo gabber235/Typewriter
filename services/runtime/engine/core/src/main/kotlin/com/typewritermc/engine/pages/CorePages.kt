@@ -3,6 +3,7 @@ package com.typewritermc.engine.pages
 import com.typewritermc.elements.Entry
 import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
+import com.typewritermc.pages.CommonPageAuthoringRules
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageEditorDefinition
 import com.typewritermc.pages.TypewriterPage
@@ -41,6 +42,7 @@ fun sequencePage() =
         icon = "material-symbols:account-tree",
         color = "#2196F3",
         editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT, listOf(SequenceEntry::class)),
+        authoringRules = listOf(CommonPageAuthoringRules.noSelfReferences),
     )
 
 @TypewriterPage(
@@ -79,4 +81,5 @@ fun manifestPage() =
         icon = "material-symbols:schema",
         color = "#4CAF50",
         editor = PageEditorDefinition.Graph(GraphDirection.TOP_TO_BOTTOM, listOf(ManifestEntry::class)),
+        authoringRules = listOf(CommonPageAuthoringRules.acyclicElementReferences),
     )

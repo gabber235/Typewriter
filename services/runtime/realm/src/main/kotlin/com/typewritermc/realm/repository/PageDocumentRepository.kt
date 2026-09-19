@@ -84,17 +84,21 @@ class SurrealPageDocumentRepository(
         pageId: PageId,
     ): PageDocument? = load(transaction, pageId, catalog())
 
+    internal fun loadAll(transaction: Transaction): Map<PageId, PageDocument> {
+        val resolvedCatalog = catalog()
+        return transaction
+            .query("SELECT VALUE id FROM page ORDER BY id;")
+            .take(0)
+            .getArray()
+            .map { it.getRecordId().toPageId() }
+            .mapNotNull { pageId -> load(transaction, pageId, resolvedCatalog)?.let { pageId to it } }
+            .toMap()
+    }
+
     override suspend fun getAuthoringSnapshot(): AuthoringSnapshot =
         database.inTransaction { transaction ->
             val revision = transaction.authoringRevision()
-            val pageIds =
-                transaction
-                    .query("SELECT VALUE id FROM page ORDER BY id;")
-                    .take(0)
-                    .getArray()
-                    .map { it.getRecordId().toPageId() }
-            val resolvedCatalog = catalog()
-            AuthoringSnapshot(revision, pageIds.mapNotNull { load(transaction, it, resolvedCatalog) })
+            AuthoringSnapshot(revision, loadAll(transaction).values.toList())
         }
 
     override suspend fun currentAuthoringRevision(): String = database.inTransaction(Transaction::authoringRevision)

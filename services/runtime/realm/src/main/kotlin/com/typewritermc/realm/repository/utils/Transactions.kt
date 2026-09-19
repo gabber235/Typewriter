@@ -20,3 +20,16 @@ internal inline fun <Result> Surreal.inTransaction(block: (Transaction) -> Resul
         throw failure
     }
 }
+
+/** Executes against a transaction consistent view and always cancels instead of committing. */
+internal inline fun <Result> Surreal.inPreviewTransaction(block: (Transaction) -> Result): Result {
+    val transaction = beginTransaction()
+    return try {
+        val result = block(transaction)
+        transaction.cancel()
+        result
+    } catch (failure: Throwable) {
+        runCatching { transaction.cancel() }.exceptionOrNull()?.let(failure::addSuppressed)
+        throw failure
+    }
+}

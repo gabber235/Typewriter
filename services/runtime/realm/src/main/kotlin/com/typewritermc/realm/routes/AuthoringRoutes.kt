@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.AuthoringBatchResult
+import com.typewritermc.realm.repository.AuthoringPreviewResult
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
@@ -68,6 +69,21 @@ internal class AuthoringRoutes(
                     if (result.affectsCompilation) onCompilationInvalidated()
                 }
                 result.toWireResponse()
+            }
+            unary(contracts.previewAuthoringBatch) { call ->
+                try {
+                    repository.preview(call.request.toDomain()).toWireResponse()
+                } catch (invalid: IllegalArgumentException) {
+                    AuthoringPreviewResult
+                        .Invalid(
+                            listOf(
+                                com.typewritermc.realm.repository.AuthoringDiagnostic(
+                                    code = "invalid-request",
+                                    message = invalid.message ?: "Invalid authoring preview request.",
+                                ),
+                            ),
+                        ).toWireResponse()
+                }
             }
         }
 }

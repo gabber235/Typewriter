@@ -47,6 +47,9 @@ interface AuthoringRepository {
      * Storage failures remain exceptional.
      */
     suspend fun apply(batch: AuthoringBatch): AuthoringBatchResult
+
+    /** Runs operations and page rules in an always cancelled transaction. */
+    suspend fun preview(operations: List<AuthoringOperation>): AuthoringPreviewResult
 }
 
 @JvmInline
@@ -141,6 +144,22 @@ data class ExpectedElementValueMutation(
     val expected: DataValue,
     val mutation: ElementValueMutation,
 )
+
+/** Replaces an element schema and value after comparing the complete observed source state. */
+@Serializable
+data class ElementTypeChange(
+    val expectedElementType: ElementTypeId,
+    val expectedSchemaRevision: Int,
+    val expectedValue: DataValue,
+    val elementType: ElementTypeId,
+    val schemaRevision: Int,
+    val value: DataValue,
+) {
+    init {
+        require(expectedSchemaRevision > 0) { "Expected element schema revisions must be positive." }
+        require(schemaRevision > 0) { "Element schema revisions must be positive." }
+    }
+}
 
 /**
  * Carries a logical element in authoring requests and change events.
@@ -302,7 +321,14 @@ sealed interface AuthoringOperation {
         val page: ExpectedChange<Ref<LibraryPage>>? = null,
         val placement: ExpectedChange<ElementPlacement>? = null,
         val valueMutations: List<ExpectedElementValueMutation> = emptyList(),
+        val elementType: ElementTypeChange? = null,
     ) : AuthoringOperation {
+        init {
+            require(elementType == null || valueMutations.isEmpty()) {
+                "Element type replacement cannot be combined with value mutations."
+            }
+        }
+
         override val resource get() = AuthoringResourceRef.Element(id)
     }
 
@@ -315,6 +341,7 @@ sealed interface AuthoringOperation {
         val page: Ref<LibraryPage>,
         val placement: ElementPlacement,
         val referenceRewrites: Map<ResourceId, ResourceId> = emptyMap(),
+        val valueMutations: List<ElementValueMutation> = emptyList(),
     ) : AuthoringOperation {
         override val resource get() = AuthoringResourceRef.Element(newId)
     }
@@ -554,4 +581,19 @@ sealed interface AuthoringBatchResult {
     data class Invalid(
         val diagnostics: List<AuthoringDiagnostic>,
     ) : AuthoringBatchResult
+}
+
+/** Result of executing an authoring mutation without committing it. */
+sealed interface AuthoringPreviewResult {
+    data class Valid(
+        val affectedResources: Set<AuthoringResourceRef>,
+    ) : AuthoringPreviewResult
+
+    data class Conflict(
+        val conflicts: List<PropertyConflict>,
+    ) : AuthoringPreviewResult
+
+    data class Invalid(
+        val diagnostics: List<AuthoringDiagnostic>,
+    ) : AuthoringPreviewResult
 }

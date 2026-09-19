@@ -18,6 +18,7 @@ import com.typewritermc.realm.repository.AuthoringBatchResult
 import com.typewritermc.realm.repository.AuthoringChanged
 import com.typewritermc.realm.repository.AuthoringDiagnostic
 import com.typewritermc.realm.repository.AuthoringElement
+import com.typewritermc.realm.repository.AuthoringPreviewResult
 import com.typewritermc.realm.repository.AuthoringPropertyValue
 import com.typewritermc.realm.repository.AuthoringResourceChange
 import com.typewritermc.realm.repository.AuthoringResourceRef
@@ -32,6 +33,7 @@ import skirout.editor.v1.path.DataPathSegment
 import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
 import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
 import skirout.library.v1.authoring.GraphPlacement
+import skirout.library.v1.authoring.PreviewAuthoringBatchResponse
 import skirout.library.v1.authoring.AuthoringConflict as WireConflict
 import skirout.library.v1.authoring.AuthoringInvalid as WireInvalid
 import skirout.library.v1.authoring.AuthoringPropertyValue as WirePropertyValue
@@ -88,6 +90,21 @@ internal fun AuthoringBatchResult.toWireResponse(): ApplyAuthoringBatchResponse 
             ApplyAuthoringBatchResponse.InvalidWrapper(
                 WireInvalid(diagnostics = diagnostics.map(AuthoringDiagnostic::toWire)),
             )
+        }
+    }
+
+internal fun AuthoringPreviewResult.toWireResponse(): PreviewAuthoringBatchResponse =
+    when (this) {
+        is AuthoringPreviewResult.Valid -> {
+            PreviewAuthoringBatchResponse.createValid(affectedResources = affectedResources.map { it.toWire() })
+        }
+
+        is AuthoringPreviewResult.Conflict -> {
+            PreviewAuthoringBatchResponse.createConflict(conflicts = conflicts.map(PropertyConflict::toWire))
+        }
+
+        is AuthoringPreviewResult.Invalid -> {
+            PreviewAuthoringBatchResponse.createInvalid(diagnostics = diagnostics.map(AuthoringDiagnostic::toWire))
         }
     }
 

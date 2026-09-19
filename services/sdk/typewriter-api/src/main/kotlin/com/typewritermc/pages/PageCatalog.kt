@@ -45,6 +45,7 @@ data class PageDescriptor(
     val icon: Icon,
     val color: Color,
     val editor: ResolvedPageEditorDefinition,
+    val authoringRules: List<PageAuthoringRuleRef> = emptyList(),
 ) {
     init {
         require(name.isNotBlank()) { "Page names must not be blank." }
@@ -91,6 +92,7 @@ data class PageDiagnostic(
 data class PageCatalog(
     val entries: List<PageCatalogEntry>,
     val diagnostics: List<PageDiagnostic>,
+    private val authoringRules: Map<PageKindRef, List<PageAuthoringRule>> = emptyMap(),
 ) {
     init {
         require(entries.map { it.descriptor.kind }.distinct().size == entries.size) {
@@ -107,6 +109,9 @@ data class PageCatalog(
      * Returns null for an absent identity or revision. It never substitutes another revision.
      */
     fun definition(kind: PageKindRef): PageDescriptor? = entries.singleOrNull { it.descriptor.kind == kind }?.descriptor
+
+    /** Returns executable rules for one exact page kind revision. */
+    fun authoringRules(kind: PageKindRef): List<PageAuthoringRule> = authoringRules[kind].orEmpty()
 }
 
 /**
@@ -144,20 +149,22 @@ object PageCatalogAssembler {
             providers
                 .sortedWith(compareBy(PageProvider::namespace, PageProvider::sourcePart, PageProvider::declarationName))
                 .mapNotNull { provider -> compile(provider, prototypes, diagnostics) }
-        val duplicates = compiled.groupBy { it.descriptor.kind.id }.filterValues { it.size > 1 }
+        val duplicates = compiled.groupBy { it.entry.descriptor.kind.id }.filterValues { it.size > 1 }
         duplicates.forEach { (id, entries) ->
             entries.forEach { entry ->
                 diagnostics +=
                     PageDiagnostic(
                         "duplicate_id",
                         "Page kind id $id is declared more than once.",
-                        kind = entry.descriptor.kind,
+                        kind = entry.entry.descriptor.kind,
                     )
             }
         }
+        val accepted = compiled.filterNot { it.entry.descriptor.kind.id in duplicates }
         return PageCatalog(
-            entries = compiled.filterNot { it.descriptor.kind.id in duplicates }.sortedBy { it.descriptor.name },
+            entries = accepted.map(CompiledPage::entry).sortedBy { it.descriptor.name },
             diagnostics = diagnostics,
+            authoringRules = accepted.associate { it.entry.descriptor.kind to it.authoringRules },
         )
     }
 
@@ -165,21 +172,26 @@ object PageCatalogAssembler {
         provider: PageProvider,
         prototypes: TypePrototypeRegistry,
         diagnostics: MutableList<PageDiagnostic>,
-    ): PageCatalogEntry? =
+    ): CompiledPage? =
         runCatching {
             val specification = provider.specification()
-            PageCatalogEntry(
-                originArtifactId = provider.namespace,
-                sourcePart = provider.sourcePart,
-                descriptor =
-                    PageDescriptor(
-                        kind = provider.kind,
-                        name = specification.name ?: provider.declarationName.derivedPageName(),
-                        description = specification.description,
-                        icon = Icon.parse(specification.icon),
-                        color = Color.parseRgb(specification.color),
-                        editor = specification.editor.resolve(prototypes),
+            CompiledPage(
+                entry =
+                    PageCatalogEntry(
+                        originArtifactId = provider.namespace,
+                        sourcePart = provider.sourcePart,
+                        descriptor =
+                            PageDescriptor(
+                                kind = provider.kind,
+                                name = specification.name ?: provider.declarationName.derivedPageName(),
+                                description = specification.description,
+                                icon = Icon.parse(specification.icon),
+                                color = Color.parseRgb(specification.color),
+                                editor = specification.editor.resolve(prototypes),
+                                authoringRules = specification.authoringRules.map(PageAuthoringRule::reference),
+                            ),
                     ),
+                authoringRules = specification.authoringRules,
             )
         }.getOrElse { failure ->
             diagnostics +=
@@ -194,6 +206,11 @@ object PageCatalogAssembler {
             null
         }
 }
+
+private data class CompiledPage(
+    val entry: PageCatalogEntry,
+    val authoringRules: List<PageAuthoringRule>,
+)
 
 private fun PageEditorDefinition.resolve(prototypes: TypePrototypeRegistry): ResolvedPageEditorDefinition =
     when (this) {

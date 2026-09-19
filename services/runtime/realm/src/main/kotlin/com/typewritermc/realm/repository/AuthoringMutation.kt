@@ -18,7 +18,6 @@ import com.typewritermc.elements.StoredReference
 import com.typewritermc.elements.elementId
 import com.typewritermc.elements.elementName
 import com.typewritermc.elements.withElementId
-import com.typewritermc.elements.withElementName
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookId
 import com.typewritermc.library.LibraryName
@@ -467,7 +466,7 @@ internal class AuthoringMutation(
             loaded.elements.singleOrNull()
                 ?: conflict(operation.resource, emptyPath(), null, null)
         val currentPage = checkNotNull(loaded.pages[current.id]).toPageId().ref()
-        val graph = typeGraphs[current.elementType] ?: invalid("element-type-unavailable", operation.resource)
+        val currentGraph = typeGraphs[current.elementType] ?: invalid("element-type-unavailable", operation.resource)
         val conflicts = mutableListOf<PropertyConflict>()
         operation.page.check(operation.resource, "page", currentPage, conflicts) {
             AuthoringPropertyValue.ResourceValue(it.id)
@@ -478,6 +477,36 @@ internal class AuthoringMutation(
             current.placement,
             conflicts,
         ) { AuthoringPropertyValue.PlacementValue(it) }
+        val currentLogicalValue = current.logicalValue(currentGraph)
+        operation.elementType?.let { change ->
+            if (change.expectedElementType != current.elementType) {
+                conflicts +=
+                    PropertyConflict(
+                        operation.resource,
+                        fieldPath("elementType"),
+                        AuthoringPropertyValue.StringValue(change.expectedElementType.value.toString()),
+                        AuthoringPropertyValue.StringValue(current.elementType.value.toString()),
+                    )
+            }
+            if (change.expectedSchemaRevision != current.schemaRevision) {
+                conflicts +=
+                    PropertyConflict(
+                        operation.resource,
+                        fieldPath("schemaRevision"),
+                        AuthoringPropertyValue.IntegerValue(change.expectedSchemaRevision),
+                        AuthoringPropertyValue.IntegerValue(current.schemaRevision),
+                    )
+            }
+            if (change.expectedValue != currentLogicalValue) {
+                conflicts +=
+                    PropertyConflict(
+                        operation.resource,
+                        fieldPath("value"),
+                        AuthoringPropertyValue.DataValueValue(change.expectedValue),
+                        AuthoringPropertyValue.DataValueValue(currentLogicalValue),
+                    )
+            }
+        }
         var projectedValue = current.value
         operation.valueMutations.forEach { expectedMutation ->
             val mutation = expectedMutation.mutation
@@ -485,7 +514,7 @@ internal class AuthoringMutation(
                 invalid("immutable-element-id", operation.resource, mutation.path)
             }
             val actual =
-                runCatching { valueMutator.read(graph, projectedValue, mutation.path) }
+                runCatching { valueMutator.read(currentGraph, projectedValue, mutation.path) }
                     .getOrElse { invalid("invalid-value-path", operation.resource, mutation.path) }
             if (actual != expectedMutation.expected) {
                 conflicts +=
@@ -497,19 +526,25 @@ internal class AuthoringMutation(
                     )
             } else {
                 projectedValue =
-                    when (val result = valueMutator.apply(graph, projectedValue, listOf(mutation))) {
+                    when (val result = valueMutator.apply(currentGraph, projectedValue, listOf(mutation))) {
                         is ElementValueMutationResult.Success -> result.value
                         is ElementValueMutationResult.Failure -> invalid(result.code, operation.resource, mutation.path)
                     }
             }
         }
         rejectConflicts(conflicts)
+        val nextElementType = operation.elementType?.elementType ?: current.elementType
+        val nextSchemaRevision = operation.elementType?.schemaRevision ?: current.schemaRevision
+        val nextGraph = typeGraphs[nextElementType] ?: invalid("element-type-unavailable", operation.resource)
+        operation.elementType?.let { change ->
+            projectedValue = decomposer.decompose(nextGraph, change.value.withElementId(operation.id))
+        }
         operation.page?.let { requireRecords(listOf(it.value.id), "page-not-found", operation.resource) }
         val nextPage = operation.page?.value ?: currentPage
         validateElementReferences(
             operation.resource,
             nextPage.pageId(),
-            graph,
+            nextGraph,
             projectedValue.references,
             if (operation.page == null) current.value.references else emptyList(),
         )
@@ -526,9 +561,12 @@ internal class AuthoringMutation(
         }
         transaction
             .query(
-                "UPDATE ONLY \$element SET value = \$value, placement = \$placement;",
+                "UPDATE ONLY \$element SET element_type = \$element_type, schema_revision = \$schema_revision, " +
+                    "value = \$value, placement = \$placement;",
                 mapOf(
                     "element" to operation.id.surrealId(),
+                    "element_type" to nextElementType.value.toString(),
+                    "schema_revision" to nextSchemaRevision,
                     "value" to DataValueDatabaseCodec.encode(projectedValue.valueWithSlots),
                     "placement" to (operation.placement?.value ?: current.placement).databaseValue(),
                 ),
@@ -546,6 +584,7 @@ internal class AuthoringMutation(
         if (
             operation.page != null ||
             operation.valueMutations.isNotEmpty() ||
+            operation.elementType != null ||
             placementAffectsCompilation
         ) {
             affectsCompilation = true
@@ -573,19 +612,28 @@ internal class AuthoringMutation(
             invalid("element-already-exists", operation.resource)
         }
         requireRecords(listOf(operation.page.id), "page-not-found", operation.resource)
+        var duplicateValue =
+            decomposer.decompose(
+                graph,
+                logical.withElementId(operation.newId),
+            )
+        operation.valueMutations.forEach { mutation ->
+            if (mutation.path.segments.firstOrNull() == ElementValuePathSegment.Field("id")) {
+                invalid("immutable-element-id", operation.resource, mutation.path)
+            }
+            duplicateValue =
+                when (val result = valueMutator.apply(graph, duplicateValue, listOf(mutation))) {
+                    is ElementValueMutationResult.Success -> result.value
+                    is ElementValueMutationResult.Failure -> invalid(result.code, operation.resource, mutation.path)
+                }
+        }
         val value =
-            decomposer
-                .decompose(
-                    graph,
-                    logical
-                        .withElementId(operation.newId)
-                        .withElementName("${logical.elementName()} Copy"),
-                ).copy(
-                    references =
-                        source.value.references.map { reference ->
-                            reference.copy(target = operation.referenceRewrites[reference.target] ?: reference.target)
-                        },
-                )
+            duplicateValue.copy(
+                references =
+                    source.value.references.map { reference ->
+                        reference.copy(target = operation.referenceRewrites[reference.target] ?: reference.target)
+                    },
+            )
         validateElementReferences(
             operation.resource,
             operation.page.pageId(),

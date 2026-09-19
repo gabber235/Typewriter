@@ -92,12 +92,16 @@ data class PageSpec(
     val color: String,
     val name: String? = null,
     val description: String? = null,
+    val authoringRules: List<PageAuthoringRule> = emptyList(),
 ) {
     init {
         require(name == null || name.isNotBlank()) { "Explicit page names must not be blank." }
         require(description == null || description.isNotBlank()) { "Explicit page descriptions must not be blank." }
         require(icon.isNotBlank()) { "Page icons must not be blank." }
         require(color.isNotBlank()) { "Page colors must not be blank." }
+        require(authoringRules.map { it.reference.id }.distinct().size == authoringRules.size) {
+            "Page authoring rule ids must be unique within a page specification."
+        }
     }
 }
 
@@ -112,4 +116,5 @@ fun page(
     color: String,
     name: String? = null,
     description: String? = null,
-): PageSpec = PageSpec(editor, icon, color, name, description)
+    authoringRules: List<PageAuthoringRule> = emptyList(),
+): PageSpec = PageSpec(editor, icon, color, name, description, authoringRules)

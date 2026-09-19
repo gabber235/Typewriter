@@ -141,7 +141,14 @@ class Realm(
                     elementSearchCatalog,
                     typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) },
                 )
-            val authoring = SurrealAuthoringRepository(connected, pageDocuments, elementTypeGraphs, authoringSearch)
+            val authoring =
+                SurrealAuthoringRepository(
+                    connected,
+                    pageDocuments,
+                    elementTypeGraphs,
+                    authoringSearch,
+                    pageCatalog = { discoverySnapshots.current()?.pages },
+                )
             val compiler =
                 RealmCompileCoordinator(
                     documents = pageDocuments,

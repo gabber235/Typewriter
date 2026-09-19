@@ -7,11 +7,14 @@ import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ElementValueMutator
 import com.typewritermc.library.BookId
 import com.typewritermc.library.PageId
+import com.typewritermc.pages.PageAuthoringRuleContext
+import com.typewritermc.pages.PageCatalog
 import com.typewritermc.realm.repository.records.BookRecord
 import com.typewritermc.realm.repository.records.PageRecord
 import com.typewritermc.realm.repository.records.TagRecord
 import com.typewritermc.realm.repository.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.repository.utils.advanceCollaborationRevision
+import com.typewritermc.realm.repository.utils.inPreviewTransaction
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.types.TypeGraph
@@ -32,6 +35,7 @@ internal class SurrealAuthoringRepository(
     private val typeGraphs: () -> Map<ElementTypeId, TypeGraph>,
     private val search: SurrealAuthoringSearchRepository? = null,
     private val valueMutator: ElementValueMutator = ElementValueMutator(),
+    private val pageCatalog: () -> PageCatalog? = { null },
 ) : AuthoringRepository {
     /**
      * Captures all requested scopes before the transaction commits, giving every slice one collaboration sequence.
@@ -54,8 +58,11 @@ internal class SurrealAuthoringRepository(
             database.inTransaction { transaction ->
                 val requestHash = canonicalJson.encodeToString(batch).sha256()
                 transaction.replay(batch.id, requestHash)?.let { return@inTransaction it }
+                val catalog = pageCatalog()?.takeIf { it.hasAuthoringRules() }
+                val documentsBefore = catalog?.let { pageDocuments.loadAll(transaction) }.orEmpty()
                 val mutation = AuthoringMutation(transaction, typeGraphs(), valueMutator)
                 batch.operations.forEach(mutation::apply)
+                catalog?.let { transaction.validatePageRules(it, documentsBefore) }
                 search?.update(transaction, mutation.dirtyElementIds)
                 val sequence = transaction.advanceCollaborationRevision()
                 if (mutation.affectsCompilation) {
@@ -77,6 +84,78 @@ internal class SurrealAuthoringRepository(
         } catch (rejected: AuthoringRejected) {
             rejected.result
         }
+
+    override suspend fun preview(operations: List<AuthoringOperation>): AuthoringPreviewResult {
+        require(operations.isNotEmpty()) { "Authoring previews must not be empty." }
+        require(operations.map(AuthoringOperation::resource).distinct().size == operations.size) {
+            "Authoring previews must contain at most one operation per resource."
+        }
+        return try {
+            database.inPreviewTransaction { transaction ->
+                val catalog = pageCatalog()?.takeIf { it.hasAuthoringRules() }
+                val documentsBefore = catalog?.let { pageDocuments.loadAll(transaction) }.orEmpty()
+                val mutation = AuthoringMutation(transaction, typeGraphs(), valueMutator)
+                operations.forEach(mutation::apply)
+                catalog?.let { transaction.validatePageRules(it, documentsBefore) }
+                AuthoringPreviewResult.Valid(
+                    mutation.changes.mapTo(linkedSetOf()) { it.resource } + mutation.indirectResources(),
+                )
+            }
+        } catch (rejected: AuthoringRejected) {
+            when (val result = rejected.result) {
+                is AuthoringBatchResult.Conflict -> AuthoringPreviewResult.Conflict(result.conflicts)
+                is AuthoringBatchResult.Invalid -> AuthoringPreviewResult.Invalid(result.diagnostics)
+                is AuthoringBatchResult.Applied -> error("Applied results cannot reject an authoring preview.")
+            }
+        }
+    }
+
+    private fun Transaction.validatePageRules(
+        catalog: PageCatalog,
+        documentsBefore: Map<PageId, com.typewritermc.library.PageDocument>,
+    ) {
+        val documentsAfter = pageDocuments.loadAll(this)
+        documentsAfter.forEach { (pageId, after) ->
+            val before = documentsBefore[pageId]
+            if (before == after) return@forEach
+            val context = PageAuthoringRuleContext(before, after, documentsBefore, documentsAfter)
+            catalog.authoringRules(after.page.kind).forEach { rule ->
+                val violations =
+                    runCatching { rule.validate(context) }.getOrElse { failure ->
+                        throw AuthoringRejected(
+                            AuthoringBatchResult.Invalid(
+                                listOf(
+                                    AuthoringDiagnostic(
+                                        code = "page-rule-failed",
+                                        message =
+                                            "Page rule ${rule.reference.id.value} failed: " +
+                                                (failure.message ?: failure::class.simpleName.orEmpty()),
+                                        resource = AuthoringResourceRef.Page(pageId),
+                                    ),
+                                ),
+                            ),
+                        )
+                    }
+                if (violations.isNotEmpty()) {
+                    throw AuthoringRejected(
+                        AuthoringBatchResult.Invalid(
+                            violations.map { violation ->
+                                AuthoringDiagnostic(
+                                    code = violation.code,
+                                    message = violation.message,
+                                    resource =
+                                        violation.element?.let(AuthoringResourceRef::Element)
+                                            ?: AuthoringResourceRef.Page(pageId),
+                                )
+                            },
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun PageCatalog.hasAuthoringRules(): Boolean = entries.any { it.descriptor.authoringRules.isNotEmpty() }
 
     private fun Transaction.snapshot(scope: AuthoringSnapshotScope): AuthoringSnapshotSlice =
         when (scope) {
