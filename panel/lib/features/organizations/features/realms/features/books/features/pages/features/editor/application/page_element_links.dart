@@ -65,25 +65,38 @@ extension on PageElement {
       entry: switch (entry) {
         DefinitionPageEntry(:final definition) => PageEntry.definition(
           definition: definition.copyWith(
-            inwardEdges: inward,
-            outwardEdges: outward,
+            inwardEdges: [...definition.inwardEdges.structural, ...inward],
+            outwardEdges: [...definition.outwardEdges.structural, ...outward],
           ),
         ),
         MissingElementDefinitionPageEntry() => entry.copyWith(
-          inwardLinks: inward,
+          inwardLinks: [...entry.inwardLinks.structural, ...inward],
         ),
         _ => entry,
       },
     ),
     PageElementCue(:final cue) => PageElement.cue(
       cue: switch (cue) {
-        Segment() => cue.copyWith(inwardLinks: inward, outwardLinks: outward),
-        Keyframe() => cue.copyWith(inwardLinks: inward),
+        Segment() => cue.copyWith(
+          inwardLinks: [...cue.inwardLinks.structural, ...inward],
+          outwardLinks: [...cue.outwardLinks.structural, ...outward],
+        ),
+        Keyframe() => cue.copyWith(
+          inwardLinks: [...cue.inwardLinks.structural, ...inward],
+        ),
         _ => cue,
       },
     ),
     _ => this,
   };
+}
+
+extension on List<ElementLink> {
+  /// Persisted structural links use named slots such as `children` and
+  /// `parent`. Projected value references use canonical record paths, which
+  /// always start with a field segment because page element values are records.
+  Iterable<ElementLink> get structural =>
+      where((link) => !link.path.startsWith("."));
 }
 
 extension on DataValue {

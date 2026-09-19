@@ -13,7 +13,16 @@ void main() {
           "targets": ListValue([ReferenceValue(recordId("element:target"))]),
         }),
         outward: const [
-          ElementLink(linkId: "stale", otherId: "old", path: "slot"),
+          ElementLink(
+            linkId: "source:.targets[0]",
+            otherId: "old",
+            path: ".targets[0]",
+          ),
+          ElementLink(
+            linkId: "source_child",
+            otherId: "child",
+            path: "children",
+          ),
         ],
       );
       final target = _entry(
@@ -26,6 +35,7 @@ void main() {
       final projectedTarget = _definition(projected.last);
 
       expect(projectedSource.outwardEdges, const [
+        ElementLink(linkId: "source_child", otherId: "child", path: "children"),
         ElementLink(
           linkId: "source:.targets[0]",
           otherId: "target",
@@ -47,7 +57,9 @@ void main() {
         ),
         target,
       ].projectLinks();
-      expect(_definition(withoutReference.first).outwardEdges, isEmpty);
+      expect(_definition(withoutReference.first).outwardEdges, const [
+        ElementLink(linkId: "source_child", otherId: "child", path: "children"),
+      ]);
       expect(_definition(withoutReference.last).inwardEdges, isEmpty);
     },
   );
