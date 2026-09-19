@@ -22,7 +22,7 @@ void main() {
         child: Center(
           child: SizedBox(
             width: 400,
-            child: _renderer([directTag, inheritedTag], [directTag.tagId.id]),
+            child: _renderer([directTag, inheritedTag], [directTag.tagId]),
           ),
         ),
         settle: false,
@@ -64,7 +64,7 @@ void main() {
       child: Center(
         child: SizedBox(
           width: 400,
-          child: _renderer([directTag, first, second], [directTag.tagId.id]),
+          child: _renderer([directTag, first, second], [directTag.tagId]),
         ),
       ),
       settle: false,
@@ -132,7 +132,7 @@ void main() {
               width: 400,
               child: _renderer(
                 [firstRoot, secondRoot, shared, firstLeaf, secondLeaf],
-                [firstRoot.tagId.id, secondRoot.tagId.id],
+                [firstRoot.tagId, secondRoot.tagId],
               ),
             ),
           );
@@ -186,7 +186,7 @@ Tag _tag(String id, {required String name, List<String> parents = const []}) =>
       placement: const Placement(x: 0, y: 0, width: 4, height: 1),
     );
 
-EditorProtocolRenderer _renderer(List<Tag> tags, List<String> rootTagIds) {
+EditorProtocolRenderer _renderer(List<Tag> tags, List<RecordId> rootTagIds) {
   const rootBinding = BindingReference(bindingId: BindingId(0));
   final rootType = ResolvedTypeRef(
     id: const QualifiedTypeId(namespace: "test", name: "bookTags"),
@@ -195,9 +195,10 @@ EditorProtocolRenderer _renderer(List<Tag> tags, List<String> rootTagIds) {
   return EditorProtocolRenderer(
     envelope: TypedValueEnvelope(
       rootType: rootType,
-      rootValue: ListValue(rootTagIds.map(StringValue.new).toList()),
+      rootValue: ListValue(rootTagIds.map(ReferenceValue.new).toList()),
     ),
     typeCatalog: TypeCatalog([
+      ...referenceResourceTypes.definitions,
       TypeDefinition(
         id: rootType,
         kind: NominalTypeKind.concrete,

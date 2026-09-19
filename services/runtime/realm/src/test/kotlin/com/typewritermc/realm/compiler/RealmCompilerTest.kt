@@ -19,7 +19,9 @@ import com.typewritermc.realm.repository.SurrealPageDocumentRepository
 import com.typewritermc.realm.routes.toLibrary
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
+import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
 import com.typewritermc.types.TypeId
@@ -153,12 +155,36 @@ private suspend fun RepositoryFixture.createDanglingElement(
                     com.typewritermc.types.TypeField("target", REFERENCE_TYPE),
                 ),
             ),
-            emptyList(),
+            REFERENCE_DEFINITIONS,
+        ),
+    )
+    registerElementType(TARGET_TYPE, TypeGraph(TypeExpression.Any, emptyList()))
+    authoring.apply(
+        AuthoringBatch(
+            BatchId("$batchId-target"),
+            listOf(
+                AuthoringOperation.CreateElement(
+                    AuthoringElement(
+                        id = MISSING_ID,
+                        page = page.pageRef(),
+                        elementType = TARGET_TYPE,
+                        schemaRevision = 1,
+                        value =
+                            DataValue.Record(
+                                mapOf(
+                                    "id" to DataValue.StringValue(MISSING_ID.value),
+                                    "name" to DataValue.StringValue("Temporary target"),
+                                ),
+                            ),
+                        placement = ElementPlacement.Graph(0, 0, 1, 1),
+                    ),
+                ),
+            ),
         ),
     )
     authoring.apply(
         AuthoringBatch(
-            BatchId(batchId),
+            BatchId("$batchId-source"),
             listOf(
                 AuthoringOperation.CreateElement(
                     AuthoringElement(
@@ -171,10 +197,7 @@ private suspend fun RepositoryFixture.createDanglingElement(
                                 mapOf(
                                     "id" to DataValue.StringValue(INVALID_ID.value),
                                     "name" to DataValue.StringValue("Invalid"),
-                                    "target" to
-                                        DataValue.StringValue(
-                                            MISSING_ID.ref<com.typewritermc.elements.Element>().id.referenceString(),
-                                        ),
+                                    "target" to DataValue.Reference(MISSING_ID.ref<com.typewritermc.elements.Element>().id),
                                 ),
                             ),
                         placement = ElementPlacement.Graph(0, 0, 1, 1),
@@ -183,16 +206,23 @@ private suspend fun RepositoryFixture.createDanglingElement(
             ),
         ),
     )
+    authoring.apply(
+        AuthoringBatch(
+            BatchId("$batchId-delete-target"),
+            listOf(AuthoringOperation.DeleteElement(MISSING_ID)),
+        ),
+    )
 }
 
 private val INVALID_ID = ElementInstanceId("70000000000000000000000000000001")
 private val MISSING_ID = ElementInstanceId("70000000000000000000000000000002")
 private val INVALID_TYPE = ElementTypeId(DeclaredTypeId.parse("70000000000000000000000000000003"))
-private val REFERENCE_TYPE =
-    TypeExpression.Named(
-        ResolvedTypeRef(
-            TypeId.Qualified("typewriter/v1", "Ref"),
-            revision = 1,
-            arguments = listOf(TypeExpression.Any),
-        ),
+private val TARGET_TYPE = ElementTypeId(DeclaredTypeId.parse("70000000000000000000000000000004"))
+private val REFERENCEABLE_TYPE = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.types", "Referenceable"), 1)
+private val ELEMENT_REFERENCE_TYPE = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.elements", "Element"), 1)
+private val REFERENCE_TYPE = TypeExpression.Reference(ELEMENT_REFERENCE_TYPE)
+private val REFERENCE_DEFINITIONS =
+    listOf(
+        TypeDefinition(REFERENCEABLE_TYPE, NominalTypeKind.OPEN_ABSTRACT),
+        TypeDefinition(ELEMENT_REFERENCE_TYPE, NominalTypeKind.OPEN_ABSTRACT, parents = listOf(REFERENCEABLE_TYPE)),
     )

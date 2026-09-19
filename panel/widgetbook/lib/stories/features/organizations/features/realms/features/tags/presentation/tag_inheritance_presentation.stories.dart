@@ -100,10 +100,11 @@ Widget _story({
             envelope: TypedValueEnvelope(
               rootType: rootType,
               rootValue: ListValue(
-                roots.map((id) => StringValue(_tagRecordId(id).id)).toList(),
+                roots.map((id) => ReferenceValue(_tagRecordId(id))).toList(),
               ),
             ),
             typeCatalog: TypeCatalog([
+              ...referenceResourceTypes.definitions,
               TypeDefinition(
                 id: rootType,
                 kind: NominalTypeKind.concrete,

@@ -120,7 +120,7 @@ val SyntheticDiscoveryTest by testSuite {
         with(CodecContext(registry)) { SyntheticEntryElementPrototype.decode(encoded) } shouldBe source
     }
 
-    test("encodes exact page references as scalar page ids") {
+    test("encodes exact page references as typed page references") {
         val definitions = typeContribution("elements.cbor").definitions
         val entryDefinition =
             definitions.single {
@@ -130,9 +130,8 @@ val SyntheticDiscoveryTest by testSuite {
             (entryDefinition.representation as TypeExpression.Record)
                 .fields
                 .single { it.name == "page" }
-                .type as TypeExpression.Named
-        val referencedKind = pageType.reference.arguments.single() as TypeExpression.Named
-        referencedKind.reference.id shouldBe
+                .type as TypeExpression.Reference
+        pageType.target.id shouldBe
             TypeId.Declared(DeclaredTypeId.parse("019d3a87000170008000000000000001"))
         val registry =
             TypePrototypeRegistry(
@@ -150,7 +149,7 @@ val SyntheticDiscoveryTest by testSuite {
         val fields = (encoded as DataValue.Record).fields
 
         fields.getValue("id") shouldBe DataValue.StringValue("00000000000000000000000000000003")
-        fields.getValue("page") shouldBe DataValue.StringValue("page:opening")
+        fields.getValue("page") shouldBe DataValue.Reference(ResourceId("page", PageId("opening").key))
         with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.decode(encoded) } shouldBe source
     }
 

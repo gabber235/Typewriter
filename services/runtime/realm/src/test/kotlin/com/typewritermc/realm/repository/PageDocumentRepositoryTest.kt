@@ -8,7 +8,9 @@ import com.typewritermc.library.PageId
 import com.typewritermc.realm.routes.toLibrary
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
+import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeGraph
@@ -25,10 +27,11 @@ val PageDocumentRepositoryTest by testSuite {
     test("page documents include local values and cross page reference summaries") {
         runTest {
             RepositoryFixture().use { fixture ->
-                val firstPage = fixture.page("first")
-                val secondPage = fixture.page("second")
-                fixture.createElement(firstPage, SOURCE_ID, "Source", referenceValue(TARGET_ID), TypeGraph(REF_EXPRESSION, emptyList()))
+                val book = fixture.createBook("shared_book")
+                val firstPage = fixture.createPage("first_page", book.id, PageType.STATIC.toLibrary()).id
+                val secondPage = fixture.createPage("second_page", book.id, PageType.STATIC.toLibrary()).id
                 fixture.createElement(secondPage, TARGET_ID, "Target", defaultValue("Target"), TypeGraph(TypeExpression.Any, emptyList()))
+                fixture.createElement(firstPage, SOURCE_ID, "Source", referenceValue(TARGET_ID), REFERENCE_GRAPH)
                 val documents = SurrealPageDocumentRepository(fixture.database) { null }
 
                 val first = requireNotNull(documents.getPageDocument(firstPage))
@@ -51,7 +54,9 @@ val PageDocumentRepositoryTest by testSuite {
         runTest {
             RepositoryFixture().use { fixture ->
                 val page = fixture.page("dangling")
-                fixture.createElement(page, SOURCE_ID, "Source", referenceValue(MISSING_ID), TypeGraph(REF_EXPRESSION, emptyList()))
+                fixture.createElement(page, MISSING_ID, "Missing", defaultValue("Missing"), TypeGraph(TypeExpression.Any, emptyList()))
+                fixture.createElement(page, SOURCE_ID, "Source", referenceValue(MISSING_ID), REFERENCE_GRAPH)
+                fixture.deleteElement(MISSING_ID)
 
                 val document = requireNotNull(SurrealPageDocumentRepository(fixture.database) { null }.getPageDocument(page))
 
@@ -61,6 +66,15 @@ val PageDocumentRepositoryTest by testSuite {
             }
         }
     }
+}
+
+private suspend fun RepositoryFixture.deleteElement(id: ElementInstanceId) {
+    authoring.apply(
+        AuthoringBatch(
+            BatchId("delete-element-${id.value}"),
+            listOf(AuthoringOperation.DeleteElement(id)),
+        ),
+    )
 }
 
 private suspend fun RepositoryFixture.page(name: String): PageId {
@@ -116,19 +130,21 @@ private suspend fun RepositoryFixture.createElement(
 
 private fun defaultValue(name: String): DataValue = DataValue.Record(mapOf("text" to DataValue.StringValue(name)))
 
-private fun referenceValue(target: ElementInstanceId): DataValue =
-    DataValue.StringValue(target.ref<com.typewritermc.elements.Element>().id.referenceString())
+private fun referenceValue(target: ElementInstanceId): DataValue = DataValue.Reference(target.ref<com.typewritermc.elements.Element>().id)
 
 private val SOURCE_ID = ElementInstanceId("kd9pn4fa2s7m8q3v6x0z")
 private val TARGET_ID = ElementInstanceId("nx9pn4fa2s7m8q3v6x0z")
 private val MISSING_ID = ElementInstanceId("30000000000000000000000000000003")
 private val ELEMENT_TYPE = ElementTypeId(DeclaredTypeId.parse("40000000000000000000000000000001"))
 private val REFERENCE_ELEMENT_TYPE = ElementTypeId(DeclaredTypeId.parse("40000000000000000000000000000002"))
-private val REF_EXPRESSION =
-    TypeExpression.Named(
-        ResolvedTypeRef(
-            TypeId.Qualified("typewriter/v1", "Ref"),
-            revision = 1,
-            arguments = listOf(TypeExpression.Any),
+private val REFERENCEABLE_TYPE = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.types", "Referenceable"), 1)
+private val ELEMENT_REFERENCE_TYPE = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.elements", "Element"), 1)
+private val REF_EXPRESSION = TypeExpression.Reference(ELEMENT_REFERENCE_TYPE)
+private val REFERENCE_GRAPH =
+    TypeGraph(
+        REF_EXPRESSION,
+        listOf(
+            TypeDefinition(REFERENCEABLE_TYPE, NominalTypeKind.OPEN_ABSTRACT),
+            TypeDefinition(ELEMENT_REFERENCE_TYPE, NominalTypeKind.OPEN_ABSTRACT, parents = listOf(REFERENCEABLE_TYPE)),
         ),
     )
