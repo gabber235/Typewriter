@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Bridges an [EditorSource] to the presentation renderer.

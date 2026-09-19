@@ -1,7 +1,6 @@
 import "dart:typed_data";
 
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_value.freezed.dart";

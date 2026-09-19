@@ -1,4 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Display state for one stored reference, including retained missing targets.

@@ -2,7 +2,6 @@ import "dart:convert";
 import "dart:typed_data";
 
 import "package:json_annotation/json_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/record_id.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_value_json_cursor.dart";
