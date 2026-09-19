@@ -38,7 +38,10 @@ void main() {
           organizationIdProvider.overrideWithValue(organizationId),
           realmIdProvider.overrideWithValue(realmId),
           selectedProvider.overrideWithValue(const AsyncData([])),
-          ...pageElementsProviderOverrides(elements: elements),
+          ...pageElementsProviderOverrides(
+            state: DisplayState.fewItems,
+            elements: elements,
+          ),
           decodedRealmDocumentValuesProvider.overrideWith(
             (ref, _) => ref
                 .watch(pageElementsProvider(organizationId, realmId, "page"))
@@ -63,7 +66,11 @@ void main() {
           child: EntryGraph(pageId: "page"),
         ),
       );
-      await tester.pumpAndSettle();
+      for (var attempt = 0; attempt < 20; attempt++) {
+        await tester.pump(const Duration(milliseconds: 50));
+        if (find.byType(GraphSurfaceChild).evaluate().length == 2) break;
+      }
+      expect(find.byType(GraphSurfaceChild), findsNWidgets(2));
 
       final selectors = {
         for (final selector in tester.widgetList<Selector>(

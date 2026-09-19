@@ -19,7 +19,7 @@ void main() {
     expect(organization, contains("OrganizationScaffold(child: AutoRouter())"));
     expect(
       organization,
-      contains("Expanded(\n                    child: InspectorScaffold("),
+      matches(RegExp(r"Expanded\(\s*child: InspectorScaffold\(")),
     );
     expect(organization, contains("child: child,"));
     expect(bookShell, contains("InspectorScaffold("));
