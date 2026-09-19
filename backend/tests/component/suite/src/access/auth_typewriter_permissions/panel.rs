@@ -145,7 +145,6 @@ async fn member_receives_all_organization_capabilities(
         "cloud.to.organization.writers.realm.create",
         "service.to.*.organization.writers.realm.editor.catalog.fetch",
         "service.to.*.organization.writers.realm.editor.catalog.invalidate",
-        "service.to.*.organization.writers.realm.editor.elements.fetch",
         "service.to.*.organization.writers.realm.editor.presentation.search",
         "service.to.*.organization.writers.realm.editor.presentation.search.cancel",
         "service.to.*.organization.writers.realm.editor.capability.computation.invoke",
@@ -155,11 +154,20 @@ async fn member_receives_all_organization_capabilities(
         "service.to.*.organization.writers.realm.shared.blob.read",
         "service.to.*.organization.writers.realm.library.authoring.snapshot.get",
         "service.to.*.organization.writers.realm.library.authoring.batch.apply",
+        "service.to.*.organization.writers.realm.library.authoring.batch.preview",
+        "service.to.*.organization.writers.realm.library.authoring.content.search",
+        "service.to.*.organization.writers.realm.library.authoring.resources.resolve",
+        "service.to.*.organization.writers.realm.library.authoring.selector.suggest",
         "service.to.*.organization.writers.realm.compiled.content.watch",
         "typewriter.presence.organization.writers.user.panel_user",
     ] {
         assert!(publish.iter().any(|subject| subject == required));
     }
+    assert!(
+        publish
+            .iter()
+            .all(|subject| subject != "service.to.*.organization.writers.realm.editor.elements.fetch")
+    );
     let subscribe = &response.permissions.subscribe.allow;
     for required in [
         "cloud.from.organization.writers.roles.watch",
