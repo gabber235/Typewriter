@@ -26,11 +26,9 @@ data class StoredElement(
     }
 }
 
-fun DataValue.elementId(): ElementInstanceId =
-    ElementInstanceId(requireElementField("id"))
+fun DataValue.elementId(): ElementInstanceId = ElementInstanceId(requireElementField("id"))
 
-fun DataValue.elementName(): String =
-    requireElementField("name").also { require(it.isNotBlank()) { "Element names must not be blank." } }
+fun DataValue.elementName(): String = requireElementField("name").also { require(it.isNotBlank()) { "Element names must not be blank." } }
 
 fun DataValue.withElementId(id: ElementInstanceId): DataValue = withElementField("id", id.value)
 
