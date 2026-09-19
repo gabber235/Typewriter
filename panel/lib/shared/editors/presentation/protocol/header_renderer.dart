@@ -176,6 +176,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
           onTap: collapsible ? _toggle : null,
           borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
+            key: ValueKey(("presentationHeaderPadding", widget.nodeId)),
             padding: widget.header.headerPadding.resolve(
               fallback: EdgeInsets.symmetric(
                 horizontal: spacing.space2,
@@ -231,6 +232,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
     );
 
     final bodyContent = Padding(
+      key: ValueKey(("presentationContentPadding", widget.nodeId)),
       padding: widget.header.contentPadding.resolve(
         fallback: EdgeInsets.symmetric(
           horizontal: context.spacing.space2,

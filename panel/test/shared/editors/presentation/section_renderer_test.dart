@@ -170,18 +170,18 @@ void main() {
       ),
     );
 
-    final zeroPadding = find.byWidgetPredicate(
-      (widget) => widget is Padding && widget.padding == EdgeInsets.zero,
+    final headerPadding = tester.widget<Padding>(
+      find.byKey(
+        const ValueKey(("presentationHeaderPadding", "zero.padding.section")),
+      ),
     );
-
-    expect(
-      find.ancestor(of: find.text("Zero padding"), matching: zeroPadding),
-      findsOneWidget,
+    final contentPadding = tester.widget<Padding>(
+      find.byKey(
+        const ValueKey(("presentationContentPadding", "zero.padding.section")),
+      ),
     );
-    expect(
-      find.ancestor(of: find.text("Zero padding body"), matching: zeroPadding),
-      findsOneWidget,
-    );
+    expect(headerPadding.padding, EdgeInsets.zero);
+    expect(contentPadding.padding, EdgeInsets.zero);
   });
 
   testWidgets("renders directional presentation padding", (tester) async {

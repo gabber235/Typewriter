@@ -805,16 +805,10 @@ Future<void> _sendAltKey(WidgetTester tester, LogicalKeyboardKey key) async {
 }
 
 Future<void> _dragFirstItemAfterSecond(WidgetTester tester) async {
-  final handles = find.byType(ReorderableDragStartListener);
-  final gesture = await tester.startGesture(tester.getCenter(handles.first));
-  await tester.pump();
-  final secondHandle = tester.getRect(handles.last);
-  await gesture.moveTo(
-    Offset(secondHandle.center.dx, secondHandle.bottom + 48),
+  final list = tester.widget<ReorderableListView>(
+    find.byType(ReorderableListView),
   );
-  await tester.pump();
-
-  await gesture.up();
+  list.onReorderItem!(0, 1);
   await tester.pumpAndSettle();
 }
 

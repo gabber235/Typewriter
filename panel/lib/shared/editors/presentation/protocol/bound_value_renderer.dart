@@ -129,12 +129,6 @@ class LabeledControl extends StatelessWidget {
             child: Semantics(label: semanticLabel, child: child),
           );
 
-    if ((label == null || label.isEmpty) &&
-        (description == null || description.isEmpty) &&
-        diagnostics.isEmpty) {
-      return semanticChild;
-    }
-
     final colors = Theme.of(context).colorScheme;
     final hasErrors = diagnostics.any(
       (diagnostic) => diagnostic.severity == TypeDiagnosticSeverity.error,

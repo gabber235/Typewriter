@@ -249,16 +249,19 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
       buildDefaultDragHandles: false,
       itemCount: value.values.length,
       onReorderItem: element.allowReorder && widget.editable
-          ? (source, destination) => itemScope.invoke(
-              LocalEditorAction(
-                ReorderListItemAction(
-                  source: scope
-                      .canonical(element.control.binding)
-                      .at(DataPath.root.index(source)),
-                  newIndex: destination.asSigned64Literal,
+          ? (source, destination) {
+              _identities = _moveIdentity(_identities, source, destination);
+              scope.invoke(
+                LocalEditorAction(
+                  ReorderListItemAction(
+                    source: scope
+                        .canonical(element.control.binding)
+                        .at(DataPath.root.index(source)),
+                    newIndex: destination.asSigned64Literal,
+                  ),
                 ),
-              ),
-            )
+              );
+            }
           : _ignoreReorder,
       proxyDecorator: (child, index, animation) => AnimatedBuilder(
         animation: animation,
