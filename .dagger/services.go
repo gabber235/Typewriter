@@ -16,6 +16,6 @@ func (m *Typewriter) servicesGradleContainer(source *dagger.Workspace) *dagger.C
 func (m *Typewriter) ServicesCheck(source *dagger.Workspace) *dagger.Container {
 	return m.servicesGradleContainer(source).
 		WithWorkdir("/workspace/services").
-		WithExec([]string{"./gradlew", "check", "ktlintCheck", "--no-daemon"}).
-		WithExec([]string{"./gradlew", "-p", "imprint", "check", "ktlintCheck", "--no-daemon"})
+		WithExec([]string{"./gradlew", "check", "ktlintCheck", "--no-daemon", "--max-workers=4"}).
+		WithExec([]string{"./gradlew", "-p", "imprint", "check", "ktlintCheck", "--no-daemon", "--max-workers=4"})
 }
