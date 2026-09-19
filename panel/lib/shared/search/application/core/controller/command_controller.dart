@@ -90,7 +90,7 @@ class CommandController with ChangeNotifier {
       }
     } on Object catch (error, stackTrace) {
       debugPrint(error.toString());
-      debugPrintStack(stackTrace: stackTrace);
+      debugPrint(stackTrace.toString());
       if (_disposed) return;
       _state = SearchCommandExecutionState.failed(
         command: command.id,

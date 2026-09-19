@@ -133,7 +133,7 @@ class SearchController<T> extends ChangeNotifier
       }
     } on Object catch (error, stackTrace) {
       debugPrint(error.toString());
-      debugPrintStack(stackTrace: stackTrace);
+      debugPrint(stackTrace.toString());
     } finally {
       _activationRunning = false;
       if (!_disposed) notifyListeners();
