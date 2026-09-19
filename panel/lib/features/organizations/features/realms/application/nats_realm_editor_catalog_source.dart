@@ -132,6 +132,14 @@ extension on Iterable<skir.PageCatalogEntry> {
         icon: entry.descriptor.icon._decodeDomain(),
         color: entry.descriptor.color.toFlutterColor(),
         editor: editor,
+        authoringRules: [
+          for (final rule in entry.descriptor.authoringRules)
+            RealmPageAuthoringRuleRef(
+              id: rule.id,
+              revision: rule.revision,
+              configuration: rule.configuration,
+            ),
+        ],
         originArtifactId: entry.originArtifactId,
         sourcePart: entry.sourcePart,
       );

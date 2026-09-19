@@ -80,42 +80,38 @@ extension ReferenceInputElementRendering on ReferenceInputElement {
                 : null,
           ),
         );
+        bool acceptsDrag(Object data) {
+          final resources = data.referenceResources;
+          if (!field.editable || resources.isEmpty) return false;
+          if (!shape.multiple && resources.length != 1) return false;
+          return resources.every(
+            (resource) =>
+                shape.accepts(resource, scope.registry) &&
+                _evaluateReferenceCandidate(
+                  scope: scope,
+                  binding: field.binding,
+                  shape: shape,
+                  policyId: candidatePolicy,
+                  candidate: ReferenceCandidate(
+                    id: resource.referenceId,
+                    types: resource.referenceTypes,
+                  ),
+                ) is ReferenceCandidateAllowed,
+          );
+        }
+
         return DragTarget<Object>(
-          onWillAcceptWithDetails: (details) =>
-              field.editable &&
-              details.data is ReferenceResourceDragData &&
-              shape.accepts(
-                details.data as ReferenceResourceDragData,
-                scope.registry,
-              ) &&
-              _evaluateReferenceCandidate(
-                scope: scope,
-                binding: field.binding,
-                shape: shape,
-                policyId: candidatePolicy,
-                candidate: ReferenceCandidate(
-                  id: (details.data as ReferenceResourceDragData).referenceId,
-                  types: (details.data as ReferenceResourceDragData)
-                      .referenceTypes,
-                ),
-              ) is ReferenceCandidateAllowed,
+          onWillAcceptWithDetails: (details) => acceptsDrag(details.data),
           onAcceptWithDetails: (details) {
-            final data = details.data as ReferenceResourceDragData;
-            final decision = _evaluateReferenceCandidate(
-              scope: scope,
-              binding: field.binding,
-              shape: shape,
-              policyId: candidatePolicy,
-              candidate: ReferenceCandidate(
-                id: data.referenceId,
-                types: data.referenceTypes,
-              ),
-            );
-            if (decision is! ReferenceCandidateAllowed) return;
-            final next = shape.drop(
+            if (!acceptsDrag(details.data)) return;
+            final resources = details.data.referenceResources;
+            var next = shape.drop(
               field.value,
-              ReferenceValue(data.referenceId),
+              ReferenceValue(resources.first.referenceId),
             );
+            for (final resource in resources.skip(1)) {
+              next = shape.drop(next, ReferenceValue(resource.referenceId));
+            }
             field.update(next);
           },
           builder: (context, accepted, rejected) => AnimatedContainer(

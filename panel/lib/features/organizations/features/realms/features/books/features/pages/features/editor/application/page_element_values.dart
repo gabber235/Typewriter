@@ -19,6 +19,41 @@ mixin _PageElementValues on _$PageElements, _PageElementMutationContext {
     DataValue value,
   ) => _updateFieldValue(entryId, path, value);
 
+  Future<void> updateEntryFieldValues(
+    Map<String, ({DataPath path, DataValue value})> updates,
+  ) async {
+    if (updates.isEmpty) return;
+    final owners = EditorOwnerRegistry(
+      workspace: ref.read(localWorkControllerProvider),
+    );
+    try {
+      final changes = <TransactionalEditorSource, Map<DataPath, DataValue>>{
+        for (final update in updates.entries)
+          owners.editor(_target(update.key)) as TransactionalEditorSource: {
+            elementValuePath.followedBy(update.value.path): update.value.value,
+          },
+      };
+      final results = await EditorBatch.submit(changes: changes);
+      for (final result in results.values) {
+        switch (result) {
+          case MutationSuccess() || MutationUncertain():
+            continue;
+          case MutationConflict():
+            throw ApiException.conflict("A reference field changed elsewhere");
+          case MutationInvalid(:final diagnostics) ||
+              MutationUnavailable(:final diagnostics):
+            throw ApiException.badRequest(
+              diagnostics.map((value) => value.message).join("; "),
+            );
+          case MutationPermissionDenied(:final message):
+            throw ApiException.badRequest(message);
+        }
+      }
+    } finally {
+      owners.dispose();
+    }
+  }
+
   Future<void> _updateFieldValue(
     String elementId,
     DataPath path,

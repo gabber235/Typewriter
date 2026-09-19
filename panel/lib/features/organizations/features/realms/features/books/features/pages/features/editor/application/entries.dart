@@ -3,6 +3,7 @@ import "dart:async";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart" show WidgetRef;
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -47,17 +48,6 @@ class Entry extends _$Entry {
       return elements.updateEntryFieldValue(entryId, path, value);
     });
     state = AsyncData(_cachedEntry?.definition);
-  }
-
-  Future<void> moveToPage(String pageId) async {
-    state.ensureReady();
-    final cached = _cachedEntry;
-    if (cached == null) throw ApiException.notFound("Entry");
-    if (cached.pageId == pageId) return;
-    await ref.withReadyPageElements(cached.pageId, (elements) {
-      _requireCurrentEntry(cached.pageId);
-      return elements.moveEntriesToPage([entryId], pageId);
-    });
   }
 
   CachedPageEntry? get _cachedEntry {

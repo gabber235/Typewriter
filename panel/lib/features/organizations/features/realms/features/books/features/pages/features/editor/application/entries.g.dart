@@ -104,7 +104,7 @@ final class EntryProvider
   }
 }
 
-String _$entryHash() => r'cf714024b8c810f2e32bfc90dd6d11683ae2b6db';
+String _$entryHash() => r'c25d732f2e96665b58c0f296a4177d9e3ddf3111';
 
 /// Loads one entry definition from the realm entry index and coordinates entry
 /// edits with the page element owner.

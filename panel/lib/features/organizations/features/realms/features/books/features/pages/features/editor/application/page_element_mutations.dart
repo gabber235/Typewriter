@@ -213,6 +213,107 @@ mixin _PageElementMutations
     return [for (final id in elementIds) ids[id]!.id];
   }
 
+  Future<List<String>> duplicateAndLink(
+    List<String> elementIds,
+    DataPath path,
+  ) async {
+    state.ensureReady();
+    if (elementIds.isEmpty) return const [];
+    final elements = {for (final item in _document.elements) item.id.id: item};
+    final entries = {
+      for (final item in state.requireValue)
+        if (item case PageElementEntry(
+          entry: DefinitionPageEntry(:final definition),
+        ))
+          definition.id: definition,
+    };
+    final selected = [for (final id in elementIds) elements[id]!];
+    final ids = {
+      for (final id in elementIds) id: newResourceId(AuthoringResource.element),
+    };
+    final graphElements = selected
+        .where((element) => element.placement.graphRect != null)
+        .toList(growable: false);
+    final graphPlacements = <String, skir.ElementPlacement>{};
+    if (graphElements.isNotEmpty) {
+      final sourceBounds = graphElements
+          .map((element) => element.placement.graphRect!)
+          .graphBounds!;
+      graphPlacements.addAll(
+        _placeGraphElements(
+          elements: graphElements,
+          obstacles: _document.elements.graphRects,
+          anchor: Offset(
+            sourceBounds.right + 1 + sourceBounds.width / 2,
+            sourceBounds.center.dy,
+          ),
+        ),
+      );
+    }
+    final conversion = _codec();
+    final codec = conversion.codec;
+    final encodedPath = codec.encodePath(path).valueOrNull;
+    if (encodedPath == null) {
+      throw ApiException.badRequest("The reference path cannot be encoded");
+    }
+    final rewrites = [
+      for (final id in elementIds)
+        skir.ReferenceRewrite(
+          source: recordId("element:$id"),
+          target: ids[id]!,
+        ),
+    ];
+    final operations = <skir.AuthoringOperation>[
+      for (final element in selected)
+        skir.AuthoringOperation.createDuplicateElement(
+          sourceId: element.id,
+          expectedValue: element.value,
+          newId: ids[element.id.id]!,
+          page: element.page,
+          placement: graphPlacements[element.id.id] ?? element.placement,
+          referenceRewrites: rewrites,
+          valueMutations: const [],
+        ),
+      for (final element in selected)
+        skir.AuthoringOperation.createPatchElement(
+          id: element.id,
+          page: null,
+          placement: null,
+          valueMutations: [
+            skir.ExpectedElementValueMutation(
+              expected: codec
+                  .encodeValue(
+                    path.read(entries[element.id.id]!.data).valueOrNull!,
+                  )
+                  .valueOrNull!,
+              mutation: skir.ElementValueMutation.createSetValue(
+                path: encodedPath,
+                value: codec
+                    .encodeValue(
+                      entries[element.id.id]!.referenceDropValues(
+                            EntryIdentifier(
+                              ids[element.id.id]!.id,
+                              elementType: entries[element.id.id]!
+                                  .elementDefinition
+                                  .rootType,
+                            ),
+                            conversion.registry,
+                          )[path] ??
+                          (throw ApiException.conflict(
+                            "The selected reference field changed",
+                          )),
+                    )
+                    .valueOrNull!,
+              ),
+            ),
+          ],
+          elementType: null,
+        ),
+    ];
+    await _submit(_commands.applyPreviewed(operations));
+    return [for (final id in elementIds) ids[id]!.id];
+  }
+
   Future<void> moveEntriesToPage(
     List<String> elementIds,
     String targetPageId,
@@ -245,6 +346,30 @@ mixin _PageElementMutations
         ], recordId("page:$targetPageId")),
       );
     });
+  }
+
+  Future<void> replaceEntryType(
+    String elementId,
+    ElementDefinition definition,
+    RecordValue value,
+  ) async {
+    state.ensureReady();
+    final element = _document.elements.singleWhere(
+      (element) => element.id.id == elementId,
+    );
+    final encoded = _codec().codec.encodeValue(value);
+    final wireValue = encoded.valueOrNull;
+    if (wireValue == null) {
+      throw ApiException.badRequest(encoded.diagnostics.join("; "));
+    }
+    await _submit(
+      _commands.replaceElementType(
+        element: element,
+        elementType: definition.typeId.uuid,
+        schemaRevision: definition.rootType.revision,
+        value: wireValue,
+      ),
+    );
   }
 
   Map<String, skir.ElementPlacement> _placeGraphElements({

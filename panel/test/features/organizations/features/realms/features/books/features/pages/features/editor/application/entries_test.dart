@@ -5,6 +5,30 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
+  group("EntryDragPayload", () {
+    test("participates in graph movement and grouped reference drops", () {
+      const primary = EntryIdentifier(
+        "first",
+        pageId: "page",
+        elementType: _sourceEntryType,
+      );
+      const second = EntryIdentifier(
+        "second",
+        pageId: "page",
+        elementType: _targetEntryType,
+      );
+      final payload = EntryDragPayload(
+        primary: primary,
+        entries: [primary, second],
+      );
+
+      expect(payload, isA<GraphDragData>());
+      expect(payload.graphId, primary);
+      expect((payload as Object).referenceResources, [primary, second]);
+      expect((primary as Object).referenceResources, [primary]);
+    });
+  });
+
   group("ElementDefinition", () {
     test("derives qualified identity from its root type", () {
       final definition = _elementDefinition();

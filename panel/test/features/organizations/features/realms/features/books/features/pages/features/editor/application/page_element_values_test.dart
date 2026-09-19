@@ -13,6 +13,8 @@ const _snapshotSubject =
     "service.to.realm1.organization.org1.realm.library.authoring.snapshot.get";
 const _batchSubject =
     "service.to.realm1.organization.org1.realm.library.authoring.batch.apply";
+const _previewSubject =
+    "service.to.realm1.organization.org1.realm.library.authoring.batch.preview";
 const _eventSubject =
     "service.from.realm1.organization.org1.realm.library.authoring.changed";
 const _typeId = "0123456789abcdef0123456789abcdef";
@@ -178,6 +180,66 @@ void main() {
     expect(
       (placement.x, placement.y, placement.width, placement.height),
       (5, 0, 4, 1),
+    );
+    await harness.dispose();
+  });
+
+  test("duplicate and link previews one atomic batch", () async {
+    final harness = await _Harness.create();
+    skir.PreviewAuthoringBatchRequest? previewed;
+    skir.ApplyAuthoringBatchRequest? submitted;
+    harness.nats.registerHandler(_previewSubject, (bytes) {
+      previewed = skir.PreviewAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.PreviewAuthoringBatchResponse.serializer.toBytes(
+        skir.PreviewAuthoringBatchResponse.createValid(
+          affectedResources: const [],
+        ),
+      );
+    });
+    harness.nats.registerHandler(_batchSubject, (bytes) {
+      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
+      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+        skir.ApplyAuthoringBatchResponse.createApplied(
+          sequence: 2,
+          batchId: submitted!.batchId,
+          changes: const [],
+          indirectlyAffectedResources: const [],
+        ),
+      );
+    });
+
+    final copies = await harness.notifier.duplicateAndLink([
+      _element.id,
+    ], DataPath.root.field("targets"));
+
+    expect(previewed!.operations, hasLength(2));
+    expect(
+      (previewed!.operations.first
+              as skir.AuthoringOperation_duplicateElementWrapper)
+          .value
+          .newId,
+      (submitted!.operations.first
+              as skir.AuthoringOperation_duplicateElementWrapper)
+          .value
+          .newId,
+    );
+    expect(submitted!.operations, hasLength(2));
+    expect(
+      submitted!.operations.first,
+      isA<skir.AuthoringOperation_duplicateElementWrapper>(),
+    );
+    final patch =
+        submitted!.operations.last
+            as skir.AuthoringOperation_patchElementWrapper;
+    final mutation =
+        patch.value.valueMutations.single.mutation
+            as skir.ElementValueMutation_setValueWrapper;
+    final value = SkirEditorCodec(
+      TypeRegistry(bootstrapTypeCatalog(harness.catalog.catalog.definitions)),
+    ).decodeValue(mutation.value.value).valueOrNull;
+    expect(
+      value,
+      ListValue([ReferenceValue(recordId("element:${copies.single}"))]),
     );
     await harness.dispose();
   });
@@ -629,6 +691,55 @@ void main() {
   });
 
   test(
+    "projected links publish before reference persistence settles",
+    () async {
+      final harness = await _Harness.create();
+      final projected = projectedPageElementsProvider(
+        _organization,
+        _realm,
+        _page.id,
+      );
+      final projectedOwner = harness.container.listen(projected, (_, _) {});
+      final response = Completer<Uint8List>();
+      harness.nats.registerHandler(_batchSubject, (_) => response.future);
+
+      final update = harness.notifier.updateEntryFieldValue(
+        _element.id,
+        DataPath.root.field("targets"),
+        ListValue([ReferenceValue(recordId("element:target"))]),
+      );
+
+      await _waitFor(() {
+        final element = harness.container.read(projected).value?.single;
+        if (element case PageElementEntry(
+          entry: DefinitionPageEntry(:final definition),
+        )) {
+          return definition.outwardEdges.isNotEmpty;
+        }
+        return false;
+      });
+      final element = harness.container.read(projected).requireValue.single;
+      final definition =
+          (element as PageElementEntry).entry as DefinitionPageEntry;
+      expect(definition.definition.outwardEdges, [
+        isA<ElementLink>()
+            .having((link) => link.otherId, "target", "target")
+            .having((link) => link.path, "path", ".targets[0]"),
+      ]);
+
+      response.complete(
+        skir.ApplyAuthoringBatchResponse.serializer.toBytes(
+          skir.ApplyAuthoringBatchResponse.createInvalid(diagnostics: const []),
+        ),
+      );
+      await expectLater(update, throwsA(isA<ApiException>()));
+
+      projectedOwner.close();
+      await harness.dispose();
+    },
+  );
+
+  test(
     "placement conflict preserves local intent and refreshed canonical value",
     () async {
       final harness = await _Harness.create();
@@ -671,6 +782,14 @@ void main() {
 final class _Harness {
   _Harness._({RealmEditorCatalogSource? catalogSource}) {
     nats.registerHandler(_snapshotSubject, (_) => _snapshot());
+    nats.registerHandler(
+      _previewSubject,
+      (_) => skir.PreviewAuthoringBatchResponse.serializer.toBytes(
+        skir.PreviewAuthoringBatchResponse.createValid(
+          affectedResources: const [],
+        ),
+      ),
+    );
     container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWithValue(nats),
@@ -863,6 +982,7 @@ final class _Harness {
       "id": StringValue(_element.id),
       "name": const StringValue("Element"),
       "title": StringValue(title),
+      "targets": const ListValue([]),
     });
     return skir.PageElement(
       id: _element,
@@ -942,6 +1062,7 @@ final _wireTargetPage = skir.Page(
 RealmEditorCatalogSnapshot _catalog({String elementName = "Element"}) =>
     RealmEditorCatalogSnapshot(
       catalog: TypeCatalog([
+        ...referenceResourceTypes.definitions,
         TypeDefinition(
           id: _type,
           kind: NominalTypeKind.concrete,
@@ -950,6 +1071,14 @@ RealmEditorCatalogSnapshot _catalog({String elementName = "Element"}) =>
               "id": const TypeField(name: "id", type: StringType()),
               "name": const TypeField(name: "name", type: StringType()),
               "title": const TypeField(name: "title", type: StringType()),
+              "targets": TypeField(
+                name: "targets",
+                type: ListType(
+                  element: ReferenceType(
+                    target: referenceResourceTypes.element,
+                  ),
+                ),
+              ),
             },
           ),
         ),

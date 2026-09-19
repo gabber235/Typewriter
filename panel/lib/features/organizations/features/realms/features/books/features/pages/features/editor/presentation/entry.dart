@@ -83,8 +83,9 @@ class _DefinitionEntryNode extends HookConsumerWidget {
       focusNode: focusNode,
       selectableId: entryIdentifier,
       builder: (isSelected, isFocused, isHovered) {
-        return Draggable<EntryIdentifier>(
-          data: entryIdentifier,
+        final dragPayload = ref.entryDragPayload(entryIdentifier);
+        return Draggable<EntryDragPayload>(
+          data: dragPayload,
           onDragStarted: () => graphDrag?.beginDrag(entryIdentifier),
           onDragEnd: (_) => graphDrag?.endDrag(),
           feedback: HookBuilder(
@@ -117,24 +118,26 @@ class _DefinitionEntryNode extends HookConsumerWidget {
             targetId: entryIdentifier.graphId,
             child: DragTarget<Object>(
               onWillAcceptWithDetails: (details) =>
-                  details.data is EntryIdentifier &&
+                  details.data is EntryDragPayload &&
                   registry != null &&
                   entryIndex != null &&
-                  _referenceDropValues(
-                    entryIndex,
-                    details.data as EntryIdentifier,
-                    definition,
-                    registry,
-                  ).isNotEmpty,
+                  (details.data as EntryDragPayload).entries.every(
+                    (source) => _referenceDropValues(
+                      entryIndex,
+                      source,
+                      definition,
+                      registry,
+                    ).isNotEmpty,
+                  ),
               onAcceptWithDetails: (details) {
                 final source = details.data;
-                if (source is! EntryIdentifier || entryIndex == null) return;
+                if (source is! EntryDragPayload || entryIndex == null) return;
                 unawaited(
                   _acceptReferenceDrop(
                     context,
                     ref,
                     entryIndex,
-                    source,
+                    source.entries,
                     definition.id,
                     registry!,
                   ),
@@ -250,19 +253,33 @@ Future<void> _acceptReferenceDrop(
   BuildContext context,
   WidgetRef ref,
   Map<String, CachedPageEntry> entryIndex,
-  EntryIdentifier sourceIdentifier,
+  List<EntryIdentifier> sourceIdentifiers,
   String targetId,
   TypeRegistry registry,
 ) async {
-  final source = entryIndex[sourceIdentifier.id];
   final target = entryIndex[targetId];
-  if (source == null || target == null || sourceIdentifier.id == targetId) {
+  final sources = sourceIdentifiers
+      .map((identifier) => entryIndex[identifier.id])
+      .nonNulls
+      .toList(growable: false);
+  if (sources.length != sourceIdentifiers.length ||
+      target == null ||
+      sourceIdentifiers.any((source) => source.id == targetId)) {
     return;
   }
-  final candidates = source.definition.referenceDropValues(
-    _referenceIdentity(target.definition),
-    registry,
-  );
+  final candidateMaps = [
+    for (final source in sources)
+      source.definition.referenceDropValues(
+        _referenceIdentity(target.definition),
+        registry,
+      ),
+  ];
+  final commonPaths = candidateMaps
+      .map((values) => values.keys.toSet())
+      .reduce((left, right) => left.intersection(right));
+  final candidates = {
+    for (final path in commonPaths) path: candidateMaps.first[path]!,
+  };
   if (candidates.isEmpty) return;
   final selected = candidates.length == 1
       ? candidates.entries.single
@@ -288,7 +305,7 @@ Future<void> _acceptReferenceDrop(
         );
   if (selected == null || !context.mounted) return;
   await ref
-      .withReadyPageElements(source.pageId, (elements) {
+      .withReadyPageElements(sources.first.pageId, (elements) {
         final organizationId = ref.read(organizationIdProvider);
         final realmId = ref.read(realmIdProvider);
         if (organizationId == null) throw ApiException.noOrganization();
@@ -299,27 +316,37 @@ Future<void> _acceptReferenceDrop(
         final currentIndex = ref
             .read(realmEntryIndexProvider(organizationId, realmId))
             .requireValue;
-        final currentSource = currentIndex[sourceIdentifier.id];
         final currentTarget = currentIndex[targetId];
-        if (currentSource == null || currentTarget == null) {
+        final currentSources = sourceIdentifiers
+            .map((identifier) => currentIndex[identifier.id])
+            .nonNulls
+            .toList(growable: false);
+        if (currentSources.length != sourceIdentifiers.length ||
+            currentTarget == null) {
           throw ApiException.notFound("Entry");
         }
-        if (currentSource.pageId != source.pageId) {
+        if (currentSources.any(
+          (source) => source.pageId != sources.first.pageId,
+        )) {
           throw ApiException.conflict("The entry moved to another page");
         }
-        final currentValues = currentSource.definition.referenceDropValues(
-          _referenceIdentity(currentTarget.definition),
-          registry,
-        );
-        final currentValue = currentValues[selected.key];
-        if (currentValue == null) {
+        final currentValues = {
+          for (final source in currentSources)
+            source.definition.id: source.definition.referenceDropValues(
+              _referenceIdentity(currentTarget.definition),
+              registry,
+            )[selected.key],
+        };
+        if (currentValues.values.any((value) => value == null)) {
           throw ApiException.conflict("The reference field changed");
         }
-        return elements.updateEntryFieldValue(
-          sourceIdentifier.id,
-          selected.key,
-          currentValue,
-        );
+        return elements.updateEntryFieldValues({
+          for (final source in currentSources)
+            source.definition.id: (
+              path: selected.key,
+              value: currentValues[source.definition.id]!,
+            ),
+        });
       })
       .catchApiExceptionsAndDisplay(context);
 }

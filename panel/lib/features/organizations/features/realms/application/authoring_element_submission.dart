@@ -50,6 +50,7 @@ skir.AuthoringOperation elementCommitOperation(
           )
         : null,
     valueMutations: mutations,
+    elementType: null,
   );
 }
 

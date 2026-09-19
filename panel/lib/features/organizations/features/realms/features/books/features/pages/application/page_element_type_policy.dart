@@ -35,6 +35,7 @@ abstract class PageEntryCreationPolicy with _$PageEntryCreationPolicy {
   const factory PageEntryCreationPolicy({
     required PageEntryCreationPlacement placement,
     required Set<ResolvedTypeRef> types,
+    @Default([]) List<RealmPageAuthoringRuleRef> authoringRules,
   }) = _PageEntryCreationPolicy;
 
   const PageEntryCreationPolicy._();
@@ -233,7 +234,11 @@ PageEntryCreationPolicy _entryCreationPolicy(
           .subtypeResults["page:${definition.kind.id}:${definition.kind.revision}:${root.$1}"]
           ?.matches,
   }.where(allConcreteTypes.contains).toSet();
-  return PageEntryCreationPolicy(placement: placement, types: types);
+  return PageEntryCreationPolicy(
+    placement: placement,
+    types: types,
+    authoringRules: definition.authoringRules,
+  );
 }
 
 extension on RealmEditorCatalogState {

@@ -162,11 +162,6 @@ class EntryMock extends Entry {
   Future<void> updateFieldValue(DataPath path, DataValue value) async {
     await Future<void>.delayed(200.ms);
   }
-
-  @override
-  Future<void> moveToPage(String pageId) async {
-    await Future<void>.delayed(200.ms);
-  }
 }
 
 List<Override> bookPagesProviderOverrides({

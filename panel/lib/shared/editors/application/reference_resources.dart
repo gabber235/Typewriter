@@ -37,6 +37,20 @@ abstract interface class ReferenceResourceDragData {
   List<ResolvedTypeRef> get referenceTypes;
 }
 
+/// Carries multiple reference resources through one drag interaction.
+abstract interface class ReferenceResourceDragGroupData {
+  List<ReferenceResourceDragData> get referenceResources;
+}
+
+extension ReferenceResourceDragPayload on Object {
+  List<ReferenceResourceDragData> get referenceResources => switch (this) {
+    ReferenceResourceDragGroupData(:final referenceResources) =>
+      referenceResources,
+    ReferenceResourceDragData() => [this as ReferenceResourceDragData],
+    _ => const [],
+  };
+}
+
 extension ReferenceResourceDragCompatibility on ReferenceResourceDragData {
   bool isAcceptedBy(ResolvedTypeRef target, TypeRegistry registry) {
     final family = registry.referenceFamily(target).valueOrNull;

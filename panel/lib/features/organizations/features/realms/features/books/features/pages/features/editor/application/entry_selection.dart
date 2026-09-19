@@ -21,7 +21,10 @@ class EntryIdentifier extends SelectableIdentifier
   skir.RecordId get referenceId => recordId("element:$id");
 
   @override
-  List<ResolvedTypeRef> get referenceTypes => [?elementType];
+  List<ResolvedTypeRef> get referenceTypes => [
+    referenceResourceTypes.element,
+    ?elementType,
+  ];
 
   @override
   AsyncValue<Selectable<EntryIdentifier>> create(Ref ref) {
@@ -131,6 +134,39 @@ class EntryIdentifier extends SelectableIdentifier
 
   @override
   String toString() => "EntryIdentifier($id)";
+}
+
+/// Carries the primary entry and the selected entry group through every drop surface.
+class EntryDragPayload extends GraphDragData
+    implements ReferenceResourceDragGroupData {
+  const EntryDragPayload({required this.primary, required this.entries})
+    : assert(entries.length > 0);
+
+  final EntryIdentifier primary;
+  final List<EntryIdentifier> entries;
+
+  @override
+  GraphIdentifier get graphId => primary.graphId;
+
+  @override
+  List<ReferenceResourceDragData> get referenceResources => entries;
+}
+
+extension EntryDragPayloadRef on WidgetRef {
+  EntryDragPayload entryDragPayload(EntryIdentifier primary) {
+    final selected = read(selectionProvider);
+    if (!selected.contains(primary)) {
+      return EntryDragPayload(primary: primary, entries: [primary]);
+    }
+    final entries = [
+      for (final item in selected)
+        if (item is EntryIdentifier && item.pageId == primary.pageId) item,
+    ];
+    return EntryDragPayload(
+      primary: primary,
+      entries: entries.isEmpty ? [primary] : List.unmodifiable(entries),
+    );
+  }
 }
 
 /// Selectable adapter that connects an entry identity to its editor document,

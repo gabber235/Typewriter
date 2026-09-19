@@ -41,6 +41,19 @@ sealed class RealmPageEditor with _$RealmPageEditor {
   }) = RealmTimelinePageEditor;
 }
 
+/// Open page rule identity published by Realm for local explanation and preview.
+final class RealmPageAuthoringRuleRef {
+  const RealmPageAuthoringRuleRef({
+    required this.id,
+    required this.revision,
+    this.configuration,
+  });
+
+  final String id;
+  final int revision;
+  final skir.TypedValueEnvelope? configuration;
+}
+
 @freezed
 /// Realm supplied page kind metadata used to choose and configure an editor.
 abstract class RealmPageDefinition with _$RealmPageDefinition {
@@ -53,6 +66,7 @@ abstract class RealmPageDefinition with _$RealmPageDefinition {
     required RealmPageEditor editor,
     required String originArtifactId,
     required String sourcePart,
+    @Default([]) List<RealmPageAuthoringRuleRef> authoringRules,
   }) = _RealmPageDefinition;
 
   const RealmPageDefinition._();

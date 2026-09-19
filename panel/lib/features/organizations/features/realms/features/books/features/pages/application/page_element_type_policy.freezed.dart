@@ -361,7 +361,7 @@ as List<TypeDiagnostic>,
 /// @nodoc
 mixin _$PageEntryCreationPolicy {
 
- PageEntryCreationPlacement get placement; Set<ResolvedTypeRef> get types;
+ PageEntryCreationPlacement get placement; Set<ResolvedTypeRef> get types; List<RealmPageAuthoringRuleRef> get authoringRules;
 /// Create a copy of PageEntryCreationPolicy
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -373,20 +373,20 @@ $PageEntryCreationPolicyCopyWith<PageEntryCreationPolicy> get copyWith => _$Page
 @override
 bool operator ==(Object other) {
   final _this = this as PageEntryCreationPolicy;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageEntryCreationPolicy&&(identical(other.placement, _this.placement) || other.placement == _this.placement)&&const DeepCollectionEquality().equals(other.types, _this.types));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageEntryCreationPolicy&&(identical(other.placement, _this.placement) || other.placement == _this.placement)&&const DeepCollectionEquality().equals(other.types, _this.types)&&const DeepCollectionEquality().equals(other.authoringRules, _this.authoringRules));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PageEntryCreationPolicy;
-  return Object.hash(runtimeType,_this.placement,const DeepCollectionEquality().hash(_this.types));
+  return Object.hash(runtimeType,_this.placement,const DeepCollectionEquality().hash(_this.types),const DeepCollectionEquality().hash(_this.authoringRules));
 }
 
 @override
 String toString() {
   final _this = this as PageEntryCreationPolicy;
-  return 'PageEntryCreationPolicy(placement: ${_this.placement}, types: ${_this.types})';
+  return 'PageEntryCreationPolicy(placement: ${_this.placement}, types: ${_this.types}, authoringRules: ${_this.authoringRules})';
 }
 
 
@@ -397,7 +397,7 @@ abstract mixin class $PageEntryCreationPolicyCopyWith<$Res>  {
   factory $PageEntryCreationPolicyCopyWith(PageEntryCreationPolicy value, $Res Function(PageEntryCreationPolicy) _then) = _$PageEntryCreationPolicyCopyWithImpl;
 @useResult
 $Res call({
- PageEntryCreationPlacement placement, Set<ResolvedTypeRef> types
+ PageEntryCreationPlacement placement, Set<ResolvedTypeRef> types, List<RealmPageAuthoringRuleRef> authoringRules
 });
 
 
@@ -414,11 +414,12 @@ class _$PageEntryCreationPolicyCopyWithImpl<$Res>
 
 /// Create a copy of PageEntryCreationPolicy
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? placement = null,Object? types = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? placement = null,Object? types = null,Object? authoringRules = null,}) {
   return _then(PageEntryCreationPolicy(
 placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
 as PageEntryCreationPlacement,types: null == types ? _self.types : types // ignore: cast_nullable_to_non_nullable
-as Set<ResolvedTypeRef>,
+as Set<ResolvedTypeRef>,authoringRules: null == authoringRules ? _self.authoringRules : authoringRules // ignore: cast_nullable_to_non_nullable
+as List<RealmPageAuthoringRuleRef>,
   ));
 }
 
@@ -503,10 +504,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PageEntryCreationPlacement placement,  Set<ResolvedTypeRef> types)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PageEntryCreationPlacement placement,  Set<ResolvedTypeRef> types,  List<RealmPageAuthoringRuleRef> authoringRules)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PageEntryCreationPolicy() when $default != null:
-return $default(_that.placement,_that.types);case _:
+return $default(_that.placement,_that.types,_that.authoringRules);case _:
   return orElse();
 
 }
@@ -524,10 +525,10 @@ return $default(_that.placement,_that.types);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PageEntryCreationPlacement placement,  Set<ResolvedTypeRef> types)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PageEntryCreationPlacement placement,  Set<ResolvedTypeRef> types,  List<RealmPageAuthoringRuleRef> authoringRules)  $default,) {final _that = this;
 switch (_that) {
 case _PageEntryCreationPolicy():
-return $default(_that.placement,_that.types);case _:
+return $default(_that.placement,_that.types,_that.authoringRules);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -544,10 +545,10 @@ return $default(_that.placement,_that.types);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PageEntryCreationPlacement placement,  Set<ResolvedTypeRef> types)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PageEntryCreationPlacement placement,  Set<ResolvedTypeRef> types,  List<RealmPageAuthoringRuleRef> authoringRules)?  $default,) {final _that = this;
 switch (_that) {
 case _PageEntryCreationPolicy() when $default != null:
-return $default(_that.placement,_that.types);case _:
+return $default(_that.placement,_that.types,_that.authoringRules);case _:
   return null;
 
 }
@@ -559,7 +560,7 @@ return $default(_that.placement,_that.types);case _:
 
 
 class _PageEntryCreationPolicy extends PageEntryCreationPolicy {
-  const _PageEntryCreationPolicy({required this.placement, required  Set<ResolvedTypeRef> types}): _types = types,super._();
+  const _PageEntryCreationPolicy({required this.placement, required  Set<ResolvedTypeRef> types,  List<RealmPageAuthoringRuleRef> authoringRules = const []}): _types = types,_authoringRules = authoringRules,super._();
   
 
 @override final  PageEntryCreationPlacement placement;
@@ -568,6 +569,13 @@ class _PageEntryCreationPolicy extends PageEntryCreationPolicy {
   if (_types is EqualUnmodifiableSetView) return _types;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_types);
+}
+
+ final  List<RealmPageAuthoringRuleRef> _authoringRules;
+@override@JsonKey() List<RealmPageAuthoringRuleRef> get authoringRules {
+  if (_authoringRules is EqualUnmodifiableListView) return _authoringRules;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_authoringRules);
 }
 
 
@@ -581,18 +589,18 @@ _$PageEntryCreationPolicyCopyWith<_PageEntryCreationPolicy> get copyWith => __$P
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PageEntryCreationPolicy&&(identical(other.placement, placement) || other.placement == placement)&&const DeepCollectionEquality().equals(other.types, _types));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PageEntryCreationPolicy&&(identical(other.placement, placement) || other.placement == placement)&&const DeepCollectionEquality().equals(other.types, _types)&&const DeepCollectionEquality().equals(other.authoringRules, _authoringRules));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,placement,const DeepCollectionEquality().hash(_types));
+    return Object.hash(runtimeType,placement,const DeepCollectionEquality().hash(_types),const DeepCollectionEquality().hash(_authoringRules));
 }
 
 @override
 String toString() {
-    return 'PageEntryCreationPolicy(placement: $placement, types: $types)';
+    return 'PageEntryCreationPolicy(placement: $placement, types: $types, authoringRules: $authoringRules)';
 }
 
 
@@ -603,7 +611,7 @@ abstract mixin class _$PageEntryCreationPolicyCopyWith<$Res> implements $PageEnt
   factory _$PageEntryCreationPolicyCopyWith(_PageEntryCreationPolicy value, $Res Function(_PageEntryCreationPolicy) _then) = __$PageEntryCreationPolicyCopyWithImpl;
 @override @useResult
 $Res call({
- PageEntryCreationPlacement placement, Set<ResolvedTypeRef> types
+ PageEntryCreationPlacement placement, Set<ResolvedTypeRef> types, List<RealmPageAuthoringRuleRef> authoringRules
 });
 
 
@@ -620,11 +628,12 @@ class __$PageEntryCreationPolicyCopyWithImpl<$Res>
 
 /// Create a copy of PageEntryCreationPolicy
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? placement = null,Object? types = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? placement = null,Object? types = null,Object? authoringRules = null,}) {
   return _then(_PageEntryCreationPolicy(
 placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
 as PageEntryCreationPlacement,types: null == types ? _self._types : types // ignore: cast_nullable_to_non_nullable
-as Set<ResolvedTypeRef>,
+as Set<ResolvedTypeRef>,authoringRules: null == authoringRules ? _self._authoringRules : authoringRules // ignore: cast_nullable_to_non_nullable
+as List<RealmPageAuthoringRuleRef>,
   ));
 }
 

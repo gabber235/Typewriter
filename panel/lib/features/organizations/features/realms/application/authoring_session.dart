@@ -189,6 +189,18 @@ class AuthoringSession extends _$AuthoringSession
     }
   }
 
+  /// Executes operations and Realm page rules without committing state.
+  Future<skir.PreviewAuthoringBatchResponse> preview(
+    Iterable<skir.AuthoringOperation> operations,
+  ) {
+    final request = skir.PreviewAuthoringBatchRequest(operations: operations);
+    return ref.requestSkir(
+      _address.request("library.authoring.batch.preview"),
+      skir.PreviewAuthoringBatchRequest.serializer.toBytes(request),
+      skir.PreviewAuthoringBatchResponse.serializer,
+    );
+  }
+
   _AuthoringScopeLease _acquire(_AuthoringScope scope) {
     final added = !_scopeCounts.containsKey(scope);
     _scopeCounts.update(scope, (count) => count + 1, ifAbsent: () => 1);

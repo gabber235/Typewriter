@@ -980,7 +980,7 @@ final class ProjectedPageElementValuesProvider
 }
 
 String _$projectedPageElementValuesHash() =>
-    r'378f2b2e19ce09a5862d9eb820d18cca747e88ab';
+    r'e268b943514349006293e13048c4cc00bb28c28f';
 
 /// Overlays local editor values onto canonical page elements.
 ///

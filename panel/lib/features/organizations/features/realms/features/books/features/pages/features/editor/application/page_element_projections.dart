@@ -190,22 +190,20 @@ AsyncValue<AuthoringValue<List<PageElement>>> projectedPageElementValues(
     localWorkProvider.select((state) => state.editorValues),
   );
   final value = canonical.requireValue;
-  return AsyncData(
-    AuthoringValue(
-      value: [
-        for (final element in value.value)
-          element.projected(
-            local[EditorResourceKey(
-              scope: EditorResourceScope(
-                organizationId: organizationId,
-                realmId: realmId,
-              ),
-              identity: recordId("element:${element.id}"),
-            )],
+  final projected = [
+    for (final element in value.value)
+      element.projected(
+        local[EditorResourceKey(
+          scope: EditorResourceScope(
+            organizationId: organizationId,
+            realmId: realmId,
           ),
-      ],
-      revision: value.revision,
-    ),
+          identity: recordId("element:${element.id}"),
+        )],
+      ),
+  ];
+  return AsyncData(
+    AuthoringValue(value: projected.projectLinks(), revision: value.revision),
   );
 }
 

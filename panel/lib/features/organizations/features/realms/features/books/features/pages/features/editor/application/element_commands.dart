@@ -8,6 +8,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// batch through [AuthoringSession]. The session remains responsible for
 /// optimistic revision checks and reporting whether the batch was applied.
 extension ElementCommands on AuthoringSession {
+  Future<skir.ApplyAuthoringBatchResponse> applyPreviewed(
+    Iterable<skir.AuthoringOperation> operations,
+  ) async {
+    final batch = operations.toList(growable: false);
+    (await preview(batch)).requireValid();
+    return apply(batch);
+  }
+
   Future<skir.ApplyAuthoringBatchResponse> createElements(
     Iterable<skir.PageElement> elements,
   ) => apply([
@@ -30,6 +38,7 @@ extension ElementCommands on AuthoringSession {
       page: null,
       placement: null,
       valueMutations: valueMutations,
+      elementType: null,
     ),
   ]);
 
@@ -45,25 +54,55 @@ extension ElementCommands on AuthoringSession {
           value: placement,
         ),
         valueMutations: const [],
+        elementType: null,
       ),
   ]);
+
+  Future<skir.ApplyAuthoringBatchResponse> replaceElementType({
+    required skir.PageElement element,
+    required String elementType,
+    required int schemaRevision,
+    required skir.TypedValue value,
+  }) async {
+    final operations = [
+      skir.AuthoringOperation.createPatchElement(
+        id: element.id,
+        page: null,
+        placement: null,
+        valueMutations: const [],
+        elementType: skir.ElementTypeChange(
+          expectedElementType: element.elementType,
+          expectedSchemaRevision: element.schemaRevision,
+          expectedValue: element.value,
+          valueElementType: elementType,
+          valueSchemaRevision: schemaRevision,
+          value: value,
+        ),
+      ),
+    ];
+    return applyPreviewed(operations);
+  }
 
   /// Moves each element and its calculated placement in one guarded patch.
   Future<skir.ApplyAuthoringBatchResponse> moveElementsToPage(
     Iterable<(skir.PageElement, skir.ElementPlacement)> elements,
     skir.RecordId targetPage,
-  ) => apply([
-    for (final (element, placement) in elements)
-      skir.AuthoringOperation.createPatchElement(
-        id: element.id,
-        page: skir.RecordIdChange(expected: element.page, value: targetPage),
-        placement: skir.ElementPlacementChange(
-          expected: element.placement,
-          value: placement,
+  ) async {
+    final operations = [
+      for (final (element, placement) in elements)
+        skir.AuthoringOperation.createPatchElement(
+          id: element.id,
+          page: skir.RecordIdChange(expected: element.page, value: targetPage),
+          placement: skir.ElementPlacementChange(
+            expected: element.placement,
+            value: placement,
+          ),
+          valueMutations: const [],
+          elementType: null,
         ),
-        valueMutations: const [],
-      ),
-  ]);
+    ];
+    return applyPreviewed(operations);
+  }
 
   /// Duplicates elements and rewrites links whose targets are also duplicated.
   ///
@@ -86,7 +125,29 @@ extension ElementCommands on AuthoringSession {
           page: copy.key.page,
           placement: copy.value.placement,
           referenceRewrites: rewrites,
+          valueMutations: const [],
         ),
     ]);
+  }
+}
+
+extension on skir.PreviewAuthoringBatchResponse {
+  void requireValid() {
+    switch (this) {
+      case skir.PreviewAuthoringBatchResponse_validWrapper():
+        return;
+      case skir.PreviewAuthoringBatchResponse_conflictWrapper():
+        throw ApiException.conflict(
+          "Authoring state changed while validating the move",
+        );
+      case skir.PreviewAuthoringBatchResponse_invalidWrapper(:final value):
+        throw ApiException.badRequest(
+          value.diagnostics.map((diagnostic) => diagnostic.message).join("; "),
+        );
+      case skir.PreviewAuthoringBatchResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.PreviewAuthoringBatchResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+    }
   }
 }

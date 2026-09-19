@@ -164,22 +164,30 @@ class _PageTile extends HookConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return DragTarget<EntryIdentifier>(
+        return DragTarget<EntryDragPayload>(
           onWillAcceptWithDetails: (details) {
-            final entryId = details.data.id;
-            final definition = ref.read(entryProvider(entryId)).value;
-            if (definition == null) return false;
-
             return switch (elementTypes) {
-              PageElementTypesReady(:final types) => types.contains(
-                definition.elementDefinition.rootType,
+              PageElementTypesReady(:final types) => details.data.entries.every(
+                (entry) {
+                  final elementType = entry.elementType;
+                  return elementType != null && types.contains(elementType);
+                },
               ),
               _ => false,
             };
           },
-          onAcceptWithDetails: (details) {
-            final entryId = details.data.id;
-            ref.read(entryProvider(entryId).notifier).moveToPage(pageId.id);
+          onAcceptWithDetails: (details) async {
+            final payload = details.data;
+            final sourcePageId = payload.primary.pageId;
+            if (sourcePageId == null || sourcePageId == pageId.id) return;
+            await ref.withReadyPageElements(sourcePageId, (elements) {
+              return elements.moveEntriesToPage(
+                payload.entries
+                    .map((entry) => entry.id)
+                    .toList(growable: false),
+                pageId.id,
+              );
+            });
           },
           builder: (context, entryCandidateData, entryRejectedData) {
             return DragTarget<PageDrag>(

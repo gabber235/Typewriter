@@ -12,6 +12,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "page_element_codec.dart";
 part "page_element_access.dart";
+part "page_element_links.dart";
 part "page_element_models.dart";
 part "page_element_mutation_context.dart";
 part "page_element_mutations.dart";
