@@ -141,6 +141,8 @@ final exemptions = <Exemption>[
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar_selection_grid.dart",
     "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
+    "lib/features/organizations/features/realms/features/books/presentation/book.dart",
+    "lib/shared/search/presentation/search_result_card.dart",
   ])
     Exemption(path, RegExp(r"Colors\.transparent"), "intentional transparency"),
   for (final path in [

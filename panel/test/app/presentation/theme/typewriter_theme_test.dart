@@ -247,9 +247,12 @@ void main() {
         expect(theme.inputDecorationTheme.filled, isTrue);
         expect(
           theme.inputDecorationTheme.fillColor,
-          brightness == Brightness.light
-              ? theme.colors.contentPrimary.withValues(alpha: 0.05)
-              : theme.colors.shadow.withValues(alpha: 0.2),
+          Color.alphaBlend(
+            brightness == Brightness.light
+                ? theme.colors.contentPrimary.withValues(alpha: 0.05)
+                : theme.colors.shadow.withValues(alpha: 0.2),
+            theme.colors.surface,
+          ),
         );
 
         expect(

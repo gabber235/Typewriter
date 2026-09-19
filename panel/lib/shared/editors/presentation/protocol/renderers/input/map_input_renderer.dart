@@ -69,14 +69,19 @@ final class _DraftMapInput extends StatelessWidget {
               ),
               scope: scope,
               subtreeDiagnostics: indexed.$2.diagnostics,
-              child: _entry(type, mapReference.path, indexed.$2),
+              child: _entry(context, type, mapReference.path, indexed.$2),
             ),
           ),
       ],
     );
   }
 
-  Widget _entry(MapType type, DataPath mapPath, EditorMapEntryStructure entry) {
+  Widget _entry(
+    BuildContext context,
+    MapType type,
+    DataPath mapPath,
+    EditorMapEntryStructure entry,
+  ) {
     const keyId = BindingId(2147483645);
     const valueId = BindingId(2147483646);
     final keyHost = VirtualBindingHost.editorValue(
@@ -102,7 +107,7 @@ final class _DraftMapInput extends StatelessWidget {
         .withVirtualBinding(valueHost, source: element.control.binding);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
+      spacing: context.spacing.space2,
       children: [
         _MapEntryField(
           label: element.keyPresentation == null ? null : "Key",

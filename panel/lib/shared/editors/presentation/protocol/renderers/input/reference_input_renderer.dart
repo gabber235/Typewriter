@@ -336,7 +336,8 @@ class _ReferenceSummary extends HookWidget {
     final content = ids.isEmpty
         ? Text(
             "No reference",
-            style: TextStyle(color: context.colors.contentSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.colors.contentSecondary),
           )
         : resources == null
         ? Text(
