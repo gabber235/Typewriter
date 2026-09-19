@@ -3,6 +3,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/realm_runtime.dart";
 import "package:widgetbook_workspace/support/selected_inspector_story.dart";
 
 @widgetbook.UseCase(name: "Default", type: BookWidget)
@@ -42,7 +43,10 @@ Widget bookUseCase(BuildContext context) {
       ...tagsProviderOverrides(tags: [directTag, inheritedTag]),
       canonicalBooksProvider.overrideWith(() => _BookStoryBooks([book])),
     ],
-    child: InspectorScaffold(child: const Center(child: _BookWidgetStory())),
+    child: InspectorScaffold(
+      realmRuntime: storyRealmRuntime([directTag, inheritedTag]),
+      child: const Center(child: _BookWidgetStory()),
+    ),
   );
 }
 
@@ -93,6 +97,7 @@ Widget mixedBookSelectionStory({bool initiallySelected = true}) {
       canonicalBooksProvider.overrideWith(() => _BookStoryBooks(books)),
     ],
     child: InspectorScaffold(
+      realmRuntime: storyRealmRuntime([lore, quest]),
       child: SelectedInspectorStory(
         selection: initiallySelected
             ? [for (final book in books) BookIdentifier(book.bookId)]

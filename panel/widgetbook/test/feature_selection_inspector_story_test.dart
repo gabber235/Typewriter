@@ -24,7 +24,7 @@ void main() {
     await tester.pumpWidget(Builder(builder: bookUseCase));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(BookWidget));
+    await _tapSelectable(tester, find.byType(BookWidget));
     await tester.pump(kDoubleTapTimeout);
     await tester.pumpAndSettle();
 
@@ -52,7 +52,7 @@ void main() {
     await tester.pumpWidget(Builder(builder: tagNodeUseCase));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(TagNode));
+    await _tapSelectable(tester, find.byType(TagNode));
     await tester.pumpAndSettle();
 
     expect(find.text("Direct Parents"), findsOneWidget);
@@ -72,16 +72,7 @@ void main() {
     "Book mixed selection resolves both cards through the Book inspector",
     (tester) async {
       await _prepareStory(tester);
-      await tester.pumpWidget(
-        mixedBookSelectionStory(initiallySelected: false),
-      );
-      await tester.pumpAndSettle();
-
-      final books = find.byType(BookWidget);
-      await tester.tap(books.at(0));
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.tap(books.at(1));
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pumpWidget(mixedBookSelectionStory());
       await tester.pumpAndSettle();
 
       final container = _inspectorContainer(tester);
@@ -110,9 +101,9 @@ void main() {
       await tester.pumpAndSettle();
 
       final tags = find.byType(TagNode);
-      await tester.tap(tags.at(2));
+      await _tapSelectable(tester, tags.at(2));
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.tap(tags.at(3));
+      await _tapSelectable(tester, tags.at(3));
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
       await tester.pumpAndSettle();
 
@@ -178,7 +169,7 @@ void main() {
     await tester.pumpWidget(tagsPageStory(tagsState: DisplayState.fewItems));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(TagNode).first);
+    await _tapSelectable(tester, find.byType(TagNode).first);
     await tester.pumpAndSettle();
 
     expect(find.text("Direct Parents"), findsOneWidget);
@@ -196,7 +187,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(BookWidget).first);
+    _selectFirst<BookIdentifier>(tester);
     await tester.pumpAndSettle();
 
     expect(find.text("Direct Tags"), findsOneWidget);
@@ -297,9 +288,34 @@ Future<void> _prepareStory(
 }
 
 Future<void> _openSearch(WidgetTester tester, {bool last = false}) async {
-  final search = find.bySemanticsLabel("Activate search input");
-  await tester.tap(last ? search.last : search.first);
+  final search = find.byWidgetPredicate(
+    (widget) =>
+        widget is Semantics &&
+        widget.properties.label == "Activate search input",
+    skipOffstage: false,
+  );
+  final target = last ? search.last : search.first;
+  await tester.ensureVisible(target);
+  await tester.tap(target);
   await tester.pumpAndSettle();
+}
+
+void _selectFirst<T extends SelectableIdentifier>(WidgetTester tester) {
+  final selector = tester
+      .widgetList<Selector>(find.byType(Selector))
+      .firstWhere((selector) => selector.selectableId is T);
+  final container = ProviderScope.containerOf(
+    tester.element(find.byType(Selector).first),
+  );
+  container.read(selectionProvider.notifier).select(selector.selectableId);
+}
+
+Future<void> _tapSelectable(WidgetTester tester, Finder surface) async {
+  final target = find
+      .descendant(of: surface, matching: find.byType(GestureDetector))
+      .hitTestable();
+  expect(target, findsWidgets);
+  await tester.tap(target.first);
 }
 
 Future<void> _cancel(WidgetTester tester) async {

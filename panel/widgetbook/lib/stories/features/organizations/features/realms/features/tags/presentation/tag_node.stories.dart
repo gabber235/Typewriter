@@ -4,6 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/realm_runtime.dart";
 import "package:widgetbook_workspace/support/selected_inspector_story.dart";
 
 @widgetbook.UseCase(name: "Default", type: TagNode)
@@ -33,6 +34,7 @@ Widget tagNodeUseCase(BuildContext context) {
       ...tagsProviderOverrides(tags: [previewTag, parentCandidate]),
     ],
     child: InspectorScaffold(
+      realmRuntime: storyRealmRuntime([previewTag, parentCandidate]),
       child: Center(
         child: SizedBox(
           width: 150,
@@ -81,6 +83,7 @@ Widget mixedTagSelectionStory({bool initiallySelected = true}) {
       ...tagsProviderOverrides(tags: tags),
     ],
     child: InspectorScaffold(
+      realmRuntime: storyRealmRuntime(tags),
       child: SelectedInspectorStory(
         selection: initiallySelected
             ? [for (final tag in selected) TagIdentifier(tag.tagId)]
