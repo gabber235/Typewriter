@@ -192,6 +192,7 @@ pub struct PageDescriptor {
     pub icon: crate::skirout::base::kernel::v1::icon::Icon,
     pub color: crate::skirout::base::kernel::v1::color::Color,
     pub editor: PageEditorDefinition,
+    pub authoring_rules: Vec<PageAuthoringRuleRef>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageDescriptor>>,
 }
@@ -307,6 +308,46 @@ impl PageDiagnostic {
 }
 
 // ==============================================================================
+// struct PageAuthoringRuleRef
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PageAuthoringRuleRef {
+    pub id: String,
+    pub revision: i32,
+    pub configuration: Option<crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageAuthoringRuleRef>>,
+}
+
+impl PageAuthoringRuleRef {
+    pub fn default_ref() -> &'static PageAuthoringRuleRef {
+        static D: std::sync::LazyLock<PageAuthoringRuleRef> = std::sync::LazyLock::new(PageAuthoringRuleRef::default);
+        &D
+    }
+}
+
+impl PageAuthoringRuleRef {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageAuthoringRuleRef> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PageAuthoringRuleRef>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/page_catalog.skir",
+                    "PageAuthoringRuleRef",
+                    "",
+                    |x: &PageAuthoringRuleRef| &x._unrecognized,
+                    |x: &mut PageAuthoringRuleRef, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PageAuthoringRuleRef> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PageAuthoringRuleRef::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -348,6 +389,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("icon", 3, crate::skirout::base::kernel::v1::icon::Icon::serializer(), "", |x: &PageDescriptor| &x.icon, |x: &mut PageDescriptor, v| x.icon = v);
                 (*a).add_field("color", 4, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &PageDescriptor| &x.color, |x: &mut PageDescriptor, v| x.color = v);
                 (*a).add_field("editor", 5, crate::skir_client::internal::enum_serializer_from_static(PageEditorDefinition::_adapter()), "", |x: &PageDescriptor| &x.editor, |x: &mut PageDescriptor, v| x.editor = v);
+                (*a).add_field("authoring_rules", 6, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PageAuthoringRuleRef::_adapter())), "", |x: &PageDescriptor| &x.authoring_rules, |x: &mut PageDescriptor, v| x.authoring_rules = v);
                 (*a).finalize();
             }
             unsafe {
@@ -365,6 +407,13 @@ fn initialize_module_serializers() {
                 (*a).add_field("source_part", 3, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &PageDiagnostic| &x.source_part, |x: &mut PageDiagnostic, v| x.source_part = v);
                 (*a).add_field("declaration_name", 4, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &PageDiagnostic| &x.declaration_name, |x: &mut PageDiagnostic, v| x.declaration_name = v);
                 (*a).add_field("kind", 5, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::page_kind::PageKindRef::serializer()), "", |x: &PageDiagnostic| &x.kind, |x: &mut PageDiagnostic, v| x.kind = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PageAuthoringRuleRef> = PageAuthoringRuleRef::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skir_client::Serializer::string(), "", |x: &PageAuthoringRuleRef| &x.id, |x: &mut PageAuthoringRuleRef, v| x.id = v);
+                (*a).add_field("revision", 1, crate::skir_client::Serializer::int32(), "", |x: &PageAuthoringRuleRef| &x.revision, |x: &mut PageAuthoringRuleRef, v| x.revision = v);
+                (*a).add_field("configuration", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope::serializer()), "", |x: &PageAuthoringRuleRef| &x.configuration, |x: &mut PageAuthoringRuleRef, v| x.configuration = v);
                 (*a).finalize();
             }
         });

@@ -2020,7 +2020,7 @@ class PageElement private constructor(
             serializerImpl.addField(
                 "value",
                 "value",
-                5,
+                4,
                 skirout.editor.v1.type_catalog.TypedValue.serializer,
                 "",
                 { it.value },
@@ -2029,13 +2029,12 @@ class PageElement private constructor(
             serializerImpl.addField(
                 "placement",
                 "placement",
-                6,
+                5,
                 skirout.library.v1.authoring.ElementPlacement.serializer,
                 "",
                 { it.placement },
                 { mut, v -> mut.placement = v },
             );
-            serializerImpl.addRemovedNumber(4);
             serializerImpl.finalizeStruct();
         }
     }
@@ -11210,6 +11209,7 @@ sealed interface PatchElement_OrMutable {
     val page: skirout.library.v1.authoring.RecordIdChange_OrMutable?;
     val placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable?;
     val valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable>;
+    val elementType: skirout.library.v1.authoring.ElementTypeChange_OrMutable?;
 
     fun toFrozen(): skirout.library.v1.authoring.PatchElement;
 }
@@ -11221,6 +11221,7 @@ class PatchElement private constructor(
     override val page: skirout.library.v1.authoring.RecordIdChange?,
     override val placement: skirout.library.v1.authoring.ElementPlacementChange?,
     override val valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ExpectedElementValueMutation>,
+    override val elementType: skirout.library.v1.authoring.ElementTypeChange?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PatchElement>? =
         null,
 ): skirout.library.v1.authoring.PatchElement_OrMutable {
@@ -11231,6 +11232,7 @@ class PatchElement private constructor(
         page: skirout.library.v1.authoring.RecordIdChange_OrMutable?,
         placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable?,
         valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable>,
+        elementType: skirout.library.v1.authoring.ElementTypeChange_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PatchElement>? =
             null,
     ): this(
@@ -11238,6 +11240,7 @@ class PatchElement private constructor(
         if (page != null) page.toFrozen() else null,
         if (placement != null) placement.toFrozen() else null,
         build.skir.internal.toFrozenList(valueMutations, { it.toFrozen() }),
+        if (elementType != null) elementType.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -11250,6 +11253,7 @@ class PatchElement private constructor(
         page = this.page,
         placement = this.placement,
         valueMutations = this.valueMutations,
+        elementType = this.elementType,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -11264,11 +11268,14 @@ class PatchElement private constructor(
             this.placement,
         valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable> =
             this.valueMutations,
+        elementType: skirout.library.v1.authoring.ElementTypeChange_OrMutable? =
+            this.elementType,
     ) = skirout.library.v1.authoring.PatchElement(
         id.toFrozen(),
         if (page != null) page.toFrozen() else null,
         if (placement != null) placement.toFrozen() else null,
         build.skir.internal.toFrozenList(valueMutations, { it.toFrozen() }),
+        if (elementType != null) elementType.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -11276,11 +11283,11 @@ class PatchElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.authoring.PatchElement && this.id == other.id && this.page == other.page && this.placement == other.placement && this.valueMutations == other.valueMutations);
+        return this === other || (other is skirout.library.v1.authoring.PatchElement && this.id == other.id && this.page == other.page && this.placement == other.placement && this.valueMutations == other.valueMutations && this.elementType == other.elementType);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.page, this.placement, this.valueMutations).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.page, this.placement, this.valueMutations, this.elementType).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -11302,6 +11309,8 @@ class PatchElement private constructor(
             null,
         override var valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ExpectedElementValueMutation>(),
+        override var elementType: skirout.library.v1.authoring.ElementTypeChange_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PatchElement>? =
             null,
     ): skirout.library.v1.authoring.PatchElement_OrMutable {
@@ -11311,6 +11320,7 @@ class PatchElement private constructor(
             page = this.page,
             placement = this.placement,
             valueMutations = this.valueMutations,
+            elementType = this.elementType,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -11354,6 +11364,7 @@ class PatchElement private constructor(
                 null,
                 null,
                 build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ExpectedElementValueMutation>(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -11375,11 +11386,14 @@ class PatchElement private constructor(
                 null,
             valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ExpectedElementValueMutation>(),
+            elementType: skirout.library.v1.authoring.ElementTypeChange_OrMutable? =
+                null,
         ) = skirout.library.v1.authoring.PatchElement(
             id = id,
             page = page,
             placement = placement,
             valueMutations = valueMutations,
+            elementType = elementType,
             _unrecognizedFields = null,
         );
 
@@ -11423,7 +11437,7 @@ class PatchElement private constructor(
             serializerImpl.addField(
                 "placement",
                 "placement",
-                3,
+                2,
                 build.skir.Serializers.optional(
                     skirout.library.v1.authoring.ElementPlacementChange.serializer,
                 ),
@@ -11434,7 +11448,7 @@ class PatchElement private constructor(
             serializerImpl.addField(
                 "value_mutations",
                 "valueMutations",
-                4,
+                3,
                 build.skir.Serializers.list(
                     skirout.library.v1.authoring.ExpectedElementValueMutation.serializer,
                 ),
@@ -11442,7 +11456,17 @@ class PatchElement private constructor(
                 { it.valueMutations },
                 { mut, v -> mut.valueMutations = v },
             );
-            serializerImpl.addRemovedNumber(2);
+            serializerImpl.addField(
+                "element_type",
+                "elementType",
+                4,
+                build.skir.Serializers.optional(
+                    skirout.library.v1.authoring.ElementTypeChange.serializer,
+                ),
+                "",
+                { it.elementType },
+                { mut, v -> mut.elementType = v },
+            );
             serializerImpl.finalizeStruct();
         }
     }
@@ -11643,6 +11667,7 @@ sealed interface DuplicateElement_OrMutable {
     val page: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val placement: skirout.library.v1.authoring.ElementPlacement;
     val referenceRewrites: kotlin.collections.List<skirout.library.v1.authoring.ReferenceRewrite_OrMutable>;
+    val valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ElementValueMutation>;
 
     fun toFrozen(): skirout.library.v1.authoring.DuplicateElement;
 }
@@ -11656,6 +11681,7 @@ class DuplicateElement private constructor(
     override val page: skirout.kernel.v1.record_id.RecordId,
     override val placement: skirout.library.v1.authoring.ElementPlacement,
     override val referenceRewrites: kotlin.collections.List<skirout.library.v1.authoring.ReferenceRewrite>,
+    override val valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ElementValueMutation>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.DuplicateElement>? =
         null,
 ): skirout.library.v1.authoring.DuplicateElement_OrMutable {
@@ -11668,6 +11694,7 @@ class DuplicateElement private constructor(
         page: skirout.kernel.v1.record_id.RecordId_OrMutable,
         placement: skirout.library.v1.authoring.ElementPlacement,
         referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable>,
+        valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ElementValueMutation>,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.DuplicateElement>? =
             null,
     ): this(
@@ -11677,6 +11704,7 @@ class DuplicateElement private constructor(
         page.toFrozen(),
         placement,
         build.skir.internal.toFrozenList(referenceRewrites, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(valueMutations),
         _unrecognizedFields,
     ) {}
 
@@ -11691,6 +11719,7 @@ class DuplicateElement private constructor(
         page = this.page,
         placement = this.placement,
         referenceRewrites = this.referenceRewrites,
+        valueMutations = this.valueMutations,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -11709,6 +11738,8 @@ class DuplicateElement private constructor(
             this.placement,
         referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable> =
             this.referenceRewrites,
+        valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ElementValueMutation> =
+            this.valueMutations,
     ) = skirout.library.v1.authoring.DuplicateElement(
         sourceId.toFrozen(),
         expectedValue,
@@ -11716,6 +11747,7 @@ class DuplicateElement private constructor(
         page.toFrozen(),
         placement,
         build.skir.internal.toFrozenList(referenceRewrites, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(valueMutations),
         this._unrecognizedFields,
     );
 
@@ -11723,11 +11755,11 @@ class DuplicateElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.authoring.DuplicateElement && this.sourceId == other.sourceId && this.expectedValue == other.expectedValue && this.newId == other.newId && this.page == other.page && this.placement == other.placement && this.referenceRewrites == other.referenceRewrites);
+        return this === other || (other is skirout.library.v1.authoring.DuplicateElement && this.sourceId == other.sourceId && this.expectedValue == other.expectedValue && this.newId == other.newId && this.page == other.page && this.placement == other.placement && this.referenceRewrites == other.referenceRewrites && this.valueMutations == other.valueMutations);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.expectedValue, this.newId, this.page, this.placement, this.referenceRewrites).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.expectedValue, this.newId, this.page, this.placement, this.referenceRewrites, this.valueMutations).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -11753,6 +11785,8 @@ class DuplicateElement private constructor(
             skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
         override var referenceRewrites: kotlin.collections.List<skirout.library.v1.authoring.ReferenceRewrite_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceRewrite>(),
+        override var valueMutations: kotlin.collections.List<skirout.library.v1.authoring.ElementValueMutation> =
+            build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ElementValueMutation>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.DuplicateElement>? =
             null,
     ): skirout.library.v1.authoring.DuplicateElement_OrMutable {
@@ -11764,6 +11798,7 @@ class DuplicateElement private constructor(
             page = this.page,
             placement = this.placement,
             referenceRewrites = this.referenceRewrites,
+            valueMutations = this.valueMutations,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -11830,6 +11865,22 @@ class DuplicateElement private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [valueMutations] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [valueMutations] and returns it.
+         */
+        val mutableValueMutations: kotlin.collections.MutableList<skirout.library.v1.authoring.ElementValueMutation> get() {
+            var value = this.valueMutations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.valueMutations = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
@@ -11841,6 +11892,7 @@ class DuplicateElement private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
                 build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceRewrite>(),
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ElementValueMutation>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -11866,6 +11918,8 @@ class DuplicateElement private constructor(
                 skirout.library.v1.authoring.ElementPlacement.UNKNOWN,
             referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ReferenceRewrite>(),
+            valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ElementValueMutation> =
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.ElementValueMutation>(),
         ) = skirout.library.v1.authoring.DuplicateElement(
             sourceId = sourceId,
             expectedValue = expectedValue,
@@ -11873,6 +11927,7 @@ class DuplicateElement private constructor(
             page = page,
             placement = placement,
             referenceRewrites = referenceRewrites,
+            valueMutations = valueMutations,
             _unrecognizedFields = null,
         );
 
@@ -11932,7 +11987,7 @@ class DuplicateElement private constructor(
             serializerImpl.addField(
                 "placement",
                 "placement",
-                5,
+                4,
                 skirout.library.v1.authoring.ElementPlacement.serializer,
                 "",
                 { it.placement },
@@ -11941,7 +11996,7 @@ class DuplicateElement private constructor(
             serializerImpl.addField(
                 "reference_rewrites",
                 "referenceRewrites",
-                6,
+                5,
                 build.skir.Serializers.list(
                     skirout.library.v1.authoring.ReferenceRewrite.serializer,
                 ),
@@ -11949,7 +12004,17 @@ class DuplicateElement private constructor(
                 { it.referenceRewrites },
                 { mut, v -> mut.referenceRewrites = v },
             );
-            serializerImpl.addRemovedNumber(4);
+            serializerImpl.addField(
+                "value_mutations",
+                "valueMutations",
+                6,
+                build.skir.Serializers.list(
+                    skirout.library.v1.authoring.ElementValueMutation.serializer,
+                ),
+                "",
+                { it.valueMutations },
+                { mut, v -> mut.valueMutations = v },
+            );
             serializerImpl.finalizeStruct();
         }
     }
@@ -12554,12 +12619,14 @@ sealed class AuthoringOperation private constructor() {
             page: skirout.library.v1.authoring.RecordIdChange_OrMutable?,
             placement: skirout.library.v1.authoring.ElementPlacementChange_OrMutable?,
             valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ExpectedElementValueMutation_OrMutable>,
+            elementType: skirout.library.v1.authoring.ElementTypeChange_OrMutable?,
         ) = PatchElementWrapper(
             skirout.library.v1.authoring.PatchElement(
                 id = id,
                 page = page,
                 placement = placement,
                 valueMutations = valueMutations,
+                elementType = elementType,
             )
         );
 
@@ -12574,6 +12641,7 @@ sealed class AuthoringOperation private constructor() {
             page: skirout.kernel.v1.record_id.RecordId_OrMutable,
             placement: skirout.library.v1.authoring.ElementPlacement,
             referenceRewrites: kotlin.collections.Iterable<skirout.library.v1.authoring.ReferenceRewrite_OrMutable>,
+            valueMutations: kotlin.collections.Iterable<skirout.library.v1.authoring.ElementValueMutation>,
         ) = DuplicateElementWrapper(
             skirout.library.v1.authoring.DuplicateElement(
                 sourceId = sourceId,
@@ -12582,6 +12650,7 @@ sealed class AuthoringOperation private constructor() {
                 page = page,
                 placement = placement,
                 referenceRewrites = referenceRewrites,
+                valueMutations = valueMutations,
             )
         );
 
@@ -17502,6 +17571,787 @@ class AuthoringReferenceResolution private constructor(
     }
 }
 
+sealed interface ElementTypeChange_OrMutable {
+    val expectedElementType: kotlin.String;
+    val expectedSchemaRevision: kotlin.Int;
+    val expectedValue: skirout.editor.v1.type_catalog.TypedValue;
+    val valueElementType: kotlin.String;
+    val valueSchemaRevision: kotlin.Int;
+    val value: skirout.editor.v1.type_catalog.TypedValue;
+
+    fun toFrozen(): skirout.library.v1.authoring.ElementTypeChange;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ElementTypeChange private constructor(
+    override val expectedElementType: kotlin.String,
+    override val expectedSchemaRevision: kotlin.Int,
+    override val expectedValue: skirout.editor.v1.type_catalog.TypedValue,
+    override val valueElementType: kotlin.String,
+    override val valueSchemaRevision: kotlin.Int,
+    override val value: skirout.editor.v1.type_catalog.TypedValue,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ElementTypeChange>? =
+        null,
+): skirout.library.v1.authoring.ElementTypeChange_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        expectedElementType: kotlin.String,
+        expectedSchemaRevision: kotlin.Int,
+        expectedValue: skirout.editor.v1.type_catalog.TypedValue,
+        valueElementType: kotlin.String,
+        valueSchemaRevision: kotlin.Int,
+        value: skirout.editor.v1.type_catalog.TypedValue,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ElementTypeChange>? =
+            null,
+    ): this(
+        expectedElementType,
+        expectedSchemaRevision,
+        expectedValue,
+        valueElementType,
+        valueSchemaRevision,
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        expectedElementType = this.expectedElementType,
+        expectedSchemaRevision = this.expectedSchemaRevision,
+        expectedValue = this.expectedValue,
+        valueElementType = this.valueElementType,
+        valueSchemaRevision = this.valueSchemaRevision,
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        expectedElementType: kotlin.String =
+            this.expectedElementType,
+        expectedSchemaRevision: kotlin.Int =
+            this.expectedSchemaRevision,
+        expectedValue: skirout.editor.v1.type_catalog.TypedValue =
+            this.expectedValue,
+        valueElementType: kotlin.String =
+            this.valueElementType,
+        valueSchemaRevision: kotlin.Int =
+            this.valueSchemaRevision,
+        value: skirout.editor.v1.type_catalog.TypedValue =
+            this.value,
+    ) = skirout.library.v1.authoring.ElementTypeChange(
+        expectedElementType,
+        expectedSchemaRevision,
+        expectedValue,
+        valueElementType,
+        valueSchemaRevision,
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.ElementTypeChange && this.expectedElementType == other.expectedElementType && this.expectedSchemaRevision == other.expectedSchemaRevision && this.expectedValue == other.expectedValue && this.valueElementType == other.valueElementType && this.valueSchemaRevision == other.valueSchemaRevision && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.expectedElementType, this.expectedSchemaRevision, this.expectedValue, this.valueElementType, this.valueSchemaRevision, this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.ElementTypeChange.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ElementTypeChange]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var expectedElementType: kotlin.String =
+            "",
+        override var expectedSchemaRevision: kotlin.Int =
+            0,
+        override var expectedValue: skirout.editor.v1.type_catalog.TypedValue =
+            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        override var valueElementType: kotlin.String =
+            "",
+        override var valueSchemaRevision: kotlin.Int =
+            0,
+        override var value: skirout.editor.v1.type_catalog.TypedValue =
+            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.ElementTypeChange>? =
+            null,
+    ): skirout.library.v1.authoring.ElementTypeChange_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.ElementTypeChange(
+            expectedElementType = this.expectedElementType,
+            expectedSchemaRevision = this.expectedSchemaRevision,
+            expectedValue = this.expectedValue,
+            valueElementType = this.valueElementType,
+            valueSchemaRevision = this.valueSchemaRevision,
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.ElementTypeChange(
+                "",
+                0,
+                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+                "",
+                0,
+                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ElementTypeChange].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedElementType: kotlin.String =
+                "",
+            expectedSchemaRevision: kotlin.Int =
+                0,
+            expectedValue: skirout.editor.v1.type_catalog.TypedValue =
+                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            valueElementType: kotlin.String =
+                "",
+            valueSchemaRevision: kotlin.Int =
+                0,
+            value: skirout.editor.v1.type_catalog.TypedValue =
+                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        ) = skirout.library.v1.authoring.ElementTypeChange(
+            expectedElementType = expectedElementType,
+            expectedSchemaRevision = expectedSchemaRevision,
+            expectedValue = expectedValue,
+            valueElementType = valueElementType,
+            valueSchemaRevision = valueSchemaRevision,
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:ElementTypeChange",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ElementTypeChange] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ElementTypeChange] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "expected_element_type",
+                "expectedElementType",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.expectedElementType },
+                { mut, v -> mut.expectedElementType = v },
+            );
+            serializerImpl.addField(
+                "expected_schema_revision",
+                "expectedSchemaRevision",
+                1,
+                build.skir.Serializers.int32,
+                "",
+                { it.expectedSchemaRevision },
+                { mut, v -> mut.expectedSchemaRevision = v },
+            );
+            serializerImpl.addField(
+                "expected_value",
+                "expectedValue",
+                2,
+                skirout.editor.v1.type_catalog.TypedValue.serializer,
+                "",
+                { it.expectedValue },
+                { mut, v -> mut.expectedValue = v },
+            );
+            serializerImpl.addField(
+                "value_element_type",
+                "valueElementType",
+                3,
+                build.skir.Serializers.string,
+                "",
+                { it.valueElementType },
+                { mut, v -> mut.valueElementType = v },
+            );
+            serializerImpl.addField(
+                "value_schema_revision",
+                "valueSchemaRevision",
+                4,
+                build.skir.Serializers.int32,
+                "",
+                { it.valueSchemaRevision },
+                { mut, v -> mut.valueSchemaRevision = v },
+            );
+            serializerImpl.addField(
+                "value",
+                "value",
+                5,
+                skirout.editor.v1.type_catalog.TypedValue.serializer,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface AuthoringPreview_OrMutable {
+    val affectedResources: kotlin.collections.List<skirout.library.v1.authoring.AuthoringResourceRef>;
+
+    fun toFrozen(): skirout.library.v1.authoring.AuthoringPreview;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class AuthoringPreview private constructor(
+    override val affectedResources: kotlin.collections.List<skirout.library.v1.authoring.AuthoringResourceRef>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.AuthoringPreview>? =
+        null,
+): skirout.library.v1.authoring.AuthoringPreview_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        affectedResources: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringResourceRef>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.AuthoringPreview>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(affectedResources),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        affectedResources = this.affectedResources,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        affectedResources: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringResourceRef> =
+            this.affectedResources,
+    ) = skirout.library.v1.authoring.AuthoringPreview(
+        build.skir.internal.toFrozenList(affectedResources),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.AuthoringPreview && this.affectedResources == other.affectedResources);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.affectedResources).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.AuthoringPreview.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [AuthoringPreview]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var affectedResources: kotlin.collections.List<skirout.library.v1.authoring.AuthoringResourceRef> =
+            build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.AuthoringResourceRef>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.AuthoringPreview>? =
+            null,
+    ): skirout.library.v1.authoring.AuthoringPreview_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.AuthoringPreview(
+            affectedResources = this.affectedResources,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [affectedResources] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [affectedResources] and returns it.
+         */
+        val mutableAffectedResources: kotlin.collections.MutableList<skirout.library.v1.authoring.AuthoringResourceRef> get() {
+            var value = this.affectedResources;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.affectedResources = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.AuthoringPreview(
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.AuthoringResourceRef>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [AuthoringPreview].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            affectedResources: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringResourceRef> =
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.AuthoringResourceRef>(),
+        ) = skirout.library.v1.authoring.AuthoringPreview(
+            affectedResources = affectedResources,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:AuthoringPreview",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [AuthoringPreview] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [AuthoringPreview] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "affected_resources",
+                "affectedResources",
+                0,
+                build.skir.Serializers.list(
+                    skirout.library.v1.authoring.AuthoringResourceRef.serializer,
+                ),
+                "",
+                { it.affectedResources },
+                { mut, v -> mut.affectedResources = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface PreviewAuthoringBatchRequest_OrMutable {
+    val operations: kotlin.collections.List<skirout.library.v1.authoring.AuthoringOperation>;
+
+    fun toFrozen(): skirout.library.v1.authoring.PreviewAuthoringBatchRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PreviewAuthoringBatchRequest private constructor(
+    override val operations: kotlin.collections.List<skirout.library.v1.authoring.AuthoringOperation>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PreviewAuthoringBatchRequest>? =
+        null,
+): skirout.library.v1.authoring.PreviewAuthoringBatchRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        operations: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringOperation>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PreviewAuthoringBatchRequest>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(operations),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        operations = this.operations,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        operations: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringOperation> =
+            this.operations,
+    ) = skirout.library.v1.authoring.PreviewAuthoringBatchRequest(
+        build.skir.internal.toFrozenList(operations),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.authoring.PreviewAuthoringBatchRequest && this.operations == other.operations);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.operations).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.PreviewAuthoringBatchRequest.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [PreviewAuthoringBatchRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var operations: kotlin.collections.List<skirout.library.v1.authoring.AuthoringOperation> =
+            build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.AuthoringOperation>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.authoring.PreviewAuthoringBatchRequest>? =
+            null,
+    ): skirout.library.v1.authoring.PreviewAuthoringBatchRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.authoring.PreviewAuthoringBatchRequest(
+            operations = this.operations,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [operations] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
+         */
+        val mutableOperations: kotlin.collections.MutableList<skirout.library.v1.authoring.AuthoringOperation> get() {
+            var value = this.operations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.operations = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.authoring.PreviewAuthoringBatchRequest(
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.AuthoringOperation>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PreviewAuthoringBatchRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            operations: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringOperation> =
+                build.skir.internal.emptyFrozenList<skirout.library.v1.authoring.AuthoringOperation>(),
+        ) = skirout.library.v1.authoring.PreviewAuthoringBatchRequest(
+            operations = operations,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/authoring.skir:PreviewAuthoringBatchRequest",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [PreviewAuthoringBatchRequest] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [PreviewAuthoringBatchRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "operations",
+                "operations",
+                0,
+                build.skir.Serializers.list(
+                    skirout.library.v1.authoring.AuthoringOperation.serializer,
+                ),
+                "",
+                { it.operations },
+                { mut, v -> mut.operations = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class PreviewAuthoringBatchResponse private constructor() {
+    /** The kind of variant held by a `PreviewAuthoringBatchResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        VALID_WRAPPER,
+        CONFLICT_WRAPPER,
+        INVALID_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.authoring.PreviewAuthoringBatchResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.authoring.PreviewAuthoringBatchResponse>?,
+    ) : skirout.library.v1.authoring.PreviewAuthoringBatchResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.PreviewAuthoringBatchResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ValidWrapper private constructor (
+        val value: skirout.library.v1.authoring.AuthoringPreview,
+    ) : skirout.library.v1.authoring.PreviewAuthoringBatchResponse() {
+        constructor(
+            value: skirout.library.v1.authoring.AuthoringPreview_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.VALID_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.PreviewAuthoringBatchResponse.ValidWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 111972348;
+        }
+    }
+
+    class ConflictWrapper private constructor (
+        val value: skirout.library.v1.authoring.AuthoringConflict,
+    ) : skirout.library.v1.authoring.PreviewAuthoringBatchResponse() {
+        constructor(
+            value: skirout.library.v1.authoring.AuthoringConflict_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONFLICT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.PreviewAuthoringBatchResponse.ConflictWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -580047918;
+        }
+    }
+
+    class InvalidWrapper private constructor (
+        val value: skirout.library.v1.authoring.AuthoringInvalid,
+    ) : skirout.library.v1.authoring.PreviewAuthoringBatchResponse() {
+        constructor(
+            value: skirout.library.v1.authoring.AuthoringInvalid_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.PreviewAuthoringBatchResponse.InvalidWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1959784951;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.library.v1.authoring.PreviewAuthoringBatchResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.authoring.PreviewAuthoringBatchResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.authoring.PreviewAuthoringBatchResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.authoring.PreviewAuthoringBatchResponse._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PreviewAuthoringBatchResponse].
+         * Default value for fields of type [PreviewAuthoringBatchResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ValidWrapper(skirout.library.v1.authoring.AuthoringPreview(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createValid(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            affectedResources: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringResourceRef>,
+        ) = ValidWrapper(
+            skirout.library.v1.authoring.AuthoringPreview(
+                affectedResources = affectedResources,
+            )
+        );
+
+        /** Shortcut for `ConflictWrapper(skirout.library.v1.authoring.AuthoringConflict(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createConflict(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            conflicts: kotlin.collections.Iterable<skirout.library.v1.authoring.PropertyConflict_OrMutable>,
+        ) = ConflictWrapper(
+            skirout.library.v1.authoring.AuthoringConflict(
+                conflicts = conflicts,
+            )
+        );
+
+        /** Shortcut for `InvalidWrapper(skirout.library.v1.authoring.AuthoringInvalid(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalid(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            diagnostics: kotlin.collections.Iterable<skirout.library.v1.authoring.AuthoringDiagnostic_OrMutable>,
+        ) = InvalidWrapper(
+            skirout.library.v1.authoring.AuthoringInvalid(
+                diagnostics = diagnostics,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.library.v1.authoring.PreviewAuthoringBatchResponse, Unknown>(
+                recordId = "library/v1/authoring.skir:PreviewAuthoringBatchResponse",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [PreviewAuthoringBatchResponse] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [PreviewAuthoringBatchResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "valid",
+                    Kind.VALID_WRAPPER.ordinal,
+                    skirout.library.v1.authoring.AuthoringPreview.serializer,
+                    "",
+                    { ValidWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "conflict",
+                    Kind.CONFLICT_WRAPPER.ordinal,
+                    skirout.library.v1.authoring.AuthoringConflict.serializer,
+                    "",
+                    { ConflictWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "invalid",
+                    Kind.INVALID_WRAPPER.ordinal,
+                    skirout.library.v1.authoring.AuthoringInvalid.serializer,
+                    "",
+                    { InvalidWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
+                    "internal_error",
+                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InternalError.serializer,
+                    "",
+                    { InternalErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
 sealed interface SearchAuthoringContentRequest_OrMutable {
     val query: skirout.editor.v1.search.RealmSearchQuery_OrMutable;
     val contextPage: skirout.kernel.v1.record_id.RecordId_OrMutable?;
@@ -18699,6 +19549,19 @@ val ApplyAuthoringBatch: build.skir.service.Method<
         skirout.library.v1.authoring.ApplyAuthoringBatchRequest.serializer,
         skirout.library.v1.authoring.ApplyAuthoringBatchResponse.serializer,
         "Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.\nBatch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.",
+    )
+}
+
+val PreviewAuthoringBatch: build.skir.service.Method<
+    skirout.library.v1.authoring.PreviewAuthoringBatchRequest,
+    skirout.library.v1.authoring.PreviewAuthoringBatchResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "PreviewAuthoringBatch",
+        920007,
+        skirout.library.v1.authoring.PreviewAuthoringBatchRequest.serializer,
+        skirout.library.v1.authoring.PreviewAuthoringBatchResponse.serializer,
+        "",
     )
 }
 

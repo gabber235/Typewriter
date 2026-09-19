@@ -1,4 +1,5 @@
 import { ResolvedTypeRef } from "editor/v1/type_catalog.skir";
+import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
 import { Color } from "kernel/v1/color.skir";
 import { Icon } from "kernel/v1/icon.skir";
 import { PageKindRef } from "kernel/v1/page_kind.skir";
@@ -37,6 +38,7 @@ struct PageDescriptor(811300005) {
   icon: Icon = 3;
   color: Color = 4;
   editor: PageEditorDefinition = 5;
+  authoring_rules: [PageAuthoringRuleRef] = 6;
 }
 
 struct PageCatalogEntry(811300006) {
@@ -52,4 +54,10 @@ struct PageDiagnostic(811300007) {
   source_part: string? = 3;
   declaration_name: string? = 4;
   kind: PageKindRef? = 5;
+}
+
+struct PageAuthoringRuleRef(811300008) {
+  id: string = 0;
+  revision: int32 = 1;
+  configuration: TypedValueEnvelope? = 2;
 }

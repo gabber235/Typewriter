@@ -2235,6 +2235,7 @@ pub struct PatchElement {
     pub page: Option<RecordIdChange>,
     pub placement: Option<ElementPlacementChange>,
     pub value_mutations: Vec<ExpectedElementValueMutation>,
+    pub element_type: Option<ElementTypeChange>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PatchElement>>,
 }
@@ -2317,6 +2318,7 @@ pub struct DuplicateElement {
     pub page: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub placement: ElementPlacement,
     pub reference_rewrites: Vec<ReferenceRewrite>,
+    pub value_mutations: Vec<ElementValueMutation>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DuplicateElement>>,
 }
@@ -3406,6 +3408,171 @@ impl AuthoringReferenceResolution {
 }
 
 // ==============================================================================
+// struct ElementTypeChange
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ElementTypeChange {
+    pub expected_element_type: String,
+    pub expected_schema_revision: i32,
+    pub expected_value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+    pub value_element_type: String,
+    pub value_schema_revision: i32,
+    pub value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementTypeChange>>,
+}
+
+impl ElementTypeChange {
+    pub fn default_ref() -> &'static ElementTypeChange {
+        static D: std::sync::LazyLock<ElementTypeChange> = std::sync::LazyLock::new(ElementTypeChange::default);
+        &D
+    }
+}
+
+impl ElementTypeChange {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementTypeChange> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementTypeChange>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "ElementTypeChange",
+                    "",
+                    |x: &ElementTypeChange| &x._unrecognized,
+                    |x: &mut ElementTypeChange, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ElementTypeChange> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ElementTypeChange::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AuthoringPreview
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringPreview {
+    pub affected_resources: Vec<AuthoringResourceRef>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringPreview>>,
+}
+
+impl AuthoringPreview {
+    pub fn default_ref() -> &'static AuthoringPreview {
+        static D: std::sync::LazyLock<AuthoringPreview> = std::sync::LazyLock::new(AuthoringPreview::default);
+        &D
+    }
+}
+
+impl AuthoringPreview {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringPreview> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringPreview>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "AuthoringPreview",
+                    "",
+                    |x: &AuthoringPreview| &x._unrecognized,
+                    |x: &mut AuthoringPreview, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringPreview> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringPreview::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PreviewAuthoringBatchRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PreviewAuthoringBatchRequest {
+    pub operations: Vec<AuthoringOperation>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PreviewAuthoringBatchRequest>>,
+}
+
+impl PreviewAuthoringBatchRequest {
+    pub fn default_ref() -> &'static PreviewAuthoringBatchRequest {
+        static D: std::sync::LazyLock<PreviewAuthoringBatchRequest> = std::sync::LazyLock::new(PreviewAuthoringBatchRequest::default);
+        &D
+    }
+}
+
+impl PreviewAuthoringBatchRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PreviewAuthoringBatchRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PreviewAuthoringBatchRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/authoring.skir",
+                    "PreviewAuthoringBatchRequest",
+                    "",
+                    |x: &PreviewAuthoringBatchRequest| &x._unrecognized,
+                    |x: &mut PreviewAuthoringBatchRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PreviewAuthoringBatchRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PreviewAuthoringBatchRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PreviewAuthoringBatchResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PreviewAuthoringBatchResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PreviewAuthoringBatchResponse>>),
+    Valid(Box<AuthoringPreview>),
+    Conflict(Box<AuthoringConflict>),
+    Invalid(Box<AuthoringInvalid>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for PreviewAuthoringBatchResponse {
+    fn default() -> Self {
+        PreviewAuthoringBatchResponse::Unknown(None)
+    }
+}
+
+impl PreviewAuthoringBatchResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PreviewAuthoringBatchResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PreviewAuthoringBatchResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PreviewAuthoringBatchResponse| match x {
+                        PreviewAuthoringBatchResponse::Unknown(_) => 0,
+                        PreviewAuthoringBatchResponse::Valid(_) => 1,
+                        PreviewAuthoringBatchResponse::Conflict(_) => 2,
+                        PreviewAuthoringBatchResponse::Invalid(_) => 3,
+                        PreviewAuthoringBatchResponse::InternalError(_) => 4,
+                    },
+                    |u| PreviewAuthoringBatchResponse::Unknown(Some(u)),
+                    |x: &PreviewAuthoringBatchResponse| match x { PreviewAuthoringBatchResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/authoring.skir",
+                    "PreviewAuthoringBatchResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PreviewAuthoringBatchResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PreviewAuthoringBatchResponse::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct SearchAuthoringContentRequest
 // ==============================================================================
 
@@ -3726,13 +3893,12 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PageElement> = PageElement::_adapter() as *const _ as *mut _;
-                (*a).add_removed_number(4);
                 (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PageElement| &x.id, |x: &mut PageElement, v| x.id = v);
                 (*a).add_field("page", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PageElement| &x.page, |x: &mut PageElement, v| x.page = v);
                 (*a).add_field("element_type", 2, crate::skir_client::Serializer::string(), "", |x: &PageElement| &x.element_type, |x: &mut PageElement, v| x.element_type = v);
                 (*a).add_field("schema_revision", 3, crate::skir_client::Serializer::int32(), "", |x: &PageElement| &x.schema_revision, |x: &mut PageElement, v| x.schema_revision = v);
-                (*a).add_field("value", 5, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &PageElement| &x.value, |x: &mut PageElement, v| x.value = v);
-                (*a).add_field("placement", 6, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &PageElement| &x.placement, |x: &mut PageElement, v| x.placement = v);
+                (*a).add_field("value", 4, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &PageElement| &x.value, |x: &mut PageElement, v| x.value = v);
+                (*a).add_field("placement", 5, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &PageElement| &x.placement, |x: &mut PageElement, v| x.placement = v);
                 (*a).finalize();
             }
             unsafe {
@@ -4048,11 +4214,11 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PatchElement> = PatchElement::_adapter() as *const _ as *mut _;
-                (*a).add_removed_number(2);
                 (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PatchElement| &x.id, |x: &mut PatchElement, v| x.id = v);
                 (*a).add_field("page", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(RecordIdChange::_adapter())), "", |x: &PatchElement| &x.page, |x: &mut PatchElement, v| x.page = v);
-                (*a).add_field("placement", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ElementPlacementChange::_adapter())), "", |x: &PatchElement| &x.placement, |x: &mut PatchElement, v| x.placement = v);
-                (*a).add_field("value_mutations", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ExpectedElementValueMutation::_adapter())), "", |x: &PatchElement| &x.value_mutations, |x: &mut PatchElement, v| x.value_mutations = v);
+                (*a).add_field("placement", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ElementPlacementChange::_adapter())), "", |x: &PatchElement| &x.placement, |x: &mut PatchElement, v| x.placement = v);
+                (*a).add_field("value_mutations", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ExpectedElementValueMutation::_adapter())), "", |x: &PatchElement| &x.value_mutations, |x: &mut PatchElement, v| x.value_mutations = v);
+                (*a).add_field("element_type", 4, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ElementTypeChange::_adapter())), "", |x: &PatchElement| &x.element_type, |x: &mut PatchElement, v| x.element_type = v);
                 (*a).finalize();
             }
             unsafe {
@@ -4063,13 +4229,13 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<DuplicateElement> = DuplicateElement::_adapter() as *const _ as *mut _;
-                (*a).add_removed_number(4);
                 (*a).add_field("source_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DuplicateElement| &x.source_id, |x: &mut DuplicateElement, v| x.source_id = v);
                 (*a).add_field("expected_value", 1, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &DuplicateElement| &x.expected_value, |x: &mut DuplicateElement, v| x.expected_value = v);
                 (*a).add_field("new_id", 2, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DuplicateElement| &x.new_id, |x: &mut DuplicateElement, v| x.new_id = v);
                 (*a).add_field("page", 3, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DuplicateElement| &x.page, |x: &mut DuplicateElement, v| x.page = v);
-                (*a).add_field("placement", 5, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &DuplicateElement| &x.placement, |x: &mut DuplicateElement, v| x.placement = v);
-                (*a).add_field("reference_rewrites", 6, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ReferenceRewrite::_adapter())), "", |x: &DuplicateElement| &x.reference_rewrites, |x: &mut DuplicateElement, v| x.reference_rewrites = v);
+                (*a).add_field("placement", 4, crate::skir_client::internal::enum_serializer_from_static(ElementPlacement::_adapter()), "", |x: &DuplicateElement| &x.placement, |x: &mut DuplicateElement, v| x.placement = v);
+                (*a).add_field("reference_rewrites", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ReferenceRewrite::_adapter())), "", |x: &DuplicateElement| &x.reference_rewrites, |x: &mut DuplicateElement, v| x.reference_rewrites = v);
+                (*a).add_field("value_mutations", 6, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(ElementValueMutation::_adapter())), "", |x: &DuplicateElement| &x.value_mutations, |x: &mut DuplicateElement, v| x.value_mutations = v);
                 (*a).finalize();
             }
             unsafe {
@@ -4261,6 +4427,34 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ElementTypeChange> = ElementTypeChange::_adapter() as *const _ as *mut _;
+                (*a).add_field("expected_element_type", 0, crate::skir_client::Serializer::string(), "", |x: &ElementTypeChange| &x.expected_element_type, |x: &mut ElementTypeChange, v| x.expected_element_type = v);
+                (*a).add_field("expected_schema_revision", 1, crate::skir_client::Serializer::int32(), "", |x: &ElementTypeChange| &x.expected_schema_revision, |x: &mut ElementTypeChange, v| x.expected_schema_revision = v);
+                (*a).add_field("expected_value", 2, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &ElementTypeChange| &x.expected_value, |x: &mut ElementTypeChange, v| x.expected_value = v);
+                (*a).add_field("value_element_type", 3, crate::skir_client::Serializer::string(), "", |x: &ElementTypeChange| &x.value_element_type, |x: &mut ElementTypeChange, v| x.value_element_type = v);
+                (*a).add_field("value_schema_revision", 4, crate::skir_client::Serializer::int32(), "", |x: &ElementTypeChange| &x.value_schema_revision, |x: &mut ElementTypeChange, v| x.value_schema_revision = v);
+                (*a).add_field("value", 5, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &ElementTypeChange| &x.value, |x: &mut ElementTypeChange, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringPreview> = AuthoringPreview::_adapter() as *const _ as *mut _;
+                (*a).add_field("affected_resources", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(AuthoringResourceRef::_adapter())), "", |x: &AuthoringPreview| &x.affected_resources, |x: &mut AuthoringPreview, v| x.affected_resources = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PreviewAuthoringBatchRequest> = PreviewAuthoringBatchRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("operations", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(AuthoringOperation::_adapter())), "", |x: &PreviewAuthoringBatchRequest| &x.operations, |x: &mut PreviewAuthoringBatchRequest, v| x.operations = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PreviewAuthoringBatchResponse> = PreviewAuthoringBatchResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("valid", 1, 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringPreview::_adapter()), "", |v| PreviewAuthoringBatchResponse::Valid(Box::new(v)), |x| match x { PreviewAuthoringBatchResponse::Valid(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conflict", 2, 2, crate::skir_client::internal::struct_serializer_from_static(AuthoringConflict::_adapter()), "", |v| PreviewAuthoringBatchResponse::Conflict(Box::new(v)), |x| match x { PreviewAuthoringBatchResponse::Conflict(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid", 3, 3, crate::skir_client::internal::struct_serializer_from_static(AuthoringInvalid::_adapter()), "", |v| PreviewAuthoringBatchResponse::Invalid(Box::new(v)), |x| match x { PreviewAuthoringBatchResponse::Invalid(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| PreviewAuthoringBatchResponse::InternalError(Box::new(v)), |x| match x { PreviewAuthoringBatchResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SearchAuthoringContentRequest> = SearchAuthoringContentRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("query", 0, crate::skirout::base::editor::v1::search::RealmSearchQuery::serializer(), "", |x: &SearchAuthoringContentRequest| &x.query, |x: &mut SearchAuthoringContentRequest, v| x.query = v);
                 (*a).add_field("context_page", 1, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &SearchAuthoringContentRequest| &x.context_page, |x: &mut SearchAuthoringContentRequest, v| x.context_page = v);
@@ -4334,6 +4528,19 @@ pub fn apply_authoring_batch_method() -> &'static crate::skir_client::Method<App
             request_serializer: ApplyAuthoringBatchRequest::serializer(),
             response_serializer: ApplyAuthoringBatchResponse::serializer(),
             doc: "Operations execute in order within one atomic transaction. A batch must be nonempty and contain at most one operation per target resource.\nBatch IDs must not be blank. Reuse an ID only for an identical request. Replaying a committed batch returns its original sequence and changes without applying its operations again.".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn preview_authoring_batch_method() -> &'static crate::skir_client::Method<PreviewAuthoringBatchRequest, PreviewAuthoringBatchResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<PreviewAuthoringBatchRequest, PreviewAuthoringBatchResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "PreviewAuthoringBatch".to_string(),
+            number: 920007_i64,
+            request_serializer: PreviewAuthoringBatchRequest::serializer(),
+            response_serializer: PreviewAuthoringBatchResponse::serializer(),
+            doc: "".to_string(),
         }
     });
     &*METHOD

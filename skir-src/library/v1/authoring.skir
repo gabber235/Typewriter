@@ -75,9 +75,8 @@ struct PageElement(812200009) {
   page: RecordId = 1;
   element_type: string = 2;
   schema_revision: int32 = 3;
-  removed 4;
-  value: TypedValue = 5;
-  placement: ElementPlacement = 6;
+  value: TypedValue = 4;
+  placement: ElementPlacement = 5;
 }
 
 struct PageReference(812200010) {
@@ -350,9 +349,9 @@ struct CreateElement(812200050) {
 struct PatchElement(812200051) {
   id: RecordId = 0;
   page: RecordIdChange? = 1;
-  removed 2;
-  placement: ElementPlacementChange? = 3;
-  value_mutations: [ExpectedElementValueMutation] = 4;
+  placement: ElementPlacementChange? = 2;
+  value_mutations: [ExpectedElementValueMutation] = 3;
+  element_type: ElementTypeChange? = 4;
 }
 
 struct ReferenceRewrite(812200052) {
@@ -365,9 +364,9 @@ struct DuplicateElement(812200053) {
   expected_value: TypedValue = 1;
   new_id: RecordId = 2;
   page: RecordId = 3;
-  removed 4;
-  placement: ElementPlacement = 5;
-  reference_rewrites: [ReferenceRewrite] = 6;
+  placement: ElementPlacement = 4;
+  reference_rewrites: [ReferenceRewrite] = 5;
+  value_mutations: [ElementValueMutation] = 6;
 }
 
 struct DeleteElement(812200054) {
@@ -537,6 +536,30 @@ struct ReferenceResourceSummary(812200078) {
 struct AuthoringReferenceResolution(812200079) {
   resources: [ReferenceResourceSummary] = 0;
 }
+
+struct ElementTypeChange(812200080) {
+  expected_element_type: string = 0;
+  expected_schema_revision: int32 = 1;
+  expected_value: TypedValue = 2;
+  value_element_type: string = 3;
+  value_schema_revision: int32 = 4;
+  value: TypedValue = 5;
+}
+
+struct AuthoringPreview(812200081) {
+  affected_resources: [AuthoringResourceRef] = 0;
+}
+
+method PreviewAuthoringBatch(
+  struct {
+    operations: [AuthoringOperation] = 0;
+  }
+): enum {
+  valid: AuthoringPreview = 1;
+  conflict: AuthoringConflict = 2;
+  invalid: AuthoringInvalid = 3;
+  internal_error: InternalError = 4;
+} = 920007;
 
 method SearchAuthoringContent(
   struct {
