@@ -20,21 +20,39 @@ func (m *Typewriter) dartContainer() *dagger.Container {
 		WithExec([]string{"flutter", "precache", "--linux"})
 }
 
-func (m *Typewriter) panelContainer(source *dagger.Workspace, cacheScope string) *dagger.Container {
+func (m *Typewriter) panelDependencies(source *dagger.Workspace) *dagger.Container {
 	panelSource := source.Directory("/panel", defaultWorkspaceOpts)
 
 	return m.dartContainer().
 		WithDirectory("/workspace/panel", panelSource).
-		WithMountedCache("/root/.pub-cache", lockedCache("panel-"+cacheScope+"-pub-cache"))
+		WithMountedCache("/root/.pub-cache", lockedCache("panel-pub-cache")).
+		WithWorkdir("/workspace/panel/testkit").
+		WithExec([]string{"flutter", "pub", "get", "--enforce-lockfile"}).
+		WithWorkdir("/workspace/panel/widgetbook").
+		WithExec([]string{"flutter", "pub", "get", "--enforce-lockfile"}).
+		WithWorkdir("/workspace/panel").
+		WithExec([]string{"flutter", "pub", "get", "--enforce-lockfile"}).
+		WithExec([]string{"sh", "-c", "mkdir -p /dependency-cache/pub && cp -a /root/.pub-cache/. /dependency-cache/pub"}).
+		WithNewFile("/dependency-ready", "")
+}
+
+func (m *Typewriter) panelContainer(source *dagger.Workspace) *dagger.Container {
+	panelSource := source.Directory("/panel", defaultWorkspaceOpts)
+	dependencies := m.panelDependencies(source)
+
+	return m.dartContainer().
+		WithDirectory("/workspace/panel", panelSource).
+		WithFile("/dependency-ready", dependencies.File("/dependency-ready")).
+		WithDirectory("/root/.pub-cache", dependencies.Directory("/dependency-cache/pub")).
+		WithDirectory("/workspace/panel/.dart_tool", dependencies.Directory("/workspace/panel/.dart_tool")).
+		WithDirectory("/workspace/panel/testkit/.dart_tool", dependencies.Directory("/workspace/panel/testkit/.dart_tool")).
+		WithDirectory("/workspace/panel/widgetbook/.dart_tool", dependencies.Directory("/workspace/panel/widgetbook/.dart_tool"))
 }
 
 func (m *Typewriter) panelGeneratorContainer(source *dagger.Workspace, packageName string) *dagger.Container {
-	panelSource := source.Directory("/panel", defaultWorkspaceOpts)
 	cachePrefix := "panel-generator-" + packageName + "-" + panelGeneratorCacheVersion
 
-	return m.dartContainer().
-		WithDirectory("/workspace/panel", panelSource).
-		WithMountedCache("/root/.pub-cache", lockedCache(cachePrefix+"-pub-cache")).
+	return m.panelContainer(source).
 		WithMountedCache("/workspace/panel/.dart_tool", lockedCache(cachePrefix+"-dart-tool")).
 		WithMountedCache("/workspace/panel/testkit/.dart_tool", lockedCache(cachePrefix+"-dart-tool-testkit")).
 		WithMountedCache("/workspace/panel/widgetbook/.dart_tool", lockedCache(cachePrefix+"-dart-tool-widgetbook"))
@@ -99,43 +117,37 @@ func (m *Typewriter) PanelWidgetbookBuildRunner(
 func (m *Typewriter) PanelAnalysis(
 	source *dagger.Workspace,
 ) *dagger.Container {
-	return m.panelContainer(source, "analysis").
+	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/testkit").
-		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"flutter", "analyze"}).
+		WithExec([]string{"flutter", "analyze", "--no-pub"}).
 		WithWorkdir("/workspace/panel/widgetbook").
-		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"flutter", "analyze"}).
+		WithExec([]string{"flutter", "analyze", "--no-pub"}).
 		WithWorkdir("/workspace/panel").
-		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"flutter", "analyze"})
+		WithExec([]string{"flutter", "analyze", "--no-pub"})
 }
 
 // +check
 func (m *Typewriter) PanelTest(
 	source *dagger.Workspace,
 ) *dagger.Container {
-	return m.panelContainer(source, "test").
+	return m.panelContainer(source).
 		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithWorkdir("/workspace/panel").
-		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"flutter", "test"})
+		WithExec([]string{"flutter", "test", "--no-pub"})
 }
 
 // +check
 func (m *Typewriter) PanelTestKitTest(source *dagger.Workspace) *dagger.Container {
-	return m.panelContainer(source, "testkit-test").
+	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/testkit").
-		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"flutter", "test"})
+		WithExec([]string{"flutter", "test", "--no-pub"})
 }
 
 // +check
 func (m *Typewriter) PanelWidgetbookTest(source *dagger.Workspace) *dagger.Container {
-	return m.panelContainer(source, "widgetbook-test").
+	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/widgetbook").
-		WithExec([]string{"flutter", "pub", "get"}).
-		WithExec([]string{"flutter", "test"})
+		WithExec([]string{"flutter", "test", "--no-pub"})
 }
 
 // +check
@@ -163,14 +175,14 @@ authorization {
 			UseEntrypoint: true,
 		})
 
-	return m.panelContainer(source, "nats-integration").
+	return m.panelContainer(source).
 		WithServiceBinding("nats", nats).
 		WithEnvVariable("NATS_ADAPTER_URL", "nats://nats:4222").
 		WithWorkdir("/workspace/panel").
-		WithExec([]string{"flutter", "pub", "get"}).
 		WithExec([]string{
 			"flutter",
 			"test",
+			"--no-pub",
 			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
 		})
 }
