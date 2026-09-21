@@ -37,6 +37,12 @@ abstract class RealmEditorCatalogRequest with _$RealmEditorCatalogRequest {
         presentations: {...presentations, ...other.presentations},
         subtypeQueries: {...subtypeQueries, ...other.subtypeQueries},
       );
+
+  /// Whether this request includes every projection required by [other].
+  bool covers(RealmEditorCatalogRequest other) =>
+      types.containsAll(other.types) &&
+      presentations.containsAll(other.presentations) &&
+      subtypeQueries.containsAll(other.subtypeQueries);
 }
 
 /// Decoded matches for one [RealmEditorSubtypeQuery].

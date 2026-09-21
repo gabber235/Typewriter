@@ -121,7 +121,7 @@ PresentationDefinition _runtimeInspectorPresentation({
               ),
             ],
           ),
-        ],
+        ].map(PresentationAxisChild.fixed).toList(),
       ),
     ),
   );

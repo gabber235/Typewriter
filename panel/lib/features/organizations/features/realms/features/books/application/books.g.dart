@@ -54,7 +54,7 @@ final class CanonicalBooksProvider
   CanonicalBooks create() => CanonicalBooks();
 }
 
-String _$canonicalBooksHash() => r'd95efa451697da113c10971a7585b60cc27cd470';
+String _$canonicalBooksHash() => r'eb236b3b2cd4de0d084dfa7d7ab03fc773292f54';
 
 /// Owns the confirmed book collection for the selected organization and realm.
 ///
@@ -202,8 +202,13 @@ final bookIdProvider = BookIdProvider._();
 /// Resolves the current route parameter into the typed book record identity.
 
 final class BookIdProvider
-    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
-    with $Provider<skir.RecordId?> {
+    extends
+        $FunctionalProvider<
+          skir.ResourceId?,
+          skir.ResourceId?,
+          skir.ResourceId?
+        >
+    with $Provider<skir.ResourceId?> {
   /// Resolves the current route parameter into the typed book record identity.
   BookIdProvider._()
     : super(
@@ -221,24 +226,24 @@ final class BookIdProvider
 
   @$internal
   @override
-  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.ResourceId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  skir.RecordId? create(Ref ref) {
+  skir.ResourceId? create(Ref ref) {
     return bookId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(skir.RecordId? value) {
+  Override overrideWithValue(skir.ResourceId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
+      providerOverride: $SyncValueProvider<skir.ResourceId?>(value),
     );
   }
 }
 
-String _$bookIdHash() => r'167ce138e263f44eb212912668031e5954892725';
+String _$bookIdHash() => r'902a2e5fe4f162247509d29a7f1d9e6dbdfbbf79';
 
 /// Finds one confirmed book in the authoritative realm session.
 
@@ -253,7 +258,7 @@ final class CanonicalBookProvider
   /// Finds one confirmed book in the authoritative realm session.
   CanonicalBookProvider._({
     required CanonicalBookFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'canonicalBookProvider',
@@ -279,7 +284,7 @@ final class CanonicalBookProvider
 
   @override
   FutureOr<Book?> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
+    final argument = this.argument as skir.ResourceId;
     return canonicalBook(ref, argument);
   }
 
@@ -294,12 +299,12 @@ final class CanonicalBookProvider
   }
 }
 
-String _$canonicalBookHash() => r'4792d2e5ec03050b83447ee8f7f590c7e94ee241';
+String _$canonicalBookHash() => r'43552f0ec9a18c8da40af8e810152f78bc9b3d36';
 
 /// Finds one confirmed book in the authoritative realm session.
 
 final class CanonicalBookFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Book?>, skir.RecordId> {
+    with $FunctionalFamilyOverride<FutureOr<Book?>, skir.ResourceId> {
   CanonicalBookFamily._()
     : super(
         retry: null,
@@ -311,7 +316,7 @@ final class CanonicalBookFamily extends $Family
 
   /// Finds one confirmed book in the authoritative realm session.
 
-  CanonicalBookProvider call(skir.RecordId bookId) =>
+  CanonicalBookProvider call(skir.ResourceId bookId) =>
       CanonicalBookProvider._(argument: bookId, from: this);
 
   @override
@@ -412,7 +417,7 @@ final class ProjectedBookProvider
   /// overlay can be applied.
   ProjectedBookProvider._({
     required ProjectedBookFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'projectedBookProvider',
@@ -439,7 +444,7 @@ final class ProjectedBookProvider
 
   @override
   AsyncValue<Book?> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
+    final argument = this.argument as skir.ResourceId;
     return projectedBook(ref, argument);
   }
 
@@ -462,7 +467,7 @@ final class ProjectedBookProvider
   }
 }
 
-String _$projectedBookHash() => r'a9305728db6040d2333f7f9b751fbea6584ddf01';
+String _$projectedBookHash() => r'47d27d7b9d7b00447dd69a75667bcf56e82df964';
 
 /// Returns one book with its local editor projection, if present.
 ///
@@ -471,7 +476,7 @@ String _$projectedBookHash() => r'a9305728db6040d2333f7f9b751fbea6584ddf01';
 /// overlay can be applied.
 
 final class ProjectedBookFamily extends $Family
-    with $FunctionalFamilyOverride<AsyncValue<Book?>, skir.RecordId> {
+    with $FunctionalFamilyOverride<AsyncValue<Book?>, skir.ResourceId> {
   ProjectedBookFamily._()
     : super(
         retry: null,
@@ -487,7 +492,7 @@ final class ProjectedBookFamily extends $Family
   /// It retains the canonical loading or missing value state until the local
   /// overlay can be applied.
 
-  ProjectedBookProvider call(skir.RecordId bookId) =>
+  ProjectedBookProvider call(skir.ResourceId bookId) =>
       ProjectedBookProvider._(argument: bookId, from: this);
 
   @override

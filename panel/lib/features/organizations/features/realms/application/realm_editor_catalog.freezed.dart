@@ -282,7 +282,7 @@ as skir.RecordId,
 /// @nodoc
 mixin _$RealmEditorCatalogSnapshot {
 
- TypeCatalog get catalog; CatalogGeneration get generation; Map<PresentationId, PresentationDefinition> get presentations; Map<ConversionId, ConversionDefinition> get conversions; Map<CapabilityId, CapabilityDefinition> get capabilities; Map<String, RealmEditorSubtypeResult> get subtypeResults; List<TypeDiagnostic> get diagnostics; Map<String, RealmElementCatalogEntry> get elements; RealmPageCatalog get pageCatalog;
+ TypeCatalog get catalog; CatalogGeneration get generation; Map<PresentationId, PresentationDefinition> get presentations; Map<ConversionId, ConversionDefinition> get conversions; Map<CapabilityId, CapabilityDefinition> get capabilities; Map<String, RealmEditorSubtypeResult> get subtypeResults; List<TypeDiagnostic> get diagnostics; Map<String, RealmElementCatalogEntry> get elements; RealmPageCatalog get pageCatalog; Map<skir.ResourceKind, RealmResourceKindDefinition> get resourceKinds; Map<String, RealmRelationDefinition> get relations; Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> get collectionProjections;
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -294,20 +294,20 @@ $RealmEditorCatalogSnapshotCopyWith<RealmEditorCatalogSnapshot> get copyWith => 
 @override
 bool operator ==(Object other) {
   final _this = this as RealmEditorCatalogSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmEditorCatalogSnapshot&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.generation, _this.generation) || other.generation == _this.generation)&&const DeepCollectionEquality().equals(other.presentations, _this.presentations)&&const DeepCollectionEquality().equals(other.conversions, _this.conversions)&&const DeepCollectionEquality().equals(other.capabilities, _this.capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _this.subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&const DeepCollectionEquality().equals(other.elements, _this.elements)&&(identical(other.pageCatalog, _this.pageCatalog) || other.pageCatalog == _this.pageCatalog));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmEditorCatalogSnapshot&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.generation, _this.generation) || other.generation == _this.generation)&&const DeepCollectionEquality().equals(other.presentations, _this.presentations)&&const DeepCollectionEquality().equals(other.conversions, _this.conversions)&&const DeepCollectionEquality().equals(other.capabilities, _this.capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _this.subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&const DeepCollectionEquality().equals(other.elements, _this.elements)&&(identical(other.pageCatalog, _this.pageCatalog) || other.pageCatalog == _this.pageCatalog)&&const DeepCollectionEquality().equals(other.resourceKinds, _this.resourceKinds)&&const DeepCollectionEquality().equals(other.relations, _this.relations)&&const DeepCollectionEquality().equals(other.collectionProjections, _this.collectionProjections));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RealmEditorCatalogSnapshot;
-  return Object.hash(runtimeType,_this.catalog,_this.generation,const DeepCollectionEquality().hash(_this.presentations),const DeepCollectionEquality().hash(_this.conversions),const DeepCollectionEquality().hash(_this.capabilities),const DeepCollectionEquality().hash(_this.subtypeResults),const DeepCollectionEquality().hash(_this.diagnostics),const DeepCollectionEquality().hash(_this.elements),_this.pageCatalog);
+  return Object.hash(runtimeType,_this.catalog,_this.generation,const DeepCollectionEquality().hash(_this.presentations),const DeepCollectionEquality().hash(_this.conversions),const DeepCollectionEquality().hash(_this.capabilities),const DeepCollectionEquality().hash(_this.subtypeResults),const DeepCollectionEquality().hash(_this.diagnostics),const DeepCollectionEquality().hash(_this.elements),_this.pageCatalog,const DeepCollectionEquality().hash(_this.resourceKinds),const DeepCollectionEquality().hash(_this.relations),const DeepCollectionEquality().hash(_this.collectionProjections));
 }
 
 @override
 String toString() {
   final _this = this as RealmEditorCatalogSnapshot;
-  return 'RealmEditorCatalogSnapshot(catalog: ${_this.catalog}, generation: ${_this.generation}, presentations: ${_this.presentations}, conversions: ${_this.conversions}, capabilities: ${_this.capabilities}, subtypeResults: ${_this.subtypeResults}, diagnostics: ${_this.diagnostics}, elements: ${_this.elements}, pageCatalog: ${_this.pageCatalog})';
+  return 'RealmEditorCatalogSnapshot(catalog: ${_this.catalog}, generation: ${_this.generation}, presentations: ${_this.presentations}, conversions: ${_this.conversions}, capabilities: ${_this.capabilities}, subtypeResults: ${_this.subtypeResults}, diagnostics: ${_this.diagnostics}, elements: ${_this.elements}, pageCatalog: ${_this.pageCatalog}, resourceKinds: ${_this.resourceKinds}, relations: ${_this.relations}, collectionProjections: ${_this.collectionProjections})';
 }
 
 
@@ -318,7 +318,7 @@ abstract mixin class $RealmEditorCatalogSnapshotCopyWith<$Res>  {
   factory $RealmEditorCatalogSnapshotCopyWith(RealmEditorCatalogSnapshot value, $Res Function(RealmEditorCatalogSnapshot) _then) = _$RealmEditorCatalogSnapshotCopyWithImpl;
 @useResult
 $Res call({
- TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog
+ TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog, Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds, Map<String, RealmRelationDefinition> relations, Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections
 });
 
 
@@ -335,7 +335,7 @@ class _$RealmEditorCatalogSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,Object? resourceKinds = null,Object? relations = null,Object? collectionProjections = null,}) {
   return _then(RealmEditorCatalogSnapshot(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as TypeCatalog,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
@@ -346,7 +346,10 @@ as Map<CapabilityId, CapabilityDefinition>,subtypeResults: null == subtypeResult
 as Map<String, RealmEditorSubtypeResult>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<TypeDiagnostic>,elements: null == elements ? _self.elements : elements // ignore: cast_nullable_to_non_nullable
 as Map<String, RealmElementCatalogEntry>,pageCatalog: null == pageCatalog ? _self.pageCatalog : pageCatalog // ignore: cast_nullable_to_non_nullable
-as RealmPageCatalog,
+as RealmPageCatalog,resourceKinds: null == resourceKinds ? _self.resourceKinds : resourceKinds // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceKind, RealmResourceKindDefinition>,relations: null == relations ? _self.relations : relations // ignore: cast_nullable_to_non_nullable
+as Map<String, RealmRelationDefinition>,collectionProjections: null == collectionProjections ? _self.collectionProjections : collectionProjections // ignore: cast_nullable_to_non_nullable
+as Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>,
   ));
 }
 /// Create a copy of RealmEditorCatalogSnapshot
@@ -458,10 +461,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogSnapshot() when $default != null:
-return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog);case _:
+return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceKinds,_that.relations,_that.collectionProjections);case _:
   return orElse();
 
 }
@@ -479,10 +482,10 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections)  $default,) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogSnapshot():
-return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog);case _:
+return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceKinds,_that.relations,_that.collectionProjections);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -499,10 +502,10 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogSnapshot() when $default != null:
-return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog);case _:
+return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceKinds,_that.relations,_that.collectionProjections);case _:
   return null;
 
 }
@@ -514,7 +517,7 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 
 
 class _RealmEditorCatalogSnapshot implements RealmEditorCatalogSnapshot {
-  const _RealmEditorCatalogSnapshot({required this.catalog, required this.generation,  Map<PresentationId, PresentationDefinition> presentations = const {},  Map<ConversionId, ConversionDefinition> conversions = const {},  Map<CapabilityId, CapabilityDefinition> capabilities = const {},  Map<String, RealmEditorSubtypeResult> subtypeResults = const {},  List<TypeDiagnostic> diagnostics = const [],  Map<String, RealmElementCatalogEntry> elements = const {}, this.pageCatalog = const RealmPageCatalog()}): _presentations = presentations,_conversions = conversions,_capabilities = capabilities,_subtypeResults = subtypeResults,_diagnostics = diagnostics,_elements = elements;
+  const _RealmEditorCatalogSnapshot({required this.catalog, required this.generation,  Map<PresentationId, PresentationDefinition> presentations = const {},  Map<ConversionId, ConversionDefinition> conversions = const {},  Map<CapabilityId, CapabilityDefinition> capabilities = const {},  Map<String, RealmEditorSubtypeResult> subtypeResults = const {},  List<TypeDiagnostic> diagnostics = const [],  Map<String, RealmElementCatalogEntry> elements = const {}, this.pageCatalog = const RealmPageCatalog(),  Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds = const {},  Map<String, RealmRelationDefinition> relations = const {},  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections = const {}}): _presentations = presentations,_conversions = conversions,_capabilities = capabilities,_subtypeResults = subtypeResults,_diagnostics = diagnostics,_elements = elements,_resourceKinds = resourceKinds,_relations = relations,_collectionProjections = collectionProjections;
   
 
 @override final  TypeCatalog catalog;
@@ -562,6 +565,27 @@ class _RealmEditorCatalogSnapshot implements RealmEditorCatalogSnapshot {
 }
 
 @override@JsonKey() final  RealmPageCatalog pageCatalog;
+ final  Map<skir.ResourceKind, RealmResourceKindDefinition> _resourceKinds;
+@override@JsonKey() Map<skir.ResourceKind, RealmResourceKindDefinition> get resourceKinds {
+  if (_resourceKinds is EqualUnmodifiableMapView) return _resourceKinds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_resourceKinds);
+}
+
+ final  Map<String, RealmRelationDefinition> _relations;
+@override@JsonKey() Map<String, RealmRelationDefinition> get relations {
+  if (_relations is EqualUnmodifiableMapView) return _relations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_relations);
+}
+
+ final  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> _collectionProjections;
+@override@JsonKey() Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> get collectionProjections {
+  if (_collectionProjections is EqualUnmodifiableMapView) return _collectionProjections;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_collectionProjections);
+}
+
 
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -573,18 +597,18 @@ _$RealmEditorCatalogSnapshotCopyWith<_RealmEditorCatalogSnapshot> get copyWith =
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmEditorCatalogSnapshot&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.generation, generation) || other.generation == generation)&&const DeepCollectionEquality().equals(other.presentations, _presentations)&&const DeepCollectionEquality().equals(other.conversions, _conversions)&&const DeepCollectionEquality().equals(other.capabilities, _capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&const DeepCollectionEquality().equals(other.elements, _elements)&&(identical(other.pageCatalog, pageCatalog) || other.pageCatalog == pageCatalog));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmEditorCatalogSnapshot&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.generation, generation) || other.generation == generation)&&const DeepCollectionEquality().equals(other.presentations, _presentations)&&const DeepCollectionEquality().equals(other.conversions, _conversions)&&const DeepCollectionEquality().equals(other.capabilities, _capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&const DeepCollectionEquality().equals(other.elements, _elements)&&(identical(other.pageCatalog, pageCatalog) || other.pageCatalog == pageCatalog)&&const DeepCollectionEquality().equals(other.resourceKinds, _resourceKinds)&&const DeepCollectionEquality().equals(other.relations, _relations)&&const DeepCollectionEquality().equals(other.collectionProjections, _collectionProjections));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,catalog,generation,const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_conversions),const DeepCollectionEquality().hash(_capabilities),const DeepCollectionEquality().hash(_subtypeResults),const DeepCollectionEquality().hash(_diagnostics),const DeepCollectionEquality().hash(_elements),pageCatalog);
+    return Object.hash(runtimeType,catalog,generation,const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_conversions),const DeepCollectionEquality().hash(_capabilities),const DeepCollectionEquality().hash(_subtypeResults),const DeepCollectionEquality().hash(_diagnostics),const DeepCollectionEquality().hash(_elements),pageCatalog,const DeepCollectionEquality().hash(_resourceKinds),const DeepCollectionEquality().hash(_relations),const DeepCollectionEquality().hash(_collectionProjections));
 }
 
 @override
 String toString() {
-    return 'RealmEditorCatalogSnapshot(catalog: $catalog, generation: $generation, presentations: $presentations, conversions: $conversions, capabilities: $capabilities, subtypeResults: $subtypeResults, diagnostics: $diagnostics, elements: $elements, pageCatalog: $pageCatalog)';
+    return 'RealmEditorCatalogSnapshot(catalog: $catalog, generation: $generation, presentations: $presentations, conversions: $conversions, capabilities: $capabilities, subtypeResults: $subtypeResults, diagnostics: $diagnostics, elements: $elements, pageCatalog: $pageCatalog, resourceKinds: $resourceKinds, relations: $relations, collectionProjections: $collectionProjections)';
 }
 
 
@@ -595,7 +619,7 @@ abstract mixin class _$RealmEditorCatalogSnapshotCopyWith<$Res> implements $Real
   factory _$RealmEditorCatalogSnapshotCopyWith(_RealmEditorCatalogSnapshot value, $Res Function(_RealmEditorCatalogSnapshot) _then) = __$RealmEditorCatalogSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog
+ TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog, Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds, Map<String, RealmRelationDefinition> relations, Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections
 });
 
 
@@ -612,7 +636,7 @@ class __$RealmEditorCatalogSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,Object? resourceKinds = null,Object? relations = null,Object? collectionProjections = null,}) {
   return _then(_RealmEditorCatalogSnapshot(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as TypeCatalog,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
@@ -623,7 +647,10 @@ as Map<CapabilityId, CapabilityDefinition>,subtypeResults: null == subtypeResult
 as Map<String, RealmEditorSubtypeResult>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<TypeDiagnostic>,elements: null == elements ? _self._elements : elements // ignore: cast_nullable_to_non_nullable
 as Map<String, RealmElementCatalogEntry>,pageCatalog: null == pageCatalog ? _self.pageCatalog : pageCatalog // ignore: cast_nullable_to_non_nullable
-as RealmPageCatalog,
+as RealmPageCatalog,resourceKinds: null == resourceKinds ? _self._resourceKinds : resourceKinds // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceKind, RealmResourceKindDefinition>,relations: null == relations ? _self._relations : relations // ignore: cast_nullable_to_non_nullable
+as Map<String, RealmRelationDefinition>,collectionProjections: null == collectionProjections ? _self._collectionProjections : collectionProjections // ignore: cast_nullable_to_non_nullable
+as Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>,
   ));
 }
 

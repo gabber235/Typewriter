@@ -149,25 +149,29 @@ Widget _renderer({
       id: "root",
       element: ColumnElement(
         children: [
-          const PresentationNode(
-            id: "duration",
-            element: DurationInputElement(
-              BoundControl(
-                binding: _rootBinding,
-                label: TypedExpression(
-                  resultType: StringType(),
-                  expression: LiteralExpression(StringValue("Delay")),
+          PresentationAxisChild.fixed(
+            const PresentationNode(
+              id: "duration",
+              element: DurationInputElement(
+                BoundControl(
+                  binding: _rootBinding,
+                  label: TypedExpression(
+                    resultType: StringType(),
+                    expression: LiteralExpression(StringValue("Delay")),
+                  ),
                 ),
               ),
             ),
           ),
           if (showValue)
-            const PresentationNode(
-              id: "value",
-              element: TextElement(
-                TypedExpression(
-                  resultType: DurationType(),
-                  expression: BindingExpression(_rootBinding),
+            PresentationAxisChild.fixed(
+              const PresentationNode(
+                id: "value",
+                element: TextElement(
+                  TypedExpression(
+                    resultType: DurationType(),
+                    expression: BindingExpression(_rootBinding),
+                  ),
                 ),
               ),
             ),

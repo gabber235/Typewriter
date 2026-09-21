@@ -9,7 +9,7 @@ class BookIdentifier extends SelectableIdentifier
     implements ReferenceResourceDragData {
   const BookIdentifier(this.bookId);
 
-  final skir.RecordId bookId;
+  final skir.ResourceId bookId;
 
   @override
   String get id => bookId.id;
@@ -18,7 +18,7 @@ class BookIdentifier extends SelectableIdentifier
   Object get resourceId => bookId;
 
   @override
-  skir.RecordId get referenceId => bookId;
+  skir.ResourceId get referenceId => bookId;
 
   @override
   List<ResolvedTypeRef> get referenceTypes => const [];
@@ -44,24 +44,59 @@ class BookIdentifier extends SelectableIdentifier
         .authoring(organization, realm);
     final router = ref.watch(appRouterProvider);
     final session = ref.watch(authoringSessionProvider(organization, realm));
-    final bookValue = session.bookEditorValue(bookId);
+    ref.watch(
+      realmEditorCatalogLeaseProvider(
+        RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
+      ),
+    );
+    final catalogState = ref.watch(realmEditorCatalogProvider).value;
+    final catalog = catalogState?.snapshot;
+    if (catalog == null) return const AsyncLoading();
+    final codec = TypedAuthoringCodec(catalog);
+    final bookValue = session.bookEditorValue(bookId, codec);
     if (bookValue == null) {
       if (session.sequence == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
     final book = bookValue.value;
-
-    final tagsAsync = ref.watch(projectedTagsProvider);
-    if (tagsAsync.mapUnready<Selectable>() case final value?) return value;
-    final tags = tagsAsync.requireValue;
+    final collections = decodeAuthoringCollections(
+      session: session,
+      catalog: catalog,
+      presentations: catalog.presentations.values,
+    );
+    final tags = collections.sources[authoringTagCollectionSourceId];
+    if (tags == null) {
+      return AsyncError(
+        StateError(
+          collections.diagnostics.map((item) => item.message).join("; "),
+        ),
+        StackTrace.current,
+      );
+    }
+    final content = codec.decodeResource(session.resources[bookId]!);
+    if (content.valueOrNull == null) {
+      return AsyncError(
+        StateError(content.diagnostics.map((item) => item.message).join("; ")),
+        StackTrace.current,
+      );
+    }
     return AsyncData(
       BookSelection(
         resource: BookEditorResource(repository, bookId),
         onOpen: () => router.navigate(routeFor(organization, realm)),
         id: this,
         book: book,
-        revision: bookValue.revision,
-        tagCollection: tags.presentationCollection(),
+        snapshot: TypedAuthoringEditorSnapshot(
+          resource: session.resources[bookId]!,
+          content: content.valueOrNull!.content,
+          revision: bookValue.revision,
+          codec: codec,
+        ),
+        catalogPresentations: catalog.presentations.values.toList(
+          growable: false,
+        ),
+        tagCollection: tags,
+        presentationDiagnostics: collections.diagnostics,
       ),
     );
   }
@@ -99,19 +134,24 @@ class BookSelection extends EditableSelectable<BookIdentifier> {
     required this.onOpen,
     required this.id,
     required this.book,
-    required this.revision,
+    required this.snapshot,
+    required this.catalogPresentations,
     required this.tagCollection,
+    this.presentationDiagnostics = const [],
   });
 
   @override
   final BookIdentifier id;
   final Book book;
-  final int revision;
+  @override
+  final EditorSnapshot snapshot;
   @override
   final EditableResource resource;
   final VoidCallback? onOpen;
 
   final PresentationCollectionSource tagCollection;
+  final List<PresentationDefinition> catalogPresentations;
+  final List<TypeDiagnostic> presentationDiagnostics;
 
   @override
   MultiInspectionDefinition get multiInspection =>
@@ -121,14 +161,19 @@ class BookSelection extends EditableSelectable<BookIdentifier> {
   String get name => book.title;
 
   @override
-  List<PresentationDefinition> get presentations => [
-    _bookInspectorPresentation,
-  ];
+  List<PresentationDefinition> get presentations => catalogPresentations;
   @override
   List<PresentationCollectionSource> get collections => [tagCollection];
 
   @override
-  EditorSnapshot get snapshot => BookEditorSnapshot(book, revision);
+  PresentationModel buildPresentation(EditorOwnerScope owners) =>
+      PresentationModel.editor(
+        owner: owners.editor(this),
+        presentations: presentations,
+        collections: collections,
+        diagnostics: [...document.diagnostics, ...presentationDiagnostics],
+      );
+
   @override
   List<SelectionCapability> get capabilities => [
     if (onOpen case final open?)
@@ -136,19 +181,13 @@ class BookSelection extends EditableSelectable<BookIdentifier> {
   ];
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => ManagedInspectorHeader(
-    id: book.bookId.id,
-    owner: owner,
-    fallbackName: book.title.formatted,
-    fallbackColor: book.color,
-    nameField: "title",
+  Widget? buildInspectorHeader(EditOwner owner) => AuthoringSubjectRole(
+    resourceId: book.bookId,
+    resourceType: rootType,
+    role: PresentationRole.inspectorHeader,
+    historyNamespace: "book.inspector.header.${book.bookId.id}",
   );
 }
-
-BindingReference _bookField(String name) => BindingReference(
-  bindingId: const BindingId(0),
-  path: DataPath.root.field(name),
-);
 
 /// Encodes and decodes the book fields understood by the inspector.
 ///

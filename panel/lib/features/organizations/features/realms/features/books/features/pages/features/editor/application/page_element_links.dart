@@ -7,6 +7,10 @@ part of "page_elements.dart";
 /// produce the same topology without a second optimistic state owner.
 extension PageElementLinkProjection on List<PageElement> {
   List<PageElement> projectLinks() {
+    final localSourceIds = {
+      for (final element in this)
+        if (element._hasProjectableReferences) element.id,
+    };
     final references = [
       for (final element in this) ...element._referenceOccurrences,
     ];
@@ -19,6 +23,7 @@ extension PageElementLinkProjection on List<PageElement> {
         linkId: "${reference.sourceId}:$path",
         otherId: reference.targetId,
         path: path,
+        sourcePath: reference.path,
       );
       outward.putIfAbsent(reference.sourceId, () => []).add(link);
       inward
@@ -31,12 +36,19 @@ extension PageElementLinkProjection on List<PageElement> {
         element._withProjectedLinks(
           inward[element.id] ?? const [],
           outward[element.id] ?? const [],
+          localSourceIds,
         ),
     ];
   }
 }
 
 extension on PageElement {
+  bool get _hasProjectableReferences => switch (this) {
+    PageElementEntry(entry: DefinitionPageEntry()) ||
+    PageElementCue(cue: Segment()) => true,
+    _ => false,
+  };
+
   Iterable<_PageReferenceOccurrence> get _referenceOccurrences sync* {
     final source = switch (this) {
       PageElementEntry(entry: DefinitionPageEntry(:final definition)) => (
@@ -60,29 +72,44 @@ extension on PageElement {
   PageElement _withProjectedLinks(
     List<ElementLink> inward,
     List<ElementLink> outward,
+    Set<String> localSourceIds,
   ) => switch (this) {
     PageElementEntry(:final entry) => PageElement.entry(
       entry: switch (entry) {
         DefinitionPageEntry(:final definition) => PageEntry.definition(
           definition: definition.copyWith(
-            inwardEdges: [...definition.inwardEdges.structural, ...inward],
+            inwardEdges: [
+              ...definition.inwardEdges.retainedIncoming(localSourceIds),
+              ...inward,
+            ],
             outwardEdges: [...definition.outwardEdges.structural, ...outward],
           ),
         ),
         MissingElementDefinitionPageEntry() => entry.copyWith(
-          inwardLinks: [...entry.inwardLinks.structural, ...inward],
+          inwardLinks: [
+            ...entry.inwardLinks.retainedIncoming(localSourceIds),
+            ...inward,
+          ],
         ),
+        ReferencePageEntry() => entry,
+        UnavailableReferencePageEntry() => entry,
         _ => entry,
       },
     ),
     PageElementCue(:final cue) => PageElement.cue(
       cue: switch (cue) {
         Segment() => cue.copyWith(
-          inwardLinks: [...cue.inwardLinks.structural, ...inward],
+          inwardLinks: [
+            ...cue.inwardLinks.retainedIncoming(localSourceIds),
+            ...inward,
+          ],
           outwardLinks: [...cue.outwardLinks.structural, ...outward],
         ),
         Keyframe() => cue.copyWith(
-          inwardLinks: [...cue.inwardLinks.structural, ...inward],
+          inwardLinks: [
+            ...cue.inwardLinks.retainedIncoming(localSourceIds),
+            ...inward,
+          ],
         ),
         _ => cue,
       },
@@ -97,6 +124,11 @@ extension on List<ElementLink> {
   /// always start with a field segment because page element values are records.
   Iterable<ElementLink> get structural =>
       where((link) => !link.path.startsWith("."));
+
+  Iterable<ElementLink> retainedIncoming(Set<String> localSourceIds) => where(
+    (link) =>
+        !link.path.startsWith(".") || !localSourceIds.contains(link.otherId),
+  );
 }
 
 extension on DataValue {

@@ -113,8 +113,8 @@ Widget pagePageStory({
         ),
   };
   final page = Page(
-    pageId: recordId("page:example-page-id"),
-    bookId: recordId("book:example-book-id"),
+    pageId: skir.ResourceId(value: "page:example-page-id"),
+    bookId: skir.ResourceId(value: "book:example-book-id"),
     name: "Example",
     kind: definition.kind,
     chapter: "",
@@ -125,6 +125,7 @@ Widget pagePageStory({
     overrides: [
       ...authoringSessionMockOverrides(
         initial: pageStoryAuthoring(definition, storyElements ?? const []),
+        includeCatalog: false,
       ),
       authoringEntryIndexProvider.overrideWith(
         (ref, scope) =>
@@ -148,6 +149,13 @@ Widget pagePageStory({
       realmEditorCatalogProvider.overrideWith(
         (ref) => Stream.value(
           pageStoryPageCatalog(definition, storyElements ?? const []),
+        ),
+      ),
+      authoringSubjectsProvider.overrideWith(
+        (ref, scope) async => pageStorySubjectProjection(
+          definition,
+          storyElements ?? const [],
+          scope,
         ),
       ),
       realmEditorCatalogLeaseProvider.overrideWith((ref, request) => null),

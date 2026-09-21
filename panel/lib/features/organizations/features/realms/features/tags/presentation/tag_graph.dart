@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders projected tags as an editable graph.
@@ -14,14 +16,19 @@ class TagGraph extends HookConsumerWidget {
 
   final ValueChanged<Offset?>? onViewportCenterChanged;
 
-  GraphElement _elementFromTag(Tag tag) {
+  GraphElement _elementFromTag(
+    Tag tag,
+    AsyncValue<AuthoringSubjectProjection>? subjects,
+  ) {
     return GraphElement(
       id: GraphIdentifier(tag.tagId.id),
       x: tag.placement.x,
       y: tag.placement.y,
       width: tag.placement.width,
       height: tag.placement.height,
-      builder: (context) => SizedBox.expand(child: TagNode(tagId: tag.tagId)),
+      builder: (context) => SizedBox.expand(
+        child: TagNode(tagId: tag.tagId, subjects: subjects),
+      ),
     );
   }
 
@@ -52,8 +59,12 @@ class TagGraph extends HookConsumerWidget {
     return edges;
   }
 
-  GraphData _graphFromTags(BuildContext context, List<Tag> tags) {
-    final elements = tags.map(_elementFromTag).toList();
+  GraphData _graphFromTags(
+    BuildContext context,
+    List<Tag> tags,
+    AsyncValue<AuthoringSubjectProjection>? subjects,
+  ) {
+    final elements = tags.map((tag) => _elementFromTag(tag, subjects)).toList();
     final edges = _edgesFromTags(context, tags);
 
     return GraphData(
@@ -73,15 +84,38 @@ class TagGraph extends HookConsumerWidget {
         if (tagList.isEmpty) {
           return EmptyTagsPage(
             onCreateTag: () => ref
-                .read(canonicalTagsProvider.notifier)
-                .createTag(name: "New Tag"),
+                .read(resourceCreationProvider)
+                .create(
+                  context: context,
+                  request: ResourceCreationRequest(
+                    kind: skir.ResourceKind.tag,
+                    title: "Create Tag",
+                    partial: tagCreationPartial(tagList),
+                  ),
+                ),
           );
         }
 
         final tagIds = {for (final tag in tagList) tag.tagId.id: tag.tagId};
+        final organizationId = ref.watch(organizationIdProvider);
+        final realmId = ref.watch(realmIdProvider);
+        final subjects = organizationId == null || realmId == null
+            ? null
+            : ref.watch(
+                authoringSubjectsProvider(
+                  AuthoringSubjectScope(
+                    organizationId: organizationId,
+                    realmId: realmId,
+                    resources: {
+                      for (final tag in tagList)
+                        tag.tagId: referenceResourceTypes.tag,
+                    },
+                  ),
+                ),
+              );
 
         return Graph(
-          data: _graphFromTags(context, tagList),
+          data: _graphFromTags(context, tagList, subjects),
           onViewportCenterChanged: onViewportCenterChanged,
           onElementsMoved: (changes) {
             final tagsById = {for (final tag in tagList) tag.tagId: tag};

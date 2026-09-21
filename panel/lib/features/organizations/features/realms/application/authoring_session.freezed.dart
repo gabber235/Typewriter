@@ -567,13 +567,7 @@ as int,
 /// @nodoc
 mixin _$AuthoringSessionState {
 
-/// The server sequence represented by all canonical collections.
- int? get sequence;/// Canonical books retained by active scopes.
- Map<skir.RecordId, skir.Book> get books;/// Canonical tags retained by the library scope.
- Map<skir.RecordId, skir.Tag> get tags;/// Canonical page metadata retained by active book or page scopes.
- Map<skir.RecordId, skir.Page> get pages;/// Canonical page documents retained by active page scopes.
- Map<skir.RecordId, skir.PageDocument> get documents;/// Whether an authoritative refresh is currently reconciling the model.
- bool get refreshing;
+ skir.CatalogGeneration? get generation; int? get sequence; Map<skir.ResourceId, skir.AuthoringResource> get resources; Map<skir.AuthoringEdgeId, skir.AuthoringEdge> get edges; Map<skir.ResourceId, skir.PresentationSubject> get presentations; Map<skir.ResourceId, skir.CompiledResourceState> get compiledStatuses; Map<String, skir.GraphSelectionResult> get selections; List<skir.AuthoringDiagnostic> get diagnostics; bool get refreshing;
 /// Create a copy of AuthoringSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -585,20 +579,20 @@ $AuthoringSessionStateCopyWith<AuthoringSessionState> get copyWith => _$Authorin
 @override
 bool operator ==(Object other) {
   final _this = this as AuthoringSessionState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringSessionState&&(identical(other.sequence, _this.sequence) || other.sequence == _this.sequence)&&const DeepCollectionEquality().equals(other.books, _this.books)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&const DeepCollectionEquality().equals(other.pages, _this.pages)&&const DeepCollectionEquality().equals(other.documents, _this.documents)&&(identical(other.refreshing, _this.refreshing) || other.refreshing == _this.refreshing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringSessionState&&(identical(other.generation, _this.generation) || other.generation == _this.generation)&&(identical(other.sequence, _this.sequence) || other.sequence == _this.sequence)&&const DeepCollectionEquality().equals(other.resources, _this.resources)&&const DeepCollectionEquality().equals(other.edges, _this.edges)&&const DeepCollectionEquality().equals(other.presentations, _this.presentations)&&const DeepCollectionEquality().equals(other.compiledStatuses, _this.compiledStatuses)&&const DeepCollectionEquality().equals(other.selections, _this.selections)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.refreshing, _this.refreshing) || other.refreshing == _this.refreshing));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthoringSessionState;
-  return Object.hash(runtimeType,_this.sequence,const DeepCollectionEquality().hash(_this.books),const DeepCollectionEquality().hash(_this.tags),const DeepCollectionEquality().hash(_this.pages),const DeepCollectionEquality().hash(_this.documents),_this.refreshing);
+  return Object.hash(runtimeType,_this.generation,_this.sequence,const DeepCollectionEquality().hash(_this.resources),const DeepCollectionEquality().hash(_this.edges),const DeepCollectionEquality().hash(_this.presentations),const DeepCollectionEquality().hash(_this.compiledStatuses),const DeepCollectionEquality().hash(_this.selections),const DeepCollectionEquality().hash(_this.diagnostics),_this.refreshing);
 }
 
 @override
 String toString() {
   final _this = this as AuthoringSessionState;
-  return 'AuthoringSessionState(sequence: ${_this.sequence}, books: ${_this.books}, tags: ${_this.tags}, pages: ${_this.pages}, documents: ${_this.documents}, refreshing: ${_this.refreshing})';
+  return 'AuthoringSessionState(generation: ${_this.generation}, sequence: ${_this.sequence}, resources: ${_this.resources}, edges: ${_this.edges}, presentations: ${_this.presentations}, compiledStatuses: ${_this.compiledStatuses}, selections: ${_this.selections}, diagnostics: ${_this.diagnostics}, refreshing: ${_this.refreshing})';
 }
 
 
@@ -609,7 +603,7 @@ abstract mixin class $AuthoringSessionStateCopyWith<$Res>  {
   factory $AuthoringSessionStateCopyWith(AuthoringSessionState value, $Res Function(AuthoringSessionState) _then) = _$AuthoringSessionStateCopyWithImpl;
 @useResult
 $Res call({
- int? sequence, Map<skir.RecordId, skir.Book> books, Map<skir.RecordId, skir.Tag> tags, Map<skir.RecordId, skir.Page> pages, Map<skir.RecordId, skir.PageDocument> documents, bool refreshing
+ skir.CatalogGeneration? generation, int? sequence, Map<skir.ResourceId, skir.AuthoringResource> resources, Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges, Map<skir.ResourceId, skir.PresentationSubject> presentations, Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses, Map<String, skir.GraphSelectionResult> selections, List<skir.AuthoringDiagnostic> diagnostics, bool refreshing
 });
 
 
@@ -626,14 +620,17 @@ class _$AuthoringSessionStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringSessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sequence = freezed,Object? books = null,Object? tags = null,Object? pages = null,Object? documents = null,Object? refreshing = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? generation = freezed,Object? sequence = freezed,Object? resources = null,Object? edges = null,Object? presentations = null,Object? compiledStatuses = null,Object? selections = null,Object? diagnostics = null,Object? refreshing = null,}) {
   return _then(AuthoringSessionState(
-sequence: freezed == sequence ? _self.sequence : sequence // ignore: cast_nullable_to_non_nullable
-as int?,books: null == books ? _self.books : books // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.Book>,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.Tag>,pages: null == pages ? _self.pages : pages // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.Page>,documents: null == documents ? _self.documents : documents // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.PageDocument>,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
+generation: freezed == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
+as skir.CatalogGeneration?,sequence: freezed == sequence ? _self.sequence : sequence // ignore: cast_nullable_to_non_nullable
+as int?,resources: null == resources ? _self.resources : resources // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.AuthoringResource>,edges: null == edges ? _self.edges : edges // ignore: cast_nullable_to_non_nullable
+as Map<skir.AuthoringEdgeId, skir.AuthoringEdge>,presentations: null == presentations ? _self.presentations : presentations // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.PresentationSubject>,compiledStatuses: null == compiledStatuses ? _self.compiledStatuses : compiledStatuses // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.CompiledResourceState>,selections: null == selections ? _self.selections : selections // ignore: cast_nullable_to_non_nullable
+as Map<String, skir.GraphSelectionResult>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<skir.AuthoringDiagnostic>,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -719,10 +716,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? sequence,  Map<skir.RecordId, skir.Book> books,  Map<skir.RecordId, skir.Tag> tags,  Map<skir.RecordId, skir.Page> pages,  Map<skir.RecordId, skir.PageDocument> documents,  bool refreshing)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState() when $default != null:
-return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.documents,_that.refreshing);case _:
+return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_that.presentations,_that.compiledStatuses,_that.selections,_that.diagnostics,_that.refreshing);case _:
   return orElse();
 
 }
@@ -740,10 +737,10 @@ return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.document
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? sequence,  Map<skir.RecordId, skir.Book> books,  Map<skir.RecordId, skir.Tag> tags,  Map<skir.RecordId, skir.Page> pages,  Map<skir.RecordId, skir.PageDocument> documents,  bool refreshing)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState():
-return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.documents,_that.refreshing);case _:
+return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_that.presentations,_that.compiledStatuses,_that.selections,_that.diagnostics,_that.refreshing);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -760,10 +757,10 @@ return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.document
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? sequence,  Map<skir.RecordId, skir.Book> books,  Map<skir.RecordId, skir.Tag> tags,  Map<skir.RecordId, skir.Page> pages,  Map<skir.RecordId, skir.PageDocument> documents,  bool refreshing)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState() when $default != null:
-return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.documents,_that.refreshing);case _:
+return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_that.presentations,_that.compiledStatuses,_that.selections,_that.diagnostics,_that.refreshing);case _:
   return null;
 
 }
@@ -775,48 +772,53 @@ return $default(_that.sequence,_that.books,_that.tags,_that.pages,_that.document
 
 
 class _AuthoringSessionState implements AuthoringSessionState {
-  const _AuthoringSessionState({this.sequence,  Map<skir.RecordId, skir.Book> books = const {},  Map<skir.RecordId, skir.Tag> tags = const {},  Map<skir.RecordId, skir.Page> pages = const {},  Map<skir.RecordId, skir.PageDocument> documents = const {}, this.refreshing = false}): _books = books,_tags = tags,_pages = pages,_documents = documents;
+  const _AuthoringSessionState({this.generation, this.sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources = const {},  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges = const {},  Map<skir.ResourceId, skir.PresentationSubject> presentations = const {},  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses = const {},  Map<String, skir.GraphSelectionResult> selections = const {},  List<skir.AuthoringDiagnostic> diagnostics = const [], this.refreshing = false}): _resources = resources,_edges = edges,_presentations = presentations,_compiledStatuses = compiledStatuses,_selections = selections,_diagnostics = diagnostics;
   
 
-/// The server sequence represented by all canonical collections.
+@override final  skir.CatalogGeneration? generation;
 @override final  int? sequence;
-/// Canonical books retained by active scopes.
- final  Map<skir.RecordId, skir.Book> _books;
-/// Canonical books retained by active scopes.
-@override@JsonKey() Map<skir.RecordId, skir.Book> get books {
-  if (_books is EqualUnmodifiableMapView) return _books;
+ final  Map<skir.ResourceId, skir.AuthoringResource> _resources;
+@override@JsonKey() Map<skir.ResourceId, skir.AuthoringResource> get resources {
+  if (_resources is EqualUnmodifiableMapView) return _resources;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_books);
+  return EqualUnmodifiableMapView(_resources);
 }
 
-/// Canonical tags retained by the library scope.
- final  Map<skir.RecordId, skir.Tag> _tags;
-/// Canonical tags retained by the library scope.
-@override@JsonKey() Map<skir.RecordId, skir.Tag> get tags {
-  if (_tags is EqualUnmodifiableMapView) return _tags;
+ final  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> _edges;
+@override@JsonKey() Map<skir.AuthoringEdgeId, skir.AuthoringEdge> get edges {
+  if (_edges is EqualUnmodifiableMapView) return _edges;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_tags);
+  return EqualUnmodifiableMapView(_edges);
 }
 
-/// Canonical page metadata retained by active book or page scopes.
- final  Map<skir.RecordId, skir.Page> _pages;
-/// Canonical page metadata retained by active book or page scopes.
-@override@JsonKey() Map<skir.RecordId, skir.Page> get pages {
-  if (_pages is EqualUnmodifiableMapView) return _pages;
+ final  Map<skir.ResourceId, skir.PresentationSubject> _presentations;
+@override@JsonKey() Map<skir.ResourceId, skir.PresentationSubject> get presentations {
+  if (_presentations is EqualUnmodifiableMapView) return _presentations;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_pages);
+  return EqualUnmodifiableMapView(_presentations);
 }
 
-/// Canonical page documents retained by active page scopes.
- final  Map<skir.RecordId, skir.PageDocument> _documents;
-/// Canonical page documents retained by active page scopes.
-@override@JsonKey() Map<skir.RecordId, skir.PageDocument> get documents {
-  if (_documents is EqualUnmodifiableMapView) return _documents;
+ final  Map<skir.ResourceId, skir.CompiledResourceState> _compiledStatuses;
+@override@JsonKey() Map<skir.ResourceId, skir.CompiledResourceState> get compiledStatuses {
+  if (_compiledStatuses is EqualUnmodifiableMapView) return _compiledStatuses;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_documents);
+  return EqualUnmodifiableMapView(_compiledStatuses);
 }
 
-/// Whether an authoritative refresh is currently reconciling the model.
+ final  Map<String, skir.GraphSelectionResult> _selections;
+@override@JsonKey() Map<String, skir.GraphSelectionResult> get selections {
+  if (_selections is EqualUnmodifiableMapView) return _selections;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_selections);
+}
+
+ final  List<skir.AuthoringDiagnostic> _diagnostics;
+@override@JsonKey() List<skir.AuthoringDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
 @override@JsonKey() final  bool refreshing;
 
 /// Create a copy of AuthoringSessionState
@@ -829,18 +831,18 @@ _$AuthoringSessionStateCopyWith<_AuthoringSessionState> get copyWith => __$Autho
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringSessionState&&(identical(other.sequence, sequence) || other.sequence == sequence)&&const DeepCollectionEquality().equals(other.books, _books)&&const DeepCollectionEquality().equals(other.tags, _tags)&&const DeepCollectionEquality().equals(other.pages, _pages)&&const DeepCollectionEquality().equals(other.documents, _documents)&&(identical(other.refreshing, refreshing) || other.refreshing == refreshing));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringSessionState&&(identical(other.generation, generation) || other.generation == generation)&&(identical(other.sequence, sequence) || other.sequence == sequence)&&const DeepCollectionEquality().equals(other.resources, _resources)&&const DeepCollectionEquality().equals(other.edges, _edges)&&const DeepCollectionEquality().equals(other.presentations, _presentations)&&const DeepCollectionEquality().equals(other.compiledStatuses, _compiledStatuses)&&const DeepCollectionEquality().equals(other.selections, _selections)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.refreshing, refreshing) || other.refreshing == refreshing));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,sequence,const DeepCollectionEquality().hash(_books),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_pages),const DeepCollectionEquality().hash(_documents),refreshing);
+    return Object.hash(runtimeType,generation,sequence,const DeepCollectionEquality().hash(_resources),const DeepCollectionEquality().hash(_edges),const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_compiledStatuses),const DeepCollectionEquality().hash(_selections),const DeepCollectionEquality().hash(_diagnostics),refreshing);
 }
 
 @override
 String toString() {
-    return 'AuthoringSessionState(sequence: $sequence, books: $books, tags: $tags, pages: $pages, documents: $documents, refreshing: $refreshing)';
+    return 'AuthoringSessionState(generation: $generation, sequence: $sequence, resources: $resources, edges: $edges, presentations: $presentations, compiledStatuses: $compiledStatuses, selections: $selections, diagnostics: $diagnostics, refreshing: $refreshing)';
 }
 
 
@@ -851,7 +853,7 @@ abstract mixin class _$AuthoringSessionStateCopyWith<$Res> implements $Authoring
   factory _$AuthoringSessionStateCopyWith(_AuthoringSessionState value, $Res Function(_AuthoringSessionState) _then) = __$AuthoringSessionStateCopyWithImpl;
 @override @useResult
 $Res call({
- int? sequence, Map<skir.RecordId, skir.Book> books, Map<skir.RecordId, skir.Tag> tags, Map<skir.RecordId, skir.Page> pages, Map<skir.RecordId, skir.PageDocument> documents, bool refreshing
+ skir.CatalogGeneration? generation, int? sequence, Map<skir.ResourceId, skir.AuthoringResource> resources, Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges, Map<skir.ResourceId, skir.PresentationSubject> presentations, Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses, Map<String, skir.GraphSelectionResult> selections, List<skir.AuthoringDiagnostic> diagnostics, bool refreshing
 });
 
 
@@ -868,14 +870,17 @@ class __$AuthoringSessionStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringSessionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sequence = freezed,Object? books = null,Object? tags = null,Object? pages = null,Object? documents = null,Object? refreshing = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? generation = freezed,Object? sequence = freezed,Object? resources = null,Object? edges = null,Object? presentations = null,Object? compiledStatuses = null,Object? selections = null,Object? diagnostics = null,Object? refreshing = null,}) {
   return _then(_AuthoringSessionState(
-sequence: freezed == sequence ? _self.sequence : sequence // ignore: cast_nullable_to_non_nullable
-as int?,books: null == books ? _self._books : books // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.Book>,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.Tag>,pages: null == pages ? _self._pages : pages // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.Page>,documents: null == documents ? _self._documents : documents // ignore: cast_nullable_to_non_nullable
-as Map<skir.RecordId, skir.PageDocument>,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
+generation: freezed == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
+as skir.CatalogGeneration?,sequence: freezed == sequence ? _self.sequence : sequence // ignore: cast_nullable_to_non_nullable
+as int?,resources: null == resources ? _self._resources : resources // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.AuthoringResource>,edges: null == edges ? _self._edges : edges // ignore: cast_nullable_to_non_nullable
+as Map<skir.AuthoringEdgeId, skir.AuthoringEdge>,presentations: null == presentations ? _self._presentations : presentations // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.PresentationSubject>,compiledStatuses: null == compiledStatuses ? _self._compiledStatuses : compiledStatuses // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.CompiledResourceState>,selections: null == selections ? _self._selections : selections // ignore: cast_nullable_to_non_nullable
+as Map<String, skir.GraphSelectionResult>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<skir.AuthoringDiagnostic>,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -994,7 +999,7 @@ return page(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  library,TResult Function( skir.RecordId bookId)?  book,TResult Function( skir.RecordId pageId)?  page,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  library,TResult Function( skir.ResourceId bookId)?  book,TResult Function( skir.ResourceId pageId)?  page,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LibraryScope() when library != null:
 return library();case _BookScope() when book != null:
@@ -1017,7 +1022,7 @@ return page(_that.pageId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  library,required TResult Function( skir.RecordId bookId)  book,required TResult Function( skir.RecordId pageId)  page,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  library,required TResult Function( skir.ResourceId bookId)  book,required TResult Function( skir.ResourceId pageId)  page,}) {final _that = this;
 switch (_that) {
 case _LibraryScope():
 return library();case _BookScope():
@@ -1036,7 +1041,7 @@ return page(_that.pageId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  library,TResult? Function( skir.RecordId bookId)?  book,TResult? Function( skir.RecordId pageId)?  page,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  library,TResult? Function( skir.ResourceId bookId)?  book,TResult? Function( skir.ResourceId pageId)?  page,}) {final _that = this;
 switch (_that) {
 case _LibraryScope() when library != null:
 return library();case _BookScope() when book != null:
@@ -1088,7 +1093,7 @@ class _BookScope extends _AuthoringScope {
   const _BookScope(this.bookId): super._();
   
 
- final  skir.RecordId bookId;
+ final  skir.ResourceId bookId;
 
 /// Create a copy of _AuthoringScope
 /// with the given fields replaced by the non-null parameter values.
@@ -1122,7 +1127,7 @@ abstract mixin class _$BookScopeCopyWith<$Res> implements _$AuthoringScopeCopyWi
   factory _$BookScopeCopyWith(_BookScope value, $Res Function(_BookScope) _then) = __$BookScopeCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId bookId
+ skir.ResourceId bookId
 });
 
 
@@ -1142,7 +1147,7 @@ class __$BookScopeCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? bookId = null,}) {
   return _then(_BookScope(
 null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,
   ));
 }
 
@@ -1156,7 +1161,7 @@ class _PageScope extends _AuthoringScope {
   const _PageScope(this.pageId): super._();
   
 
- final  skir.RecordId pageId;
+ final  skir.ResourceId pageId;
 
 /// Create a copy of _AuthoringScope
 /// with the given fields replaced by the non-null parameter values.
@@ -1190,7 +1195,7 @@ abstract mixin class _$PageScopeCopyWith<$Res> implements _$AuthoringScopeCopyWi
   factory _$PageScopeCopyWith(_PageScope value, $Res Function(_PageScope) _then) = __$PageScopeCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId pageId
+ skir.ResourceId pageId
 });
 
 
@@ -1210,7 +1215,7 @@ class __$PageScopeCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? pageId = null,}) {
   return _then(_PageScope(
 null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,
   ));
 }
 

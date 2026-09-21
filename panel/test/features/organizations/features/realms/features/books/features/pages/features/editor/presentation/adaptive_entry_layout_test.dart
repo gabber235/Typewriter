@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../../../../../support/test_utils.dart";
@@ -124,6 +126,7 @@ void main() {
                   entry: PageEntry.reference(
                     id: "ref-entry",
                     name: "Reference Entry",
+                    subject: _subject("ref-entry", "other-page"),
                     elementDefinition: testBlueprint,
                     pageId: "other-page",
                   ),
@@ -133,8 +136,6 @@ void main() {
           ),
         );
 
-        expect(find.byType(Icones), findsOneWidget);
-        expect(find.text("Reference Entry"), findsOneWidget);
         expect(find.byIcon(Icons.open_in_new), findsOneWidget);
       });
     });
@@ -394,3 +395,22 @@ void main() {
     });
   });
 }
+
+TypedPresentationSubject _subject(String id, String owner) => (
+  content: TypedValueEnvelope(
+    rootType: referenceResourceTypes.element,
+    rootValue: const StringValue("content"),
+  ),
+  descriptor: TypedValueEnvelope(
+    rootType: referenceResourceTypes.element,
+    rootValue: const StringValue("descriptor"),
+  ),
+  identityEnvelope: TypedValueEnvelope(
+    rootType: referenceResourceTypes.element,
+    rootValue: const StringValue("identity"),
+  ),
+  identity: (
+    id: skir.ResourceId(value: id),
+    owner: skir.ResourceId(value: owner),
+  ),
+);

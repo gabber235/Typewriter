@@ -208,7 +208,7 @@ return $default(_that.value);case _:
 
 class _PresentationCollectionSourceId extends PresentationCollectionSourceId {
   const _PresentationCollectionSourceId(this.value): assert(value != "", 'Collection source ID must not be empty.'),super._();
-  
+
 
 @override final  String value;
 
@@ -463,7 +463,7 @@ return $default(_that.value);case _:
 
 class _PresentationCollectionRelationId extends PresentationCollectionRelationId {
   const _PresentationCollectionRelationId(this.value): assert(value != "", 'Collection relation ID must not be empty.'),super._();
-  
+
 
 @override final  String value;
 
@@ -525,7 +525,7 @@ as String,
 /// @nodoc
 mixin _$PresentationCollectionSchema {
 
- TypeExpression get rowType; TypeExpression get keyType; BindingId get rowBindingId; TypedExpression get key; List<PresentationCollectionRelation> get relations;
+ TypeExpression get rowType; BindingId get rowBindingId; TypedExpression get key; TypedExpression get selectability; List<PresentationCollectionRelation> get relations;
 /// Create a copy of PresentationCollectionSchema
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -537,20 +537,20 @@ $PresentationCollectionSchemaCopyWith<PresentationCollectionSchema> get copyWith
 @override
 bool operator ==(Object other) {
   final _this = this as PresentationCollectionSchema;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationCollectionSchema&&(identical(other.rowType, _this.rowType) || other.rowType == _this.rowType)&&(identical(other.keyType, _this.keyType) || other.keyType == _this.keyType)&&(identical(other.rowBindingId, _this.rowBindingId) || other.rowBindingId == _this.rowBindingId)&&(identical(other.key, _this.key) || other.key == _this.key)&&const DeepCollectionEquality().equals(other.relations, _this.relations));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationCollectionSchema&&(identical(other.rowType, _this.rowType) || other.rowType == _this.rowType)&&(identical(other.rowBindingId, _this.rowBindingId) || other.rowBindingId == _this.rowBindingId)&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.selectability, _this.selectability) || other.selectability == _this.selectability)&&const DeepCollectionEquality().equals(other.relations, _this.relations));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PresentationCollectionSchema;
-  return Object.hash(runtimeType,_this.rowType,_this.keyType,_this.rowBindingId,_this.key,const DeepCollectionEquality().hash(_this.relations));
+  return Object.hash(runtimeType,_this.rowType,_this.rowBindingId,_this.key,_this.selectability,const DeepCollectionEquality().hash(_this.relations));
 }
 
 @override
 String toString() {
   final _this = this as PresentationCollectionSchema;
-  return 'PresentationCollectionSchema(rowType: ${_this.rowType}, keyType: ${_this.keyType}, rowBindingId: ${_this.rowBindingId}, key: ${_this.key}, relations: ${_this.relations})';
+  return 'PresentationCollectionSchema(rowType: ${_this.rowType}, rowBindingId: ${_this.rowBindingId}, key: ${_this.key}, selectability: ${_this.selectability}, relations: ${_this.relations})';
 }
 
 
@@ -561,11 +561,11 @@ abstract mixin class $PresentationCollectionSchemaCopyWith<$Res>  {
   factory $PresentationCollectionSchemaCopyWith(PresentationCollectionSchema value, $Res Function(PresentationCollectionSchema) _then) = _$PresentationCollectionSchemaCopyWithImpl;
 @useResult
 $Res call({
- TypeExpression rowType, TypeExpression keyType, BindingId rowBindingId, TypedExpression key, List<PresentationCollectionRelation> relations
+ TypeExpression rowType, BindingId rowBindingId, TypedExpression key, TypedExpression selectability, List<PresentationCollectionRelation> relations
 });
 
 
-$TypeExpressionCopyWith<$Res> get rowType;$TypeExpressionCopyWith<$Res> get keyType;$BindingIdCopyWith<$Res> get rowBindingId;$TypedExpressionCopyWith<$Res> get key;
+$TypeExpressionCopyWith<$Res> get rowType;$BindingIdCopyWith<$Res> get rowBindingId;$TypedExpressionCopyWith<$Res> get key;$TypedExpressionCopyWith<$Res> get selectability;
 
 }
 /// @nodoc
@@ -578,12 +578,12 @@ class _$PresentationCollectionSchemaCopyWithImpl<$Res>
 
 /// Create a copy of PresentationCollectionSchema
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? rowType = null,Object? keyType = null,Object? rowBindingId = null,Object? key = null,Object? relations = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? rowType = null,Object? rowBindingId = null,Object? key = null,Object? selectability = null,Object? relations = null,}) {
   return _then(PresentationCollectionSchema(
 rowType: null == rowType ? _self.rowType : rowType // ignore: cast_nullable_to_non_nullable
-as TypeExpression,keyType: null == keyType ? _self.keyType : keyType // ignore: cast_nullable_to_non_nullable
 as TypeExpression,rowBindingId: null == rowBindingId ? _self.rowBindingId : rowBindingId // ignore: cast_nullable_to_non_nullable
 as BindingId,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression,selectability: null == selectability ? _self.selectability : selectability // ignore: cast_nullable_to_non_nullable
 as TypedExpression,relations: null == relations ? _self.relations : relations // ignore: cast_nullable_to_non_nullable
 as List<PresentationCollectionRelation>,
   ));
@@ -593,7 +593,7 @@ as List<PresentationCollectionRelation>,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get rowType {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.rowType, (value) {
     return _then(_self.copyWith(rowType: value));
   });
@@ -601,17 +601,8 @@ $TypeExpressionCopyWith<$Res> get rowType {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$TypeExpressionCopyWith<$Res> get keyType {
-  
-  return $TypeExpressionCopyWith<$Res>(_self.keyType, (value) {
-    return _then(_self.copyWith(keyType: value));
-  });
-}/// Create a copy of PresentationCollectionSchema
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rowBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.rowBindingId, (value) {
     return _then(_self.copyWith(rowBindingId: value));
   });
@@ -620,9 +611,18 @@ $BindingIdCopyWith<$Res> get rowBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of PresentationCollectionSchema
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get selectability {
+
+  return $TypedExpressionCopyWith<$Res>(_self.selectability, (value) {
+    return _then(_self.copyWith(selectability: value));
   });
 }
 }
@@ -706,10 +706,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypeExpression rowType,  TypeExpression keyType,  BindingId rowBindingId,  TypedExpression key,  List<PresentationCollectionRelation> relations)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypeExpression rowType,  BindingId rowBindingId,  TypedExpression key,  TypedExpression selectability,  List<PresentationCollectionRelation> relations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationCollectionSchema() when $default != null:
-return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.relations);case _:
+return $default(_that.rowType,_that.rowBindingId,_that.key,_that.selectability,_that.relations);case _:
   return orElse();
 
 }
@@ -727,10 +727,10 @@ return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypeExpression rowType,  TypeExpression keyType,  BindingId rowBindingId,  TypedExpression key,  List<PresentationCollectionRelation> relations)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypeExpression rowType,  BindingId rowBindingId,  TypedExpression key,  TypedExpression selectability,  List<PresentationCollectionRelation> relations)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationCollectionSchema():
-return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.relations);case _:
+return $default(_that.rowType,_that.rowBindingId,_that.key,_that.selectability,_that.relations);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -747,10 +747,10 @@ return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.r
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypeExpression rowType,  TypeExpression keyType,  BindingId rowBindingId,  TypedExpression key,  List<PresentationCollectionRelation> relations)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypeExpression rowType,  BindingId rowBindingId,  TypedExpression key,  TypedExpression selectability,  List<PresentationCollectionRelation> relations)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationCollectionSchema() when $default != null:
-return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.relations);case _:
+return $default(_that.rowType,_that.rowBindingId,_that.key,_that.selectability,_that.relations);case _:
   return null;
 
 }
@@ -761,14 +761,14 @@ return $default(_that.rowType,_that.keyType,_that.rowBindingId,_that.key,_that.r
 /// @nodoc
 
 
-class _PresentationCollectionSchema implements PresentationCollectionSchema {
-  const _PresentationCollectionSchema({required this.rowType, required this.keyType, required this.rowBindingId, required this.key,  List<PresentationCollectionRelation> relations = const <PresentationCollectionRelation>[]}): _relations = relations;
-  
+class _PresentationCollectionSchema extends PresentationCollectionSchema {
+  const _PresentationCollectionSchema({required this.rowType, required this.rowBindingId, required this.key, required this.selectability,  List<PresentationCollectionRelation> relations = const <PresentationCollectionRelation>[]}): _relations = relations,super._();
+
 
 @override final  TypeExpression rowType;
-@override final  TypeExpression keyType;
 @override final  BindingId rowBindingId;
 @override final  TypedExpression key;
+@override final  TypedExpression selectability;
  final  List<PresentationCollectionRelation> _relations;
 @override@JsonKey() List<PresentationCollectionRelation> get relations {
   if (_relations is EqualUnmodifiableListView) return _relations;
@@ -787,18 +787,18 @@ _$PresentationCollectionSchemaCopyWith<_PresentationCollectionSchema> get copyWi
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationCollectionSchema&&(identical(other.rowType, rowType) || other.rowType == rowType)&&(identical(other.keyType, keyType) || other.keyType == keyType)&&(identical(other.rowBindingId, rowBindingId) || other.rowBindingId == rowBindingId)&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.relations, _relations));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationCollectionSchema&&(identical(other.rowType, rowType) || other.rowType == rowType)&&(identical(other.rowBindingId, rowBindingId) || other.rowBindingId == rowBindingId)&&(identical(other.key, key) || other.key == key)&&(identical(other.selectability, selectability) || other.selectability == selectability)&&const DeepCollectionEquality().equals(other.relations, _relations));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,rowType,keyType,rowBindingId,key,const DeepCollectionEquality().hash(_relations));
+    return Object.hash(runtimeType,rowType,rowBindingId,key,selectability,const DeepCollectionEquality().hash(_relations));
 }
 
 @override
 String toString() {
-    return 'PresentationCollectionSchema(rowType: $rowType, keyType: $keyType, rowBindingId: $rowBindingId, key: $key, relations: $relations)';
+    return 'PresentationCollectionSchema(rowType: $rowType, rowBindingId: $rowBindingId, key: $key, selectability: $selectability, relations: $relations)';
 }
 
 
@@ -809,11 +809,11 @@ abstract mixin class _$PresentationCollectionSchemaCopyWith<$Res> implements $Pr
   factory _$PresentationCollectionSchemaCopyWith(_PresentationCollectionSchema value, $Res Function(_PresentationCollectionSchema) _then) = __$PresentationCollectionSchemaCopyWithImpl;
 @override @useResult
 $Res call({
- TypeExpression rowType, TypeExpression keyType, BindingId rowBindingId, TypedExpression key, List<PresentationCollectionRelation> relations
+ TypeExpression rowType, BindingId rowBindingId, TypedExpression key, TypedExpression selectability, List<PresentationCollectionRelation> relations
 });
 
 
-@override $TypeExpressionCopyWith<$Res> get rowType;@override $TypeExpressionCopyWith<$Res> get keyType;@override $BindingIdCopyWith<$Res> get rowBindingId;@override $TypedExpressionCopyWith<$Res> get key;
+@override $TypeExpressionCopyWith<$Res> get rowType;@override $BindingIdCopyWith<$Res> get rowBindingId;@override $TypedExpressionCopyWith<$Res> get key;@override $TypedExpressionCopyWith<$Res> get selectability;
 
 }
 /// @nodoc
@@ -826,12 +826,12 @@ class __$PresentationCollectionSchemaCopyWithImpl<$Res>
 
 /// Create a copy of PresentationCollectionSchema
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? rowType = null,Object? keyType = null,Object? rowBindingId = null,Object? key = null,Object? relations = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? rowType = null,Object? rowBindingId = null,Object? key = null,Object? selectability = null,Object? relations = null,}) {
   return _then(_PresentationCollectionSchema(
 rowType: null == rowType ? _self.rowType : rowType // ignore: cast_nullable_to_non_nullable
-as TypeExpression,keyType: null == keyType ? _self.keyType : keyType // ignore: cast_nullable_to_non_nullable
 as TypeExpression,rowBindingId: null == rowBindingId ? _self.rowBindingId : rowBindingId // ignore: cast_nullable_to_non_nullable
 as BindingId,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression,selectability: null == selectability ? _self.selectability : selectability // ignore: cast_nullable_to_non_nullable
 as TypedExpression,relations: null == relations ? _self._relations : relations // ignore: cast_nullable_to_non_nullable
 as List<PresentationCollectionRelation>,
   ));
@@ -842,7 +842,7 @@ as List<PresentationCollectionRelation>,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get rowType {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.rowType, (value) {
     return _then(_self.copyWith(rowType: value));
   });
@@ -850,17 +850,8 @@ $TypeExpressionCopyWith<$Res> get rowType {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$TypeExpressionCopyWith<$Res> get keyType {
-  
-  return $TypeExpressionCopyWith<$Res>(_self.keyType, (value) {
-    return _then(_self.copyWith(keyType: value));
-  });
-}/// Create a copy of PresentationCollectionSchema
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rowBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.rowBindingId, (value) {
     return _then(_self.copyWith(rowBindingId: value));
   });
@@ -869,9 +860,18 @@ $BindingIdCopyWith<$Res> get rowBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of PresentationCollectionSchema
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get selectability {
+
+  return $TypedExpressionCopyWith<$Res>(_self.selectability, (value) {
+    return _then(_self.copyWith(selectability: value));
   });
 }
 }
@@ -944,7 +944,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get id {
-  
+
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -953,7 +953,7 @@ $PresentationCollectionRelationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get targets {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.targets, (value) {
     return _then(_self.copyWith(targets: value));
   });
@@ -1096,7 +1096,7 @@ return $default(_that.id,_that.targets);case _:
 
 class _PresentationCollectionRelation implements PresentationCollectionRelation {
   const _PresentationCollectionRelation({required this.id, required this.targets});
-  
+
 
 @override final  PresentationCollectionRelationId id;
 @override final  TypedExpression targets;
@@ -1163,7 +1163,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get id {
-  
+
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1172,7 +1172,7 @@ $PresentationCollectionRelationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get targets {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.targets, (value) {
     return _then(_self.copyWith(targets: value));
   });
@@ -1356,7 +1356,7 @@ return graph(_that.roots,_that.relation,_that.direction,_that.maximumDepth);case
 
 class PresentationCollectionAll implements PresentationCollectionQuery {
   const PresentationCollectionAll();
-  
+
 
 
 
@@ -1388,7 +1388,7 @@ String toString() {
 
 class PresentationCollectionKeys implements PresentationCollectionQuery {
   const PresentationCollectionKeys( List<DataValue> keys): _keys = keys;
-  
+
 
  final  List<DataValue> _keys;
  List<DataValue> get keys {
@@ -1462,7 +1462,7 @@ as List<DataValue>,
 
 class PresentationCollectionSearch implements PresentationCollectionQuery {
   const PresentationCollectionSearch(this.query);
-  
+
 
  final  SearchQueryContext query;
 
@@ -1527,7 +1527,7 @@ as SearchQueryContext,
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
-  
+
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
   });
@@ -1539,7 +1539,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 
 class PresentationCollectionGraph implements PresentationCollectionQuery {
   const PresentationCollectionGraph({required  List<DataValue> roots, required this.relation, required this.direction, this.maximumDepth}): assert(maximumDepth == null || maximumDepth > 0, 'Maximum depth must be positive.'),_roots = roots;
-  
+
 
  final  List<DataValue> _roots;
  List<DataValue> get roots {
@@ -1616,7 +1616,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationCollectionRelationIdCopyWith<$Res> get relation {
-  
+
   return $PresentationCollectionRelationIdCopyWith<$Res>(_self.relation, (value) {
     return _then(_self.copyWith(relation: value));
   });
@@ -1691,7 +1691,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-  
+
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1700,7 +1700,7 @@ $DataValueCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1843,7 +1843,7 @@ return $default(_that.key,_that.value);case _:
 
 class _PresentationCollectionRow implements PresentationCollectionRow {
   const _PresentationCollectionRow({required this.key, required this.value});
-  
+
 
 @override final  DataValue key;
 @override final  DataValue value;
@@ -1910,7 +1910,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-  
+
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1919,7 +1919,7 @@ $DataValueCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -2127,7 +2127,7 @@ return $default(_that.keys);case _:
 
 class _PresentationCollectionPath implements PresentationCollectionPath {
   const _PresentationCollectionPath( List<DataValue> keys): _keys = keys;
-  
+
 
  final  List<DataValue> _keys;
 @override List<DataValue> get keys {
@@ -2401,7 +2401,7 @@ return $default(_that.rootRows,_that.rows,_that.paths,_that.diagnostics,_that.lo
 
 class _PresentationCollectionSnapshot extends PresentationCollectionSnapshot {
   const _PresentationCollectionSnapshot({ List<PresentationCollectionRow> rootRows = const <PresentationCollectionRow>[],  List<PresentationCollectionRow> rows = const <PresentationCollectionRow>[],  List<PresentationCollectionPath> paths = const <PresentationCollectionPath>[],  List<TypeDiagnostic> diagnostics = const <TypeDiagnostic>[], this.loading = false}): _rootRows = rootRows,_rows = rows,_paths = paths,_diagnostics = diagnostics,super._();
-  
+
 
  final  List<PresentationCollectionRow> _rootRows;
 @override@JsonKey() List<PresentationCollectionRow> get rootRows {

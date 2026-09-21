@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -18,7 +20,7 @@ void main() {
     expect(draft.value(DataPath.root), isA<MissingEditorValue>());
     expect(draft.finalize().valueOrNull, isNull);
 
-    final reference = ReferenceValue(recordId("element:target"));
+    final reference = ReferenceValue(skir.ResourceId(value: "target"));
     expect(
       draft.update(DataPath.root, reference),
       isA<AppliedEditorMutation>(),
@@ -43,13 +45,13 @@ void main() {
     expect(
       draft.update(
         DataPath.root,
-        ListValue([ReferenceValue(recordId("element:first"))]),
+        ListValue([ReferenceValue(skir.ResourceId(value: "first"))]),
       ),
       isA<AppliedEditorMutation>(),
     );
     expect(
       draft.value(DataPath.root).valueOrNull,
-      ListValue([ReferenceValue(recordId("element:first"))]),
+      ListValue([ReferenceValue(skir.ResourceId(value: "first"))]),
     );
     expect(draft.finalize().valueOrNull, isNull);
 
@@ -57,14 +59,14 @@ void main() {
       ..appendListItem(DataPath.root)
       ..update(
         DataPath.root.index(1),
-        ReferenceValue(recordId("element:second")),
+        ReferenceValue(skir.ResourceId(value: "second")),
       );
 
     expect(
       draft.finalize().valueOrNull,
       ListValue([
-        ReferenceValue(recordId("element:first")),
-        ReferenceValue(recordId("element:second")),
+        ReferenceValue(skir.ResourceId(value: "first")),
+        ReferenceValue(skir.ResourceId(value: "second")),
       ]),
     );
   });
@@ -94,7 +96,7 @@ void main() {
         ..updateMapValue(
           DataPath.root,
           entry.id,
-          ReferenceValue(recordId("element:value")),
+          ReferenceValue(skir.ResourceId(value: "value")),
         );
 
       expect(
@@ -102,7 +104,7 @@ void main() {
         MapValue([
           DataMapEntry(
             key: const StringValue("key"),
-            value: ReferenceValue(recordId("element:value")),
+            value: ReferenceValue(skir.ResourceId(value: "value")),
           ),
         ]),
       );
@@ -177,14 +179,14 @@ void main() {
     draft.updateConcretePayloadAt(
       DataPath.root,
       DataPath.root.field("target"),
-      ReferenceValue(recordId("element:target")),
+      ReferenceValue(skir.ResourceId(value: "target")),
     );
 
     expect(draft.finalize().valueOrNull, isA<PolymorphicValue>());
   });
 
   test("fixed creation values can finalize without opening an editor", () {
-    final fixed = ReferenceValue(recordId("element:fixed"));
+    final fixed = ReferenceValue(skir.ResourceId(value: "fixed"));
     final result = materializeReadyValue(
       const ReferenceType(target: target),
       registry,

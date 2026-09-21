@@ -50,14 +50,16 @@ extension on DataValue {
       if (this is PolymorphicValue) {
         return [_invalid(path, "Concrete values must not carry a type tag")];
       }
-      if (type.reference._sameDeclaration(standardTypeRefs.svgIcon)) {
-        return _validateSvgIcon(path);
-      }
-      return validateAgainst(
+      final diagnostics = validateAgainst(
         resolvedExpected.representation,
         path: path,
         registry: registry,
       );
+      if (diagnostics.isNotEmpty ||
+          !type.reference._sameDeclaration(standardTypeRefs.svgIcon)) {
+        return diagnostics;
+      }
+      return _validateSvgIcon(path);
     }
     if (this is! PolymorphicValue) {
       return [_invalid(path, "Abstract values require an exact concrete tag")];
@@ -94,11 +96,11 @@ extension on ResolvedTypeRef {
 
 extension on DataValue {
   List<TypeDiagnostic> _validateSvgIcon(DataPath path) {
-    if (this is! StringValue) {
-      return [_invalid(path, "Sanitized SVG content must be a string")];
+    if (this case RecordValue(fields: {"source": StringValue(:final value)})) {
+      return !value.isSanitizedSvg
+          ? [_invalid(path.field("source"), "SVG content is not sanitized")]
+          : const [];
     }
-    return !(this as StringValue).value.isSanitizedSvg
-        ? [_invalid(path, "SVG content is not sanitized")]
-        : const [];
+    return [_invalid(path, "SVG content must contain a string source field")];
   }
 }

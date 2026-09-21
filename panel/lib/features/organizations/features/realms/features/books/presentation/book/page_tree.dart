@@ -15,15 +15,40 @@ class _PagesTree extends HookConsumerWidget {
     final tree = useMemoized(() => createTreeNode(pages, (p) => p.chapter), [
       pages,
     ]);
-    return _TreeChildren(children: tree.children, expanded: expanded);
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    final subjects = organizationId == null || realmId == null
+        ? null
+        : ref.watch(
+            authoringSubjectsProvider(
+              AuthoringSubjectScope(
+                organizationId: organizationId,
+                realmId: realmId,
+                resources: {
+                  for (final page in pages)
+                    page.pageId: referenceResourceTypes.page,
+                },
+              ),
+            ),
+          );
+    return _TreeChildren(
+      children: tree.children,
+      expanded: expanded,
+      subjects: subjects,
+    );
   }
 }
 
 class _TreeChildren extends HookWidget {
-  const _TreeChildren({required this.children, required this.expanded});
+  const _TreeChildren({
+    required this.children,
+    required this.expanded,
+    required this.subjects,
+  });
 
   final List<TreeNode<Page>> children;
   final bool expanded;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context) {
@@ -46,26 +71,39 @@ class _TreeChildren extends HookWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final child in sorted) _TreeItem(node: child, expanded: expanded),
+        for (final child in sorted)
+          _TreeItem(node: child, expanded: expanded, subjects: subjects),
       ],
     );
   }
 }
 
 class _TreeItem extends HookWidget {
-  const _TreeItem({required this.node, required this.expanded});
+  const _TreeItem({
+    required this.node,
+    required this.expanded,
+    required this.subjects,
+  });
 
   final TreeNode<Page> node;
   final bool expanded;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context) {
     return switch (node) {
-      LeafTreeNode<Page>(:final value) when expanded => _PageTile(page: value),
-      LeafTreeNode<Page>(:final value) => _SmallPageTile(page: value),
+      LeafTreeNode<Page>(:final value) when expanded => _PageTile(
+        page: value,
+        subjects: subjects,
+      ),
+      LeafTreeNode<Page>(:final value) => _SmallPageTile(
+        page: value,
+        subjects: subjects,
+      ),
       InnerTreeNode<Page>() => _TreeCategory(
         node: node as InnerTreeNode<Page>,
         expanded: expanded,
+        subjects: subjects,
       ),
       _ => throw UnimplementedError(),
     };
@@ -77,10 +115,15 @@ class _TreeItem extends HookWidget {
 /// Chapter expansion is local display state. Renaming and moving a chapter
 /// delegate to the page mutation path so every descendant is updated together.
 class _TreeCategory extends HookConsumerWidget {
-  const _TreeCategory({required this.node, required this.expanded});
+  const _TreeCategory({
+    required this.node,
+    required this.expanded,
+    required this.subjects,
+  });
 
   final InnerTreeNode<Page> node;
   final bool expanded;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   String get chapter => node.path;
 
@@ -176,10 +219,8 @@ class _TreeCategory extends HookConsumerWidget {
                   onAcceptWithDetails: (details) async {
                     final result = await ref.editPage(
                       id: details.data.pageId,
-                      chapter: skir.StringChange(
-                        expected: details.data.chapter,
-                        value: node.path,
-                      ),
+                      chapter: node.path,
+                      expectedChapter: details.data.chapter,
                     );
                     result.requireApplied(
                       conflictMessage: "The page chapter changed",
@@ -250,6 +291,7 @@ class _TreeCategory extends HookConsumerWidget {
                   child: _TreeChildren(
                     children: node.children,
                     expanded: expanded,
+                    subjects: subjects,
                   ),
                 )
               : const SizedBox(height: 0),

@@ -80,6 +80,7 @@ Widget primarySearchButtonStory({
       }),
       ...authoringSessionMockOverrides(
         initial: pageStoryAuthoring(pageDefinition, storyElements),
+        includeCatalog: false,
       ),
       authoringEntryIndexProvider.overrideWith(
         (ref, scope) =>

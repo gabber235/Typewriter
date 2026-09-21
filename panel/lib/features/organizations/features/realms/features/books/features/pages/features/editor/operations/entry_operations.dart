@@ -430,9 +430,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
       .requireValue;
   final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
   if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
-  final registry = TypeRegistry(
-    bootstrapTypeCatalog(snapshot.catalog.definitions),
-  );
+  final registry = TypeRegistry(snapshot.catalog);
   final selectedIds = entries.map((entry) => entry.id.id).toSet();
   final sourcePages = _cachedEntries(
     ref,
@@ -441,11 +439,13 @@ Future<EntryIdentifier?> _selectLinkTarget(
   if (sourcePages.length != 1) {
     throw ApiException.badRequest("Linked entries must belong to one page");
   }
-  final sourcePageId = recordId("page:${sourcePages.single}");
+  final sourcePageId = sourcePages.single;
+  final sourcePageResourceId = skir.ResourceId(value: sourcePageId);
 
   bool accepts(SearchResult result) {
     final payload = result.payload;
-    if (payload is! skir.AuthoringSearchElement ||
+    if (payload is! AuthoringSearchResultPayload ||
+        payload.kind != AuthoringSearchResultKind.element ||
         selectedIds.contains(payload.id.id)) {
       return false;
     }
@@ -477,7 +477,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
     ref.context,
     (modalRef, promptContext) {
       final policy = modalRef.valued(
-        pageEntryCreationPolicyForPageProvider(sourcePageId),
+        pageEntryCreationPolicyForPageProvider(sourcePageResourceId),
       );
       return SearchContribution(
         session: SearchSession(
@@ -487,7 +487,8 @@ Future<EntryIdentifier?> _selectLinkTarget(
               organizationId: organizationId,
               realmId: realmId,
               referenceOrigins: [
-                for (final entry in entries) recordId("element:${entry.id.id}"),
+                for (final entry in entries)
+                  skir.ResourceId(value: entry.id.id),
               ],
             ),
             ElementTypeSearchSource(
@@ -537,12 +538,16 @@ Future<EntryIdentifier?> _selectLinkTarget(
                     createElementOnPageCommandId,
                   );
                 }
-                final element = result.payload as skir.AuthoringSearchElement;
+                final element = result.payload as AuthoringSearchResultPayload;
                 final target = index[element.id.id]!;
+                final pageId = element.owner?.id;
+                if (pageId == null) {
+                  return const SearchActivationResult.cancelled();
+                }
                 return SearchActivationResult.complete(
                   EntryIdentifier(
                     element.id.id,
-                    pageId: element.page.id.id,
+                    pageId: pageId,
                     elementType: target.definition.elementDefinition.rootType,
                   ),
                 );
@@ -554,7 +559,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
                 ref: modalRef,
                 organizationId: organizationId,
                 realmId: realmId,
-                pageId: sourcePageId,
+                pageId: sourcePageResourceId,
                 policy: policy,
               ),
             ],
@@ -562,7 +567,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
         ),
         hostEffectExecutors: [
           SearchHostEffectExecutor<SelectCreatedElementEffect>((effect) {
-            if (effect.pageId != sourcePageId) {
+            if (effect.pageId != sourcePageResourceId) {
               throw StateError("Created element belongs to another page");
             }
             Navigator.of(promptContext).pop(effect.elementIdentifier);
@@ -573,8 +578,8 @@ Future<EntryIdentifier?> _selectLinkTarget(
     searchHint: "Choose entry to link",
     rowRenderers: {
       authoringElementSearchResultType.id: (context) =>
-          AuthoringElementSearchResultItem(
-            element: context.result.payload as skir.AuthoringSearchElement,
+          AuthoringSearchResultItem(
+            payload: context.result.payload as AuthoringSearchResultPayload,
             focused: context.focused,
             selected: context.selected,
             loading: context.loading,
@@ -595,9 +600,7 @@ Future<void> _linkEntries(
   final target = _cachedEntryIdentifiers(ref, [targetIdentifier]).single;
   final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
   if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
-  final registry = TypeRegistry(
-    bootstrapTypeCatalog(snapshot.catalog.definitions),
-  );
+  final registry = TypeRegistry(snapshot.catalog);
   final identity = EntryIdentifier(
     target.definition.id,
     elementType: target.definition.elementDefinition.rootType,
@@ -667,9 +670,7 @@ Future<DataPath?> _selectDuplicateLinkPath(
 ) async {
   final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
   if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
-  final registry = TypeRegistry(
-    bootstrapTypeCatalog(snapshot.catalog.definitions),
-  );
+  final registry = TypeRegistry(snapshot.catalog);
   final candidates = [
     for (final entry in entries)
       entry.definition
@@ -720,7 +721,7 @@ Future<Page?> _selectTargetPage(WidgetRef ref, List<Page> pages) {
         ),
         scope: PredicateSearchScope(
           evaluate: (result, query) => switch (result.payload) {
-            skir.AuthoringSearchPage(:final id) when byId.containsKey(id) =>
+            AuthoringSearchResultPayload(:final id) when byId.containsKey(id) =>
               const SearchResultVisibility.visible(),
             _ => const SearchResultVisibility.hidden(),
           },
@@ -729,13 +730,14 @@ Future<Page?> _selectTargetPage(WidgetRef ref, List<Page> pages) {
           activation: SearchActivation.custom(
             dependencies: const [],
             evaluate: (context, result) => switch (result.payload) {
-              skir.AuthoringSearchPage(:final id) when byId.containsKey(id) =>
+              AuthoringSearchResultPayload(:final id)
+                  when byId.containsKey(id) =>
                 const SearchActivationState.enabled(),
               _ => const SearchActivationState.hidden(),
             },
             activate: (context, result) async =>
                 SearchActivationResult.complete(
-                  byId[(result.payload as skir.AuthoringSearchPage).id]!,
+                  byId[(result.payload as AuthoringSearchResultPayload).id]!,
                 ),
           ),
           selectionMode: SearchSelectionMode.single,
@@ -744,15 +746,14 @@ Future<Page?> _selectTargetPage(WidgetRef ref, List<Page> pages) {
     ),
     searchHint: "Move to page",
     rowRenderers: {
-      authoringPageSearchResultType.id: (context) =>
-          AuthoringPageSearchResultItem(
-            page: context.result.payload as skir.AuthoringSearchPage,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
+      authoringPageSearchResultType.id: (context) => AuthoringSearchResultItem(
+        payload: context.result.payload as AuthoringSearchResultPayload,
+        focused: context.focused,
+        selected: context.selected,
+        loading: context.loading,
+        onTap: context.onTap,
+        shortcutActivator: context.shortcutActivator,
+      ),
     },
   );
 }
@@ -772,7 +773,7 @@ Future<ElementDefinition?> _selectReplacementType(
         availableElementDefinitionsFutureProvider,
       );
       final policy = modalRef.valued(
-        pageEntryCreationPolicyForPageProvider(recordId("page:$pageId")),
+        pageEntryCreationPolicyForPageProvider(skir.ResourceId(value: pageId)),
       );
       return SearchContribution(
         session: SearchSession(
@@ -812,9 +813,7 @@ Future<RecordValue?> _prepareReplacementValue(
 ) async {
   final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
   if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
-  final registry = TypeRegistry(
-    bootstrapTypeCatalog(snapshot.catalog.definitions),
-  );
+  final registry = TypeRegistry(snapshot.catalog);
   final representation = replacement
       .resolve(registry)
       .valueOrNull
@@ -834,13 +833,10 @@ Future<RecordValue?> _prepareReplacementValue(
     fixedValues[MaterializationLocation(["field:${field.name}"])] = value;
     retained.add(field.name);
   }
-  fixedValues[const MaterializationLocation(["field:id"])] = StringValue(
-    entry.id.id,
-  );
   fixedValues[const MaterializationLocation(["field:name"])] = StringValue(
     entry.name,
   );
-  retained.addAll(const ["id", "name"]);
+  retained.add("name");
 
   final draft = CreationDraft(
     rootType: NamedType(replacement.rootType),
@@ -850,12 +846,12 @@ Future<RecordValue?> _prepareReplacementValue(
   try {
     final prepared =
         draft.finalize().valueOrNull ??
-        await promptElementCreationEditor(
+        await promptResourceCreationEditor(
           context: ref.context,
           title: "Replace with ${replacement.name}",
           draft: draft,
           presentations: snapshot.presentations.values.toList(),
-          origins: [recordId("element:${entry.id.id}")],
+          origins: [skir.ResourceId(value: entry.id.id)],
         );
     if (prepared == null || !ref.context.mounted) return null;
     if (prepared is! RecordValue) {
@@ -886,9 +882,7 @@ Future<RecordValue?> _prepareReplacementValue(
       );
       if (confirmed != true) return null;
     }
-    return prepared
-        .withField("id", StringValue(entry.id.id))
-        .withField("name", StringValue(entry.name));
+    return prepared.withField("name", StringValue(entry.name));
   } finally {
     draft.dispose();
   }

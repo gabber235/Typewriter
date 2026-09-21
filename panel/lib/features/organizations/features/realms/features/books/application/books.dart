@@ -32,43 +32,27 @@ class CanonicalBooks extends _$CanonicalBooks {
       return [];
     }
 
+    ref.watch(
+      realmEditorCatalogLeaseProvider(
+        RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
+      ),
+    );
+    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
+    final catalog = catalogState.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
     ref.listen(provider, (_, value) {
-      if (value.sequence != null) state = AsyncData(_projectBooks(value));
+      if (value.sequence != null &&
+          value.generation?.value == catalog.generation.value) {
+        state = AsyncData(_projectBooks(value, codec));
+      }
     });
     final lease = ref.watch(
       authoringLibraryScopeProvider(organizationId, realmId),
     );
     await lease.ready;
-    return _projectBooks(ref.read(provider));
-  }
-
-  /// Creates a book through the authoring session and returns its requested
-  /// local value after the server accepts the operation.
-  ///
-  /// The generated identifier is included in the request, so callers can
-  /// select the new book without waiting for a second lookup. A rejected
-  /// application raises the session mutation error, including the duplicate
-  /// book conflict message.
-  Future<Book> createBook({
-    required String title,
-    String? icon,
-    Color? color,
-    List<skir.RecordId> tagIds = const [],
-  }) async {
-    state.ensureReady();
-    final book = Book(
-      bookId: newResourceId(AuthoringResource.book),
-      title: title,
-      icon: icon ?? "mdi:book",
-      color: color ?? Colors.grey,
-      tagIds: tagIds,
-    );
-    final response = await ref.readAuthoringSession().notifier.createBook(
-      book.toWire(),
-    );
-    response.requireApplied(conflictMessage: "The book already exists");
-    return book;
+    return _projectBooks(ref.read(provider), codec);
   }
 
   /// Applies the changed inspector fields of [book] against [expected].
@@ -80,11 +64,25 @@ class CanonicalBooks extends _$CanonicalBooks {
   Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
     state.ensureReady();
     final session = ref.readAuthoringSession();
-    final current = session.state.books[book.bookId];
+    final current = session.state.resources[book.bookId];
     if (current == null || session.state.sequence == null) {
       throw ApiException.notFound("Book");
     }
-    final before = expected ?? Book.fromWire(current);
+    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final codec = TypedAuthoringCodec(catalog);
+    final decoded = codec.decodeResource(current).valueOrNull;
+    if (decoded == null) throw StateError("The Book content is invalid");
+    final collections = decodeAuthoringCollections(
+      session: session.state,
+      catalog: catalog,
+      presentations: catalog.presentations.values,
+    );
+    final tags = collections.sources[authoringTagCollectionSourceId];
+    if (tags == null) {
+      throw StateError("The Realm Tag collection is unavailable");
+    }
+    final before = expected ?? Book.fromTyped(decoded);
     final commands = session.notifier;
     final owners = EditorOwnerRegistry(
       workspace: ref.read(localWorkControllerProvider),
@@ -101,9 +99,17 @@ class CanonicalBooks extends _$CanonicalBooks {
           onOpen: null,
           id: BookIdentifier(book.bookId),
           book: before,
-          revision: session.state.sequence!,
-          tagCollection: (ref.read(projectedTagsProvider).value ?? const [])
-              .presentationCollection(),
+          snapshot: TypedAuthoringEditorSnapshot(
+            resource: current,
+            content: decoded.content,
+            revision: session.state.sequence!,
+            codec: codec,
+          ),
+          catalogPresentations: catalog.presentations.values.toList(
+            growable: false,
+          ),
+          tagCollection: tags,
+          presentationDiagnostics: collections.diagnostics,
         ),
       );
       return await owner.applyChanges(
@@ -115,17 +121,34 @@ class CanonicalBooks extends _$CanonicalBooks {
   }
 }
 
-List<Book> _projectBooks(AuthoringSessionState value) {
-  return value.books.values.map(Book.fromWire).toList();
+List<Book> _projectBooks(
+  AuthoringSessionState value,
+  TypedAuthoringCodec codec,
+) {
+  return value.resources.values
+      .map(codec.decodeResourceOrThrow)
+      .where(
+        (resource) =>
+            codec.isResourceType(resource.content, skir.ResourceKind.book),
+      )
+      .map(Book.fromTyped)
+      .toList();
 }
 
 /// Reads one confirmed book together with the session sequence that confirms
 /// it. A missing book or uninitialized session produces no editable value.
 extension AuthoringBookValue on AuthoringSessionState {
-  AuthoringValue<Book>? bookEditorValue(skir.RecordId bookId) {
-    final value = books[bookId];
+  AuthoringValue<Book>? bookEditorValue(
+    skir.ResourceId bookId,
+    TypedAuthoringCodec codec,
+  ) {
+    final value = resources[bookId];
     final revision = sequence;
     if (value == null || revision == null) return null;
-    return AuthoringValue(value: Book.fromWire(value), revision: revision);
+    final decoded = codec.decodeResourceOrThrow(value);
+    if (!codec.isResourceType(decoded.content, skir.ResourceKind.book)) {
+      return null;
+    }
+    return AuthoringValue(value: Book.fromTyped(decoded), revision: revision);
   }
 }

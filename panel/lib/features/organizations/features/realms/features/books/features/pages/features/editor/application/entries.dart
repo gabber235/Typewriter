@@ -86,14 +86,31 @@ abstract class PageEntry with _$PageEntry {
   const factory PageEntry.reference({
     required String id,
     required String name,
+    required TypedPresentationSubject subject,
     required ElementDefinition elementDefinition,
     required String pageId,
+    @Default([]) List<ElementLink> inwardLinks,
+    @Default([]) List<ElementLink> outwardLinks,
     @Default([]) List<EntryMetadata> metadata,
   }) = ReferencePageEntry;
 
   @Assert("id != \"\"", "ID must not be empty.")
   const factory PageEntry.nonexistent({required String id}) =
       NonexistentPageEntry;
+
+  /// A foreign graph resource whose identity exists but cannot be rendered.
+  ///
+  /// Remote ownership remains explicit so graph placement and occurrence
+  /// edges behave exactly like a resolved reference while diagnostics stay
+  /// visible.
+  @Assert("id != \"\"", "ID must not be empty.")
+  const factory PageEntry.unavailableReference({
+    required String id,
+    required String name,
+    @Default([]) List<ElementLink> inwardLinks,
+    @Default([]) List<ElementLink> outwardLinks,
+    @Default([]) List<EntryMetadata> metadata,
+  }) = UnavailableReferencePageEntry;
 
   @Assert("id != \"\"", "ID must not be empty.")
   const factory PageEntry.missingElementDefinition({
@@ -222,6 +239,7 @@ extension PageEntryExtension on PageEntry {
     DefinitionPageEntry(:final definition) => definition.id,
     ReferencePageEntry(:final id) => id,
     NonexistentPageEntry(:final id) => id,
+    UnavailableReferencePageEntry(:final id) => id,
     MissingElementDefinitionPageEntry(:final id) => id,
     _ => throw UnimplementedError(),
   };
@@ -237,6 +255,16 @@ extension PageEntryExtension on PageEntry {
           definition.inwardEdges,
           definition.outwardEdges,
         ),
+        ReferencePageEntry(
+          inwardLinks: final inwardLinks,
+          outwardLinks: final outwardLinks,
+        ) =>
+          (inwardLinks, outwardLinks),
+        UnavailableReferencePageEntry(
+          inwardLinks: final inwardLinks,
+          outwardLinks: final outwardLinks,
+        ) =>
+          (inwardLinks, outwardLinks),
         _ => (const <ElementLink>[], const <ElementLink>[]),
       };
 }

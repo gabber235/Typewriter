@@ -369,10 +369,15 @@ class _TestPageElements extends PageElements {
   _TestPageElements(this.initialElements) {
     nats.registerHandler(
       _snapshotSubject,
-      (_) => skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-        skir.GetAuthoringSnapshotResponse.createSuccess(
+      (_) => skir.QueryAuthoringGraphResponse.serializer.toBytes(
+        skir.QueryAuthoringGraphResponse.createSuccess(
+          generation: skir.CatalogGeneration(value: "1"),
           sequence: 1,
-          slices: const [],
+          resources: const [],
+          edges: const [],
+          selections: const [],
+          diagnostics: const [],
+          presentations: const [],
         ),
       ),
     );
@@ -438,6 +443,7 @@ final _testPageElementsProvider = pageElementsProvider(
 );
 
 List<Override> _pageElementOverrides(_TestPageElements notifier) => [
+  ...authoringSessionMockOverrides(),
   natsProvider.overrideWithValue(notifier.nats),
   organizationIdProvider.overrideWithValue(_testOrganization),
   realmIdProvider.overrideWithValue(_testRealm),
@@ -453,12 +459,12 @@ List<Override> _pageElementOverrides(_TestPageElements notifier) => [
   pageDocumentHealthProvider(
     _testOrganization,
     _testRealm,
-    recordId("page:page"),
+    skir.ResourceId(value: "page"),
   ).overrideWithValue(null),
 ];
 
 const _snapshotSubject =
-    "service.to.test.organization.test.realm.library.authoring.snapshot.get";
+    "service.to.test.organization.test.realm.library.authoring.graph.query";
 
 List<PageElement> _sceneElements() {
   return [

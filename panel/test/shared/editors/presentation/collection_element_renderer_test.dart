@@ -70,14 +70,18 @@ void main() {
                 id: "occurrence",
                 element: ColumnElement(
                   children: [
-                    fixture.rowName("name"),
-                    PresentationNode(
-                      id: "childCount",
-                      element: TextElement(children.length()),
+                    PresentationAxisChild.fixed(fixture.rowName("name")),
+                    PresentationAxisChild.fixed(
+                      PresentationNode(
+                        id: "childCount",
+                        element: TextElement(children.length()),
+                      ),
                     ),
-                    const PresentationNode(
-                      id: "children",
-                      element: PresentationSlotElement(slotId: "children"),
+                    PresentationAxisChild.fixed(
+                      const PresentationNode(
+                        id: "children",
+                        element: PresentationSlotElement(slotId: "children"),
+                      ),
                     ),
                   ],
                 ),
@@ -164,10 +168,12 @@ void main() {
               id: "occurrence",
               element: ColumnElement(
                 children: [
-                  fixture.rowName("name"),
-                  const PresentationNode(
-                    id: "children",
-                    element: PresentationSlotElement(slotId: "children"),
+                  PresentationAxisChild.fixed(fixture.rowName("name")),
+                  PresentationAxisChild.fixed(
+                    const PresentationNode(
+                      id: "children",
+                      element: PresentationSlotElement(slotId: "children"),
+                    ),
                   ),
                 ],
               ),
@@ -231,13 +237,17 @@ void main() {
               id: "occurrence",
               element: ColumnElement(
                 children: [
-                  PresentationNode(
-                    id: "first",
-                    element: PresentationSlotElement(slotId: "first"),
+                  PresentationAxisChild.fixed(
+                    PresentationNode(
+                      id: "first",
+                      element: PresentationSlotElement(slotId: "first"),
+                    ),
                   ),
-                  PresentationNode(
-                    id: "second",
-                    element: PresentationSlotElement(slotId: "second"),
+                  PresentationAxisChild.fixed(
+                    PresentationNode(
+                      id: "second",
+                      element: PresentationSlotElement(slotId: "second"),
+                    ),
                   ),
                 ],
               ),
@@ -323,8 +333,11 @@ _CollectionFixture _fixture({List<RecordValue>? rows}) {
     id: const PresentationCollectionSourceId("nodes"),
     schema: PresentationCollectionSchema(
       rowType: rowType,
-      keyType: const StringType(),
       rowBindingId: rowBinding,
+      selectability: const TypedExpression(
+        resultType: BooleanType(),
+        expression: LiteralExpression(BooleanValue(true)),
+      ),
       key: field("key", const StringType()),
       relations: [
         PresentationCollectionRelation(

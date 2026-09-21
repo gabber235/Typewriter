@@ -1,6 +1,8 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays one page using the editor selected by its catalog definition.
@@ -18,7 +20,9 @@ class PagePage extends HookConsumerWidget {
   /// Builds a page surface or a safe read only fallback when its kind is absent.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final page = ref.watch(projectedPageProvider(recordId("page:$pageId")));
+    final page = ref.watch(
+      projectedPageProvider(skir.ResourceId(value: pageId)),
+    );
     return Pane(
       id: "pagepage",
       primary: true,

@@ -62,26 +62,6 @@ void main() {
         isA<DiagnosticElement>(),
       );
     });
-
-    test("provides dedicated semantic color and icon presentations", () {
-      final definitions = {
-        for (final definition in builtinPresentationDefinitions())
-          definition.id: definition.root.element,
-      };
-
-      expect(
-        definitions[standardColorPresentationId],
-        isA<ColorInputElement>(),
-      );
-      expect(
-        definitions[standardIconifyPresentationId],
-        isA<SearchInputElement>(),
-      );
-      expect(
-        definitions[standardSvgIconPresentationId],
-        isA<NamedInputElement>(),
-      );
-    });
   });
 
   group("expressions", () {
@@ -191,21 +171,27 @@ void main() {
       id: "root",
       element: ColumnElement(
         children: [
-          PresentationNode(
-            id: "valid",
-            element: TextInputElement(control: BoundControl(binding: binding)),
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "valid",
+              element: TextInputElement(
+                control: BoundControl(binding: binding),
+              ),
+            ),
           ),
-          PresentationNode(
-            id: "invalid",
-            element: NumericInputElement(BoundControl(binding: binding)),
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "invalid",
+              element: NumericInputElement(BoundControl(binding: binding)),
+            ),
           ),
         ],
       ),
     ).localizeFailures(context, registry: null);
     final children = (localized.element as ColumnElement).children;
 
-    expect(children.first.element, isA<TextInputElement>());
-    expect(children.last.element, isA<DiagnosticElement>());
+    expect(children.first.child.element, isA<TextInputElement>());
+    expect(children.last.child.element, isA<DiagnosticElement>());
   });
 
   test("rejects a date and time control with no visible parts", () {

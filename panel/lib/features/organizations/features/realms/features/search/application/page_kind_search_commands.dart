@@ -42,24 +42,32 @@ SearchCommand createPageCommand({
         message: "Select exactly one book before creating a page",
       );
     }
-    final input = await execution.prompts.show(
-      (context) =>
-          promptPageCreation(context: context, fixedKind: definition.kind),
+    final created = await execution.prompts.show(
+      (context) => ref
+          .read(resourceCreationProvider)
+          .create(
+            context: context,
+            request: ResourceCreationRequest(
+              kind: skir.ResourceKind.page,
+              title: "Create Page",
+              partial: pageCreationPartial(
+                bookId: book.bookId,
+                kind: definition.kind,
+              ),
+              referenceOrigins: [book.bookId],
+            ),
+          ),
     );
-    if (input == null || !ref.mounted) {
+    if (created == null || !ref.mounted) {
       return const SearchCommandResult.cancelled();
     }
-    final page = await ref.readAuthoringSession().notifier.createPageFromInput(
-      book.bookId,
-      input,
-    );
     return SearchCommandResult.completed(
       hostEffects: [
         OpenAuthoringPageEffect(
           organizationId: organizationId,
           realmId: realmId,
           bookId: book.bookId,
-          pageId: page.pageId,
+          pageId: created.id,
         ),
       ],
     );

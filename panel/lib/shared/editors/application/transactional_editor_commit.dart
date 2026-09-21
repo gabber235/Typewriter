@@ -1,6 +1,30 @@
 part of "transactional_editor_source.dart";
 
 extension EditorCommitReconciliation on TransactionalEditorSource {
+  EditorCommit previewCommit(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) {
+    final replaced = path.replace(_draft, value);
+    if (replaced case TypeFailure(:final diagnostics)) {
+      throw StateError(diagnostics.map((item) => item.message).join("; "));
+    }
+    final paths = {...editedPaths, path};
+    final current = captureCommit(paths);
+    return EditorCommit(
+      expectedRevision: current.expectedRevision,
+      localRevision: current.localRevision,
+      rootValue: replaced.valueOrNull!,
+      baseValue: current.baseValue,
+      changedPaths: current.changedPaths,
+      mutations: [
+        ...current.mutations,
+        structuralMutation ?? EditorSetValue(path, value),
+      ],
+    );
+  }
+
   /// Captures immutable intent. Delivery and later edits cannot change it.
   EditorCommit captureCommit(Set<DataPath> paths) => EditorCommit(
     expectedRevision: document.revision,

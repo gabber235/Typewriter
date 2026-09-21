@@ -130,6 +130,14 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
     this.editor,
   });
 
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required TypedValueEnvelope partial,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
+
   final List<ResolvedTypeRef> matches;
   final Set<ResolvedTypeRef> abstractMatches;
   final Set<ResolvedTypeRef> concreteRoots;
@@ -190,6 +198,9 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
                   ),
               originArtifactId: "test",
               sourcePart: "test",
+              presentationSubject: _catalogSubject(
+                referenceResourceTypes.pageKind,
+              ),
             ),
           },
         ),
@@ -202,3 +213,9 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
     RealmEditorCatalogRoute route,
   ) => _watch.stream;
 }
+
+TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
+  target: type,
+  descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+);

@@ -211,6 +211,7 @@ TypeResult<TypeExpression> _intersectRecords(
       name: entry.key,
       type: type.valueOrNull!,
       initialValue: entry.value.initialValue ?? existing.initialValue,
+      defaulted: entry.value.defaulted && existing.defaulted,
     );
   }
   if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);

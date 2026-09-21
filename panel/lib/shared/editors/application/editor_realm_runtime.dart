@@ -49,6 +49,7 @@ abstract class ReferenceAuthoringCapabilities
   const factory ReferenceAuthoringCapabilities({
     required ReferenceSearchSourceBuilder search,
     required ReferenceResourceResolver resolve,
+    ReferenceEligibilityEvaluator? eligibility,
     @Default(ReferenceCandidatePolicyRegistry())
     ReferenceCandidatePolicyRegistry policies,
   }) = _ReferenceAuthoringCapabilities;

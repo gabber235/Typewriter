@@ -69,9 +69,11 @@ extension PresentationInputScope on PresentationRenderScope {
       final actual = value.type;
 
       var inferred = expected.inferPresentationSubstitutions(actual);
-      inferred ??= expected
-          .bindingNominal(registry)
-          .inferPresentationSubstitutions(actual.bindingNominal(registry));
+      inferred ??= _inferNominalOrAncestorSubstitutions(
+        expected.bindingNominal(registry),
+        actual.bindingNominal(registry),
+        registry,
+      );
       if (inferred == null && expected is! NamedType) {
         final representation = actual.bindingRepresentation(registry);
         inferred = expected.inferPresentationSubstitutions(representation);
@@ -120,6 +122,42 @@ extension PresentationInputScope on PresentationRenderScope {
     ));
   }
 }
+
+Map<String, TypeExpression>? _inferNominalOrAncestorSubstitutions(
+  TypeExpression expected,
+  TypeExpression actual,
+  TypeRegistry registry,
+) {
+  final exact = expected.inferPresentationSubstitutions(actual);
+  if (exact != null || expected is! NamedType || actual is! NamedType) {
+    return exact;
+  }
+
+  final resolved = registry.resolveExact(actual.reference).valueOrNull;
+  if (resolved == null) return null;
+  Map<String, TypeExpression>? inferred;
+  for (final ancestor in resolved.ancestors) {
+    final candidate = expected.inferPresentationSubstitutions(
+      NamedType(ancestor),
+    );
+    if (candidate == null) continue;
+    if (inferred != null && !_sameSubstitutions(inferred, candidate)) {
+      return null;
+    }
+    inferred = candidate;
+  }
+  return inferred;
+}
+
+bool _sameSubstitutions(
+  Map<String, TypeExpression> left,
+  Map<String, TypeExpression> right,
+) =>
+    left.length == right.length &&
+    left.entries.every((entry) {
+      final value = right[entry.key];
+      return value != null && typeExpressionsEqual(entry.value, value);
+    });
 
 TypeFailure<T> _inputFailure<T>(String message) => TypeFailure([
   TypeDiagnostic(

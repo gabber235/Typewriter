@@ -8,67 +8,6 @@ library;
 
 import "package:typewriter_panel/typewriter_panel.dart";
 
-const builtinStringSingleLinePresentationId = PresentationId(
-  namespace: "typewriter",
-  name: "string.singleLine",
-);
-
-List<PresentationDefinition> builtinPresentationDefinitions() => [
-  PresentationDefinition.single(
-    id: builtinStringSingleLinePresentationId,
-    target: const StringType(),
-    root: const PresentationNode(
-      id: "string.singleLine",
-      element: TextInputElement(
-        control: BoundControl(
-          binding: BindingReference(bindingId: BindingId(0)),
-        ),
-        multiline: false,
-      ),
-    ),
-  ),
-  PresentationDefinition.single(
-    id: standardColorPresentationId,
-    target: NamedType(standardTypeRefs.color),
-    root: const PresentationNode(
-      id: "color.default",
-      element: ColorInputElement(
-        control: BoundControl(
-          binding: BindingReference(bindingId: BindingId(0)),
-        ),
-      ),
-    ),
-  ),
-  PresentationDefinition.single(
-    id: standardColorAlphaPresentationId,
-    target: NamedType(standardTypeRefs.color),
-    root: const PresentationNode(
-      id: "color.alpha",
-      element: ColorInputElement(
-        control: BoundControl(
-          binding: BindingReference(bindingId: BindingId(0)),
-        ),
-        includeAlpha: true,
-      ),
-    ),
-  ),
-  PresentationDefinition.single(
-    id: standardIconifyPresentationId,
-    target: NamedType(standardTypeRefs.iconifyIcon),
-    root: iconifySearchPresentation(),
-  ),
-  PresentationDefinition.single(
-    id: standardSvgIconPresentationId,
-    target: NamedType(standardTypeRefs.svgIcon),
-    root: const PresentationNode(
-      id: "svg.default",
-      element: NamedInputElement(
-        BoundControl(binding: BindingReference(bindingId: BindingId(0))),
-      ),
-    ),
-  ),
-];
-
 /// Builds the fallback editor tree used when no catalog presentation is selected.
 extension TypeExpressionDefaultPresentation on TypeExpression {
   PresentationNode generateDefaultPresentation({
@@ -184,7 +123,10 @@ final class _DefaultPresentationGenerator {
       control: control,
       fieldPresentation: PresentationNode(
         id: "$id.fields",
-        element: ColumnElement(children: children, spacing: 12),
+        element: ColumnElement(
+          children: children.map(PresentationAxisChild.fixed).toList(),
+          spacing: 12,
+        ),
       ),
     );
   }

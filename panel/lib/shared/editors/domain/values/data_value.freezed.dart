@@ -802,7 +802,7 @@ class ReferenceValue extends DataValue {
   const ReferenceValue(this.id): super._();
   
 
- final  RecordId id;
+ final  skir.ResourceId id;
 
 /// Create a copy of DataValue
 /// with the given fields replaced by the non-null parameter values.
@@ -836,7 +836,7 @@ abstract mixin class $ReferenceValueCopyWith<$Res> implements $DataValueCopyWith
   factory $ReferenceValueCopyWith(ReferenceValue value, $Res Function(ReferenceValue) _then) = _$ReferenceValueCopyWithImpl;
 @useResult
 $Res call({
- RecordId id
+ skir.ResourceId id
 });
 
 
@@ -856,7 +856,7 @@ class _$ReferenceValueCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
   return _then(ReferenceValue(
 null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as RecordId,
+as skir.ResourceId,
   ));
 }
 

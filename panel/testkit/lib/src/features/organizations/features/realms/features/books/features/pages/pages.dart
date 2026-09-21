@@ -28,8 +28,8 @@ Page generateRandomPage([PageKindRef pageKind = fixturePageKind]) {
   ];
 
   return Page(
-    pageId: recordId("page:${faker.guid.guid()}"),
-    bookId: recordId("book:${faker.guid.guid()}"),
+    pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
+    bookId: skir.ResourceId(value: "book:${faker.guid.guid()}"),
     name: pageName,
     kind: pageKind,
     chapter: chapters.randomOrNull() ?? "",
@@ -43,7 +43,7 @@ class BookPagesMock extends CanonicalBookPages {
   final DisplayState displayState;
 
   @override
-  Future<List<Page>> build(skir.RecordId bookId) async {
+  Future<List<Page>> build(skir.ResourceId bookId) async {
     await ref.debounce(300.ms);
     await Future<void>.delayed(100.ms);
     final pages = await displayState.generate(generateRandomPage);
@@ -59,7 +59,7 @@ class PagesMock extends CanonicalPage {
   final PageKindRef? pageKind;
 
   @override
-  Future<Page> build(skir.RecordId pageId) async {
+  Future<Page> build(skir.ResourceId pageId) async {
     await Future<void>.delayed(50.ms);
     if (page != null) {
       return page!;
@@ -181,10 +181,36 @@ List<Override> pagesProviderOverrides({Page? page, PageKindRef? pageKind}) => [
 List<Override> pageElementsProviderOverrides({
   DisplayState state = DisplayState.loading,
   List<PageElement>? elements,
-}) => [
-  pageElementsProvider.overrideWith2(
-    (_) => PageElementsMock(displayState: state, elements: elements),
-  ),
+}) {
+  final ready = switch (state) {
+    DisplayState.loading || DisplayState.error => null,
+    DisplayState.noItems => const <PageElement>[],
+    DisplayState.fewItems || DisplayState.manyItems =>
+      elements ?? state.generateReadyBatch(_randomPageElements)!,
+  };
+  return [
+    pageElementsProvider.overrideWith2(
+      (_) => PageElementsMock(displayState: state, elements: elements),
+    ),
+    authoringPageElementsProvider.overrideWith((ref, argument) {
+      if (state == DisplayState.loading) return const AsyncLoading();
+      if (state == DisplayState.error) {
+        return AsyncError(
+          Exception("Failed to load items"),
+          StackTrace.current,
+        );
+      }
+      return AsyncData(AuthoringValue(value: ready!, revision: 1));
+    }),
+  ];
+}
+
+List<PageElement> _randomPageElements(int count) => [
+  for (final definition in layoutGraphEntries(
+    List.generate(count, (_) => generateRandomEntryDefinition()),
+    direction: GraphDirection.leftToRight,
+  ))
+    PageElement.entry(entry: PageEntry.definition(definition: definition)),
 ];
 
 List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
@@ -193,12 +219,12 @@ List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
 
 List<Override> pageIdProviderOverrides({String? pageId}) => [
   pageIdProvider.overrideWith(
-    (ref) => pageId != null ? recordId("page:$pageId") : null,
+    (ref) => pageId != null ? skir.ResourceId(value: "page:$pageId") : null,
   ),
 ];
 
 List<Override> bookIdProviderOverrides({String? bookId}) => [
   bookIdProvider.overrideWith(
-    (ref) => bookId != null ? recordId("book:$bookId") : null,
+    (ref) => bookId != null ? skir.ResourceId(value: "book:$bookId") : null,
   ),
 ];

@@ -17,6 +17,7 @@ part "page_element_models.dart";
 part "page_element_mutation_context.dart";
 part "page_element_mutations.dart";
 part "page_element_projections.dart";
+part "page_element_relationships.dart";
 part "page_element_values.dart";
 part "page_elements.freezed.dart";
 part "page_elements.g.dart";
@@ -31,26 +32,27 @@ PageDocumentHealth? pageDocumentHealth(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
 ) {
   final activeOrganizationId = ref.watch(organizationIdProvider);
   final activeRealmId = ref.watch(realmIdProvider);
   if (activeOrganizationId != organizationId || activeRealmId != realmId) {
     return null;
   }
-  final document = ref
-      .watch(authoringSessionProvider(organizationId, realmId))
-      .documents[pageId];
-  if (document == null) return null;
+  final session = ref.watch(authoringSessionProvider(organizationId, realmId));
+  if (!session.resources.containsKey(pageId)) return null;
+  final status = session.compiledStatuses[pageId];
+  final diagnostics = session.diagnostics
+      .where((diagnostic) => diagnostic.resource == pageId)
+      .map((diagnostic) => diagnostic.message)
+      .toList(growable: false);
   return PageDocumentHealth(
-    diagnostics: document.diagnostics
-        .map((diagnostic) => diagnostic.message)
-        .toList(growable: false),
-    compileBlocked:
-        document.compileStatus is skir.PageCompileStatus_blockedWrapper,
-    activeManifestId: switch (document.compileStatus) {
-      skir.PageCompileStatus_activeWrapper(:final value) => value.manifestId,
-      skir.PageCompileStatus_blockedWrapper(:final value) =>
+    diagnostics: diagnostics,
+    compileBlocked: status is skir.CompiledResourceState_blockedWrapper,
+    activeManifestId: switch (status) {
+      skir.CompiledResourceState_activeWrapper(:final value) =>
+        value.manifestId,
+      skir.CompiledResourceState_blockedWrapper(:final value) =>
         value.lastActiveManifestId,
       _ => null,
     },
@@ -75,7 +77,7 @@ class PageElements extends _$PageElements
     skir.RecordId realmId,
     String pageId,
   ) async {
-    _pageId = recordId("page:$pageId");
+    _pageId = skir.ResourceId(value: pageId);
     if (ref.watch(organizationIdProvider) != organizationId ||
         ref.watch(realmIdProvider) != realmId) {
       throw ApiException.conflict("The selected realm changed");

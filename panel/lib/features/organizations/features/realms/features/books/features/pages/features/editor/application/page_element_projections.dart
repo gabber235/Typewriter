@@ -1,11 +1,5 @@
 part of "page_elements.dart";
 
-/// Decodes every authoring document into page element projections.
-///
-/// The authoring session supplies canonical documents and their revision. The
-/// realm editor catalog supplies the schema needed to decode values. Catalog
-/// failures remain diagnostics, while unresolved references are represented in
-/// the projection for the UI to repair.
 @riverpod
 AsyncValue<AuthoringValue<Map<String, List<PageElement>>>>
 decodedRealmDocumentValues(
@@ -13,39 +7,53 @@ decodedRealmDocumentValues(
   skir.RecordId organizationId,
   skir.RecordId realmId,
 ) {
-  final activeOrganizationId = ref.watch(organizationIdProvider);
-  final activeRealmId = ref.watch(realmIdProvider);
-  if (activeOrganizationId != organizationId || activeRealmId != realmId) {
+  if (ref.watch(organizationIdProvider) != organizationId ||
+      ref.watch(realmIdProvider) != realmId) {
     return const AsyncLoading();
   }
-
   final session = ref.watch(authoringSessionProvider(organizationId, realmId));
   final revision = session.sequence;
   if (revision == null) return const AsyncLoading();
+  final roots = SkirTypeCodec(TypeRegistry(const TypeCatalog([])));
   ref.watch(
     realmEditorCatalogLeaseProvider(
       RealmEditorCatalogRequest(
         types: {
-          for (final document in session.documents.values)
-            for (final element in document.elements)
-              ResolvedTypeRef(
-                id: DeclaredTypeId(element.elementType),
-                revision: element.schemaRevision,
-              ),
+          for (final resource in session.resources.values)
+            ?roots.decodeReference(resource.content.rootType).valueOrNull,
+          for (final subject in session.presentations.values)
+            ...[subject.content, subject.descriptor, subject.identity]
+                .map(
+                  (envelope) =>
+                      roots.decodeReference(envelope.rootType).valueOrNull,
+                )
+                .nonNulls,
         },
       ),
     ),
   );
-
   final catalog = ref.watch(realmEditorCatalogProvider);
   if (catalog.isLoading) return const AsyncLoading();
   return catalog.when(
-    data: (state) => switch (state) {
+    data: (catalogState) => switch (catalogState) {
       RealmEditorCatalogReady(:final value) => AsyncData(
         AuthoringValue(
           value: {
-            for (final document in session.documents.entries)
-              document.key.id: _decodePageElements(document.value, value),
+            for (final selection in session.selections.entries)
+              if (selection.key.startsWith("page:"))
+                selection.key.substring("page:".length): _decodePageElements(
+                  skir.ResourceId(
+                    value: selection.key.substring("page:".length),
+                  ),
+                  selection.value.resourceIds
+                      .map((id) => session.resources[id])
+                      .nonNulls,
+                  selection.value.edgeIds
+                      .map((id) => session.edges[id])
+                      .nonNulls,
+                  session.presentations,
+                  value,
+                ),
           },
           revision: revision,
         ),
@@ -161,17 +169,10 @@ AsyncValue<List<PageElement>> projectedPageElements(
   final projected = ref.watch(
     projectedPageElementValuesProvider(organizationId, realmId, pageId),
   );
-  if (projected.mapUnready<List<PageElement>>() case final value?) {
-    return value;
-  }
+  if (projected.mapUnready<List<PageElement>>() case final value?) return value;
   return AsyncData(projected.requireValue.value);
 }
 
-/// Overlays local editor values onto canonical page elements.
-///
-/// Canonical revision and element identity remain unchanged. This is the read
-/// model for responsive editors; persistence still belongs to the local work
-/// and authoring session owners.
 @riverpod
 AsyncValue<AuthoringValue<List<PageElement>>> projectedPageElementValues(
   Ref ref,
@@ -198,7 +199,7 @@ AsyncValue<AuthoringValue<List<PageElement>>> projectedPageElementValues(
             organizationId: organizationId,
             realmId: realmId,
           ),
-          identity: recordId("element:${element.id}"),
+          identity: skir.ResourceId(value: element.id),
         )],
       ),
   ];
@@ -218,11 +219,11 @@ AsyncValue<PageElement?> projectedPageElement(
   final canonical = ref.watch(
     projectedPageElementValuesProvider(organizationId, realmId, pageId),
   );
-  if (canonical.mapUnready<PageElement?>() case final value?) {
-    return value;
-  }
-  final element = canonical.requireValue.value
-      .where((value) => value.id == elementId)
-      .firstOrNull;
-  return AsyncData(element);
+  return canonical.when(
+    data: (value) => AsyncData(
+      value.value.where((element) => element.id == elementId).firstOrNull,
+    ),
+    error: AsyncError.new,
+    loading: AsyncLoading.new,
+  );
 }

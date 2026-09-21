@@ -137,6 +137,8 @@ void main() {
 
     expect(find.text("Length must be at least 2"), findsOneWidget);
 
+    await tester.ensureVisible(_resultRow("Mayor greeting"));
+    await tester.pumpAndSettle();
     await tester.tap(_resultRow("Mayor greeting"));
     await tester.pumpAndSettle();
 
@@ -213,12 +215,14 @@ void main() {
     await tester.pumpAndSettle();
 
     var firstEntry = _entryHeader("Map entry 1");
+    await _setEntryKey(tester, firstEntry, "objective");
     await _selectEntryValue(tester, firstEntry, "Mayor greeting");
     await tester.tap(find.byTooltip("Add entry"));
     await tester.pumpAndSettle();
 
     firstEntry = _entryHeader("Map entry 1");
     final secondEntry = _entryHeader("Map entry 2");
+    await _setEntryKey(tester, secondEntry, "objective");
     expect(
       find.descendant(
         of: firstEntry,
@@ -273,10 +277,27 @@ Finder _resultRow(String label) => find
     .ancestor(of: find.text(label).first, matching: find.byType(InkWell))
     .first;
 
-Finder _entryHeader(String label) => find.ancestor(
-  of: find.text(label),
-  matching: find.byType(PresentationHeaderChrome),
-).first;
+Finder _entryHeader(String label) => find
+    .ancestor(
+      of: find.text(label),
+      matching: find.byType(PresentationHeaderChrome),
+    )
+    .first;
+
+Future<void> _setEntryKey(
+  WidgetTester tester,
+  Finder entry,
+  String value,
+) async {
+  final input = find.descendant(
+    of: entry,
+    matching: find.byType(TextFormField),
+  );
+  expect(input, findsOneWidget);
+  await tester.ensureVisible(input);
+  await tester.enterText(input, value);
+  await tester.pumpAndSettle();
+}
 
 Future<void> _selectEntryValue(
   WidgetTester tester,
@@ -294,6 +315,8 @@ Future<void> _selectEntryValue(
   await tester.ensureVisible(input);
   await tester.pumpAndSettle();
   await tester.tap(input);
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(_resultRow(result));
   await tester.pumpAndSettle();
   await tester.tap(_resultRow(result));
   await tester.pumpAndSettle();

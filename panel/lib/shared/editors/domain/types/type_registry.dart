@@ -2,22 +2,18 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Catalog authority used to resolve nominal type references.
 ///
-/// Construction bootstraps standard declarations, indexes definitions, and
-/// records declaration diagnostics. Resolution then validates identity, arity,
+/// Construction indexes received definitions and records declaration
+/// diagnostics. Resolution then validates identity, arity,
 /// inheritance cycles, bounds, variance, sealed ownership, and representation
 /// refinement. Successful results are cached by their complete reference.
 final class TypeRegistry {
-  TypeRegistry(TypeCatalog catalog)
-    : this._(catalog, bootstrapTypeCatalog(catalog.definitions));
-
-  TypeRegistry._(this.catalog, TypeCatalog resolvedCatalog)
+  TypeRegistry(this.catalog)
     : _definitions = {
-        for (final definition in resolvedCatalog.definitions)
-          definition.id: definition,
+        for (final definition in catalog.definitions) definition.id: definition,
       },
-      _duplicates = _findDuplicates(resolvedCatalog.definitions),
+      _duplicates = _findDuplicates(catalog.definitions),
       _declarationDiagnostics = {
-        for (final definition in resolvedCatalog.definitions)
+        for (final definition in catalog.definitions)
           definition.id: definition.validateDeclaration(),
       };
 
@@ -213,18 +209,22 @@ final class TypeRegistry {
   List<TypeDiagnostic> _validateSealedOwnership(
     ResolvedTypeRef child,
     Set<ResolvedTypeRef> ancestors,
-  ) => [
-    for (final ancestor in ancestors)
-      if (_definitions[ancestor._declarationRef] case final definition?
-          when definition.kind == NominalTypeKind.sealedAbstract &&
-              definition.id.id._owner != child.id._owner)
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidConcreteType,
-          message:
-              "Type '$child' is outside the owner of sealed type '${definition.id}'",
-          type: child,
-        ),
-  ];
+  ) {
+    final childDefinition = _definitions[child._declarationRef];
+    final childOwner = childDefinition?._effectiveOwner ?? child.id._owner;
+    return [
+      for (final ancestor in ancestors)
+        if (_definitions[ancestor._declarationRef] case final definition?
+            when definition.kind == NominalTypeKind.sealedAbstract &&
+                definition._effectiveOwner != childOwner)
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidConcreteType,
+            message:
+                "Type '$child' is outside the owner of sealed type '${definition.id}'",
+            type: child,
+          ),
+    ];
+  }
 
   List<TypeDiagnostic> _findWeakening(
     TypeExpression parent,
@@ -306,6 +306,10 @@ extension on TypeId {
     DeclaredTypeId(:final uuid) => uuid,
     QualifiedTypeId(:final namespace) => namespace,
   };
+}
+
+extension on TypeDefinition {
+  String get _effectiveOwner => declarationOwner ?? id.id._owner;
 }
 
 extension on ResolvedTypeRef {

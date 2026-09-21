@@ -101,6 +101,12 @@ final class TransactionalEditorSource extends ChangeNotifier
   EditableResource? get resource => _resource;
   final LocalWorkSession? workspace;
   EditorSnapshot? _snapshot;
+  EditorSnapshot? get snapshot => _snapshot;
+  EditorSnapshot? _pendingContractSnapshot;
+  bool get contractReconciliationPending => _pendingContractSnapshot != null;
+  bool _contractUnavailable = false;
+  bool get contractUnavailable => _contractUnavailable;
+  int get localRevision => _localRevision;
   final EditorMutationValidator? _validate;
   final List<TypeDiagnostic> Function(DataValue)? _validateDraft;
 

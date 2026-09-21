@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Page {
 
- skir.RecordId get pageId; skir.RecordId get bookId; String get name; PageKindRef get kind; String get chapter; int get priority;
+ skir.ResourceId get pageId; skir.ResourceId get bookId; String get name; PageKindRef get kind; String get chapter; int get priority;
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,7 +51,7 @@ abstract mixin class $PageCopyWith<$Res>  {
   factory $PageCopyWith(Page value, $Res Function(Page) _then) = _$PageCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId pageId, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
+ skir.ResourceId pageId, skir.ResourceId bookId, String name, PageKindRef kind, String chapter, int priority
 });
 
 
@@ -71,8 +71,8 @@ class _$PageCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? pageId = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
   return _then(Page(
 pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as PageKindRef,chapter: null == chapter ? _self.chapter : chapter // ignore: cast_nullable_to_non_nullable
 as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
@@ -170,7 +170,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId pageId,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId pageId,  skir.ResourceId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Page() when $default != null:
 return $default(_that.pageId,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
@@ -191,7 +191,7 @@ return $default(_that.pageId,_that.bookId,_that.name,_that.kind,_that.chapter,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId pageId,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId pageId,  skir.ResourceId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)  $default,) {final _that = this;
 switch (_that) {
 case _Page():
 return $default(_that.pageId,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
@@ -211,7 +211,7 @@ return $default(_that.pageId,_that.bookId,_that.name,_that.kind,_that.chapter,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId pageId,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId pageId,  skir.ResourceId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,) {final _that = this;
 switch (_that) {
 case _Page() when $default != null:
 return $default(_that.pageId,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
@@ -229,8 +229,8 @@ class _Page extends Page {
   const _Page({required this.pageId, required this.bookId, required this.name, required this.kind, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
   
 
-@override final  skir.RecordId pageId;
-@override final  skir.RecordId bookId;
+@override final  skir.ResourceId pageId;
+@override final  skir.ResourceId bookId;
 @override final  String name;
 @override final  PageKindRef kind;
 @override final  String chapter;
@@ -268,7 +268,7 @@ abstract mixin class _$PageCopyWith<$Res> implements $PageCopyWith<$Res> {
   factory _$PageCopyWith(_Page value, $Res Function(_Page) _then) = __$PageCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId pageId, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
+ skir.ResourceId pageId, skir.ResourceId bookId, String name, PageKindRef kind, String chapter, int priority
 });
 
 
@@ -288,8 +288,8 @@ class __$PageCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? pageId = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
   return _then(_Page(
 pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as PageKindRef,chapter: null == chapter ? _self.chapter : chapter // ignore: cast_nullable_to_non_nullable
 as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable

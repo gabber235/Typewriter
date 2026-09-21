@@ -23,7 +23,7 @@ void main() {
           rootType: exact,
           rootValue: const StringValue("value"),
         ),
-        typeCatalog: TypeCatalog([
+        typeCatalog: receivedRealmCatalog([
           TypeDefinition(
             id: declaration,
             kind: NominalTypeKind.concrete,
@@ -52,28 +52,6 @@ void main() {
     expect(find.text("value"), findsOneWidget);
   });
 
-  testWidgets("selects the named single line string presentation", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: _renderer(
-        type: const StringType(),
-        value: const StringValue("single line"),
-        presentation: const PresentationNode(
-          id: "delegate",
-          element: DefaultPresentationElement(
-            binding: _rootBinding,
-            presentationId: builtinStringSingleLinePresentationId,
-          ),
-        ),
-      ),
-    );
-
-    final field = tester.widget<TextField>(find.byType(TextField));
-    expect(field.minLines, 1);
-    expect(field.maxLines, 1);
-  });
-
   testWidgets("localizes recursive default delegation", (tester) async {
     const id = PresentationId(namespace: "test", name: "recursive");
     final root = ResolvedTypeRef(
@@ -94,7 +72,7 @@ void main() {
           rootType: root,
           rootValue: const StringValue("value"),
         ),
-        typeCatalog: TypeCatalog([
+        typeCatalog: receivedRealmCatalog([
           TypeDefinition(
             id: root,
             kind: NominalTypeKind.concrete,
@@ -182,16 +160,35 @@ void main() {
   testWidgets(
     "uses the concrete default presentation inside a polymorphic input",
     (tester) async {
+      const presentationId = PresentationId(
+        namespace: "typewriter.core",
+        name: "icon.iconify.default",
+      );
       await tester.pumpTestApp(
         child: EditorProtocolRenderer(
           envelope: TypedValueEnvelope(
             rootType: standardTypeRefs.icon,
             rootValue: PolymorphicValue(
               concreteType: standardTypeRefs.iconifyIcon,
-              value: const StringValue("mdi:account"),
+              value: RecordValue({"value": const StringValue("mdi:account")}),
             ),
           ),
-          typeCatalog: const TypeCatalog([]),
+          typeCatalog: receivedRealmCatalog(),
+          presentations: [
+            PresentationDefinition.single(
+              id: presentationId,
+              target: NamedType(standardTypeRefs.iconifyIcon),
+              root: PresentationNode(
+                id: "iconify",
+                element: TextInputElement(
+                  control: BoundControl(
+                    binding: _rootBinding.at(DataPath.root.field("value")),
+                  ),
+                  multiline: false,
+                ),
+              ),
+            ),
+          ],
           presentation: PresentationNode(
             id: "icon",
             element: PolymorphicInputElement(
@@ -207,20 +204,10 @@ void main() {
         ),
       );
 
-      expect(find.byType(PresentationSearchInput), findsOneWidget);
+      expect(find.byType(TextFormField), findsOneWidget);
+      expect(find.text("mdi:account"), findsOneWidget);
     },
   );
-
-  test("uses the standard icon search presentation", () {
-    final definition = builtinPresentationDefinitions().singleWhere(
-      (candidate) => candidate.id == standardIconifyPresentationId,
-    );
-    final element = definition.root.element;
-
-    expect(definition.target, NamedType(standardTypeRefs.iconifyIcon));
-    expect(element, isA<SearchInputElement>());
-    expect((element as SearchInputElement).placeholder, isNotNull);
-  });
 }
 
 const _rootBinding = BindingReference(bindingId: BindingId(0));
@@ -236,7 +223,7 @@ EditorProtocolRenderer _renderer({
   );
   return EditorProtocolRenderer(
     envelope: TypedValueEnvelope(rootType: root, rootValue: value),
-    typeCatalog: TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

@@ -13,8 +13,11 @@ void main() {
         id: const PresentationCollectionSourceId("elements"),
         schema: const PresentationCollectionSchema(
           rowType: StringType(),
-          keyType: StringType(),
           rowBindingId: rowBinding,
+          selectability: TypedExpression(
+            resultType: BooleanType(),
+            expression: LiteralExpression(BooleanValue(true)),
+          ),
           key: TypedExpression(
             resultType: StringType(),
             expression: BindingExpression(
@@ -99,8 +102,11 @@ void main() {
       id: const PresentationCollectionSourceId("elements"),
       schema: const PresentationCollectionSchema(
         rowType: BooleanType(),
-        keyType: BooleanType(),
         rowBindingId: rowBinding,
+        selectability: TypedExpression(
+          resultType: BooleanType(),
+          expression: LiteralExpression(BooleanValue(true)),
+        ),
         key: TypedExpression(
           resultType: BooleanType(),
           expression: BindingExpression(
@@ -227,8 +233,11 @@ final class _DelayedCollectionSource implements PresentationCollectionSource {
   @override
   PresentationCollectionSchema get schema => const PresentationCollectionSchema(
     rowType: StringType(),
-    keyType: StringType(),
     rowBindingId: BindingId(7),
+    selectability: TypedExpression(
+      resultType: BooleanType(),
+      expression: LiteralExpression(BooleanValue(true)),
+    ),
     key: TypedExpression(
       resultType: StringType(),
       expression: BindingExpression(BindingReference(bindingId: BindingId(7))),

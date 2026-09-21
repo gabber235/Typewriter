@@ -102,6 +102,15 @@ extension on PresentationElement {
         width: value.width._substituteTypes(substitutions),
         height: value.height._substituteTypes(substitutions),
       ),
+      AdaptiveLeadingElement() => AdaptiveLeadingElement(
+        leading: value.leading._substituteTypes(substitutions),
+        center: value.center._substituteTypes(substitutions),
+        suffix: value.suffix._substituteTypes(substitutions),
+        padding: value.padding,
+        compactPadding: value.compactPadding,
+        gap: value.gap,
+        minimumCenterWidth: value.minimumCenterWidth,
+      ),
       TextElement() => TextElement(
         value.value._substituteTypes(substitutions),
         color: value.color._substituteTypes(substitutions),
@@ -116,6 +125,18 @@ extension on PresentationElement {
         letterSpacing: value.letterSpacing._substituteTypes(substitutions),
         decoration: value.decoration._substituteTypes(substitutions),
         semanticLabel: value.semanticLabel._substituteTypes(substitutions),
+        paragraph: value.paragraph,
+      ),
+      RichTextElement() => RichTextElement(
+        runs: [
+          for (final run in value.runs)
+            PresentationTextRun(
+              text: run.text._substituteTypes(substitutions),
+              style: run.style?._substituteTypes(substitutions),
+            ),
+        ],
+        style: value.style?._substituteTypes(substitutions),
+        paragraph: value.paragraph,
       ),
       MarkdownElement() => MarkdownElement(
         value.value._substituteTypes(substitutions),
@@ -404,6 +425,36 @@ extension on Iterable<PresentationNode> {
   List<PresentationNode> _substituteTypes(
     Map<String, TypeExpression> substitutions,
   ) => map((value) => value._substituteTypes(substitutions)).toList();
+}
+
+extension on List<PresentationAxisChild> {
+  List<PresentationAxisChild> _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => [
+    for (final value in this)
+      switch (value) {
+        FixedPresentationAxisChild(:final child) => PresentationAxisChild.fixed(
+          child._substituteTypes(substitutions),
+        ),
+        FlexiblePresentationAxisChild(:final child, :final flex, :final fit) =>
+          PresentationAxisChild.flexible(
+            child: child._substituteTypes(substitutions),
+            flex: flex,
+            fit: fit,
+          ),
+      },
+  ];
+}
+
+extension on PresentationTextStyle {
+  PresentationTextStyle _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => PresentationTextStyle(
+    color: color._substituteTypes(substitutions),
+    fontWeight: fontWeight._substituteTypes(substitutions),
+    fontItalic: fontItalic._substituteTypes(substitutions),
+    decoration: decoration._substituteTypes(substitutions),
+  );
 }
 
 extension on PresentationNode {

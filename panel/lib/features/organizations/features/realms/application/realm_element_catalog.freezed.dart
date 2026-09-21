@@ -856,7 +856,7 @@ $ElementAvailabilityCopyWith<$Res> get availability {
 /// @nodoc
 mixin _$RealmElementCatalogEntry {
 
- String get originArtifactId; String get sourcePart; DiscoveredElementDefinition get definition; bool get eligible; bool get available; List<String> get ineligibilityReasons;
+ String get originArtifactId; String get sourcePart; DiscoveredElementDefinition get definition; TypedCatalogPresentationSubject get presentationSubject; bool get eligible; bool get available; List<String> get ineligibilityReasons;
 /// Create a copy of RealmElementCatalogEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -868,20 +868,20 @@ $RealmElementCatalogEntryCopyWith<RealmElementCatalogEntry> get copyWith => _$Re
 @override
 bool operator ==(Object other) {
   final _this = this as RealmElementCatalogEntry;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmElementCatalogEntry&&(identical(other.originArtifactId, _this.originArtifactId) || other.originArtifactId == _this.originArtifactId)&&(identical(other.sourcePart, _this.sourcePart) || other.sourcePart == _this.sourcePart)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.eligible, _this.eligible) || other.eligible == _this.eligible)&&(identical(other.available, _this.available) || other.available == _this.available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _this.ineligibilityReasons));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmElementCatalogEntry&&(identical(other.originArtifactId, _this.originArtifactId) || other.originArtifactId == _this.originArtifactId)&&(identical(other.sourcePart, _this.sourcePart) || other.sourcePart == _this.sourcePart)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.presentationSubject, _this.presentationSubject) || other.presentationSubject == _this.presentationSubject)&&(identical(other.eligible, _this.eligible) || other.eligible == _this.eligible)&&(identical(other.available, _this.available) || other.available == _this.available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _this.ineligibilityReasons));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RealmElementCatalogEntry;
-  return Object.hash(runtimeType,_this.originArtifactId,_this.sourcePart,_this.definition,_this.eligible,_this.available,const DeepCollectionEquality().hash(_this.ineligibilityReasons));
+  return Object.hash(runtimeType,_this.originArtifactId,_this.sourcePart,_this.definition,_this.presentationSubject,_this.eligible,_this.available,const DeepCollectionEquality().hash(_this.ineligibilityReasons));
 }
 
 @override
 String toString() {
   final _this = this as RealmElementCatalogEntry;
-  return 'RealmElementCatalogEntry(originArtifactId: ${_this.originArtifactId}, sourcePart: ${_this.sourcePart}, definition: ${_this.definition}, eligible: ${_this.eligible}, available: ${_this.available}, ineligibilityReasons: ${_this.ineligibilityReasons})';
+  return 'RealmElementCatalogEntry(originArtifactId: ${_this.originArtifactId}, sourcePart: ${_this.sourcePart}, definition: ${_this.definition}, presentationSubject: ${_this.presentationSubject}, eligible: ${_this.eligible}, available: ${_this.available}, ineligibilityReasons: ${_this.ineligibilityReasons})';
 }
 
 
@@ -892,7 +892,7 @@ abstract mixin class $RealmElementCatalogEntryCopyWith<$Res>  {
   factory $RealmElementCatalogEntryCopyWith(RealmElementCatalogEntry value, $Res Function(RealmElementCatalogEntry) _then) = _$RealmElementCatalogEntryCopyWithImpl;
 @useResult
 $Res call({
- String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, bool eligible, bool available, List<String> ineligibilityReasons
+ String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, TypedCatalogPresentationSubject presentationSubject, bool eligible, bool available, List<String> ineligibilityReasons
 });
 
 
@@ -909,12 +909,13 @@ class _$RealmElementCatalogEntryCopyWithImpl<$Res>
 
 /// Create a copy of RealmElementCatalogEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? presentationSubject = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
   return _then(RealmElementCatalogEntry(
 originArtifactId: null == originArtifactId ? _self.originArtifactId : originArtifactId // ignore: cast_nullable_to_non_nullable
 as String,sourcePart: null == sourcePart ? _self.sourcePart : sourcePart // ignore: cast_nullable_to_non_nullable
 as String,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as DiscoveredElementDefinition,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
+as DiscoveredElementDefinition,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
+as TypedCatalogPresentationSubject,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
 as bool,available: null == available ? _self.available : available // ignore: cast_nullable_to_non_nullable
 as bool,ineligibilityReasons: null == ineligibilityReasons ? _self.ineligibilityReasons : ineligibilityReasons // ignore: cast_nullable_to_non_nullable
 as List<String>,
@@ -1011,10 +1012,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  TypedCatalogPresentationSubject presentationSubject,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmElementCatalogEntry() when $default != null:
-return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
+return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.presentationSubject,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
   return orElse();
 
 }
@@ -1032,10 +1033,10 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  bool eligible,  bool available,  List<String> ineligibilityReasons)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  TypedCatalogPresentationSubject presentationSubject,  bool eligible,  bool available,  List<String> ineligibilityReasons)  $default,) {final _that = this;
 switch (_that) {
 case _RealmElementCatalogEntry():
-return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
+return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.presentationSubject,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1052,10 +1053,10 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  TypedCatalogPresentationSubject presentationSubject,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmElementCatalogEntry() when $default != null:
-return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
+return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.presentationSubject,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
   return null;
 
 }
@@ -1067,12 +1068,13 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 
 
 class _RealmElementCatalogEntry implements RealmElementCatalogEntry {
-  const _RealmElementCatalogEntry({required this.originArtifactId, required this.sourcePart, required this.definition, required this.eligible, required this.available,  List<String> ineligibilityReasons = const []}): _ineligibilityReasons = ineligibilityReasons;
+  const _RealmElementCatalogEntry({required this.originArtifactId, required this.sourcePart, required this.definition, required this.presentationSubject, required this.eligible, required this.available,  List<String> ineligibilityReasons = const []}): _ineligibilityReasons = ineligibilityReasons;
   
 
 @override final  String originArtifactId;
 @override final  String sourcePart;
 @override final  DiscoveredElementDefinition definition;
+@override final  TypedCatalogPresentationSubject presentationSubject;
 @override final  bool eligible;
 @override final  bool available;
  final  List<String> _ineligibilityReasons;
@@ -1093,18 +1095,18 @@ _$RealmElementCatalogEntryCopyWith<_RealmElementCatalogEntry> get copyWith => __
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmElementCatalogEntry&&(identical(other.originArtifactId, originArtifactId) || other.originArtifactId == originArtifactId)&&(identical(other.sourcePart, sourcePart) || other.sourcePart == sourcePart)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.eligible, eligible) || other.eligible == eligible)&&(identical(other.available, available) || other.available == available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _ineligibilityReasons));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmElementCatalogEntry&&(identical(other.originArtifactId, originArtifactId) || other.originArtifactId == originArtifactId)&&(identical(other.sourcePart, sourcePart) || other.sourcePart == sourcePart)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.presentationSubject, presentationSubject) || other.presentationSubject == presentationSubject)&&(identical(other.eligible, eligible) || other.eligible == eligible)&&(identical(other.available, available) || other.available == available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _ineligibilityReasons));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,originArtifactId,sourcePart,definition,eligible,available,const DeepCollectionEquality().hash(_ineligibilityReasons));
+    return Object.hash(runtimeType,originArtifactId,sourcePart,definition,presentationSubject,eligible,available,const DeepCollectionEquality().hash(_ineligibilityReasons));
 }
 
 @override
 String toString() {
-    return 'RealmElementCatalogEntry(originArtifactId: $originArtifactId, sourcePart: $sourcePart, definition: $definition, eligible: $eligible, available: $available, ineligibilityReasons: $ineligibilityReasons)';
+    return 'RealmElementCatalogEntry(originArtifactId: $originArtifactId, sourcePart: $sourcePart, definition: $definition, presentationSubject: $presentationSubject, eligible: $eligible, available: $available, ineligibilityReasons: $ineligibilityReasons)';
 }
 
 
@@ -1115,7 +1117,7 @@ abstract mixin class _$RealmElementCatalogEntryCopyWith<$Res> implements $RealmE
   factory _$RealmElementCatalogEntryCopyWith(_RealmElementCatalogEntry value, $Res Function(_RealmElementCatalogEntry) _then) = __$RealmElementCatalogEntryCopyWithImpl;
 @override @useResult
 $Res call({
- String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, bool eligible, bool available, List<String> ineligibilityReasons
+ String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, TypedCatalogPresentationSubject presentationSubject, bool eligible, bool available, List<String> ineligibilityReasons
 });
 
 
@@ -1132,12 +1134,13 @@ class __$RealmElementCatalogEntryCopyWithImpl<$Res>
 
 /// Create a copy of RealmElementCatalogEntry
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? presentationSubject = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
   return _then(_RealmElementCatalogEntry(
 originArtifactId: null == originArtifactId ? _self.originArtifactId : originArtifactId // ignore: cast_nullable_to_non_nullable
 as String,sourcePart: null == sourcePart ? _self.sourcePart : sourcePart // ignore: cast_nullable_to_non_nullable
 as String,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as DiscoveredElementDefinition,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
+as DiscoveredElementDefinition,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
+as TypedCatalogPresentationSubject,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
 as bool,available: null == available ? _self.available : available // ignore: cast_nullable_to_non_nullable
 as bool,ineligibilityReasons: null == ineligibilityReasons ? _self._ineligibilityReasons : ineligibilityReasons // ignore: cast_nullable_to_non_nullable
 as List<String>,

@@ -32,7 +32,7 @@ PresentationNode _dashboardSection({
           element: ColumnElement(
             spacing: _dashboardFieldSpacing,
             crossAxisAlignment: PresentationCrossAxisAlignment.start,
-            children: children,
+            children: children.map(PresentationAxisChild.fixed).toList(),
           ),
         ),
       ),
@@ -74,7 +74,7 @@ PresentationNode _dashboardCard({
                 ),
               ),
               ...children,
-            ],
+            ].map(PresentationAxisChild.fixed).toList(),
           ),
         ),
       ),

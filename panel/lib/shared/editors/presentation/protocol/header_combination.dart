@@ -14,6 +14,7 @@ abstract class ResolvedHeaderChain with _$ResolvedHeaderChain {
   const factory ResolvedHeaderChain({
     required PresentationHeader? header,
     required Set<(String, BindingReference?)> suppressed,
+    @Default(false) bool showDirectDiagnostics,
   }) = _ResolvedHeaderChain;
 }
 
@@ -30,34 +31,73 @@ extension PresentationNodeHeaderCombination on PresentationNode {
   ResolvedHeaderChain resolveHeaderChain(PresentationRenderScope scope) {
     final own = _ownHeader(scope);
     if (own == null) {
-      return const ResolvedHeaderChain(header: null, suppressed: {});
+      final child = element._transparentChild(scope);
+      if (child == null) {
+        return const ResolvedHeaderChain(header: null, suppressed: {});
+      }
+      final inner = child.$1.resolveHeaderChain(child.$2);
+      final header = inner.header;
+      if (header == null) return inner;
+      final binding = header.binding == null
+          ? null
+          : child.$2.canonical(header.binding!);
+      return ResolvedHeaderChain(
+        header: header,
+        suppressed: {...inner.suppressed, (child.$1.id, binding)},
+        showDirectDiagnostics: inner.showDirectDiagnostics,
+      );
     }
     final anchor = own.binding == null ? null : scope.canonical(own.binding!);
     if (anchor == null) {
-      return ResolvedHeaderChain(header: own, suppressed: const {});
+      return ResolvedHeaderChain(
+        header: own,
+        suppressed: const {},
+        showDirectDiagnostics: element.ownsDirectHeaderDiagnostics,
+      );
     }
-    return _collect(scope, own, anchor, const {});
+    return _collect(
+      scope,
+      own,
+      anchor,
+      const {},
+      showDirectDiagnostics: element.ownsDirectHeaderDiagnostics,
+    );
   }
 
   ResolvedHeaderChain _collect(
     PresentationRenderScope scope,
     PresentationHeader outer,
     BindingReference anchor,
-    Set<(String, BindingReference?)> suppressed,
-  ) {
+    Set<(String, BindingReference?)> suppressed, {
+    required bool showDirectDiagnostics,
+  }) {
     final child = element._transparentChild(scope);
     if (child == null) {
-      return ResolvedHeaderChain(header: outer, suppressed: suppressed);
+      return ResolvedHeaderChain(
+        header: outer,
+        suppressed: suppressed,
+        showDirectDiagnostics: showDirectDiagnostics,
+      );
     }
     final inner = child.$1._ownHeader(child.$2);
     if (inner == null) {
-      return child.$1._collect(child.$2, outer, anchor, suppressed);
+      return child.$1._collect(
+        child.$2,
+        outer,
+        anchor,
+        suppressed,
+        showDirectDiagnostics: showDirectDiagnostics,
+      );
     }
     final binding = inner.binding == null
         ? null
         : child.$2.canonical(inner.binding!);
     if (binding != anchor) {
-      return ResolvedHeaderChain(header: outer, suppressed: suppressed);
+      return ResolvedHeaderChain(
+        header: outer,
+        suppressed: suppressed,
+        showDirectDiagnostics: showDirectDiagnostics,
+      );
     }
 
     final nextSuppressed = {...suppressed, (child.$1.id, binding)};
@@ -66,6 +106,7 @@ extension PresentationNodeHeaderCombination on PresentationNode {
       outer.mergeInner(inner),
       anchor,
       nextSuppressed,
+      showDirectDiagnostics: showDirectDiagnostics,
     );
   }
 
@@ -79,6 +120,13 @@ extension PresentationNodeHeaderCombination on PresentationNode {
       _ => null,
     };
   }
+}
+
+extension on PresentationElement {
+  bool get ownsDirectHeaderDiagnostics =>
+      this is ListInputElement ||
+      this is MapInputElement ||
+      this is RecordInputElement;
 }
 
 extension on PresentationElement {

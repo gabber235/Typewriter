@@ -112,7 +112,7 @@ extension DataValueExpressionDisplay on DataValue {
     MapValue(:final entries) => "${entries.length} entries",
     RecordValue() => "record",
     PolymorphicValue(:final concreteType) => concreteType.toString(),
-    ReferenceValue(:final id) => id.toSurrealQl(),
+    ReferenceValue(:final id) => id.value,
   };
 }
 

@@ -115,7 +115,7 @@ final class AuthoringSessionProvider
   }
 }
 
-String _$authoringSessionHash() => r'837bbbd271af4f08bc9c65d8662793c43ef83a9e';
+String _$authoringSessionHash() => r'bdb876727bfb6211ffc9c20dfa4b54b72e4438c0';
 
 /// Owns the canonical authoring state for one organization and realm.
 ///
@@ -352,7 +352,7 @@ final class AuthoringBookScopeProvider
   /// Keeps a book projection and its session alive while observed.
   AuthoringBookScopeProvider._({
     required AuthoringBookScopeFamily super.from,
-    required (skir.RecordId, skir.RecordId, skir.RecordId) super.argument,
+    required (skir.RecordId, skir.RecordId, skir.ResourceId) super.argument,
   }) : super(
          retry: null,
          name: r'authoringBookScopeProvider',
@@ -380,7 +380,7 @@ final class AuthoringBookScopeProvider
   @override
   AuthoringScopeLease create(Ref ref) {
     final argument =
-        this.argument as (skir.RecordId, skir.RecordId, skir.RecordId);
+        this.argument as (skir.RecordId, skir.RecordId, skir.ResourceId);
     return authoringBookScope(ref, argument.$1, argument.$2, argument.$3);
   }
 
@@ -404,7 +404,7 @@ final class AuthoringBookScopeProvider
 }
 
 String _$authoringBookScopeHash() =>
-    r'1a226ad5d72cecd97ca053dbaace05f26b78ec56';
+    r'a0f242ece48d0ecbf42978a45caa7fef83787640';
 
 /// Keeps a book projection and its session alive while observed.
 
@@ -412,7 +412,7 @@ final class AuthoringBookScopeFamily extends $Family
     with
         $FunctionalFamilyOverride<
           AuthoringScopeLease,
-          (skir.RecordId, skir.RecordId, skir.RecordId)
+          (skir.RecordId, skir.RecordId, skir.ResourceId)
         > {
   AuthoringBookScopeFamily._()
     : super(
@@ -428,7 +428,7 @@ final class AuthoringBookScopeFamily extends $Family
   AuthoringBookScopeProvider call(
     skir.RecordId organizationId,
     skir.RecordId realmId,
-    skir.RecordId bookId,
+    skir.ResourceId bookId,
   ) => AuthoringBookScopeProvider._(
     argument: (organizationId, realmId, bookId),
     from: this,
@@ -456,7 +456,7 @@ final class AuthoringPageScopeProvider
   /// Keeps a page projection and its session alive while observed.
   AuthoringPageScopeProvider._({
     required AuthoringPageScopeFamily super.from,
-    required (skir.RecordId, skir.RecordId, skir.RecordId) super.argument,
+    required (skir.RecordId, skir.RecordId, skir.ResourceId) super.argument,
   }) : super(
          retry: null,
          name: r'authoringPageScopeProvider',
@@ -484,7 +484,7 @@ final class AuthoringPageScopeProvider
   @override
   AuthoringScopeLease create(Ref ref) {
     final argument =
-        this.argument as (skir.RecordId, skir.RecordId, skir.RecordId);
+        this.argument as (skir.RecordId, skir.RecordId, skir.ResourceId);
     return authoringPageScope(ref, argument.$1, argument.$2, argument.$3);
   }
 
@@ -508,7 +508,7 @@ final class AuthoringPageScopeProvider
 }
 
 String _$authoringPageScopeHash() =>
-    r'c44890a703bb89f8493bdc840dba77f605c3752b';
+    r'1d915e2a72d5fe1845654ee4d49145dc1b4a2001';
 
 /// Keeps a page projection and its session alive while observed.
 
@@ -516,7 +516,7 @@ final class AuthoringPageScopeFamily extends $Family
     with
         $FunctionalFamilyOverride<
           AuthoringScopeLease,
-          (skir.RecordId, skir.RecordId, skir.RecordId)
+          (skir.RecordId, skir.RecordId, skir.ResourceId)
         > {
   AuthoringPageScopeFamily._()
     : super(
@@ -532,7 +532,7 @@ final class AuthoringPageScopeFamily extends $Family
   AuthoringPageScopeProvider call(
     skir.RecordId organizationId,
     skir.RecordId realmId,
-    skir.RecordId pageId,
+    skir.ResourceId pageId,
   ) => AuthoringPageScopeProvider._(
     argument: (organizationId, realmId, pageId),
     from: this,

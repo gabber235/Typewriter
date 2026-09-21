@@ -3,6 +3,8 @@
 // searches built from the active snapshot share its catalog generation.
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm_editor_catalog_provider.g.dart";
@@ -111,6 +113,7 @@ RealmEditorCatalogLease? realmEditorCatalogLease(
 /// generation. When the catalog becomes unavailable, no runtime is exposed;
 /// when it changes, Riverpod rebuilds the runtime rather than mixing versions.
 final activeRealmEditorRuntimeProvider = Provider<EditorRealmRuntime?>((ref) {
+  final localWork = ref.watch(localWorkProvider);
   final organizationId = ref.watch(organizationIdProvider);
   final realmId = ref.watch(realmIdProvider);
   final snapshot = ref.watch(realmEditorCatalogProvider).value?.snapshot;
@@ -121,9 +124,7 @@ final activeRealmEditorRuntimeProvider = Provider<EditorRealmRuntime?>((ref) {
       cache == null) {
     return null;
   }
-  final registry = TypeRegistry(
-    bootstrapTypeCatalog(snapshot.catalog.definitions),
-  );
+  final registry = TypeRegistry(snapshot.catalog);
 
   final commandTransport = NatsRealmCapabilityTransport(
     ref: ref,
@@ -198,12 +199,211 @@ final activeRealmEditorRuntimeProvider = Provider<EditorRealmRuntime?>((ref) {
             ids: ids,
             registry: registry,
           ),
-      policies: ReferenceCandidatePolicyRegistry({
-        tagParentReferencePolicyId: tagParentReferencePolicy(ref),
-      }),
+      eligibility: ReferenceEligibilityEvaluator(
+        version: (snapshot.generation, localWork),
+        evaluate: (evaluation) => _checkReferenceEligibility(
+          ref: ref,
+          organizationId: organizationId,
+          realmId: realmId,
+          evaluation: evaluation,
+        ),
+      ),
+      policies: ReferenceCandidatePolicyRegistry(const {}),
     ),
   );
 });
+
+Future<ReferenceCandidateDecision> _checkReferenceEligibility({
+  required Ref ref,
+  required skir.RecordId organizationId,
+  required skir.RecordId realmId,
+  required ReferenceEligibilityEvaluation evaluation,
+}) async {
+  final targets = _eligibilityTargets(
+    evaluation.context.owner,
+    evaluation.context.path,
+  ).toList();
+  if (targets.isEmpty) {
+    return const ReferenceCandidateDecision.unavailable(
+      ReferencePolicyIssue(
+        code: "reference.eligibility.owner_unavailable",
+        message: "The edited resource is unavailable",
+      ),
+    );
+  }
+  final proposals = <skir.AuthoringOperation>[];
+  CatalogGeneration? generation;
+  final proposedIds = <skir.ResourceId>{};
+  for (final target in targets) {
+    final source = target.source;
+    final snapshot = source.snapshot;
+    final resource = source.resource;
+    if (snapshot is! TypedAuthoringSnapshot ||
+        resource is! AuthoringEditorResource) {
+      return const ReferenceCandidateDecision.unavailable(
+        ReferencePolicyIssue(
+          code: "reference.eligibility.resource_unavailable",
+          message: "The edited resource cannot be previewed",
+        ),
+      );
+    }
+    final typedSnapshot = snapshot! as TypedAuthoringSnapshot;
+    if (!resource.repository.isScopedTo(organizationId, realmId)) {
+      return const ReferenceCandidateDecision.unavailable(
+        ReferencePolicyIssue(
+          code: "reference.eligibility.realm_mismatch",
+          message: "The edited resource belongs to another Realm",
+        ),
+      );
+    }
+    generation ??= typedSnapshot.codec.catalog.generation;
+    if (generation != typedSnapshot.codec.catalog.generation) {
+      return const ReferenceCandidateDecision.unavailable(
+        ReferencePolicyIssue(
+          code: "reference.eligibility.catalog_mismatch",
+          message: "The edited resources use different catalogs",
+        ),
+      );
+    }
+    final mutation = evaluation.structuralMutation == null
+        ? null
+        : _mutationAt(evaluation.structuralMutation!, target.path);
+    final commit = source.previewCommit(
+      target.path,
+      evaluation.proposedValue,
+      structuralMutation: mutation,
+    );
+    proposals.add(typedSnapshot.encodePreviewCommit(commit));
+    proposedIds.add(resource.id);
+  }
+  final drafts = <skir.AuthoringOperation>[];
+  for (final editor in ref.read(localWorkControllerProvider).resources.values) {
+    final source = editor.source;
+    if (!source.hasWork || source.editedPaths.isEmpty) continue;
+    final snapshot = source.snapshot;
+    final resource = source.resource;
+    if (snapshot is! TypedAuthoringSnapshot ||
+        resource is! AuthoringEditorResource ||
+        !resource.repository.isScopedTo(organizationId, realmId) ||
+        proposedIds.contains(resource.id)) {
+      continue;
+    }
+    final typedSnapshot = snapshot! as TypedAuthoringSnapshot;
+    if (typedSnapshot.codec.catalog.generation != generation) {
+      return const ReferenceCandidateDecision.unavailable(
+        ReferencePolicyIssue(
+          code: "reference.eligibility.draft_catalog_mismatch",
+          message: "A related draft uses another editor catalog",
+        ),
+      );
+    }
+    drafts.add(
+      typedSnapshot.encodePreviewCommit(
+        source.captureCommit(source.editedPaths),
+      ),
+    );
+  }
+  final repository = ref
+      .read(resourceRepositoriesProvider)
+      .authoring(organizationId, realmId);
+  final result = await repository.preview(
+    generation: generation!,
+    operations: [...drafts, ...proposals],
+  );
+  return switch (result) {
+    skir.PreviewAuthoringBatchResponse_validWrapper() =>
+      const ReferenceCandidateDecision.allowed(),
+    skir.PreviewAuthoringBatchResponse_conflictWrapper(:final value) =>
+      ReferenceCandidateDecision.rejected(
+        ReferencePolicyIssue(
+          code: "reference.conflict",
+          message: value.conflicts.isEmpty
+              ? "The reference conflicts with current authoring state"
+              : "The reference conflicts at ${value.conflicts.first.path}",
+        ),
+      ),
+    skir.PreviewAuthoringBatchResponse_invalidWrapper(:final value) =>
+      ReferenceCandidateDecision.rejected(
+        ReferencePolicyIssue(
+          code: value.diagnostics.firstOrNull?.code ?? "reference.rejected",
+          message:
+              value.diagnostics.firstOrNull?.message ??
+              "The reference is not eligible",
+        ),
+      ),
+    skir.PreviewAuthoringBatchResponse_catalogChangedWrapper() =>
+      const ReferenceCandidateDecision.unavailable(
+        ReferencePolicyIssue(
+          code: "reference.catalog_changed",
+          message: "The editor catalog changed",
+        ),
+      ),
+    skir.PreviewAuthoringBatchResponse_internalErrorWrapper() =>
+      const ReferenceCandidateDecision.unavailable(
+        ReferencePolicyIssue(
+          code: "reference.preview_unavailable",
+          message: "The Realm could not validate the reference",
+        ),
+      ),
+    _ => const ReferenceCandidateDecision.unavailable(
+      ReferencePolicyIssue(
+        code: "reference.preview_unknown",
+        message: "The Realm returned an unknown reference preview result",
+      ),
+    ),
+  };
+}
+
+Iterable<({TransactionalEditorSource source, DataPath path})>
+_eligibilityTargets(EditOwner? owner, DataPath path) sync* {
+  if (owner == null) return;
+  if (owner case ProjectedEditOwner(:final owner, path: final prefix)) {
+    yield* _eligibilityTargets(owner, prefix.followedBy(path));
+    return;
+  }
+  if (owner case MultiEditOwner(:final owners)) {
+    for (final child in owners) {
+      yield* _eligibilityTargets(child, path);
+    }
+    return;
+  }
+  if (owner case final TransactionalEditorSource source) {
+    yield (source: source, path: path);
+  }
+}
+
+EditorStructuralMutation _mutationAt(
+  EditorStructuralMutation mutation,
+  DataPath path,
+) => switch (mutation) {
+  EditorSetValue(:final value) => EditorSetValue(path, value),
+  EditorInsertListItems(:final index, :final values) => EditorInsertListItems(
+    path,
+    index,
+    values,
+  ),
+  EditorRemoveListItems(:final index, :final count) => EditorRemoveListItems(
+    path,
+    index,
+    count,
+  ),
+  EditorReorderListItems(
+    :final sourceIndex,
+    :final count,
+    :final destinationIndex,
+  ) =>
+    EditorReorderListItems(path, sourceIndex, count, destinationIndex),
+  EditorDuplicateListItems(
+    :final sourceIndex,
+    :final count,
+    :final destinationIndex,
+  ) =>
+    EditorDuplicateListItems(path, sourceIndex, count, destinationIndex),
+  EditorPutMapEntries(:final entries) => EditorPutMapEntries(path, entries),
+  EditorRemoveMapEntries(:final keys) => EditorRemoveMapEntries(path, keys),
+  EditorReplaceConcreteType(:final concreteType, :final value) =>
+    EditorReplaceConcreteType(path, concreteType, value),
+};
 
 /// Evaluates and validates a command before crossing into realm transport.
 /// Reload bypasses payload validation because it is a local control action.
@@ -297,11 +497,8 @@ extension RealmEditorCatalogElementResolution
         _ => const AsyncValue.loading(),
       };
     }
-    final catalog = bootstrapTypeCatalog(snapshot.catalog.definitions);
-    final availablePresentationIds = {
-      ...builtinPresentationDefinitions().map((definition) => definition.id),
-      ...snapshot.presentations.keys,
-    };
+    final catalog = snapshot.catalog;
+    final availablePresentationIds = {...snapshot.presentations.keys};
 
     final missingPresentationIds = {
       for (final type in catalog.definitions)

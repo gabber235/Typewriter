@@ -210,7 +210,7 @@ EditorProtocolRenderer _renderer({
   );
   return EditorProtocolRenderer(
     envelope: TypedValueEnvelope(rootType: root, rootValue: value),
-    typeCatalog: TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

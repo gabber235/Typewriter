@@ -10,11 +10,41 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "tags.freezed.dart";
 part "tags.g.dart";
 part "tag_model.dart";
-part "tag_collection.dart";
-part "tag_inspector_presentation.dart";
-part "tag_inheritance_presentation.dart";
 
 const tagGraphCellSize = 50.0;
+
+RecordValue tagCreationPartial(
+  Iterable<Tag> tags, {
+  Offset? preferredGraphAnchor,
+}) {
+  final obstacles = [
+    for (final tag in tags)
+      GraphGridRect(
+        x: tag.placement.x,
+        y: tag.placement.y,
+        width: tag.placement.width,
+        height: tag.placement.height,
+      ),
+  ];
+  final placement = const GraphIncrementalPlacer()
+      .placeGroup(
+        obstacles: obstacles,
+        group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
+        anchor:
+            preferredGraphAnchor ??
+            graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
+            Offset.zero,
+      )
+      .single;
+  return RecordValue({
+    "placement": RecordValue({
+      "x": placement.x.asValue,
+      "y": placement.y.asValue,
+      "width": placement.width.asValue,
+      "height": placement.height.asValue,
+    }),
+  });
+}
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
@@ -32,76 +62,28 @@ class CanonicalTags extends _$CanonicalTags {
     if (organizationId == null || realmId == null) {
       return [];
     }
+    ref.watch(
+      realmEditorCatalogLeaseProvider(
+        RealmEditorCatalogRequest(types: {referenceResourceTypes.tag}),
+      ),
+    );
+    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
+    final catalog = catalogState.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
     ref.listen(provider, (_, value) {
-      if (value.sequence != null) state = AsyncData(_projectTags(value));
+      if (value.sequence != null &&
+          value.generation?.value == catalog.generation.value) {
+        state = AsyncData(_projectTags(value, codec));
+      }
     });
     final lease = ref.watch(
       authoringLibraryScopeProvider(organizationId, realmId),
     );
 
     await lease.ready;
-    return _projectTags(ref.read(provider));
-  }
-
-  /// Creates a tag in the selected Realm and returns the requested value.
-  ///
-  /// The server assigns the operation result to canonical state. A conflict is
-  /// surfaced as an exception, so callers must not select or display the new
-  /// resource as persisted until this future succeeds.
-  Future<Tag> createTag({
-    required String name,
-    Color? color,
-    List<skir.RecordId> parentIds = const [],
-    Offset? preferredGraphAnchor,
-  }) async {
-    state.ensureReady();
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    final existingTags = organizationId == null || realmId == null
-        ? state.requireValue
-        : _projectTagValues(
-            state.requireValue,
-            ref.read(localWorkProvider).editorValues,
-            organizationId,
-            realmId,
-          );
-    final obstacles = [
-      for (final tag in existingTags)
-        GraphGridRect(
-          x: tag.placement.x,
-          y: tag.placement.y,
-          width: tag.placement.width,
-          height: tag.placement.height,
-        ),
-    ];
-    final placement = const GraphIncrementalPlacer()
-        .placeGroup(
-          obstacles: obstacles,
-          group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
-          anchor:
-              preferredGraphAnchor ??
-              graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
-              Offset.zero,
-        )
-        .single;
-    final tag = Tag(
-      tagId: newResourceId(AuthoringResource.tag),
-      name: name,
-      color: color ?? Colors.grey,
-      parentIds: parentIds,
-      placement: Placement(
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-      ),
-    );
-    final response = await ref.readAuthoringSession().notifier.createTag(
-      tag.toWire(),
-    );
-    response.requireApplied(conflictMessage: "The tag already exists");
-    return tag;
+    return _projectTags(ref.read(provider), codec);
   }
 
   /// Saves a tag through the shared editor mutation boundary.
@@ -113,11 +95,25 @@ class CanonicalTags extends _$CanonicalTags {
   Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
     state.ensureReady();
     final session = ref.readAuthoringSession();
-    final current = session.state.tags[tag.tagId];
+    final current = session.state.resources[tag.tagId];
     if (current == null || session.state.sequence == null) {
       throw ApiException.notFound("Tag");
     }
-    final before = expected ?? Tag.fromWire(current);
+    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final codec = TypedAuthoringCodec(catalog);
+    final decoded = codec.decodeResource(current).valueOrNull;
+    if (decoded == null) throw StateError("The Tag content is invalid");
+    final collections = decodeAuthoringCollections(
+      session: session.state,
+      catalog: catalog,
+      presentations: catalog.presentations.values,
+    );
+    final tagCollection = collections.sources[authoringTagCollectionSourceId];
+    if (tagCollection == null) {
+      throw StateError("The Realm Tag collection is unavailable");
+    }
+    final before = expected ?? Tag.fromTyped(decoded);
     final commands = session.notifier;
     final owners = EditorOwnerRegistry(
       workspace: ref.read(localWorkControllerProvider),
@@ -134,8 +130,17 @@ class CanonicalTags extends _$CanonicalTags {
           onDelete: () => deleteTag(tag.tagId),
           id: TagIdentifier(tag.tagId),
           tag: before,
-          revision: session.state.sequence!,
-          tagCollection: state.requireValue.presentationCollection(),
+          snapshot: TypedAuthoringEditorSnapshot(
+            resource: current,
+            content: decoded.content,
+            revision: session.state.sequence!,
+            codec: codec,
+          ),
+          catalogPresentations: catalog.presentations.values.toList(
+            growable: false,
+          ),
+          tagCollection: tagCollection,
+          presentationDiagnostics: collections.diagnostics,
         ),
       );
       return await owner.applyChanges(
@@ -153,8 +158,8 @@ class CanonicalTags extends _$CanonicalTags {
   /// and expected child, preserving the graph's cycle and missing node checks.
   Future<void> toggleTagParent(
     List<Tag> tags,
-    skir.RecordId childId,
-    skir.RecordId parentId,
+    skir.ResourceId childId,
+    skir.ResourceId parentId,
   ) async {
     state.ensureReady();
     final action = tagParentDropAction(
@@ -177,7 +182,7 @@ class CanonicalTags extends _$CanonicalTags {
   ///
   /// The authoring response is required to apply. A conflict reports that the
   /// tag changed before deletion and leaves reconciliation to session refresh.
-  Future<void> deleteTag(skir.RecordId tagId) async {
+  Future<void> deleteTag(skir.ResourceId tagId) async {
     state.ensureReady();
     final response = await ref.readAuthoringSession().notifier.deleteTag(tagId);
     response.requireApplied(conflictMessage: "The tag changed before deletion");
@@ -186,22 +191,36 @@ class CanonicalTags extends _$CanonicalTags {
 
 /// Reads one tag from the canonical Realm projection.
 @riverpod
-Future<Tag?> canonicalTag(Ref ref, skir.RecordId tagId) async {
+Future<Tag?> canonicalTag(Ref ref, skir.ResourceId tagId) async {
   final tags = await ref.watch(canonicalTagsProvider.future);
   return tags.firstWhereOrNull((tag) => tag.tagId == tagId);
 }
 
-List<Tag> _projectTags(AuthoringSessionState value) {
-  return value.tags.values.map(Tag.fromWire).toList();
+List<Tag> _projectTags(AuthoringSessionState value, TypedAuthoringCodec codec) {
+  return value.resources.values
+      .map(codec.decodeResourceOrThrow)
+      .where(
+        (resource) =>
+            codec.isResourceType(resource.content, skir.ResourceKind.tag),
+      )
+      .map(Tag.fromTyped)
+      .toList();
 }
 
 /// Converts one canonical wire tag and its session revision into editor input.
 extension AuthoringTagValue on AuthoringSessionState {
-  AuthoringValue<Tag>? tagEditorValue(skir.RecordId tagId) {
-    final value = tags[tagId];
+  AuthoringValue<Tag>? tagEditorValue(
+    skir.ResourceId tagId,
+    TypedAuthoringCodec codec,
+  ) {
+    final value = resources[tagId];
     final revision = sequence;
     if (value == null || revision == null) return null;
-    return AuthoringValue(value: Tag.fromWire(value), revision: revision);
+    final decoded = codec.decodeResourceOrThrow(value);
+    if (!codec.isResourceType(decoded.content, skir.ResourceKind.tag)) {
+      return null;
+    }
+    return AuthoringValue(value: Tag.fromTyped(decoded), revision: revision);
   }
 }
 
@@ -253,7 +272,7 @@ List<Tag> _projectTagValues(
 
 /// Projects one tag for graph nodes that rebuild independently.
 @riverpod
-AsyncValue<Tag?> projectedTag(Ref ref, skir.RecordId tagId) {
+AsyncValue<Tag?> projectedTag(Ref ref, skir.ResourceId tagId) {
   final canonical = ref.watch(canonicalTagProvider(tagId));
   if (canonical.mapUnready<Tag?>() case final value?) return value;
   final organizationId = ref.watch(organizationIdProvider);

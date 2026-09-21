@@ -1,8 +1,6 @@
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 Book? resolveSearchBook(SearchQueryContext query, List<Book> books) {
@@ -196,8 +194,8 @@ SearchScope elementDestinationScope({
     final policies = compatibleKinds.value.value;
     if (policies == null) return const SearchResultVisibility.hidden();
     return switch (result.payload) {
-      skir.AuthoringSearchPage(:final kind) =>
-        policies.containsKey(PageKindRef.fromSkir(kind))
+      AuthoringSearchResultPayload(:final pageKind) when pageKind != null =>
+        policies.containsKey(pageKind)
             ? const SearchResultVisibility.visible()
             : const SearchResultVisibility.hidden(),
       RealmPageDefinition(:final kind) =>

@@ -1,6 +1,8 @@
 import "package:flutter/material.dart" hide Page;
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -149,6 +151,17 @@ RealmElementCatalogEntry _catalogEntry(ElementDefinition definition) =>
         color: definition.color,
         availability: const ElementAvailability.always(),
       ),
+      presentationSubject: (
+        target: definition.rootType,
+        descriptor: TypedValueEnvelope(
+          rootType: definition.rootType,
+          rootValue: RecordValue({}),
+        ),
+        identity: TypedValueEnvelope(
+          rootType: definition.rootType,
+          rootValue: RecordValue({}),
+        ),
+      ),
       eligible: true,
       available: true,
     );
@@ -174,14 +187,14 @@ SearchResult _elementResult(ElementDefinition definition) => SearchResult(
 );
 
 final _currentBook = Book(
-  bookId: recordId("book:current"),
+  bookId: skir.ResourceId(value: "current"),
   title: "Current",
   icon: "mdi:book",
   color: Colors.blue,
   tagIds: const [],
 );
 final _otherBook = Book(
-  bookId: recordId("book:other"),
+  bookId: skir.ResourceId(value: "other"),
   title: "Other",
   icon: "mdi:book",
   color: Colors.green,
@@ -189,7 +202,7 @@ final _otherBook = Book(
 );
 const _pageKind = PageKindRef(id: "static", revision: 1);
 final _currentPage = Page(
-  pageId: recordId("page:current"),
+  pageId: skir.ResourceId(value: "current"),
   bookId: _currentBook.bookId,
   name: "Intro",
   kind: _pageKind,
@@ -197,7 +210,7 @@ final _currentPage = Page(
   priority: 0,
 );
 final _otherPage = Page(
-  pageId: recordId("page:other"),
+  pageId: skir.ResourceId(value: "other"),
   bookId: _otherBook.bookId,
   name: "Intro",
   kind: _pageKind,

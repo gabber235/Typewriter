@@ -1,6 +1,8 @@
 import "dart:convert";
 import "dart:typed_data";
 
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Decodes an ordinary JSON value according to a Typewriter type expression.
@@ -132,7 +134,9 @@ DataValue _decode(
     source,
   ),
   NamedType() => _decodeResolved(source, type, registry, path),
-  ReferenceType() when source is String => ReferenceValue(recordId(source)),
+  ReferenceType() when source is String => ReferenceValue(
+    skir.ResourceId(value: source),
+  ),
   ReferenceType() => throw _invalidJsonValue(
     path,
     "a resource reference string",

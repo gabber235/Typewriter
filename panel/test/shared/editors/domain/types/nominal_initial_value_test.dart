@@ -1,6 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../support/realm_catalog_fixture.dart";
+
 void main() {
   const container = ResolvedTypeRef(
     id: QualifiedTypeId(namespace: "test", name: "Container"),
@@ -8,7 +10,7 @@ void main() {
   );
   const string = StringType();
   TypeRegistry registry(DataValue initial) => TypeRegistry(
-    TypeCatalog([
+    receivedRealmCatalog([
       TypeDefinition(
         id: container,
         kind: NominalTypeKind.concrete,

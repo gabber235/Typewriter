@@ -15,10 +15,10 @@ class EntryIdentifier extends SelectableIdentifier
   final String id;
 
   @override
-  Object get resourceId => recordId("element:$id");
+  Object get resourceId => skir.ResourceId(value: id);
 
   @override
-  skir.RecordId get referenceId => recordId("element:$id");
+  skir.ResourceId get referenceId => skir.ResourceId(value: id);
 
   @override
   List<ResolvedTypeRef> get referenceTypes => [
@@ -72,7 +72,6 @@ class EntryIdentifier extends SelectableIdentifier
           repository: repository,
           state: state,
           identity: identity,
-          pageId: location.pageId,
           label: value.name,
           document: EditorDocument(
             rootType: NamedType(value.elementDefinition.rootType),
@@ -214,8 +213,8 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
   }
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => EntryHeader(
-    id: id.id,
+  Widget? buildInspectorHeader(EditOwner owner) => EntryInspectorHeader(
+    id: id,
     name: name,
     color: definition.elementDefinition.color,
     owner: ProjectedEditOwner(owner, elementValuePath),
@@ -259,7 +258,7 @@ extension EntryPresentationModel on PresentationModel {
               ),
             ),
             ?content,
-          ],
+          ].map(PresentationAxisChild.fixed).toList(),
         ),
       ),
     );
@@ -273,12 +272,9 @@ extension PresentationNodeIdentityFields on PresentationNode {
     final fields = record.fieldPresentation;
     final column = fields?.element;
     if (fields == null || column is! ColumnElement) return this;
-    final identityPaths = {
-      DataPath.root.field("id"),
-      DataPath.root.field("name"),
-    };
-    final children = column.children.where((node) {
-      final element = node.element;
+    final identityPaths = {DataPath.root.field("name")};
+    final children = column.children.where((axisChild) {
+      final element = axisChild.child.element;
       return element is! TypedFieldElement ||
           !identityPaths.contains(element.binding.path);
     }).toList();

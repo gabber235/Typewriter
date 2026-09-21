@@ -17,8 +17,8 @@ part "pages.g.dart";
 abstract class Page with _$Page {
   @Assert("name != \"\"", "Name must not be empty.")
   const factory Page({
-    required skir.RecordId pageId,
-    required skir.RecordId bookId,
+    required skir.ResourceId pageId,
+    required skir.ResourceId bookId,
     required String name,
     required PageKindRef kind,
     required String chapter,
@@ -27,14 +27,48 @@ abstract class Page with _$Page {
 
   const Page._();
 
-  /// Converts the authoring contract into the panel's page read model.
-  factory Page.fromWire(skir.Page page) => Page(
-    pageId: page.id,
-    bookId: page.book,
-    name: page.name,
-    kind: PageKindRef.fromSkir(page.kind),
-    chapter: page.chapter,
-    priority: page.priority,
+  factory Page.fromTyped(TypedAuthoringResource resource) {
+    final value = resource.content.rootValue;
+    if (value is! RecordValue) throw StateError("The Page content is invalid");
+    final book = value.fields["book"];
+    final name = value.fields["name"];
+    final kind = value.fields["kind"];
+    final chapter = value.fields["chapter"];
+    final priority = value.fields["priority"];
+    if (book is! ReferenceValue ||
+        name is! StringValue ||
+        kind is! RecordValue ||
+        chapter is! StringValue ||
+        priority is! IntegerValue ||
+        kind.fields["id"] is! StringValue ||
+        kind.fields["revision"] is! IntegerValue) {
+      throw StateError("The Page content is invalid");
+    }
+    return Page(
+      pageId: resource.id,
+      bookId: book.id,
+      name: name.value,
+      kind: PageKindRef(
+        id: (kind.fields["id"]! as StringValue).value,
+        revision: (kind.fields["revision"]! as IntegerValue).value.toInt(),
+      ),
+      chapter: chapter.value,
+      priority: priority.value.toInt(),
+    );
+  }
+
+  TypedValueEnvelope content(ResolvedTypeRef rootType) => TypedValueEnvelope(
+    rootType: rootType,
+    rootValue: RecordValue({
+      "book": ReferenceValue(this.bookId),
+      "name": name.asValue,
+      "kind": RecordValue({
+        "id": kind.id.asValue,
+        "revision": kind.revision.asValue,
+      }),
+      "chapter": chapter.asValue,
+      "priority": priority.asValue,
+    }),
   );
 
   /// Encodes editable metadata for the shared transactional editor boundary.
@@ -81,21 +115,38 @@ abstract class Page with _$Page {
 @riverpod
 class CanonicalBookPages extends _$CanonicalBookPages {
   @override
-  Future<List<Page>> build(skir.RecordId bookId) async {
+  Future<List<Page>> build(skir.ResourceId bookId) async {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (organizationId == null) throw ApiException.noOrganization();
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     final provider = authoringSessionProvider(organizationId, realmId);
+    ref.watch(
+      realmEditorCatalogLeaseProvider(
+        RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
+      ),
+    );
+    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
+    final catalog = catalogState.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final codec = TypedAuthoringCodec(catalog);
     List<Page> project(AuthoringSessionState value) {
-      return value.pages.values
-          .where((page) => page.book == bookId)
-          .map(Page.fromWire)
+      return value.resources.values
+          .map(codec.decodeResourceOrThrow)
+          .where(
+            (resource) =>
+                codec.isResourceType(resource.content, skir.ResourceKind.page),
+          )
+          .map(Page.fromTyped)
+          .where((page) => page.bookId == bookId)
           .toList();
     }
 
     ref.listen(provider, (_, value) {
-      if (value.sequence != null) state = AsyncData(project(value));
+      if (value.sequence != null &&
+          value.generation?.value == catalog.generation.value) {
+        state = AsyncData(project(value));
+      }
     });
 
     final lease = ref.watch(
@@ -114,18 +165,32 @@ class CanonicalBookPages extends _$CanonicalBookPages {
 @riverpod
 class CanonicalPage extends _$CanonicalPage {
   @override
-  Future<Page> build(skir.RecordId pageId) async {
+  Future<Page> build(skir.ResourceId pageId) async {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (organizationId == null) throw ApiException.noOrganization();
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     final provider = authoringSessionProvider(organizationId, realmId);
+    ref.watch(
+      realmEditorCatalogLeaseProvider(
+        RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
+      ),
+    );
+    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
+    final catalog = catalogState.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final codec = TypedAuthoringCodec(catalog);
     ref.listen(provider, (_, value) {
       if (value.sequence == null) return;
-      final page = value.pages[pageId];
+      if (value.generation?.value != catalog.generation.value) return;
+      final resource = value.resources[pageId];
+      final decoded = resource == null
+          ? null
+          : codec.decodeResourceOrThrow(resource);
+      final page = decoded == null ? null : Page.fromTyped(decoded);
       state = page == null
           ? AsyncError(ApiException.notFound("Page"), StackTrace.current)
-          : AsyncData(Page.fromWire(page));
+          : AsyncData(page);
     });
 
     final lease = ref.watch(
@@ -133,9 +198,12 @@ class CanonicalPage extends _$CanonicalPage {
     );
     await lease.ready;
     final value = ref.read(provider);
-    final page = value.pages[pageId];
-    if (page == null) throw ApiException.notFound("Page");
-    return Page.fromWire(page);
+    final resource = value.resources[pageId];
+    final decoded = resource == null
+        ? null
+        : codec.decodeResourceOrThrow(resource);
+    if (decoded == null) throw ApiException.notFound("Page");
+    return Page.fromTyped(decoded);
   }
 }
 
@@ -147,7 +215,7 @@ class CanonicalPage extends _$CanonicalPage {
 @riverpod
 AsyncValue<List<Page>> projectedBookPages(
   Ref ref,
-  skir.RecordId bookId,
+  skir.ResourceId bookId,
   String search,
 ) {
   final canonical = ref.watch(canonicalBookPagesProvider(bookId));
@@ -201,7 +269,7 @@ AsyncValue<List<Page>> projectedPages(Ref ref) {
 /// Canonical loading and errors pass through. An invalid draft projection is
 /// ignored by [Page.projected], preserving the last valid visible metadata.
 @riverpod
-AsyncValue<Page> projectedPage(Ref ref, skir.RecordId pageId) {
+AsyncValue<Page> projectedPage(Ref ref, skir.ResourceId pageId) {
   final canonical = ref.watch(canonicalPageProvider(pageId));
   if (canonical.mapUnready<Page>() case final value?) return value;
   final organizationId = ref.watch(organizationIdProvider);
@@ -230,8 +298,8 @@ AsyncValue<Page> projectedPage(Ref ref, skir.RecordId pageId) {
 
 /// Resolves the route's string parameter to the typed page record identity.
 @riverpod
-skir.RecordId? pageId(Ref ref) {
+skir.ResourceId? pageId(Ref ref) {
   final id = ref.watch(routeParamProvider("pageId"));
   if (id == null) return null;
-  return recordId("page:$id");
+  return skir.ResourceId(value: id);
 }

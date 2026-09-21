@@ -153,7 +153,7 @@ AsyncValue<PageEntryCreationPolicy> pageEntryCreationPolicy(
 @riverpod
 AsyncValue<PageEntryCreationPolicy> pageEntryCreationPolicyForPage(
   Ref ref,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
 ) {
   final page = ref.watch(projectedPageProvider(pageId));
   if (page.mapUnready<PageEntryCreationPolicy>() case final value?) {

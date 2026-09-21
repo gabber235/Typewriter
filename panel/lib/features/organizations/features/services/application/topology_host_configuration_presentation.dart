@@ -145,7 +145,12 @@ PresentationNode _workloadMode({
                   ),
                   element: ColumnElement(
                     spacing: 12,
-                    children: currentType == enabled ? fields : const [],
+                    children:
+                        (currentType == enabled
+                                ? fields
+                                : const <PresentationNode>[])
+                            .map(PresentationAxisChild.fixed)
+                            .toList(),
                   ),
                 ),
               ),

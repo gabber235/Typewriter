@@ -65,7 +65,7 @@ Widget _renderer({
   );
   return EditorProtocolRenderer(
     envelope: TypedValueEnvelope(rootType: root, rootValue: const UnitValue()),
-    typeCatalog: TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

@@ -183,7 +183,7 @@ PresentationNode _singlePresentationRoot(
   final selected = declared is NamedType
       ? registry.definition(declared.reference)?.defaultPresentationId
       : null;
-  final definition = [...builtinPresentationDefinitions(), ...presentations]
+  final definition = presentations
       .where(
         (definition) =>
             definition.id == selected && definition.inputs.length == 1,

@@ -183,7 +183,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
 Future<bool> showPageDeletionDialogue(
   WidgetRef ref,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
   String pageName,
 ) {
   return showConfirmationDialogue(

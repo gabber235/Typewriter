@@ -33,7 +33,7 @@ void main() {
     final elements = <(PresentationElement, skir.PresentationElement_kind)>[
       (
         ColumnElement(
-          children: const [leaf],
+          children: const [PresentationAxisChild.fixed(leaf)],
           spacing: 2,
           mainAxisAlignment: PresentationMainAxisAlignment.spaceBetween,
           crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
@@ -41,7 +41,10 @@ void main() {
         skir.PresentationElement_kind.childrenWrapper,
       ),
       (
-        RowElement(children: const [leaf], spacing: 3),
+        RowElement(
+          children: const [PresentationAxisChild.fixed(leaf)],
+          spacing: 3,
+        ),
         skir.PresentationElement_kind.childrenWrapper,
       ),
       (
@@ -268,7 +271,10 @@ void main() {
       id: "richHeader",
       header: PresentationHeader(
         title: PresentationHeaderTitle.presentation(
-          PresentationNode(id: "title", element: TextElement(text)),
+          PresentationNode(
+            id: "title",
+            element: TextElement(text, paragraph: TextParagraph()),
+          ),
         ),
       ),
       element: DividerElement(),
@@ -471,6 +477,7 @@ void main() {
           letterSpacing: number,
           decoration: text,
           semanticLabel: text,
+          paragraph: const TextParagraph(),
         ),
         skir.PresentationElement_kind.textWrapper,
       ),

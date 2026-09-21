@@ -46,7 +46,7 @@ final class PageDocumentHealthProvider
   /// active manifest when a new document is blocked.
   PageDocumentHealthProvider._({
     required PageDocumentHealthFamily super.from,
-    required (skir.RecordId, skir.RecordId, skir.RecordId) super.argument,
+    required (skir.RecordId, skir.RecordId, skir.ResourceId) super.argument,
   }) : super(
          retry: null,
          name: r'pageDocumentHealthProvider',
@@ -74,7 +74,7 @@ final class PageDocumentHealthProvider
   @override
   PageDocumentHealth? create(Ref ref) {
     final argument =
-        this.argument as (skir.RecordId, skir.RecordId, skir.RecordId);
+        this.argument as (skir.RecordId, skir.RecordId, skir.ResourceId);
     return pageDocumentHealth(ref, argument.$1, argument.$2, argument.$3);
   }
 
@@ -98,7 +98,7 @@ final class PageDocumentHealthProvider
 }
 
 String _$pageDocumentHealthHash() =>
-    r'77575aa931504255039851bffe3f1bad1cae0d2f';
+    r'1f9b155b426e910acfa9ba421f12c6ba99c3b931';
 
 /// Projects compile diagnostics for the selected page without hiding the last
 /// active manifest when a new document is blocked.
@@ -107,7 +107,7 @@ final class PageDocumentHealthFamily extends $Family
     with
         $FunctionalFamilyOverride<
           PageDocumentHealth?,
-          (skir.RecordId, skir.RecordId, skir.RecordId)
+          (skir.RecordId, skir.RecordId, skir.ResourceId)
         > {
   PageDocumentHealthFamily._()
     : super(
@@ -124,7 +124,7 @@ final class PageDocumentHealthFamily extends $Family
   PageDocumentHealthProvider call(
     skir.RecordId organizationId,
     skir.RecordId realmId,
-    skir.RecordId pageId,
+    skir.ResourceId pageId,
   ) => PageDocumentHealthProvider._(
     argument: (organizationId, realmId, pageId),
     from: this,
@@ -194,7 +194,7 @@ final class PageElementsProvider
   }
 }
 
-String _$pageElementsHash() => r'ae8bd5842053bdd5532ec519345beddadb5c5000';
+String _$pageElementsHash() => r'5a691612609f98f7cd69bf62326e8a98f60c6fa1';
 
 /// Owns the page scoped editing coordinator.
 ///
@@ -279,22 +279,8 @@ abstract class _$PageElements extends $AsyncNotifier<List<PageElement>> {
   }
 }
 
-/// Decodes every authoring document into page element projections.
-///
-/// The authoring session supplies canonical documents and their revision. The
-/// realm editor catalog supplies the schema needed to decode values. Catalog
-/// failures remain diagnostics, while unresolved references are represented in
-/// the projection for the UI to repair.
-
 @ProviderFor(decodedRealmDocumentValues)
 final decodedRealmDocumentValuesProvider = DecodedRealmDocumentValuesFamily._();
-
-/// Decodes every authoring document into page element projections.
-///
-/// The authoring session supplies canonical documents and their revision. The
-/// realm editor catalog supplies the schema needed to decode values. Catalog
-/// failures remain diagnostics, while unresolved references are represented in
-/// the projection for the UI to repair.
 
 final class DecodedRealmDocumentValuesProvider
     extends
@@ -304,12 +290,6 @@ final class DecodedRealmDocumentValuesProvider
           AsyncValue<AuthoringValue<Map<String, List<PageElement>>>>
         >
     with $Provider<AsyncValue<AuthoringValue<Map<String, List<PageElement>>>>> {
-  /// Decodes every authoring document into page element projections.
-  ///
-  /// The authoring session supplies canonical documents and their revision. The
-  /// realm editor catalog supplies the schema needed to decode values. Catalog
-  /// failures remain diagnostics, while unresolved references are represented in
-  /// the projection for the UI to repair.
   DecodedRealmDocumentValuesProvider._({
     required DecodedRealmDocumentValuesFamily super.from,
     required (skir.RecordId, skir.RecordId) super.argument,
@@ -368,14 +348,7 @@ final class DecodedRealmDocumentValuesProvider
 }
 
 String _$decodedRealmDocumentValuesHash() =>
-    r'82cf167f9eecae98df0a2fcc55cf0a833ea68195';
-
-/// Decodes every authoring document into page element projections.
-///
-/// The authoring session supplies canonical documents and their revision. The
-/// realm editor catalog supplies the schema needed to decode values. Catalog
-/// failures remain diagnostics, while unresolved references are represented in
-/// the projection for the UI to repair.
+    r'81a5d7fe4eef089a8e09abf5dd54aaff80b8733b';
 
 final class DecodedRealmDocumentValuesFamily extends $Family
     with
@@ -391,13 +364,6 @@ final class DecodedRealmDocumentValuesFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// Decodes every authoring document into page element projections.
-  ///
-  /// The authoring session supplies canonical documents and their revision. The
-  /// realm editor catalog supplies the schema needed to decode values. Catalog
-  /// failures remain diagnostics, while unresolved references are represented in
-  /// the projection for the UI to repair.
 
   DecodedRealmDocumentValuesProvider call(
     skir.RecordId organizationId,
@@ -859,7 +825,7 @@ final class ProjectedPageElementsProvider
 }
 
 String _$projectedPageElementsHash() =>
-    r'86ef0fd521003438a4f90f49f9da061f1b743d7a';
+    r'e6a70d3c4cea9156c89a439623d367b21f490b58';
 
 final class ProjectedPageElementsFamily extends $Family
     with
@@ -889,20 +855,8 @@ final class ProjectedPageElementsFamily extends $Family
   String toString() => r'projectedPageElementsProvider';
 }
 
-/// Overlays local editor values onto canonical page elements.
-///
-/// Canonical revision and element identity remain unchanged. This is the read
-/// model for responsive editors; persistence still belongs to the local work
-/// and authoring session owners.
-
 @ProviderFor(projectedPageElementValues)
 final projectedPageElementValuesProvider = ProjectedPageElementValuesFamily._();
-
-/// Overlays local editor values onto canonical page elements.
-///
-/// Canonical revision and element identity remain unchanged. This is the read
-/// model for responsive editors; persistence still belongs to the local work
-/// and authoring session owners.
 
 final class ProjectedPageElementValuesProvider
     extends
@@ -912,11 +866,6 @@ final class ProjectedPageElementValuesProvider
           AsyncValue<AuthoringValue<List<PageElement>>>
         >
     with $Provider<AsyncValue<AuthoringValue<List<PageElement>>>> {
-  /// Overlays local editor values onto canonical page elements.
-  ///
-  /// Canonical revision and element identity remain unchanged. This is the read
-  /// model for responsive editors; persistence still belongs to the local work
-  /// and authoring session owners.
   ProjectedPageElementValuesProvider._({
     required ProjectedPageElementValuesFamily super.from,
     required (skir.RecordId, skir.RecordId, String) super.argument,
@@ -980,13 +929,7 @@ final class ProjectedPageElementValuesProvider
 }
 
 String _$projectedPageElementValuesHash() =>
-    r'e268b943514349006293e13048c4cc00bb28c28f';
-
-/// Overlays local editor values onto canonical page elements.
-///
-/// Canonical revision and element identity remain unchanged. This is the read
-/// model for responsive editors; persistence still belongs to the local work
-/// and authoring session owners.
+    r'25a92864a7947e3984eca88ff68325f8f884fb7d';
 
 final class ProjectedPageElementValuesFamily extends $Family
     with
@@ -1002,12 +945,6 @@ final class ProjectedPageElementValuesFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// Overlays local editor values onto canonical page elements.
-  ///
-  /// Canonical revision and element identity remain unchanged. This is the read
-  /// model for responsive editors; persistence still belongs to the local work
-  /// and authoring session owners.
 
   ProjectedPageElementValuesProvider call(
     skir.RecordId organizationId,
@@ -1093,7 +1030,7 @@ final class ProjectedPageElementProvider
 }
 
 String _$projectedPageElementHash() =>
-    r'f88e10845db11ee8f886c68df9b2867ac2371c63';
+    r'2a62b18e92fa63a9b4fb08a05fc5cb89797ee8e6';
 
 final class ProjectedPageElementFamily extends $Family
     with

@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -49,6 +50,106 @@ final class RealmEditorCatalogLease {
   }
 }
 
+typedef RealmEditorCatalogPinState = ({
+  RealmEditorCatalogSnapshot snapshot,
+  RealmEditorCatalogSnapshot? pending,
+  bool paused,
+  List<TypeDiagnostic> diagnostics,
+});
+
+/// Pins one editor to a coherent catalog until compatibility is established.
+final class RealmEditorCatalogPin extends ChangeNotifier {
+  RealmEditorCatalogPin._(
+    this._lease,
+    this._request,
+    RealmEditorCatalogSnapshot snapshot,
+    Stream<RealmEditorCatalogState> states,
+  ) : _state = (
+        snapshot: snapshot,
+        pending: null,
+        paused: false,
+        diagnostics: const [],
+      ) {
+    _subscription = states.listen(_accept);
+  }
+
+  final RealmEditorCatalogLease _lease;
+  final RealmEditorCatalogRequest _request;
+  late final StreamSubscription<RealmEditorCatalogState> _subscription;
+  RealmEditorCatalogPinState _state;
+
+  RealmEditorCatalogPinState get state => _state;
+
+  Future<bool> reconcile(
+    FutureOr<bool> Function(
+      RealmEditorCatalogSnapshot pinned,
+      RealmEditorCatalogSnapshot candidate,
+    )
+    validate,
+  ) async {
+    final pending = _state.pending;
+    if (pending == null) return false;
+    if (!await validate(_state.snapshot, pending)) return false;
+    _state = (
+      snapshot: pending,
+      pending: null,
+      paused: false,
+      diagnostics: const [],
+    );
+    notifyListeners();
+    return true;
+  }
+
+  void _accept(RealmEditorCatalogState event) {
+    switch (event) {
+      case RealmEditorCatalogReady(:final value):
+        if (value.generation == _state.snapshot.generation) return;
+        if (editorCatalogContractsCompatible(
+          _state.snapshot,
+          value,
+          _request,
+        )) {
+          _state = (
+            snapshot: value,
+            pending: null,
+            paused: false,
+            diagnostics: const [],
+          );
+        } else {
+          _state = (
+            snapshot: _state.snapshot,
+            pending: value,
+            paused: true,
+            diagnostics: const [
+              TypeDiagnostic(
+                code: TypeDiagnosticCode.invalidRevision,
+                message: "Editor catalog changed incompatibly",
+                pathPresent: false,
+              ),
+            ],
+          );
+        }
+        notifyListeners();
+      case RealmEditorCatalogUnavailable(:final diagnostics):
+        _state = (
+          snapshot: _state.snapshot,
+          pending: _state.pending,
+          paused: true,
+          diagnostics: diagnostics,
+        );
+        notifyListeners();
+      case RealmEditorCatalogLoading():
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_subscription.cancel());
+    _lease.close();
+    super.dispose();
+  }
+}
+
 /// Owns one realm catalog snapshot, its invalidation watch, and consumer leases.
 ///
 /// Each lease contributes requested types, presentations, or subtype queries.
@@ -71,6 +172,7 @@ final class RealmEditorCatalogCache {
   var _disposed = false;
   var _nextLeaseId = 0;
   final Map<int, RealmEditorCatalogRequest> _requests = {};
+  final List<_RetainedCatalogSnapshot> _retained = [];
 
   RealmEditorCatalogRequest get _requested => _requests.values.fold(
     RealmEditorCatalogRequest(),
@@ -116,6 +218,54 @@ final class RealmEditorCatalogCache {
     return RealmEditorCatalogLease._(() => _requests.remove(id));
   }
 
+  /// Creates an editor specific pin from the currently coherent snapshot.
+  RealmEditorCatalogPin pin(RealmEditorCatalogRequest request) {
+    final snapshot = _state.snapshot;
+    if (snapshot == null) {
+      throw StateError("A catalog snapshot is required before pinning");
+    }
+    return RealmEditorCatalogPin._(acquire(request), request, snapshot, states);
+  }
+
+  /// Returns the requested projection from exactly [generation].
+  ///
+  /// Retained snapshots are reused only when their recorded request covers the
+  /// complete projection. A cache miss performs an exact generation fetch and
+  /// returns a mismatch instead of decoding against the current generation.
+  Future<RealmEditorCatalogFetchResult> fetchExact(
+    CatalogGeneration generation,
+    RealmEditorCatalogRequest request,
+  ) async {
+    if (_disposed) {
+      return RealmEditorCatalogFetchUnavailable([
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm editor catalog cache is disposed",
+        ),
+      ]);
+    }
+    for (final retained in _retained.reversed) {
+      if (retained.snapshot.generation == generation &&
+          retained.request.covers(request)) {
+        return RealmEditorCatalogFetched(retained.snapshot);
+      }
+    }
+    final result = await _fetch(generation, request);
+    if (_disposed) {
+      return RealmEditorCatalogFetchUnavailable([
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm editor catalog cache was disposed during the fetch",
+        ),
+      ]);
+    }
+    if (result case RealmEditorCatalogFetched(:final snapshot)) {
+      if (snapshot.generation != generation) {
+        return RealmEditorCatalogGenerationMismatch(snapshot.generation);
+      }
+      _retain(request, snapshot);
+    }
+    return result;
+  }
+
   /// Reconciles current demand against the latest known catalog generation.
   Future<void> refresh() =>
       _refresh(expectedGeneration: _state.snapshot?.generation);
@@ -132,7 +282,7 @@ final class RealmEditorCatalogCache {
   void _handleWatchEvent(RealmEditorCatalogWatchEvent event) {
     switch (event) {
       case RealmEditorCatalogInvalidated(:final generation):
-        _emit(const RealmEditorCatalogLoading());
+        _emit(RealmEditorCatalogLoading(_state.snapshot));
         unawaited(_refresh(expectedGeneration: generation));
       case RealmEditorCatalogWatchUnavailable(:final diagnostics):
         _epoch++;
@@ -160,30 +310,28 @@ final class RealmEditorCatalogCache {
 
   Future<void> _refresh({CatalogGeneration? expectedGeneration}) async {
     final epoch = ++_epoch;
+    final request = _requested;
     _emit(RealmEditorCatalogLoading(_state.snapshot));
-    final first = await _fetch(expectedGeneration);
+    final first = await _fetch(expectedGeneration, request);
     if (!_isCurrent(epoch)) return;
     if (first case RealmEditorCatalogGenerationMismatch(
       :final currentGeneration,
     )) {
-      _emit(const RealmEditorCatalogLoading());
-      final retry = await _fetch(currentGeneration);
+      _emit(RealmEditorCatalogLoading(_state.snapshot));
+      final retry = await _fetch(currentGeneration, request);
       if (!_isCurrent(epoch)) return;
-      _applyFetchResult(retry);
+      _applyFetchResult(retry, request);
       return;
     }
-    _applyFetchResult(first);
+    _applyFetchResult(first, request);
   }
 
   Future<RealmEditorCatalogFetchResult> _fetch(
     CatalogGeneration? generation,
+    RealmEditorCatalogRequest request,
   ) async {
     try {
-      return await source.fetch(
-        route,
-        _requested,
-        expectedGeneration: generation,
-      );
+      return await source.fetch(route, request, expectedGeneration: generation);
     } on Object catch (error) {
       return RealmEditorCatalogFetchUnavailable([
         realmEditorCatalogUnavailableDiagnostic(
@@ -193,9 +341,13 @@ final class RealmEditorCatalogCache {
     }
   }
 
-  void _applyFetchResult(RealmEditorCatalogFetchResult result) {
+  void _applyFetchResult(
+    RealmEditorCatalogFetchResult result,
+    RealmEditorCatalogRequest request,
+  ) {
     switch (result) {
       case RealmEditorCatalogFetched(:final snapshot):
+        _retain(request, snapshot);
         _emit(RealmEditorCatalogReady(snapshot));
       case RealmEditorCatalogFetchUnavailable(:final diagnostics):
         _emitUnavailable(diagnostics);
@@ -227,4 +379,83 @@ final class RealmEditorCatalogCache {
   }
 
   bool _isCurrent(int epoch) => !_disposed && epoch == _epoch;
+
+  void _retain(
+    RealmEditorCatalogRequest request,
+    RealmEditorCatalogSnapshot snapshot,
+  ) {
+    _retained.removeWhere(
+      (item) =>
+          item.snapshot.generation == snapshot.generation &&
+          request.covers(item.request),
+    );
+    _retained.add((request: request, snapshot: snapshot));
+  }
+}
+
+typedef _RetainedCatalogSnapshot = ({
+  RealmEditorCatalogRequest request,
+  RealmEditorCatalogSnapshot snapshot,
+});
+
+bool editorCatalogContractsCompatible(
+  RealmEditorCatalogSnapshot before,
+  RealmEditorCatalogSnapshot after,
+  RealmEditorCatalogRequest request,
+) {
+  final beforeTypes = TypeRegistry(before.catalog);
+  final afterTypes = TypeRegistry(after.catalog);
+  final presentationIds = {...request.presentations};
+  for (final type in request.types) {
+    final beforeResolved = beforeTypes.resolveExact(type).valueOrNull;
+    final afterResolved = afterTypes.resolveExact(type).valueOrNull;
+    if (beforeResolved == null || beforeResolved != afterResolved) {
+      return false;
+    }
+    final references = {type, ...beforeResolved.ancestors};
+    for (final reference in references) {
+      final beforeDefinition = beforeTypes.definition(reference);
+      final afterDefinition = afterTypes.definition(reference);
+      if (!listEquals(
+        beforeDefinition?.fieldMergePolicies,
+        afterDefinition?.fieldMergePolicies,
+      )) {
+        return false;
+      }
+    }
+    for (final role in PresentationRole.values) {
+      final beforeRole = beforeTypes
+          .resolvePresentationRole(type, role)
+          .valueOrNull;
+      final afterRole = afterTypes
+          .resolvePresentationRole(type, role)
+          .valueOrNull;
+      if (beforeRole != afterRole) return false;
+      if (beforeRole != null) presentationIds.add(beforeRole);
+    }
+  }
+  for (final presentation in presentationIds) {
+    if (!_samePresentationContract(
+      before.presentations[presentation],
+      after.presentations[presentation],
+    )) {
+      return false;
+    }
+  }
+  for (final query in request.subtypeQueries) {
+    if (before.subtypeResults[query.id] != after.subtypeResults[query.id]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool _samePresentationContract(
+  PresentationDefinition? before,
+  PresentationDefinition? after,
+) {
+  if (before == null || after == null) return before == after;
+  return before.id == after.id &&
+      before.primaryInput == after.primaryInput &&
+      listEquals(before.inputs, after.inputs);
 }

@@ -51,7 +51,7 @@ Future<T> _withReadyPageElements<T>(
   final session = container.read(
     authoringSessionProvider(organizationId, realmId).notifier,
   );
-  final lease = session.acquirePage(recordId("page:$pageId"));
+  final lease = session.acquirePage(skir.ResourceId(value: pageId));
   final provider = pageElementsProvider(organizationId, realmId, pageId);
   final pageSubscription = container.listen(provider, (_, _) {});
 

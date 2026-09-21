@@ -1,6 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/realm_catalog_fixture.dart";
+
 void main() {
   group("Value validation", () {
     test("integer width boundaries are inclusive", () {
@@ -49,7 +51,7 @@ void main() {
     });
 
     test("records require explicit option values for optional fields", () {
-      final registry = TypeRegistry(TypeCatalog([]));
+      final registry = TypeRegistry(receivedRealmCatalog());
       final type = RecordType(
         fields: {
           "required": const TypeField(name: "required", type: StringType()),

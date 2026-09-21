@@ -9,6 +9,6 @@ extension RowElementRendering on RowElement {
     mainAxisSize: MainAxisSize.min,
     mainAxisAlignment: mainAxisAlignment.mainAxisAlignment,
     crossAxisAlignment: crossAxisAlignment.crossAxisAlignment,
-    children: children.renderSpaced(spacing, scope),
+    children: children.renderAxisChildren(spacing, scope),
   );
 }

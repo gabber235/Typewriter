@@ -149,6 +149,27 @@ extension on PresentationElement {
         ],
         initiallySelectedTabId: element.initiallySelectedTabId,
       ),
+      AdaptiveLeadingElement() => AdaptiveLeadingElement(
+        leading: element.leading.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+        center: element.center?.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+        suffix: element.suffix?.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+        padding: element.padding,
+        compactPadding: element.compactPadding,
+        gap: element.gap,
+        minimumCenterWidth: element.minimumCenterWidth,
+      ),
       TypedFieldElement() => TypedFieldElement(
         binding: element.binding,
         expectedType: element.expectedType,
@@ -205,5 +226,30 @@ extension on List<PresentationNode> {
   ) => [
     for (final child in this)
       child.localizeFailures(context, registry: registry, budget: budget),
+  ];
+}
+
+extension on List<PresentationAxisChild> {
+  List<PresentationAxisChild> _localizeFailures(
+    ExpressionContext context,
+    ExpressionBudget budget,
+    TypeRegistry? registry,
+  ) => [
+    for (final value in this)
+      switch (value) {
+        FixedPresentationAxisChild(:final child) => PresentationAxisChild.fixed(
+          child.localizeFailures(context, registry: registry, budget: budget),
+        ),
+        FlexiblePresentationAxisChild(:final child, :final flex, :final fit) =>
+          PresentationAxisChild.flexible(
+            child: child.localizeFailures(
+              context,
+              registry: registry,
+              budget: budget,
+            ),
+            flex: flex,
+            fit: fit,
+          ),
+      },
   ];
 }

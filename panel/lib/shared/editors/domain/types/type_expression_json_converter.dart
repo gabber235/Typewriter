@@ -166,6 +166,7 @@ class TypeExpressionJsonConverter
               "initialValue": const DataValueJsonConverter().toJson(
                 field.initialValue!,
               ),
+            if (field.defaulted) "defaulted": true,
           },
       },
     },
@@ -198,6 +199,7 @@ class TypeExpressionJsonConverter
             : const DataValueJsonConverter().fromJson(
                 field["initialValue"].asObjectMap,
               ),
+        defaulted: field["defaulted"] as bool? ?? false,
       );
     }
     return RecordType(fields: fields, closed: json["closed"] as bool? ?? true);

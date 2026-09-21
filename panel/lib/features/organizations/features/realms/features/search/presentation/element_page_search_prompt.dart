@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Opens a nested search and returns the selected compatible page choice.
 Future<ElementPageSelection?> promptElementPageSelection({
   required BuildContext context,
-  required skir.RecordId? initialBookId,
+  required skir.ResourceId? initialBookId,
   required ElementDefinition elementDefinition,
 }) async {
   return showSearchModal<ElementPageSelection>(
@@ -42,6 +42,7 @@ Future<ElementPageSelection?> promptElementPageSelection({
           ),
           interaction: SearchInteraction(
             activation: elementDestinationActivation(
+              ref: ref,
               books: books,
               compatibleKinds: compatibleKinds,
             ),
@@ -53,15 +54,14 @@ Future<ElementPageSelection?> promptElementPageSelection({
     },
     searchHint: "Choose or create a compatible page",
     rowRenderers: {
-      authoringPageSearchResultType.id: (context) =>
-          AuthoringPageSearchResultItem(
-            page: context.result.payload as skir.AuthoringSearchPage,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
+      authoringPageSearchResultType.id: (context) => AuthoringSearchResultItem(
+        payload: context.result.payload as AuthoringSearchResultPayload,
+        focused: context.focused,
+        selected: context.selected,
+        loading: context.loading,
+        onTap: context.onTap,
+        shortcutActivator: context.shortcutActivator,
+      ),
       pageKindSearchResultType.id: (context) => PageKindSearchResultItem(
         definition: context.result.payload as RealmPageDefinition,
         focused: context.focused,

@@ -6,7 +6,7 @@ part of "page_elements.dart";
 /// of retaining mutable snapshots across operations. Submission preserves the
 /// backend response so conflicts remain visible to callers.
 mixin _PageElementMutationContext on _$PageElements {
-  late skir.RecordId _pageId;
+  late skir.ResourceId _pageId;
   late AuthoringSessionProvider _sessionProvider;
 
   AuthoringSession get _commands => ref.read(_sessionProvider.notifier);
@@ -18,20 +18,25 @@ mixin _PageElementMutationContext on _$PageElements {
     );
   }
 
-  ({TypeRegistry registry, SkirEditorCodec codec}) _codec() {
+  ({
+    RealmEditorCatalogSnapshot catalog,
+    TypeRegistry registry,
+    SkirEditorCodec codec,
+    TypedAuthoringCodec authoring,
+  })
+  _codec() {
     final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
     if (snapshot == null) {
       throw ApiException.badRequest("The editor catalog is unavailable");
     }
-    final registry = TypeRegistry(
-      bootstrapTypeCatalog(snapshot.catalog.definitions),
+    final registry = TypeRegistry(snapshot.catalog);
+    return (
+      catalog: snapshot,
+      registry: registry,
+      codec: SkirEditorCodec(registry),
+      authoring: TypedAuthoringCodec(snapshot),
     );
-    return (registry: registry, codec: SkirEditorCodec(registry));
   }
 
-  skir.PageDocument get _document {
-    final document = ref.read(_sessionProvider).documents[_pageId];
-    if (document == null) throw ApiException.notFound("Page");
-    return document;
-  }
+  AuthoringSessionState get _authoring => ref.read(_sessionProvider);
 }

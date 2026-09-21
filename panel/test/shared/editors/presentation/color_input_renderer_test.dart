@@ -68,7 +68,7 @@ Widget _colorRenderer({
       rootType: root,
       rootValue: value ?? IntegerValue(BigInt.from(0x807C4DFF)),
     ),
-    typeCatalog: TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

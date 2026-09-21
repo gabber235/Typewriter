@@ -45,7 +45,13 @@ sealed class PresentationElement with _$PresentationElement {
     TypedExpression? letterSpacing,
     TypedExpression? decoration,
     TypedExpression? semanticLabel,
+    TextParagraph? paragraph,
   }) = TextElement;
+  const factory PresentationElement.richText({
+    required List<PresentationTextRun> runs,
+    PresentationTextStyle? style,
+    TextParagraph? paragraph,
+  }) = RichTextElement;
   const factory PresentationElement.markdown(
     TypedExpression value, {
     TypedExpression? color,
@@ -255,7 +261,7 @@ sealed class PresentationElement with _$PresentationElement {
   @Implements<ChildrenLayoutElement>()
   @Assert("spacing >= 0", "Spacing must not be negative.")
   const factory PresentationElement.column({
-    required List<PresentationNode> children,
+    required List<PresentationAxisChild> children,
     @Default(0) double spacing,
     @Default(PresentationMainAxisAlignment.start)
     PresentationMainAxisAlignment mainAxisAlignment,
@@ -265,7 +271,7 @@ sealed class PresentationElement with _$PresentationElement {
   @Implements<ChildrenLayoutElement>()
   @Assert("spacing >= 0", "Spacing must not be negative.")
   const factory PresentationElement.row({
-    required List<PresentationNode> children,
+    required List<PresentationAxisChild> children,
     @Default(0) double spacing,
     @Default(PresentationMainAxisAlignment.start)
     PresentationMainAxisAlignment mainAxisAlignment,
@@ -356,4 +362,13 @@ sealed class PresentationElement with _$PresentationElement {
     TypedExpression? width,
     TypedExpression? height,
   }) = SpacerElement;
+  const factory PresentationElement.adaptiveLeading({
+    required PresentationNode leading,
+    PresentationNode? center,
+    PresentationNode? suffix,
+    @Default(PresentationInsets.all(0)) PresentationInsets padding,
+    @Default(PresentationInsets.all(0)) PresentationInsets compactPadding,
+    @Default(8) double gap,
+    @Default(30) double minimumCenterWidth,
+  }) = AdaptiveLeadingElement;
 }

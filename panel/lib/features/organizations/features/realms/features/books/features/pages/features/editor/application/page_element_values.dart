@@ -100,14 +100,12 @@ mixin _PageElementValues on _$PageElements, _PageElementMutationContext {
     final codec = _codec();
     final session = ref.read(_sessionProvider);
     final revision = session.sequence;
-    final wireElement = session.documents[_pageId]?.elements
-        .where((element) => element.id.id == elementId)
-        .firstOrNull;
-    if (revision == null || wireElement == null) {
+    final resource = session.resources[skir.ResourceId(value: elementId)];
+    if (revision == null || resource == null) {
       throw ApiException.notFound("Element");
     }
-    final canonical = codec.codec.decodeValue(wireElement.value).valueOrNull;
-    if (canonical == null) {
+    final decoded = codec.authoring.decodeResource(resource).valueOrNull;
+    if (decoded == null) {
       throw ApiException.badRequest("The element value cannot be decoded");
     }
 
@@ -117,12 +115,11 @@ mixin _PageElementValues on _$PageElements, _PageElementMutationContext {
           .authoring(this.organizationId, this.realmId),
       state: session,
       identity: EntryIdentifier(elementId),
-      pageId: _pageId.id,
       label: _elementName(current),
       document: EditorDocument(
         rootType: NamedType(definition.rootType),
         typeCatalog: codec.registry.catalog,
-        confirmedValue: canonical,
+        confirmedValue: decoded.content.rootValue,
         revision: revision,
       ),
     );

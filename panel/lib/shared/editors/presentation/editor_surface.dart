@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Bridges an [EditorSource] to the presentation renderer.
@@ -33,7 +35,7 @@ class EditorSurface extends StatelessWidget {
   final List<PresentationCollectionSource> collections;
   final List<ConversionDefinition> conversions;
   final EditorHostCapabilities host;
-  final List<RecordId> referenceOrigins;
+  final List<skir.ResourceId> referenceOrigins;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;

@@ -53,6 +53,7 @@ abstract class RealmElementCatalogEntry with _$RealmElementCatalogEntry {
     required String originArtifactId,
     required String sourcePart,
     required DiscoveredElementDefinition definition,
+    required TypedCatalogPresentationSubject presentationSubject,
     required bool eligible,
     required bool available,
     @Default([]) List<String> ineligibilityReasons,

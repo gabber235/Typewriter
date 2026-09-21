@@ -5,18 +5,35 @@ extension on List<PresentationNode> {
     for (final child in this)
       PresentationNodeRenderer(node: child, scope: scope),
   ];
+}
 
-  List<Widget> renderSpaced(
+extension on List<PresentationAxisChild> {
+  List<Widget> renderAxisChildren(
     double spacing,
     PresentationRenderScope scope, {
     bool vertical = false,
   }) => [
-    for (final entry in indexed) ...[
-      if (entry.$1 > 0)
+    for (final (index, child) in indexed) ...[
+      if (index > 0)
         SizedBox(width: vertical ? 0 : spacing, height: vertical ? spacing : 0),
-      PresentationNodeRenderer(node: entry.$2, scope: scope),
+      child.render(scope),
     ],
   ];
+}
+
+extension on PresentationAxisChild {
+  Widget render(PresentationRenderScope scope) => switch (this) {
+    FixedPresentationAxisChild(:final child) => PresentationNodeRenderer(
+      node: child,
+      scope: scope,
+    ),
+    FlexiblePresentationAxisChild(:final child, :final flex, :final fit) =>
+      Flexible(
+        flex: flex,
+        fit: fit == PresentationFlexFit.tight ? FlexFit.tight : FlexFit.loose,
+        child: PresentationNodeRenderer(node: child, scope: scope),
+      ),
+  };
 }
 
 extension on PresentationMainAxisAlignment {

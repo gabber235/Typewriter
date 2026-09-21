@@ -7,5 +7,4 @@
 /// book to navigation, inspection, and resource lifecycle management.
 library;
 
-export "book_commands.dart";
 export "books.dart";

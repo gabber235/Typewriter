@@ -60,8 +60,7 @@ void main() {
 
     expect(outcome, isA<SearchActivationComplete<ElementPageSelection>>());
     final selection =
-        (outcome as SearchActivationComplete<ElementPageSelection>).value
-            as ExistingElementPageSelection;
+        (outcome as SearchActivationComplete<ElementPageSelection>).value;
     expect(selection.pageId, _pageId);
     expect(selection.bookId, _book.bookId);
     expect(selection.policy, _policy);
@@ -69,13 +68,13 @@ void main() {
 }
 
 final _book = Book(
-  bookId: recordId("book:test"),
+  bookId: skir.ResourceId(value: "test"),
   title: "Test Book",
   icon: "mdi:book",
   color: Colors.blue,
   tagIds: const [],
 );
-final _pageId = recordId("page:compatible");
+final _pageId = skir.ResourceId(value: "compatible");
 const _compatibleKind = PageKindRef(id: "compatible", revision: 1);
 const _incompatibleKind = PageKindRef(id: "incompatible", revision: 1);
 final _elementType = ResolvedTypeRef(
@@ -97,14 +96,51 @@ final _bookQuery = SearchQueryContext(
 SearchResult _pageResult(PageKindRef kind) => SearchResult(
   id: "page:${kind.id}",
   type: authoringPageSearchResultType,
-  payload: skir.AuthoringSearchPage(
-    id: _pageId,
-    name: "Compatible",
-    kind: kind.toSkir(),
-    book: skir.AuthoringSearchBookContext(id: _book.bookId, title: _book.title),
-    chapter: "",
-  ),
+  payload: _pagePayload(kind),
 );
+
+AuthoringSearchResultPayload _pagePayload(PageKindRef kind) {
+  final content = TypedValueEnvelope(
+    rootType: referenceResourceTypes.page,
+    rootValue: RecordValue({
+      "kind": RecordValue({
+        "id": StringValue(kind.id),
+        "revision": IntegerValue(BigInt.from(kind.revision)),
+      }),
+    }),
+  );
+  final catalog = TypeCatalog([
+    TypeDefinition(
+      id: referenceResourceTypes.page,
+      kind: NominalTypeKind.concrete,
+      representation: const RecordType(fields: {}),
+    ),
+  ]);
+  return AuthoringSearchResultPayload(
+    subject: (
+      content: content,
+      descriptor: content,
+      identityEnvelope: content,
+      identity: (id: _pageId, owner: _book.bookId),
+    ),
+    context: TypedValueEnvelope(
+      rootType: referenceResourceTypes.page,
+      rootValue: RecordValue({"book": ReferenceValue(_book.bookId)}),
+    ),
+    presentation: (
+      model: PresentationModel(
+        catalog: catalog,
+        inputs: const {},
+        root: PresentationNode(
+          id: "test.page.result",
+          element: TextElement("Compatible".asStringLiteral),
+        ),
+      ),
+      presentation: const PresentationId(namespace: "test", name: "page"),
+    ),
+    kind: AuthoringSearchResultKind.page,
+  );
+}
 
 SearchResult _kindResult(PageKindRef kind) => SearchResult(
   id: "kind:${kind.id}",
@@ -121,7 +157,14 @@ SearchResult _kindResult(PageKindRef kind) => SearchResult(
     ),
     originArtifactId: "test",
     sourcePart: "test",
+    presentationSubject: _catalogSubject(referenceResourceTypes.pageKind),
   ),
+);
+
+TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
+  target: type,
+  descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
 );
 
 final class _NoCommands implements SearchCommandDispatcher {

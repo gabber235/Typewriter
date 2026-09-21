@@ -33,19 +33,26 @@ void registerConnectionAnchorExportScenarios() {
                 element: ColumnElement(
                   spacing: 48,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomCenter),
-                    PresentationNode(
-                      id: "target.section",
-                      header: PresentationHeader(
-                        title: "Targets".asStringLiteral.asHeaderTitle,
-                        initiallyExpanded: true,
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomCenter,
                       ),
-                      element: SectionElement(
-                        child: PresentationNode(
-                          id: "nested",
-                          element: ConnectionLayerElement(
-                            connections: [_inactiveConnection()],
-                            child: _exportedAnchor(),
+                    ),
+                    PresentationAxisChild.fixed(
+                      PresentationNode(
+                        id: "target.section",
+                        header: PresentationHeader(
+                          title: "Targets".asStringLiteral.asHeaderTitle,
+                          initiallyExpanded: true,
+                        ),
+                        element: SectionElement(
+                          child: PresentationNode(
+                            id: "nested",
+                            element: ConnectionLayerElement(
+                              connections: [_inactiveConnection()],
+                              child: _exportedAnchor(),
+                            ),
                           ),
                         ),
                       ),
@@ -90,16 +97,23 @@ void registerConnectionAnchorExportScenarios() {
                 element: ColumnElement(
                   spacing: 48,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomCenter),
-                    PresentationNode(
-                      id: "middle",
-                      element: ConnectionLayerElement(
-                        connections: [_inactiveConnection()],
-                        child: PresentationNode(
-                          id: "inner",
-                          element: ConnectionLayerElement(
-                            connections: [_inactiveConnection()],
-                            child: _exportedAnchor(),
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomCenter,
+                      ),
+                    ),
+                    PresentationAxisChild.fixed(
+                      PresentationNode(
+                        id: "middle",
+                        element: ConnectionLayerElement(
+                          connections: [_inactiveConnection()],
+                          child: PresentationNode(
+                            id: "inner",
+                            element: ConnectionLayerElement(
+                              connections: [_inactiveConnection()],
+                              child: _exportedAnchor(),
+                            ),
                           ),
                         ),
                       ),
@@ -150,19 +164,26 @@ void registerConnectionAnchorExportScenarios() {
                 element: ColumnElement(
                   spacing: 48,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomCenter),
-                    PresentationNode(
-                      id: "nested",
-                      element: ConnectionLayerElement(
-                        connections: [_inactiveConnection()],
-                        child: PresentationNode(
-                          id: "target.scope",
-                          element: ScopedBindingElement(
-                            binding: const BindingReference(
-                              bindingId: BindingId(0),
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomCenter,
+                      ),
+                    ),
+                    PresentationAxisChild.fixed(
+                      PresentationNode(
+                        id: "nested",
+                        element: ConnectionLayerElement(
+                          connections: [_inactiveConnection()],
+                          child: PresentationNode(
+                            id: "target.scope",
+                            element: ScopedBindingElement(
+                              binding: const BindingReference(
+                                bindingId: BindingId(0),
+                              ),
+                              scopeBindingId: targetBinding,
+                              child: _exportedAnchor(),
                             ),
-                            scopeBindingId: targetBinding,
-                            child: _exportedAnchor(),
                           ),
                         ),
                       ),

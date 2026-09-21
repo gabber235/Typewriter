@@ -56,6 +56,70 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
       transformer: (previous, response) => response._decodeDomain(),
     );
   }
+
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required TypedValueEnvelope partial,
+    required TypeRegistry registry,
+  }) async {
+    final types = SkirTypeCodec(registry);
+    final root = types.encodeReference(partial.rootType);
+    final value = SkirDataValueCodec(types).encode(partial.rootValue);
+    final diagnostics = [...root.diagnostics, ...value.diagnostics];
+    if (diagnostics.isNotEmpty) {
+      return RealmTypedValueInitializationRejected(diagnostics);
+    }
+    final request = skir.InitializeTypedValueRequest(
+      generation: skir.CatalogGeneration(value: generation.value),
+      rootType: root.valueOrNull!,
+      partialValue: value.valueOrNull!,
+    );
+    final response = await ref.requestSkir(
+      route.initializationSubject,
+      skir.InitializeTypedValueRequest.serializer.toBytes(request),
+      skir.InitializeTypedValueResult.serializer,
+    );
+    return switch (response) {
+      skir.InitializeTypedValueResult_successWrapper(:final value) =>
+        _decodeInitializedValue(value, types),
+      skir.InitializeTypedValueResult_invalidWrapper(:final value) ||
+      skir.InitializeTypedValueResult_unavailableWrapper(
+        :final value,
+      ) => RealmTypedValueInitializationRejected(
+        value._decodeDiagnostics(registry: registry),
+      ),
+      skir.InitializeTypedValueResult_generationMismatchWrapper(:final value) =>
+        RealmTypedValueInitializationGenerationMismatch(
+          CatalogGeneration(value.actualGeneration.value),
+        ),
+      skir.InitializeTypedValueResult_unknown() =>
+        RealmTypedValueInitializationRejected([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an unknown typed value initialization response",
+          ),
+        ]),
+    };
+  }
+}
+
+RealmTypedValueInitializationResult _decodeInitializedValue(
+  skir.TypedValueEnvelope value,
+  SkirTypeCodec types,
+) {
+  final root = types.decodeReference(value.rootType);
+  final decoded = SkirDataValueCodec(types).decode(value.rootValue);
+  final diagnostics = [...root.diagnostics, ...decoded.diagnostics];
+  if (diagnostics.isNotEmpty) {
+    return RealmTypedValueInitializationRejected(diagnostics);
+  }
+  return RealmTypedValueInitialized(
+    TypedValueEnvelope(
+      rootType: root.valueOrNull!,
+      rootValue: decoded.valueOrNull!,
+    ),
+  );
 }
 
 extension on Iterable<skir.ElementCatalogEntry> {
@@ -88,6 +152,12 @@ extension on Iterable<skir.ElementCatalogEntry> {
       }
 
       final eligibility = entry.eligibility._decodeDomain();
+      final presentationSubject = entry.presentationSubject._decodeDomain(
+        registry,
+      );
+      if (presentationSubject.valueOrNull == null) {
+        return TypeResult.failure(presentationSubject.diagnostics);
+      }
       entries[id] = RealmElementCatalogEntry(
         originArtifactId: entry.originArtifactId,
         sourcePart: entry.sourcePart,
@@ -100,6 +170,7 @@ extension on Iterable<skir.ElementCatalogEntry> {
           color: entry.descriptor.color.toFlutterColor(),
           availability: entry.descriptor.availability._decodeDomain(),
         ),
+        presentationSubject: presentationSubject.valueOrNull!,
         eligible: eligibility.$1,
         available: entry.available,
         ineligibilityReasons: eligibility.$2,
@@ -113,7 +184,8 @@ extension on Iterable<skir.PageCatalogEntry> {
   TypeResult<Map<PageKindRef, RealmPageDefinition>> _decodeDomain(
     TypeCatalog catalog,
   ) {
-    final codec = SkirTypeCodec(TypeRegistry(catalog));
+    final registry = TypeRegistry(catalog);
+    final codec = SkirTypeCodec(registry);
     final definitions = <PageKindRef, RealmPageDefinition>{};
     for (final entry in this) {
       final editor = entry.descriptor.editor._decodeDomain(codec);
@@ -125,6 +197,12 @@ extension on Iterable<skir.PageCatalogEntry> {
         ]);
       }
       final kind = PageKindRef.fromSkir(entry.descriptor.kind);
+      final presentationSubject = entry.presentationSubject._decodeDomain(
+        registry,
+      );
+      if (presentationSubject.valueOrNull == null) {
+        return TypeResult.failure(presentationSubject.diagnostics);
+      }
       definitions[kind] = RealmPageDefinition(
         kind: kind,
         name: entry.descriptor.name,
@@ -132,6 +210,7 @@ extension on Iterable<skir.PageCatalogEntry> {
         icon: entry.descriptor.icon._decodeDomain(),
         color: entry.descriptor.color.toFlutterColor(),
         editor: editor,
+        presentationSubject: presentationSubject.valueOrNull!,
         authoringRules: [
           for (final rule in entry.descriptor.authoringRules)
             RealmPageAuthoringRuleRef(
@@ -145,6 +224,38 @@ extension on Iterable<skir.PageCatalogEntry> {
       );
     }
     return TypeResult.success(definitions);
+  }
+}
+
+extension on skir.CatalogPresentationSubject {
+  TypeResult<TypedCatalogPresentationSubject> _decodeDomain(
+    TypeRegistry registry,
+  ) {
+    final codec = SkirEditorCodec(registry);
+    final target = codec.decodeType(this.target);
+    final descriptorType = codec.decodeType(descriptor.rootType);
+    final descriptorValue = codec.decodeValue(descriptor.rootValue);
+    final identityType = codec.decodeType(identity.rootType);
+    final identityValue = codec.decodeValue(identity.rootValue);
+    final diagnostics = [
+      ...target.diagnostics,
+      ...descriptorType.diagnostics,
+      ...descriptorValue.diagnostics,
+      ...identityType.diagnostics,
+      ...identityValue.diagnostics,
+    ];
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    return TypeResult.success((
+      target: target.valueOrNull!,
+      descriptor: TypedValueEnvelope(
+        rootType: descriptorType.valueOrNull!,
+        rootValue: descriptorValue.valueOrNull!,
+      ),
+      identity: TypedValueEnvelope(
+        rootType: identityType.valueOrNull!,
+        rootValue: identityValue.valueOrNull!,
+      ),
+    ));
   }
 }
 
@@ -258,6 +369,21 @@ extension on skir.CatalogFetchSuccess {
       return RealmEditorCatalogFetchUnavailable(decoded.diagnostics);
     }
     final decodedParts = value._decodeCatalogParts(catalog);
+    final resourceKinds = value.resourceKindDefinitions._decodeDomain(
+      catalog.registry,
+    );
+    if (resourceKinds case TypeFailure(:final diagnostics)) {
+      return RealmEditorCatalogFetchUnavailable(diagnostics);
+    }
+    final relations = value.relationDefinitions._decodeDomain(catalog.registry);
+    if (relations case TypeFailure(:final diagnostics)) {
+      return RealmEditorCatalogFetchUnavailable(diagnostics);
+    }
+    final collectionProjections = value.collectionProjectionDefinitions
+        ._decodeDomain(catalog.registry);
+    if (collectionProjections case TypeFailure(:final diagnostics)) {
+      return RealmEditorCatalogFetchUnavailable(diagnostics);
+    }
     final decodedElements = value.elementEntries._decodeDomain(catalog.catalog);
 
     final elements = decodedElements.valueOrNull;
@@ -296,8 +422,266 @@ extension on skir.CatalogFetchSuccess {
               )
               .toList(growable: false),
         ),
+        resourceKinds: resourceKinds.valueOrNull!,
+        relations: relations.valueOrNull!,
+        collectionProjections: collectionProjections.valueOrNull!,
       ),
     );
+  }
+}
+
+extension on Iterable<skir.CollectionProjectionDefinition> {
+  TypeResult<
+    Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>
+  >
+  _decodeDomain(TypeRegistry registry) {
+    final codec = SkirEditorCodec(registry);
+    final result =
+        <PresentationCollectionSourceId, RealmCollectionProjectionDefinition>{};
+    final diagnostics = <TypeDiagnostic>[];
+    for (final value in this) {
+      final sourceId = PresentationCollectionSourceId(value.sourceId);
+      final assignableWire = value.resources.assignableTo;
+      final assignableTo = assignableWire == null
+          ? null
+          : codec.typeCodec.decodeExpression(assignableWire);
+      final rowType = codec.typeCodec.decodeReference(value.rowType);
+      final fields = value.fields
+          .map((field) => field._decodeDomain(codec))
+          .toList(growable: false);
+      diagnostics
+        ..addAll(assignableTo?.diagnostics ?? const [])
+        ..addAll(rowType.diagnostics)
+        ..addAll(fields.expand((field) => field.diagnostics));
+      final kinds = value.resources.kinds.where((kind) {
+        return kind == skir.ResourceKind.book ||
+            kind == skir.ResourceKind.tag ||
+            kind == skir.ResourceKind.page ||
+            kind == skir.ResourceKind.element;
+      }).toSet();
+      if (value.sourceId.isEmpty ||
+          result.containsKey(sourceId) ||
+          kinds.length != value.resources.kinds.length ||
+          (value.resources.assignableTo != null &&
+              assignableTo?.valueOrNull == null) ||
+          rowType.valueOrNull == null ||
+          fields.any((field) => field.valueOrNull == null)) {
+        diagnostics.add(
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an invalid or duplicate collection projection",
+          ),
+        );
+        continue;
+      }
+      result[sourceId] = RealmCollectionProjectionDefinition(
+        sourceId: sourceId,
+        kinds: kinds,
+        assignableTo: assignableTo?.valueOrNull,
+        rowType: rowType.valueOrNull!,
+        fields: fields.map((field) => field.valueOrNull!).toList(),
+      );
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(result)
+        : TypeResult.failure(diagnostics);
+  }
+}
+
+extension on skir.CollectionProjectionField {
+  TypeResult<RealmCollectionProjectionField> _decodeDomain(
+    SkirEditorCodec codec,
+  ) {
+    final target = codec.decodePath(this.target);
+    final source = switch (this.source) {
+      final skir.CollectionProjectionSource value
+          when value == skir.CollectionProjectionSource.resourceId =>
+        const TypeResult<RealmCollectionProjectionSource>.success(
+          RealmCollectionResourceId(),
+        ),
+      skir.CollectionProjectionSource_contentWrapper(:final value) =>
+        _mapCollectionProjectionSource(
+          codec.decodePath(value),
+          RealmCollectionContentPath.new,
+        ),
+      skir.CollectionProjectionSource_literalWrapper(:final value) =>
+        _mapCollectionProjectionSource(
+          codec.decodeValue(value),
+          RealmCollectionLiteral.new,
+        ),
+      skir.CollectionProjectionSource_unknown() =>
+        TypeResult<RealmCollectionProjectionSource>.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an unknown collection projection source",
+          ),
+        ]),
+      _ => TypeResult<RealmCollectionProjectionSource>.failure([
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm returned an invalid collection projection source",
+        ),
+      ]),
+    };
+    final diagnostics = [...target.diagnostics, ...source.diagnostics];
+    if (target.valueOrNull == null || source.valueOrNull == null) {
+      return TypeResult.failure(diagnostics);
+    }
+    return TypeResult.success(
+      RealmCollectionProjectionField(
+        target: target.valueOrNull!,
+        source: source.valueOrNull!,
+      ),
+    );
+  }
+}
+
+TypeResult<RealmCollectionProjectionSource> _mapCollectionProjectionSource<T>(
+  TypeResult<T> result,
+  RealmCollectionProjectionSource Function(T value) transform,
+) => switch (result) {
+  TypeSuccess(:final value) => TypeResult.success(transform(value)),
+  TypeFailure(:final diagnostics) => TypeResult.failure(diagnostics),
+};
+
+extension on Iterable<skir.RelationDefinition> {
+  TypeResult<Map<String, RealmRelationDefinition>> _decodeDomain(
+    TypeRegistry registry,
+  ) {
+    final codec = SkirEditorCodec(registry);
+    final result = <String, RealmRelationDefinition>{};
+    final diagnostics = <TypeDiagnostic>[];
+    for (final value in this) {
+      final source = codec.decodeType(value.source);
+      final target = codec.decodeType(value.target);
+      final sourceEndpoint = value.sourceEndpoint?._decodeDomain(codec);
+      final targetEndpoint = value.targetEndpoint?._decodeDomain(codec);
+      diagnostics
+        ..addAll(source.diagnostics)
+        ..addAll(target.diagnostics)
+        ..addAll(sourceEndpoint?.diagnostics ?? const [])
+        ..addAll(targetEndpoint?.diagnostics ?? const []);
+      final sourcePolicy = value.onSourceDelete._decodeDomain;
+      final targetPolicy = value.onTargetDelete._decodeDomain;
+      if (value.id.value.isEmpty ||
+          result.containsKey(value.id.value) ||
+          source.valueOrNull == null ||
+          target.valueOrNull == null ||
+          sourcePolicy == null ||
+          targetPolicy == null ||
+          (value.sourceEndpoint != null &&
+              sourceEndpoint?.valueOrNull == null) ||
+          (value.targetEndpoint != null &&
+              targetEndpoint?.valueOrNull == null)) {
+        diagnostics.add(
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an invalid or duplicate relation definition",
+          ),
+        );
+        continue;
+      }
+      result[value.id.value] = RealmRelationDefinition(
+        id: value.id.value,
+        source: source.valueOrNull!,
+        target: target.valueOrNull!,
+        onSourceDelete: sourcePolicy,
+        onTargetDelete: targetPolicy,
+        sourceEndpoint: sourceEndpoint?.valueOrNull,
+        targetEndpoint: targetEndpoint?.valueOrNull,
+      );
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(result)
+        : TypeResult.failure(diagnostics);
+  }
+}
+
+extension on skir.RelationEndpointDefinition {
+  TypeResult<RealmRelationEndpointDefinition> _decodeDomain(
+    SkirEditorCodec codec,
+  ) {
+    final owner = codec.decodeType(this.owner);
+    final path = codec.decodePath(this.path);
+    final side = switch (this.side) {
+      skir.RelationEndpointSide.source => RealmRelationEndpointSide.source,
+      skir.RelationEndpointSide.target => RealmRelationEndpointSide.target,
+      _ => null,
+    };
+    final cardinality = switch (this.cardinality) {
+      skir.RelationCardinality.one => RealmRelationCardinality.one,
+      skir.RelationCardinality.many => RealmRelationCardinality.many,
+      _ => null,
+    };
+    final diagnostics = [...owner.diagnostics, ...path.diagnostics];
+    if (owner.valueOrNull == null ||
+        path.valueOrNull == null ||
+        side == null ||
+        cardinality == null) {
+      return TypeResult.failure([
+        ...diagnostics,
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm returned an invalid relation endpoint definition",
+        ),
+      ]);
+    }
+    return TypeResult.success(
+      RealmRelationEndpointDefinition(
+        owner: owner.valueOrNull!,
+        path: path.valueOrNull!,
+        side: side,
+        cardinality: cardinality,
+      ),
+    );
+  }
+}
+
+extension on skir.RelationDeletePolicy {
+  RealmRelationDeletePolicy? get _decodeDomain => switch (this) {
+    skir.RelationDeletePolicy.restrict => RealmRelationDeletePolicy.restrict,
+    skir.RelationDeletePolicy.cascade => RealmRelationDeletePolicy.cascade,
+    skir.RelationDeletePolicy.clear => RealmRelationDeletePolicy.clear,
+    _ => null,
+  };
+}
+
+extension on Iterable<skir.ResourceKindDefinition> {
+  TypeResult<Map<skir.ResourceKind, RealmResourceKindDefinition>> _decodeDomain(
+    TypeRegistry registry,
+  ) {
+    final codec = SkirTypeCodec(registry);
+    final result = <skir.ResourceKind, RealmResourceKindDefinition>{};
+    final diagnostics = <TypeDiagnostic>[];
+    for (final value in this) {
+      final kind = switch (value.kind) {
+        skir.ResourceKind.book ||
+        skir.ResourceKind.tag ||
+        skir.ResourceKind.page ||
+        skir.ResourceKind.element => value.kind,
+        _ => null,
+      };
+      final accepted = codec.decodeExpression(value.acceptedRoot);
+      final defaultRoot = value.defaultRoot == null
+          ? null
+          : codec.decodeReference(value.defaultRoot);
+      diagnostics.addAll(accepted.diagnostics);
+      if (defaultRoot != null) diagnostics.addAll(defaultRoot.diagnostics);
+      if (kind == null ||
+          accepted.valueOrNull == null ||
+          (value.defaultRoot != null && defaultRoot?.valueOrNull == null) ||
+          result.containsKey(kind)) {
+        diagnostics.add(
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an invalid or duplicate resource kind definition",
+          ),
+        );
+        continue;
+      }
+      result[kind] = RealmResourceKindDefinition(
+        kind: kind,
+        acceptedRoot: accepted.valueOrNull!,
+        defaultRoot: defaultRoot?.valueOrNull,
+      );
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(result)
+        : TypeResult.failure(diagnostics);
   }
 }
 

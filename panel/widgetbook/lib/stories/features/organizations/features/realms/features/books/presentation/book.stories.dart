@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -9,21 +11,21 @@ import "package:widgetbook_workspace/support/selected_inspector_story.dart";
 @widgetbook.UseCase(name: "Default", type: BookWidget)
 Widget bookUseCase(BuildContext context) {
   final inheritedTag = Tag(
-    tagId: recordId("tag:inherited_lore"),
+    tagId: skir.ResourceId(value: "tag:inherited_lore"),
     name: "inherited_lore",
     color: Colors.purple,
     parentIds: const [],
-    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
   final directTag = Tag(
-    tagId: recordId("tag:direct_story"),
+    tagId: skir.ResourceId(value: "tag:direct_story"),
     name: "direct_story",
     color: Colors.blue,
     parentIds: [inheritedTag.tagId],
-    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
   final book = Book(
-    bookId: recordId("book:widgetbook"),
+    bookId: skir.ResourceId(value: "book:widgetbook"),
     title: "widgetbook",
     icon: "mdi:book",
     color: Colors.teal,
@@ -56,29 +58,29 @@ Widget mixedBookSelectionUseCase(BuildContext context) =>
 
 Widget mixedBookSelectionStory({bool initiallySelected = true}) {
   final lore = Tag(
-    tagId: recordId("tag:lore"),
+    tagId: skir.ResourceId(value: "tag:lore"),
     name: "lore",
     color: Colors.purple,
     parentIds: const [],
-    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
   final quest = Tag(
-    tagId: recordId("tag:quest"),
+    tagId: skir.ResourceId(value: "tag:quest"),
     name: "quest",
     color: Colors.blue,
     parentIds: const [],
-    placement: const Placement(x: 5, y: 0, width: 4, height: 1),
+    placement: const GraphPlacement(x: 5, y: 0, width: 4, height: 1),
   );
   final books = [
     Book(
-      bookId: recordId("book:earth"),
+      bookId: skir.ResourceId(value: "book:earth"),
       title: "earth",
       icon: "mdi:earth",
       color: Colors.teal,
       tagIds: [lore.tagId],
     ),
     Book(
-      bookId: recordId("book:mars"),
+      bookId: skir.ResourceId(value: "book:mars"),
       title: "mars",
       icon: "mdi:rocket",
       color: Colors.teal,

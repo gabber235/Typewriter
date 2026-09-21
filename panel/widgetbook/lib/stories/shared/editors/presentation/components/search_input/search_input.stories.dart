@@ -95,33 +95,6 @@ Widget searchInputPlayground(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Live Iconify", type: PresentationSearchInput)
-Widget liveIconifySearchInput(BuildContext context) {
-  final maximumExtent = context.knobs.double.slider(
-    label: "Maximum result height",
-    initialValue: 280,
-    min: 120,
-    max: 480,
-  );
-  final width = context.knobs.double.slider(
-    label: "Control width",
-    initialValue: 520,
-    min: 280,
-    max: 760,
-  );
-  final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
-  final readOnly = context.knobs.boolean(label: "Read only");
-  final element = iconifySearchPresentation().element as SearchInputElement;
-
-  return SearchInputStory(
-    element: element.copyWith(maximumExtent: maximumExtent.asFloatLiteral),
-    type: NamedType(standardTypeRefs.iconifyIcon),
-    initialValue: const StringValue("mdi:map-marker-star"),
-    enabled: enabled,
-    readOnly: readOnly,
-    width: width,
-  );
-}
 
 _StoryConfiguration _configuration(_Scenario scenario) => switch (scenario) {
   _Scenario.ready => _StoryConfiguration(staticEffectsProvider()),

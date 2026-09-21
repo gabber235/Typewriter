@@ -14,11 +14,12 @@ const _root = PresentationNode(
 
 PresentationRenderScope _scope(
   Map<BindingId, BindingSnapshot> bindings, {
+  TypeRegistry? registry,
   Map<BindingId, PresentationInputAccess> inputAccess = const {},
   Map<BindingId, BindingReference?> ownerBindings = const {},
 }) => PresentationRenderScope(
   expressions: ExpressionContext(bindings: BindingEnvironment(bindings)),
-  registry: TypeRegistry(const TypeCatalog([])),
+  registry: registry ?? TypeRegistry(const TypeCatalog([])),
   budget: const ExpressionBudget(),
   expansionStore: HeaderExpansionStore(),
   inputAccess: inputAccess,
@@ -335,6 +336,99 @@ void main() {
     expect(
       bound.resolve(const BindingReference(bindingId: BindingId(1))),
       isA<TypeFailure>(),
+    );
+  });
+
+  test("ancestor fields stay editable without permitting concrete root replacement", () {
+    const base = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "Base"),
+      revision: 1,
+    );
+    const concrete = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "Concrete"),
+      revision: 1,
+    );
+    const source = BindingId(3);
+    const local = BindingId(7);
+    final registry = TypeRegistry(
+      TypeCatalog([
+        TypeDefinition(
+          id: base,
+          kind: NominalTypeKind.openAbstract,
+          representation: RecordType(
+            fields: {"name": TypeField(name: "name", type: StringType())},
+          ),
+        ),
+        TypeDefinition(
+          id: concrete,
+          kind: NominalTypeKind.concrete,
+          representation: RecordType(
+            fields: {"detail": TypeField(name: "detail", type: StringType())},
+          ),
+          parents: [base],
+        ),
+      ]),
+    );
+    final scope = _scope(
+      {
+        source: BindingSnapshot(
+          type: const NamedType(concrete),
+          value: RecordValue(const {
+            "name": StringValue("entry"),
+            "detail": StringValue("concrete"),
+          }),
+          revision: 1,
+        ),
+      },
+      registry: registry,
+      inputAccess: {source: PresentationInputAccess.edit},
+      ownerBindings: {source: const BindingReference(bindingId: source)},
+    );
+    final definition = ResolvedPresentationDefinition(
+      id: _id,
+      root: _root,
+      inputs: const [
+        PresentationInputParameter(
+          id: local,
+          name: "content",
+          type: NamedType(base),
+          access: PresentationInputAccess.edit,
+        ),
+      ],
+    );
+
+    final bound = scope
+        .bindPresentation(definition, {
+          local: const BindingReference(bindingId: source),
+        })
+        .valueOrNull!
+        .$2;
+    final localRoot = const BindingReference(bindingId: local);
+    final name = localRoot.at(DataPath.root.field("name"));
+
+    expect(
+      bound.inspect(localRoot).valueOrNull!.type,
+      const NamedType(concrete),
+    );
+    expect(
+      bound.canonical(name),
+      const BindingReference(bindingId: source).at(DataPath.root.field("name")),
+    );
+    expect(
+      const StringValue("replacement").validateAgainst(
+        bound.inspect(name).valueOrNull!.type,
+        registry: registry,
+      ),
+      isEmpty,
+    );
+    expect(
+      bound.canonical(localRoot),
+      const BindingReference(bindingId: source),
+    );
+    expect(
+      RecordValue(const {"name": StringValue("replacement")})
+          .validateAgainst(const NamedType(concrete), registry: registry),
+      isNotEmpty,
     );
   });
 }

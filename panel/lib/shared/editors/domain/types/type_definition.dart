@@ -9,6 +9,29 @@ enum TypeVariance { invariant, covariant, contravariant }
 /// Declares whether a nominal type can be instantiated or extended.
 enum NominalTypeKind { concrete, openAbstract, sealedAbstract }
 
+/// Semantic surface for which a nominal type can supply a presentation.
+enum PresentationRole {
+  referenceSummary,
+  referenceOption,
+  catalogOption,
+  authoringResult,
+  pageTile,
+  graphNode,
+  inspectorHeader,
+}
+
+/// Closed field reconciliation strategies understood by the editor.
+enum FieldMergeStrategy { setMembership }
+
+/// Associates one canonical field path with its reconciliation strategy.
+@freezed
+abstract class FieldMergePolicy with _$FieldMergePolicy {
+  const factory FieldMergePolicy({
+    required DataPath path,
+    required FieldMergeStrategy strategy,
+  }) = _FieldMergePolicy;
+}
+
 /// A generic parameter, including the values permitted for its argument.
 @freezed
 abstract class TypeParameter with _$TypeParameter {
@@ -30,11 +53,14 @@ abstract class TypeDefinition with _$TypeDefinition {
   const factory TypeDefinition({
     required ResolvedTypeRef id,
     required NominalTypeKind kind,
+    String? declarationOwner,
     @Default(AnyType()) TypeExpression representation,
     @Default([]) List<TypeParameter> parameters,
     @Default([]) List<ResolvedTypeRef> parents,
     PresentationId? defaultPresentationId,
     @Default({}) Map<String, PresentationId> namedPresentations,
+    @Default({}) Map<PresentationRole, PresentationId> rolePresentations,
+    @Default([]) List<FieldMergePolicy> fieldMergePolicies,
   }) = _TypeDefinition;
 }
 

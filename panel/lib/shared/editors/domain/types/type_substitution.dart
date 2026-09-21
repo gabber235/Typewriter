@@ -39,6 +39,7 @@ extension TypeExpressionSubstitution on TypeExpression {
               name: name,
               type: field.type.substitute(substitutions),
               initialValue: field.initialValue,
+              defaulted: field.defaulted,
             ),
           ),
         ),

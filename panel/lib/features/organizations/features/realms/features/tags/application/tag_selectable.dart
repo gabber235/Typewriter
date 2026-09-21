@@ -16,7 +16,7 @@ class TagIdentifier extends SelectableIdentifier
     implements GraphDragData, ReferenceResourceDragData {
   const TagIdentifier(this.tagId);
 
-  final skir.RecordId tagId;
+  final skir.ResourceId tagId;
 
   @override
   String get id => tagId.id;
@@ -28,7 +28,7 @@ class TagIdentifier extends SelectableIdentifier
   Object get resourceId => tagId;
 
   @override
-  skir.RecordId get referenceId => tagId;
+  skir.ResourceId get referenceId => tagId;
 
   @override
   List<ResolvedTypeRef> get referenceTypes => const [];
@@ -45,15 +45,42 @@ class TagIdentifier extends SelectableIdentifier
     }
     final tagsCommands = ref.watch(canonicalTagsProvider.notifier);
     final session = ref.watch(authoringSessionProvider(organization, realm));
-    final tagValue = session.tagEditorValue(tagId);
+    ref.watch(
+      realmEditorCatalogLeaseProvider(
+        RealmEditorCatalogRequest(types: {referenceResourceTypes.tag}),
+      ),
+    );
+    final catalogState = ref.watch(realmEditorCatalogProvider).value;
+    final catalog = catalogState?.snapshot;
+    if (catalog == null) return const AsyncLoading();
+    final codec = TypedAuthoringCodec(catalog);
+    final tagValue = session.tagEditorValue(tagId, codec);
     if (tagValue == null) {
       if (session.sequence == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
     final tag = tagValue.value;
-    final tagsAsync = ref.watch(projectedTagsProvider);
-    if (tagsAsync.mapUnready<Selectable>() case final value?) return value;
-    final tags = tagsAsync.requireValue;
+    final collections = decodeAuthoringCollections(
+      session: session,
+      catalog: catalog,
+      presentations: catalog.presentations.values,
+    );
+    final tags = collections.sources[authoringTagCollectionSourceId];
+    if (tags == null) {
+      return AsyncError(
+        StateError(
+          collections.diagnostics.map((item) => item.message).join("; "),
+        ),
+        StackTrace.current,
+      );
+    }
+    final content = codec.decodeResource(session.resources[tagId]!);
+    if (content.valueOrNull == null) {
+      return AsyncError(
+        StateError(content.diagnostics.map((item) => item.message).join("; ")),
+        StackTrace.current,
+      );
+    }
     return AsyncValue.data(
       TagSelectable(
         resource: TagEditorResource(
@@ -65,11 +92,17 @@ class TagIdentifier extends SelectableIdentifier
         onDelete: () => tagsCommands.deleteTag(tagId),
         id: this,
         tag: tag,
-        revision: tagValue.revision,
-        tagCollection: tags.presentationCollection(
-          editingTagId: tag.tagId,
-          existingParentIds: tag.parentIds,
+        snapshot: TypedAuthoringEditorSnapshot(
+          resource: session.resources[tagId]!,
+          content: content.valueOrNull!.content,
+          revision: tagValue.revision,
+          codec: codec,
         ),
+        catalogPresentations: catalog.presentations.values.toList(
+          growable: false,
+        ),
+        tagCollection: tags,
+        presentationDiagnostics: collections.diagnostics,
       ),
     );
   }
@@ -99,16 +132,21 @@ class TagSelectable extends EditableSelectable<TagIdentifier> {
     required this.onDelete,
     required this.id,
     required this.tag,
-    required this.revision,
+    required this.snapshot,
+    required this.catalogPresentations,
     required this.tagCollection,
+    this.presentationDiagnostics = const [],
   });
 
   @override
   final TagIdentifier id;
 
   final Tag tag;
-  final int revision;
+  @override
+  final EditorSnapshot snapshot;
   final PresentationCollectionSource tagCollection;
+  final List<PresentationDefinition> catalogPresentations;
+  final List<TypeDiagnostic> presentationDiagnostics;
 
   @override
   MultiInspectionDefinition get multiInspection =>
@@ -122,23 +160,30 @@ class TagSelectable extends EditableSelectable<TagIdentifier> {
   final Future<void> Function() onDelete;
 
   @override
-  List<PresentationDefinition> get presentations => [_tagInspectorPresentation];
+  List<PresentationDefinition> get presentations => catalogPresentations;
   @override
   List<PresentationCollectionSource> get collections => [tagCollection];
 
   @override
-  EditorSnapshot get snapshot => TagEditorSnapshot(tag, revision);
+  PresentationModel buildPresentation(EditorOwnerScope owners) =>
+      PresentationModel.editor(
+        owner: owners.editor(this),
+        presentations: presentations,
+        collections: collections,
+        diagnostics: [...document.diagnostics, ...presentationDiagnostics],
+      );
+
   @override
   List<SelectionCapability> get capabilities => [
     DeleteSelectionCapability(onDelete: onDelete),
   ];
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => ManagedInspectorHeader(
-    id: tag.tagId.id,
-    owner: owner,
-    fallbackName: tag.name.formatted,
-    fallbackColor: tag.color,
+  Widget? buildInspectorHeader(EditOwner owner) => AuthoringSubjectRole(
+    resourceId: tag.tagId,
+    resourceType: rootType,
+    role: PresentationRole.inspectorHeader,
+    historyNamespace: "tag.inspector.header.${tag.tagId.id}",
   );
 
   @override

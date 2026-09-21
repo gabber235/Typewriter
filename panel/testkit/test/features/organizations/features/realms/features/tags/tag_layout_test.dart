@@ -1,5 +1,4 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/typewriter_panel.dart" show RecordIdExtension;
 import "package:typewriter_testkit/features/organizations.dart";
 
 void main() {
@@ -111,7 +110,7 @@ void main() {
     group("generateRandomTag", () {
       test("generates tag with valid id and name", () {
         final tag = generateRandomTag();
-        expect(tag.tagId.id, isNotEmpty);
+        expect(tag.tagId.value, isNotEmpty);
         expect(tag.name, isNotEmpty);
       });
 

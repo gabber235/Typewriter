@@ -18,6 +18,20 @@ final class CreationDraft extends ChangeNotifier
     _nextId = _maximumId(_root) + 1;
   }
 
+  CreationDraft.fromMaterialized({
+    required this.rootType,
+    required DataValue value,
+    required TypeRegistry registry,
+  }) : typeCatalog = registry.catalog,
+       _registry = registry,
+       _root = draftFromValue(
+         type: rootType,
+         value: value,
+         registry: registry,
+       ) {
+    _nextId = _maximumId(_root) + 1;
+  }
+
   @override
   final TypeExpression rootType;
   @override

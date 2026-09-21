@@ -42,42 +42,20 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
         onTap: context.onTap,
         shortcutActivator: context.shortcutActivator,
       ),
-      authoringBookSearchResultType.id: (context) =>
-          AuthoringBookSearchResultItem(
-            book: context.result.payload as skir.AuthoringSearchBook,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
-      authoringTagSearchResultType.id: (context) =>
-          AuthoringTagSearchResultItem(
-            tag: context.result.payload as skir.AuthoringSearchTag,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
-      authoringPageSearchResultType.id: (context) =>
-          AuthoringPageSearchResultItem(
-            page: context.result.payload as skir.AuthoringSearchPage,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
-      authoringElementSearchResultType.id: (context) =>
-          AuthoringElementSearchResultItem(
-            element: context.result.payload as skir.AuthoringSearchElement,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
+      for (final type in [
+        authoringBookSearchResultType,
+        authoringTagSearchResultType,
+        authoringPageSearchResultType,
+        authoringElementSearchResultType,
+      ])
+        type.id: (context) => AuthoringSearchResultItem(
+          payload: context.result.payload as AuthoringSearchResultPayload,
+          focused: context.focused,
+          selected: context.selected,
+          loading: context.loading,
+          onTap: context.onTap,
+          shortcutActivator: context.shortcutActivator,
+        ),
       pageKindSearchResultType.id: (context) => PageKindSearchResultItem(
         definition: context.result.payload as RealmPageDefinition,
         focused: context.focused,
@@ -276,8 +254,8 @@ Future<void> _openBook(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
-  skir.RecordId bookId, {
-  skir.RecordId? pageId,
+  skir.ResourceId bookId, {
+  skir.ResourceId? pageId,
 }) => ref
     .read(appRouterProvider)
     .navigate(

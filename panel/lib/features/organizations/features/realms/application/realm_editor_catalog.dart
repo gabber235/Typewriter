@@ -35,6 +35,9 @@ abstract class RealmEditorCatalogRoute with _$RealmEditorCatalogRoute {
 
   String get fetchSubject => address.request("editor.catalog.fetch");
 
+  String get initializationSubject =>
+      address.request("editor.typed.value.initialize");
+
   String get invalidationRequestSubject =>
       address.request("editor.catalog.invalidate");
 
@@ -59,7 +62,111 @@ abstract class RealmEditorCatalogSnapshot with _$RealmEditorCatalogSnapshot {
     @Default([]) List<TypeDiagnostic> diagnostics,
     @Default({}) Map<String, RealmElementCatalogEntry> elements,
     @Default(RealmPageCatalog()) RealmPageCatalog pageCatalog,
+    @Default({})
+    Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds,
+    @Default({}) Map<String, RealmRelationDefinition> relations,
+    @Default({})
+    Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>
+    collectionProjections,
   }) = _RealmEditorCatalogSnapshot;
+}
+
+final class RealmCollectionProjectionDefinition {
+  const RealmCollectionProjectionDefinition({
+    required this.sourceId,
+    required this.kinds,
+    required this.assignableTo,
+    required this.rowType,
+    required this.fields,
+  });
+
+  final PresentationCollectionSourceId sourceId;
+  final Set<skir.ResourceKind> kinds;
+  final TypeExpression? assignableTo;
+  final ResolvedTypeRef rowType;
+  final List<RealmCollectionProjectionField> fields;
+}
+
+final class RealmCollectionProjectionField {
+  const RealmCollectionProjectionField({
+    required this.target,
+    required this.source,
+  });
+
+  final DataPath target;
+  final RealmCollectionProjectionSource source;
+}
+
+sealed class RealmCollectionProjectionSource {
+  const RealmCollectionProjectionSource();
+}
+
+final class RealmCollectionResourceId extends RealmCollectionProjectionSource {
+  const RealmCollectionResourceId();
+}
+
+final class RealmCollectionContentPath extends RealmCollectionProjectionSource {
+  const RealmCollectionContentPath(this.path);
+
+  final DataPath path;
+}
+
+final class RealmCollectionLiteral extends RealmCollectionProjectionSource {
+  const RealmCollectionLiteral(this.value);
+
+  final DataValue value;
+}
+
+final class RealmResourceKindDefinition {
+  const RealmResourceKindDefinition({
+    required this.kind,
+    required this.acceptedRoot,
+    required this.defaultRoot,
+  });
+
+  final skir.ResourceKind kind;
+  final TypeExpression acceptedRoot;
+  final ResolvedTypeRef? defaultRoot;
+}
+
+enum RealmRelationDeletePolicy { restrict, cascade, clear }
+
+enum RealmRelationCardinality { one, many }
+
+enum RealmRelationEndpointSide { source, target }
+
+final class RealmRelationEndpointDefinition {
+  const RealmRelationEndpointDefinition({
+    required this.owner,
+    required this.path,
+    required this.side,
+    required this.cardinality,
+  });
+
+  final ResolvedTypeRef owner;
+  final DataPath path;
+  final RealmRelationEndpointSide side;
+  final RealmRelationCardinality cardinality;
+}
+
+final class RealmRelationDefinition {
+  const RealmRelationDefinition({
+    required this.id,
+    required this.source,
+    required this.target,
+    required this.onSourceDelete,
+    required this.onTargetDelete,
+    required this.sourceEndpoint,
+    required this.targetEndpoint,
+  });
+
+  final String id;
+  final ResolvedTypeRef source;
+  final ResolvedTypeRef target;
+  final RealmRelationDeletePolicy onSourceDelete;
+  final RealmRelationDeletePolicy onTargetDelete;
+  final RealmRelationEndpointDefinition? sourceEndpoint;
+  final RealmRelationEndpointDefinition? targetEndpoint;
 }
 
 /// Outcome of fetching the catalog requested by a consumer.
@@ -79,6 +186,31 @@ sealed class RealmEditorCatalogFetchResult
   const factory RealmEditorCatalogFetchResult.unavailable(
     List<TypeDiagnostic> diagnostics,
   ) = RealmEditorCatalogFetchUnavailable;
+}
+
+sealed class RealmTypedValueInitializationResult {
+  const RealmTypedValueInitializationResult();
+}
+
+final class RealmTypedValueInitialized
+    extends RealmTypedValueInitializationResult {
+  const RealmTypedValueInitialized(this.value);
+
+  final TypedValueEnvelope value;
+}
+
+final class RealmTypedValueInitializationRejected
+    extends RealmTypedValueInitializationResult {
+  const RealmTypedValueInitializationRejected(this.diagnostics);
+
+  final List<TypeDiagnostic> diagnostics;
+}
+
+final class RealmTypedValueInitializationGenerationMismatch
+    extends RealmTypedValueInitializationResult {
+  const RealmTypedValueInitializationGenerationMismatch(this.generation);
+
+  final CatalogGeneration generation;
 }
 
 /// Notification from the realm that the catalog generation changed or watching
@@ -112,6 +244,13 @@ abstract interface class RealmEditorCatalogSource {
   Stream<RealmEditorCatalogWatchEvent> watchInvalidations(
     RealmEditorCatalogRoute route,
   );
+
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required TypedValueEnvelope partial,
+    required TypeRegistry registry,
+  });
 }
 
 /// Catalog source used when the realm transport cannot be constructed.
@@ -137,6 +276,14 @@ final class UnavailableRealmEditorCatalogSource
   ) => Stream.value(
     RealmEditorCatalogWatchEvent.unavailable([_unavailableDiagnostic()]),
   );
+
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required TypedValueEnvelope partial,
+    required TypeRegistry registry,
+  }) async => RealmTypedValueInitializationRejected([_unavailableDiagnostic()]);
 }
 
 /// Converts source and decoding failures into diagnostics understood by editor

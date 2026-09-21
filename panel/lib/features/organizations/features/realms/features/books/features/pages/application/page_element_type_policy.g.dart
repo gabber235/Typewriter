@@ -275,7 +275,7 @@ final class PageEntryCreationPolicyForPageProvider
   /// rebuilding their own lifecycle owner.
   PageEntryCreationPolicyForPageProvider._({
     required PageEntryCreationPolicyForPageFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'pageEntryCreationPolicyForPageProvider',
@@ -302,7 +302,7 @@ final class PageEntryCreationPolicyForPageProvider
 
   @override
   AsyncValue<PageEntryCreationPolicy> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
+    final argument = this.argument as skir.ResourceId;
     return pageEntryCreationPolicyForPage(ref, argument);
   }
 
@@ -329,7 +329,7 @@ final class PageEntryCreationPolicyForPageProvider
 }
 
 String _$pageEntryCreationPolicyForPageHash() =>
-    r'da9b59d31258b0ebc71a31020c2ffdf240b9cf9c';
+    r'62af5daf10f23eb8f55dc4c96e0d4bf867d81ebb';
 
 /// Resolves the live entry creation policy for one page identity.
 ///
@@ -341,7 +341,7 @@ final class PageEntryCreationPolicyForPageFamily extends $Family
     with
         $FunctionalFamilyOverride<
           AsyncValue<PageEntryCreationPolicy>,
-          skir.RecordId
+          skir.ResourceId
         > {
   PageEntryCreationPolicyForPageFamily._()
     : super(
@@ -358,7 +358,7 @@ final class PageEntryCreationPolicyForPageFamily extends $Family
   /// indirection in a provider lets consumers observe policy changes without
   /// rebuilding their own lifecycle owner.
 
-  PageEntryCreationPolicyForPageProvider call(skir.RecordId pageId) =>
+  PageEntryCreationPolicyForPageProvider call(skir.ResourceId pageId) =>
       PageEntryCreationPolicyForPageProvider._(argument: pageId, from: this);
 
   @override

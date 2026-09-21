@@ -53,7 +53,13 @@ void main() {
       expect(find.byType(PagePage), findsOneWidget);
       expect(find.byType(MobileInspector), findsOneWidget);
       expect(find.byType(DesktopInspector), findsNothing);
-      expect(find.byType(ComposedEditor), findsOneWidget);
+      final inspectorBodyEditor = find.descendant(
+        of: find.byType(MobileInspector),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is ComposedEditor && widget.key != null,
+        ),
+      );
+      expect(inspectorBodyEditor, findsOneWidget);
     },
   );
 }

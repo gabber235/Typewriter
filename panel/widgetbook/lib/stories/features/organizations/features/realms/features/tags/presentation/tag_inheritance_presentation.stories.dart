@@ -85,10 +85,21 @@ Widget _story({
   double width = 520,
   TextDirection textDirection = TextDirection.ltr,
 }) {
-  const rootBinding = BindingReference(bindingId: BindingId(0));
-  const rootType = ResolvedTypeRef(
-    id: QualifiedTypeId(namespace: "widgetbook", name: "TagInheritance"),
-    revision: 1,
+  final catalog = authoringFixtureCatalog();
+  final presentation = catalog.presentations[authoringFixtureTagPresentationId]!;
+  final inheritance = switch (presentation.root.element) {
+    ColumnElement(:final children) => switch (children.last) {
+      FixedPresentationAxisChild(:final child) => child,
+      _ => throw StateError("The tag inheritance presentation must be fixed"),
+    },
+    _ => throw StateError("The tag presentation must be a column"),
+  };
+  final subject = Tag(
+    tagId: skir.ResourceId(value: "tag:subject"),
+    name: "Subject",
+    color: Colors.blue,
+    parentIds: roots.map(_tagRecordId).toList(),
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
   return FakeApp(
     child: Directionality(
@@ -97,26 +108,11 @@ Widget _story({
         child: SizedBox(
           width: width,
           child: EditorProtocolRenderer(
-            envelope: TypedValueEnvelope(
-              rootType: rootType,
-              rootValue: ListValue(
-                roots.map((id) => ReferenceValue(_tagRecordId(id))).toList(),
-              ),
-            ),
-            typeCatalog: TypeCatalog([
-              ...referenceResourceTypes.definitions,
-              TypeDefinition(
-                id: rootType,
-                kind: NominalTypeKind.concrete,
-                representation: ListType(element: tagReferenceType),
-              ),
-            ]),
-            collections: [tags.presentationCollection()],
-            presentation: effectiveTagGraph(
-              id: "widgetbook.tagInheritance",
-              title: "Inheritance",
-              roots: rootBinding,
-            ),
+            envelope: subject.content(authoringFixtureTagType),
+            typeCatalog: catalog.catalog,
+            presentations: catalog.presentations.values.toList(),
+            collections: [authoringFixtureTagCollection(tags)],
+            presentation: inheritance,
           ),
         ),
       ),
@@ -129,7 +125,7 @@ Tag _tag(String id, {List<String> parents = const []}) => Tag(
   name: id,
   color: Colors.blue,
   parentIds: parents.map(_tagRecordId).toList(),
-  placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+  placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
 );
 
-skir.RecordId _tagRecordId(String id) => recordId("tag:$id");
+skir.ResourceId _tagRecordId(String id) => skir.ResourceId(value: "tag:$id");

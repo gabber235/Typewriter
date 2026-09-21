@@ -4,11 +4,11 @@ AuthoringSessionState pageStoryAuthoring(
   RealmPageDefinition pageDefinition,
   List<PageElement> elements,
 ) {
-  final page = skir.Page(
-    id: recordId("page:example-page-id"),
-    book: recordId("book:example-book-id"),
+  final page = Page(
+    pageId: skir.ResourceId(value: "page:example-page-id"),
+    bookId: skir.ResourceId(value: "book:example-book-id"),
     name: "Example",
-    kind: pageDefinition.kind.toSkir(),
+    kind: pageDefinition.kind,
     chapter: "",
     priority: 0,
   );
@@ -17,43 +17,30 @@ AuthoringSessionState pageStoryAuthoring(
     elements,
   ) as RealmEditorCatalogReady).value.catalog;
   final codec = SkirEditorCodec(TypeRegistry(catalog));
+  final content = page.content(referenceResourceTypes.page);
+  final resource = skir.AuthoringResource(
+    id: page.pageId,
+    kind: skir.ResourceKind.page,
+    content: skir.TypedValueEnvelope(
+      rootType: codec.encodeType(content.rootType).valueOrNull!,
+      rootValue: codec.encodeValue(content.rootValue).valueOrNull!,
+    ),
+  );
+  final elementResources = [
+    for (final element in elements) _wireElement(element, codec),
+  ];
   return AuthoringSessionState(
+    generation: skir.CatalogGeneration(value: "widgetbook"),
     sequence: 1,
-    pages: {page.id: page},
-    documents: {
-      page.id: skir.PageDocument(
-        page: page,
-        elements: [
-          for (final element in elements) _wireElement(element, page, codec),
-        ],
-        references: [
-          for (final element in elements)
-            for (final link in switch (element) {
-              PageElementEntry(:final entry) => entry.links.$2,
-              PageElementCue(cue: Segment(:final outwardLinks)) => outwardLinks,
-              _ => const <ElementLink>[],
-            })
-              skir.PageReference(
-                source: recordId("element:${element.id}"),
-                slot: link.path,
-                target: recordId("element:${link.otherId}"),
-              ),
-        ],
-        crossPageTargets: const [],
-        crossPageSources: const [],
-        diagnostics: const [],
-        compileStatus: skir.PageCompileStatus.createBlocked(
-          lastActiveManifestId: null,
-          diagnosticCount: 0,
-        ),
-      ),
+    resources: {
+      page.pageId: resource,
+      for (final element in elementResources) element.id: element,
     },
   );
 }
 
-skir.PageElement _wireElement(
+skir.AuthoringResource _wireElement(
   PageElement element,
-  skir.Page page,
   SkirEditorCodec codec,
 ) {
   final (id, definition, data, placement) = switch (element) {
@@ -62,16 +49,15 @@ skir.PageElement _wireElement(
       definition.elementDefinition,
       definition.data,
       switch (definition.placement.kind) {
-        EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
+        EntryPlacementKind.graph => GraphPlacement(
           x: definition.placement.x,
           y: definition.placement.y,
           width: definition.placement.width,
           height: definition.placement.height,
         ),
-        EntryPlacementKind.timelineEntry =>
-          skir.ElementPlacement.createTimelineEntry(
-            trackIndex: definition.placement.x,
-          ),
+        EntryPlacementKind.timelineEntry => TimelineEntryPlacement(
+          trackIndex: definition.placement.x,
+        ),
       },
     ),
     PageElementCue(:final cue) => (
@@ -79,25 +65,24 @@ skir.PageElement _wireElement(
       cue.elementDefinition,
       cue.data,
       switch (cue) {
-        Segment(:final startFrame, :final endFrame) =>
-          skir.ElementPlacement.createTimelineSegment(
-            startFrame: startFrame,
-            endFrame: endFrame,
-          ),
-        Keyframe(:final frame) => skir.ElementPlacement.createTimelineKeyframe(
-          frame: frame,
+        Segment(:final startFrame, :final endFrame) => TimelineSegmentPlacement(
+          startFrame: startFrame,
+          endFrame: endFrame,
         ),
+        Keyframe(:final frame) => TimelineKeyframePlacement(frame: frame),
         _ => throw StateError("Unknown story cue"),
       },
     ),
     _ => throw StateError("Unsupported story element"),
   };
-  return skir.PageElement(
-    id: recordId("element:$id"),
-    page: page.id,
-    elementType: definition.typeId.uuid,
-    schemaRevision: definition.rootType.revision,
-    value: codec.encodeValue(data).valueOrNull!,
-    placement: placement,
+  return skir.AuthoringResource(
+    id: skir.ResourceId(value: id),
+    kind: skir.ResourceKind.element,
+    content: skir.TypedValueEnvelope(
+      rootType: codec.encodeType(definition.rootType).valueOrNull!,
+      rootValue: codec
+          .encodeValue(data.withField("placement", placementValue(placement)))
+          .valueOrNull!,
+    ),
   );
 }

@@ -1,4 +1,6 @@
 import "package:flutter/widgets.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Opens the current page's element type picker.
@@ -19,7 +21,7 @@ Future<void> showAddElementSearch(
       throw ApiException.badRequest("No realm selected");
     }
 
-    final targetPageId = recordId("page:$pageId");
+    final targetPageId = skir.ResourceId(value: pageId);
     final policy = ref.valued(
       pageEntryCreationPolicyForPageProvider(targetPageId),
     );

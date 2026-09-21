@@ -22,7 +22,7 @@ final class SelectCreatedElementEffect implements SearchHostEffect {
     required this.elementIdentifier,
   });
 
-  final skir.RecordId pageId;
+  final skir.ResourceId pageId;
   final EntryIdentifier elementIdentifier;
 }
 
@@ -79,10 +79,9 @@ SearchCommand createElementCommand({
               )
               .value;
 
-    skir.RecordId? targetPageId;
-    skir.RecordId targetBookId;
+    skir.ResourceId? targetPageId;
+    skir.ResourceId targetBookId;
     PageEntryCreationPolicy targetPolicy;
-    PageCreationInput? pendingPage;
     if (preferredPage != null &&
         preferredPolicy?.accepts(definition.rootType) == true) {
       targetPageId = preferredPage.pageId;
@@ -104,35 +103,12 @@ SearchCommand createElementCommand({
         return const SearchCommandResult.cancelled();
       }
       targetPolicy = selection.policy;
-      switch (selection) {
-        case ExistingElementPageSelection(:final pageId, :final bookId):
-          targetPageId = pageId;
-          targetBookId = bookId;
-        case NewElementPageSelection(:final bookId, :final input):
-          targetBookId = bookId;
-          pendingPage = input;
-      }
-    }
-
-    final initialValue = await _prepareElementValue(
-      ref: ref,
-      execution: execution,
-      definition: definition,
-      origin: targetPageId ?? targetBookId,
-    );
-    if (initialValue == null || !ref.mounted) {
-      return const SearchCommandResult.cancelled();
-    }
-    if (pendingPage case final input?) {
-      final page = await ref
-          .readAuthoringSession()
-          .notifier
-          .createPageFromInput(targetBookId, input);
-      targetPageId = page.pageId;
+      targetPageId = selection.pageId;
+      targetBookId = selection.bookId;
     }
 
     final livePolicy = ref
-        .read(pageEntryCreationPolicyForPageProvider(targetPageId!))
+        .read(pageEntryCreationPolicyForPageProvider(targetPageId))
         .value;
     final policy = livePolicy ?? targetPolicy;
     if (!policy.accepts(definition.rootType)) {
@@ -142,12 +118,13 @@ SearchCommand createElementCommand({
     }
     final elementId = await _createElementOnPage(
       ref: ref,
+      execution: execution,
       pageId: targetPageId,
       definition: definition,
       policy: policy,
-      initialValue: initialValue,
       preferredGraphAnchor: null,
     );
+    if (elementId == null) return const SearchCommandResult.cancelled();
     return SearchCommandResult.completed(
       hostEffects: [
         OpenAuthoringElementEffect(
@@ -173,7 +150,7 @@ SearchCommand createElementOnPageCommand({
   required Ref ref,
   required skir.RecordId organizationId,
   required skir.RecordId realmId,
-  required skir.RecordId pageId,
+  required skir.ResourceId pageId,
   required ValueListenable<AsyncValue<PageEntryCreationPolicy>> policy,
   Offset? preferredGraphAnchor,
 }) => SearchCommand.single<ElementDefinition>(
@@ -230,23 +207,15 @@ SearchCommand createElementOnPageCommand({
       );
     }
 
-    final initialValue = await _prepareElementValue(
+    final elementId = await _createElementOnPage(
       ref: ref,
       execution: execution,
-      definition: definition,
-      origin: pageId,
-    );
-    if (initialValue == null || !ref.mounted) {
-      return const SearchCommandResult.cancelled();
-    }
-    final elementId = await _createElementOnPage(
-      initialValue: initialValue,
-      ref: ref,
       pageId: pageId,
       definition: definition,
       policy: livePolicy,
       preferredGraphAnchor: preferredGraphAnchor,
     );
+    if (elementId == null) return const SearchCommandResult.cancelled();
     return SearchCommandResult.completed(
       hostEffects: [
         SelectCreatedElementEffect(
@@ -258,72 +227,44 @@ SearchCommand createElementOnPageCommand({
   },
 );
 
-Future<String> _createElementOnPage({
-  required Ref ref,
-  required skir.RecordId pageId,
-  required ElementDefinition definition,
-  required PageEntryCreationPolicy policy,
-  required DataValue initialValue,
-  Offset? preferredGraphAnchor,
-}) async {
-  final elementIds = await ref.withReadyPageElements(
-    pageId.id,
-    (elements) => elements.createEntries(
-      [definition],
-      switch (policy.placement) {
-        PageEntryCreationPlacement.graph => EntryPlacementKind.graph,
-        PageEntryCreationPlacement.timelineTrack =>
-          EntryPlacementKind.timelineEntry,
-      },
-      preferredGraphAnchor: preferredGraphAnchor,
-      initialValues: [initialValue],
-    ),
-  );
-  return elementIds.single;
-}
-
-Future<DataValue?> _prepareElementValue({
+Future<String?> _createElementOnPage({
   required Ref ref,
   required SearchCommandExecutionContext execution,
+  required skir.ResourceId pageId,
   required ElementDefinition definition,
-  required skir.RecordId origin,
+  required PageEntryCreationPolicy policy,
+  Offset? preferredGraphAnchor,
 }) async {
-  final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
-  if (snapshot == null) {
-    throw ApiException.badRequest("The editor catalog is unavailable");
-  }
-  final registry = TypeRegistry(
-    bootstrapTypeCatalog(snapshot.catalog.definitions),
+  final placement = await ref.withReadyPageElements(
+    pageId.id,
+    (elements) => elements.creationPlacement(switch (policy.placement) {
+      PageEntryCreationPlacement.graph => EntryPlacementKind.graph,
+      PageEntryCreationPlacement.timelineTrack =>
+        EntryPlacementKind.timelineEntry,
+    }, preferredGraphAnchor: preferredGraphAnchor),
   );
-  final draft = CreationDraft(
-    rootType: NamedType(definition.rootType),
-    registry: registry,
-    fixedValues: {
-      const MaterializationLocation(["field:id"]): const StringValue("pending"),
-      const MaterializationLocation(["field:name"]): StringValue(
-        definition.name,
-      ),
-    },
-  );
-  try {
-    final initial = draft.finalize().valueOrNull;
-    final value =
-        initial ??
-        await execution.prompts.show(
-          (context) => promptElementCreationEditor(
-            context: context,
+  final created = await execution.prompts.show(
+    (context) => ref
+        .read(resourceCreationProvider)
+        .create(
+          context: context,
+          request: ResourceCreationRequest(
+            kind: skir.ResourceKind.element,
             title: "Create ${definition.name}",
-            draft: draft,
-            presentations: snapshot.presentations.values.toList(),
-            origins: [origin],
+            root: definition.rootType,
+            partial: RecordValue({
+              "name": StringValue(definition.name),
+              "placement": placementValue(placement),
+            }),
+            relations: [
+              ResourceRelationAttachment.toMany(
+                owner: pageId,
+                path: DataPath.root.field("elements"),
+              ),
+            ],
+            referenceOrigins: [pageId],
           ),
-        );
-    if (value == null || !ref.mounted) return null;
-    if (value is! RecordValue) {
-      throw ApiException.badRequest("Element values must be records");
-    }
-    return value;
-  } finally {
-    draft.dispose();
-  }
+        ),
+  );
+  return created?.id.value;
 }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OpenAuthoringBookEffect {
 
- skir.RecordId get organizationId; skir.RecordId get realmId; skir.RecordId get bookId;
+ skir.RecordId get organizationId; skir.RecordId get realmId; skir.ResourceId get bookId;
 /// Create a copy of OpenAuthoringBookEffect
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,7 +51,7 @@ abstract mixin class $OpenAuthoringBookEffectCopyWith<$Res>  {
   factory $OpenAuthoringBookEffectCopyWith(OpenAuthoringBookEffect value, $Res Function(OpenAuthoringBookEffect) _then) = _$OpenAuthoringBookEffectCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId bookId
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId bookId
 });
 
 
@@ -73,7 +73,7 @@ class _$OpenAuthoringBookEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,
   ));
 }
 
@@ -158,7 +158,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OpenAuthoringBookEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.bookId);case _:
@@ -179,7 +179,7 @@ return $default(_that.organizationId,_that.realmId,_that.bookId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId)  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringBookEffect():
 return $default(_that.organizationId,_that.realmId,_that.bookId);case _:
@@ -199,7 +199,7 @@ return $default(_that.organizationId,_that.realmId,_that.bookId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId)?  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringBookEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.bookId);case _:
@@ -219,7 +219,7 @@ class _OpenAuthoringBookEffect implements OpenAuthoringBookEffect {
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
-@override final  skir.RecordId bookId;
+@override final  skir.ResourceId bookId;
 
 /// Create a copy of OpenAuthoringBookEffect
 /// with the given fields replaced by the non-null parameter values.
@@ -253,7 +253,7 @@ abstract mixin class _$OpenAuthoringBookEffectCopyWith<$Res> implements $OpenAut
   factory _$OpenAuthoringBookEffectCopyWith(_OpenAuthoringBookEffect value, $Res Function(_OpenAuthoringBookEffect) _then) = __$OpenAuthoringBookEffectCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId bookId
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId bookId
 });
 
 
@@ -275,7 +275,7 @@ class __$OpenAuthoringBookEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,
   ));
 }
 
@@ -285,7 +285,7 @@ as skir.RecordId,
 /// @nodoc
 mixin _$OpenAuthoringTagEffect {
 
- skir.RecordId get organizationId; skir.RecordId get realmId; skir.RecordId get tagId;
+ skir.RecordId get organizationId; skir.RecordId get realmId; skir.ResourceId get tagId;
 /// Create a copy of OpenAuthoringTagEffect
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -321,7 +321,7 @@ abstract mixin class $OpenAuthoringTagEffectCopyWith<$Res>  {
   factory $OpenAuthoringTagEffectCopyWith(OpenAuthoringTagEffect value, $Res Function(OpenAuthoringTagEffect) _then) = _$OpenAuthoringTagEffectCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId tagId
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId tagId
 });
 
 
@@ -343,7 +343,7 @@ class _$OpenAuthoringTagEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,tagId: null == tagId ? _self.tagId : tagId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,
   ));
 }
 
@@ -428,7 +428,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId tagId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId tagId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OpenAuthoringTagEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.tagId);case _:
@@ -449,7 +449,7 @@ return $default(_that.organizationId,_that.realmId,_that.tagId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId tagId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId tagId)  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringTagEffect():
 return $default(_that.organizationId,_that.realmId,_that.tagId);case _:
@@ -469,7 +469,7 @@ return $default(_that.organizationId,_that.realmId,_that.tagId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId tagId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId tagId)?  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringTagEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.tagId);case _:
@@ -489,7 +489,7 @@ class _OpenAuthoringTagEffect implements OpenAuthoringTagEffect {
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
-@override final  skir.RecordId tagId;
+@override final  skir.ResourceId tagId;
 
 /// Create a copy of OpenAuthoringTagEffect
 /// with the given fields replaced by the non-null parameter values.
@@ -523,7 +523,7 @@ abstract mixin class _$OpenAuthoringTagEffectCopyWith<$Res> implements $OpenAuth
   factory _$OpenAuthoringTagEffectCopyWith(_OpenAuthoringTagEffect value, $Res Function(_OpenAuthoringTagEffect) _then) = __$OpenAuthoringTagEffectCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId tagId
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId tagId
 });
 
 
@@ -545,7 +545,7 @@ class __$OpenAuthoringTagEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,tagId: null == tagId ? _self.tagId : tagId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,
   ));
 }
 
@@ -555,7 +555,7 @@ as skir.RecordId,
 /// @nodoc
 mixin _$OpenAuthoringPageEffect {
 
- skir.RecordId get organizationId; skir.RecordId get realmId; skir.RecordId get bookId; skir.RecordId get pageId;
+ skir.RecordId get organizationId; skir.RecordId get realmId; skir.ResourceId get bookId; skir.ResourceId get pageId;
 /// Create a copy of OpenAuthoringPageEffect
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -591,7 +591,7 @@ abstract mixin class $OpenAuthoringPageEffectCopyWith<$Res>  {
   factory $OpenAuthoringPageEffectCopyWith(OpenAuthoringPageEffect value, $Res Function(OpenAuthoringPageEffect) _then) = _$OpenAuthoringPageEffectCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId bookId, skir.RecordId pageId
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId bookId, skir.ResourceId pageId
 });
 
 
@@ -613,8 +613,8 @@ class _$OpenAuthoringPageEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,
   ));
 }
 
@@ -699,7 +699,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId,  skir.RecordId pageId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId,  skir.ResourceId pageId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OpenAuthoringPageEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId);case _:
@@ -720,7 +720,7 @@ return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId,  skir.RecordId pageId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId,  skir.ResourceId pageId)  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringPageEffect():
 return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId);case _:
@@ -740,7 +740,7 @@ return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId,  skir.RecordId pageId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId,  skir.ResourceId pageId)?  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringPageEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId);case _:
@@ -760,8 +760,8 @@ class _OpenAuthoringPageEffect implements OpenAuthoringPageEffect {
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
-@override final  skir.RecordId bookId;
-@override final  skir.RecordId pageId;
+@override final  skir.ResourceId bookId;
+@override final  skir.ResourceId pageId;
 
 /// Create a copy of OpenAuthoringPageEffect
 /// with the given fields replaced by the non-null parameter values.
@@ -795,7 +795,7 @@ abstract mixin class _$OpenAuthoringPageEffectCopyWith<$Res> implements $OpenAut
   factory _$OpenAuthoringPageEffectCopyWith(_OpenAuthoringPageEffect value, $Res Function(_OpenAuthoringPageEffect) _then) = __$OpenAuthoringPageEffectCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId bookId, skir.RecordId pageId
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId bookId, skir.ResourceId pageId
 });
 
 
@@ -817,8 +817,8 @@ class __$OpenAuthoringPageEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,
+as skir.ResourceId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,
   ));
 }
 
@@ -828,7 +828,7 @@ as skir.RecordId,
 /// @nodoc
 mixin _$OpenAuthoringElementEffect {
 
- skir.RecordId get organizationId; skir.RecordId get realmId; skir.RecordId get bookId; skir.RecordId get pageId; SelectableIdentifier? get elementIdentifier;
+ skir.RecordId get organizationId; skir.RecordId get realmId; skir.ResourceId get bookId; skir.ResourceId get pageId; SelectableIdentifier? get elementIdentifier;
 /// Create a copy of OpenAuthoringElementEffect
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -864,7 +864,7 @@ abstract mixin class $OpenAuthoringElementEffectCopyWith<$Res>  {
   factory $OpenAuthoringElementEffectCopyWith(OpenAuthoringElementEffect value, $Res Function(OpenAuthoringElementEffect) _then) = _$OpenAuthoringElementEffectCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId bookId, skir.RecordId pageId, SelectableIdentifier? elementIdentifier
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId bookId, skir.ResourceId pageId, SelectableIdentifier? elementIdentifier
 });
 
 
@@ -886,8 +886,8 @@ class _$OpenAuthoringElementEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,elementIdentifier: freezed == elementIdentifier ? _self.elementIdentifier : elementIdentifier // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,elementIdentifier: freezed == elementIdentifier ? _self.elementIdentifier : elementIdentifier // ignore: cast_nullable_to_non_nullable
 as SelectableIdentifier?,
   ));
 }
@@ -973,7 +973,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId,  skir.RecordId pageId,  SelectableIdentifier? elementIdentifier)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId,  skir.ResourceId pageId,  SelectableIdentifier? elementIdentifier)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OpenAuthoringElementEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId,_that.elementIdentifier);case _:
@@ -994,7 +994,7 @@ return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId,  skir.RecordId pageId,  SelectableIdentifier? elementIdentifier)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId,  skir.ResourceId pageId,  SelectableIdentifier? elementIdentifier)  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringElementEffect():
 return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId,_that.elementIdentifier);case _:
@@ -1014,7 +1014,7 @@ return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.RecordId bookId,  skir.RecordId pageId,  SelectableIdentifier? elementIdentifier)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId bookId,  skir.ResourceId pageId,  SelectableIdentifier? elementIdentifier)?  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringElementEffect() when $default != null:
 return $default(_that.organizationId,_that.realmId,_that.bookId,_that.pageId,_that.elementIdentifier);case _:
@@ -1034,8 +1034,8 @@ class _OpenAuthoringElementEffect implements OpenAuthoringElementEffect {
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
-@override final  skir.RecordId bookId;
-@override final  skir.RecordId pageId;
+@override final  skir.ResourceId bookId;
+@override final  skir.ResourceId pageId;
 @override final  SelectableIdentifier? elementIdentifier;
 
 /// Create a copy of OpenAuthoringElementEffect
@@ -1070,7 +1070,7 @@ abstract mixin class _$OpenAuthoringElementEffectCopyWith<$Res> implements $Open
   factory _$OpenAuthoringElementEffectCopyWith(_OpenAuthoringElementEffect value, $Res Function(_OpenAuthoringElementEffect) _then) = __$OpenAuthoringElementEffectCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.RecordId bookId, skir.RecordId pageId, SelectableIdentifier? elementIdentifier
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId bookId, skir.ResourceId pageId, SelectableIdentifier? elementIdentifier
 });
 
 
@@ -1092,8 +1092,8 @@ class __$OpenAuthoringElementEffectCopyWithImpl<$Res>
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,elementIdentifier: freezed == elementIdentifier ? _self.elementIdentifier : elementIdentifier // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,elementIdentifier: freezed == elementIdentifier ? _self.elementIdentifier : elementIdentifier // ignore: cast_nullable_to_non_nullable
 as SelectableIdentifier?,
   ));
 }

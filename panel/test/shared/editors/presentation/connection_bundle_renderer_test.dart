@@ -99,7 +99,10 @@ Future<void> _pumpBundle(
               element: ColumnElement(
                 spacing: 40,
                 crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
-                children: children,
+                children: [
+                  for (final child in children)
+                    PresentationAxisChild.fixed(child),
+                ],
               ),
             ),
           ),
@@ -187,7 +190,7 @@ EditorProtocolRenderer _renderer(PresentationNode presentation) {
   );
   return EditorProtocolRenderer(
     envelope: const TypedValueEnvelope(rootType: root, rootValue: UnitValue()),
-    typeCatalog: const TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

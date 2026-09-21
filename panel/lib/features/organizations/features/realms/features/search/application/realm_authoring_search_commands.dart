@@ -14,7 +14,7 @@ List<SearchCommand> openAuthoringCommands(
   skir.RecordId organizationId,
   skir.RecordId realmId,
 ) => [
-  _openAuthoringCommand<skir.AuthoringSearchBook>(
+  _openAuthoringCommand<AuthoringSearchResultPayload>(
     id: openAuthoringBookCommandId,
     type: authoringBookSearchResultType,
     effect: (value) => OpenAuthoringBookEffect(
@@ -23,7 +23,7 @@ List<SearchCommand> openAuthoringCommands(
       bookId: value.id,
     ),
   ),
-  _openAuthoringCommand<skir.AuthoringSearchTag>(
+  _openAuthoringCommand<AuthoringSearchResultPayload>(
     id: openAuthoringTagCommandId,
     type: authoringTagSearchResultType,
     effect: (value) => OpenAuthoringTagEffect(
@@ -32,24 +32,24 @@ List<SearchCommand> openAuthoringCommands(
       tagId: value.id,
     ),
   ),
-  _openAuthoringCommand<skir.AuthoringSearchPage>(
+  _openAuthoringCommand<AuthoringSearchResultPayload>(
     id: openAuthoringPageCommandId,
     type: authoringPageSearchResultType,
     effect: (value) => OpenAuthoringPageEffect(
       organizationId: organizationId,
       realmId: realmId,
-      bookId: value.book.id,
+      bookId: value.owner!,
       pageId: value.id,
     ),
   ),
-  _openAuthoringCommand<skir.AuthoringSearchElement>(
+  _openAuthoringCommand<AuthoringSearchResultPayload>(
     id: openAuthoringElementCommandId,
     type: authoringElementSearchResultType,
     effect: (value) => OpenAuthoringElementEffect(
       organizationId: organizationId,
       realmId: realmId,
-      bookId: value.page.book.id,
-      pageId: value.page.id,
+      bookId: value.contextReference("book")!,
+      pageId: value.owner!,
       elementIdentifier: value.elementIdentifier,
     ),
   ),
@@ -74,7 +74,7 @@ abstract class OpenAuthoringBookEffect
   const factory OpenAuthoringBookEffect({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
-    required skir.RecordId bookId,
+    required skir.ResourceId bookId,
   }) = _OpenAuthoringBookEffect;
 }
 
@@ -85,7 +85,7 @@ abstract class OpenAuthoringTagEffect
   const factory OpenAuthoringTagEffect({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
-    required skir.RecordId tagId,
+    required skir.ResourceId tagId,
   }) = _OpenAuthoringTagEffect;
 }
 
@@ -96,8 +96,8 @@ abstract class OpenAuthoringPageEffect
   const factory OpenAuthoringPageEffect({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
-    required skir.RecordId bookId,
-    required skir.RecordId pageId,
+    required skir.ResourceId bookId,
+    required skir.ResourceId pageId,
   }) = _OpenAuthoringPageEffect;
 }
 
@@ -108,24 +108,26 @@ abstract class OpenAuthoringElementEffect
   const factory OpenAuthoringElementEffect({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
-    required skir.RecordId bookId,
-    required skir.RecordId pageId,
+    required skir.ResourceId bookId,
+    required skir.ResourceId pageId,
     required SelectableIdentifier? elementIdentifier,
   }) = _OpenAuthoringElementEffect;
 }
 
-extension on skir.AuthoringSearchElement {
-  SelectableIdentifier? get elementIdentifier => switch (placement) {
-    skir.ElementPlacement_graphWrapper() ||
-    skir.ElementPlacement_timelineEntryWrapper() => EntryIdentifier(
-      id.id,
-      pageId: page.id.id,
-    ),
-    skir.ElementPlacement_timelineSegmentWrapper() ||
-    skir.ElementPlacement_timelineKeyframeWrapper() => CueIdentifier(
-      pageId: page.id.id,
-      id: id.id,
-    ),
-    skir.ElementPlacement_unknown() => null,
-  };
+extension on AuthoringSearchResultPayload {
+  SelectableIdentifier? get elementIdentifier {
+    final pageId = owner?.id;
+    if (pageId == null) return null;
+    final registry = TypeRegistry(presentation.model.catalog);
+    final resolved = registry
+        .resolveExact(subject.content.rootType)
+        .valueOrNull;
+    final names = {
+      subject.content.rootType.id,
+      ...?resolved?.ancestors.map((type) => type.id),
+    }.whereType<QualifiedTypeId>().map((id) => id.name).toSet();
+    return names.contains("Entry")
+        ? EntryIdentifier(id.id, pageId: pageId)
+        : CueIdentifier(pageId: pageId, id: id.id);
+  }
 }

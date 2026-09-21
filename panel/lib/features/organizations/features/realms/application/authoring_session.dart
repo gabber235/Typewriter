@@ -108,7 +108,7 @@ class AuthoringSession extends _$AuthoringSession
   /// The first lease for [bookId] fetches the book and its pages. Await
   /// [AuthoringScopeLease.ready] before reading the resulting canonical state.
   /// Release the lease when the book is no longer in use.
-  AuthoringScopeLease acquireBook(skir.RecordId bookId) =>
+  AuthoringScopeLease acquireBook(skir.ResourceId bookId) =>
       _acquire(_AuthoringScope.book(bookId));
 
   /// Retains the page scope and returns its lifecycle lease.
@@ -116,7 +116,7 @@ class AuthoringSession extends _$AuthoringSession
   /// The first lease for [pageId] fetches the page and its document. Await
   /// [AuthoringScopeLease.ready] before reading the resulting canonical state.
   /// Release the lease when the page is no longer in use.
-  AuthoringScopeLease acquirePage(skir.RecordId pageId) =>
+  AuthoringScopeLease acquirePage(skir.ResourceId pageId) =>
       _acquire(_AuthoringScope.page(pageId));
 
   /// Prepares one authoring batch for the shared local mutation owner.
@@ -134,6 +134,9 @@ class AuthoringSession extends _$AuthoringSession
   }) {
     final request = skir.ApplyAuthoringBatchRequest(
       batchId: batchId ?? uuid.v4(),
+      generation:
+          state.generation ??
+          (throw StateError("The authoring catalog is not loaded")),
       operations: operations,
     );
     return ref.prepareSkir(
@@ -154,6 +157,8 @@ class AuthoringSession extends _$AuthoringSession
           case skir.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
             _accept(value);
           case skir.ApplyAuthoringBatchResponse_conflictWrapper():
+            await _refresh();
+          case skir.ApplyAuthoringBatchResponse_catalogChangedWrapper():
             await _refresh();
           case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
               skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
@@ -193,7 +198,12 @@ class AuthoringSession extends _$AuthoringSession
   Future<skir.PreviewAuthoringBatchResponse> preview(
     Iterable<skir.AuthoringOperation> operations,
   ) {
-    final request = skir.PreviewAuthoringBatchRequest(operations: operations);
+    final request = skir.PreviewAuthoringBatchRequest(
+      generation:
+          state.generation ??
+          (throw StateError("The authoring catalog is not loaded")),
+      operations: operations,
+    );
     return ref.requestSkir(
       _address.request("library.authoring.batch.preview"),
       skir.PreviewAuthoringBatchRequest.serializer.toBytes(request),
@@ -288,6 +298,8 @@ extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
         return;
       case skir.ApplyAuthoringBatchResponse_conflictWrapper():
         throw ApiException.conflict(conflictMessage);
+      case skir.ApplyAuthoringBatchResponse_catalogChangedWrapper():
+        throw ApiException.conflict("The authoring catalog changed");
       case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
           skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
           skir.ApplyAuthoringBatchResponse_unknown():
@@ -302,6 +314,8 @@ extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
       ApiException.internalServerError(),
     skir.ApplyAuthoringBatchResponse_unknown() =>
       ApiException.unknownResponseMessage(),
+    skir.ApplyAuthoringBatchResponse_catalogChangedWrapper() =>
+      ApiException.conflict("The authoring catalog changed"),
     _ => throw StateError("The authoring response is not a failure"),
   };
 
@@ -338,7 +352,7 @@ AuthoringScopeLease authoringBookScope(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
-  skir.RecordId bookId,
+  skir.ResourceId bookId,
 ) {
   final session = authoringSessionProvider(organizationId, realmId);
   final lease = ref.read(session.notifier).acquireBook(bookId);
@@ -352,7 +366,7 @@ AuthoringScopeLease authoringPageScope(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
 ) {
   final session = authoringSessionProvider(organizationId, realmId);
   final lease = ref.read(session.notifier).acquirePage(pageId);

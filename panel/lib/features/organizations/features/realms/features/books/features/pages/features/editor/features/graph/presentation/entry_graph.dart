@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders the graph view for one page and routes committed layout changes
@@ -31,9 +33,17 @@ class EntryGraph extends HookConsumerWidget {
   /// outward edges. Other element variants still receive a placeholder node so
   /// the graph snapshot preserves identity without claiming relationships it
   /// cannot verify.
-  (GraphElement, List<GraphEdge>) _graphFromElement(PageElement element) {
+  (GraphElement, List<GraphEdge>) _graphFromElement(
+    PageElement element,
+    Map<String, GraphGridRect> remotePlacements,
+    AsyncValue<AuthoringSubjectProjection> subjects,
+  ) {
     return switch (element) {
-      PageElementEntry(:final entry) => _graphFromEntry(entry),
+      PageElementEntry(:final entry) => _graphFromEntry(
+        entry,
+        remotePlacements[entry.id],
+        subjects,
+      ),
       _ => (
         GraphElement(
           id: GraphIdentifier(element.id),
@@ -54,7 +64,31 @@ class EntryGraph extends HookConsumerWidget {
   /// links because the target and source semantics are no longer authoritative.
   /// Other nondefinition variants use a small fallback node until their full
   /// page projection is available.
-  (GraphElement, List<GraphEdge>) _graphFromEntry(PageEntry entry) {
+  (GraphElement, List<GraphEdge>) _graphFromEntry(
+    PageEntry entry,
+    GraphGridRect? remotePlacement,
+    AsyncValue<AuthoringSubjectProjection> subjects,
+  ) {
+    if (entry
+        case ReferencePageEntry() ||
+            UnavailableReferencePageEntry() ||
+            NonexistentPageEntry()) {
+      final placement =
+          remotePlacement ?? GraphGridRect(x: 0, y: 0, width: 4, height: 1);
+      return (
+        GraphElement(
+          id: EntryIdentifier(entry.id),
+          x: placement.x,
+          y: placement.y,
+          width: placement.width,
+          height: placement.height,
+          builder: (context) => SizedBox.expand(
+            child: EntryNode(pageId: pageId, entry: entry, subjects: subjects),
+          ),
+        ),
+        const <GraphEdge>[],
+      );
+    }
     return entry.maybeWhen(
       definition: (definition) => (
         GraphElement(
@@ -65,7 +99,11 @@ class EntryGraph extends HookConsumerWidget {
           height: definition.placement.height,
           builder: (context) {
             return SizedBox.expand(
-              child: EntryNode(pageId: pageId, entry: entry),
+              child: EntryNode(
+                pageId: pageId,
+                entry: entry,
+                subjects: subjects,
+              ),
             );
           },
         ),
@@ -91,7 +129,11 @@ class EntryGraph extends HookConsumerWidget {
               height: placement.height,
               builder: (context) {
                 return SizedBox.expand(
-                  child: EntryNode(pageId: pageId, entry: entry),
+                  child: EntryNode(
+                    pageId: pageId,
+                    entry: entry,
+                    subjects: subjects,
+                  ),
                 );
               },
             ),
@@ -106,7 +148,11 @@ class EntryGraph extends HookConsumerWidget {
           height: 5,
           builder: (context) {
             return SizedBox.expand(
-              child: EntryNode(pageId: pageId, entry: entry),
+              child: EntryNode(
+                pageId: pageId,
+                entry: entry,
+                subjects: subjects,
+              ),
             );
           },
         ),
@@ -120,14 +166,48 @@ class EntryGraph extends HookConsumerWidget {
   /// Conversion is deliberately separate from persistence. This lets the
   /// shared graph preview interaction against the current projection and lets
   /// the page coordinator decide how a completed batch is reconciled.
-  GraphData _graphFromElements(List<PageElement> elements) {
+  GraphData _graphFromElements(
+    List<PageElement> elements,
+    RemoteGraphPlacementSession placementSession,
+    Offset emptyGraphAnchor,
+    AsyncValue<AuthoringSubjectProjection> subjects,
+  ) {
     final graphElements = <GraphElement>[];
     final edges = <GraphEdge>[];
+    final remotePlacements = placementSession.place(
+      elements: elements,
+      direction: graphDirection,
+      emptyGraphAnchor: emptyGraphAnchor,
+    );
 
     for (final element in elements) {
-      final (graphElement, graphEdges) = _graphFromElement(element);
+      final (graphElement, graphEdges) = _graphFromElement(
+        element,
+        remotePlacements,
+        subjects,
+      );
       graphElements.add(graphElement);
       edges.addAll(graphEdges);
+    }
+    final remoteIds = remotePlacements.keys.toSet();
+    for (final element in elements) {
+      if (element case PageElementEntry(
+        entry: DefinitionPageEntry(:final definition),
+      )) {
+        for (final edge in definition.inwardEdges) {
+          if (!remoteIds.contains(edge.otherId)) continue;
+          edges.add(
+            GraphEdge(
+              id: edge.linkId,
+              source: EntryIdentifier(edge.otherId),
+              target: EntryIdentifier(definition.id),
+              color: definition.elementDefinition.color,
+              sourceSide: graphDirection.sourceSide,
+              targetSide: graphDirection.targetSide,
+            ),
+          );
+        }
+      }
     }
 
     return GraphData(
@@ -159,10 +239,36 @@ class EntryGraph extends HookConsumerWidget {
     final elements = ref.watch(provider);
     final commands = pageElementsProvider(organizationId, realmId, pageId);
     final viewportCenter = useRef<Offset?>(null);
+    final placementSession = useMemoized(RemoteGraphPlacementSession.new, [
+      pageId,
+    ]);
 
     return elements(
       name: "elements",
       builder: (elements) {
+        final resources = <skir.ResourceId, ResolvedTypeRef>{};
+        for (final element in elements) {
+          if (element case PageElementEntry(:final entry)) {
+            switch (entry) {
+              case DefinitionPageEntry(:final definition):
+                resources[skir.ResourceId(value: definition.id)] =
+                    definition.elementDefinition.rootType;
+              case ReferencePageEntry(:final subject):
+                resources[skir.ResourceId(value: entry.id)] =
+                    subject.content.rootType;
+              default:
+            }
+          }
+        }
+        final subjects = ref.watch(
+          authoringSubjectsProvider(
+            AuthoringSubjectScope(
+              organizationId: organizationId,
+              realmId: realmId,
+              resources: resources,
+            ),
+          ),
+        );
         return FloatingButton(
           icon: const Icon(Icons.add),
           onPressed: () => showAddElementSearch(
@@ -173,18 +279,41 @@ class EntryGraph extends HookConsumerWidget {
           child: Stack(
             children: [
               Graph(
-                data: _graphFromElements(elements),
+                data: _graphFromElements(
+                  elements,
+                  placementSession,
+                  viewportCenter.value ?? Offset.zero,
+                  subjects,
+                ),
                 onViewportCenterChanged: (center) {
                   viewportCenter.value = center;
                 },
                 onElementsMoved: (changes) {
+                  final localIds = {
+                    for (final element in elements)
+                      if (element case PageElementEntry(
+                        entry: DefinitionPageEntry() ||
+                            MissingElementDefinitionPageEntry(),
+                      ))
+                        element.id,
+                  };
                   final changed = changes
+                      .where((entry) => localIds.contains(entry.id.id))
                       .map((entry) => (entry.id.id, entry.x, entry.y))
                       .toList(growable: false);
                   ref.read(commands.notifier).moveAll(changed);
                 },
                 onElementsResized: (changes) {
+                  final localIds = {
+                    for (final element in elements)
+                      if (element case PageElementEntry(
+                        entry: DefinitionPageEntry() ||
+                            MissingElementDefinitionPageEntry(),
+                      ))
+                        element.id,
+                  };
                   final changed = changes
+                      .where((entry) => localIds.contains(entry.id.id))
                       .map((entry) => (entry.id.id, entry.width, entry.height))
                       .toList(growable: false);
                   ref.read(commands.notifier).resizeAll(changed);

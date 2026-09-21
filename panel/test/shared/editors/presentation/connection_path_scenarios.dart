@@ -71,21 +71,32 @@ void registerConnectionPathScenarios() {
                   spacing: 24,
                   crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomStart),
-                    PresentationNode(
-                      id: "bundle.targets",
-                      element: ConnectionLayerElement(
-                        connections: [_inactiveConnection()],
-                        child: PresentationNode(
-                          id: "bundle.target.column",
-                          element: ColumnElement(
-                            spacing: 48,
-                            crossAxisAlignment:
-                                PresentationCrossAxisAlignment.stretch,
-                            children: [
-                              _exportedAnchor("first.target"),
-                              _exportedAnchor("second.target"),
-                            ],
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomStart,
+                      ),
+                    ),
+                    PresentationAxisChild.fixed(
+                      PresentationNode(
+                        id: "bundle.targets",
+                        element: ConnectionLayerElement(
+                          connections: [_inactiveConnection()],
+                          child: PresentationNode(
+                            id: "bundle.target.column",
+                            element: ColumnElement(
+                              spacing: 48,
+                              crossAxisAlignment:
+                                  PresentationCrossAxisAlignment.stretch,
+                              children: [
+                                PresentationAxisChild.fixed(
+                                  _exportedAnchor("first.target"),
+                                ),
+                                PresentationAxisChild.fixed(
+                                  _exportedAnchor("second.target"),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

@@ -22,13 +22,16 @@ extension ContainerElementRendering on ContainerElement {
     final radiusValue = resolvedRadius.valueOrNull!;
 
     final background = resolvedBackground.valueOrNull;
-    final content = DecoratedBox(
+    final decorated = DecoratedBox(
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.all(radiusValue),
       ),
       child: PresentationNodeRenderer(node: child, scope: scope),
     );
+    final content = background == null
+        ? decorated
+        : Surface(color: background, child: decorated);
     if (resolvedBorder?.valueOrNull case final borderValue?) {
       return CustomPaint(
         foregroundPainter: _SectionBorderPainter(

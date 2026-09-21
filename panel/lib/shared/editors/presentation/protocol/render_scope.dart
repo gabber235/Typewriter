@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "render_scope.freezed.dart";
@@ -265,10 +267,12 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,
     ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,
     ReferenceResourceResolver? resolveReferences,
-    @Default([]) List<RecordId> referenceOrigins,
+    ReferenceEligibilityEvaluator? referenceEligibility,
+    @Default([]) List<skir.ResourceId> referenceOrigins,
     @Default(ReferenceCandidatePolicyRegistry())
     ReferenceCandidatePolicyRegistry referencePolicies,
     EditOwner? Function(BindingReference reference)? editOwnerFor,
+    RenderedBindingFocusController? bindingFocusController,
     @Default({})
     Map<PresentationCollectionSourceId, PresentationCollectionSource>
     collections,

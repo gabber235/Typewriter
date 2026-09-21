@@ -95,6 +95,7 @@ bool typeExpressionsEqual(TypeExpression left, TypeExpression right) {
 bool typeFieldsEqual(TypeField left, TypeField right) =>
     left.name == right.name &&
     left.initialValue == right.initialValue &&
+    left.defaulted == right.defaulted &&
     typeExpressionsEqual(left.type, right.type);
 
 /// A hash for use with caches and change detection alongside
@@ -192,5 +193,5 @@ extension TypeExpressionStructuralHash on TypeExpression {
 /// Structural hash for a record field, including its optional initializer.
 extension TypeFieldStructuralHash on TypeField {
   int get structuralHash =>
-      Object.hash(name, initialValue, type.structuralHash);
+      Object.hash(name, initialValue, defaulted, type.structuralHash);
 }

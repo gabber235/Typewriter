@@ -6,10 +6,11 @@ part of "route.dart";
 /// movement, and entry drops. It renders projected page metadata but sends all
 /// edits through the authoring commands.
 class _PageTile extends HookConsumerWidget {
-  const _PageTile({required this.page});
+  const _PageTile({required this.page, required this.subjects});
   final Page page;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
-  skir.RecordId get pageId => page.pageId;
+  skir.ResourceId get pageId => page.pageId;
   String get name => page.name;
   String get chapter => page.chapter;
 
@@ -33,7 +34,8 @@ class _PageTile extends HookConsumerWidget {
           onChapterChanged: (newChapter) async {
             final result = await ref.editPage(
               id: pageId,
-              chapter: skir.StringChange(expected: chapter, value: newChapter),
+              chapter: newChapter,
+              expectedChapter: chapter,
             );
             result.requireApplied(conflictMessage: "The page chapter changed");
           },
@@ -87,7 +89,8 @@ class _PageTile extends HookConsumerWidget {
           onChapterChanged: (newChapter) async {
             final result = await ref.editPage(
               id: pageId,
-              chapter: skir.StringChange(expected: chapter, value: newChapter),
+              chapter: newChapter,
+              expectedChapter: chapter,
             );
             result.requireApplied(conflictMessage: "The page chapter changed");
           },
@@ -123,12 +126,6 @@ class _PageTile extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
 
-    final definition = ref
-        .watch(realmEditorCatalogProvider)
-        .value
-        ?.snapshot
-        ?.pageCatalog
-        .definitions[page.kind];
     final elementTypes = ref.watch(pageElementTypesProvider(page.kind)).value;
 
     final backgroundColor = isSelected
@@ -144,17 +141,8 @@ class _PageTile extends HookConsumerWidget {
       child: Row(
         children: [
           SizedBox(width: context.spacing.space1),
-          if (definition == null)
-            Icon(Icons.warning_rounded, size: 11, color: foregroundColor)
-          else
-            Icones.value(definition.icon, size: 11, color: foregroundColor),
-          SizedBox(width: context.spacing.space2),
           Expanded(
-            child: Text(
-              page.name.formatted,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: foregroundColor),
-            ),
+            child: _PageRoleTile(pageId: pageId, subjects: subjects),
           ),
           SizedBox(width: context.spacing.space2),
           Icon(Icons.chevron_right, size: 16, color: foregroundColor),
@@ -196,10 +184,8 @@ class _PageTile extends HookConsumerWidget {
               onAcceptWithDetails: (details) async {
                 final result = await ref.editPage(
                   id: details.data.pageId,
-                  chapter: skir.StringChange(
-                    expected: details.data.chapter,
-                    value: chapter,
-                  ),
+                  chapter: chapter,
+                  expectedChapter: details.data.chapter,
                 );
                 result.requireApplied(
                   conflictMessage: "The page chapter changed",
@@ -312,21 +298,16 @@ class _PageTile extends HookConsumerWidget {
 /// Selection remains read from the route provider, while page kind metadata is
 /// resolved from the active realm catalog.
 class _SmallPageTile extends HookConsumerWidget {
-  const _SmallPageTile({required this.page});
+  const _SmallPageTile({required this.page, required this.subjects});
 
   final Page page;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
-  skir.RecordId get pageId => page.pageId;
+  skir.ResourceId get pageId => page.pageId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
-    final definition = ref
-        .watch(realmEditorCatalogProvider)
-        .value
-        ?.snapshot
-        ?.pageCatalog
-        .definitions[page.kind];
 
     return Material(
       color: isSelected
@@ -335,22 +316,79 @@ class _SmallPageTile extends HookConsumerWidget {
       borderRadius: context.shapes.mediumBorderRadius,
       child: Padding(
         padding: EdgeInsets.all(context.spacing.space2),
-        child: definition == null
-            ? Icon(
-                Icons.warning_rounded,
-                size: 11,
-                color: isSelected
-                    ? context.colors.onSelectionContainer
-                    : context.colors.contentSecondary,
-              )
-            : Icones.value(
-                definition.icon,
-                size: 11,
-                color: isSelected
-                    ? context.colors.onSelectionContainer
-                    : context.colors.contentSecondary,
-              ),
+        child: SizedBox.square(
+          dimension: 20,
+          child: ClipRect(
+            child: _PageRoleTile(pageId: pageId, subjects: subjects),
+          ),
+        ),
       ),
     );
   }
 }
+
+class _PageRoleTile extends StatelessWidget {
+  const _PageRoleTile({required this.pageId, required this.subjects});
+
+  final skir.ResourceId pageId;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
+
+  @override
+  Widget build(BuildContext context) {
+    final projection = switch (subjects) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    if (projection == null) {
+      if (subjects?.hasError ?? subjects == null) {
+        return const Tooltip(
+          message: "Page presentation is unavailable",
+          child: Icon(Icons.warning_rounded, size: 14),
+        );
+      }
+      return ShimmerBox.rectangle(width: double.infinity, height: 20);
+    }
+    final subject = projection.subjects[pageId];
+    if (subject == null) {
+      return ComposedEditor(
+        model: _pageTileDiagnostic(
+          projection.catalog.catalog,
+          projection.diagnostics.isEmpty
+              ? const [
+                  TypeDiagnostic(
+                    code: TypeDiagnosticCode.invalidPresentation,
+                    message: "Page presentation subject is unavailable",
+                    pathPresent: false,
+                  ),
+                ]
+              : projection.diagnostics,
+        ),
+        readOnly: true,
+      );
+    }
+    final result = TypedAuthoringCodec(projection.catalog).subjectPresentation(
+      subject,
+      PresentationRole.pageTile,
+      collections: projection.collections,
+    );
+    return ComposedEditor(
+      model:
+          result.valueOrNull?.model ??
+          _pageTileDiagnostic(projection.catalog.catalog, result.diagnostics),
+      readOnly: true,
+    );
+  }
+}
+
+PresentationModel _pageTileDiagnostic(
+  TypeCatalog catalog,
+  List<TypeDiagnostic> diagnostics,
+) => PresentationModel(
+  catalog: catalog,
+  inputs: const {},
+  root: PresentationNode(
+    id: "page.tile.diagnostic",
+    element: DiagnosticElement(diagnostics),
+  ),
+  diagnostics: diagnostics,
+);

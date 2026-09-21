@@ -1,9 +1,11 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: "Complete editor", type: ElementCreationDialog)
+@widgetbook.UseCase(name: "Complete editor", type: ResourceCreationDialog)
 Widget materializationPromptUseCase(BuildContext context) => FakeApp(
   overrides: [
     editorRealmRuntimeProvider.overrideWithValue(_materializationRuntime),
@@ -28,9 +30,6 @@ final class _MaterializationStoryState extends State<_MaterializationStory> {
       rootType: _creationType,
       registry: _materializationRegistry,
       fixedValues: {
-        const MaterializationLocation(["field:id"]): const StringValue(
-          "widgetbook",
-        ),
         const MaterializationLocation(["field:name"]): const StringValue(
           "Quest objective",
         ),
@@ -39,11 +38,11 @@ final class _MaterializationStoryState extends State<_MaterializationStory> {
   }
 
   @override
-  Widget build(BuildContext context) => ElementCreationDialog(
+  Widget build(BuildContext context) => ResourceCreationDialog(
     title: "Create quest objective",
     draft: draft,
     presentations: const [],
-    origins: [recordId("page:widgetbook_origin")],
+    origins: [skir.ResourceId(value: "page:widgetbook_origin")],
     onCancel: () {},
     onCreate: (_) {},
   );
@@ -57,7 +56,6 @@ final class _MaterializationStoryState extends State<_MaterializationStory> {
 
 const _creationType = RecordType(
   fields: {
-    "id": TypeField(name: "id", type: StringType()),
     "name": TypeField(name: "name", type: StringType()),
     "target": TypeField(
       name: "target",
@@ -105,7 +103,7 @@ const _creationType = RecordType(
 );
 
 final _materializationRegistry = TypeRegistry(
-  TypeCatalog([
+  receivedRealmCatalog([
     ...referenceResourceTypes.definitions,
     const TypeDefinition(
       id: _audienceType,
@@ -163,7 +161,7 @@ final _materializationRuntime = EditorRealmRuntime(
         ReferenceResourceSummary(
           id: id,
           exists: true,
-          title: _referenceTitles[id] ?? id.toSurrealQl(),
+          title: _referenceTitles[id] ?? id.value,
           subtitle: "Element on widgetbook_origin",
         ),
     ],
@@ -171,23 +169,23 @@ final _materializationRuntime = EditorRealmRuntime(
 );
 
 final _referenceTitles = {
-  recordId("element:mayor_greeting"): "Mayor greeting",
-  recordId("element:start_main_quest"): "Start main quest",
-  recordId("element:reward_player"): "Reward player",
+  skir.ResourceId(value: "element:mayor_greeting"): "Mayor greeting",
+  skir.ResourceId(value: "element:start_main_quest"): "Start main quest",
+  skir.ResourceId(value: "element:reward_player"): "Reward player",
 };
 
 final _referenceNodes = [
   for (final entry in _referenceTitles.entries)
     SearchNode.result(
       result: SearchResult(
-        id: entry.key.toSurrealQl(),
+        id: entry.key.value,
         type: presentationSearchResultType,
         title: entry.value,
         subtitle: "Element on widgetbook_origin",
         payload: PresentationSearchResultPayload(
           selectedValue: ReferenceValue(entry.key),
           presentation: PresentationNode(
-            id: "materialization.${entry.key.id}",
+            id: "materialization.${entry.key.value}",
             element: TextElement(entry.value.asStringLiteral),
           ),
           expressions: const ExpressionContext(
