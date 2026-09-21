@@ -1,6 +1,7 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeDefinition
 import kotlinx.serialization.Serializable
@@ -134,6 +135,7 @@ data class TypeDiscoveryContribution(
     val definitions: List<TypeDefinition>,
     val prototypeBindings: List<PrototypeBinding>,
     val executableBindings: List<ExecutableBinding>,
+    val relations: List<RelationDefinition> = emptyList(),
 ) {
     init {
         require(schema == TYPE_DISCOVERY_SCHEMA) { "Unsupported type discovery schema $schema." }
@@ -143,6 +145,9 @@ data class TypeDiscoveryContribution(
         }
         require(prototypeBindings.map(PrototypeBinding::type).distinct().size == prototypeBindings.size) {
             "A type discovery contribution cannot contain duplicate prototype bindings."
+        }
+        require(relations.map(RelationDefinition::id).distinct().size == relations.size) {
+            "A type discovery contribution cannot contain duplicate relation definitions."
         }
     }
 }

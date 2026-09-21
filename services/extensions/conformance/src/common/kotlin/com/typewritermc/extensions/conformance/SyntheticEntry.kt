@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilities
@@ -14,7 +15,6 @@ import com.typewritermc.capability.realmSearch
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.TypewriterRegistrar
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeContext
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementRuntimeHandle
@@ -29,6 +29,8 @@ import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.TypewriterPresentation
 import com.typewritermc.presentation.presentation
 import com.typewritermc.types.Color
+import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,20 +59,22 @@ data class RepeatedMessage(
     val repetitions: Int,
 ) : SyntheticMessage
 
-interface ConformanceEntry : Entry
+interface ConformanceEntry : Entry {
+    override val placement: GraphPlacement
+}
 
 /** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
 @TypewriterElement(
     id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
-    revision = 2,
+    revision = 1,
     name = "Synthetic Entry",
     description = "Verifies Typewriter discovery",
     icon = "material-symbols:science",
     color = Color.Hex.PURPLE,
 )
 data class SyntheticEntry(
-    override val id: ElementInstanceId,
     override val name: String,
+    override val placement: GraphPlacement,
     val message: SyntheticMessage,
 ) : ConformanceEntry
 
@@ -162,7 +166,7 @@ fun syntheticEntryCompactEditor() =
 @TypewriterElementFacet(SyntheticEntry::class)
 class SyntheticEntryFacet : ElementRuntimeFacet<SyntheticEntry> {
     context(context: ElementRuntimeContext)
-    override suspend fun attach(element: SyntheticEntry): ElementRuntimeHandle =
+    override suspend fun attach(element: Resource<ResourceId, SyntheticEntry>): ElementRuntimeHandle =
         object : ElementRuntimeHandle {
             override fun close() = Unit
         }

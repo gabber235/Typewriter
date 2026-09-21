@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
@@ -38,28 +39,17 @@ final class CompiledBlobPointer implements CompiledBlobPointer_orMutable {
   factory CompiledBlobPointer({
     required _core.String digest,
     required _core.int size,
-  }) => CompiledBlobPointer._(
-    digest,
-    size,
-  );
+  }) => CompiledBlobPointer._(digest, size);
 
-  CompiledBlobPointer._(
-    this.digest,
-    this.size,
-  );
+  CompiledBlobPointer._(this.digest, this.size);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompiledBlobPointer._(
-    "",
-    0,
-  );
+  static final defaultInstance = CompiledBlobPointer._("", 0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompiledBlobPointer_mutable mutable() => CompiledBlobPointer_mutable._(
-    "",
-    0,
-  );
+  static CompiledBlobPointer_mutable mutable() =>
+      CompiledBlobPointer_mutable._("", 0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -67,31 +57,33 @@ final class CompiledBlobPointer implements CompiledBlobPointer_orMutable {
   CompiledBlobPointer toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompiledBlobPointer_mutable toMutable() => CompiledBlobPointer_mutable._(
-    this.digest,
-    this.size,
-  );
+  CompiledBlobPointer_mutable toMutable() =>
+      CompiledBlobPointer_mutable._(this.digest, this.size);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompiledBlobPointer) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.digest,
-    this.size,
-  ];
+  _core.List get _equality_proxy => [this.digest, this.size];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompiledBlobPointer` instances.
-  static _skir.StructSerializer<CompiledBlobPointer, CompiledBlobPointer_mutable> get serializer {
+  static _skir.StructSerializer<
+    CompiledBlobPointer,
+    CompiledBlobPointer_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "digest",
@@ -128,22 +120,18 @@ final class CompiledBlobPointer implements CompiledBlobPointer_orMutable {
 }
 
 /// Mutable version of [CompiledBlobPointer].
-final class CompiledBlobPointer_mutable implements CompiledBlobPointer_orMutable {
+final class CompiledBlobPointer_mutable
+    implements CompiledBlobPointer_orMutable {
   _core.String digest;
   _core.int size;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompiledBlobPointer_mutable._(
-    this.digest,
-    this.size,
-  );
+  CompiledBlobPointer_mutable._(this.digest, this.size);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompiledBlobPointer toFrozen() => CompiledBlobPointer(
-    digest: this.digest,
-    size: this.size,
-  ).._u = this._u;
+  CompiledBlobPointer toFrozen() =>
+      CompiledBlobPointer(digest: this.digest, size: this.size).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -168,15 +156,9 @@ final class CompiledShardPointer implements CompiledShardPointer_orMutable {
   factory CompiledShardPointer({
     required _core.String shardDigest,
     required CompiledBlobPointer_orMutable blob,
-  }) => CompiledShardPointer._(
-    shardDigest,
-    blob.toFrozen(),
-  );
+  }) => CompiledShardPointer._(shardDigest, blob.toFrozen());
 
-  CompiledShardPointer._(
-    this.shardDigest,
-    this.blob,
-  );
+  CompiledShardPointer._(this.shardDigest, this.blob);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompiledShardPointer._(
@@ -186,10 +168,8 @@ final class CompiledShardPointer implements CompiledShardPointer_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompiledShardPointer_mutable mutable() => CompiledShardPointer_mutable._(
-    "",
-    CompiledBlobPointer.defaultInstance,
-  );
+  static CompiledShardPointer_mutable mutable() =>
+      CompiledShardPointer_mutable._("", CompiledBlobPointer.defaultInstance);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -197,31 +177,33 @@ final class CompiledShardPointer implements CompiledShardPointer_orMutable {
   CompiledShardPointer toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompiledShardPointer_mutable toMutable() => CompiledShardPointer_mutable._(
-    this.shardDigest,
-    this.blob,
-  );
+  CompiledShardPointer_mutable toMutable() =>
+      CompiledShardPointer_mutable._(this.shardDigest, this.blob);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompiledShardPointer) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.shardDigest,
-    this.blob,
-  ];
+  _core.List get _equality_proxy => [this.shardDigest, this.blob];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompiledShardPointer` instances.
-  static _skir.StructSerializer<CompiledShardPointer, CompiledShardPointer_mutable> get serializer {
+  static _skir.StructSerializer<
+    CompiledShardPointer,
+    CompiledShardPointer_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "shard_digest",
@@ -258,15 +240,13 @@ final class CompiledShardPointer implements CompiledShardPointer_orMutable {
 }
 
 /// Mutable version of [CompiledShardPointer].
-final class CompiledShardPointer_mutable implements CompiledShardPointer_orMutable {
+final class CompiledShardPointer_mutable
+    implements CompiledShardPointer_orMutable {
   _core.String shardDigest;
   CompiledBlobPointer_orMutable blob;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompiledShardPointer_mutable._(
-    this.shardDigest,
-    this.blob,
-  );
+  CompiledShardPointer_mutable._(this.shardDigest, this.blob);
 
   /// If the value of [blob] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [blob] and returns it.
@@ -281,10 +261,9 @@ final class CompiledShardPointer_mutable implements CompiledShardPointer_orMutab
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompiledShardPointer toFrozen() => CompiledShardPointer(
-    shardDigest: this.shardDigest,
-    blob: this.blob,
-  ).._u = this._u;
+  CompiledShardPointer toFrozen() =>
+      CompiledShardPointer(shardDigest: this.shardDigest, blob: this.blob)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -305,7 +284,8 @@ sealed class CompiledContentActivation_orMutable {
 /// content, while their blob pointers identify bytes to download and verify.
 ///
 /// Deeply immutable.
-final class CompiledContentActivation implements CompiledContentActivation_orMutable {
+final class CompiledContentActivation
+    implements CompiledContentActivation_orMutable {
   @_core.override
   final _core.int activationRevision;
   @_core.override
@@ -345,12 +325,13 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompiledContentActivation_mutable mutable() => CompiledContentActivation_mutable._(
-    0,
-    "",
-    CompiledBlobPointer.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
+  static CompiledContentActivation_mutable mutable() =>
+      CompiledContentActivation_mutable._(
+        0,
+        "",
+        CompiledBlobPointer.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -358,18 +339,22 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
   CompiledContentActivation toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompiledContentActivation_mutable toMutable() => CompiledContentActivation_mutable._(
-    this.activationRevision,
-    this.manifestDigest,
-    this.manifest,
-    this.shards,
-  );
+  CompiledContentActivation_mutable toMutable() =>
+      CompiledContentActivation_mutable._(
+        this.activationRevision,
+        this.manifestDigest,
+        this.manifest,
+        this.shards,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompiledContentActivation) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -386,7 +371,11 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompiledContentActivation` instances.
-  static _skir.StructSerializer<CompiledContentActivation, CompiledContentActivation_mutable> get serializer {
+  static _skir.StructSerializer<
+    CompiledContentActivation,
+    CompiledContentActivation_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "activation_revision",
@@ -419,9 +408,7 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
         "shards",
         "shards",
         3,
-        _skir.Serializers.iterable(
-          CompiledShardPointer.serializer,
-        ),
+        _skir.Serializers.iterable(CompiledShardPointer.serializer),
         "",
         (it) => it.shards,
         (it, v) => it.shards = v,
@@ -443,7 +430,8 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
 }
 
 /// Mutable version of [CompiledContentActivation].
-final class CompiledContentActivation_mutable implements CompiledContentActivation_orMutable {
+final class CompiledContentActivation_mutable
+    implements CompiledContentActivation_orMutable {
   _core.int activationRevision;
   _core.String manifestDigest;
   CompiledBlobPointer_orMutable manifest;
@@ -498,7 +486,8 @@ sealed class WatchCompiledContentRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchCompiledContentRequest implements WatchCompiledContentRequest_orMutable {
+final class WatchCompiledContentRequest
+    implements WatchCompiledContentRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchCompiledContentRequest() => WatchCompiledContentRequest._();
@@ -510,7 +499,8 @@ final class WatchCompiledContentRequest implements WatchCompiledContentRequest_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchCompiledContentRequest_mutable mutable() => WatchCompiledContentRequest_mutable._();
+  static WatchCompiledContentRequest_mutable mutable() =>
+      WatchCompiledContentRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -518,13 +508,17 @@ final class WatchCompiledContentRequest implements WatchCompiledContentRequest_o
   WatchCompiledContentRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentRequest_mutable toMutable() => WatchCompiledContentRequest_mutable._();
+  WatchCompiledContentRequest_mutable toMutable() =>
+      WatchCompiledContentRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchCompiledContentRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -536,7 +530,11 @@ final class WatchCompiledContentRequest implements WatchCompiledContentRequest_o
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchCompiledContentRequest` instances.
-  static _skir.StructSerializer<WatchCompiledContentRequest, WatchCompiledContentRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchCompiledContentRequest,
+    WatchCompiledContentRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -555,14 +553,16 @@ final class WatchCompiledContentRequest implements WatchCompiledContentRequest_o
 }
 
 /// Mutable version of [WatchCompiledContentRequest].
-final class WatchCompiledContentRequest_mutable implements WatchCompiledContentRequest_orMutable {
+final class WatchCompiledContentRequest_mutable
+    implements WatchCompiledContentRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchCompiledContentRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchCompiledContentRequest toFrozen() => WatchCompiledContentRequest().._u = this._u;
+  WatchCompiledContentRequest toFrozen() =>
+      WatchCompiledContentRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -576,7 +576,8 @@ sealed class WatchCompiledContentResponse_Initial_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchCompiledContentResponse_Initial implements WatchCompiledContentResponse_Initial_orMutable {
+final class WatchCompiledContentResponse_Initial
+    implements WatchCompiledContentResponse_Initial_orMutable {
   @_core.override
   final CompiledContentActivation? activation;
   _skir.internal__UnrecognizedFields? _u;
@@ -587,20 +588,15 @@ final class WatchCompiledContentResponse_Initial implements WatchCompiledContent
     (activation != null) ? activation.toFrozen() : null,
   );
 
-  WatchCompiledContentResponse_Initial._(
-    this.activation,
-  );
+  WatchCompiledContentResponse_Initial._(this.activation);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WatchCompiledContentResponse_Initial._(
-    null,
-  );
+  static final defaultInstance = WatchCompiledContentResponse_Initial._(null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchCompiledContentResponse_Initial_mutable mutable() => WatchCompiledContentResponse_Initial_mutable._(
-    null,
-  );
+  static WatchCompiledContentResponse_Initial_mutable mutable() =>
+      WatchCompiledContentResponse_Initial_mutable._(null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -608,37 +604,39 @@ final class WatchCompiledContentResponse_Initial implements WatchCompiledContent
   WatchCompiledContentResponse_Initial toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentResponse_Initial_mutable toMutable() => WatchCompiledContentResponse_Initial_mutable._(
-    this.activation,
-  );
+  WatchCompiledContentResponse_Initial_mutable toMutable() =>
+      WatchCompiledContentResponse_Initial_mutable._(this.activation);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchCompiledContentResponse_Initial) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.activation,
-  ];
+  _core.List get _equality_proxy => [this.activation];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchCompiledContentResponse_Initial` instances.
-  static _skir.StructSerializer<WatchCompiledContentResponse_Initial, WatchCompiledContentResponse_Initial_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchCompiledContentResponse_Initial,
+    WatchCompiledContentResponse_Initial_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "activation",
         "activation",
         0,
-        _skir.Serializers.optional(
-          CompiledContentActivation.serializer,
-        ),
+        _skir.Serializers.optional(CompiledContentActivation.serializer),
         "",
         (it) => it.activation,
         (it, v) => it.activation = v,
@@ -649,30 +647,31 @@ final class WatchCompiledContentResponse_Initial implements WatchCompiledContent
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "library/v1/compiled_content.skir:WatchCompiledContentResponse.Initial",
+    recordId:
+        "library/v1/compiled_content.skir:WatchCompiledContentResponse.Initial",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchCompiledContentResponse_Initial_mutable it) => it.toFrozen(),
+    toFrozen: (WatchCompiledContentResponse_Initial_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WatchCompiledContentResponse_Initial].
-final class WatchCompiledContentResponse_Initial_mutable implements WatchCompiledContentResponse_Initial_orMutable {
+final class WatchCompiledContentResponse_Initial_mutable
+    implements WatchCompiledContentResponse_Initial_orMutable {
   CompiledContentActivation_orMutable? activation;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchCompiledContentResponse_Initial_mutable._(
-    this.activation,
-  );
+  WatchCompiledContentResponse_Initial_mutable._(this.activation);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchCompiledContentResponse_Initial toFrozen() => WatchCompiledContentResponse_Initial(
-    activation: this.activation,
-  ).._u = this._u;
+  WatchCompiledContentResponse_Initial toFrozen() =>
+      WatchCompiledContentResponse_Initial(activation: this.activation)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -684,10 +683,12 @@ sealed class WatchCompiledContentResponse_Blocked_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchCompiledContentResponse_Blocked implements WatchCompiledContentResponse_Blocked_orMutable {
+final class WatchCompiledContentResponse_Blocked
+    implements WatchCompiledContentResponse_Blocked_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WatchCompiledContentResponse_Blocked() => WatchCompiledContentResponse_Blocked._();
+  factory WatchCompiledContentResponse_Blocked() =>
+      WatchCompiledContentResponse_Blocked._();
 
   WatchCompiledContentResponse_Blocked._();
 
@@ -696,7 +697,8 @@ final class WatchCompiledContentResponse_Blocked implements WatchCompiledContent
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchCompiledContentResponse_Blocked_mutable mutable() => WatchCompiledContentResponse_Blocked_mutable._();
+  static WatchCompiledContentResponse_Blocked_mutable mutable() =>
+      WatchCompiledContentResponse_Blocked_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -704,13 +706,17 @@ final class WatchCompiledContentResponse_Blocked implements WatchCompiledContent
   WatchCompiledContentResponse_Blocked toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentResponse_Blocked_mutable toMutable() => WatchCompiledContentResponse_Blocked_mutable._();
+  WatchCompiledContentResponse_Blocked_mutable toMutable() =>
+      WatchCompiledContentResponse_Blocked_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchCompiledContentResponse_Blocked) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -722,7 +728,11 @@ final class WatchCompiledContentResponse_Blocked implements WatchCompiledContent
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchCompiledContentResponse_Blocked` instances.
-  static _skir.StructSerializer<WatchCompiledContentResponse_Blocked, WatchCompiledContentResponse_Blocked_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchCompiledContentResponse_Blocked,
+    WatchCompiledContentResponse_Blocked_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -730,25 +740,29 @@ final class WatchCompiledContentResponse_Blocked implements WatchCompiledContent
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "library/v1/compiled_content.skir:WatchCompiledContentResponse.Blocked",
+    recordId:
+        "library/v1/compiled_content.skir:WatchCompiledContentResponse.Blocked",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchCompiledContentResponse_Blocked_mutable it) => it.toFrozen(),
+    toFrozen: (WatchCompiledContentResponse_Blocked_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WatchCompiledContentResponse_Blocked].
-final class WatchCompiledContentResponse_Blocked_mutable implements WatchCompiledContentResponse_Blocked_orMutable {
+final class WatchCompiledContentResponse_Blocked_mutable
+    implements WatchCompiledContentResponse_Blocked_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchCompiledContentResponse_Blocked_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchCompiledContentResponse_Blocked toFrozen() => WatchCompiledContentResponse_Blocked().._u = this._u;
+  WatchCompiledContentResponse_Blocked toFrozen() =>
+      WatchCompiledContentResponse_Blocked().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -770,25 +784,24 @@ final class WatchCompiledContentResponse_Blocked_mutable implements WatchCompile
 sealed class WatchCompiledContentResponse {
   /// Constant indicating an unknown `WatchCompiledContentResponse`.
   /// Default value for fields of type `WatchCompiledContentResponse`.
-  static const WatchCompiledContentResponse unknown = WatchCompiledContentResponse_unknown._instance;
+  static const WatchCompiledContentResponse unknown =
+      WatchCompiledContentResponse_unknown._instance;
 
   /// Create a 'initial' variant wrapping around the given value.
   factory WatchCompiledContentResponse.wrapInitial(
-    WatchCompiledContentResponse_Initial value
+    WatchCompiledContentResponse_Initial value,
   ) => WatchCompiledContentResponse_initialWrapper._(value);
 
   /// Same as `wrapInitial(WatchCompiledContentResponse_Initial(...))`.
   factory WatchCompiledContentResponse.createInitial({
     required CompiledContentActivation_orMutable? activation,
   }) => WatchCompiledContentResponse.wrapInitial(
-    WatchCompiledContentResponse_Initial(
-      activation: activation,
-    )
+    WatchCompiledContentResponse_Initial(activation: activation),
   );
 
   /// Create a 'activated' variant wrapping around the given value.
   factory WatchCompiledContentResponse.wrapActivated(
-    CompiledContentActivation value
+    CompiledContentActivation value,
   ) => WatchCompiledContentResponse_activatedWrapper._(value);
 
   /// Same as `wrapActivated(CompiledContentActivation(...))`.
@@ -803,28 +816,30 @@ sealed class WatchCompiledContentResponse {
       manifestDigest: manifestDigest,
       manifest: manifest,
       shards: shards,
-    )
+    ),
   );
 
   /// Create a 'blocked' variant wrapping around the given value.
   factory WatchCompiledContentResponse.wrapBlocked(
-    WatchCompiledContentResponse_Blocked value
+    WatchCompiledContentResponse_Blocked value,
   ) => WatchCompiledContentResponse_blockedWrapper._(value);
 
   /// Same as `wrapBlocked(WatchCompiledContentResponse_Blocked(...))`.
-  factory WatchCompiledContentResponse.createBlocked() => WatchCompiledContentResponse.wrapBlocked(
-    WatchCompiledContentResponse_Blocked()
-  );
+  factory WatchCompiledContentResponse.createBlocked() =>
+      WatchCompiledContentResponse.wrapBlocked(
+        WatchCompiledContentResponse_Blocked(),
+      );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchCompiledContentResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchCompiledContentResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchCompiledContentResponse.createInternalError() => WatchCompiledContentResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory WatchCompiledContentResponse.createInternalError() =>
+      WatchCompiledContentResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this WatchCompiledContentResponse.
   WatchCompiledContentResponse_kind get kind;
@@ -870,22 +885,25 @@ sealed class WatchCompiledContentResponse {
         "",
         WatchCompiledContentResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: WatchCompiledContentResponse_kind.internalErrorWrapper._ordinal,
+        ordinal:
+            WatchCompiledContentResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "library/v1/compiled_content.skir:WatchCompiledContentResponse",
-    doc: "",
-    unknownInstance: WatchCompiledContentResponse_unknown._instance,
-    enumInstance: WatchCompiledContentResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchCompiledContentResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId:
+            "library/v1/compiled_content.skir:WatchCompiledContentResponse",
+        doc: "",
+        unknownInstance: WatchCompiledContentResponse_unknown._instance,
+        enumInstance: WatchCompiledContentResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchCompiledContentResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `WatchCompiledContentResponse`.
@@ -901,7 +919,8 @@ enum WatchCompiledContentResponse_kind {
   const WatchCompiledContentResponse_kind(this._ordinal);
 }
 
-final class WatchCompiledContentResponse_unknown implements WatchCompiledContentResponse {
+final class WatchCompiledContentResponse_unknown
+    implements WatchCompiledContentResponse {
   static const _instance = WatchCompiledContentResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -910,16 +929,20 @@ final class WatchCompiledContentResponse_unknown implements WatchCompiledContent
   WatchCompiledContentResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.unknown;
+  WatchCompiledContentResponse_kind get kind =>
+      WatchCompiledContentResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is WatchCompiledContentResponse_unknown;
+  _core.bool operator ==(other) =>
+      other is WatchCompiledContentResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchCompiledContentResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchCompiledContentResponse.serializer);
 }
 
-sealed class _WatchCompiledContentResponse_wrapper implements WatchCompiledContentResponse {
+sealed class _WatchCompiledContentResponse_wrapper
+    implements WatchCompiledContentResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -932,56 +955,62 @@ sealed class _WatchCompiledContentResponse_wrapper implements WatchCompiledConte
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchCompiledContentResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchCompiledContentResponse.serializer);
 }
 
-final class WatchCompiledContentResponse_initialWrapper extends _WatchCompiledContentResponse_wrapper {
+final class WatchCompiledContentResponse_initialWrapper
+    extends _WatchCompiledContentResponse_wrapper {
   final WatchCompiledContentResponse_Initial value;
 
   WatchCompiledContentResponse_initialWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.initialWrapper;
+  WatchCompiledContentResponse_kind get kind =>
+      WatchCompiledContentResponse_kind.initialWrapper;
 }
 
-final class WatchCompiledContentResponse_activatedWrapper extends _WatchCompiledContentResponse_wrapper {
+final class WatchCompiledContentResponse_activatedWrapper
+    extends _WatchCompiledContentResponse_wrapper {
   final CompiledContentActivation value;
 
   WatchCompiledContentResponse_activatedWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.activatedWrapper;
+  WatchCompiledContentResponse_kind get kind =>
+      WatchCompiledContentResponse_kind.activatedWrapper;
 }
 
-final class WatchCompiledContentResponse_blockedWrapper extends _WatchCompiledContentResponse_wrapper {
+final class WatchCompiledContentResponse_blockedWrapper
+    extends _WatchCompiledContentResponse_wrapper {
   final WatchCompiledContentResponse_Blocked value;
 
   WatchCompiledContentResponse_blockedWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.blockedWrapper;
+  WatchCompiledContentResponse_kind get kind =>
+      WatchCompiledContentResponse_kind.blockedWrapper;
 }
 
-final class WatchCompiledContentResponse_internalErrorWrapper extends _WatchCompiledContentResponse_wrapper {
+final class WatchCompiledContentResponse_internalErrorWrapper
+    extends _WatchCompiledContentResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchCompiledContentResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.internalErrorWrapper;
+  WatchCompiledContentResponse_kind get kind =>
+      WatchCompiledContentResponse_kind.internalErrorWrapper;
 }
 
 /// Watches the current compiled activation and later activation state changes.
 /// The initial response is a point in time. Activated and blocked notifications
 /// are advisory, so consumers reconnect or refresh when delivery is uncertain.
-final _skir.Method<
-  WatchCompiledContentRequest,
-  WatchCompiledContentResponse
-> watchCompiledContentMethod =
-  _skir.Method(
-    "WatchCompiledContent",
-    920003,
-    WatchCompiledContentRequest.serializer,
-    WatchCompiledContentResponse.serializer,
-    "Watches the current compiled activation and later activation state changes.\nThe initial response is a point in time. Activated and blocked notifications\nare advisory, so consumers reconnect or refresh when delivery is uncertain.",
-  );
+final _skir.Method<WatchCompiledContentRequest, WatchCompiledContentResponse>
+watchCompiledContentMethod = _skir.Method(
+  "WatchCompiledContent",
+  920003,
+  WatchCompiledContentRequest.serializer,
+  WatchCompiledContentResponse.serializer,
+  "Watches the current compiled activation and later activation state changes.\nThe initial response is a point in time. Activated and blocked notifications\nare advisory, so consumers reconnect or refresh when delivery is uncertain.",
+);

@@ -1,10 +1,8 @@
 package com.typewritermc.pages
 
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.library.PageDocument
 import com.typewritermc.library.PageId
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.RecordIdKey
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
@@ -52,7 +50,7 @@ data class PageAuthoringRuleContext(
 data class PageAuthoringRuleViolation(
     val code: String,
     val message: String,
-    val element: ElementInstanceId? = null,
+    val element: ResourceId? = null,
 ) {
     init {
         require(code.isNotBlank()) { "Page authoring rule violation codes must not be blank." }
@@ -78,7 +76,7 @@ object CommonPageAuthoringRules {
 
         override fun validate(context: PageAuthoringRuleContext): List<PageAuthoringRuleViolation> =
             context.after.references.mapNotNull { reference ->
-                if (reference.target != reference.source.resourceId()) return@mapNotNull null
+                if (reference.target != reference.source) return@mapNotNull null
                 PageAuthoringRuleViolation(
                     code = "page-rule-self-reference",
                     message = "Element ${reference.source.value} cannot reference itself.",
@@ -96,14 +94,14 @@ object CommonPageAuthoringRules {
             val outgoing =
                 context.after.references
                     .mapNotNull { reference ->
-                        val target = reference.target.elementInstanceId() ?: return@mapNotNull null
+                        val target = reference.target
                         if (reference.source !in localElements || target !in localElements) return@mapNotNull null
                         reference.source to target
                     }.groupBy({ it.first }, { it.second })
-            val visited = mutableSetOf<ElementInstanceId>()
-            val active = linkedSetOf<ElementInstanceId>()
+            val visited = mutableSetOf<ResourceId>()
+            val active = linkedSetOf<ResourceId>()
 
-            fun visit(element: ElementInstanceId): ElementInstanceId? {
+            fun visit(element: ResourceId): ResourceId? {
                 if (element in active) return element
                 if (!visited.add(element)) return null
                 active += element
@@ -124,12 +122,4 @@ object CommonPageAuthoringRules {
             )
         }
     }
-}
-
-private fun ElementInstanceId.resourceId(): ResourceId = ResourceId("element", value)
-
-private fun ResourceId.elementInstanceId(): ElementInstanceId? {
-    if (table != "element") return null
-    val stringKey = key as? RecordIdKey.String ?: return null
-    return ElementInstanceId(stringKey.value)
 }

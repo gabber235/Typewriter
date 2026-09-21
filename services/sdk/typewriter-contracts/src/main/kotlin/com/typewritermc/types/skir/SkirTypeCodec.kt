@@ -4,12 +4,17 @@ package com.typewritermc.types.skir
 
 import com.typewritermc.types.BuiltinTypeId
 import com.typewritermc.types.ConversionId
+import com.typewritermc.types.DataPath
+import com.typewritermc.types.DataPathSegment
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
+import com.typewritermc.types.FieldMergePolicy
+import com.typewritermc.types.FieldMergeStrategy
 import com.typewritermc.types.FloatWidth
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.PresentationId
+import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
@@ -22,13 +27,17 @@ import java.math.BigInteger
 import skirout.editor.v1.type_catalog.BuiltinTypeId as SkirBuiltinTypeId
 import skirout.editor.v1.type_catalog.CollectionConstraints as SkirCollectionConstraints
 import skirout.editor.v1.type_catalog.ConversionId as SkirConversionId
+import skirout.editor.v1.type_catalog.FieldMergePolicy as SkirFieldMergePolicy
+import skirout.editor.v1.type_catalog.FieldMergeStrategy as SkirFieldMergeStrategy
 import skirout.editor.v1.type_catalog.FloatWidth as SkirFloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth as SkirIntegerWidth
 import skirout.editor.v1.type_catalog.NamedPresentation as SkirNamedPresentation
 import skirout.editor.v1.type_catalog.NumericConstraints as SkirNumericConstraints
 import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
+import skirout.editor.v1.type_catalog.PresentationRole as SkirPresentationRole
 import skirout.editor.v1.type_catalog.RecordField as SkirRecordField
 import skirout.editor.v1.type_catalog.ResolvedTypeRef as SkirResolvedTypeRef
+import skirout.editor.v1.type_catalog.RolePresentation as SkirRolePresentation
 import skirout.editor.v1.type_catalog.TypeCatalog as SkirTypeCatalog
 import skirout.editor.v1.type_catalog.TypeDefinition as SkirTypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionKind as SkirTypeDefinitionKind
@@ -82,12 +91,18 @@ private fun ConversionScope.encode(definition: TypeDefinition): SkirTypeDefiniti
                 NominalTypeKind.OPEN_ABSTRACT -> SkirTypeDefinitionKind.OPEN_ABSTRACT
                 NominalTypeKind.SEALED_ABSTRACT -> SkirTypeDefinitionKind.SEALED_ABSTRACT
             },
+        declarationOwner = definition.declarationOwner,
         defaultPresentationId = definition.defaultPresentationId?.let(::encode),
         namedPresentations =
             definition.namedPresentations.toSortedMap().map { (name, id) ->
                 SkirNamedPresentation(name = name, presentationId = encode(id))
             },
         outgoingConversionIds = definition.outgoingConversionIds.map(::encode),
+        rolePresentations =
+            definition.rolePresentations.entries.sortedBy { it.key.ordinal }.map { (role, id) ->
+                SkirRolePresentation(role = encode(role), presentationId = encode(id))
+            },
+        fieldMergePolicies = definition.fieldMergePolicies.map(::encode),
     )
 
 private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefinition {
@@ -101,6 +116,7 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
                 SkirTypeDefinitionKind.SEALED_ABSTRACT -> NominalTypeKind.SEALED_ABSTRACT
                 else -> fail("Unknown Skir nominal type kind.")
             },
+        declarationOwner = definition.declarationOwner,
         representation = at("representation") { decode(definition.representation) },
         parameters = definition.parameters.mapIndexed { index, value -> at("parameter $index") { decode(value) } },
         parents = definition.directParents.mapIndexed { index, value -> at("parent $index") { decode(value) } },
@@ -109,8 +125,63 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
             definition.namedPresentations.associate { value -> value.name to decode(value.presentationId) },
         displayName = definition.displayName,
         outgoingConversionIds = definition.outgoingConversionIds.map(::decode),
+        rolePresentations =
+            definition.rolePresentations
+                .map { decode(it.role) to decode(it.presentationId) }
+                .also { values ->
+                    if (values.map { it.first }.distinct().size != values.size) {
+                        fail("Presentation roles must be unique.")
+                    }
+                }.toMap(),
+        fieldMergePolicies = definition.fieldMergePolicies.map(::decode),
     )
 }
+
+private fun ConversionScope.encode(role: PresentationRole): SkirPresentationRole =
+    when (role) {
+        PresentationRole.REFERENCE_SUMMARY -> SkirPresentationRole.REFERENCE_SUMMARY
+        PresentationRole.REFERENCE_OPTION -> SkirPresentationRole.REFERENCE_OPTION
+        PresentationRole.CATALOG_OPTION -> SkirPresentationRole.CATALOG_OPTION
+        PresentationRole.AUTHORING_RESULT -> SkirPresentationRole.AUTHORING_RESULT
+        PresentationRole.PAGE_TILE -> SkirPresentationRole.PAGE_TILE
+        PresentationRole.GRAPH_NODE -> SkirPresentationRole.GRAPH_NODE
+        PresentationRole.INSPECTOR_HEADER -> SkirPresentationRole.INSPECTOR_HEADER
+    }
+
+private fun ConversionScope.decode(role: SkirPresentationRole): PresentationRole =
+    when (role) {
+        SkirPresentationRole.REFERENCE_SUMMARY -> PresentationRole.REFERENCE_SUMMARY
+        SkirPresentationRole.REFERENCE_OPTION -> PresentationRole.REFERENCE_OPTION
+        SkirPresentationRole.CATALOG_OPTION -> PresentationRole.CATALOG_OPTION
+        SkirPresentationRole.AUTHORING_RESULT -> PresentationRole.AUTHORING_RESULT
+        SkirPresentationRole.PAGE_TILE -> PresentationRole.PAGE_TILE
+        SkirPresentationRole.GRAPH_NODE -> PresentationRole.GRAPH_NODE
+        SkirPresentationRole.INSPECTOR_HEADER -> PresentationRole.INSPECTOR_HEADER
+        else -> fail("Unknown Skir presentation role.")
+    }
+
+private fun ConversionScope.encode(policy: FieldMergePolicy): SkirFieldMergePolicy =
+    SkirFieldMergePolicy(
+        fieldPath =
+            policy.path.segments.map { segment ->
+                (segment as? DataPathSegment.Field)?.name
+                    ?: fail("Merge policies currently support field paths only.")
+            },
+        strategy =
+            when (policy.strategy) {
+                FieldMergeStrategy.SET_MEMBERSHIP -> SkirFieldMergeStrategy.SET_MEMBERSHIP
+            },
+    )
+
+private fun ConversionScope.decode(policy: SkirFieldMergePolicy): FieldMergePolicy =
+    FieldMergePolicy(
+        path = DataPath(policy.fieldPath.map(DataPathSegment::Field)),
+        strategy =
+            when (policy.strategy) {
+                SkirFieldMergeStrategy.SET_MEMBERSHIP -> FieldMergeStrategy.SET_MEMBERSHIP
+                else -> fail("Unknown Skir field merge strategy.")
+            },
+    )
 
 private fun ConversionScope.encode(parameter: TypeParameter): SkirTypeParameter =
     SkirTypeParameter(
@@ -241,6 +312,7 @@ private fun ConversionScope.encode(expression: TypeExpression): SkirTypeExpressi
                             name = field.name,
                             valueType = at(field.name) { encode(field.type) },
                             initializer = field.initialValue?.let { at("${field.name} initializer") { encodeDataValue(it) } },
+                            defaulted = field.defaulted,
                         )
                     },
                 closed = expression.closed,
@@ -362,6 +434,7 @@ private fun ConversionScope.decode(expression: SkirTypeExpression): TypeExpressi
                             name = field.name,
                             type = at(field.name) { decode(field.valueType) },
                             initialValue = field.initializer?.let { at("${field.name} initializer") { decodeDataValue(it) } },
+                            defaulted = field.defaulted,
                         )
                     },
                 closed = expression.value.closed,

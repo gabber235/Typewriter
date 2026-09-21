@@ -1,12 +1,10 @@
 package com.typewritermc.pages
 
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.ElementPlacement
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.library.BookId
 import com.typewritermc.library.ChapterPath
-import com.typewritermc.library.LibraryName
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageDocument
 import com.typewritermc.library.PageDocumentElement
@@ -17,7 +15,9 @@ import com.typewritermc.library.PageReference
 import com.typewritermc.library.ref
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
+import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.ToOne
 import com.typewritermc.types.TypeExpression
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
@@ -53,31 +53,34 @@ val PageAuthoringRulesTest by testSuite {
 
 private fun document(vararg edges: Pair<String, String>): PageDocument {
     val pageId = PageId("page")
-    val elementIds = edges.flatMap { listOf(it.first, it.second) }.distinct().map(::ElementInstanceId)
+    val elementIds = edges.flatMap { listOf(it.first, it.second) }.distinct().map(::ResourceId)
     val elementType = ElementTypeId(DeclaredTypeId.parse("40000000000000000000000000000001"))
     return PageDocument(
         page =
-            Page(
-                id = pageId,
-                book = BookId("book").ref(),
-                name = LibraryName("page"),
-                kind = PageKindRef(PageKindId(DeclaredTypeId.parse("50000000000000000000000000000001")), 1),
-                chapter = ChapterPath.parse(""),
-                priority = 0,
+            Resource(
+                pageId,
+                Page(
+                    book = ToOne(BookId("book").ref()),
+                    name = "page",
+                    kind = PageKindRef(PageKindId(DeclaredTypeId.parse("50000000000000000000000000000001")), 1),
+                    chapter = ChapterPath.parse(""),
+                    priority = 0,
+                ),
             ),
         elements =
             elementIds.map { id ->
-                PageDocumentElement(id, elementType, 1, DataValue.Unit, ElementPlacement.Graph(0, 0, 1, 1))
+                PageDocumentElement(id, elementType, 1, DataValue.Unit, GraphPlacement(0, 0, 1, 1))
             },
         references =
             edges.mapIndexed { index, (source, target) ->
                 PageReference(
-                    ElementInstanceId(source),
+                    ResourceId(source),
                     ReferenceSlotId("target:$index"),
-                    ResourceId("element", target),
+                    ResourceId(target),
                     TypeExpression.Any,
                 )
             },
+        incomingReferences = emptyList(),
         crossPageTargets = emptyList(),
         crossPageSources = emptyList(),
         diagnostics = emptyList(),

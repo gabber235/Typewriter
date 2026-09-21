@@ -3,7 +3,10 @@ package com.typewritermc.discovery.runtime
 import com.typewritermc.discovery.AssembledTypeDiscovery
 import com.typewritermc.discovery.DiscoveryDomainId
 import com.typewritermc.types.CatalogAbstractTypePrototype
+import com.typewritermc.types.CatalogMetadataTypePrototype
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypePrototype
 import com.typewritermc.types.TypePrototypeProvider
@@ -46,19 +49,86 @@ class PrototypeRegistryLoader {
                 }
         val abstracts =
             discovery.catalog.definitions
-                .filter { it.kind != NominalTypeKind.CONCRETE }
-                .map { definition ->
-                    val identity = definition.id.id
-                    require(identity is TypeId.Qualified) { "Abstract type identities must be qualified names." }
+                .filter { definition ->
+                    definition.kind != NominalTypeKind.CONCRETE &&
+                        definition.id.id is TypeId.Qualified &&
+                        concrete.any { prototype ->
+                            discovery.catalog.isDescendant(prototype.definition, definition.id.id)
+                        }
+                }.map { definition ->
+                    val identity = definition.id.id as TypeId.Qualified
                     val runtimeClass = Class.forName(identity.jvmName(), false, classLoader).kotlin
                     @Suppress("UNCHECKED_CAST")
                     CatalogAbstractTypePrototype<Any>(
                         runtimeType = runtimeClass as KClass<Any>,
                         type = definition.id,
                         definition = definition,
+                        serializedFieldNames =
+                            discovery.catalog
+                                .fieldNames(definition)
+                                .filter { field -> runtimeClass.java.hasPropertyGetter(field) }
+                                .associateWith { it },
                     ) as TypePrototype<*>
                 }
-        return TypePrototypeRegistry(concrete + abstracts, discovery.catalog.definitions)
+        val boundTypes = concrete.mapTo(mutableSetOf()) { it.type }
+        val concreteRuntimeTypes = concrete.mapTo(mutableSetOf()) { it.runtimeType }
+        val metadata =
+            discovery.catalog.definitions
+                .filter { definition ->
+                    definition.kind == NominalTypeKind.CONCRETE &&
+                        definition.id.id is TypeId.Qualified &&
+                        definition.id !in boundTypes
+                }.mapNotNull { definition ->
+                    val identity = definition.id.id as TypeId.Qualified
+                    val runtimeClass =
+                        runCatching { Class.forName(identity.jvmName(), false, classLoader).kotlin }.getOrNull()
+                            ?: return@mapNotNull null
+                    if (runtimeClass in concreteRuntimeTypes) return@mapNotNull null
+
+                    @Suppress("UNCHECKED_CAST")
+                    CatalogMetadataTypePrototype<Any>(
+                        runtimeType = runtimeClass as KClass<Any>,
+                        type = definition.id,
+                        definition = definition,
+                        serializedFieldNames =
+                            discovery.catalog
+                                .fieldNames(definition)
+                                .filter { field -> runtimeClass.java.hasPropertyGetter(field) }
+                                .associateWith { it },
+                    ) as TypePrototype<*>
+                }
+        return TypePrototypeRegistry(concrete + abstracts + metadata, discovery.catalog.definitions)
+    }
+}
+
+private fun Class<*>.hasPropertyGetter(field: String): Boolean {
+    val suffix = field.replaceFirstChar { character -> character.titlecase() }
+    return methods.any { method -> method.parameterCount == 0 && method.name in setOf("get$suffix", "is$suffix") }
+}
+
+private fun com.typewritermc.types.TypeCatalog.fieldNames(
+    definition: com.typewritermc.types.TypeDefinition,
+    visited: Set<ResolvedTypeRef> = emptySet(),
+): Set<String> {
+    if (definition.id in visited) return emptySet()
+    val own = (definition.representation as? TypeExpression.Record)?.fields?.mapTo(mutableSetOf()) { it.name }.orEmpty()
+    val next = visited + definition.id
+    return definition.parents.fold(own) { fields, parent ->
+        val inherited = definitions.singleOrNull { it.id == parent }?.let { fieldNames(it, next) }.orEmpty()
+        fields + inherited
+    }
+}
+
+private fun com.typewritermc.types.TypeCatalog.isDescendant(
+    candidate: com.typewritermc.types.TypeDefinition,
+    target: TypeId,
+    visited: Set<TypeId> = emptySet(),
+): Boolean {
+    if (candidate.id.id in visited) return false
+    if (candidate.parents.any { it.id == target }) return true
+    val next = visited + candidate.id.id
+    return candidate.parents.any { parent ->
+        definitions.singleOrNull { it.id.id == parent.id }?.let { isDescendant(it, target, next) } == true
     }
 }
 

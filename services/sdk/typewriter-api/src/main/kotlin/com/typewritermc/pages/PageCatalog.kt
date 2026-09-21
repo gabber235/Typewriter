@@ -124,6 +124,8 @@ data class PageCatalogEntry(
     val originArtifactId: String,
     val sourcePart: String,
     val descriptor: PageDescriptor,
+    val presentationTarget: ResolvedTypeRef =
+        ResolvedTypeRef(TypeId.Declared(descriptor.kind.id.value), descriptor.kind.revision),
 )
 
 /**
@@ -180,6 +182,7 @@ object PageCatalogAssembler {
                     PageCatalogEntry(
                         originArtifactId = provider.namespace,
                         sourcePart = provider.sourcePart,
+                        presentationTarget = provider.marker.resolve(prototypes),
                         descriptor =
                             PageDescriptor(
                                 kind = provider.kind,

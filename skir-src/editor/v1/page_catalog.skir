@@ -1,3 +1,4 @@
+import { CatalogPresentationSubject } from "editor/v1/catalog_presentation.skir";
 import { ResolvedTypeRef } from "editor/v1/type_catalog.skir";
 import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
 import { Color } from "kernel/v1/color.skir";
@@ -45,6 +46,7 @@ struct PageCatalogEntry(811300006) {
   origin_artifact_id: string = 0;
   source_part: string = 1;
   descriptor: PageDescriptor = 2;
+  presentation_subject: CatalogPresentationSubject = 3;
 }
 
 struct PageDiagnostic(811300007) {

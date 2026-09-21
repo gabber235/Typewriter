@@ -30,7 +30,7 @@ val DiscoveryModelTest by testSuite {
                 ),
             )
 
-        assembled.catalog.definitions shouldBe listOf(definition)
+        assembled.catalog.definitions.single { it.id == definition.id } shouldBe definition
     }
 
     test("conflicting qualified parent definitions fail assembly") {
@@ -107,7 +107,7 @@ val DiscoveryModelTest by testSuite {
                 listOf(SourcePartCatalogEntry(origin, "paper", Eligibility.Ineligible(listOf("Not selected.")))),
             )
 
-        assembled.catalog.definitions shouldBe listOf(definition)
+        assembled.catalog.definitions.single { it.id == definition.id } shouldBe definition
         assembled.executableBindings shouldBe emptyList()
     }
 

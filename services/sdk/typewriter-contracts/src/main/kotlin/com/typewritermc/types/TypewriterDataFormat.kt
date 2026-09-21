@@ -173,6 +173,11 @@ class TypewriterDataFormat internal constructor(
             validate(descriptor, option.arguments.single(), path, inspectNullability = false)
             return
         }
+        if (descriptor.isInline) {
+            require(descriptor.elementsCount == 1) { "$path: Inline serializers must contain exactly one value." }
+            validate(descriptor.getElementDescriptor(0), expected, path, inspectNullability = false)
+            return
+        }
         when (expected) {
             TypeExpression.Any -> {}
 
@@ -349,7 +354,7 @@ private open class DataValueEncoder(
                 is TypeExpression.Duration -> DataValue.Duration(Duration.parse(value))
                 is TypeExpression.Integer -> DataValue.Integer(requireIntegerRange(value.toBigInteger(), type.width, path))
                 is TypeExpression.Enumeration -> DataValue.StringValue(value)
-                is TypeExpression.Reference -> DataValue.Reference(ResourceId.parse(value))
+                is TypeExpression.Reference -> DataValue.Reference(ResourceId(value))
                 else -> mismatch("string", type)
             }
         emit(encoded)
@@ -663,7 +668,7 @@ private open class DataValueDecoder(
             is DataValue.Timestamp -> current.value.toString()
             is DataValue.Duration -> current.value.toString()
             is DataValue.Integer -> current.value.toString()
-            is DataValue.Reference -> current.id.referenceString()
+            is DataValue.Reference -> current.id.value
             else -> mismatch("string compatible value")
         }
 

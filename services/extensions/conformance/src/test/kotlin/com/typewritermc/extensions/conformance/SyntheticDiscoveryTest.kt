@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilityProvider
@@ -20,7 +21,6 @@ import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.PageId
@@ -43,6 +43,9 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.presentation.AxisChild
+import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PresentationNode
 
 val SyntheticDiscoveryTest by testSuite {
     test("generates the element descriptor and stable concrete identity") {
@@ -108,8 +111,8 @@ val SyntheticDiscoveryTest by testSuite {
             )
         val source =
             SyntheticEntry(
-                elementId("00000000000000000000000000000002"),
                 "Synthetic Entry",
+                GraphPlacement(0, 0, 4, 1),
                 LiteralMessage("hello"),
             )
 
@@ -140,16 +143,15 @@ val SyntheticDiscoveryTest by testSuite {
             )
         val source =
             SyntheticPageReferenceEntry(
-                elementId("00000000000000000000000000000003"),
                 "Synthetic Page Reference",
-                Ref<SyntheticPageKind>(ResourceId("page", PageId("opening").key)),
+                GraphPlacement(0, 0, 4, 1),
+                Ref<SyntheticPageKind>(PageId("opening").value),
             )
 
         val encoded = with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.encode(source) }
         val fields = (encoded as DataValue.Record).fields
 
-        fields.getValue("id") shouldBe DataValue.StringValue("00000000000000000000000000000003")
-        fields.getValue("page") shouldBe DataValue.Reference(ResourceId("page", PageId("opening").key))
+        fields.getValue("page") shouldBe DataValue.Reference(PageId("opening").value)
         with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.decode(encoded) } shouldBe source
     }
 
@@ -250,19 +252,21 @@ val SyntheticDiscoveryTest by testSuite {
             val editor = catalog.definitions.single { definition -> definition.presentationId.name == "editor" }
             val root = editor.root.element as skirout.editor.v1.presentation.PresentationElement.ChildrenWrapper
             val section =
-                root.value.children
+                root.value
+                    .axisNodes()
                     .single()
                     .element as skirout.editor.v1.presentation.PresentationElement.SectionWrapper
             val sectionContent = section.value.child.element as skirout.editor.v1.presentation.PresentationElement.ChildrenWrapper
             val polymorphic =
-                sectionContent.value.children
+                sectionContent.value
+                    .axisNodes()
                     .single()
                     .element as
                     skirout.editor.v1.presentation.PresentationElement.PolymorphicInputWrapper
             val repeated = requireNotNull(polymorphic.value.concreteTypes[1].presentation)
             val repeatedFields = repeated.element as skirout.editor.v1.presentation.PresentationElement.ChildrenWrapper
             val repetitions =
-                repeatedFields.value.children[1].element as
+                repeatedFields.value.axisNodes()[1].element as
                     skirout.editor.v1.presentation.PresentationElement.NumericInputWrapper
             val path =
                 repetitions.value.binding.path.segments.map { segment ->
@@ -351,15 +355,47 @@ val SyntheticDiscoveryTest by testSuite {
     }
 }
 
+private fun ChildrenElement.axisNodes(): List<PresentationNode> =
+    when (this) {
+        is ChildrenElement.ColumnWrapper -> value.children.map { it.node() }
+
+        is ChildrenElement.RowWrapper -> value.children.map { it.node() }
+
+        is ChildrenElement.WrapWrapper -> value.children
+
+        is ChildrenElement.GridWrapper -> value.children
+
+        is ChildrenElement.StackWrapper -> value.children
+
+        ChildrenElement.UNKNOWN,
+        is ChildrenElement.Unknown,
+        -> emptyList()
+    }
+
+private fun AxisChild.node(): PresentationNode =
+    when (this) {
+        is AxisChild.FixedWrapper -> value
+
+        is AxisChild.FlexibleWrapper -> value.child
+
+        AxisChild.UNKNOWN,
+        is AxisChild.Unknown,
+        -> error("Unknown axis child")
+    }
+
 private fun declaredContribution() = typeContribution("declared.cbor")
 
-private fun elementId(value: String) = ElementInstanceId(value)
-
 private fun typeContribution(name: String) =
-    TypeDiscoveryContributionCodec.decode(
-        requireNotNull(SyntheticEntry::class.java.getResourceAsStream("/META-INF/typewriter/contributions/types/$name"))
-            .use { it.readAllBytes() },
-    )
+    SyntheticEntry::class.java.classLoader
+        .getResources("META-INF/typewriter/contributions/types/$name")
+        .asSequence()
+        .map { resource -> resource.openStream().use { TypeDiscoveryContributionCodec.decode(it.readAllBytes()) } }
+        .single { contribution ->
+            contribution.prototypeBindings.any { it.runtimeClass.startsWith(CONFORMANCE_PACKAGE) } ||
+                contribution.executableBindings.any { it.moduleProviderClass.startsWith(CONFORMANCE_PACKAGE) }
+        }
+
+private const val CONFORMANCE_PACKAGE = "com.typewritermc.extensions.conformance."
 
 private class CodecContext(
     override val prototypes: TypePrototypeRegistry,

@@ -1,7 +1,7 @@
 package com.typewritermc.engine.conformance
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageEditorDefinition
 import com.typewritermc.pages.PageSpec
@@ -15,7 +15,7 @@ import com.typewritermc.pages.page
  * composition.
  */
 interface CapabilityElement : Element {
-    override val id: ElementInstanceId
+    override val placement: GraphPlacement
 }
 
 /** Declares the conformance page used to verify capability supplied editor roles. */

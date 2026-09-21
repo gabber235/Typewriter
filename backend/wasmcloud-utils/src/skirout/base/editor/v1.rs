@@ -15,14 +15,15 @@
 pub mod type_catalog;
 pub mod path;
 pub mod diagnostic;
+pub mod search;
+pub mod typed_value;
 pub mod binding;
 pub mod expression;
 pub mod action;
 pub mod capability;
 pub mod conversion;
+pub mod catalog_presentation;
 pub mod element_catalog;
-pub mod typed_value;
 pub mod page_catalog;
 pub mod presentation;
 pub mod catalog;
-pub mod search;

@@ -36,6 +36,7 @@ data class PresentationDependencies(
 internal fun collectPresentationDependencies(
     root: PresentationNode,
     inputs: List<com.typewritermc.types.TypeExpression>,
+    collections: List<skirout.editor.v1.presentation.PresentationCollectionDefinition> = emptyList(),
 ): PresentationDependencies {
     val collector = PresentationDependencyCollector()
     collector.transform(root, PresentationNode.serializer.typeDescriptor)
@@ -45,10 +46,18 @@ internal fun collectPresentationDependencies(
             skirout.editor.v1.type_catalog.TypeExpression.serializer.typeDescriptor,
         )
     }
+    collections.forEach { collection ->
+        collector.transform(
+            collection,
+            skirout.editor.v1.presentation.PresentationCollectionDefinition.serializer.typeDescriptor,
+        )
+    }
     return collector.dependencies()
 }
 
-internal fun PresentationDependencies.toWire(): skirout.editor.v1.presentation.PresentationDependencies =
+internal fun PresentationDependencies.toWire(
+    collections: List<skirout.editor.v1.presentation.PresentationCollectionDefinition> = emptyList(),
+): skirout.editor.v1.presentation.PresentationDependencies =
     skirout.editor.v1.presentation.PresentationDependencies(
         types = types.sortedBy(ResolvedTypeRef::toString).map { SkirTypeCodec.encode(it).getOrThrow() },
         presentations =
@@ -60,6 +69,7 @@ internal fun PresentationDependencies.toWire(): skirout.editor.v1.presentation.P
                 SkirConversionId(namespace = it.namespace, name = it.name)
             },
         capabilities = capabilities.sortedBy(CapabilityId::value).map { SkirCapabilityId(value = it.value) },
+        collections = collections.sortedBy { it.sourceId },
     )
 
 private class PresentationDependencyCollector : ReflectiveTransformer {

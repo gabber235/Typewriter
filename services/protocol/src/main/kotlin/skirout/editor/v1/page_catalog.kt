@@ -1090,6 +1090,7 @@ sealed interface PageCatalogEntry_OrMutable {
     val originArtifactId: kotlin.String;
     val sourcePart: kotlin.String;
     val descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable;
+    val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.page_catalog.PageCatalogEntry;
 }
@@ -1100,6 +1101,7 @@ class PageCatalogEntry private constructor(
     override val originArtifactId: kotlin.String,
     override val sourcePart: kotlin.String,
     override val descriptor: skirout.editor.v1.page_catalog.PageDescriptor,
+    override val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageCatalogEntry>? =
         null,
 ): skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable {
@@ -1109,12 +1111,14 @@ class PageCatalogEntry private constructor(
         originArtifactId: kotlin.String,
         sourcePart: kotlin.String,
         descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable,
+        presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageCatalogEntry>? =
             null,
     ): this(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
+        presentationSubject.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -1126,6 +1130,7 @@ class PageCatalogEntry private constructor(
         originArtifactId = this.originArtifactId,
         sourcePart = this.sourcePart,
         descriptor = this.descriptor,
+        presentationSubject = this.presentationSubject,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1138,10 +1143,13 @@ class PageCatalogEntry private constructor(
             this.sourcePart,
         descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable =
             this.descriptor,
+        presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+            this.presentationSubject,
     ) = skirout.editor.v1.page_catalog.PageCatalogEntry(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
+        presentationSubject.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -1149,11 +1157,11 @@ class PageCatalogEntry private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.PageCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor);
+        return this === other || (other is skirout.editor.v1.page_catalog.PageCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor && this.presentationSubject == other.presentationSubject);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.originArtifactId, this.sourcePart, this.descriptor).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.originArtifactId, this.sourcePart, this.descriptor, this.presentationSubject).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1173,6 +1181,8 @@ class PageCatalogEntry private constructor(
             "",
         override var descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable =
             skirout.editor.v1.page_catalog.PageDescriptor.partial(),
+        override var presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+            skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageCatalogEntry>? =
             null,
     ): skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable {
@@ -1181,6 +1191,7 @@ class PageCatalogEntry private constructor(
             originArtifactId = this.originArtifactId,
             sourcePart = this.sourcePart,
             descriptor = this.descriptor,
+            presentationSubject = this.presentationSubject,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1199,6 +1210,22 @@ class PageCatalogEntry private constructor(
                 is skirout.editor.v1.page_catalog.PageDescriptor.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [presentationSubject] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [presentationSubject] and returns it.
+         */
+        val mutablePresentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable get() {
+            var value = this.presentationSubject;
+            return when (value) {
+                is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject -> {
+                    value = value.toMutable();
+                    this.presentationSubject = value;
+                    return value;
+                }
+                is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -1207,6 +1234,7 @@ class PageCatalogEntry private constructor(
                 "",
                 "",
                 skirout.editor.v1.page_catalog.PageDescriptor.partial(),
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1226,10 +1254,13 @@ class PageCatalogEntry private constructor(
                 "",
             descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable =
                 skirout.editor.v1.page_catalog.PageDescriptor.partial(),
+            presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
         ) = skirout.editor.v1.page_catalog.PageCatalogEntry(
             originArtifactId = originArtifactId,
             sourcePart = sourcePart,
             descriptor = descriptor,
+            presentationSubject = presentationSubject,
             _unrecognizedFields = null,
         );
 
@@ -1276,6 +1307,15 @@ class PageCatalogEntry private constructor(
                 "",
                 { it.descriptor },
                 { mut, v -> mut.descriptor = v },
+            );
+            serializerImpl.addField(
+                "presentation_subject",
+                "presentationSubject",
+                3,
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.serializer,
+                "",
+                { it.presentationSubject },
+                { mut, v -> mut.presentationSubject = v },
             );
             serializerImpl.finalizeStruct();
         }

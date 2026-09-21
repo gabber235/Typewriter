@@ -16,6 +16,7 @@ import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -92,7 +93,7 @@ private fun shard(
     formatRevision = 1,
     digest = ContentDigest(digestCharacter.repeat(64)),
     inputFingerprint = ContentDigest("f".repeat(64)),
-    page = Ref<Page>("page", pageKey),
+    page = Ref<Page>(ResourceId(pageKey)),
     elements = emptyList(),
 )
 

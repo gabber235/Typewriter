@@ -2,8 +2,11 @@ package com.typewritermc.presentation
 
 import com.typewritermc.capability.RealmCommandCapabilityRef
 import com.typewritermc.capability.RealmSearchCapabilityRef
+import com.typewritermc.types.Color
 import com.typewritermc.types.FloatWidth
+import com.typewritermc.types.Icon
 import com.typewritermc.types.IntegerWidth
+import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypePrototypeRegistry
 import skirout.editor.v1.presentation.PresentationNode
@@ -21,6 +24,7 @@ import kotlin.reflect.KProperty1
 annotation class TypewriterPresentation(
     val default: Boolean = false,
     val priority: Int = 0,
+    val roles: Array<PresentationRole> = [],
 )
 
 /**
@@ -29,7 +33,7 @@ annotation class TypewriterPresentation(
  * A property must have a serialized name in its prototype. This prevents UI bindings from silently using Kotlin
  * names that differ from the stored value.
  */
-class PresentationBuildContext internal constructor(
+class PresentationBuildContext(
     private val prototypes: TypePrototypeRegistry,
 ) {
     internal fun type(owner: KClass<*>): TypeExpression =
@@ -95,6 +99,21 @@ inline fun <reified T : Any> presentation(
         .build(name)
 
 /**
+ * Builds a role presentation with explicit inputs and no implicit value binding.
+ *
+ * Use this when a semantic surface needs multiple context values. The declaration target still associates roles
+ * with [T], while every runtime input is declared by [block].
+ */
+context(context: PresentationBuildContext)
+inline fun <reified T : Any> rolePresentation(
+    name: String,
+    block: PresentationBuilder<T>.() -> Unit,
+): PresentationSpec<T> =
+    PresentationBuilder(T::class, context, implicitPrimaryInput = false)
+        .apply(block)
+        .build(name)
+
+/**
  * Builds an ordered presentation for one Kotlin target type.
  *
  * Property based controls resolve serialized names immediately through the build context. The resulting tree is
@@ -108,14 +127,20 @@ class PresentationBuilder<T : Any>
         @PublishedApi internal val target: KClass<T>,
         @PublishedApi internal val context: PresentationBuildContext,
         @PublishedApi internal val inputs: MutableList<PresentationInputRef<*>> = mutableListOf(),
+        private val implicitPrimaryInput: Boolean = true,
     ) {
         init {
-            if (target != Unit::class && inputs.isEmpty()) {
+            if (implicitPrimaryInput && target != Unit::class && inputs.isEmpty()) {
                 inputs += PresentationInputRef("value", target, false, 0, context)
             }
         }
 
         private val children = mutableListOf<AuthoredPresentationNode>()
+
+        /** Appends one node supplied by a focused SDK extension in this module. */
+        internal fun append(node: AuthoredPresentationNode) {
+            children += node
+        }
 
         /** Declares a read only value supplied to this presentation. */
         inline fun <reified V : Any> input(name: String): PresentationInputRef<V> = declareInput(name, V::class, false)
@@ -160,6 +185,15 @@ class PresentationBuilder<T : Any>
             children += AuthoredPresentationNode.NumericInput(value.reference(), label)
         }
 
+        /** Adds an editable color control for a typed color value. */
+        fun colorInput(
+            value: PresentationValue<Color>,
+            includeAlpha: Boolean = false,
+            label: String? = null,
+        ) {
+            children += AuthoredPresentationNode.ColorInput(value.reference(), includeAlpha, label)
+        }
+
         /** Places transaction controls for an editable input without owning its persistence policy. */
         fun commitControls(value: PresentationValue<*>) {
             require(value.input.editable) { "Commit controls require an editable presentation input." }
@@ -183,6 +217,38 @@ class PresentationBuilder<T : Any>
          */
         fun text(value: PresentationValue<String>) {
             children += AuthoredPresentationNode.Text(value)
+        }
+
+        /** Adds non editable text computed from a typed authored expression. */
+        fun text(value: PresentationExpression<String>) {
+            children += AuthoredPresentationNode.ExpressionText(value)
+        }
+
+        /** Adds flat styled text runs with shared paragraph behavior. */
+        fun richText(
+            vararg runs: PresentationTextRun,
+            maxLines: Int? = null,
+            ellipsis: Boolean = false,
+            softWrap: Boolean = true,
+            selectable: Boolean = false,
+            secondary: Boolean = false,
+        ) {
+            require(runs.isNotEmpty()) { "Rich text requires at least one run." }
+            require(maxLines == null || maxLines > 0) { "Rich text maximum lines must be positive." }
+            children +=
+                AuthoredPresentationNode.RichText(
+                    runs = runs.toList(),
+                    maxLines = maxLines,
+                    ellipsis = ellipsis,
+                    softWrap = softWrap,
+                    selectable = selectable,
+                    secondary = secondary,
+                )
+        }
+
+        /** Adds a display only icon whose value remains a typed expression. */
+        fun icon(value: PresentationValue<Icon>) {
+            children += AuthoredPresentationNode.Icon(value)
         }
 
         /**
@@ -329,12 +395,89 @@ class PresentationBuilder<T : Any>
             children += AuthoredPresentationNode.Wire(node)
         }
 
+        /** Adds a row whose parent owns fixed and flexible child allocation. */
+        fun row(
+            spacing: Double = 0.0,
+            block: PresentationAxisBuilder<T>.() -> Unit,
+        ) {
+            require(spacing.isFinite() && spacing >= 0.0) { "Row spacing must be finite and nonnegative." }
+            children +=
+                AuthoredPresentationNode.Axis(
+                    row = true,
+                    spacing = spacing,
+                    children = PresentationAxisBuilder(target, context, inputs).apply(block).build(),
+                )
+        }
+
+        /** Adds a column whose parent owns fixed and flexible child allocation. */
+        fun column(
+            spacing: Double = 0.0,
+            block: PresentationAxisBuilder<T>.() -> Unit,
+        ) {
+            require(spacing.isFinite() && spacing >= 0.0) { "Column spacing must be finite and nonnegative." }
+            children +=
+                AuthoredPresentationNode.Axis(
+                    row = false,
+                    spacing = spacing,
+                    children = PresentationAxisBuilder(target, context, inputs).apply(block).build(),
+                )
+        }
+
+        /** Builds a measured leading layout whose optional slots collapse when bounded space is insufficient. */
+        fun adaptiveLeading(
+            leading: PresentationBuilder<T>.() -> Unit,
+            center: (PresentationBuilder<T>.() -> Unit)? = null,
+            suffix: (PresentationBuilder<T>.() -> Unit)? = null,
+        ) {
+            children +=
+                AuthoredPresentationNode.AdaptiveLeading(
+                    leading = PresentationBuilder(target, context, inputs).apply(leading).column(),
+                    center = center?.let { PresentationBuilder(target, context, inputs).apply(it).column() },
+                    suffix = suffix?.let { PresentationBuilder(target, context, inputs).apply(it).column() },
+                )
+        }
+
         @PublishedApi
         internal fun build(name: String): PresentationSpec<T> = PresentationSpec(name, target, inputs.toList(), column())
 
         @PublishedApi
         internal fun column(): AuthoredPresentationNode = AuthoredPresentationNode.Column(children.toList())
     }
+
+/** Controls how an axis parent allocates remaining space to one child. */
+enum class PresentationFlexFit { TIGHT, LOOSE }
+
+/** Builds atomic axis children from the same typed presentation primitives. */
+@PresentationDsl
+class PresentationAxisBuilder<T : Any> internal constructor(
+    private val target: KClass<T>,
+    private val context: PresentationBuildContext,
+    private val inputs: MutableList<PresentationInputRef<*>>,
+) {
+    private val children = mutableListOf<AuthoredPresentationAxisChild>()
+
+    /** Adds a fixed child built from ordinary presentation primitives. */
+    fun fixed(block: PresentationBuilder<T>.() -> Unit) {
+        children += AuthoredPresentationAxisChild.Fixed(PresentationBuilder(target, context, inputs).apply(block).column())
+    }
+
+    /** Adds a flexible child while keeping allocation metadata with its node. */
+    fun flexible(
+        flex: Int = 1,
+        fit: PresentationFlexFit = PresentationFlexFit.LOOSE,
+        block: PresentationBuilder<T>.() -> Unit,
+    ) {
+        require(flex > 0) { "Axis child flex must be positive." }
+        children +=
+            AuthoredPresentationAxisChild.Flexible(
+                child = PresentationBuilder(target, context, inputs).apply(block).column(),
+                flex = flex,
+                fit = fit,
+            )
+    }
+
+    internal fun build(): List<AuthoredPresentationAxisChild> = children.toList()
+}
 
 /**
  * Collects explicitly offered concrete alternatives for a polymorphic field.
@@ -399,6 +542,23 @@ internal sealed interface AuthoredPresentationNode {
         val value: PresentationValue<String>,
     ) : AuthoredPresentationNode
 
+    data class ExpressionText(
+        val value: PresentationExpression<String>,
+    ) : AuthoredPresentationNode
+
+    data class RichText(
+        val runs: List<PresentationTextRun>,
+        val maxLines: Int?,
+        val ellipsis: Boolean,
+        val softWrap: Boolean,
+        val selectable: Boolean,
+        val secondary: Boolean,
+    ) : AuthoredPresentationNode
+
+    data class Icon(
+        val value: PresentationValue<com.typewritermc.types.Icon>,
+    ) : AuthoredPresentationNode
+
     data class Invocation(
         val id: com.typewritermc.types.PresentationId,
         val arguments: List<PresentationArgumentRef>,
@@ -406,6 +566,18 @@ internal sealed interface AuthoredPresentationNode {
 
     data class Column(
         val children: List<AuthoredPresentationNode>,
+    ) : AuthoredPresentationNode
+
+    data class Axis(
+        val row: Boolean,
+        val spacing: Double,
+        val children: List<AuthoredPresentationAxisChild>,
+    ) : AuthoredPresentationNode
+
+    data class AdaptiveLeading(
+        val leading: AuthoredPresentationNode,
+        val center: AuthoredPresentationNode?,
+        val suffix: AuthoredPresentationNode?,
     ) : AuthoredPresentationNode
 
     data class Section(
@@ -423,6 +595,12 @@ internal sealed interface AuthoredPresentationNode {
 
     data class NumericInput(
         val field: FieldReference,
+        val label: String?,
+    ) : AuthoredPresentationNode
+
+    data class ColorInput(
+        val field: FieldReference,
+        val includeAlpha: Boolean,
         val label: String?,
     ) : AuthoredPresentationNode
 
@@ -449,4 +627,34 @@ internal sealed interface AuthoredPresentationNode {
     data class Wire(
         val node: PresentationNode,
     ) : AuthoredPresentationNode
+}
+
+/** One flat rich text run. Style values override the shared inherited text style. */
+data class PresentationTextRun(
+    val text: PresentationExpression<String>,
+    val fontWeight: Double? = null,
+    val fontItalic: Double? = null,
+) {
+    init {
+        require(fontWeight == null || (fontWeight.isFinite() && fontWeight in 1.0..1000.0)) {
+            "Text run weight must be finite and between 1 and 1000."
+        }
+        require(fontItalic == null || (fontItalic.isFinite() && fontItalic in 0.0..1.0)) {
+            "Text run italic value must be finite and between 0 and 1."
+        }
+    }
+}
+
+internal sealed interface AuthoredPresentationAxisChild {
+    val child: AuthoredPresentationNode
+
+    data class Fixed(
+        override val child: AuthoredPresentationNode,
+    ) : AuthoredPresentationAxisChild
+
+    data class Flexible(
+        override val child: AuthoredPresentationNode,
+        val flex: Int,
+        val fit: PresentationFlexFit,
+    ) : AuthoredPresentationAxisChild
 }

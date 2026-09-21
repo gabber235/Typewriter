@@ -1,8 +1,9 @@
 package com.typewritermc.library
 
 import com.typewritermc.types.DeclaredTypeId
-import com.typewritermc.types.RecordIdKey
 import com.typewritermc.types.Referenceable
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.Serializable
 
 /**
@@ -28,6 +29,7 @@ value class PageKindId(
  * interchangeable.
  */
 @Serializable
+@TypewriterType(id = "b591373727574148919d8aab4f4cd8a8")
 data class PageKindRef(
     val id: PageKindId,
     val revision: Int,
@@ -45,10 +47,7 @@ data class PageKindRef(
 @JvmInline
 @Serializable
 value class PageId(
-    val key: RecordIdKey,
-) {
-    constructor(value: String) : this(
-        com.typewritermc.types.RecordIdKey
-            .String(value),
-    )
-}
+    val value: ResourceId,
+)
+
+fun PageId(value: String): PageId = PageId(ResourceId(value))

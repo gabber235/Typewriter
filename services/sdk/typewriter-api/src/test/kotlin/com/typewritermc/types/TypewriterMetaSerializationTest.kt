@@ -2,8 +2,8 @@
 
 package com.typewritermc.types
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.TypewriterElement
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -24,7 +24,7 @@ val TypewriterMetaSerializationTest by testSuite {
     }
 
     test("TypewriterElement generates its serializer") {
-        val source = MetaSerializableElement(ElementInstanceId("element"), "Element")
+        val source = MetaSerializableElement("Element", GraphPlacement(0, 0, 1, 1))
 
         Json.decodeFromString(
             MetaSerializableElement.serializer(),
@@ -52,6 +52,6 @@ private data class MetaSerializableType(
     color = "#7C4DFF",
 )
 private data class MetaSerializableElement(
-    override val id: ElementInstanceId,
     override val name: String,
+    override val placement: GraphPlacement,
 ) : Element

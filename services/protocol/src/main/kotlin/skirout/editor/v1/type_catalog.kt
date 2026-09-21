@@ -2788,6 +2788,142 @@ class TypedDurationValue private constructor(
     }
 }
 
+sealed interface ResourceId_OrMutable {
+    val value: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.type_catalog.ResourceId;
+}
+
+/**
+ * Opaque authored resource identity. Consumers compare it and never parse it.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ResourceId private constructor(
+    override val value: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ResourceId>? =
+        null,
+): skirout.editor.v1.type_catalog.ResourceId_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ResourceId>? =
+            null,
+    ): this(
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.type_catalog.ResourceId(
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.type_catalog.ResourceId && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.ResourceId.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ResourceId]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ResourceId>? =
+            null,
+    ): skirout.editor.v1.type_catalog.ResourceId_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.type_catalog.ResourceId(
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.type_catalog.ResourceId(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ResourceId].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.type_catalog.ResourceId(
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/type_catalog.skir:ResourceId",
+            doc = "Opaque authored resource identity. Consumers compare it and never parse it.",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ResourceId] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ResourceId] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "value",
+                "value",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 /** Deeply immutable. */
 sealed class TypedValue private constructor() {
     /** The kind of variant held by a `TypedValue`. */
@@ -3149,10 +3285,10 @@ sealed class TypedValue private constructor() {
     }
 
     class ReferenceWrapper private constructor (
-        val value: skirout.kernel.v1.record_id.RecordId,
+        val value: skirout.editor.v1.type_catalog.ResourceId,
     ) : skirout.editor.v1.type_catalog.TypedValue() {
         constructor(
-            value: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            value: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.REFERENCE_WRAPPER;
@@ -3234,17 +3370,15 @@ sealed class TypedValue private constructor() {
             )
         );
 
-        /** Shortcut for `ReferenceWrapper(skirout.kernel.v1.record_id.RecordId(...))`. */
+        /** Shortcut for `ReferenceWrapper(skirout.editor.v1.type_catalog.ResourceId(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createReference(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            table: kotlin.String,
-            key: skirout.kernel.v1.record_id.RecordIdKey,
+            value: kotlin.String,
         ) = ReferenceWrapper(
-            skirout.kernel.v1.record_id.RecordId(
-                table = table,
-                key = key,
+            skirout.editor.v1.type_catalog.ResourceId(
+                value = value,
             )
         );
 
@@ -3468,7 +3602,7 @@ sealed class TypedValue private constructor() {
                     22,
                     "reference",
                     Kind.REFERENCE_WRAPPER.ordinal,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
+                    skirout.editor.v1.type_catalog.ResourceId.serializer,
                     "",
                     { ReferenceWrapper(it) },
                     { it.value },
@@ -3851,6 +3985,7 @@ sealed interface RecordField_OrMutable {
     val name: kotlin.String;
     val valueType: skirout.editor.v1.type_catalog.TypeExpression;
     val initializer: skirout.editor.v1.type_catalog.TypedValue?;
+    val defaulted: kotlin.Boolean;
 
     fun toFrozen(): skirout.editor.v1.type_catalog.RecordField;
 }
@@ -3861,6 +3996,7 @@ class RecordField private constructor(
     override val name: kotlin.String,
     override val valueType: skirout.editor.v1.type_catalog.TypeExpression,
     override val initializer: skirout.editor.v1.type_catalog.TypedValue?,
+    override val defaulted: kotlin.Boolean,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RecordField>? =
         null,
 ): skirout.editor.v1.type_catalog.RecordField_OrMutable {
@@ -3870,12 +4006,14 @@ class RecordField private constructor(
         name: kotlin.String,
         valueType: skirout.editor.v1.type_catalog.TypeExpression,
         initializer: skirout.editor.v1.type_catalog.TypedValue?,
+        defaulted: kotlin.Boolean,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RecordField>? =
             null,
     ): this(
         name,
         valueType,
         initializer,
+        defaulted,
         _unrecognizedFields,
     ) {}
 
@@ -3887,6 +4025,7 @@ class RecordField private constructor(
         name = this.name,
         valueType = this.valueType,
         initializer = this.initializer,
+        defaulted = this.defaulted,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -3899,10 +4038,13 @@ class RecordField private constructor(
             this.valueType,
         initializer: skirout.editor.v1.type_catalog.TypedValue? =
             this.initializer,
+        defaulted: kotlin.Boolean =
+            this.defaulted,
     ) = skirout.editor.v1.type_catalog.RecordField(
         name,
         valueType,
         initializer,
+        defaulted,
         this._unrecognizedFields,
     );
 
@@ -3910,11 +4052,11 @@ class RecordField private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.RecordField && this.name == other.name && this.valueType == other.valueType && this.initializer == other.initializer);
+        return this === other || (other is skirout.editor.v1.type_catalog.RecordField && this.name == other.name && this.valueType == other.valueType && this.initializer == other.initializer && this.defaulted == other.defaulted);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.name, this.valueType, this.initializer).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.name, this.valueType, this.initializer, this.defaulted).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3934,6 +4076,8 @@ class RecordField private constructor(
             skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
         override var initializer: skirout.editor.v1.type_catalog.TypedValue? =
             null,
+        override var defaulted: kotlin.Boolean =
+            false,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RecordField>? =
             null,
     ): skirout.editor.v1.type_catalog.RecordField_OrMutable {
@@ -3942,6 +4086,7 @@ class RecordField private constructor(
             name = this.name,
             valueType = this.valueType,
             initializer = this.initializer,
+            defaulted = this.defaulted,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -3952,6 +4097,7 @@ class RecordField private constructor(
                 "",
                 skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
                 null,
+                false,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -3971,10 +4117,13 @@ class RecordField private constructor(
                 skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
             initializer: skirout.editor.v1.type_catalog.TypedValue? =
                 null,
+            defaulted: kotlin.Boolean =
+                false,
         ) = skirout.editor.v1.type_catalog.RecordField(
             name = name,
             valueType = valueType,
             initializer = initializer,
+            defaulted = defaulted,
             _unrecognizedFields = null,
         );
 
@@ -4023,6 +4172,15 @@ class RecordField private constructor(
                 "",
                 { it.initializer },
                 { mut, v -> mut.initializer = v },
+            );
+            serializerImpl.addField(
+                "defaulted",
+                "defaulted",
+                3,
+                build.skir.Serializers.bool,
+                "",
+                { it.defaulted },
+                { mut, v -> mut.defaulted = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -6655,6 +6813,696 @@ class NamedPresentation private constructor(
     }
 }
 
+/** Deeply immutable. */
+sealed class PresentationRole private constructor() {
+    /** The kind of variant held by a `PresentationRole`. */
+    enum class Kind {
+        UNKNOWN,
+        REFERENCE_SUMMARY_CONST,
+        REFERENCE_OPTION_CONST,
+        CATALOG_OPTION_CONST,
+        AUTHORING_RESULT_CONST,
+        PAGE_TILE_CONST,
+        GRAPH_NODE_CONST,
+        INSPECTOR_HEADER_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.PresentationRole>?,
+    ) : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object REFERENCE_SUMMARY : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.REFERENCE_SUMMARY_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.REFERENCE_SUMMARY_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.REFERENCE_SUMMARY_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object REFERENCE_OPTION : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.REFERENCE_OPTION_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.REFERENCE_OPTION_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.REFERENCE_OPTION_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object CATALOG_OPTION : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.CATALOG_OPTION_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.CATALOG_OPTION_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.CATALOG_OPTION_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object AUTHORING_RESULT : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.AUTHORING_RESULT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.AUTHORING_RESULT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.AUTHORING_RESULT_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object PAGE_TILE : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.PAGE_TILE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.PAGE_TILE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PAGE_TILE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object GRAPH_NODE : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.GRAPH_NODE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.GRAPH_NODE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.GRAPH_NODE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object INSPECTOR_HEADER : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.INSPECTOR_HEADER_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.INSPECTOR_HEADER_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.INSPECTOR_HEADER_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.PresentationRole>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.PresentationRole._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationRole].
+         * Default value for fields of type [PresentationRole].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.PresentationRole, Unknown>(
+                recordId = "editor/v1/type_catalog.skir:PresentationRole",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [PresentationRole] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [PresentationRole] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            REFERENCE_SUMMARY;
+            REFERENCE_OPTION;
+            CATALOG_OPTION;
+            AUTHORING_RESULT;
+            PAGE_TILE;
+            GRAPH_NODE;
+            INSPECTOR_HEADER;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 8) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "reference_summary",
+                    Kind.REFERENCE_SUMMARY_CONST.ordinal,
+                    "",
+                    REFERENCE_SUMMARY,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "reference_option",
+                    Kind.REFERENCE_OPTION_CONST.ordinal,
+                    "",
+                    REFERENCE_OPTION,
+                );
+                _serializerImpl.addConstantVariant(
+                    3,
+                    "catalog_option",
+                    Kind.CATALOG_OPTION_CONST.ordinal,
+                    "",
+                    CATALOG_OPTION,
+                );
+                _serializerImpl.addConstantVariant(
+                    4,
+                    "authoring_result",
+                    Kind.AUTHORING_RESULT_CONST.ordinal,
+                    "",
+                    AUTHORING_RESULT,
+                );
+                _serializerImpl.addConstantVariant(
+                    5,
+                    "page_tile",
+                    Kind.PAGE_TILE_CONST.ordinal,
+                    "",
+                    PAGE_TILE,
+                );
+                _serializerImpl.addConstantVariant(
+                    6,
+                    "graph_node",
+                    Kind.GRAPH_NODE_CONST.ordinal,
+                    "",
+                    GRAPH_NODE,
+                );
+                _serializerImpl.addConstantVariant(
+                    7,
+                    "inspector_header",
+                    Kind.INSPECTOR_HEADER_CONST.ordinal,
+                    "",
+                    INSPECTOR_HEADER,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface RolePresentation_OrMutable {
+    val role: skirout.editor.v1.type_catalog.PresentationRole;
+    val presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.type_catalog.RolePresentation;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RolePresentation private constructor(
+    override val role: skirout.editor.v1.type_catalog.PresentationRole,
+    override val presentationId: skirout.editor.v1.type_catalog.PresentationId,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RolePresentation>? =
+        null,
+): skirout.editor.v1.type_catalog.RolePresentation_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        role: skirout.editor.v1.type_catalog.PresentationRole,
+        presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RolePresentation>? =
+            null,
+    ): this(
+        role,
+        presentationId.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        role = this.role,
+        presentationId = this.presentationId,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        role: skirout.editor.v1.type_catalog.PresentationRole =
+            this.role,
+        presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable =
+            this.presentationId,
+    ) = skirout.editor.v1.type_catalog.RolePresentation(
+        role,
+        presentationId.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.type_catalog.RolePresentation && this.role == other.role && this.presentationId == other.presentationId);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.role, this.presentationId).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.RolePresentation.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [RolePresentation]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var role: skirout.editor.v1.type_catalog.PresentationRole =
+            skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN,
+        override var presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable =
+            skirout.editor.v1.type_catalog.PresentationId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RolePresentation>? =
+            null,
+    ): skirout.editor.v1.type_catalog.RolePresentation_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.type_catalog.RolePresentation(
+            role = this.role,
+            presentationId = this.presentationId,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [presentationId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [presentationId] and returns it.
+         */
+        val mutablePresentationId: skirout.editor.v1.type_catalog.PresentationId.Mutable get() {
+            var value = this.presentationId;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.PresentationId -> {
+                    value = value.toMutable();
+                    this.presentationId = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.PresentationId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.type_catalog.RolePresentation(
+                skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN,
+                skirout.editor.v1.type_catalog.PresentationId.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RolePresentation].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            role: skirout.editor.v1.type_catalog.PresentationRole =
+                skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN,
+            presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable =
+                skirout.editor.v1.type_catalog.PresentationId.partial(),
+        ) = skirout.editor.v1.type_catalog.RolePresentation(
+            role = role,
+            presentationId = presentationId,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/type_catalog.skir:RolePresentation",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [RolePresentation] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [RolePresentation] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "role",
+                "role",
+                0,
+                skirout.editor.v1.type_catalog.PresentationRole.serializer,
+                "",
+                { it.role },
+                { mut, v -> mut.role = v },
+            );
+            serializerImpl.addField(
+                "presentation_id",
+                "presentationId",
+                1,
+                skirout.editor.v1.type_catalog.PresentationId.serializer,
+                "",
+                { it.presentationId },
+                { mut, v -> mut.presentationId = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class FieldMergeStrategy private constructor() {
+    /** The kind of variant held by a `FieldMergeStrategy`. */
+    enum class Kind {
+        UNKNOWN,
+        SET_MEMBERSHIP_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.FieldMergeStrategy.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.FieldMergeStrategy>?,
+    ) : skirout.editor.v1.type_catalog.FieldMergeStrategy() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.FieldMergeStrategy && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object SET_MEMBERSHIP : skirout.editor.v1.type_catalog.FieldMergeStrategy() {
+        override val kind get() = Kind.SET_MEMBERSHIP_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.FieldMergeStrategy && other.kind == Kind.SET_MEMBERSHIP_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SET_MEMBERSHIP_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.FieldMergeStrategy>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.FieldMergeStrategy._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [FieldMergeStrategy].
+         * Default value for fields of type [FieldMergeStrategy].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.FieldMergeStrategy, Unknown>(
+                recordId = "editor/v1/type_catalog.skir:FieldMergeStrategy",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [FieldMergeStrategy] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [FieldMergeStrategy] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            SET_MEMBERSHIP;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 2) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "set_membership",
+                    Kind.SET_MEMBERSHIP_CONST.ordinal,
+                    "",
+                    SET_MEMBERSHIP,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface FieldMergePolicy_OrMutable {
+    val fieldPath: kotlin.collections.List<kotlin.String>;
+    val strategy: skirout.editor.v1.type_catalog.FieldMergeStrategy;
+
+    fun toFrozen(): skirout.editor.v1.type_catalog.FieldMergePolicy;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class FieldMergePolicy private constructor(
+    override val fieldPath: kotlin.collections.List<kotlin.String>,
+    override val strategy: skirout.editor.v1.type_catalog.FieldMergeStrategy,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.FieldMergePolicy>? =
+        null,
+): skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        fieldPath: kotlin.collections.Iterable<kotlin.String>,
+        strategy: skirout.editor.v1.type_catalog.FieldMergeStrategy,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.FieldMergePolicy>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(fieldPath),
+        strategy,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        fieldPath = this.fieldPath,
+        strategy = this.strategy,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        fieldPath: kotlin.collections.Iterable<kotlin.String> =
+            this.fieldPath,
+        strategy: skirout.editor.v1.type_catalog.FieldMergeStrategy =
+            this.strategy,
+    ) = skirout.editor.v1.type_catalog.FieldMergePolicy(
+        build.skir.internal.toFrozenList(fieldPath),
+        strategy,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.type_catalog.FieldMergePolicy && this.fieldPath == other.fieldPath && this.strategy == other.strategy);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.fieldPath, this.strategy).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.FieldMergePolicy.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [FieldMergePolicy]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var fieldPath: kotlin.collections.List<kotlin.String> =
+            build.skir.internal.emptyFrozenList<kotlin.String>(),
+        override var strategy: skirout.editor.v1.type_catalog.FieldMergeStrategy =
+            skirout.editor.v1.type_catalog.FieldMergeStrategy.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.FieldMergePolicy>? =
+            null,
+    ): skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.type_catalog.FieldMergePolicy(
+            fieldPath = this.fieldPath,
+            strategy = this.strategy,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [fieldPath] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [fieldPath] and returns it.
+         */
+        val mutableFieldPath: kotlin.collections.MutableList<kotlin.String> get() {
+            var value = this.fieldPath;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.fieldPath = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.type_catalog.FieldMergePolicy(
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+                skirout.editor.v1.type_catalog.FieldMergeStrategy.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [FieldMergePolicy].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            fieldPath: kotlin.collections.Iterable<kotlin.String> =
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+            strategy: skirout.editor.v1.type_catalog.FieldMergeStrategy =
+                skirout.editor.v1.type_catalog.FieldMergeStrategy.UNKNOWN,
+        ) = skirout.editor.v1.type_catalog.FieldMergePolicy(
+            fieldPath = fieldPath,
+            strategy = strategy,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/type_catalog.skir:FieldMergePolicy",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [FieldMergePolicy] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [FieldMergePolicy] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "field_path",
+                "fieldPath",
+                0,
+                build.skir.Serializers.list(
+                    build.skir.Serializers.string,
+                ),
+                "",
+                { it.fieldPath },
+                { mut, v -> mut.fieldPath = v },
+            );
+            serializerImpl.addField(
+                "strategy",
+                "strategy",
+                1,
+                skirout.editor.v1.type_catalog.FieldMergeStrategy.serializer,
+                "",
+                { it.strategy },
+                { mut, v -> mut.strategy = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface TypeDefinition_OrMutable {
     val displayName: kotlin.String;
     val parameters: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeParameter_OrMutable>;
@@ -6666,6 +7514,9 @@ sealed interface TypeDefinition_OrMutable {
     val defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable?;
     val namedPresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable>;
     val outgoingConversionIds: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId_OrMutable>;
+    val rolePresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.RolePresentation_OrMutable>;
+    val fieldMergePolicies: kotlin.collections.List<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable>;
+    val declarationOwner: kotlin.String;
 
     fun toFrozen(): skirout.editor.v1.type_catalog.TypeDefinition;
 }
@@ -6683,6 +7534,9 @@ class TypeDefinition private constructor(
     override val defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId?,
     override val namedPresentations: build.skir.KeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>,
     override val outgoingConversionIds: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId>,
+    override val rolePresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.RolePresentation>,
+    override val fieldMergePolicies: kotlin.collections.List<skirout.editor.v1.type_catalog.FieldMergePolicy>,
+    override val declarationOwner: kotlin.String,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeDefinition>? =
         null,
 ): skirout.editor.v1.type_catalog.TypeDefinition_OrMutable {
@@ -6699,6 +7553,9 @@ class TypeDefinition private constructor(
         defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable?,
         namedPresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable>,
         outgoingConversionIds: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable>,
+        rolePresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RolePresentation_OrMutable>,
+        fieldMergePolicies: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable>,
+        declarationOwner: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeDefinition>? =
             null,
     ): this(
@@ -6712,6 +7569,9 @@ class TypeDefinition private constructor(
         if (defaultPresentationId != null) defaultPresentationId.toFrozen() else null,
         build.skir.internal.toKeyedList(namedPresentations, "name", { it.name }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(outgoingConversionIds, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(rolePresentations, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(fieldMergePolicies, { it.toFrozen() }),
+        declarationOwner,
         _unrecognizedFields,
     ) {}
 
@@ -6730,6 +7590,9 @@ class TypeDefinition private constructor(
         defaultPresentationId = this.defaultPresentationId,
         namedPresentations = this.namedPresentations,
         outgoingConversionIds = this.outgoingConversionIds,
+        rolePresentations = this.rolePresentations,
+        fieldMergePolicies = this.fieldMergePolicies,
+        declarationOwner = this.declarationOwner,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -6756,6 +7619,12 @@ class TypeDefinition private constructor(
             this.namedPresentations,
         outgoingConversionIds: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
             this.outgoingConversionIds,
+        rolePresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RolePresentation_OrMutable> =
+            this.rolePresentations,
+        fieldMergePolicies: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable> =
+            this.fieldMergePolicies,
+        declarationOwner: kotlin.String =
+            this.declarationOwner,
     ) = skirout.editor.v1.type_catalog.TypeDefinition(
         displayName,
         build.skir.internal.toKeyedList(parameters, "name", { it.name }, { it.toFrozen() }),
@@ -6767,6 +7636,9 @@ class TypeDefinition private constructor(
         if (defaultPresentationId != null) defaultPresentationId.toFrozen() else null,
         build.skir.internal.toKeyedList(namedPresentations, "name", { it.name }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(outgoingConversionIds, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(rolePresentations, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(fieldMergePolicies, { it.toFrozen() }),
+        declarationOwner,
         this._unrecognizedFields,
     );
 
@@ -6774,11 +7646,11 @@ class TypeDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.TypeDefinition && this.displayName == other.displayName && this.parameters == other.parameters && this.directParents == other.directParents && this.representation == other.representation && this.typeId == other.typeId && this.revision == other.revision && this.kind == other.kind && this.defaultPresentationId == other.defaultPresentationId && this.namedPresentations == other.namedPresentations && this.outgoingConversionIds == other.outgoingConversionIds);
+        return this === other || (other is skirout.editor.v1.type_catalog.TypeDefinition && this.displayName == other.displayName && this.parameters == other.parameters && this.directParents == other.directParents && this.representation == other.representation && this.typeId == other.typeId && this.revision == other.revision && this.kind == other.kind && this.defaultPresentationId == other.defaultPresentationId && this.namedPresentations == other.namedPresentations && this.outgoingConversionIds == other.outgoingConversionIds && this.rolePresentations == other.rolePresentations && this.fieldMergePolicies == other.fieldMergePolicies && this.declarationOwner == other.declarationOwner);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.displayName, this.parameters, this.directParents, this.representation, this.typeId, this.revision, this.kind, this.defaultPresentationId, this.namedPresentations, this.outgoingConversionIds).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.displayName, this.parameters, this.directParents, this.representation, this.typeId, this.revision, this.kind, this.defaultPresentationId, this.namedPresentations, this.outgoingConversionIds, this.rolePresentations, this.fieldMergePolicies, this.declarationOwner).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -6812,6 +7684,12 @@ class TypeDefinition private constructor(
             build.skir.internal.emptyKeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>(),
         override var outgoingConversionIds: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
+        override var rolePresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.RolePresentation_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RolePresentation>(),
+        override var fieldMergePolicies: kotlin.collections.List<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.FieldMergePolicy>(),
+        override var declarationOwner: kotlin.String =
+            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeDefinition>? =
             null,
     ): skirout.editor.v1.type_catalog.TypeDefinition_OrMutable {
@@ -6827,6 +7705,9 @@ class TypeDefinition private constructor(
             defaultPresentationId = this.defaultPresentationId,
             namedPresentations = this.namedPresentations,
             outgoingConversionIds = this.outgoingConversionIds,
+            rolePresentations = this.rolePresentations,
+            fieldMergePolicies = this.fieldMergePolicies,
+            declarationOwner = this.declarationOwner,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -6893,6 +7774,38 @@ class TypeDefinition private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [rolePresentations] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [rolePresentations] and returns it.
+         */
+        val mutableRolePresentations: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.RolePresentation_OrMutable> get() {
+            var value = this.rolePresentations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.rolePresentations = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [fieldMergePolicies] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [fieldMergePolicies] and returns it.
+         */
+        val mutableFieldMergePolicies: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable> get() {
+            var value = this.fieldMergePolicies;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.fieldMergePolicies = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
@@ -6908,6 +7821,9 @@ class TypeDefinition private constructor(
                 null,
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RolePresentation>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.FieldMergePolicy>(),
+                "",
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -6941,6 +7857,12 @@ class TypeDefinition private constructor(
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>(),
             outgoingConversionIds: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
+            rolePresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RolePresentation_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RolePresentation>(),
+            fieldMergePolicies: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.FieldMergePolicy>(),
+            declarationOwner: kotlin.String =
+                "",
         ) = skirout.editor.v1.type_catalog.TypeDefinition(
             displayName = displayName,
             parameters = parameters,
@@ -6952,6 +7874,9 @@ class TypeDefinition private constructor(
             defaultPresentationId = defaultPresentationId,
             namedPresentations = namedPresentations,
             outgoingConversionIds = outgoingConversionIds,
+            rolePresentations = rolePresentations,
+            fieldMergePolicies = fieldMergePolicies,
+            declarationOwner = declarationOwner,
             _unrecognizedFields = null,
         );
 
@@ -7075,6 +8000,37 @@ class TypeDefinition private constructor(
                 "",
                 { it.outgoingConversionIds },
                 { mut, v -> mut.outgoingConversionIds = v },
+            );
+            serializerImpl.addField(
+                "role_presentations",
+                "rolePresentations",
+                10,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.RolePresentation.serializer,
+                ),
+                "",
+                { it.rolePresentations },
+                { mut, v -> mut.rolePresentations = v },
+            );
+            serializerImpl.addField(
+                "field_merge_policies",
+                "fieldMergePolicies",
+                11,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.FieldMergePolicy.serializer,
+                ),
+                "",
+                { it.fieldMergePolicies },
+                { mut, v -> mut.fieldMergePolicies = v },
+            );
+            serializerImpl.addField(
+                "declaration_owner",
+                "declarationOwner",
+                12,
+                build.skir.Serializers.string,
+                "",
+                { it.declarationOwner },
+                { mut, v -> mut.declarationOwner = v },
             );
             serializerImpl.finalizeStruct();
         }

@@ -21,6 +21,7 @@ extension SkirPresentationContentDecoder on SkirPresentationDecoder {
     final decoration = _optionalExpression(value.decoration);
 
     final semanticLabel = _optionalExpression(value.semanticLabel);
+    final paragraph = _paragraph(value.paragraph);
 
     final diagnostics = [
       ...text.diagnostics,
@@ -36,6 +37,7 @@ extension SkirPresentationContentDecoder on SkirPresentationDecoder {
       ...letterSpacing.diagnostics,
       ...decoration.diagnostics,
       ...semanticLabel.diagnostics,
+      ...paragraph.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -53,9 +55,93 @@ extension SkirPresentationContentDecoder on SkirPresentationDecoder {
               letterSpacing: letterSpacing.valueOrNull,
               decoration: decoration.valueOrNull,
               semanticLabel: semanticLabel.valueOrNull,
+              paragraph: paragraph.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<PresentationElement> _richText(wire.RichTextContent value) {
+    if (value.runs.isEmpty) return invalidWire("Rich text has no runs");
+    final runs = <PresentationTextRun>[];
+    final diagnostics = <TypeDiagnostic>[];
+    for (final run in value.runs) {
+      final text = expressions.decode(run.text);
+      final style = _textStyle(run.style);
+      diagnostics
+        ..addAll(text.diagnostics)
+        ..addAll(style.diagnostics);
+      if (text.valueOrNull case final decoded?) {
+        runs.add(PresentationTextRun(text: decoded, style: style.valueOrNull));
+      }
+    }
+    final style = _textStyle(value.style);
+    final paragraph = _paragraph(value.paragraph);
+    diagnostics
+      ..addAll(style.diagnostics)
+      ..addAll(paragraph.diagnostics);
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            RichTextElement(
+              runs: runs,
+              style: style.valueOrNull,
+              paragraph: paragraph.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<PresentationTextStyle?> _textStyle(wire.TextStyleOverride? value) {
+    if (value == null) return const TypeResult.success(null);
+    final color = _optionalExpression(value.color);
+    final weight = _optionalExpression(value.fontWeight);
+    final italic = _optionalExpression(value.fontItalic);
+    final decoration = _optionalExpression(value.decoration);
+    final diagnostics = [
+      ...color.diagnostics,
+      ...weight.diagnostics,
+      ...italic.diagnostics,
+      ...decoration.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            PresentationTextStyle(
+              color: color.valueOrNull,
+              fontWeight: weight.valueOrNull,
+              fontItalic: italic.valueOrNull,
+              decoration: decoration.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<TextParagraph> _paragraph(wire.TextParagraph value) {
+    if (value.maxLines != null && value.maxLines! <= 0) {
+      return invalidWire("Text maximum lines must be positive");
+    }
+    final overflow = switch (value.overflow) {
+      wire.PresentationTextOverflow.clip => PresentationTextOverflow.clip,
+      wire.PresentationTextOverflow.ellipsis =>
+        PresentationTextOverflow.ellipsis,
+      _ => null,
+    };
+    final tone = switch (value.tone) {
+      wire.PresentationTextTone.primary => PresentationTextTone.primary,
+      wire.PresentationTextTone.secondary => PresentationTextTone.secondary,
+      _ => null,
+    };
+    if (overflow == null || tone == null) {
+      return invalidWire("Unknown text paragraph metadata");
+    }
+    return TypeResult.success(
+      TextParagraph(
+        maxLines: value.maxLines,
+        overflow: overflow,
+        softWrap: value.softWrap,
+        selectable: value.selectable,
+        tone: tone,
+      ),
+    );
   }
 
   TypeResult<PresentationElement> _markdown(wire.TextContent value) =>

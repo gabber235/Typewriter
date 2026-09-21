@@ -22,23 +22,16 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.WildcardTypeName
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.writeTo
-import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.argument
 import com.typewritermc.codegen.getSymbolsWithAnnotation
+import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
 import com.typewritermc.discovery.TypeDiscoveryContribution
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.GeneratedDiscoveryModule
-import com.typewritermc.library.PageKind
-import com.typewritermc.library.PageKindId
-import com.typewritermc.library.PageKindRef
-import com.typewritermc.pages.GeneratedPageKind
-import com.typewritermc.pages.PageProvider
-import com.typewritermc.pages.PageSpec
-import com.typewritermc.pages.TypewriterPage
 import com.typewritermc.types.DeclaredTypeId
 
 /**
@@ -60,7 +53,7 @@ private class TypewriterPageProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(TypewriterPage::class).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TYPEWRITER_PAGE).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
         val declarations = symbols.mapNotNull(::pageFunction).sortedBy { it.function.qualifiedName?.asString() }
@@ -98,17 +91,18 @@ private class TypewriterPageProcessor(
                 ?.declaration
                 ?.qualifiedName
                 ?.asString()
-        if (returnType != PageSpec::class.qualifiedName) {
+        if (returnType != PAGE_SPEC.canonicalName) {
             logger.error("TypewriterPage functions must return PageSpec.", function)
             return null
         }
-        val annotation = requireNotNull(function.annotation<TypewriterPage>())
-        val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull()
+        val annotation = requireNotNull(function.rawAnnotation(TYPEWRITER_PAGE))
+        val idValue = annotation.argument("id") as? String
+        val id = idValue?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() }
         if (id == null) {
             logger.error("Page ids must contain exactly 32 hexadecimal characters.", function)
             return null
         }
-        val revision = annotation.revision
+        val revision = annotation.argument("revision") as? Int ?: 1
         if (revision <= 0) {
             logger.error("Page revisions must be positive.", function)
             return null
@@ -130,10 +124,10 @@ private class TypewriterPageProcessor(
             TypeSpec
                 .objectBuilder(declaration.markerName)
                 .addModifiers(KModifier.DATA)
-                .addSuperinterface(PageKind::class)
+                .addSuperinterface(PAGE_KIND)
                 .addAnnotation(
                     AnnotationSpec
-                        .builder(GeneratedPageKind::class)
+                        .builder(GENERATED_PAGE_KIND)
                         .addMember("id = %S", declaration.id.toString())
                         .addMember("revision = %L", declaration.revision)
                         .build(),
@@ -147,14 +141,14 @@ private class TypewriterPageProcessor(
                         .addParameter("namespace", String::class)
                         .addParameter("sourcePart", String::class)
                         .build(),
-                ).addSuperinterface(PageProvider::class)
+                ).addSuperinterface(PAGE_PROVIDER)
                 .addProperty(
                     PropertySpec
-                        .builder("kind", PageKindRef::class, KModifier.OVERRIDE)
+                        .builder("kind", PAGE_KIND_REF, KModifier.OVERRIDE)
                         .initializer(
                             "%T(%T(%T.parse(%S)), %L)",
-                            PageKindRef::class,
-                            PageKindId::class,
+                            PAGE_KIND_REF,
+                            PAGE_KIND_ID,
                             DeclaredTypeId::class,
                             declaration.id.toString(),
                             declaration.revision,
@@ -174,7 +168,7 @@ private class TypewriterPageProcessor(
                     PropertySpec
                         .builder(
                             "marker",
-                            KOTLIN_KCLASS.parameterizedBy(WildcardTypeName.producerOf(PageKind::class.asClassName())),
+                            KOTLIN_KCLASS.parameterizedBy(WildcardTypeName.producerOf(PAGE_KIND)),
                             KModifier.OVERRIDE,
                         ).initializer("%T::class", markerClass)
                         .build(),
@@ -182,7 +176,7 @@ private class TypewriterPageProcessor(
                     FunSpec
                         .builder("specification")
                         .addModifiers(KModifier.OVERRIDE)
-                        .returns(PageSpec::class)
+                        .returns(PAGE_SPEC)
                         .addStatement("return %M()", MemberName(packageName, functionName))
                         .build(),
                 ).build()
@@ -205,7 +199,7 @@ private class TypewriterPageProcessor(
                                 .indent()
                                 .add("%T(contribution.origin.value, contribution.sourcePart)\n", providerClass)
                                 .unindent()
-                                .add("} bind %T::class\n", PageProvider::class)
+                                .add("} bind %T::class\n", PAGE_PROVIDER)
                                 .unindent()
                                 .add("}\n")
                                 .build(),
@@ -260,3 +254,10 @@ private fun stringProperty(
         .build()
 
 private val KOTLIN_KCLASS = ClassName("kotlin.reflect", "KClass")
+private const val TYPEWRITER_PAGE = "com.typewritermc.pages.TypewriterPage"
+private val GENERATED_PAGE_KIND = ClassName("com.typewritermc.pages", "GeneratedPageKind")
+private val PAGE_KIND = ClassName("com.typewritermc.library", "PageKind")
+private val PAGE_KIND_ID = ClassName("com.typewritermc.library", "PageKindId")
+private val PAGE_KIND_REF = ClassName("com.typewritermc.library", "PageKindRef")
+private val PAGE_PROVIDER = ClassName("com.typewritermc.pages", "PageProvider")
+private val PAGE_SPEC = ClassName("com.typewritermc.pages", "PageSpec")

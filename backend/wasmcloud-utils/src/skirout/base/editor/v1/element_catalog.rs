@@ -52,44 +52,6 @@ impl ElementTypeId {
 }
 
 // ==============================================================================
-// struct ElementInstanceId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementInstanceId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementInstanceId>>,
-}
-
-impl ElementInstanceId {
-    pub fn default_ref() -> &'static ElementInstanceId {
-        static D: std::sync::LazyLock<ElementInstanceId> = std::sync::LazyLock::new(ElementInstanceId::default);
-        &D
-    }
-}
-
-impl ElementInstanceId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementInstanceId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementInstanceId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/element_catalog.skir",
-                    "ElementInstanceId",
-                    "",
-                    |x: &ElementInstanceId| &x._unrecognized,
-                    |x: &mut ElementInstanceId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementInstanceId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementInstanceId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct AvailabilityFact
 // ==============================================================================
 
@@ -849,6 +811,7 @@ pub struct ElementCatalogEntry {
     pub origin_artifact_id: String,
     pub source_part: String,
     pub descriptor: ElementDescriptor,
+    pub presentation_subject: crate::skirout::base::editor::v1::catalog_presentation::CatalogPresentationSubject,
     pub eligibility: ElementEligibility,
     pub available: bool,
     /// Set this to None when you're creating a struct.
@@ -892,11 +855,6 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ElementTypeId> = ElementTypeId::_adapter() as *const _ as *mut _;
                 (*a).add_field("value", 0, crate::skirout::base::editor::v1::type_catalog::DeclaredTypeId::serializer(), "", |x: &ElementTypeId| &x.value, |x: &mut ElementTypeId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementInstanceId> = ElementInstanceId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &ElementInstanceId| &x.value, |x: &mut ElementInstanceId, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1012,8 +970,9 @@ fn initialize_module_serializers() {
                 (*a).add_field("origin_artifact_id", 0, crate::skir_client::Serializer::string(), "", |x: &ElementCatalogEntry| &x.origin_artifact_id, |x: &mut ElementCatalogEntry, v| x.origin_artifact_id = v);
                 (*a).add_field("source_part", 1, crate::skir_client::Serializer::string(), "", |x: &ElementCatalogEntry| &x.source_part, |x: &mut ElementCatalogEntry, v| x.source_part = v);
                 (*a).add_field("descriptor", 2, crate::skir_client::internal::struct_serializer_from_static(ElementDescriptor::_adapter()), "", |x: &ElementCatalogEntry| &x.descriptor, |x: &mut ElementCatalogEntry, v| x.descriptor = v);
-                (*a).add_field("eligibility", 3, crate::skir_client::internal::enum_serializer_from_static(ElementEligibility::_adapter()), "", |x: &ElementCatalogEntry| &x.eligibility, |x: &mut ElementCatalogEntry, v| x.eligibility = v);
-                (*a).add_field("available", 4, crate::skir_client::Serializer::bool(), "", |x: &ElementCatalogEntry| &x.available, |x: &mut ElementCatalogEntry, v| x.available = v);
+                (*a).add_field("presentation_subject", 3, crate::skirout::base::editor::v1::catalog_presentation::CatalogPresentationSubject::serializer(), "", |x: &ElementCatalogEntry| &x.presentation_subject, |x: &mut ElementCatalogEntry, v| x.presentation_subject = v);
+                (*a).add_field("eligibility", 4, crate::skir_client::internal::enum_serializer_from_static(ElementEligibility::_adapter()), "", |x: &ElementCatalogEntry| &x.eligibility, |x: &mut ElementCatalogEntry, v| x.eligibility = v);
+                (*a).add_field("available", 5, crate::skir_client::Serializer::bool(), "", |x: &ElementCatalogEntry| &x.available, |x: &mut ElementCatalogEntry, v| x.available = v);
                 (*a).finalize();
             }
         });

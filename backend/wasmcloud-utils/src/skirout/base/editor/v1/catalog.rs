@@ -186,6 +186,9 @@ pub struct CatalogFetchSuccess {
     pub element_entries: Vec<crate::skirout::base::editor::v1::element_catalog::ElementCatalogEntry>,
     pub page_entries: Vec<crate::skirout::base::editor::v1::page_catalog::PageCatalogEntry>,
     pub page_diagnostics: Vec<crate::skirout::base::editor::v1::page_catalog::PageDiagnostic>,
+    pub resource_kind_definitions: Vec<crate::skirout::base::library::v1::authoring::ResourceKindDefinition>,
+    pub relation_definitions: Vec<crate::skirout::base::library::v1::authoring::RelationDefinition>,
+    pub collection_projection_definitions: Vec<crate::skirout::base::library::v1::authoring::CollectionProjectionDefinition>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogFetchSuccess>>,
 }
@@ -381,6 +384,92 @@ impl CatalogWatchUpdate {
 }
 
 // ==============================================================================
+// struct InitializeTypedValueRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct InitializeTypedValueRequest {
+    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
+    pub root_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub partial_value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<InitializeTypedValueRequest>>,
+}
+
+impl InitializeTypedValueRequest {
+    pub fn default_ref() -> &'static InitializeTypedValueRequest {
+        static D: std::sync::LazyLock<InitializeTypedValueRequest> = std::sync::LazyLock::new(InitializeTypedValueRequest::default);
+        &D
+    }
+}
+
+impl InitializeTypedValueRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InitializeTypedValueRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InitializeTypedValueRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/catalog.skir",
+                    "InitializeTypedValueRequest",
+                    "",
+                    |x: &InitializeTypedValueRequest| &x._unrecognized,
+                    |x: &mut InitializeTypedValueRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<InitializeTypedValueRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(InitializeTypedValueRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum InitializeTypedValueResult
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InitializeTypedValueResult {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<InitializeTypedValueResult>>),
+    Success(Box<crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope>),
+    Invalid(Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>),
+    GenerationMismatch(Box<CatalogGenerationMismatch>),
+    Unavailable(Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>),
+}
+
+impl Default for InitializeTypedValueResult {
+    fn default() -> Self {
+        InitializeTypedValueResult::Unknown(None)
+    }
+}
+
+impl InitializeTypedValueResult {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<InitializeTypedValueResult> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<InitializeTypedValueResult>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &InitializeTypedValueResult| match x {
+                        InitializeTypedValueResult::Unknown(_) => 0,
+                        InitializeTypedValueResult::Success(_) => 1,
+                        InitializeTypedValueResult::Invalid(_) => 2,
+                        InitializeTypedValueResult::GenerationMismatch(_) => 3,
+                        InitializeTypedValueResult::Unavailable(_) => 4,
+                    },
+                    |u| InitializeTypedValueResult::Unknown(Some(u)),
+                    |x: &InitializeTypedValueResult| match x { InitializeTypedValueResult::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/catalog.skir",
+                    "InitializeTypedValueResult",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<InitializeTypedValueResult> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(InitializeTypedValueResult::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct WatchEditorCatalogRequest
 // ==============================================================================
 
@@ -461,6 +550,9 @@ fn initialize_module_serializers() {
                 (*a).add_field("element_entries", 7, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::element_catalog::ElementCatalogEntry::serializer()), "", |x: &CatalogFetchSuccess| &x.element_entries, |x: &mut CatalogFetchSuccess, v| x.element_entries = v);
                 (*a).add_field("page_entries", 8, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::page_catalog::PageCatalogEntry::serializer()), "", |x: &CatalogFetchSuccess| &x.page_entries, |x: &mut CatalogFetchSuccess, v| x.page_entries = v);
                 (*a).add_field("page_diagnostics", 9, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::page_catalog::PageDiagnostic::serializer()), "", |x: &CatalogFetchSuccess| &x.page_diagnostics, |x: &mut CatalogFetchSuccess, v| x.page_diagnostics = v);
+                (*a).add_field("resource_kind_definitions", 10, crate::skir_client::Serializer::array(crate::skirout::base::library::v1::authoring::ResourceKindDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.resource_kind_definitions, |x: &mut CatalogFetchSuccess, v| x.resource_kind_definitions = v);
+                (*a).add_field("relation_definitions", 11, crate::skir_client::Serializer::array(crate::skirout::base::library::v1::authoring::RelationDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.relation_definitions, |x: &mut CatalogFetchSuccess, v| x.relation_definitions = v);
+                (*a).add_field("collection_projection_definitions", 12, crate::skir_client::Serializer::array(crate::skirout::base::library::v1::authoring::CollectionProjectionDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.collection_projection_definitions, |x: &mut CatalogFetchSuccess, v| x.collection_projection_definitions = v);
                 (*a).finalize();
             }
             unsafe {
@@ -485,6 +577,21 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<CatalogWatchUpdate> = CatalogWatchUpdate::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("initial", 1, 1, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |v| CatalogWatchUpdate::Initial(Box::new(v)), |x| match x { CatalogWatchUpdate::Initial(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalidated", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CatalogInvalidated::_adapter()), "", |v| CatalogWatchUpdate::Invalidated(Box::new(v)), |x| match x { CatalogWatchUpdate::Invalidated(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<InitializeTypedValueRequest> = InitializeTypedValueRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &InitializeTypedValueRequest| &x.generation, |x: &mut InitializeTypedValueRequest, v| x.generation = v);
+                (*a).add_field("root_type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &InitializeTypedValueRequest| &x.root_type, |x: &mut InitializeTypedValueRequest, v| x.root_type = v);
+                (*a).add_field("partial_value", 2, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &InitializeTypedValueRequest| &x.partial_value, |x: &mut InitializeTypedValueRequest, v| x.partial_value = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<InitializeTypedValueResult> = InitializeTypedValueResult::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("success", 1, 1, crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope::serializer(), "", |v| InitializeTypedValueResult::Success(Box::new(v)), |x| match x { InitializeTypedValueResult::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid", 2, 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |v| InitializeTypedValueResult::Invalid(v), |x| match x { InitializeTypedValueResult::Invalid(v) => v, _ => unreachable!() });
+                (*a).add_wrapper_variant("generation_mismatch", 3, 3, crate::skir_client::internal::struct_serializer_from_static(CatalogGenerationMismatch::_adapter()), "", |v| InitializeTypedValueResult::GenerationMismatch(Box::new(v)), |x| match x { InitializeTypedValueResult::GenerationMismatch(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("unavailable", 4, 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |v| InitializeTypedValueResult::Unavailable(v), |x| match x { InitializeTypedValueResult::Unavailable(v) => v, _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -519,6 +626,19 @@ pub fn watch_editor_catalog_method() -> &'static crate::skir_client::Method<Watc
             number: 910002_i64,
             request_serializer: WatchEditorCatalogRequest::serializer(),
             response_serializer: CatalogWatchUpdate::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn initialize_typed_value_method() -> &'static crate::skir_client::Method<InitializeTypedValueRequest, InitializeTypedValueResult> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<InitializeTypedValueRequest, InitializeTypedValueResult>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "InitializeTypedValue".to_string(),
+            number: 910004_i64,
+            request_serializer: InitializeTypedValueRequest::serializer(),
+            response_serializer: InitializeTypedValueResult::serializer(),
             doc: "".to_string(),
         }
     });

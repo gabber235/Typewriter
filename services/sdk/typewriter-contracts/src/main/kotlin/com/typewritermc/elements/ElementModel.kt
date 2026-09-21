@@ -1,5 +1,8 @@
 package com.typewritermc.elements
 
+import com.typewritermc.authoring.Placement
+import com.typewritermc.authoring.TimelineKeyframePlacement
+import com.typewritermc.authoring.TimelineSegmentPlacement
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.types.Color
 import com.typewritermc.types.ConcreteTypePrototype
@@ -9,7 +12,6 @@ import com.typewritermc.types.Icon
 import com.typewritermc.types.Referenceable
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypewriterString
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
@@ -19,12 +21,12 @@ import kotlin.reflect.KClass
 /**
  * Base contract for authored instances that can be referenced by other content.
  *
- * [id] identifies the instance, while [ElementTypeId] identifies its schema. Runtime behavior is supplied through
- * separate facets.
+ * Resource identity lives outside the typed content. [ElementTypeId] identifies the schema. Runtime behavior is
+ * supplied through separate facets.
  */
 interface Element : Referenceable {
-    val id: ElementInstanceId
     val name: String
+    val placement: Placement
 }
 
 /**
@@ -43,15 +45,14 @@ interface Cue : Element
  * Implementations expose authored bounds; this interface does not validate them or define playback scheduling.
  */
 interface Segment : Cue {
-    val startFrame: Int
-    val endFrame: Int
+    override val placement: TimelineSegmentPlacement
 }
 
 /**
  * Describes a timeline cue at one frame index. Scheduling and execution belong to the runtime using the cue.
  */
 interface Keyframe : Cue {
-    val frame: Int
+    override val placement: TimelineKeyframePlacement
 }
 
 /**
@@ -61,20 +62,9 @@ interface Keyframe : Cue {
  */
 @JvmInline
 @Serializable
+@com.typewritermc.types.TypewriterType(id = "ef2cd4c6ab4f4c5a9f0850f3d7a0f58f")
 value class ElementTypeId(
     val value: DeclaredTypeId,
-)
-
-/**
- * Carries an element instance key across authoring, references, and runtime decoding.
- *
- * It serializes as a plain string. Construction does not validate format or establish that an element exists.
- */
-@JvmInline
-@Serializable(with = ElementInstanceIdSerializer::class)
-@TypewriterString
-value class ElementInstanceId(
-    val value: String,
 )
 
 /**

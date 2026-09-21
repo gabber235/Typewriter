@@ -4,12 +4,14 @@ package com.typewritermc.types.skir
 
 import com.typewritermc.types.DataMapEntry
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.ResourceId
 import okio.ByteString.Companion.toByteString
 import java.math.BigInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
 import skirout.editor.v1.type_catalog.ResolvedTypeRef as SkirResolvedTypeRef
+import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.TypedMapEntry as SkirTypedMapEntry
 import skirout.editor.v1.type_catalog.TypedRecordField as SkirTypedRecordField
 import skirout.editor.v1.type_catalog.TypedValue as SkirTypedValue
@@ -108,7 +110,7 @@ internal fun ConversionScope.encodeDataValue(value: DataValue): SkirTypedValue =
         }
 
         is DataValue.Reference -> {
-            SkirTypedValue.ReferenceWrapper(value.id.toSkirRecordId())
+            SkirTypedValue.ReferenceWrapper(SkirResourceId(value = value.id.value))
         }
     }
 
@@ -214,7 +216,7 @@ internal fun ConversionScope.decodeDataValue(value: SkirTypedValue): DataValue =
         }
 
         is SkirTypedValue.ReferenceWrapper -> {
-            DataValue.Reference(value.value.toResourceId())
+            DataValue.Reference(ResourceId(value.value.value))
         }
 
         else -> {

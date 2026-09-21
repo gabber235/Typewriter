@@ -11,8 +11,15 @@ import {
   CatalogGeneration,
   PresentationId,
   ResolvedTypeRef,
+  TypedValue,
   TypeDefinition,
 } from "editor/v1/type_catalog.skir";
+import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
+import {
+  CollectionProjectionDefinition,
+  RelationDefinition,
+  ResourceKindDefinition,
+} from "library/v1/authoring.skir";
 
 // The editor catalog is one versioned capability boundary. A fetch assembles the
 // type system and the metadata that makes those types editable, searchable, and
@@ -51,6 +58,9 @@ struct CatalogFetchSuccess(810900006) {
   element_entries: [ElementCatalogEntry] = 7;
   page_entries: [PageCatalogEntry] = 8;
   page_diagnostics: [PageDiagnostic] = 9;
+  resource_kind_definitions: [ResourceKindDefinition] = 10;
+  relation_definitions: [RelationDefinition] = 11;
+  collection_projection_definitions: [CollectionProjectionDefinition] = 12;
 }
 
 // Reports a conditional fetch against a different catalog generation.
@@ -74,6 +84,19 @@ enum CatalogWatchUpdate(810900010) {
   invalidated: CatalogInvalidated = 2;
 }
 
+struct InitializeTypedValueRequest(810900011) {
+  generation: CatalogGeneration = 0;
+  root_type: ResolvedTypeRef = 1;
+  partial_value: TypedValue = 2;
+}
+
+enum InitializeTypedValueResult(810900012) {
+  success: TypedValueEnvelope = 1;
+  invalid: [TypeDiagnostic] = 2;
+  generation_mismatch: CatalogGenerationMismatch = 3;
+  unavailable: [TypeDiagnostic] = 4;
+}
+
 method FetchEditorCatalog(
   CatalogFetchRequest
 ): CatalogFetchResult = 910001;
@@ -81,3 +104,7 @@ method FetchEditorCatalog(
 method WatchEditorCatalog(
   struct {}
 ): CatalogWatchUpdate = 910002;
+
+method InitializeTypedValue(
+  InitializeTypedValueRequest
+): InitializeTypedValueResult = 910004;

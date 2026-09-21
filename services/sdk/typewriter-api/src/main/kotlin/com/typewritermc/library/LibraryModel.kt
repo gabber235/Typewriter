@@ -1,7 +1,8 @@
 package com.typewritermc.library
 
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.ElementPlacement
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.Placement
+import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.types.Color
@@ -9,7 +10,14 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Referenceable
+import com.typewritermc.types.Relation
+import com.typewritermc.types.RelationDeletePolicy
+import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.ToMany
+import com.typewritermc.types.ToOne
+import com.typewritermc.types.TypewriterRelation
+import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -19,14 +27,22 @@ import kotlinx.serialization.Serializable
  * Tags are references to separate records; constructing a book does not resolve them or enforce database
  * uniqueness.
  */
-@Serializable
+@TypewriterType(id = "bbb646b300cf4dd2b7aab051854e4dd1")
 data class Book(
-    val id: BookId,
-    val title: LibraryName,
-    val icon: Icon,
-    val color: Color,
-    val tags: Set<Ref<Tag>>,
+    val title: String = "",
+    val icon: Icon = Icon.Iconify("material-symbols:book"),
+    val color: Color = Color(0xff3f51b5u),
+    val tags: Set<Ref<Tag>> = emptySet(),
+    val pages: ToMany<BookPages, Page> = ToMany.empty(),
 ) : Referenceable
+
+/** Owns the synchronized Book to Page containment relationship. */
+@TypewriterRelation(
+    id = BOOK_PAGES_RELATION_ID,
+    onSourceDelete = RelationDeletePolicy.CASCADE,
+    onTargetDelete = RelationDeletePolicy.CLEAR,
+)
+sealed interface BookPages : Relation<Book, Page>
 
 /**
  * Represents a library tag with potentially multiple parents and editor placement.
@@ -34,13 +50,12 @@ data class Book(
  * Hierarchy validation belongs to [TagHierarchy] and the repository. The record itself permits unresolved parent
  * references.
  */
-@Serializable
+@TypewriterType(id = "ce1ae253a42d4509935c48b8ecba664a")
 data class Tag(
-    val id: TagId,
-    val name: LibraryName,
-    val color: Color,
-    val parents: Set<Ref<Tag>>,
-    val placement: GridPlacement,
+    val name: String = "",
+    val color: Color = Color(0xff9e9e9eu),
+    val parents: Set<Ref<Tag>> = emptySet(),
+    val placement: GraphPlacement,
 ) : Referenceable
 
 /**
@@ -49,29 +64,26 @@ data class Tag(
  * [PageDocument] adds elements, reference summaries, and diagnostics. The kind includes a revision so consumers
  * can detect incompatible schema changes.
  */
-@Serializable
+@TypewriterType(id = "2f5ff6a1077d41a4be6d527e864c1409")
 data class Page(
-    val id: PageId,
-    val book: Ref<Book>,
-    val name: LibraryName,
+    val book: ToOne<BookPages, Book>,
+    val name: String = "",
     val kind: PageKindRef,
     val chapter: ChapterPath,
     val priority: Int,
+    val elements: ToMany<PageElements, Element> = ToMany.empty(),
 ) : Referenceable
 
-/**
- * Stores the rectangular editor position of a library record in grid units.
- *
- * Coordinates identify the top left corner. The model does not validate bounds because the owning editor decides
- * which placements are valid.
- */
-@Serializable
-data class GridPlacement(
-    val x: Int,
-    val y: Int,
-    val width: Int,
-    val height: Int,
+/** Owns Page containment of authored element resources. */
+@TypewriterRelation(
+    id = PAGE_ELEMENTS_RELATION_ID,
+    onSourceDelete = RelationDeletePolicy.CASCADE,
+    onTargetDelete = RelationDeletePolicy.CLEAR,
 )
+sealed interface PageElements : Relation<Page, Element>
+
+const val BOOK_PAGES_RELATION_ID = "4fbbe0dcedd84ccb8b7ce8c6a6105551"
+const val PAGE_ELEMENTS_RELATION_ID = "349b4d11c4464d13ad4ca063ead60c62"
 
 /**
  * Provides the editor view of a page with logical element values and reference diagnostics.
@@ -81,11 +93,12 @@ data class GridPlacement(
  */
 @Serializable
 data class PageDocument(
-    val page: Page,
+    val page: Resource<PageId, Page>,
     val elements: List<PageDocumentElement>,
     val references: List<PageReference>,
-    val crossPageTargets: List<ResourceSummary>,
-    val crossPageSources: List<ResourceSummary>,
+    val incomingReferences: List<PageReference>,
+    val crossPageTargets: List<ReferenceResourceResolution>,
+    val crossPageSources: List<ReferenceResourceResolution>,
     val diagnostics: List<PageDocumentDiagnostic>,
     val compileStatus: PageCompileStatus = PageCompileStatus.NotCompiled,
 ) {
@@ -95,6 +108,13 @@ data class PageDocument(
         }
         require(references.map { it.source to it.slot }.distinct().size == references.size) {
             "Page document reference slots must be unique per source."
+        }
+        val localTargets = elements.mapTo(hashSetOf(), PageDocumentElement::id) + page.id.value
+        require(incomingReferences.all { it.target in localTargets }) {
+            "Incoming page document references must target the page or one of its elements."
+        }
+        require(incomingReferences.map { it.source to it.slot }.distinct().size == incomingReferences.size) {
+            "Incoming page document reference slots must be unique per source."
         }
     }
 }
@@ -107,11 +127,11 @@ data class PageDocument(
  */
 @Serializable
 data class PageDocumentElement(
-    val id: ElementInstanceId,
+    val id: ResourceId,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
     val value: DataValue,
-    val placement: ElementPlacement,
+    val placement: Placement,
 )
 
 /**
@@ -122,25 +142,10 @@ data class PageDocumentElement(
  */
 @Serializable
 data class PageReference(
-    val source: ElementInstanceId,
+    val source: ResourceId,
     val slot: ReferenceSlotId,
     val target: ResourceId,
     val expectedType: com.typewritermc.types.TypeExpression,
-)
-
-/**
- * Describes a referenced resource without loading its full document.
- *
- * [exists] distinguishes missing targets, while optional name, element type, and page fields supply context when
- * known.
- */
-@Serializable
-data class ResourceSummary(
-    val id: ResourceId,
-    val name: String?,
-    val elementType: ElementTypeId? = null,
-    val page: Ref<Page>? = null,
-    val exists: Boolean,
 )
 
 /**
@@ -153,7 +158,7 @@ data class ResourceSummary(
 data class PageDocumentDiagnostic(
     val code: String,
     val message: String,
-    val element: ElementInstanceId? = null,
+    val element: ResourceId? = null,
     val slot: ReferenceSlotId? = null,
     val target: ResourceId? = null,
 )

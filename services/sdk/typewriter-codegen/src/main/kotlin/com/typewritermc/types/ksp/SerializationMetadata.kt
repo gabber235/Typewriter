@@ -26,6 +26,15 @@ private val KSDeclaration.serialName: String?
 private val KSPropertyDeclaration.isSerializedProperty: Boolean
     get() =
         extensionReceiver == null &&
-            hasBackingField &&
+            (hasBackingField || isConstructorProperty) &&
             !isDelegated() &&
             annotation<Transient>() == null
+
+private val KSPropertyDeclaration.isConstructorProperty: Boolean
+    get() {
+        val owner = parentDeclaration as? KSClassDeclaration ?: return false
+        val name = simpleName.asString()
+        return owner.primaryConstructor?.parameters?.any { parameter ->
+            parameter.name?.asString() == name && (parameter.isVal || parameter.isVar)
+        } == true
+    }

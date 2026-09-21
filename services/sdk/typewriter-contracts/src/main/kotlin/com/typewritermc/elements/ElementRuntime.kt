@@ -1,6 +1,8 @@
 package com.typewritermc.elements
 
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceId
 
 /**
  * Supplies deployment codecs, facts, and resource ownership while a facet attaches to an element.
@@ -23,5 +25,5 @@ interface ElementRuntimeHandle : AutoCloseable
  */
 interface ElementRuntimeFacet<E : Element> {
     context(context: ElementRuntimeContext)
-    suspend fun attach(element: E): ElementRuntimeHandle
+    suspend fun attach(element: Resource<ResourceId, E>): ElementRuntimeHandle
 }

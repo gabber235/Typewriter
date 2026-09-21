@@ -38,7 +38,33 @@ private fun PresentationNode.children(): List<PresentationNode> =
         (header?.title as? PresentationHeaderTitle.PresentationWrapper)?.value?.let(::add)
         when (val element = element) {
             is PresentationElement.ChildrenWrapper -> {
-                addAll(element.value.children)
+                when (val children = element.value) {
+                    is skirout.editor.v1.presentation.ChildrenElement.ColumnWrapper -> {
+                        children.value.children.mapTo(this) { it.node() }
+                    }
+
+                    is skirout.editor.v1.presentation.ChildrenElement.RowWrapper -> {
+                        children.value.children.mapTo(this) { it.node() }
+                    }
+
+                    is skirout.editor.v1.presentation.ChildrenElement.WrapWrapper -> {
+                        addAll(children.value.children)
+                    }
+
+                    is skirout.editor.v1.presentation.ChildrenElement.GridWrapper -> {
+                        addAll(children.value.children)
+                    }
+
+                    is skirout.editor.v1.presentation.ChildrenElement.StackWrapper -> {
+                        addAll(children.value.children)
+                    }
+
+                    skirout.editor.v1.presentation.ChildrenElement.UNKNOWN,
+                    is skirout.editor.v1.presentation.ChildrenElement.Unknown,
+                    -> {
+                        Unit
+                    }
+                }
             }
 
             is PresentationElement.SectionWrapper -> {
@@ -188,6 +214,17 @@ private fun PresentationNode.children(): List<PresentationNode> =
 private fun MutableList<PresentationNode>.addPrefix(control: BoundControl) {
     control.prefix?.let(::add)
 }
+
+private fun skirout.editor.v1.presentation.AxisChild.node(): PresentationNode =
+    when (this) {
+        is skirout.editor.v1.presentation.AxisChild.FixedWrapper -> value
+
+        is skirout.editor.v1.presentation.AxisChild.FlexibleWrapper -> value.child
+
+        skirout.editor.v1.presentation.AxisChild.UNKNOWN,
+        is skirout.editor.v1.presentation.AxisChild.Unknown,
+        -> error("Unknown axis child variant.")
+    }
 
 private fun SequencePresentation.nodes(): List<PresentationNode> = listOfNotNull(item, empty, separator)
 

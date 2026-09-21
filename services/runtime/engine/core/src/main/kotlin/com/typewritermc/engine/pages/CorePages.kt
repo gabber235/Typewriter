@@ -1,5 +1,7 @@
 package com.typewritermc.engine.pages
 
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.elements.Entry
 import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
@@ -14,24 +16,32 @@ import com.typewritermc.pages.page
  *
  * The marker defines an editor role; execution behavior must be supplied by the entry or a runtime facet.
  */
-interface SequenceEntry : Entry
+interface SequenceEntry : Entry {
+    override val placement: GraphPlacement
+}
 
 /**
  * Marks entries accepted by the core static graph page.
  *
  * The page specification defines layout, while runtime behavior remains separate.
  */
-interface StaticEntry : Entry
+interface StaticEntry : Entry {
+    override val placement: GraphPlacement
+}
 
 /**
  * Marks entries accepted by the core manifest graph page.
  */
-interface ManifestEntry : Entry
+interface ManifestEntry : Entry {
+    override val placement: GraphPlacement
+}
 
 /**
  * Marks track entries accepted by the core scene timeline alongside segments and keyframes.
  */
-interface SceneEntry : Entry
+interface SceneEntry : Entry {
+    override val placement: TimelineEntryPlacement
+}
 
 @TypewriterPage(
     id = "01a0b185-85cd-75c3-86c5-1fa6706bed6a",

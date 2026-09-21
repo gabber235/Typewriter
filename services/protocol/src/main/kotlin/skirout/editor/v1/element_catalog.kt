@@ -168,138 +168,6 @@ class ElementTypeId private constructor(
     }
 }
 
-sealed interface ElementInstanceId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementInstanceId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ElementInstanceId private constructor(
-    override val value: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementInstanceId>? =
-        null,
-): skirout.editor.v1.element_catalog.ElementInstanceId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementInstanceId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.element_catalog.ElementInstanceId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementInstanceId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.element_catalog.ElementInstanceId.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [ElementInstanceId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementInstanceId>? =
-            null,
-    ): skirout.editor.v1.element_catalog.ElementInstanceId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementInstanceId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.element_catalog.ElementInstanceId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ElementInstanceId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.element_catalog.ElementInstanceId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementInstanceId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [ElementInstanceId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [ElementInstanceId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "value",
-                "value",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
 sealed interface AvailabilityFact_OrMutable {
     val key: kotlin.String;
     val expected: kotlin.String;
@@ -3179,6 +3047,7 @@ sealed interface ElementCatalogEntry_OrMutable {
     val originArtifactId: kotlin.String;
     val sourcePart: kotlin.String;
     val descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable;
+    val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable;
     val eligibility: skirout.editor.v1.element_catalog.ElementEligibility;
     val available: kotlin.Boolean;
 
@@ -3191,6 +3060,7 @@ class ElementCatalogEntry private constructor(
     override val originArtifactId: kotlin.String,
     override val sourcePart: kotlin.String,
     override val descriptor: skirout.editor.v1.element_catalog.ElementDescriptor,
+    override val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject,
     override val eligibility: skirout.editor.v1.element_catalog.ElementEligibility,
     override val available: kotlin.Boolean,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogEntry>? =
@@ -3202,6 +3072,7 @@ class ElementCatalogEntry private constructor(
         originArtifactId: kotlin.String,
         sourcePart: kotlin.String,
         descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable,
+        presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable,
         eligibility: skirout.editor.v1.element_catalog.ElementEligibility,
         available: kotlin.Boolean,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogEntry>? =
@@ -3210,6 +3081,7 @@ class ElementCatalogEntry private constructor(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
+        presentationSubject.toFrozen(),
         eligibility,
         available,
         _unrecognizedFields,
@@ -3223,6 +3095,7 @@ class ElementCatalogEntry private constructor(
         originArtifactId = this.originArtifactId,
         sourcePart = this.sourcePart,
         descriptor = this.descriptor,
+        presentationSubject = this.presentationSubject,
         eligibility = this.eligibility,
         available = this.available,
     );
@@ -3237,6 +3110,8 @@ class ElementCatalogEntry private constructor(
             this.sourcePart,
         descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable =
             this.descriptor,
+        presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+            this.presentationSubject,
         eligibility: skirout.editor.v1.element_catalog.ElementEligibility =
             this.eligibility,
         available: kotlin.Boolean =
@@ -3245,6 +3120,7 @@ class ElementCatalogEntry private constructor(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
+        presentationSubject.toFrozen(),
         eligibility,
         available,
         this._unrecognizedFields,
@@ -3254,11 +3130,11 @@ class ElementCatalogEntry private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor && this.eligibility == other.eligibility && this.available == other.available);
+        return this === other || (other is skirout.editor.v1.element_catalog.ElementCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor && this.presentationSubject == other.presentationSubject && this.eligibility == other.eligibility && this.available == other.available);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.originArtifactId, this.sourcePart, this.descriptor, this.eligibility, this.available).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.originArtifactId, this.sourcePart, this.descriptor, this.presentationSubject, this.eligibility, this.available).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3278,6 +3154,8 @@ class ElementCatalogEntry private constructor(
             "",
         override var descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable =
             skirout.editor.v1.element_catalog.ElementDescriptor.partial(),
+        override var presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+            skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
         override var eligibility: skirout.editor.v1.element_catalog.ElementEligibility =
             skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN,
         override var available: kotlin.Boolean =
@@ -3290,6 +3168,7 @@ class ElementCatalogEntry private constructor(
             originArtifactId = this.originArtifactId,
             sourcePart = this.sourcePart,
             descriptor = this.descriptor,
+            presentationSubject = this.presentationSubject,
             eligibility = this.eligibility,
             available = this.available,
             _unrecognizedFields = this._unrecognizedFields,
@@ -3310,6 +3189,22 @@ class ElementCatalogEntry private constructor(
                 is skirout.editor.v1.element_catalog.ElementDescriptor.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [presentationSubject] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [presentationSubject] and returns it.
+         */
+        val mutablePresentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable get() {
+            var value = this.presentationSubject;
+            return when (value) {
+                is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject -> {
+                    value = value.toMutable();
+                    this.presentationSubject = value;
+                    return value;
+                }
+                is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -3318,6 +3213,7 @@ class ElementCatalogEntry private constructor(
                 "",
                 "",
                 skirout.editor.v1.element_catalog.ElementDescriptor.partial(),
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
                 skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN,
                 false,
             );
@@ -3339,6 +3235,8 @@ class ElementCatalogEntry private constructor(
                 "",
             descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable =
                 skirout.editor.v1.element_catalog.ElementDescriptor.partial(),
+            presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
             eligibility: skirout.editor.v1.element_catalog.ElementEligibility =
                 skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN,
             available: kotlin.Boolean =
@@ -3347,6 +3245,7 @@ class ElementCatalogEntry private constructor(
             originArtifactId = originArtifactId,
             sourcePart = sourcePart,
             descriptor = descriptor,
+            presentationSubject = presentationSubject,
             eligibility = eligibility,
             available = available,
             _unrecognizedFields = null,
@@ -3397,9 +3296,18 @@ class ElementCatalogEntry private constructor(
                 { mut, v -> mut.descriptor = v },
             );
             serializerImpl.addField(
-                "eligibility",
-                "eligibility",
+                "presentation_subject",
+                "presentationSubject",
                 3,
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.serializer,
+                "",
+                { it.presentationSubject },
+                { mut, v -> mut.presentationSubject = v },
+            );
+            serializerImpl.addField(
+                "eligibility",
+                "eligibility",
+                4,
                 skirout.editor.v1.element_catalog.ElementEligibility.serializer,
                 "",
                 { it.eligibility },
@@ -3408,7 +3316,7 @@ class ElementCatalogEntry private constructor(
             serializerImpl.addField(
                 "available",
                 "available",
-                4,
+                5,
                 build.skir.Serializers.bool,
                 "",
                 { it.available },

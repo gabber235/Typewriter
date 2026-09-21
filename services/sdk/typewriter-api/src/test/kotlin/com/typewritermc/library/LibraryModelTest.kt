@@ -1,17 +1,11 @@
 package com.typewritermc.library
 
 import com.typewritermc.types.Color
+import com.typewritermc.types.Resource
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 
 val LibraryModelTest by testSuite {
-    test("library names enforce the persisted identifier format") {
-        LibraryName("valid_name").value shouldBe "valid_name"
-        shouldThrow<IllegalArgumentException> { LibraryName("No spaces") }
-        shouldThrow<IllegalArgumentException> { LibraryName("ab") }
-    }
-
     test("chapter replacement respects segment boundaries") {
         ChapterPath.parse("act.one.deep").replacePrefix(
             ChapterPath.parse("act.one"),
@@ -38,11 +32,13 @@ val LibraryModelTest by testSuite {
 private fun tag(
     id: String,
     parents: Set<com.typewritermc.types.Ref<Tag>> = emptySet(),
-): Tag =
-    Tag(
-        id = TagId(id),
-        name = LibraryName(id),
-        color = Color(0u),
-        parents = parents,
-        placement = GridPlacement(0, 0, 1, 1),
+): Resource<TagId, Tag> =
+    Resource(
+        TagId(id),
+        Tag(
+            name = id,
+            color = Color(0u),
+            parents = parents,
+            placement = com.typewritermc.authoring.GraphPlacement(0, 0, 1, 1),
+        ),
     )

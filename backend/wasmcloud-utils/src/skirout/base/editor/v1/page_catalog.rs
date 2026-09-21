@@ -233,6 +233,7 @@ pub struct PageCatalogEntry {
     pub origin_artifact_id: String,
     pub source_part: String,
     pub descriptor: PageDescriptor,
+    pub presentation_subject: crate::skirout::base::editor::v1::catalog_presentation::CatalogPresentationSubject,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageCatalogEntry>>,
 }
@@ -397,6 +398,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("origin_artifact_id", 0, crate::skir_client::Serializer::string(), "", |x: &PageCatalogEntry| &x.origin_artifact_id, |x: &mut PageCatalogEntry, v| x.origin_artifact_id = v);
                 (*a).add_field("source_part", 1, crate::skir_client::Serializer::string(), "", |x: &PageCatalogEntry| &x.source_part, |x: &mut PageCatalogEntry, v| x.source_part = v);
                 (*a).add_field("descriptor", 2, crate::skir_client::internal::struct_serializer_from_static(PageDescriptor::_adapter()), "", |x: &PageCatalogEntry| &x.descriptor, |x: &mut PageCatalogEntry, v| x.descriptor = v);
+                (*a).add_field("presentation_subject", 3, crate::skirout::base::editor::v1::catalog_presentation::CatalogPresentationSubject::serializer(), "", |x: &PageCatalogEntry| &x.presentation_subject, |x: &mut PageCatalogEntry, v| x.presentation_subject = v);
                 (*a).finalize();
             }
             unsafe {

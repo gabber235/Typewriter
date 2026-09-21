@@ -4,7 +4,6 @@
 // capabilities, and conversions. A resolved reference identifies a declaration revision plus its type arguments.
 
 import { Duration } from "kernel/v1/duration.skir";
-import { RecordId } from "kernel/v1/record_id.skir";
 
 enum BuiltinTypeId(810100001) {
   option = 1;
@@ -99,6 +98,11 @@ struct TypedDurationValue(810200006) {
   duration: Duration = 0;
 }
 
+/// Opaque authored resource identity. Consumers compare it and never parse it.
+struct ResourceId(810200008) {
+  value: string = 0;
+}
+
 enum TypedValue(810200007) {
   unit = 1;
   boolean: bool = 2;
@@ -121,7 +125,7 @@ enum TypedValue(810200007) {
   record: TypedRecordValue = 19;
   named: TypedNamedValue = 20;
   duration: TypedDurationValue = 21;
-  reference: RecordId = 22;
+  reference: ResourceId = 22;
 }
 
 struct ListType(810100012) {
@@ -139,6 +143,7 @@ struct RecordField(810100014) {
   name: string = 0;
   value_type: TypeExpression = 1;
   initializer: TypedValue? = 2;
+  defaulted: bool = 3;
 }
 
 struct RecordType(810100015) {
@@ -221,6 +226,36 @@ struct NamedPresentation(810100025) {
   presentation_id: PresentationId = 1;
 }
 
+// A semantic surface resolved independently for each nominal type. Consumers
+// select the nearest associated ancestor for the requested role.
+enum PresentationRole(810100030) {
+  reference_summary = 1;
+  reference_option = 2;
+  catalog_option = 3;
+  authoring_result = 4;
+  page_tile = 5;
+  graph_node = 6;
+  inspector_header = 7;
+}
+
+struct RolePresentation(810100031) {
+  role: PresentationRole = 0;
+  presentation_id: PresentationId = 1;
+}
+
+enum FieldMergeStrategy(810100032) {
+  set_membership = 1;
+}
+
+// Merge policy belongs to the canonical type declaration. Editors use it to
+// reconcile an affected field without introducing resource specific paths.
+struct FieldMergePolicy(810100033) {
+  // Merge policies currently address record fields only. This avoids a schema
+  // cycle between type definitions, typed map keys, and general data paths.
+  field_path: [string] = 0;
+  strategy: FieldMergeStrategy = 1;
+}
+
 struct TypeDefinition(810100026) {
   display_name: string = 0;
   parameters: [TypeParameter|name] = 1;
@@ -232,6 +267,9 @@ struct TypeDefinition(810100026) {
   default_presentation_id: PresentationId? = 7;
   named_presentations: [NamedPresentation|name] = 8;
   outgoing_conversion_ids: [ConversionId] = 9;
+  role_presentations: [RolePresentation] = 10;
+  field_merge_policies: [FieldMergePolicy] = 11;
+  declaration_owner: string = 12;
 }
 
 struct TypeCatalog(810100027) {

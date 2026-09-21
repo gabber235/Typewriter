@@ -13,6 +13,7 @@ export "skirout/editor/v1/action.dart";
 export "skirout/editor/v1/binding.dart";
 export "skirout/editor/v1/capability.dart";
 export "skirout/editor/v1/catalog.dart";
+export "skirout/editor/v1/catalog_presentation.dart";
 export "skirout/editor/v1/conversion.dart";
 export "skirout/editor/v1/diagnostic.dart";
 export "skirout/editor/v1/element_catalog.dart";

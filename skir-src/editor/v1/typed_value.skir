@@ -3,7 +3,7 @@ import {
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 
-struct TypedValueEnvelope(810200008) {
+struct TypedValueEnvelope(810200009) {
   root_type: ResolvedTypeRef = 0;
   root_value: TypedValue = 1;
 }

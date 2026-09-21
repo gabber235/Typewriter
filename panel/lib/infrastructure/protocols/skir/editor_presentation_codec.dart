@@ -95,6 +95,7 @@ final class SkirPresentationDecoder {
     ),
     wire.PresentationElement_spacerWrapper(:final value) => _spacer(value),
     wire.PresentationElement_textWrapper(:final value) => _text(value),
+    wire.PresentationElement_richTextWrapper(:final value) => _richText(value),
     wire.PresentationElement_markdownWrapper(:final value) => _markdown(value),
     wire.PresentationElement_iconWrapper(:final value) => _icon(value),
     wire.PresentationElement_imageWrapper(:final value) => _image(value),
@@ -175,6 +176,8 @@ final class SkirPresentationDecoder {
     ),
     wire.PresentationElement_menuWrapper(:final value) => _menu(value),
     wire.PresentationElement_tooltipWrapper(:final value) => _tooltip(value),
+    wire.PresentationElement_adaptiveLeadingWrapper(:final value) =>
+      _adaptiveLeading(value),
     wire.PresentationElement_unknown() => invalidWire(
       "Unknown presentation element",
     ),

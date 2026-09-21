@@ -1,9 +1,18 @@
 package com.typewritermc.types
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import java.math.BigInteger
 import kotlin.time.Duration
 import kotlin.time.Instant
@@ -17,6 +26,7 @@ import kotlin.uuid.Uuid
  */
 @JvmInline
 @Serializable(with = DeclaredTypeIdSerializer::class)
+@TypewriterString
 value class DeclaredTypeId(
     val value: Uuid,
 ) {
@@ -105,7 +115,9 @@ sealed interface TypeId {
  * Revisions must be positive. Definitions use references without arguments, while use sites may supply arguments;
  * consumers must apply the definition parameters when interpreting them.
  */
-@Serializable
+@Serializable(with = ResolvedTypeRefSerializer::class)
+@TypewriterString
+@TypewriterType(id = "8f96c94c17b946d788e0e5e7049c8536")
 data class ResolvedTypeRef(
     val id: TypeId,
     val revision: Int,
@@ -118,6 +130,36 @@ data class ResolvedTypeRef(
     /** Returns this reference with a copied list of generic arguments. */
     fun withArguments(arguments: Iterable<TypeExpression>) = copy(arguments = arguments.toList())
 }
+
+object ResolvedTypeRefSerializer : KSerializer<ResolvedTypeRef> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ResolvedTypeRef", PrimitiveKind.STRING)
+
+    override fun serialize(
+        encoder: Encoder,
+        value: ResolvedTypeRef,
+    ) {
+        encoder.encodeString(
+            typeReferenceJson.encodeToString(
+                ResolvedTypeRefSurrogate.serializer(),
+                ResolvedTypeRefSurrogate(value.id, value.revision, value.arguments),
+            ),
+        )
+    }
+
+    override fun deserialize(decoder: Decoder): ResolvedTypeRef {
+        val value = typeReferenceJson.decodeFromString(ResolvedTypeRefSurrogate.serializer(), decoder.decodeString())
+        return ResolvedTypeRef(value.id, value.revision, value.arguments)
+    }
+}
+
+@Serializable
+private data class ResolvedTypeRefSurrogate(
+    val id: TypeId,
+    val revision: Int,
+    val arguments: List<TypeExpression>,
+)
+
+private val typeReferenceJson = Json { classDiscriminator = "_kind" }
 
 /** Describes the bit width and signedness of a portable integer expression. */
 @Serializable
@@ -360,6 +402,7 @@ data class TypeField(
     val name: String,
     val type: TypeExpression,
     val initialValue: DataValue? = null,
+    val defaulted: Boolean = false,
 ) {
     init {
         require(name.isNotBlank()) { "Type field name must not be blank." }
@@ -406,6 +449,76 @@ data class PresentationId(
     }
 }
 
+/** Identifies the semantic surface for which a presentation is selected. */
+@Serializable
+enum class PresentationRole {
+    REFERENCE_SUMMARY,
+    REFERENCE_OPTION,
+    CATALOG_OPTION,
+    AUTHORING_RESULT,
+    PAGE_TILE,
+    GRAPH_NODE,
+    INSPECTOR_HEADER,
+}
+
+/** Addresses a nested value while retaining field, list, and map identity. */
+@Serializable
+data class DataPath(
+    val segments: List<DataPathSegment> = emptyList(),
+) {
+    companion object {
+        /** Creates a path to one record field. */
+        fun field(name: String): DataPath = DataPath(listOf(DataPathSegment.Field(name)))
+    }
+}
+
+/** One segment in a typed value path. */
+@Serializable
+sealed interface DataPathSegment {
+    /** Selects a named record field. */
+    @Serializable
+    data class Field(
+        val name: String,
+    ) : DataPathSegment {
+        init {
+            require(name.isNotBlank()) { "Field path names must not be blank." }
+        }
+    }
+
+    /** Selects an ordered collection item. */
+    @Serializable
+    data class Index(
+        val index: Int,
+    ) : DataPathSegment {
+        init {
+            require(index >= 0) { "Path indexes must not be negative." }
+        }
+    }
+
+    /** Selects a map entry by its portable key. */
+    @Serializable
+    data class MapKey(
+        val key: DataValue,
+    ) : DataPathSegment
+}
+
+/** Closed reconciliation strategies understood by the shared editor. */
+@Serializable
+enum class FieldMergeStrategy {
+    SET_MEMBERSHIP,
+}
+
+/** Associates one canonical field path with its shared reconciliation strategy. */
+@Serializable
+data class FieldMergePolicy(
+    val path: DataPath,
+    val strategy: FieldMergeStrategy,
+) {
+    init {
+        require(path.segments.isNotEmpty()) { "Merge policy paths must not be empty." }
+    }
+}
+
 /** Identifies a conversion offered from a type definition. */
 @Serializable
 data class ConversionId(
@@ -436,15 +549,29 @@ data class TypeDefinition(
     val namedPresentations: Map<String, PresentationId> = emptyMap(),
     val displayName: String = id.displayName,
     val outgoingConversionIds: List<ConversionId> = emptyList(),
+    val rolePresentations: Map<PresentationRole, PresentationId> = emptyMap(),
+    val fieldMergePolicies: List<FieldMergePolicy> = emptyList(),
+    val declarationOwner: String = defaultDeclarationOwner(id),
 ) {
     init {
         require(id.arguments.isEmpty()) { "Type definition identity must not contain type arguments." }
+        require(declarationOwner.isNotBlank()) { "Type declaration owner must not be blank." }
         require(parameters.map(TypeParameter::name).distinct().size == parameters.size) {
             "Type parameter names must be unique."
         }
         require(namedPresentations.keys.none(String::isBlank)) { "Named presentation names must not be blank." }
+        require(fieldMergePolicies.map(FieldMergePolicy::path).distinct().size == fieldMergePolicies.size) {
+            "Merge policy paths must be unique."
+        }
     }
 }
+
+private fun defaultDeclarationOwner(id: ResolvedTypeRef): String =
+    when (val typeId = id.id) {
+        is TypeId.Builtin -> "builtin"
+        is TypeId.Declared -> typeId.id.toString()
+        is TypeId.Qualified -> typeId.namespace
+    }
 
 private val ResolvedTypeRef.displayName: String
     get() =
@@ -537,6 +664,55 @@ data class TypedValueEnvelope(
     val rootType: TypeExpression,
     val rootValue: DataValue,
 )
+
+/** Cardinality exposed by one generated synchronized relation endpoint. */
+@Serializable
+enum class RelationCardinality {
+    ONE,
+    MANY,
+}
+
+/** Identifies which declared marker endpoint owns one typed field. */
+@Serializable
+enum class RelationEndpointSide {
+    SOURCE,
+    TARGET,
+}
+
+/** Maps one Kotlin endpoint property onto its ordinary authored reference path. */
+@Serializable
+data class RelationEndpointDefinition(
+    val owner: ResolvedTypeRef,
+    val path: DataPath,
+    val side: RelationEndpointSide,
+    val cardinality: RelationCardinality,
+)
+
+/**
+ * Complete generated policy for one synchronized authored relationship.
+ *
+ * Either endpoint may be absent when only one side is declared. Assembly merges compatible partial definitions
+ * and rejects conflicting marker identities, endpoint declarations, or deletion policy.
+ */
+@Serializable
+data class RelationDefinition(
+    val id: RelationId,
+    val source: ResolvedTypeRef,
+    val target: ResolvedTypeRef,
+    val onSourceDelete: RelationDeletePolicy,
+    val onTargetDelete: RelationDeletePolicy,
+    val sourceEndpoint: RelationEndpointDefinition? = null,
+    val targetEndpoint: RelationEndpointDefinition? = null,
+) {
+    init {
+        require(sourceEndpoint == null || sourceEndpoint.side == RelationEndpointSide.SOURCE) {
+            "Source relation endpoints must use the source side."
+        }
+        require(targetEndpoint == null || targetEndpoint.side == RelationEndpointSide.TARGET) {
+            "Target relation endpoints must use the target side."
+        }
+    }
+}
 
 private fun validateLengths(
     minimum: Int?,

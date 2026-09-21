@@ -1,11 +1,11 @@
 package com.typewritermc.engine
 
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.library.Page
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -67,7 +67,7 @@ data class CompiledElementKey(
 @Serializable
 data class CompiledElement(
     val key: CompiledElementKey,
-    val sourceId: ElementInstanceId,
+    val sourceId: ResourceId,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
     val value: DataValue,
@@ -83,24 +83,24 @@ data class CompiledElement(
 @Serializable
 sealed interface CompiledPlacement {
     @Serializable
-    @SerialName("graph_v1")
+    @SerialName("graph")
     data object Graph : CompiledPlacement
 
     @Serializable
-    @SerialName("timeline_entry_v1")
+    @SerialName("timeline_entry")
     data class TimelineEntry(
         val trackIndex: Int,
     ) : CompiledPlacement
 
     @Serializable
-    @SerialName("timeline_segment_v1")
+    @SerialName("timeline_segment")
     data class TimelineSegment(
         val startFrame: Int,
         val endFrame: Int,
     ) : CompiledPlacement
 
     @Serializable
-    @SerialName("timeline_keyframe_v1")
+    @SerialName("timeline_keyframe")
     data class TimelineKeyframe(
         val frame: Int,
     ) : CompiledPlacement
@@ -267,8 +267,8 @@ data class CompileDiagnostic(
     val code: String,
     val message: String,
     val severity: CompileDiagnosticSeverity,
-    val source: ElementInstanceId? = null,
-    val target: com.typewritermc.types.ResourceId? = null,
+    val source: ResourceId? = null,
+    val target: ResourceId? = null,
 )
 
 /**

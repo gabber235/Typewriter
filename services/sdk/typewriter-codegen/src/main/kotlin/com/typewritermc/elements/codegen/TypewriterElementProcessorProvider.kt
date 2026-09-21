@@ -42,7 +42,6 @@ import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementDescriptor
 import com.typewritermc.elements.ElementDiscoveryContribution
 import com.typewritermc.elements.ElementDiscoveryContributionCodec
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementPrototype
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementSearch
@@ -53,7 +52,6 @@ import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.elements.TypewriterElementFacet
-import com.typewritermc.pages.GeneratedPageKind
 import com.typewritermc.types.Color
 import com.typewritermc.types.ConcreteTypePrototype
 import com.typewritermc.types.DeclaredTypeId
@@ -118,7 +116,7 @@ private class TypewriterElementProcessor(
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration -> declaration.declaredTypeReference()?.let { put(declaration.qualifiedName!!.asString(), it) } }
                 resolver
-                    .getSymbolsWithAnnotation(GeneratedPageKind::class)
+                    .getSymbolsWithAnnotation(GENERATED_PAGE_KIND_ANNOTATION)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration ->
                         declaration.generatedPageKindReference()?.let {
@@ -307,7 +305,6 @@ private class TypewriterElementProcessor(
         }
         val rootProperties =
             successfulConversion.serializedProperties.filter { it.ownerType == element.reference }
-        if (!validateRequiredProperty(element, rootProperties, "id", ElementInstanceId::class.qualifiedName!!)) return null
         if (!validateRequiredProperty(element, rootProperties, "name", String::class.qualifiedName!!)) return null
         val overrideDeclarations =
             successfulConversion.serializedProperties.mapNotNull { property ->
@@ -318,11 +315,11 @@ private class TypewriterElementProcessor(
             }
         val reservedOverrides =
             overrideDeclarations.filter { (override, _) ->
-                override.ownerType == element.reference && override.field in setOf("id", "name")
+                override.ownerType == element.reference && override.field == "name"
             }
         if (reservedOverrides.isNotEmpty()) {
             reservedOverrides.forEach { (_, declaration) ->
-                logger.error("Element id and name fields have fixed search behavior.", declaration)
+                logger.error("The Element name field has fixed search behavior.", declaration)
             }
             return null
         }
@@ -537,9 +534,11 @@ private fun KSClassDeclaration.declaredTypeReference(): ResolvedTypeRef? {
 }
 
 private fun KSClassDeclaration.generatedPageKindReference(): ResolvedTypeRef? {
-    val annotation = annotation<GeneratedPageKind>() ?: return null
-    val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull() ?: return null
-    return ResolvedTypeRef(TypeId.Declared(id), annotation.revision)
+    val annotation = rawAnnotation(GENERATED_PAGE_KIND_ANNOTATION) ?: return null
+    val idValue = annotation.argument("id") as? String ?: return null
+    val id = runCatching { DeclaredTypeId.parse(idValue) }.getOrNull() ?: return null
+    val revision = annotation.argument("revision") as? Int ?: return null
+    return ResolvedTypeRef(TypeId.Declared(id), revision)
 }
 
 private fun TypeGraph.withDisplayNames(displayNames: Map<ResolvedTypeRef, String>): TypeGraph =
@@ -605,3 +604,4 @@ private fun String.escape(): String = replace("\\", "\\\\").replace("\"", "\\\""
 
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"
+private const val GENERATED_PAGE_KIND_ANNOTATION = "com.typewritermc.pages.GeneratedPageKind"

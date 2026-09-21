@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
  * source is nonblank; rendering boundaries remain responsible for interpreting it safely.
  */
 @Serializable
+@TypewriterType(id = ICON_TYPE_ID)
 sealed interface Icon {
     val wireValue: String
         get() =
@@ -20,6 +21,7 @@ sealed interface Icon {
 
     @Serializable
     @SerialName("iconify")
+    @TypewriterType(id = ICONIFY_TYPE_ID)
     data class Iconify(
         val value: String,
     ) : Icon {
@@ -30,6 +32,7 @@ sealed interface Icon {
 
     @Serializable
     @SerialName("svg")
+    @TypewriterType(id = SVG_ICON_TYPE_ID)
     data class Svg(
         val source: String,
     ) : Icon {
@@ -56,6 +59,7 @@ sealed interface Icon {
  */
 @JvmInline
 @Serializable
+@TypewriterType(id = COLOR_TYPE_ID)
 value class Color(
     val argb: UInt,
 ) {
@@ -87,3 +91,8 @@ value class Color(
 
 private val ICONIFY_PATTERN = Regex("[a-z0-9-]+:[a-z0-9-]+")
 private val RGB_PATTERN = Regex("#[0-9A-Fa-f]{6}")
+
+const val ICON_TYPE_ID = "6fffa4398c0b4611bbf3517e047e6a52"
+const val ICONIFY_TYPE_ID = "3845952a4d714e23ad55f07051669930"
+const val SVG_ICON_TYPE_ID = "67ed1a5b0e534c05b8d233ef9783971b"
+const val COLOR_TYPE_ID = "c15fe94d13fb4317924a0ad2072defe4"

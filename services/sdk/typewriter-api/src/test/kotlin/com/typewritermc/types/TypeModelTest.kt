@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
+import kotlinx.serialization.json.Json
 import java.math.BigInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -63,6 +64,28 @@ val TypeModelTest by testSuite {
 
         DeclaredTypeId.parse("019d1c2a-8f7b-7cc1-8c2a-4a7b2fd1e281") shouldBe expected
         expected.toString() shouldBe "019d1c2a8f7b7cc18c2a4a7b2fd1e281"
+    }
+
+    test("resolved type reference serializer preserves identity revision and nested arguments") {
+        val reference =
+            ResolvedTypeRef(
+                TypeId.Qualified("example.types", "Container"),
+                revision = 7,
+                arguments =
+                    listOf(
+                        TypeExpression.Named(
+                            ResolvedTypeRef(
+                                TypeId.Declared(DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")),
+                                revision = 3,
+                            ),
+                        ),
+                        TypeExpression.ListType(TypeExpression.StringType(minimumLength = 1)),
+                    ),
+            )
+
+        val encoded = Json.encodeToString(ResolvedTypeRefSerializer, reference)
+
+        Json.decodeFromString(ResolvedTypeRefSerializer, encoded) shouldBe reference
     }
 
     test("model rejects contradictory collection constraints") {

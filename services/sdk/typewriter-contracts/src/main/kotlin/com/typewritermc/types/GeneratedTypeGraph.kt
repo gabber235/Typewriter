@@ -6,14 +6,14 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlin.io.encoding.Base64
 
 /**
- * Reflective entry point implemented by generated concrete prototype providers.
+ * Reflective entry point implemented by generated prototype providers.
  *
  * Discovery loads the provider from manifest metadata and checks that its returned prototype matches the
  * advertised reference.
  */
 interface TypePrototypeProvider {
     /** Returns the generated prototype and its embedded structural definition. */
-    fun prototype(): ConcreteTypePrototype<*>
+    fun prototype(): TypePrototype<*>
 }
 
 /**
