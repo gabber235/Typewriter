@@ -27,22 +27,22 @@ import skirout.editor.v1.capability.InvokeRealmComputation
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.catalog.FetchEditorCatalog
+import skirout.editor.v1.catalog.InitializeTypedValue
+import skirout.editor.v1.catalog.InitializeTypedValueResult
 import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.library.v1.authoring.ApplyAuthoringBatch
 import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
 import skirout.library.v1.authoring.AuthoringChanged
-import skirout.library.v1.authoring.GetAuthoringSnapshot
-import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
 import skirout.library.v1.authoring.PreviewAuthoringBatch
 import skirout.library.v1.authoring.PreviewAuthoringBatchResponse
-import skirout.library.v1.authoring.ResolveAuthoringResources
-import skirout.library.v1.authoring.ResolveAuthoringResourcesResponse
-import skirout.library.v1.authoring.SearchAuthoringContent
-import skirout.library.v1.authoring.SearchAuthoringContentResponse
-import skirout.library.v1.authoring.SuggestAuthoringSelectorValues
-import skirout.library.v1.authoring.SuggestAuthoringSelectorValuesResponse
+import skirout.library.v1.authoring.QueryAuthoringGraph
+import skirout.library.v1.authoring.QueryAuthoringGraphResponse
+import skirout.library.v1.authoring.QueryCompiledResourceStatus
+import skirout.library.v1.authoring.QueryCompiledResourceStatusResponse
+import skirout.library.v1.authoring.SearchAuthoringGraph
+import skirout.library.v1.authoring.SearchAuthoringGraphResponse
 import skirout.library.v1.compiled_content.WatchCompiledContent
 import skirout.library.v1.compiled_content.WatchCompiledContentResponse
 
@@ -71,6 +71,12 @@ internal class LibraryContracts(
             "editor.catalog.invalidate",
             CatalogWatchUpdate.createInitial(value = "unavailable"),
             catalogWatchResponseClassifier(),
+        )
+    val initializeTypedValue =
+        unary(
+            InitializeTypedValue,
+            "editor.typed.value.initialize",
+            InitializeTypedValueResult.UnavailableWrapper(emptyList()),
         )
     val watchRealmPresentationSearch = realmPresentationSearchContract(address)
     val cancelRealmPresentationSearch =
@@ -101,11 +107,11 @@ internal class LibraryContracts(
                 diagnostics = emptyList(),
             ),
         )
-    val getAuthoringSnapshot =
+    val queryAuthoringGraph =
         unary(
-            GetAuthoringSnapshot,
-            "library.authoring.snapshot.get",
-            GetAuthoringSnapshotResponse.createInternalError(),
+            QueryAuthoringGraph,
+            "library.authoring.graph.query",
+            QueryAuthoringGraphResponse.createInternalError(),
         )
     val applyAuthoringBatch =
         unary(
@@ -119,23 +125,17 @@ internal class LibraryContracts(
             "library.authoring.batch.preview",
             PreviewAuthoringBatchResponse.createInternalError(),
         )
-    val searchAuthoringContent =
+    val searchAuthoringGraph =
         unary(
-            SearchAuthoringContent,
-            "library.authoring.content.search",
-            SearchAuthoringContentResponse.createInternalError(),
+            SearchAuthoringGraph,
+            "library.authoring.graph.search",
+            SearchAuthoringGraphResponse.createInternalError(),
         )
-    val resolveAuthoringResources =
+    val queryCompiledResourceStatus =
         unary(
-            ResolveAuthoringResources,
-            "library.authoring.resources.resolve",
-            ResolveAuthoringResourcesResponse.createInternalError(),
-        )
-    val suggestAuthoringSelectorValues =
-        unary(
-            SuggestAuthoringSelectorValues,
-            "library.authoring.selector.suggest",
-            SuggestAuthoringSelectorValuesResponse.createInternalError(),
+            QueryCompiledResourceStatus,
+            "library.authoring.compiled.status.query",
+            QueryCompiledResourceStatusResponse.createInternalError(),
         )
     val authoringChanged =
         EventContract(

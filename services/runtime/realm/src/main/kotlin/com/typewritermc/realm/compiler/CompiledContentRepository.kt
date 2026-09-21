@@ -10,7 +10,8 @@ import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.library.PageId
 import com.typewritermc.realm.repository.utils.inTransaction
-import com.typewritermc.realm.repository.utils.surrealId
+import com.typewritermc.realm.repository.utils.unifiedSurrealId
+import com.typewritermc.types.ResourceId
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -22,6 +23,9 @@ import java.util.UUID
  * advancing active content. Blocked attempts are recorded separately and retain the previous active manifest.
  */
 interface CompiledContentRepository {
+    /** Returns compilation state for every requested authored resource without dropping unknown identities. */
+    suspend fun resourceStatuses(resources: List<ResourceId>): List<CompiledResourceStatus>
+
     /**
      * Finds an immutable shard produced from the exact compiler input fingerprint.
      *
@@ -83,6 +87,43 @@ class SurrealCompiledContentRepository(
     private val onActivated: suspend (CompiledContentActivation) -> Unit = {},
     private val onBlocked: suspend () -> Unit = {},
 ) : CompiledContentRepository {
+    override suspend fun resourceStatuses(resources: List<ResourceId>): List<CompiledResourceStatus> {
+        val active = activeManifest()
+        val activePages = active?.pages?.associateBy { it.page.id }.orEmpty()
+        return resources.map { resource ->
+            val activePage = activePages[resource]
+            val latest =
+                database
+                    .query(
+                        "SELECT status, diagnostics FROM compile_attempt WHERE \$page IN pages " +
+                            "ORDER BY completed_at DESC LIMIT 1;",
+                        mapOf("page" to resource.unifiedSurrealId()),
+                    ).take(0)
+                    .getArray()
+                    .firstOrNull()
+            val state =
+                when {
+                    latest?.getObject()?.get("status")?.getString() == "blocked" -> {
+                        val diagnostics =
+                            json.decodeFromString(
+                                ListSerializer(CompileDiagnostic.serializer()),
+                                latest.getObject().get("diagnostics").getString(),
+                            )
+                        CompiledResourceState.Blocked(active?.digest?.value, diagnostics.size)
+                    }
+
+                    activePage != null -> {
+                        CompiledResourceState.Active(requireNotNull(active).digest.value)
+                    }
+
+                    else -> {
+                        CompiledResourceState.NotCompiled
+                    }
+                }
+            CompiledResourceStatus(resource, state)
+        }
+    }
+
     override suspend fun findShard(inputFingerprint: ContentDigest): CompiledPageShard? =
         database
             .query(
@@ -169,7 +210,7 @@ class SurrealCompiledContentRepository(
                 transaction.createAttempt(
                     manifest.sourceRevision,
                     manifest.catalogRevision,
-                    manifest.pages.map { PageId(it.page.id.key) },
+                    manifest.pages.map { PageId(it.page.id) },
                     "success",
                     emptyList(),
                     manifest.id(),
@@ -195,7 +236,7 @@ private fun Transaction.createImmutableShard(
         mapOf(
             "shard" to shard.id(),
             "fingerprint" to shard.inputFingerprint.value,
-            "page" to shard.page.surrealId(),
+            "page" to shard.page.id.unifiedSurrealId(),
             "payload" to payload,
         ),
     ).take(0)
@@ -241,7 +282,7 @@ private fun Transaction.createAttempt(
             "attempt" to RecordId("compile_attempt", UUID.randomUUID().toString()),
             "source_revision" to sourceRevision,
             "catalog_revision" to catalogRevision,
-            "pages" to pages.map(PageId::surrealId),
+            "pages" to pages.map { it.value.unifiedSurrealId() },
             "compiler_format" to CURRENT_COMPILER_FORMAT,
             "status" to status,
             "diagnostics" to json.encodeToString(ListSerializer(CompileDiagnostic.serializer()), diagnostics),
@@ -257,5 +298,23 @@ private fun CompiledManifest.id(): RecordId = RecordId("compiled_manifest", dige
 private fun decodeShard(value: String): CompiledPageShard = json.decodeFromString(CompiledPageShard.serializer(), value)
 
 private fun decodeManifest(value: String): CompiledManifest = json.decodeFromString(CompiledManifest.serializer(), value)
+
+data class CompiledResourceStatus(
+    val resource: ResourceId,
+    val state: CompiledResourceState,
+)
+
+sealed interface CompiledResourceState {
+    data object NotCompiled : CompiledResourceState
+
+    data class Active(
+        val manifestId: String,
+    ) : CompiledResourceState
+
+    data class Blocked(
+        val lastActiveManifestId: String?,
+        val diagnosticCount: Int,
+    ) : CompiledResourceState
+}
 
 private val json = Json { encodeDefaults = true }

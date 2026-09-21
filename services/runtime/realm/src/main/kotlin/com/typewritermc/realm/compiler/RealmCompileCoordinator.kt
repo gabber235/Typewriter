@@ -1,6 +1,5 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.realm.repository.PageDocumentRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -19,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * and retry after a delay. Start triggers an initial pass, and stop cancels and joins the worker.
  */
 class RealmCompileCoordinator(
-    private val documents: PageDocumentRepository,
+    private val documents: AuthoringCompilationSource,
     private val compiler: RealmCompiler,
     private val catalogRevision: () -> String,
     private val scope: CoroutineScope,
@@ -64,7 +63,7 @@ class RealmCompileCoordinator(
         while (true) {
             try {
                 mutableHealth.value = RealmCompileHealth.Compiling
-                val snapshot = documents.getAuthoringSnapshot()
+                val snapshot = documents.snapshot()
                 when (val result = compiler.compile(snapshot, catalogRevision())) {
                     RealmCompileResult.Stale -> {
                         continue

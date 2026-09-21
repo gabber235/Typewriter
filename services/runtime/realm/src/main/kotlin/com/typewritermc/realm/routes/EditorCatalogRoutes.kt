@@ -19,6 +19,9 @@ internal class EditorCatalogRoutes(
             unary(contracts.fetchEditorCatalog) { call ->
                 source.fetch(call.request)
             }
+            unary(contracts.initializeTypedValue) { call ->
+                source.initialize(call.request)
+            }
             watch(contracts.watchEditorCatalog) { call ->
                 source.initialGeneration(call.request)
             }

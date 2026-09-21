@@ -1,7 +1,10 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ref
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.Placement
+import com.typewritermc.authoring.TimelineEntryPlacement
+import com.typewritermc.authoring.TimelineKeyframePlacement
+import com.typewritermc.authoring.TimelineSegmentPlacement
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompileDiagnostic
 import com.typewritermc.engine.CompileDiagnosticSeverity
@@ -15,10 +18,10 @@ import com.typewritermc.engine.SourceElementKey
 import com.typewritermc.library.PageDocument
 import com.typewritermc.library.PageDocumentElement
 import com.typewritermc.library.PageReference
-import com.typewritermc.library.ResourceSummary
 import com.typewritermc.library.ref
 import com.typewritermc.types.DataMapEntry
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.ref
 import java.security.MessageDigest
 import java.util.Base64
 
@@ -68,7 +71,7 @@ class PageCompiler(
                 )
             }
         val page = document.page.id.ref()
-        val digest = digest(shardFacts(page.id.referenceString(), fingerprint, elements))
+        val digest = digest(shardFacts(page.id.value, fingerprint, elements))
         return PageCompileResult.Success(
             CompiledPageShard(formatRevision, digest, fingerprint, page, elements),
         )
@@ -86,18 +89,17 @@ class PageCompiler(
                     document.page.id
                         .ref()
                         .id
-                        .referenceString(),
+                        .value,
                 )
                 append("|book:").append(
-                    document.page.book.id
-                        .referenceString(),
+                    document.page.content.book.id
+                        .value,
                 )
-                append("|kind:").append(document.page.kind.id).append(':').append(document.page.kind.revision)
-                append("|chapter:").append(document.page.chapter)
-                append("|priority:").append(document.page.priority)
+                append("|kind:").append(document.page.content.kind.id).append(':').append(document.page.content.kind.revision)
+                append("|chapter:").append(document.page.content.chapter)
+                append("|priority:").append(document.page.content.priority)
                 document.elements.sortedBy { it.id.value }.forEach { appendElement(it) }
                 document.references.sortedBy(PageReference::stableKey).forEach { appendReference(it) }
-                document.crossPageTargets.sortedBy { it.id.referenceString() }.forEach { appendSummary(it) }
             },
         )
 }
@@ -112,14 +114,8 @@ private fun StringBuilder.appendElement(element: PageDocumentElement) {
 
 private fun StringBuilder.appendReference(reference: PageReference) {
     append("|reference:").append(reference.stableKey())
-    append(':').append(reference.target.referenceString())
+    append(':').append(reference.target.value)
     append(':').append(reference.expectedType)
-}
-
-private fun StringBuilder.appendSummary(summary: ResourceSummary) {
-    append("|target:").append(summary.id.referenceString())
-    append(':').append(summary.exists)
-    append(':').append(summary.elementType?.value)
 }
 
 private fun shardFacts(
@@ -140,20 +136,20 @@ private fun shardFacts(
 
 private fun PageReference.stableKey(): String = "${source.value}:${slot.value}"
 
-private fun ElementPlacement.executionFacts(): String =
+private fun Placement.executionFacts(): String =
     when (this) {
-        is ElementPlacement.Graph -> "graph_v1"
-        is ElementPlacement.TimelineEntry -> "timeline_entry_v1:$trackIndex"
-        is ElementPlacement.TimelineSegment -> "timeline_segment_v1:$startFrame:$endFrame"
-        is ElementPlacement.TimelineKeyframe -> "timeline_keyframe_v1:$frame"
+        is GraphPlacement -> "graph"
+        is TimelineEntryPlacement -> "timeline_entry:$trackIndex"
+        is TimelineSegmentPlacement -> "timeline_segment:$startFrame:$endFrame"
+        is TimelineKeyframePlacement -> "timeline_keyframe:$frame"
     }
 
-private fun ElementPlacement.compiled(): CompiledPlacement =
+private fun Placement.compiled(): CompiledPlacement =
     when (this) {
-        is ElementPlacement.Graph -> CompiledPlacement.Graph
-        is ElementPlacement.TimelineEntry -> CompiledPlacement.TimelineEntry(trackIndex)
-        is ElementPlacement.TimelineSegment -> CompiledPlacement.TimelineSegment(startFrame, endFrame)
-        is ElementPlacement.TimelineKeyframe -> CompiledPlacement.TimelineKeyframe(frame)
+        is GraphPlacement -> CompiledPlacement.Graph
+        is TimelineEntryPlacement -> CompiledPlacement.TimelineEntry(trackIndex)
+        is TimelineSegmentPlacement -> CompiledPlacement.TimelineSegment(startFrame, endFrame)
+        is TimelineKeyframePlacement -> CompiledPlacement.TimelineKeyframe(frame)
     }
 
 private fun DataValue.canonical(): String =
@@ -195,7 +191,7 @@ private fun DataValue.canonical(): String =
         }
 
         is DataValue.Reference -> {
-            "x:${id.referenceString()}"
+            "x:${id.value}"
         }
 
         is DataValue.ListValue -> {

@@ -4,14 +4,13 @@ import com.surrealdb.Surreal
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.realm.compiler.CompiledArtifactStore
+import com.typewritermc.realm.compiler.GraphAuthoringCompilationSource
 import com.typewritermc.realm.compiler.RealmCompileCoordinator
 import com.typewritermc.realm.compiler.RealmCompiler
 import com.typewritermc.realm.compiler.SurrealCompiledContentRepository
-import com.typewritermc.realm.repository.PageDocumentCatalog
+import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.repository.SurrealAuthoringGraphRepository
 import com.typewritermc.realm.repository.SurrealAuthoringRepository
-import com.typewritermc.realm.repository.SurrealPageDocumentRepository
-import com.typewritermc.realm.repository.search.ElementSearchCatalogEntry
-import com.typewritermc.realm.repository.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.routes.CompiledContentEvents
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
@@ -32,8 +31,7 @@ import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
 import com.typewritermc.types.TypeCatalog
-import com.typewritermc.types.TypeExpression
-import com.typewritermc.types.TypeGraph
+import com.typewritermc.types.TypePrototypeRegistry
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -68,6 +66,7 @@ class Realm(
     private val delayScheduler: DelayScheduler,
     private val catalogInvalidations: RealmCatalogInvalidationProcess,
     private val discoverySnapshots: RealmDiscoverySnapshotStore,
+    private val prototypes: TypePrototypeRegistry,
     private val host: HostedRuntimeHost,
     private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
 ) {
@@ -79,7 +78,6 @@ class Realm(
     private var serviceMonitor: Job? = null
     private var compileCoordinator: RealmCompileCoordinator? = null
     private var compileCatalogMonitor: Job? = null
-    private var searchCatalogMonitor: Job? = null
 
     /**
      * Opens Realm storage, starts compilation, and waits until the first usable messaging session has routes.
@@ -94,40 +92,6 @@ class Realm(
         val connected = childSpan("realm.database.initialize") { databaseProvider.connect() }
         try {
             database = connected
-            val pageDocuments =
-                SurrealPageDocumentRepository(connected) {
-                    discoverySnapshots.current()?.let {
-                        PageDocumentCatalog(it.elements, it.discovery.types.definitions)
-                    }
-                }
-            val elementTypeGraphs = {
-                discoverySnapshots
-                    .current()
-                    ?.let { snapshot ->
-                        snapshot.elements.entries.associate {
-                            it.descriptor.id to TypeGraph(TypeExpression.Named(it.descriptor.type), snapshot.discovery.types.definitions)
-                        }
-                    }.orEmpty()
-            }
-            val elementSearchCatalog = {
-                discoverySnapshots
-                    .current()
-                    ?.let { snapshot ->
-                        snapshot.elements.entries.associate { entry ->
-                            val descriptor = entry.descriptor
-                            descriptor.id to
-                                ElementSearchCatalogEntry(
-                                    graph =
-                                        TypeGraph(
-                                            TypeExpression.Named(descriptor.type),
-                                            snapshot.discovery.types.definitions,
-                                        ),
-                                    definition = descriptor.searchDefinition,
-                                    displayName = descriptor.name,
-                                )
-                        }
-                    }.orEmpty()
-            }
             val compiledContentEvents = CompiledContentEvents()
             val compiledContent =
                 SurrealCompiledContentRepository(
@@ -135,23 +99,41 @@ class Realm(
                     compiledContentEvents::publishActivated,
                     compiledContentEvents::publishBlocked,
                 )
-            val authoringSearch =
-                SurrealAuthoringSearchRepository(
-                    connected,
-                    elementSearchCatalog,
-                    typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) },
-                )
+            val typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) }
             val authoring =
                 SurrealAuthoringRepository(
-                    connected,
-                    pageDocuments,
-                    elementTypeGraphs,
-                    authoringSearch,
-                    pageCatalog = { discoverySnapshots.current()?.pages },
+                    database = connected,
+                    prototypes = prototypes,
+                    catalogGeneration = {
+                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                    },
+                    resourceKinds = { requireNotNull(discoverySnapshots.current()).resourceKinds },
+                    relations = { requireNotNull(discoverySnapshots.current()).relations },
+                    typeCatalog = { requireNotNull(discoverySnapshots.current()).discovery.types },
+                )
+            val authoringGraph =
+                SurrealAuthoringGraphRepository(
+                    database = connected,
+                    mapper = {
+                        ResourceValueMapper(
+                            prototypes,
+                            requireNotNull(discoverySnapshots.current()).relations,
+                        )
+                    },
+                    catalog = typeCatalog,
+                    generation = {
+                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                    },
                 )
             val compiler =
                 RealmCompileCoordinator(
-                    documents = pageDocuments,
+                    documents =
+                        GraphAuthoringCompilationSource(
+                            authoringGraph,
+                            prototypes,
+                        ) {
+                            requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                        },
                     compiler =
                         RealmCompiler(
                             compiledContent,
@@ -164,22 +146,24 @@ class Realm(
             routeFactory =
                 RealmRouteFactory(
                     authoring = authoring,
-                    authoringSearch = authoringSearch,
+                    authoringGraph = authoringGraph,
                     compiledContent = compiledContent,
                     editorCatalog = editorCatalog,
                     presentationSearch = presentationSearch,
                     capabilityInvocations = capabilityInvocations,
                     compiledContentEvents = compiledContentEvents,
                     onCompilationInvalidated = compiler::invalidate,
+                    prototypes = prototypes,
+                    catalogGeneration = {
+                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                    },
+                    elements = { requireNotNull(discoverySnapshots.current()).elements },
+                    pages = { requireNotNull(discoverySnapshots.current()).pages },
                 )
             compiler.start()
             compileCatalogMonitor =
                 scope.launch {
                     discoverySnapshots.changes.collect { compiler.invalidate() }
-                }
-            searchCatalogMonitor =
-                scope.launch {
-                    discoverySnapshots.snapshots.filterNotNull().collectLatest { authoringSearch.reconcile() }
                 }
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =
@@ -198,8 +182,6 @@ class Realm(
             runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
             compileCatalogMonitor = null
-            runCatching { searchCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
-            searchCatalogMonitor = null
             runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             compileCoordinator = null
             runCatching {
@@ -234,8 +216,6 @@ class Realm(
             serviceMonitor = null
             runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
             compileCatalogMonitor = null
-            runCatching { searchCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
-            searchCatalogMonitor = null
             runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failures::add)
             compileCoordinator = null
             runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)

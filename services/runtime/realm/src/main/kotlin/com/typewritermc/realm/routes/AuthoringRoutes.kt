@@ -5,9 +5,6 @@ import com.typewritermc.realm.repository.AuthoringPreviewResult
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import skirout.library.v1.authoring.AuthoringDiagnostic
-import skirout.library.v1.authoring.AuthoringInvalid
-import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
 
 /**
  * Owns the messaging boundary for Realm authoring reads and writes.
@@ -31,25 +28,6 @@ internal class AuthoringRoutes(
      */
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.getAuthoringSnapshot) { call ->
-                try {
-                    repository.snapshot(call.request.scopes.toDomain()).toWireResponse()
-                } catch (invalid: IllegalArgumentException) {
-                    GetAuthoringSnapshotResponse.InvalidWrapper(
-                        AuthoringInvalid(
-                            diagnostics =
-                                listOf(
-                                    AuthoringDiagnostic(
-                                        code = "invalid-request",
-                                        message = invalid.message ?: "Invalid authoring snapshot request.",
-                                        resource = null,
-                                        path = null,
-                                    ),
-                                ),
-                        ),
-                    )
-                }
-            }
             unary(contracts.applyAuthoringBatch) { call ->
                 val result =
                     try {
@@ -72,7 +50,7 @@ internal class AuthoringRoutes(
             }
             unary(contracts.previewAuthoringBatch) { call ->
                 try {
-                    repository.preview(call.request.toDomain()).toWireResponse()
+                    repository.preview(call.request.generation.value, call.request.toDomain()).toWireResponse()
                 } catch (invalid: IllegalArgumentException) {
                     AuthoringPreviewResult
                         .Invalid(

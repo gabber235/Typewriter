@@ -13,6 +13,7 @@ import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -41,7 +42,7 @@ private fun compiledShard() =
         formatRevision = 1,
         digest = ContentDigest("1".repeat(64)),
         inputFingerprint = ContentDigest("2".repeat(64)),
-        page = Ref<Page>("page", "artifact_test"),
+        page = Ref<Page>(ResourceId("artifact_test")),
         elements = emptyList(),
     )
 

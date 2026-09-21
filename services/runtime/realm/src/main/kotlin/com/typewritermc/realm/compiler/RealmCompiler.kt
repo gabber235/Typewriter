@@ -7,7 +7,6 @@ import com.typewritermc.engine.CompiledPageReference
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PageCompileResult
-import com.typewritermc.realm.repository.AuthoringSnapshot
 import java.security.MessageDigest
 
 /**
@@ -30,7 +29,7 @@ class RealmCompiler(
      * set.
      */
     suspend fun compile(
-        snapshot: AuthoringSnapshot,
+        snapshot: AuthoringCompilationSnapshot,
         catalogRevision: String,
     ): RealmCompileResult {
         val shards = mutableListOf<CompiledPageShard>()
@@ -53,7 +52,7 @@ class RealmCompiler(
             content.recordBlocked(snapshot.revision, catalogRevision, snapshot.documents.map { it.page.id }, diagnostics)
             return RealmCompileResult.Blocked(diagnostics, content.activeManifest())
         }
-        val ordered = shards.sortedBy { it.page.id.referenceString() }
+        val ordered = shards.sortedBy { it.page.id.value }
         val pageReferences = ordered.map { CompiledPageReference(it.page, it.digest) }
         val digest = manifestDigest(snapshot.revision, catalogRevision, pageReferences)
         val manifest =
@@ -101,7 +100,7 @@ private fun manifestDigest(
             append("format:").append(CURRENT_COMPILER_FORMAT)
             append("|source:").append(sourceRevision)
             append("|catalog:").append(catalogRevision)
-            pages.forEach { append("|page:").append(it.page.id.referenceString()).append(':').append(it.shard.value) }
+            pages.forEach { append("|page:").append(it.page.id.value).append(':').append(it.shard.value) }
         }
     return ContentDigest(
         MessageDigest.getInstance("SHA-256").digest(facts.toByteArray()).joinToString("") {

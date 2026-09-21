@@ -3,6 +3,7 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
+import com.typewritermc.authoring.Placement
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.discovery.CatalogGeneration
@@ -13,8 +14,12 @@ import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
+import com.typewritermc.elements.Element
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.library.Book
+import com.typewritermc.library.Page
+import com.typewritermc.library.Tag
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
@@ -24,6 +29,7 @@ import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
+import com.typewritermc.realm.repository.AuthoringResourceKind
 import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
@@ -43,6 +49,7 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.types.TypeExpression
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -139,7 +146,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 )
             val presentationCatalog =
                 PresentationCatalogAssembler.assemble(
-                    providers = loadedDiscovery.application.koin.getAll<PresentationProvider>(),
+                    providers =
+                        coreLibraryPresentationProviders() +
+                            loadedDiscovery.application.koin.getAll<PresentationProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                     types = assembled.discovery.types,
                     capabilities = capabilityRegistry.descriptors,
@@ -162,7 +171,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { capabilityRegistry }
                     single { pageCatalog }
                     single<RealmEditorCatalogSource> {
-                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().current() }
+                        SnapshotRealmEditorCatalogSource(get()) { get<RealmDiscoverySnapshotStore>().current() }
                     }
                     single<RealmPresentationSearchSource> {
                         CapabilityRealmPresentationSearchSource(get(), get(), get(), get())
@@ -178,6 +187,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             get(),
                             routeRetryPolicy,
                             delayScheduler,
+                            get(),
                             get(),
                             get(),
                             get(),
@@ -197,6 +207,30 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
                 RealmDiscoverySnapshot(
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
+                    resourceKinds =
+                        listOf(
+                            RealmResourceKindDefinition(
+                                AuthoringResourceKind.BOOK,
+                                TypeExpression.Named(loadedDiscovery.prototypes.require(Book::class).type),
+                                loadedDiscovery.prototypes.require(Book::class).type,
+                            ),
+                            RealmResourceKindDefinition(
+                                AuthoringResourceKind.TAG,
+                                TypeExpression.Named(loadedDiscovery.prototypes.require(Tag::class).type),
+                                loadedDiscovery.prototypes.require(Tag::class).type,
+                            ),
+                            RealmResourceKindDefinition(
+                                AuthoringResourceKind.PAGE,
+                                TypeExpression.Named(loadedDiscovery.prototypes.require(Page::class).type),
+                                loadedDiscovery.prototypes.require(Page::class).type,
+                            ),
+                            RealmResourceKindDefinition(
+                                AuthoringResourceKind.ELEMENT,
+                                TypeExpression.Named(loadedDiscovery.prototypes.require(Element::class).type),
+                            ),
+                        ),
+                    relations = assembled.runtimeDiscovery.relations,
+                    collectionProjections = coreLibraryCollectionProjections(loadedDiscovery.prototypes),
                     elements = assembled.elements,
                     pages = pageCatalog,
                     presentations = presentationCatalog.definitions,

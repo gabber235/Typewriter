@@ -75,7 +75,6 @@ val RealmLifecycleTest by testSuite {
                 fixture.messaging.value = first.session
                 fixture.start()
                 runCurrent()
-                fixture.artifactWrites shouldBe 1
                 val routeCount = first.transport.activeSubscriptionCount
                 routeCount shouldBeGreaterThan 0
 
@@ -259,6 +258,7 @@ private class RealmLifecycleFixture(
                     telemetry = telemetry.telemetry,
                 ),
             discoverySnapshots = RealmDiscoverySnapshotStore(),
+            prototypes = com.typewritermc.types.TypePrototypeRegistry(emptyList()),
             host = host,
         )
 

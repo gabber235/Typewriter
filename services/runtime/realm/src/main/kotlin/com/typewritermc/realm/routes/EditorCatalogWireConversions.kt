@@ -7,14 +7,18 @@ import com.typewritermc.elements.ElementSearchDefinition
 import com.typewritermc.elements.ElementSearchMode
 import com.typewritermc.elements.ElementSearchPolicy
 import com.typewritermc.elements.ElementSearchPropertyOverride
+import com.typewritermc.library.ResourceTypeDescriptor
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageAuthoringRuleRef
 import com.typewritermc.pages.PageCatalogEntry
 import com.typewritermc.pages.PageDescriptor
 import com.typewritermc.pages.PageDiagnostic
 import com.typewritermc.pages.ResolvedPageEditorDefinition
+import com.typewritermc.types.TypePrototypeRegistry
+import com.typewritermc.types.TypedValueEnvelope
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.skir.toSkir
+import skirout.editor.v1.catalog_presentation.CatalogPresentationSubject
 import skirout.editor.v1.element_catalog.AvailabilityAll
 import skirout.editor.v1.element_catalog.AvailabilityAny
 import skirout.editor.v1.element_catalog.AvailabilityFact
@@ -42,11 +46,25 @@ import skirout.editor.v1.typed_value.TypedValueEnvelope as SkirTypedValueEnvelop
  *
  * Unavailable entries remain visible with reasons so the panel can explain deployment constraints.
  */
-internal fun ElementCatalogEntry.toSkir(): SkirElementCatalogEntry =
+internal fun ElementCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): SkirElementCatalogEntry =
     SkirElementCatalogEntry(
         originArtifactId = origin.value,
         sourcePart = sourcePart,
         descriptor = descriptor.toSkir(),
+        presentationSubject =
+            catalogPresentationSubject(
+                target = descriptor.type,
+                descriptor =
+                    ResourceTypeDescriptor(
+                        type = descriptor.type,
+                        name = descriptor.name,
+                        description = descriptor.description,
+                        icon = descriptor.icon,
+                        color = descriptor.color,
+                    ),
+                identity = descriptor.type,
+                prototypes = prototypes,
+            ),
         eligibility =
             if (eligible) {
                 ElementEligibility.createEligible()
@@ -121,12 +139,37 @@ private fun AvailabilityExpression.toSkir(): SkirAvailabilityExpression =
 /**
  * Encodes a page schema and origin with resolved role references for panel use.
  */
-internal fun PageCatalogEntry.toSkir(): SkirPageCatalogEntry =
+internal fun PageCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): SkirPageCatalogEntry =
     SkirPageCatalogEntry(
         originArtifactId = originArtifactId,
         sourcePart = sourcePart,
         descriptor = descriptor.toSkir(),
+        presentationSubject =
+            catalogPresentationSubject(
+                target = presentationTarget,
+                descriptor =
+                    ResourceTypeDescriptor(
+                        type = presentationTarget,
+                        name = descriptor.name,
+                        description = descriptor.description.orEmpty(),
+                        icon = descriptor.icon,
+                        color = descriptor.color,
+                    ),
+                identity = presentationTarget,
+                prototypes = prototypes,
+            ),
     )
+
+private fun catalogPresentationSubject(
+    target: com.typewritermc.types.ResolvedTypeRef,
+    descriptor: ResourceTypeDescriptor,
+    identity: Any,
+    prototypes: TypePrototypeRegistry,
+) = CatalogPresentationSubject(
+    target = target.toSkir().getOrThrow(),
+    descriptor = prototypes.encode(descriptor).toWire(),
+    identity = prototypes.encode(identity).toWire(),
+)
 
 private fun PageDescriptor.toSkir(): SkirPageDescriptor =
     SkirPageDescriptor(

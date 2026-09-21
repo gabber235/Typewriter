@@ -4,6 +4,9 @@ import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
 import com.typewritermc.elements.ElementCatalog
 import com.typewritermc.pages.PageCatalog
+import com.typewritermc.realm.repository.AuthoringResourceKind
+import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.TypeExpression
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,9 +58,19 @@ class RealmDiscoverySnapshotStore {
  */
 data class RealmDiscoverySnapshot(
     val discovery: DeploymentDiscoverySnapshot,
+    val resourceKinds: List<RealmResourceKindDefinition> = emptyList(),
+    val relations: List<com.typewritermc.types.RelationDefinition> = emptyList(),
+    val collectionProjections: List<skirout.library.v1.authoring.CollectionProjectionDefinition> = emptyList(),
     val elements: ElementCatalog,
     val pages: PageCatalog = PageCatalog(emptyList(), emptyList()),
     val presentations: List<skirout.editor.v1.presentation.PresentationDefinition> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val presentationDiagnostics: List<com.typewritermc.presentation.PresentationDiagnostic> = emptyList(),
+)
+
+/** Realm owned persistence and authoring policy for one resource family. */
+data class RealmResourceKindDefinition(
+    val kind: AuthoringResourceKind,
+    val acceptedRoot: TypeExpression,
+    val defaultRoot: ResolvedTypeRef? = null,
 )
