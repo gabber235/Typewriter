@@ -1,6 +1,7 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.types.RelationDefinition
+import com.typewritermc.types.RelationId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
@@ -60,7 +61,7 @@ object TypeContributionAssembler {
         val definitions = linkedMapOf<Any, TypeDefinition>()
         StandardTypes.definitions.forEach { definition -> definitions[definition.id] = definition }
         val prototypeBindings = linkedMapOf<Any, PrototypeBinding>()
-        val relations = linkedMapOf<Any, RelationDefinition>()
+        val relations = linkedMapOf<RelationId, RelationDefinition>()
         val executableBindings = linkedMapOf<Pair<DiscoveryDomainId, String>, KeyedExecutableBinding>()
         val extensionEligibility = sourceParts.associateBy { it.artifact to it.sourcePart }
         ordered.forEach { keyed ->
