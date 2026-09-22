@@ -20,20 +20,19 @@ wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     /// Runs the messaging scenario selected by the incoming subject.
-    async fn handle_message(message: types::NatsMessage) -> Result<(), String> {
+    #[otel_wasi::wasi_instrument(
+        service = "component-test-messaging",
+        name = "synthetic_message",
+        export
+    )]
+    async fn handle_message(message: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         match message.subject.as_str() {
-            "test.publish" => messaging::publish("component.out".into(), message.body)
-                .await
-                .map_err(|error| error.to_string()),
+            "test.publish" => messaging::publish("component.out".into(), message.body).await,
             // The request path keeps the original body unchanged and exposes the dependency
             // reply through a separate publish so the fixture can assert both operations.
             "test.request" => {
-                let response = messaging::request("dependency.echo".into(), message.body)
-                    .await
-                    .map_err(|error| error.to_string())?;
-                messaging::publish("component.result".into(), response.body)
-                    .await
-                    .map_err(|error| error.to_string())
+                let response = messaging::request("dependency.echo".into(), message.body).await?;
+                messaging::publish("component.result".into(), response.body).await
             }
             _ => Ok(()),
         }

@@ -171,7 +171,7 @@ impl NatsDriver {
                     result = replies.join_next(), if !replies.is_empty() => { result.context("reply task missing")???; },
                     message = messages.next() => {
                         let Some(message) = message else { bail!("NATS observer disconnected"); };
-                        if message.subject.starts_with("$JS.") || message.subject.starts_with("_INBOX.") || message.headers.as_ref().is_some_and(|h| h.get("Typewriter-Test-Input").is_some()) { continue; }
+                        if message.subject.starts_with("$JS.") || message.subject.starts_with("_INBOX.") || message.subject.starts_with("_INBOX_") || message.headers.as_ref().is_some_and(|h| h.get("Typewriter-Test-Input").is_some()) { continue; }
                         let message = HostMessage {
                             subject: message.subject.to_string(), reply_to: message.reply.map(|s| s.to_string()),
                             body: message.payload.to_vec(),

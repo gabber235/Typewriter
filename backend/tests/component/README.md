@@ -131,6 +131,8 @@ Tests inject through `context.messaging()?`. Guest publish and request traffic i
 
 `expect_persisted_publish` observes an event accepted by the real `TYPEWRITER_MEMBERSHIP` JetStream stream. It does not fabricate an acknowledgement.
 
+Use `context.wait_for_span(name, timeout).await` to assert completed guest telemetry. Capture belongs to the fixture and wakes when the span processor receives a span. This keeps trace assertions deterministic while export runs asynchronously.
+
 ## Typewriter helpers
 
 `typewriter-component-test::prelude` provides:

@@ -20,13 +20,16 @@ wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     /// Echoes dependency requests through the broker reply route.
-    async fn handle_message(message: types::NatsMessage) -> Result<(), String> {
+    #[otel_wasi::wasi_instrument(
+        service = "component-test-responder",
+        name = "synthetic_reply",
+        export
+    )]
+    async fn handle_message(message: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         // Ignore unrelated subjects so the dependency remains safe to compose with other routes.
         if message.subject == "dependency.echo" {
-            messaging::reply(message.clone(), message.body)
-                .await
-                .map_err(|error| error.to_string())?;
+            messaging::reply(message.clone(), message.body).await?;
         }
-        Ok(())
+        Ok::<(), otel_wasi::Error>(())
     }
 }

@@ -71,6 +71,7 @@ pub struct TestContext<F> {
     http: Option<(SocketAddr, String)>,
     messaging: Option<NatsDriver>,
     messaging_mock: Option<MessagingMock>,
+    telemetry: telemetry::TelemetryCapture,
     handles: HashMap<TypeId, Arc<dyn Any + Send + Sync>>,
     transcript: VecDeque<String>,
     marker: PhantomData<F>,
@@ -116,6 +117,15 @@ impl<F> TestContext<F> {
             .map(|value| (*value).clone())
             .map_err(|_| anyhow::anyhow!("registered marker is not an HTTP mock"))
     }
+    /// Waits for a completed guest span captured by this fixture.
+    pub async fn wait_for_span(
+        &self,
+        name: &str,
+        timeout: std::time::Duration,
+    ) -> Result<opentelemetry_sdk::trace::SpanData> {
+        self.telemetry.wait_for_span(name, timeout).await
+    }
+
     /// Returns the NATS client for publishing or requesting through the workload broker.
     pub fn messaging(&self) -> Result<MessagingClient> {
         self.messaging
@@ -252,6 +262,9 @@ fn globals() -> Result<&'static Globals> {
     GLOBALS
         .get_or_init(|| {
             wash_runtime::init_crypto();
+            opentelemetry::global::set_text_map_propagator(
+                opentelemetry_sdk::propagation::TraceContextPropagator::new(),
+            );
             let host_tracer_provider = SdkTracerProvider::builder()
                 .with_sampler(Sampler::AlwaysOn)
                 .build();
@@ -453,13 +466,14 @@ where
         }
     }
     let mut context = if let Some(fixture) = &running {
-        fixture.context(descriptor, handles, transcript)
+        fixture.context(descriptor, handles, transcript, telemetry.clone())
     } else {
         TestContext {
             descriptor,
             http: None,
             messaging: None,
             messaging_mock: None,
+            telemetry: telemetry.clone(),
             handles,
             transcript,
             marker: PhantomData,

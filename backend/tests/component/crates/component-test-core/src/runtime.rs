@@ -334,12 +334,14 @@ impl<F> RunningFixture<F> {
         descriptor: &'static component_test_model::TestDescriptor,
         handles: HashMap<std::any::TypeId, Arc<dyn std::any::Any + Send + Sync>>,
         transcript: VecDeque<String>,
+        telemetry: TelemetryCapture,
     ) -> TestContext<F> {
         TestContext {
             descriptor,
             http: self.http.clone(),
             messaging: self.messaging.clone(),
             messaging_mock: self.messaging_mock.clone(),
+            telemetry,
             handles,
             transcript,
             marker: PhantomData,
