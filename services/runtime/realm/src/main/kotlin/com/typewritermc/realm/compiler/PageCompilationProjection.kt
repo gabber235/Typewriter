@@ -42,6 +42,7 @@ internal class PageCompilationProjection(
         GraphReadRequirement(
             definitions = setOf(CoreResourceDefinitionIds.PAGE, CoreResourceDefinitionIds.ELEMENT),
             relations = setOf(RelationId(PAGE_ELEMENTS_RELATION_ID)),
+            outgoingReferences = true,
         )
 
     override fun roots(graph: AuthoringWorkingGraph): Set<ResourceId> =

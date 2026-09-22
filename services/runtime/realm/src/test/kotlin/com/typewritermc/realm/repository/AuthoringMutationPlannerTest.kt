@@ -1,11 +1,21 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.authoring.AuthoringCreationContext
+import com.typewritermc.authoring.AuthoringCreationHostCardinality
+import com.typewritermc.authoring.AuthoringCreationHostFilter
+import com.typewritermc.authoring.AuthoringCreationRelationDirection
+import com.typewritermc.authoring.AuthoringCreationSlotDefinition
+import com.typewritermc.authoring.AuthoringCreationSlotId
+import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.types.DataPath
+import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.Ref
+import com.typewritermc.types.Referenceable
 import com.typewritermc.types.RelationCardinality
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.RelationDeletePolicy
@@ -14,17 +24,59 @@ import com.typewritermc.types.RelationEndpointSide
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.SerializationConcreteTypePrototype
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypePrototypeRegistry
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.Serializable
 
 val AuthoringMutationPlannerTest by testSuite {
+    test("create must use a registered slot whose definition and concrete root match") {
+        val definition = ResourceDefinitionId("test.resource")
+        val slot = AuthoringCreationSlotId("test:create")
+        val planner =
+            AuthoringMutationPlanner(
+                mapper = ResourceValueMapper(testPrototypes(), emptyList()),
+                resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(rootType()))),
+                creationSlots =
+                    listOf(
+                        AuthoringCreationSlotDefinition(
+                            id = slot,
+                            label = "Test",
+                            creates = definition,
+                            context = AuthoringCreationContext.Standalone,
+                            concreteRoots = listOf(rootType()),
+                        ),
+                    ),
+                relations = emptyList(),
+                catalog = testCatalog(),
+            )
+
+        val result =
+            planner.plan(
+                graph(resources = emptyList(), relations = emptyList()),
+                listOf(
+                    AuthoringOperation.CreateResource(
+                        id = id("created"),
+                        definition = definition,
+                        content = emptyContent(),
+                        creationSlot = AuthoringCreationSlotId("test:unknown"),
+                        hosts = emptyList(),
+                    ),
+                ),
+            ) as AuthoringMutationPlanResult.Invalid
+
+        result.diagnostics.single().code shouldBe "creation-slot-unsupported"
+    }
+
     test("cascade closure does not depend on delete operation order") {
         val planner = planner(RelationDeletePolicy.CASCADE)
         val graph =
@@ -71,10 +123,129 @@ val AuthoringMutationPlannerTest by testSuite {
                 ),
             ) as AuthoringMutationPlanResult.Valid
 
+        result.plan.delta.relationUpserts.values
+            .single { relation -> relation.origin is ResourceRelationOrigin.Declared }
+            .let { relation ->
+                relation.source shouldBe id("source")
+                relation.target shouldBe id("target")
+                relation.origin shouldBe ResourceRelationOrigin.Declared(relationId())
+            }
+    }
+
+    test("creation hosts materialize the registered declared relation in Realm") {
+        val definition = ResourceDefinitionId("test.resource")
+        val slot = AuthoringCreationSlotId("test:hosted")
+        val root = rootType()
+        val planner =
+            AuthoringMutationPlanner(
+                mapper = ResourceValueMapper(testPrototypes(), emptyList()),
+                resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(root))),
+                creationSlots =
+                    listOf(
+                        AuthoringCreationSlotDefinition(
+                            id = slot,
+                            label = "Hosted",
+                            creates = definition,
+                            context =
+                                AuthoringCreationContext.DeclaredRelation(
+                                    hosts = AuthoringCreationHostFilter(definitions = setOf(definition)),
+                                    cardinality = AuthoringCreationHostCardinality.EXACTLY_ONE,
+                                    relation = relationId(),
+                                    direction = AuthoringCreationRelationDirection.OUTGOING,
+                                ),
+                            concreteRoots = listOf(root),
+                        ),
+                    ),
+                relations =
+                    listOf(
+                        RelationDefinition(
+                            id = relationId(),
+                            source = root,
+                            target = root,
+                            onSourceDelete = RelationDeletePolicy.RESTRICT,
+                            onTargetDelete = RelationDeletePolicy.RESTRICT,
+                        ),
+                    ),
+                catalog = testCatalog(),
+            )
+
+        val result =
+            planner.plan(
+                graph(resources = listOf("host"), relations = emptyList()),
+                listOf(
+                    AuthoringOperation.CreateResource(
+                        id = id("created"),
+                        definition = definition,
+                        content =
+                            com.typewritermc.types.TypedValueEnvelope(
+                                TypeExpression.Named(root),
+                                DataValue.Record(mapOf("host" to DataValue.Reference(id("host")))),
+                            ),
+                        creationSlot = slot,
+                        hosts = listOf(id("host")),
+                    ),
+                ),
+            ) as AuthoringMutationPlanResult.Valid
+
+        result.plan.delta.relationUpserts.values
+            .single { relation -> relation.origin is ResourceRelationOrigin.Declared }
+            .let { relation ->
+                relation.source shouldBe id("host")
+                relation.target shouldBe id("created")
+                relation.origin shouldBe ResourceRelationOrigin.Declared(relationId())
+            }
+    }
+
+    test("reference path creation materializes the declared hosts in Realm") {
+        val definition = ResourceDefinitionId("test.resource")
+        val slot = AuthoringCreationSlotId("test:reference-hosted")
+        val root = rootType()
+        val catalog = testCatalog()
+        val planner =
+            AuthoringMutationPlanner(
+                mapper = ResourceValueMapper(testPrototypes(), emptyList()),
+                resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(root))),
+                creationSlots =
+                    listOf(
+                        AuthoringCreationSlotDefinition(
+                            id = slot,
+                            label = "Reference hosted",
+                            creates = definition,
+                            context =
+                                AuthoringCreationContext.ReferencePath(
+                                    hosts = AuthoringCreationHostFilter(definitions = setOf(definition)),
+                                    cardinality = AuthoringCreationHostCardinality.EXACTLY_ONE,
+                                    path = DataPath.field("host"),
+                                ),
+                            concreteRoots = listOf(root),
+                        ),
+                    ),
+                relations = emptyList(),
+                catalog = catalog,
+            )
+
+        val result =
+            planner.plan(
+                graph(resources = listOf("host", "wrong"), relations = emptyList()),
+                listOf(
+                    AuthoringOperation.CreateResource(
+                        id = id("created"),
+                        definition = definition,
+                        content =
+                            com.typewritermc.types.TypedValueEnvelope(
+                                TypeExpression.Named(root),
+                                DataValue.Record(mapOf("host" to DataValue.Reference(id("wrong")))),
+                            ),
+                        creationSlot = slot,
+                        hosts = listOf(id("host")),
+                    ),
+                ),
+            ) as AuthoringMutationPlanResult.Valid
+
         result.plan.delta.relationUpserts.values.single().let { relation ->
-            relation.source shouldBe id("source")
-            relation.target shouldBe id("target")
-            relation.origin shouldBe ResourceRelationOrigin.Declared(relationId())
+            relation.source shouldBe id("created")
+            relation.target shouldBe id("host")
+            (relation.origin as ResourceRelationOrigin.Reference).sourcePath shouldBe DataPath.field("host")
         }
     }
 
@@ -85,6 +256,7 @@ val AuthoringMutationPlannerTest by testSuite {
             AuthoringMutationPlanner(
                 mapper = ResourceValueMapper(testPrototypes(), emptyList()),
                 resourceDefinitions = emptyList(),
+                creationSlots = emptyList(),
                 relations =
                     listOf(
                         RelationDefinition(
@@ -124,6 +296,7 @@ val AuthoringMutationPlannerTest by testSuite {
             AuthoringMutationPlanner(
                 mapper = ResourceValueMapper(testPrototypes(), emptyList()),
                 resourceDefinitions = emptyList(),
+                creationSlots = emptyList(),
                 relations =
                     listOf(
                         RelationDefinition(
@@ -158,6 +331,37 @@ val AuthoringMutationPlannerTest by testSuite {
         result.plan.delta.relationUpserts.size shouldBe 1
     }
 
+    test("remove relation deletes the exact declared edge") {
+        val mapper = ResourceValueMapper(testPrototypes(), emptyList())
+        val relation = mapper.declaredRelation(relationId(), id("source"), id("target"))
+        val planner =
+            AuthoringMutationPlanner(
+                mapper = mapper,
+                resourceDefinitions = emptyList(),
+                creationSlots = emptyList(),
+                relations =
+                    listOf(
+                        RelationDefinition(
+                            id = relationId(),
+                            source = rootType(),
+                            target = rootType(),
+                            onSourceDelete = RelationDeletePolicy.RESTRICT,
+                            onTargetDelete = RelationDeletePolicy.RESTRICT,
+                        ),
+                    ),
+                catalog = testCatalog(),
+            )
+
+        val result =
+            planner.plan(
+                graph(resources = listOf("source", "target"), relations = listOf(relation)),
+                listOf(AuthoringOperation.RemoveRelation(relationId(), id("source"), id("target"))),
+            ) as AuthoringMutationPlanResult.Valid
+
+        result.plan.delta.relationRemovals shouldBe setOf(relation.id)
+        result.plan.proposed.relations shouldBe emptyMap()
+    }
+
     test("contributed graph rule rejects the proposed graph") {
         val rule =
             object : AuthoringGraphRule {
@@ -173,6 +377,7 @@ val AuthoringMutationPlannerTest by testSuite {
             AuthoringMutationPlanner(
                 mapper = ResourceValueMapper(testPrototypes(), emptyList()),
                 resourceDefinitions = emptyList(),
+                creationSlots = emptyList(),
                 relations = emptyList(),
                 catalog = testCatalog(),
                 rules = listOf(rule),
@@ -185,6 +390,38 @@ val AuthoringMutationPlannerTest by testSuite {
             ) as AuthoringMutationPlanResult.Invalid
 
         result.diagnostics.single().code shouldBe "contributed-rule-rejected"
+    }
+
+    test("each graph rule receives only its declared bounded dependencies") {
+        val observed = mutableListOf<Set<ResourceId>>()
+        val rule =
+            object : AuthoringGraphRule {
+                override val id = "test.isolated"
+                override val graphRequirement =
+                    com.typewritermc.realm.compiler
+                        .GraphReadRequirement(maximumDepth = 0)
+
+                override fun validate(context: AuthoringGraphValidationContext): List<AuthoringDiagnostic> {
+                    observed += context.proposed.resources.keys
+                    return emptyList()
+                }
+            }
+        val planner =
+            AuthoringMutationPlanner(
+                mapper = ResourceValueMapper(testPrototypes(), emptyList()),
+                resourceDefinitions = emptyList(),
+                creationSlots = emptyList(),
+                relations = emptyList(),
+                catalog = testCatalog(),
+                rules = listOf(rule),
+            )
+
+        planner.plan(
+            graph(resources = listOf("changed", "unrelated"), relations = emptyList()),
+            listOf(AuthoringOperation.DeleteResource(id("changed"), emptyContent())),
+        ) as AuthoringMutationPlanResult.Valid
+
+        observed.single() shouldBe emptySet()
     }
 
     test("stale delete base is rejected") {
@@ -258,6 +495,7 @@ private fun planner(policy: RelationDeletePolicy): AuthoringMutationPlanner {
     return AuthoringMutationPlanner(
         mapper = ResourceValueMapper(testPrototypes(), emptyList()),
         resourceDefinitions = emptyList(),
+        creationSlots = emptyList(),
         relations =
             listOf(
                 RelationDefinition(
@@ -322,13 +560,38 @@ private fun rootType() =
 
 private fun testCatalog() =
     TypeCatalog(
-        listOf(
+        StandardTypes.definitions +
             TypeDefinition(
                 id = rootType(),
                 kind = NominalTypeKind.CONCRETE,
-                representation = TypeExpression.Record(emptyList()),
+                representation =
+                    TypeExpression.Record(
+                        listOf(
+                            TypeField(
+                                "host",
+                                TypeExpression.Reference(rootType()),
+                            ),
+                        ),
+                    ),
             ),
-        ),
     )
 
-private fun testPrototypes() = TypePrototypeRegistry(emptyList(), testCatalog().definitions)
+private fun testPrototypes(): TypePrototypeRegistry {
+    val definition = testCatalog().definitions.single { it.id == rootType() }
+    return TypePrototypeRegistry(
+        listOf(
+            SerializationConcreteTypePrototype(
+                runtimeType = HostedResourceContent::class,
+                type = rootType(),
+                definition = definition,
+                serializer = HostedResourceContent.serializer(),
+            ),
+        ),
+        testCatalog().definitions,
+    )
+}
+
+@Serializable
+private data class HostedResourceContent(
+    val host: Ref<HostedResourceContent>,
+) : Referenceable

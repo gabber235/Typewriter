@@ -2,9 +2,14 @@ package com.typewritermc.realm.search
 
 import com.surrealdb.Surreal
 import com.typewritermc.realm.ResourceDefinitionId
+import com.typewritermc.realm.repository.isAssignable
+import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.toUnifiedResourceId
 import com.typewritermc.realm.repository.utils.unifiedSurrealId
+import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.TypeExpression
 
 /** One ranked index row with the selector and ownership metadata needed by search policy. */
 internal data class IndexedAuthoringSearchCandidate(
@@ -60,8 +65,9 @@ internal fun interface AuthoringSearchRepository {
     fun search(
         query: String,
         definitions: Set<ResourceDefinitionId>,
-        allowedResources: Set<ResourceId>?,
+        contexts: Set<ResourceId>,
         selectors: IndexedSelectorFilter,
+        assignableTo: TypeExpression?,
         limit: Int,
     ): List<IndexedAuthoringSearchCandidate>
 }
@@ -69,18 +75,19 @@ internal fun interface AuthoringSearchRepository {
 /** Executes candidate retrieval only against normalized indexed search tables. */
 internal class SurrealAuthoringSearchRepository(
     private val database: Surreal,
+    private val catalog: () -> TypeCatalog,
 ) : AuthoringSearchRepository {
     override fun search(
         query: String,
         definitions: Set<ResourceDefinitionId>,
-        allowedResources: Set<ResourceId>?,
+        contexts: Set<ResourceId>,
         selectors: IndexedSelectorFilter,
+        assignableTo: TypeExpression?,
         limit: Int,
     ): List<IndexedAuthoringSearchCandidate> {
-        if (allowedResources?.isEmpty() == true) return emptyList()
         if (definitions.isEmpty() && selectors.requiresDefinitionUniverse) return emptyList()
         val predicates = mutableListOf<String>()
-        val bindings = mutableMapOf<String, Any?>("row_limit" to limit)
+        val bindings = mutableMapOf<String, Any?>()
         if (query.isNotBlank()) {
             predicates += "(text @0@ \$query OR text @1@ \$query)"
             bindings["query"] = query
@@ -89,9 +96,10 @@ internal class SurrealAuthoringSearchRepository(
             predicates += "definition IN \$definitions"
             bindings["definitions"] = definitions.map(ResourceDefinitionId::value)
         }
-        if (allowedResources != null) {
-            predicates += "resource IN \$allowed"
-            bindings["allowed"] = allowedResources.map(ResourceId::unifiedSurrealId)
+        if (contexts.isNotEmpty()) {
+            predicates += "(resource IN \$context_resources OR owner_path CONTAINSANY \$context_values)"
+            bindings["context_resources"] = contexts.map(ResourceId::unifiedSurrealId)
+            bindings["context_values"] = contexts.map(ResourceId::value)
         }
         val selectorPredicate = selectors.toSurrealPredicate()
         bindings.putAll(selectorPredicate.bindings)
@@ -103,16 +111,40 @@ internal class SurrealAuthoringSearchRepository(
                 ?.let { " WHERE $it" }
                 .orEmpty()
         val score = if (query.isBlank()) "0" else "search::score(0) + search::score(1)"
-        val rows =
-            database
-                .query(
-                    "SELECT resource, definition, text, owner_path, $score AS score " +
-                        "FROM authoring_search$where ORDER BY score DESC, resource LIMIT \$row_limit;",
-                    bindings,
-                ).take(0)
-                .getArray()
+        val rows = mutableListOf<com.surrealdb.Value>()
+        var offset = 0
+        val pageSize = maxOf(limit, MINIMUM_SEARCH_PAGE_SIZE)
+        val typeCatalog = assignableTo?.let { catalog() }
+        while (rows.size < limit) {
+            val page =
+                database
+                    .query(
+                        "SELECT resource, definition, root, text, owner_path, $score AS score " +
+                            "FROM authoring_search$where ORDER BY score DESC, resource " +
+                            "LIMIT \$row_limit START \$row_start;",
+                        bindings + mapOf("row_limit" to pageSize, "row_start" to offset),
+                    ).take(0)
+                    .getArray()
+                    .toList()
+            rows +=
+                page.filter { value ->
+                    assignableTo == null ||
+                        requireNotNull(typeCatalog).isAssignable(
+                            TypeExpression.Named(
+                                StructuredDatabaseCodec.decode(
+                                    ResolvedTypeRef.serializer(),
+                                    value.getObject().get("root"),
+                                ),
+                            ),
+                            assignableTo,
+                        )
+                }
+            if (page.size < pageSize) break
+            offset += page.size
+        }
+        val acceptedRows = rows.take(limit)
         val ids =
-            rows.map {
+            acceptedRows.map {
                 it
                     .getObject()
                     .get("resource")
@@ -120,7 +152,7 @@ internal class SurrealAuthoringSearchRepository(
                     .toUnifiedResourceId()
             }
         val selectors = selectors(ids)
-        return rows.map { value ->
+        return acceptedRows.map { value ->
             val row = value.getObject()
             val resource = row.get("resource").getRecordId().toUnifiedResourceId()
             IndexedAuthoringSearchCandidate(
@@ -157,6 +189,8 @@ internal class SurrealAuthoringSearchRepository(
             }
     }
 }
+
+private const val MINIMUM_SEARCH_PAGE_SIZE = 256
 
 internal data class IndexedSelectorPredicate(
     val query: String,

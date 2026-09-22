@@ -9,7 +9,6 @@ DEFINE FIELD OVERWRITE input_fingerprint ON compiled_artifact TYPE string
     ASSERT string::len($value) = 64;
 DEFINE FIELD OVERWRITE semantic_digest ON compiled_artifact TYPE string
     ASSERT string::len($value) = 64;
-DEFINE FIELD OVERWRITE payload ON compiled_artifact TYPE string;
 
 DEFINE INDEX OVERWRITE compiled_artifact_input
     ON compiled_artifact FIELDS projection, root, input_fingerprint UNIQUE;

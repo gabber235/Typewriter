@@ -4,6 +4,7 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.CompiledArtifactActivation
 import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactPointer
+import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.loader.api.artifact.ArtifactDigest
@@ -23,15 +24,30 @@ class RegisteredCompiledArtifactStore(
         activationRevision: Long,
         manifest: CompiledArtifactManifest,
         artifacts: Collection<CompiledArtifact>,
+        previousActivation: CompiledArtifactActivation?,
     ): CompiledArtifactActivation {
         val manifestBlob = write(json.encodeToString(manifest).encodeToByteArray())
-        val artifactPointers =
-            artifacts.map { artifact ->
-                CompiledArtifactPointer(
-                    semanticDigest = artifact.semanticDigest,
-                    blob = write(artifact.payload),
-                )
-            }
+        val freshPointers =
+            artifacts
+                .groupBy(CompiledArtifact::semanticDigest)
+                .map { (semanticDigest, matching) ->
+                    val artifact = matching.first()
+                    require(matching.all { it.payload.contentEquals(artifact.payload) }) {
+                        "Compiled artifacts with semantic digest ${semanticDigest.value} must have identical payloads."
+                    }
+                    CompiledArtifactPointer(
+                        semanticDigest = semanticDigest,
+                        blob = write(artifact.payload),
+                    )
+                }
+        val availablePointers =
+            (previousActivation?.artifacts.orEmpty() + freshPointers)
+                .associateBy(CompiledArtifactPointer::semanticDigest)
+        val requiredDigests = manifest.artifacts.mapTo(linkedSetOf(), CompiledArtifactReference::semanticDigest)
+        require(requiredDigests.all(availablePointers::containsKey)) {
+            "Compiled activation is missing preserved artifact payloads."
+        }
+        val artifactPointers = requiredDigests.map(availablePointers::getValue)
         return CompiledArtifactActivation(
             activationRevision = activationRevision,
             manifestDigest = manifest.digest,

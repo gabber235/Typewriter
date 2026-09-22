@@ -3,8 +3,13 @@ package com.typewritermc.realm
 import com.typewritermc.authoring.AuthoringPolicyProvider
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.elements.Element
+import com.typewritermc.library.BOOK_PAGES_RELATION_ID
+import com.typewritermc.library.PAGE_ELEMENTS_RELATION_ID
 import com.typewritermc.realm.repository.loadTestPrototypes
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.RelationDefinition
+import com.typewritermc.types.RelationDeletePolicy
+import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
@@ -36,8 +41,8 @@ val AuthoringPolicyCompositionTest by testSuite {
             )
         val extensionDefinition =
             AuthoringResourceDefinition(
-                id = ResourceDefinitionId("example.quest_board"),
-                acceptedRoot = TypeExpression.Any,
+                id = ResourceDefinitionId("example.extension_resource"),
+                acceptedRoot = TypeExpression.Named(elementRoot),
             )
         val extension = AuthoringPolicyProvider { builder -> builder.definition(extensionDefinition) }
 
@@ -55,6 +60,19 @@ val AuthoringPolicyCompositionTest by testSuite {
                         extension,
                     ),
                 catalog = types,
+                relations =
+                    listOf(
+                        BOOK_PAGES_RELATION_ID,
+                        PAGE_ELEMENTS_RELATION_ID,
+                    ).map { id ->
+                        RelationDefinition(
+                            id = RelationId(id),
+                            source = elementRoot,
+                            target = elementRoot,
+                            onSourceDelete = RelationDeletePolicy.RESTRICT,
+                            onTargetDelete = RelationDeletePolicy.RESTRICT,
+                        )
+                    },
             )
 
         catalog.definitions.map(AuthoringResourceDefinition::id) shouldContain extensionDefinition.id

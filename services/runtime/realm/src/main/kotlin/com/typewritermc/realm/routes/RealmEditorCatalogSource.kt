@@ -54,6 +54,7 @@ import skirout.editor.v1.diagnostic.DiagnosticCode
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.TypeDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.authoring.AuthoringCreationSlotId as WireAuthoringCreationSlotId
 import skirout.editor.v1.authoring.RelationCardinality as SkirRelationCardinality
 import skirout.editor.v1.authoring.RelationDefinition as SkirRelationDefinition
 import skirout.editor.v1.authoring.RelationDeletePolicy as SkirRelationDeletePolicy
@@ -64,7 +65,6 @@ import skirout.editor.v1.authoring.ResourceDefinitionId as WireResourceDefinitio
 import skirout.editor.v1.catalog.AuthoringCreationContext as WireAuthoringCreationContext
 import skirout.editor.v1.catalog.AuthoringCreationHostCardinality as WireAuthoringCreationHostCardinality
 import skirout.editor.v1.catalog.AuthoringCreationSlotDefinition as WireAuthoringCreationSlotDefinition
-import skirout.editor.v1.catalog.AuthoringCreationSlotId as WireAuthoringCreationSlotId
 import skirout.editor.v1.catalog.AuthoringSearchDefinition as WireAuthoringSearchDefinition
 import skirout.editor.v1.catalog.AuthoringSearchFacetDefinition as WireAuthoringSearchFacetDefinition
 import skirout.editor.v1.catalog.TypeInitializationRequirement as WireTypeInitializationRequirement
@@ -211,26 +211,32 @@ class SnapshotRealmEditorCatalogSource(
                 }
             }
         } catch (invalid: IllegalArgumentException) {
-            InitializeTypedValueResult.InvalidWrapper(
-                listOf(
-                    TypeDiagnostic(
-                        code = DiagnosticCode.INVALID_VALUE,
-                        severity = DiagnosticSeverity.ERROR,
-                        message = invalid.message ?: "The partial typed value is invalid.",
-                        path = null,
-                        relatedType = null,
-                        details = emptyList(),
-                    ),
-                ),
-            )
+            invalid.toInvalidInitializationResult()
+        } catch (unavailable: IllegalStateException) {
+            unavailable.toInvalidInitializationResult()
         }
     }
 }
+
+private fun RuntimeException.toInvalidInitializationResult(): InitializeTypedValueResult =
+    InitializeTypedValueResult.InvalidWrapper(
+        listOf(
+            TypeDiagnostic(
+                code = DiagnosticCode.INVALID_VALUE,
+                severity = DiagnosticSeverity.ERROR,
+                message = message ?: "The partial typed value is invalid.",
+                path = null,
+                relatedType = null,
+                details = emptyList(),
+            ),
+        ),
+    )
 
 private fun com.typewritermc.realm.AuthoringResourceDefinition.toWire(): ResourceDefinition =
     ResourceDefinition(
         id = WireResourceDefinitionId(value = id.value),
         acceptedRoot = SkirTypeCodec.encode(acceptedRoot).getOrThrow(),
+        navigationHandler = navigationHandler,
     )
 
 private fun com.typewritermc.realm.AuthoringSearchDefinition.toWire(): WireAuthoringSearchDefinition =

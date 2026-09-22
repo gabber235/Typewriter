@@ -5,6 +5,7 @@ import com.surrealdb.Transaction
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.unifiedSurrealId
 import com.typewritermc.types.DataPath
+import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeId
@@ -48,8 +49,7 @@ internal class SurrealResourceGraphStore {
     ) {
         transaction
             .query(
-                "CREATE ONLY \$resource CONTENT { definition: \$definition, type_id: \$type_id, " +
-                    "type_revision: \$type_revision, value: \$value };",
+                "CREATE ONLY \$resource CONTENT { definition: \$definition, root: \$root, value: \$value };",
                 value.resource.bindings(),
             ).consumeAll()
     }
@@ -60,20 +60,18 @@ internal class SurrealResourceGraphStore {
     ) {
         transaction
             .query(
-                "UPDATE ONLY \$resource MERGE { definition: \$definition, type_id: \$type_id, " +
-                    "type_revision: \$type_revision, value: \$value };",
+                "UPDATE ONLY \$resource MERGE { definition: \$definition, root: \$root, value: \$value };",
                 value.resource.bindings(),
             ).consumeAll()
     }
 }
 
 private fun StoredTypedResource.bindings(): Map<String, Any?> {
-    val declared = root.id as? TypeId.Declared ?: error("Stored resources require declared root identities.")
+    root.id as? TypeId.Declared ?: error("Stored resources require declared root identities.")
     return mapOf(
         "resource" to id.unifiedSurrealId(),
         "definition" to definition.value,
-        "type_id" to declared.id.toString(),
-        "type_revision" to root.revision,
+        "root" to StructuredDatabaseCodec.encode(ResolvedTypeRef.serializer(), root),
         "value" to
             StructuredDatabaseCodec.encode(
                 com.typewritermc.types.DataValue

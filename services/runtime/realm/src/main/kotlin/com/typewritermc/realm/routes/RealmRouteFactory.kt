@@ -5,6 +5,7 @@ import com.typewritermc.realm.RealmAuthoringPolicyCatalog
 import com.typewritermc.realm.compiler.RegisteredCompiledContentRepository
 import com.typewritermc.realm.repository.AuthoringGraphRepository
 import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.search.AuthoringSearchMetadata
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
@@ -32,6 +33,8 @@ internal class RealmRouteFactory(
     private val prototypes: TypePrototypeRegistry = TypePrototypeRegistry(emptyList()),
     private val catalogGeneration: () -> String = { "test" },
     private val authoringPolicies: RealmAuthoringPolicyCatalog,
+    private val authoringSearchMetadata: AuthoringSearchMetadata =
+        AuthoringSearchMetadata(authoringPolicies.searchSelectors, authoringPolicies.searchFacets),
 ) {
     /**
      * Creates an unstarted route set for one logical Realm session.
@@ -53,7 +56,14 @@ internal class RealmRouteFactory(
                 authoringPolicies.presentations,
             )
         val authoringGraphRoutes = AuthoringGraphRoutes(authoringGraph, contracts, subjectProjector)
-        val authoringGraphSearchRoutes = AuthoringGraphSearchRoutes(authoringGraph, authoringSearch, contracts, subjectProjector)
+        val authoringGraphSearchRoutes =
+            AuthoringGraphSearchRoutes(
+                authoringGraph,
+                authoringSearch,
+                contracts,
+                subjectProjector,
+                authoringSearchMetadata,
+            )
         val compiledContentRoutes = EditorCompiledContentRoutes(compiledContent, compiledContracts)
         val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(compiledContent, compiledContracts)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, contracts, address)

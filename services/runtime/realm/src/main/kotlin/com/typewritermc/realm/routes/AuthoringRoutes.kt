@@ -12,7 +12,7 @@ import com.typewritermc.types.TypePrototypeRegistry
  *
  * The repository is authoritative for state and batch atomicity. This class translates invalid arguments into
  * structured protocol diagnostics, publishes a committed change after the repository returns, and asks the compiler
- * owner to invalidate only after a successful batch that affects compiled content.
+ * owner to invalidate every committed batch that affects compiled content, even when publication fails.
  */
 internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
@@ -45,9 +45,12 @@ internal class AuthoringRoutes(
                         )
                     }
                 if (result is AuthoringBatchResult.Applied) {
-                    communicator.publish(contracts.authoringChanged, address, result.change.toWire(prototypes))
-                    if (result.change.compilationImpact.isNotEmpty()) {
-                        onCompilationInvalidated(result.change.compilationImpact)
+                    try {
+                        communicator.publish(contracts.authoringChanged, address, result.change.toWire(prototypes))
+                    } finally {
+                        if (result.change.compilationImpact.isNotEmpty()) {
+                            onCompilationInvalidated(result.change.compilationImpact)
+                        }
                     }
                 }
                 result.toWireResponse(prototypes)

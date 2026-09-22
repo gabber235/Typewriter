@@ -1,5 +1,10 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.authoring.AuthoringCreationContext
+import com.typewritermc.authoring.AuthoringCreationHostCardinality
+import com.typewritermc.authoring.AuthoringCreationHostFilter
+import com.typewritermc.authoring.AuthoringCreationRelationDirection
+import com.typewritermc.authoring.AuthoringCreationSlotDefinition
 import com.typewritermc.realm.AuthoringResourceDefinition
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.compiler.GraphReadRequirement
@@ -74,6 +79,7 @@ internal sealed interface AuthoringMutationPlanResult {
 internal class AuthoringMutationPlanner(
     private val mapper: ResourceValueMapper,
     private val resourceDefinitions: Collection<AuthoringResourceDefinition>,
+    private val creationSlots: Collection<AuthoringCreationSlotDefinition>,
     private val relations: Collection<RelationDefinition>,
     private val catalog: TypeCatalog,
     private val rules: Collection<AuthoringGraphRule> = emptyList(),
@@ -103,8 +109,11 @@ internal class AuthoringMutationPlanner(
             val workingRelations = before.relations.toMutableMap()
             val upserts = linkedMapOf<ResourceId, DecomposedResourceValue>()
             val creates = linkedSetOf<ResourceId>()
+            val plannedOperations = operations.map(::materializeReferenceCreationContext)
             val resourceOperations =
-                operations.filterNot { it is AuthoringOperation.DeclareRelation }
+                plannedOperations.filterNot {
+                    it is AuthoringOperation.DeclareRelation || it is AuthoringOperation.RemoveRelation
+                }
             val directWrites =
                 resourceOperations
                     .filterNot { it is AuthoringOperation.DeleteResource }
@@ -130,16 +139,30 @@ internal class AuthoringMutationPlanner(
                         is AuthoringOperation.DeclareRelation -> {
                             error("Relation operations are planned after resource writes.")
                         }
+
+                        is AuthoringOperation.RemoveRelation -> {
+                            error("Relation operations are planned after resource writes.")
+                        }
                     }
                 }
-            operations
+            plannedOperations
+                .filterIsInstance<AuthoringOperation.CreateResource>()
+                .sortedBy { it.id.value }
+                .forEach { operation ->
+                    attachCreationContext(operation, workingResources, workingRelations)
+                }
+            plannedOperations
                 .filterIsInstance<AuthoringOperation.DeclareRelation>()
                 .sortedWith(compareBy({ it.relation.value }, { it.source.value }, { it.target.value }))
                 .forEach { operation ->
                     declareRelation(operation, workingResources, workingRelations)
                 }
+            plannedOperations
+                .filterIsInstance<AuthoringOperation.RemoveRelation>()
+                .sortedWith(compareBy({ it.relation.value }, { it.source.value }, { it.target.value }))
+                .forEach { operation -> removeRelation(operation, workingRelations) }
 
-            operations
+            plannedOperations
                 .filterIsInstance<AuthoringOperation.DeleteResource>()
                 .forEach { operation -> validateDeleteBase(operation, before) }
 
@@ -147,7 +170,10 @@ internal class AuthoringMutationPlanner(
                 resolveDeleteClosure(
                     resources = workingResources,
                     relationsById = workingRelations,
-                    requested = operations.filterIsInstance<AuthoringOperation.DeleteResource>().mapTo(linkedSetOf()) { it.id },
+                    requested =
+                        plannedOperations
+                            .filterIsInstance<AuthoringOperation.DeleteResource>()
+                            .mapTo(linkedSetOf()) { it.id },
                 )
             val overlap = deletion intersect directWrites
             if (overlap.isNotEmpty()) return invalid("delete-overlaps-direct-write", overlap)
@@ -157,12 +183,35 @@ internal class AuthoringMutationPlanner(
             }
             workingRelations.entries.removeIf { (_, relation) -> relation.source in deletion || relation.target in deletion }
 
+            plannedOperations.filterIsInstance<AuthoringOperation.CreateResource>().forEach { operation ->
+                validateCreation(operation, workingResources, workingRelations)
+            }
             validateGraph(workingResources, workingRelations)
             val proposed = AuthoringWorkingGraph(workingResources.toMap(), workingRelations.toMap())
             val changedResources = changedResources(before, proposed, directWrites, deletion)
             val changedEdges = changedEdges(before, proposed)
-            val graphChanges = AuthoringGraphValidationContext(before, proposed, changedResources, changedEdges, deletion)
-            val ruleDiagnostics = rules.flatMap { it.validate(graphChanges) }
+            val ruleRoots =
+                buildSet {
+                    addAll(changedResources)
+                    changedEdges.forEach { edgeId ->
+                        listOfNotNull(before.relations[edgeId], proposed.relations[edgeId]).forEach { relation ->
+                            add(relation.source)
+                            add(relation.target)
+                        }
+                    }
+                }
+            val ruleDiagnostics =
+                rules.flatMap { rule ->
+                    rule.validate(
+                        AuthoringGraphValidationContext(
+                            before = before.policySlice(ruleRoots, rule.graphRequirement, rule.id),
+                            proposed = proposed.policySlice(ruleRoots, rule.graphRequirement, rule.id),
+                            changedResources = changedResources,
+                            changedEdges = changedEdges,
+                            deletedResources = deletion,
+                        ),
+                    )
+                }
             if (ruleDiagnostics.isNotEmpty()) return AuthoringMutationPlanResult.Invalid(ruleDiagnostics)
 
             val delta =
@@ -197,6 +246,15 @@ internal class AuthoringMutationPlanner(
         upserts: MutableMap<ResourceId, DecomposedResourceValue>,
         creates: MutableSet<ResourceId>,
     ) {
+        val slot =
+            creationSlots.singleOrNull { it.id == operation.creationSlot }
+                ?: invalid("creation-slot-unsupported", operation.id)
+        if (slot.creates != operation.definition) invalid("creation-slot-definition-mismatch", operation.id)
+        val root =
+            (operation.content.rootType as? TypeExpression.Named)?.reference
+                ?: invalid("authored-root-must-be-named", operation.id)
+        if (root !in slot.concreteRoots) invalid("creation-slot-root-mismatch", operation.id)
+        if (operation.hosts.distinct().size != operation.hosts.size) invalid("duplicate-creation-host", operation.id)
         requireDefinition(operation.definition, operation.content.rootType, operation.id)
         if (resources.containsKey(operation.id)) invalid("resource-already-exists", operation.id)
         mapper.validate(operation.content)
@@ -205,6 +263,149 @@ internal class AuthoringMutationPlanner(
         replaceOwnedRelations(operation.id, null, value, relationsById)
         upserts[operation.id] = value
         creates += operation.id
+    }
+
+    private fun materializeReferenceCreationContext(operation: AuthoringOperation): AuthoringOperation {
+        if (operation !is AuthoringOperation.CreateResource) return operation
+        val slot =
+            creationSlots.singleOrNull { it.id == operation.creationSlot }
+                ?: invalid("creation-slot-unsupported", operation.id)
+        val context = slot.context as? AuthoringCreationContext.ReferencePath ?: return operation
+        val hostValue =
+            when (context.cardinality) {
+                AuthoringCreationHostCardinality.EXACTLY_ONE -> {
+                    if (operation.hosts.size != 1) invalid("creation-host-cardinality", operation.id)
+                    DataValue.Reference(operation.hosts.single())
+                }
+
+                AuthoringCreationHostCardinality.ONE_OR_MORE -> {
+                    if (operation.hosts.isEmpty()) invalid("creation-host-cardinality", operation.id)
+                    DataValue.ListValue(operation.hosts.map(DataValue::Reference))
+                }
+            }
+        return operation.copy(
+            content =
+                operation.content.copy(
+                    rootValue = operation.content.rootValue.set(context.path, hostValue),
+                ),
+        )
+    }
+
+    private fun validateCreation(
+        operation: AuthoringOperation.CreateResource,
+        resources: Map<ResourceId, StoredTypedResource>,
+        relationsById: Map<String, StoredResourceRelation>,
+    ) {
+        val slot = creationSlots.single { it.id == operation.creationSlot }
+        when (val context = slot.context) {
+            AuthoringCreationContext.Standalone -> {
+                if (operation.hosts.isNotEmpty()) invalid("standalone-creation-has-hosts", operation.id)
+            }
+
+            is AuthoringCreationContext.DeclaredRelation -> {
+                validateCreationHosts(operation, context.hosts, context.cardinality, resources)
+                val attached =
+                    relationsById.values
+                        .asSequence()
+                        .filter { relation ->
+                            (relation.origin as? ResourceRelationOrigin.Declared)?.relationId == context.relation
+                        }.mapNotNull { relation ->
+                            when (context.direction) {
+                                AuthoringCreationRelationDirection.OUTGOING -> {
+                                    relation.target
+                                        .takeIf { relation.source in operation.hosts && it == operation.id }
+                                        ?.let { relation.source }
+                                }
+
+                                AuthoringCreationRelationDirection.INCOMING -> {
+                                    relation.source
+                                        .takeIf { relation.target in operation.hosts && it == operation.id }
+                                        ?.let { relation.target }
+                                }
+
+                                AuthoringCreationRelationDirection.BOTH -> {
+                                    when (operation.id) {
+                                        relation.source -> relation.target
+                                        relation.target -> relation.source
+                                        else -> null
+                                    }
+                                }
+                            }
+                        }.toSet()
+                if (attached != operation.hosts.toSet()) invalid("creation-relation-mismatch", operation.id)
+            }
+
+            is AuthoringCreationContext.ReferencePath -> {
+                validateCreationHosts(operation, context.hosts, context.cardinality, resources)
+                val attached =
+                    relationsById.values
+                        .asSequence()
+                        .filter { relation ->
+                            relation.source == operation.id &&
+                                (relation.origin as? ResourceRelationOrigin.Reference)?.sourcePath == context.path
+                        }.map(StoredResourceRelation::target)
+                        .toSet()
+                if (attached != operation.hosts.toSet()) invalid("creation-reference-mismatch", operation.id)
+            }
+        }
+    }
+
+    private fun attachCreationContext(
+        operation: AuthoringOperation.CreateResource,
+        resources: Map<ResourceId, StoredTypedResource>,
+        relationsById: MutableMap<String, StoredResourceRelation>,
+    ) {
+        val slot = creationSlots.single { it.id == operation.creationSlot }
+        val context = slot.context as? AuthoringCreationContext.DeclaredRelation ?: return
+        validateCreationHosts(operation, context.hosts, context.cardinality, resources)
+        if (context.direction == AuthoringCreationRelationDirection.BOTH) {
+            invalid("creation-relation-direction-ambiguous", operation.id)
+        }
+        operation.hosts.forEach { host ->
+            val relation =
+                when (context.direction) {
+                    AuthoringCreationRelationDirection.OUTGOING -> {
+                        mapper.declaredRelation(context.relation, host, operation.id)
+                    }
+
+                    AuthoringCreationRelationDirection.INCOMING -> {
+                        mapper.declaredRelation(context.relation, operation.id, host)
+                    }
+
+                    AuthoringCreationRelationDirection.BOTH -> {
+                        error("Ambiguous creation directions are rejected before relation materialization.")
+                    }
+                }
+            if (relation.id in relationsById) invalid("relation-already-exists", operation.id)
+            relationsById[relation.id] = relation
+        }
+    }
+
+    private fun validateCreationHosts(
+        operation: AuthoringOperation.CreateResource,
+        filter: AuthoringCreationHostFilter,
+        cardinality: AuthoringCreationHostCardinality,
+        resources: Map<ResourceId, StoredTypedResource>,
+    ) {
+        when (cardinality) {
+            AuthoringCreationHostCardinality.EXACTLY_ONE -> {
+                if (operation.hosts.size != 1) invalid("creation-host-cardinality", operation.id)
+            }
+
+            AuthoringCreationHostCardinality.ONE_OR_MORE -> {
+                if (operation.hosts.isEmpty()) invalid("creation-host-cardinality", operation.id)
+            }
+        }
+        operation.hosts.forEach { hostId ->
+            val host = resources[hostId] ?: invalid("creation-host-not-found", hostId)
+            if (filter.definitions.isNotEmpty() && host.definition !in filter.definitions) {
+                invalid("creation-host-definition-mismatch", hostId)
+            }
+            val assignableTo = filter.assignableTo
+            if (assignableTo != null && !catalog.isAssignable(TypeExpression.Named(host.root), assignableTo)) {
+                invalid("creation-host-type-mismatch", hostId)
+            }
+        }
     }
 
     private fun commit(
@@ -260,6 +461,19 @@ internal class AuthoringMutationPlanner(
         val relation = mapper.declaredRelation(operation.relation, operation.source, operation.target)
         if (relation.id in relationsById) invalid("relation-already-exists", operation.source)
         relationsById[relation.id] = relation
+    }
+
+    private fun removeRelation(
+        operation: AuthoringOperation.RemoveRelation,
+        relationsById: MutableMap<String, StoredResourceRelation>,
+    ) {
+        if (relations.none { it.id == operation.relation }) {
+            invalid("relation-definition-unsupported", operation.source)
+        }
+        val relation = mapper.declaredRelation(operation.relation, operation.source, operation.target)
+        val current = relationsById[relation.id] ?: invalid("relation-not-found", operation.source)
+        if (current != relation) invalid("relation-mismatch", operation.source)
+        relationsById.remove(relation.id)
     }
 
     private fun replaceOwnedRelations(
@@ -468,6 +682,24 @@ internal class AuthoringMutationPlanner(
         buildSet {
             addAll(before.relations.keys - proposed.relations.keys)
             addAll(proposed.relations.filter { (id, relation) -> before.relations[id] != relation }.keys)
+        }
+
+    private fun AuthoringWorkingGraph.policySlice(
+        roots: Set<ResourceId>,
+        requirement: GraphReadRequirement,
+        policyId: String,
+    ): AuthoringWorkingGraph =
+        when (val result = sliceForPolicy(roots, requirement)) {
+            is PolicyGraphSliceResult.Success -> {
+                result.graph
+            }
+
+            is PolicyGraphSliceResult.LimitExceeded -> {
+                invalid(
+                    "policy-graph-${result.dimension}-limit-exceeded",
+                    message = "Policy $policyId exceeded its ${result.dimension} limit ${result.limit}.",
+                )
+            }
         }
 
     private fun invalid(

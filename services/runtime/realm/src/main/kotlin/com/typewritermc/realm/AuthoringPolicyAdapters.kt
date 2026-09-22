@@ -1,6 +1,8 @@
 package com.typewritermc.realm
 
 import com.typewritermc.authoring.AuthoringChangeSummary
+import com.typewritermc.authoring.AuthoringCreationContext
+import com.typewritermc.authoring.AuthoringCreationRelationDirection
 import com.typewritermc.authoring.AuthoringGraphRelation
 import com.typewritermc.authoring.AuthoringGraphResource
 import com.typewritermc.authoring.AuthoringPolicyCatalog
@@ -12,6 +14,7 @@ import com.typewritermc.authoring.AuthoringSearchSelectorMultiplicity
 import com.typewritermc.authoring.AuthoringSearchSelectorValues
 import com.typewritermc.authoring.AuthoringWorkingGraph
 import com.typewritermc.authoring.GraphReadRequirement
+import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
@@ -23,13 +26,17 @@ import com.typewritermc.realm.repository.AuthoringGraphDelta
 import com.typewritermc.realm.repository.AuthoringGraphRule
 import com.typewritermc.realm.repository.AuthoringGraphValidationContext
 import com.typewritermc.realm.repository.AuthoringMutationPlan
+import com.typewritermc.realm.repository.PolicyGraphSliceResult
 import com.typewritermc.realm.repository.ResourceRelationOrigin
 import com.typewritermc.realm.repository.StoredResourceRelation
 import com.typewritermc.realm.repository.StoredTypedResource
+import com.typewritermc.realm.repository.isAssignable
+import com.typewritermc.realm.repository.sliceForPolicy
 import com.typewritermc.realm.routes.AuthoringPresentationRegistry
 import com.typewritermc.realm.search.AuthoringSearchGraph
 import com.typewritermc.realm.search.AuthoringSearchProjectionRegistry
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
@@ -48,7 +55,6 @@ import com.typewritermc.realm.search.AuthoringSearchProjection as RealmSearchPro
 internal data class RealmAuthoringPolicyCatalog(
     val definitions: List<AuthoringResourceDefinition>,
     val validations: List<AuthoringGraphRule>,
-    val graphRequirements: List<RealmGraphReadRequirement>,
     val search: AuthoringSearchProjectionRegistry,
     val searchSelectors: List<AuthoringSearchSelector>,
     val searchFacets: List<AuthoringSearchFacet>,
@@ -62,20 +68,21 @@ internal object RealmAuthoringPolicyAssembler {
     fun assemble(
         providers: Collection<AuthoringPolicyProvider>,
         catalog: TypeCatalog,
+        relations: Collection<RelationDefinition> = emptyList(),
     ): RealmAuthoringPolicyCatalog {
         val policies = AuthoringPolicyCatalog.assemble(providers)
-        policies.validateTypeRoots(catalog)
+        policies.validateTypeRoots(catalog, relations)
         return RealmAuthoringPolicyCatalog(
             definitions = policies.definitions.values.map { it.toRealm() },
             validations = policies.validations.values.map { it.toRealm(catalog) },
-            graphRequirements =
-                policies.validations.values.map { it.graphRequirement.toRealm() } +
-                    policies.search.values.map { it.graphRequirement.toRealm() } +
-                    policies.presentations.values.map { it.graphRequirement.toRealm() } +
-                    policies.compilation.values.map { it.graphRequirement.toRealm() },
             search =
                 AuthoringSearchProjectionRegistry(
-                    policies.search.values.map(::toRealmSearch),
+                    policies.search.values.map { projection ->
+                        toRealmSearch(
+                            projection,
+                            policies.searchSelectors.mapTo(linkedSetOf(), AuthoringSearchSelector::id),
+                        )
+                    },
                 ),
             searchSelectors = policies.searchSelectors,
             searchFacets = policies.searchFacets,
@@ -86,25 +93,72 @@ internal object RealmAuthoringPolicyAssembler {
             creationSlots = policies.creationSlots.values.map { it.toRealm() },
             compilation =
                 AuthoringCompilationProjectionRegistry(
-                    policies.compilation.values.map(::toRealmCompilation),
+                    policies.compilation.values.map { projection ->
+                        projection.toRealmCompilation(
+                            definitions = policies.definitions.values,
+                            catalog = catalog,
+                        )
+                    },
                 ),
         )
     }
 
-    private fun AuthoringPolicyCatalog.validateTypeRoots(catalog: TypeCatalog) {
+    private fun AuthoringPolicyCatalog.validateTypeRoots(
+        catalog: TypeCatalog,
+        relations: Collection<RelationDefinition>,
+    ) {
+        val relationIds = relations.mapTo(linkedSetOf(), RelationDefinition::id)
         definitions.values.forEach { definition ->
             catalog.requireKnownRoot(definition.acceptedRoot, "resource definition ${definition.id.value}")
         }
         creationSlots.values.forEach { slot ->
+            val definition = definitions.getValue(slot.creates)
             slot.concreteRoots.forEach { root ->
                 val type = catalog.requireKnownRoot(root, "creation slot ${slot.id.value}")
                 require(type.kind == NominalTypeKind.CONCRETE) {
                     "Creation slot ${slot.id.value} must reference concrete type root $root."
                 }
+                require(catalog.isAssignable(TypeExpression.Named(root), definition.acceptedRoot)) {
+                    "Creation slot ${slot.id.value} root $root is not accepted by ${slot.creates.value}."
+                }
             }
+            when (val context = slot.context) {
+                AuthoringCreationContext.Standalone -> {}
+
+                is AuthoringCreationContext.DeclaredRelation -> {
+                    require(context.relation in relationIds) {
+                        "Creation slot ${slot.id.value} references unknown relation ${context.relation.value}."
+                    }
+                    require(context.direction != AuthoringCreationRelationDirection.BOTH) {
+                        "Creation slot ${slot.id.value} must declare one relation direction."
+                    }
+                    context.hosts.assignableTo?.let {
+                        catalog.requireKnownRoot(it, "creation slot ${slot.id.value} host filter")
+                    }
+                }
+
+                is AuthoringCreationContext.ReferencePath -> {
+                    context.hosts.assignableTo?.let {
+                        catalog.requireKnownRoot(it, "creation slot ${slot.id.value} host filter")
+                    }
+                }
+            }
+        }
+        val graphRelations =
+            (
+                validations.values.map(com.typewritermc.authoring.AuthoringValidationRule::graphRequirement) +
+                    search.values.map(com.typewritermc.authoring.AuthoringSearchProjection::graphRequirement) +
+                    presentations.values.map(com.typewritermc.authoring.AuthoringPresentationProjection::graphRequirement) +
+                    compilation.values.map(com.typewritermc.authoring.AuthoringCompilationProjection::graphRequirement)
+            ).flatMapTo(linkedSetOf()) { it.declaredRelations }
+        require(graphRelations.all { it in relationIds }) {
+            "Graph requirements reference unknown relations: ${(graphRelations - relationIds).sortedBy { it.value }}."
         }
         compilation.values.forEach { projection ->
             catalog.requireKnownRoot(projection.root, "compilation projection ${projection.id.value}")
+            require(definitions.values.any { definition -> catalog.isAssignable(projection.root, definition.acceptedRoot) }) {
+                "Compilation projection ${projection.id.value} does not target a registered resource definition."
+            }
         }
     }
 }
@@ -114,9 +168,8 @@ private fun TypeCatalog.requireKnownRoot(
     owner: String,
 ): com.typewritermc.types.TypeDefinition? =
     when (expression) {
-        TypeExpression.Any -> null
         is TypeExpression.Named -> requireKnownRoot(expression.reference, owner)
-        else -> null
+        else -> error("$owner must use a named type root, but found $expression.")
     }
 
 private fun TypeCatalog.requireKnownRoot(
@@ -165,7 +218,7 @@ internal fun RealmAuthoringPolicyCatalog.searchDefinition(): AuthoringSearchDefi
     )
 
 private fun com.typewritermc.authoring.AuthoringResourceDefinition.toRealm(): AuthoringResourceDefinition =
-    AuthoringResourceDefinition(id, acceptedRoot)
+    AuthoringResourceDefinition(id, acceptedRoot, navigationHandler)
 
 private fun com.typewritermc.authoring.AuthoringCreationSlotDefinition.toRealm(): AuthoringCreationSlotDefinition =
     AuthoringCreationSlotDefinition(
@@ -206,15 +259,33 @@ private fun com.typewritermc.authoring.AuthoringValidationRule.toRealm(catalog: 
         }
     }
 
-private fun toRealmSearch(projection: com.typewritermc.authoring.AuthoringSearchProjection): RealmSearchProjection =
+private fun toRealmSearch(
+    projection: com.typewritermc.authoring.AuthoringSearchProjection,
+    selectors: Set<String>,
+): RealmSearchProjection =
     object : RealmSearchProjection {
         override val definition: ResourceDefinitionId = projection.resourceDefinition
+        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm()
 
         override fun project(
             resource: RealmGraphResource,
             graph: AuthoringSearchGraph,
         ): com.typewritermc.realm.search.AuthoringSearchDocument {
             val document = projection.project(resource.toPublic(), graph.toPublic())
+            require(document.resource == resource.id) {
+                "Search projection ${projection.resourceDefinition.value} returned resource ${document.resource} " +
+                    "while projecting ${resource.id}."
+            }
+            require(document.definition == projection.resourceDefinition && document.definition == resource.definition) {
+                "Search projection ${projection.resourceDefinition.value} returned definition ${document.definition.value} " +
+                    "while projecting ${resource.definition.value}."
+            }
+            require(document.selectors.keys.all { it.value in selectors }) {
+                "Search projection ${projection.resourceDefinition.value} returned unregistered selectors: " +
+                    document.selectors.keys
+                        .filterNot { it.value in selectors }
+                        .map(SearchSelectorId::value) + "."
+            }
             return com.typewritermc.realm.search.AuthoringSearchDocument(
                 resource = document.resource,
                 definition = document.definition,
@@ -225,19 +296,32 @@ private fun toRealmSearch(projection: com.typewritermc.authoring.AuthoringSearch
         }
 
         override fun affectedResources(plan: AuthoringMutationPlan): Set<ResourceId> =
-            projection.affectedResources(
-                change = plan.changeSummary(),
-                before = plan.before.toPublic(),
-                proposed = plan.proposed.toPublic(),
-            )
+            plan.policyGraphs(graphRequirement).let { (before, proposed) ->
+                projection.affectedResources(
+                    change = plan.changeSummary(),
+                    before = before.toPublic(),
+                    proposed = proposed.toPublic(),
+                )
+            }
     }
 
 private fun toRealmPresentation(projection: com.typewritermc.authoring.AuthoringPresentationProjection): RealmPresentationProjection =
     object : RealmPresentationProjection {
+        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm()
+
         override fun project(
             resource: RealmGraphResource,
             graph: RealmWorkingGraph,
-        ) = projection.project(resource = resource.toPublic(), graph = graph.toPublic())
+        ) = projection.project(resource = resource.toPublic(), graph = graph.toPublic()).also { subject ->
+            require(subject.resource == resource.id) {
+                "Presentation projection ${projection.resourceDefinition.value} returned resource ${subject.resource} " +
+                    "while projecting ${resource.id}."
+            }
+            require(subject.definition == projection.resourceDefinition && subject.definition == resource.definition) {
+                "Presentation projection ${projection.resourceDefinition.value} returned definition ${subject.definition.value} " +
+                    "while projecting ${resource.definition.value}."
+            }
+        }
 
         override fun affectedResources(
             change: AuthoringChangeSummary,
@@ -251,18 +335,33 @@ private fun toRealmPresentation(projection: com.typewritermc.authoring.Authoring
             )
     }
 
-private fun toRealmCompilation(projection: com.typewritermc.authoring.AuthoringCompilationProjection): AuthoringCompilationProjection =
-    object : AuthoringCompilationProjection {
-        override val id: CompilationProjectionId = CompilationProjectionId(projection.id.value)
-        override val root: TypeExpression = projection.root
-        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm()
+private fun com.typewritermc.authoring.AuthoringCompilationProjection.toRealmCompilation(
+    definitions: Collection<com.typewritermc.authoring.AuthoringResourceDefinition>,
+    catalog: TypeCatalog,
+): AuthoringCompilationProjection {
+    val rootDefinitions =
+        definitions
+            .filter { definition -> catalog.isAssignable(root, definition.acceptedRoot) }
+            .mapTo(linkedSetOf(), com.typewritermc.authoring.AuthoringResourceDefinition::id)
+    return object : AuthoringCompilationProjection {
+        override val id: CompilationProjectionId = CompilationProjectionId(this@toRealmCompilation.id.value)
+        override val root: TypeExpression = this@toRealmCompilation.root
+        override val graphRequirement: RealmGraphReadRequirement =
+            this@toRealmCompilation.graphRequirement.toRealm().copy(
+                definitions = this@toRealmCompilation.graphRequirement.definitions + rootDefinitions,
+            )
+
+        override fun roots(graph: RealmWorkingGraph): Set<ResourceId> =
+            graph.resources.values
+                .filter { resource -> catalog.isAssignable(TypeExpression.Named(resource.root), root) }
+                .mapTo(linkedSetOf(), StoredTypedResource::id)
 
         override fun affectedRoots(
             change: AuthoringGraphDelta,
             before: RealmWorkingGraph,
             proposed: RealmWorkingGraph,
         ): Set<ResourceId> =
-            projection.affectedRoots(
+            this@toRealmCompilation.affectedRoots(
                 change = change.toSummary(),
                 before = before.toPublic(),
                 proposed = proposed.toPublic(),
@@ -271,8 +370,15 @@ private fun toRealmCompilation(projection: com.typewritermc.authoring.AuthoringC
         override suspend fun compile(
             root: ResourceId,
             graph: RealmWorkingGraph,
-        ): CompilationResult = projection.compile(root, graph.toPublic()).toRealm()
+        ): CompilationResult =
+            this@toRealmCompilation.compile(root, graph.toPublic()).toRealm().also { result ->
+                val expected = com.typewritermc.engine.CompilationRoot(id, root)
+                require(result.root == expected) {
+                    "Compilation projection ${id.value} returned root ${result.root} while compiling $expected."
+                }
+            }
     }
+}
 
 private fun GraphReadRequirement.toRealm(): RealmGraphReadRequirement =
     RealmGraphReadRequirement(
@@ -369,6 +475,34 @@ private fun AuthoringMutationPlan.changeSummary(): AuthoringChangeSummary =
         changedEdges = changedEdges,
         deletedResources = delta.resourceRemovals,
     )
+
+private fun AuthoringMutationPlan.policyGraphs(requirement: RealmGraphReadRequirement): Pair<RealmWorkingGraph, RealmWorkingGraph> {
+    val roots =
+        buildSet {
+            addAll(changedResources)
+            changedEdges.forEach { edgeId ->
+                listOfNotNull(before.relations[edgeId], proposed.relations[edgeId]).forEach { relation ->
+                    add(relation.source)
+                    add(relation.target)
+                }
+            }
+        }
+    return before.requirePolicySlice(roots, requirement) to proposed.requirePolicySlice(roots, requirement)
+}
+
+private fun RealmWorkingGraph.requirePolicySlice(
+    roots: Set<ResourceId>,
+    requirement: RealmGraphReadRequirement,
+): RealmWorkingGraph =
+    when (val result = sliceForPolicy(roots, requirement)) {
+        is PolicyGraphSliceResult.Success -> {
+            result.graph
+        }
+
+        is PolicyGraphSliceResult.LimitExceeded -> {
+            error("Authoring policy exceeded its graph ${result.dimension} limit ${result.limit}.")
+        }
+    }
 
 private fun AuthoringGraphDelta.toSummary(): AuthoringChangeSummary =
     AuthoringChangeSummary(

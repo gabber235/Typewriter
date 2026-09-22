@@ -69,7 +69,7 @@ internal fun coreAuthoringCreationSlots(
                 }
             listOf(
                 AuthoringCreationSlotDefinition(
-                    id = AuthoringCreationSlotId(pageSlotId(page.kind, suffix)),
+                    id = corePageCreationSlotId(page.kind, suffix),
                     label = "${page.name} ${if (suffix == "graph") "node" else "track"}",
                     creates = CoreResourceDefinitionIds.ELEMENT,
                     context =
@@ -89,10 +89,10 @@ internal fun coreAuthoringCreationSlots(
         }
 }
 
-private fun pageSlotId(
+internal fun corePageCreationSlotId(
     kind: PageKindRef,
     suffix: String,
-): String = "typewriter:page/${kind.id}/${kind.revision}/$suffix"
+): AuthoringCreationSlotId = AuthoringCreationSlotId("typewriter:page/${kind.id}/${kind.revision}/$suffix")
 
 private fun TypeCatalog.concreteSubtypesOf(root: ResolvedTypeRef): List<ResolvedTypeRef> =
     buildList {

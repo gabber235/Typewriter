@@ -15,7 +15,7 @@ import com.typewritermc.authoring.GraphReadRequirement
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ResourceIdentity
 import com.typewritermc.authoring.ResourceTypeDescriptor
-import com.typewritermc.authoring.SearchFacetId
+import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementCatalog
 import com.typewritermc.engine.CompilationProjectionId
@@ -90,47 +90,107 @@ internal class CoreAuthoringPolicyProvider(
             com.typewritermc.authoring.AuthoringResourceDefinition(
                 CoreResourceDefinitionIds.BOOK,
                 TypeExpression.Named(prototypes.require(Book::class).type),
+                navigationHandler = "typewriter.book",
             ),
             com.typewritermc.authoring.AuthoringResourceDefinition(
                 CoreResourceDefinitionIds.TAG,
                 TypeExpression.Named(prototypes.require(Tag::class).type),
+                navigationHandler = "typewriter.tags",
             ),
             com.typewritermc.authoring.AuthoringResourceDefinition(
                 CoreResourceDefinitionIds.PAGE,
                 TypeExpression.Named(prototypes.require(Page::class).type),
+                navigationHandler = "typewriter.page",
             ),
             com.typewritermc.authoring.AuthoringResourceDefinition(
                 CoreResourceDefinitionIds.ELEMENT,
                 TypeExpression.Named(types.requireQualified(Element::class.qualifiedName!!)),
+                navigationHandler = "typewriter.page-element",
             ),
         )
 
     private fun coreSearchProjections(): List<AuthoringSearchProjection> =
         listOf(
-            coreSearch(CoreResourceDefinitionIds.BOOK, "book", setOf(RelationId(BOOK_PAGES_RELATION_ID))),
-            coreSearch(CoreResourceDefinitionIds.TAG, "tag"),
-            coreSearch(CoreResourceDefinitionIds.PAGE, "page", setOf(RelationId(BOOK_PAGES_RELATION_ID))),
-            coreSearch(CoreResourceDefinitionIds.ELEMENT, "type", setOf(RelationId(PAGE_ELEMENTS_RELATION_ID))),
+            coreSearch(
+                definition = CoreResourceDefinitionIds.BOOK,
+                facet = "book",
+                dependencies = setOf(CoreResourceDefinitionIds.BOOK, CoreResourceDefinitionIds.TAG),
+                selectors = { resource, graph, _, _ ->
+                    mapOf(SearchSelectorId("tag") to graph.inheritedTagValues(resource.id))
+                },
+            ),
+            coreSearch(
+                definition = CoreResourceDefinitionIds.TAG,
+                facet = "tag",
+                dependencies = setOf(CoreResourceDefinitionIds.TAG),
+            ),
+            coreSearch(
+                definition = CoreResourceDefinitionIds.PAGE,
+                facet = "page",
+                dependencies =
+                    setOf(
+                        CoreResourceDefinitionIds.PAGE,
+                        CoreResourceDefinitionIds.BOOK,
+                        CoreResourceDefinitionIds.TAG,
+                    ),
+                relations = setOf(RelationId(BOOK_PAGES_RELATION_ID)),
+                ownerPath = { resource -> pageOwnerPath(resource.id) },
+                selectors = { _, graph, ownerPath, _ ->
+                    ownerPath
+                        .firstOrNull()
+                        ?.let { owner ->
+                            mapOf(
+                                SearchSelectorId("book") to graph.resources[owner]?.identityValues().orEmpty(),
+                                SearchSelectorId("tag") to graph.inheritedTagValues(owner),
+                            )
+                        }.orEmpty()
+                },
+            ),
+            coreSearch(
+                definition = CoreResourceDefinitionIds.ELEMENT,
+                facet = "type",
+                dependencies =
+                    setOf(
+                        CoreResourceDefinitionIds.ELEMENT,
+                        CoreResourceDefinitionIds.PAGE,
+                        CoreResourceDefinitionIds.BOOK,
+                        CoreResourceDefinitionIds.TAG,
+                    ),
+                relations = setOf(RelationId(PAGE_ELEMENTS_RELATION_ID), RelationId(BOOK_PAGES_RELATION_ID)),
+                ownerPath = { resource -> elementOwnerPath(resource.id) },
+                selectors = { _, graph, ownerPath, _ ->
+                    buildMap {
+                        ownerPath.firstOrNull()?.let { page ->
+                            put(SearchSelectorId("page"), graph.resources[page]?.identityValues().orEmpty())
+                        }
+                        ownerPath.drop(1).firstOrNull()?.let { book ->
+                            put(SearchSelectorId("book"), graph.resources[book]?.identityValues().orEmpty())
+                            put(SearchSelectorId("tag"), graph.inheritedTagValues(book))
+                        }
+                    }
+                },
+            ),
         )
 
     private fun coreSearch(
         definition: ResourceDefinitionId,
         facet: String,
+        dependencies: Set<ResourceDefinitionId>,
         relations: Set<RelationId> = emptySet(),
+        ownerPath: AuthoringWorkingGraph.(AuthoringGraphResource) -> List<ResourceId> = { emptyList() },
+        selectors: (
+            AuthoringGraphResource,
+            AuthoringWorkingGraph,
+            List<ResourceId>,
+            Set<String>,
+        ) -> Map<SearchSelectorId, Set<String>> = { _, _, _, _ -> emptyMap() },
     ): AuthoringSearchProjection =
         object : AuthoringSearchProjection {
             override val resourceDefinition = definition
             override val graphRequirement =
                 GraphReadRequirement(
-                    definitions =
-                        setOf(
-                            CoreResourceDefinitionIds.BOOK,
-                            CoreResourceDefinitionIds.TAG,
-                            CoreResourceDefinitionIds.PAGE,
-                            CoreResourceDefinitionIds.ELEMENT,
-                        ),
+                    definitions = dependencies,
                     declaredRelations = relations,
-                    incomingReferences = true,
                     outgoingReferences = true,
                     maximumDepth = 16,
                 )
@@ -139,31 +199,10 @@ internal class CoreAuthoringPolicyProvider(
                 resource: AuthoringGraphResource,
                 graph: AuthoringWorkingGraph,
             ): AuthoringSearchDocument {
-                val ownerPath = graph.ownerPath(resource.id)
+                val ownerPath = graph.ownerPath(resource)
                 val values = resource.identityValues()
-                val selectors =
-                    buildMap {
-                        put(SearchFacetId("definition"), setOf(resource.definition.value))
-                        put(SearchFacetId(facet), values)
-                        if (definition == CoreResourceDefinitionIds.PAGE) {
-                            ownerPath.firstOrNull()?.let { owner ->
-                                put(SearchFacetId("book"), graph.resources[owner]?.identityValues().orEmpty())
-                                put(SearchFacetId("tag"), graph.inheritedTagValues(owner))
-                            }
-                        }
-                        if (definition == CoreResourceDefinitionIds.ELEMENT) {
-                            ownerPath.firstOrNull()?.let { page ->
-                                put(SearchFacetId("page"), graph.resources[page]?.identityValues().orEmpty())
-                                ownerPath.drop(1).firstOrNull()?.let { book ->
-                                    put(SearchFacetId("book"), graph.resources[book]?.identityValues().orEmpty())
-                                    put(SearchFacetId("tag"), graph.inheritedTagValues(book))
-                                }
-                            }
-                        }
-                        if (definition == CoreResourceDefinitionIds.BOOK) {
-                            put(SearchFacetId("tag"), graph.inheritedTagValues(resource.id))
-                        }
-                    }
+                val projectedSelectors =
+                    mapOf(SearchSelectorId(facet) to values) + selectors(resource, graph, ownerPath, values)
                 return AuthoringSearchDocument(
                     resource = resource.id,
                     definition = resource.definition,
@@ -173,7 +212,7 @@ internal class CoreAuthoringPolicyProvider(
                             add(resource.definition.value)
                             resource.content.rootValue.collectText(this)
                         }.distinct().joinToString(" "),
-                    selectors = selectors,
+                    selectors = projectedSelectors,
                     ownerPath = ownerPath,
                 )
             }
@@ -201,7 +240,13 @@ internal class CoreAuthoringPolicyProvider(
             corePresentation(
                 CoreResourceDefinitionIds.TAG,
             ) { it.descriptor("Tag", "Library classification", "material-symbols:label", 0xff795548u) },
-            corePresentation(CoreResourceDefinitionIds.PAGE) { resource ->
+            corePresentation(
+                definition = CoreResourceDefinitionIds.PAGE,
+                dependencies = setOf(CoreResourceDefinitionIds.PAGE, CoreResourceDefinitionIds.BOOK),
+                relations = setOf(RelationId(BOOK_PAGES_RELATION_ID)),
+                maximumDepth = 1,
+                ownerPath = { resource -> pageOwnerPath(resource.id) },
+            ) { resource ->
                 val page = prototypes.decode(resource.content) as Page
                 val definition = pageCatalog.definition(page.kind)
                 ResourceTypeDescriptor(
@@ -212,7 +257,18 @@ internal class CoreAuthoringPolicyProvider(
                     definition?.color ?: Color(0xff607d8bu),
                 )
             },
-            corePresentation(CoreResourceDefinitionIds.ELEMENT) { resource ->
+            corePresentation(
+                definition = CoreResourceDefinitionIds.ELEMENT,
+                dependencies =
+                    setOf(
+                        CoreResourceDefinitionIds.ELEMENT,
+                        CoreResourceDefinitionIds.PAGE,
+                        CoreResourceDefinitionIds.BOOK,
+                    ),
+                relations = setOf(RelationId(PAGE_ELEMENTS_RELATION_ID), RelationId(BOOK_PAGES_RELATION_ID)),
+                maximumDepth = 2,
+                ownerPath = { resource -> elementOwnerPath(resource.id) },
+            ) { resource ->
                 val definition = elements.descriptor(resource.rootReference)
                 ResourceTypeDescriptor(
                     resource.rootReference,
@@ -226,17 +282,27 @@ internal class CoreAuthoringPolicyProvider(
 
     private fun corePresentation(
         definition: ResourceDefinitionId,
+        dependencies: Set<ResourceDefinitionId> = setOf(definition),
+        relations: Set<RelationId> = emptySet(),
+        maximumDepth: Int = 0,
+        ownerPath: AuthoringWorkingGraph.(AuthoringGraphResource) -> List<ResourceId> = { emptyList() },
         descriptor: (AuthoringGraphResource) -> ResourceTypeDescriptor,
     ): AuthoringPresentationProjection =
         object : AuthoringPresentationProjection {
             override val resourceDefinition = definition
-            override val graphRequirement = GraphReadRequirement()
+            override val graphRequirement =
+                GraphReadRequirement(
+                    definitions = dependencies,
+                    declaredRelations = relations,
+                    direction = GraphReadRequirement.Direction.INCOMING,
+                    maximumDepth = maximumDepth,
+                )
 
             override fun project(
                 resource: AuthoringGraphResource,
                 graph: AuthoringWorkingGraph,
             ): AuthoringPresentationSubject {
-                val ownerPath = graph.ownerPath(resource.id)
+                val ownerPath = graph.ownerPath(resource)
                 return AuthoringPresentationSubject(
                     resource = resource.id,
                     definition = resource.definition,
@@ -256,8 +322,11 @@ internal class CoreAuthoringPolicyProvider(
             override val root = delegate.root
             override val graphRequirement =
                 GraphReadRequirement(
-                    definitions = setOf(CoreResourceDefinitionIds.PAGE, CoreResourceDefinitionIds.ELEMENT),
+                    definitions =
+                        delegate.graphRequirement.definitions
+                            .mapTo(linkedSetOf()) { definition -> ResourceDefinitionId(definition.value) },
                     declaredRelations = setOf(RelationId(PAGE_ELEMENTS_RELATION_ID)),
+                    outgoingReferences = true,
                     direction = GraphReadRequirement.Direction.OUTGOING,
                     maximumDepth = 1,
                 )
@@ -307,12 +376,26 @@ private fun DataValue.collectText(target: MutableList<String>) {
     }
 }
 
-private fun AuthoringWorkingGraph.ownerPath(resource: ResourceId): List<ResourceId> =
-    generateSequence(resource) { current ->
-        relations.values
-            .firstOrNull { it.target == current && it.origin is com.typewritermc.authoring.AuthoringRelationOrigin.Declared }
-            ?.source
-    }.drop(1).toList()
+private fun AuthoringWorkingGraph.pageOwnerPath(page: ResourceId): List<ResourceId> = listOfNotNull(incoming(page, BOOK_PAGES_RELATION_ID))
+
+private fun AuthoringWorkingGraph.elementOwnerPath(element: ResourceId): List<ResourceId> {
+    val page = incoming(element, PAGE_ELEMENTS_RELATION_ID)
+    return listOfNotNull(page, page?.let { incoming(it, BOOK_PAGES_RELATION_ID) })
+}
+
+private fun AuthoringWorkingGraph.incoming(
+    target: ResourceId,
+    relationId: String,
+): ResourceId? =
+    relations.values
+        .asSequence()
+        .filter { relation ->
+            relation.target == target &&
+                (relation.origin as? com.typewritermc.authoring.AuthoringRelationOrigin.Declared)?.relationId ==
+                RelationId(relationId)
+        }.map(AuthoringGraphRelation::source)
+        .sortedBy(ResourceId::value)
+        .firstOrNull()
 
 private fun AuthoringWorkingGraph.dependents(roots: Set<ResourceId>): Set<ResourceId> {
     val affected = roots.toMutableSet()

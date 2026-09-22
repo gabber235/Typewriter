@@ -3,13 +3,16 @@ package com.typewritermc.realm
 import com.surrealdb.Surreal
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
+import com.typewritermc.realm.compiler.GraphReadRequirement
 import com.typewritermc.realm.compiler.RegisteredCompiledArtifactStore
 import com.typewritermc.realm.compiler.RegisteredRealmCompileCoordinator
 import com.typewritermc.realm.compiler.RegisteredRealmCompiler
 import com.typewritermc.realm.compiler.SurrealRegisteredCompiledContentRepository
+import com.typewritermc.realm.repository.AuthoringWorkingGraph
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.SurrealAuthoringGraphRepository
 import com.typewritermc.realm.repository.SurrealAuthoringRepository
+import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.routes.AuthoringPresentationProjector
 import com.typewritermc.realm.routes.EditorCompiledContentEvents
 import com.typewritermc.realm.routes.RealmAddress
@@ -20,6 +23,7 @@ import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.routes.registeredAuthoringPresentationMaterializer
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.search.AuthoringSearchIndexer
+import com.typewritermc.realm.search.AuthoringSearchMetadata
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -105,9 +109,11 @@ internal class Realm(
                 )
             val typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) }
             val compilationProjections = authoringPolicies.compilation
+            val searchMetadata = AuthoringSearchMetadata(authoringPolicies.searchSelectors, authoringPolicies.searchFacets)
             val searchIndexer =
                 AuthoringSearchIndexer(
                     authoringPolicies.search,
+                    searchMetadata,
                 )
             val authoring =
                 SurrealAuthoringRepository(
@@ -117,10 +123,10 @@ internal class Realm(
                         requireNotNull(discoverySnapshots.current()).discovery.generation.value
                     },
                     resourceDefinitions = { requireNotNull(discoverySnapshots.current()).resourceDefinitions },
+                    creationSlots = { authoringPolicies.creationSlots },
                     relations = { requireNotNull(discoverySnapshots.current()).relations },
                     typeCatalog = { requireNotNull(discoverySnapshots.current()).discovery.types },
                     validationRules = { authoringPolicies.validations },
-                    policyGraphRequirements = { authoringPolicies.graphRequirements },
                     compilationProjections = { compilationProjections },
                     searchIndexer = { searchIndexer },
                     presentationMaterializer = {
@@ -149,6 +155,25 @@ internal class Realm(
                         requireNotNull(discoverySnapshots.current()).discovery.generation.value
                     },
                 )
+
+            suspend fun rebuildSearchIndex() {
+                val projections = authoringPolicies.search.all()
+                val graph =
+                    if (projections.isEmpty()) {
+                        AuthoringWorkingGraph(emptyMap(), emptyMap())
+                    } else {
+                        val requirement =
+                            projections
+                                .map { projection ->
+                                    projection.graphRequirement.copy(
+                                        definitions = projection.graphRequirement.definitions + projection.definition,
+                                    )
+                                }.reduce(GraphReadRequirement::plus)
+                        authoringGraph.workingGraph(requirement, null)
+                    }
+                connected.inTransaction { transaction -> searchIndexer.rebuild(transaction, graph) }
+            }
+            childSpan("realm.authoring.search.rebuild") { rebuildSearchIndex() }
             val compiler =
                 RegisteredRealmCompileCoordinator(
                     projections = compilationProjections,
@@ -177,13 +202,22 @@ internal class Realm(
                     },
                     catalogRevision = { requireNotNull(discoverySnapshots.current()).catalogRevision() },
                     scope = scope,
+                    onFailure = { failure ->
+                        telemetry.mainSpan(
+                            name = "realm.compiler.failure",
+                            unhandledFailureSlug = ErrorSlug.of("realm-compiler-failure-reporting-failed"),
+                            presentation = SpanPresentation("Realm compilation"),
+                        ) { compileSpan ->
+                            compileSpan.recordDegraded(ErrorSlug.of("realm-compilation-failed"), failure)
+                        }
+                    },
                 )
             compileCoordinator = compiler
             routeFactory =
                 RealmRouteFactory(
                     authoring = authoring,
                     authoringGraph = authoringGraph,
-                    authoringSearch = SurrealAuthoringSearchRepository(connected),
+                    authoringSearch = SurrealAuthoringSearchRepository(connected, typeCatalog),
                     compiledContent = compiledContent,
                     editorCatalog = editorCatalog,
                     presentationSearch = presentationSearch,
@@ -195,11 +229,15 @@ internal class Realm(
                         requireNotNull(discoverySnapshots.current()).discovery.generation.value
                     },
                     authoringPolicies = authoringPolicies,
+                    authoringSearchMetadata = searchMetadata,
                 )
             compiler.start()
             compileCatalogMonitor =
                 scope.launch {
-                    discoverySnapshots.changes.collect { compiler.invalidateAll() }
+                    discoverySnapshots.changes.collect {
+                        rebuildSearchIndex()
+                        compiler.invalidateAll()
+                    }
                 }
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =

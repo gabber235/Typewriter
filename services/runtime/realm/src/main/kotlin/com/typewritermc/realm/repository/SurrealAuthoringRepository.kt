@@ -4,6 +4,7 @@ import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.surrealdb.Transaction
 import com.typewritermc.authoring.AuthoringChangeSummary
+import com.typewritermc.authoring.AuthoringCreationSlotDefinition
 import com.typewritermc.realm.AuthoringResourceDefinition
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.compiler.AuthoringCompilationProjectionRegistry
@@ -25,10 +26,10 @@ internal class SurrealAuthoringRepository(
     private val prototypes: TypePrototypeRegistry,
     private val catalogGeneration: () -> String,
     private val resourceDefinitions: () -> List<AuthoringResourceDefinition>,
+    private val creationSlots: () -> List<AuthoringCreationSlotDefinition>,
     private val relations: () -> List<RelationDefinition>,
     private val typeCatalog: () -> TypeCatalog,
     private val validationRules: () -> List<AuthoringGraphRule>,
-    private val policyGraphRequirements: () -> List<GraphReadRequirement>,
     private val compilationProjections: () -> AuthoringCompilationProjectionRegistry,
     private val searchIndexer: () -> AuthoringSearchIndexer,
     private val presentationMaterializer: () -> AuthoringPresentationMaterializer,
@@ -130,6 +131,7 @@ internal class SurrealAuthoringRepository(
             AuthoringMutationPlanner(
                 mapper = mapper,
                 resourceDefinitions = resourceDefinitions(),
+                creationSlots = creationSlots(),
                 relations = relations(),
                 catalog = typeCatalog(),
                 rules = rules,
@@ -137,10 +139,11 @@ internal class SurrealAuthoringRepository(
         val roots =
             operations.flatMapTo(linkedSetOf()) { operation ->
                 when (operation) {
-                    is AuthoringOperation.CreateResource -> listOf(operation.id)
+                    is AuthoringOperation.CreateResource -> listOf(operation.id) + operation.hosts
                     is AuthoringOperation.CommitResource -> listOf(operation.id)
                     is AuthoringOperation.DeleteResource -> listOf(operation.id)
                     is AuthoringOperation.DeclareRelation -> listOf(operation.source, operation.target)
+                    is AuthoringOperation.RemoveRelation -> listOf(operation.source, operation.target)
                 }
             }
         operations
@@ -158,14 +161,10 @@ internal class SurrealAuthoringRepository(
             }.flatMap { value -> value.relations.asSequence() }
             .flatMapTo(roots) { relation -> sequenceOf(relation.source, relation.target) }
         val requirement =
-            (rules.map(AuthoringGraphRule::graphRequirement) + policyGraphRequirements())
-                .fold(
-                    mutationGraphRequirement(
-                        definitions = resourceDefinitions().mapTo(linkedSetOf(), AuthoringResourceDefinition::id),
-                        relations = relations().mapTo(linkedSetOf(), RelationDefinition::id),
-                    ),
-                    GraphReadRequirement::plus,
-                )
+            mutationGraphRequirement(
+                definitions = resourceDefinitions().mapTo(linkedSetOf(), AuthoringResourceDefinition::id),
+                relations = relations().mapTo(linkedSetOf(), RelationDefinition::id),
+            )
         val before =
             when (val loaded = SurrealMutationGraphLoader().load(this, roots, requirement)) {
                 is MutationGraphLoadResult.Success -> {

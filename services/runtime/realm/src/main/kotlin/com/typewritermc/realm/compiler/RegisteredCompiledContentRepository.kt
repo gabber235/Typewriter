@@ -47,7 +47,7 @@ interface RegisteredCompiledContentRepository {
         catalogRevision: String,
         roots: Collection<CompilationRoot>,
         diagnostics: List<CompileDiagnostic>,
-    )
+    ): Boolean
 
     suspend fun publish(
         manifest: CompiledArtifactManifest,
@@ -91,10 +91,16 @@ class SurrealRegisteredCompiledContentRepository(
         val active = activeManifest()
         val activeRoots = active?.artifacts?.associateBy(CompiledArtifactReference::root).orEmpty()
         val resourceIds = roots.map { it.resource.unifiedSurrealId() }
+        val sourceRevision =
+            database
+                .query("SELECT VALUE revision FROM ONLY authoring_head:current;")
+                .take(0)
+                .getLong()
+                .toString()
         val rows =
             database
                 .query(
-                    "SELECT projection, out, in.status AS status, in.diagnostics AS diagnostics, " +
+                    "SELECT projection, out, in.source_revision AS source_revision, in.status AS status, in.diagnostics AS diagnostics, " +
                         "in.completed_at AS completed_at, in.manifest AS manifest " +
                         "FROM compile_attempt_root WHERE out IN \$resources ORDER BY completed_at DESC;",
                     mapOf("resources" to resourceIds),
@@ -103,15 +109,16 @@ class SurrealRegisteredCompiledContentRepository(
         val latest =
             rows
                 .mapNotNull { row ->
-                    val projection = row.getObject().get("projection").getString()
+                    val fields = row.getObject()
+                    if (fields.get("source_revision").getString() != sourceRevision) return@mapNotNull null
+                    val projection = fields.get("projection").getString()
                     val resource =
-                        row
-                            .getObject()
+                        fields
                             .get("out")
                             .getString()
                             .substringAfter(':')
                     val root = CompilationRoot(com.typewritermc.engine.CompilationProjectionId(projection), ResourceId(resource))
-                    root to row.getObject()
+                    root to fields
                 }.groupBy { it.first }
                 .mapValues { (_, values) -> values.first().second }
         return roots.associateWith { root ->
@@ -143,11 +150,23 @@ class SurrealRegisteredCompiledContentRepository(
         catalogRevision: String,
         roots: Collection<CompilationRoot>,
         diagnostics: List<CompileDiagnostic>,
-    ) {
-        database.inTransaction { transaction ->
-            transaction.createRegisteredAttempt(sourceRevision, catalogRevision, roots, "blocked", diagnostics, null)
+    ): Boolean {
+        val recorded =
+            database.inTransaction { transaction ->
+                val currentSourceRevision =
+                    transaction
+                        .query("SELECT VALUE revision FROM ONLY authoring_head:current;")
+                        .take(0)
+                        .getLong()
+                        .toString()
+                if (currentSourceRevision != sourceRevision) return@inTransaction false
+                transaction.createRegisteredAttempt(sourceRevision, catalogRevision, roots, "blocked", diagnostics, null)
+                true
+            }
+        if (recorded) {
+            onBlocked()
         }
-        onBlocked()
+        return recorded
     }
 
     override suspend fun publish(
@@ -165,7 +184,7 @@ class SurrealRegisteredCompiledContentRepository(
                         .toString()
                 if (sourceRevision != manifest.sourceRevision) return@inTransaction false
                 artifacts.forEach { transaction.createImmutableArtifact(it) }
-                transaction.createImmutableArtifactManifest(manifest, artifacts)
+                transaction.createImmutableArtifactManifest(manifest)
                 val current =
                     transaction
                         .query(
@@ -201,15 +220,13 @@ class SurrealRegisteredCompiledContentRepository(
 
 private fun Transaction.createImmutableArtifact(artifact: CompiledArtifact) {
     val id = artifact.id()
-    val payload = artifact.payload.encodeBase64()
-    val current = query("SELECT VALUE payload FROM ONLY \$artifact;", mapOf("artifact" to id)).take(0)
+    val current = query("SELECT VALUE id FROM ONLY \$artifact;", mapOf("artifact" to id)).take(0)
     if (!current.isNone && !current.isNull) {
-        check(current.getString() == payload) { "Compiled artifact ${artifact.semanticDigest.value} is not immutable." }
         return
     }
     query(
         "CREATE ONLY \$artifact CONTENT { projection: \$projection, root: \$root, format_revision: \$format, " +
-            "media_type: \$media_type, input_fingerprint: \$input, semantic_digest: \$semantic, payload: \$payload };",
+            "media_type: \$media_type, input_fingerprint: \$input, semantic_digest: \$semantic };",
         mapOf(
             "artifact" to id,
             "projection" to artifact.root.projection.value,
@@ -218,15 +235,11 @@ private fun Transaction.createImmutableArtifact(artifact: CompiledArtifact) {
             "media_type" to artifact.mediaType,
             "input" to artifact.inputFingerprint.value,
             "semantic" to artifact.semanticDigest.value,
-            "payload" to payload,
         ),
     ).take(0)
 }
 
-private fun Transaction.createImmutableArtifactManifest(
-    manifest: CompiledArtifactManifest,
-    artifacts: Collection<CompiledArtifact>,
-) {
+private fun Transaction.createImmutableArtifactManifest(manifest: CompiledArtifactManifest) {
     val payload = json.encodeToString(CompiledArtifactManifest.serializer(), manifest)
     val current = query("SELECT VALUE payload FROM ONLY \$manifest;", mapOf("manifest" to manifest.id())).take(0)
     if (!current.isNone && !current.isNull) {
@@ -240,7 +253,7 @@ private fun Transaction.createImmutableArtifactManifest(
             "manifest" to manifest.id(),
             "source" to manifest.sourceRevision,
             "catalog" to manifest.catalogRevision,
-            "artifacts" to artifacts.map { it.id() },
+            "artifacts" to manifest.artifacts.map { it.id() },
             "payload" to payload,
         ),
     ).take(0)
@@ -282,7 +295,10 @@ private fun Transaction.createRegisteredAttempt(
 }
 
 private fun CompiledArtifact.id(): RecordId =
-    RecordId("compiled_artifact", stableId(root.projection.value, root.resource.value, inputFingerprint.value))
+    RecordId("compiled_artifact", stableId(root.projection.value, root.resource.value, semanticDigest.value))
+
+private fun CompiledArtifactReference.id(): RecordId =
+    RecordId("compiled_artifact", stableId(root.projection.value, root.resource.value, semanticDigest.value))
 
 private fun CompiledArtifactManifest.id(): RecordId = RecordId("compiled_artifact_manifest", digest.value)
 
@@ -290,10 +306,5 @@ private fun stableId(vararg values: String): String =
     MessageDigest.getInstance("SHA-256").digest(values.joinToString("|").encodeToByteArray()).joinToString("") {
         "%02x".format(it.toInt() and 0xff)
     }
-
-private fun ByteArray.encodeBase64(): String =
-    java.util.Base64
-        .getEncoder()
-        .encodeToString(this)
 
 private val json = Json { encodeDefaults = true }

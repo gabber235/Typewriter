@@ -17,10 +17,10 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
 val AuthoringPresentationProjectionTest by testSuite {
-    test("presentation projections receive the complete proposed graph") {
-        val definition = ResourceDefinitionId("example.quest_board")
-        val root = ResolvedTypeRef(TypeId.Qualified("example", "QuestBoard"), 1)
-        val resource = resource(ResourceId("quest"), definition, root)
+    test("presentation projections receive only their declared graph slice") {
+        val definition = ResourceDefinitionId("example.extension_resource")
+        val root = ResolvedTypeRef(TypeId.Qualified("example", "ExtensionResource"), 1)
+        val resource = resource(ResourceId("extension"), definition, root)
         val related = resource(ResourceId("configuration"), definition, root)
         val graph =
             AuthoringWorkingGraph(
@@ -56,7 +56,7 @@ val AuthoringPresentationProjectionTest by testSuite {
                 ),
             )
 
-        registry.project(resource, graph).descriptor.name shouldBe "resources:2"
+        registry.project(resource, graph).descriptor.name shouldBe "resources:1"
     }
 }
 

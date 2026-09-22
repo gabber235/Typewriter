@@ -2,7 +2,6 @@ package com.typewritermc.realm.repository
 
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.types.DataPath
-import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
@@ -41,6 +40,14 @@ internal sealed interface RelationFilter {
 
     data class Declared(
         val relationIds: Set<com.typewritermc.types.RelationId> = emptySet(),
+    ) : RelationFilter
+
+    /** One unordered policy dependency set evaluated from every depth frontier. */
+    data class PolicyDependencies(
+        val declaredRelationIds: Set<com.typewritermc.types.RelationId>,
+        val declaredDirection: RelationDirection,
+        val incomingReferences: Boolean,
+        val outgoingReferences: Boolean,
     ) : RelationFilter
 }
 
@@ -187,7 +194,7 @@ internal class AuthoringGraphQueryEngine(
                     val next = linkedSetOf<ResourceId>()
                     orderedEdges.forEach { edge ->
                         if (!edge.matches(step.relations)) return@forEach
-                        val adjacent = edge.adjacent(depthFrontier, step.direction) ?: return@forEach
+                        val adjacent = edge.adjacent(depthFrontier, step) ?: return@forEach
                         val target = byId[adjacent] ?: return@forEach
                         if (step.target != null && !target.matches(step.target)) return@forEach
                         traversedEdges += edge.id
@@ -196,6 +203,20 @@ internal class AuthoringGraphQueryEngine(
                     if (depth >= step.minDepth) stepFrontier += next
                     depthFrontier = next
                     if (depthFrontier.isEmpty()) break
+                }
+                if (
+                    step.relations is RelationFilter.PolicyDependencies &&
+                    depthFrontier.isNotEmpty() &&
+                    orderedEdges.any { edge ->
+                        edge.matches(step.relations) &&
+                            edge.adjacent(depthFrontier, step)?.let { adjacent ->
+                                if (adjacent in visitedAtStep) return@let false
+                                val target = byId[adjacent] ?: return@let false
+                                step.target == null || target.matches(step.target)
+                            } == true
+                    }
+                ) {
+                    return tooLarge("depth", step.maxDepth)
                 }
                 frontier = stepFrontier
                 membership += stepFrontier
@@ -251,8 +272,41 @@ internal class AuthoringGraphQueryEngine(
                 pathMatches &&
                     (filter.expectedTarget == null || catalog.isAssignable(reference.expectedTarget, filter.expectedTarget))
             }
+
+            is RelationFilter.PolicyDependencies -> {
+                when (origin) {
+                    is ResourceRelationOrigin.Declared -> origin.relationId in filter.declaredRelationIds
+                    is ResourceRelationOrigin.Reference -> filter.incomingReferences || filter.outgoingReferences
+                }
+            }
         }
 }
+
+private fun StoredResourceRelation.adjacent(
+    frontier: Set<ResourceId>,
+    step: RelationStep,
+): ResourceId? =
+    when (val filter = step.relations) {
+        is RelationFilter.PolicyDependencies -> {
+            when (origin) {
+                is ResourceRelationOrigin.Declared -> {
+                    adjacent(frontier, filter.declaredDirection)
+                }
+
+                is ResourceRelationOrigin.Reference -> {
+                    when {
+                        filter.outgoingReferences && source in frontier -> target
+                        filter.incomingReferences && target in frontier -> source
+                        else -> null
+                    }
+                }
+            }
+        }
+
+        else -> {
+            adjacent(frontier, step.direction)
+        }
+    }
 
 private fun StoredResourceRelation.adjacent(
     frontier: Set<ResourceId>,
@@ -282,14 +336,7 @@ private fun DataPath.startsWith(prefix: DataPath): Boolean =
 internal fun TypeCatalog.isAssignable(
     candidate: TypeExpression,
     target: TypeExpression,
-): Boolean {
-    if (candidate == target || target == TypeExpression.Any) return true
-    val candidateNamed = candidate as? TypeExpression.Named ?: return false
-    val targetNamed = target as? TypeExpression.Named ?: return false
-    val targetBase = targetNamed.reference.copy(arguments = emptyList())
-    val candidateBase = candidateNamed.reference.copy(arguments = emptyList())
-    return candidateBase == targetBase || subtypesOf(targetBase).any { it.id == candidateBase }
-}
+): Boolean = isAssignableExactly(candidate, target)
 
 private fun tooLarge(
     dimension: String,

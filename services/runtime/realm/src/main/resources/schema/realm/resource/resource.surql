@@ -4,18 +4,13 @@ DEFINE TABLE OVERWRITE resource SCHEMAFULL TYPE NORMAL
 DEFINE FIELD OVERWRITE definition ON resource TYPE string
     ASSERT string::trim($value) != "";
 
-DEFINE FIELD OVERWRITE type_id ON resource TYPE string
-    ASSERT string::trim($value) != "";
-
-DEFINE FIELD OVERWRITE type_revision ON resource TYPE int
-    ASSERT $value > 0;
+DEFINE FIELD OVERWRITE root ON resource TYPE object FLEXIBLE;
 
 DEFINE FIELD OVERWRITE value ON resource TYPE object FLEXIBLE;
 
 DEFINE FIELD OVERWRITE sequence ON resource TYPE int DEFAULT 0;
 
 DEFINE INDEX OVERWRITE resource_definition ON resource FIELDS definition;
-DEFINE INDEX OVERWRITE resource_type ON resource FIELDS type_id, type_revision;
 
 DEFINE TABLE OVERWRITE resource_relation SCHEMAFULL
     TYPE RELATION FROM resource TO resource ENFORCED

@@ -28,6 +28,18 @@ val RealmSchemaResourcesTest by testSuite {
         schema.getValue("compile/compile_attempt_root.surql").script.contains("DEFINE TABLE OVERWRITE compile_attempt_root") shouldBe true
     }
 
+    test("compiled artifact payloads remain blob owned") {
+        val schema = MigrationResources().loadRealmSchema().associateBy(SchemaResource::path)
+        val artifactSchema =
+            schema
+                .getValue("compile/compiled_artifact.surql")
+                .script
+                .substringBefore("DEFINE TABLE OVERWRITE compiled_artifact_manifest")
+
+        artifactSchema.contains("payload") shouldBe false
+        artifactSchema.contains("DEFINE FIELD OVERWRITE semantic_digest") shouldBe true
+    }
+
     test("Realm schema catalog preserves declared dependency order") {
         val resources =
             migrationResources(

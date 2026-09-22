@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.authoring.AuthoringCreationSlotId
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.repository.AuthoringBatch
 import com.typewritermc.realm.repository.AuthoringOperation
@@ -36,6 +37,8 @@ private fun WireOperation.toDomain(): AuthoringOperation =
                 id = value.resource.id.toDomain(),
                 definition = value.resource.definition.toDomain(),
                 content = value.resource.content.toDomain(),
+                creationSlot = AuthoringCreationSlotId(value.creationSlot.value),
+                hosts = value.hosts.map { it.toDomain() },
             )
         }
 
@@ -60,6 +63,14 @@ private fun WireOperation.toDomain(): AuthoringOperation =
 
         is WireOperation.DeclareRelationWrapper -> {
             AuthoringOperation.DeclareRelation(
+                relation = com.typewritermc.types.RelationId(value.relation.value),
+                source = value.source.toDomain(),
+                target = value.target.toDomain(),
+            )
+        }
+
+        is WireOperation.RemoveRelationWrapper -> {
+            AuthoringOperation.RemoveRelation(
                 relation = com.typewritermc.types.RelationId(value.relation.value),
                 source = value.source.toDomain(),
                 target = value.target.toDomain(),

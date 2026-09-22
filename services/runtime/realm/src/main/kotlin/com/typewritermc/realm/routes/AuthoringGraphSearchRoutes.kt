@@ -5,9 +5,11 @@ import com.typewritermc.authoring.AuthoringSearchMatch
 import com.typewritermc.realm.repository.AuthoringGraphQueryResult
 import com.typewritermc.realm.repository.AuthoringGraphRepository
 import com.typewritermc.realm.repository.AuthoringGraphResource
-import com.typewritermc.realm.repository.GraphSelection
+import com.typewritermc.realm.repository.AuthoringGraphSnapshot
 import com.typewritermc.realm.repository.ResourceFilter
 import com.typewritermc.realm.repository.ResourceSeed
+import com.typewritermc.realm.repository.toSelection
+import com.typewritermc.realm.search.AuthoringSearchMetadata
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.realm.search.IndexedSelectorFilter
@@ -33,6 +35,7 @@ internal class AuthoringGraphSearchRoutes(
     private val search: AuthoringSearchRepository,
     private val contracts: EditorContracts,
     private val subjects: AuthoringPresentationProjector,
+    private val metadata: AuthoringSearchMetadata,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
@@ -43,7 +46,7 @@ internal class AuthoringGraphSearchRoutes(
 
     private suspend fun search(request: SearchAuthoringGraphRequest): SearchAuthoringGraphResponse {
         val filter = request.resources.toDomain().withTarget(request.referenceTarget)
-        val selectors = request.query.toIndexedSelectorFilter()
+        val selectors = request.query.toIndexedSelectorFilter(metadata)
         if (filter.definitions.isEmpty() && selectors.requiresDefinitionUniverse) {
             return SearchAuthoringGraphResponse.createInvalid(
                 diagnostics =
@@ -57,66 +60,53 @@ internal class AuthoringGraphSearchRoutes(
                     ),
             )
         }
-        val scope = request.scope?.toDomain()?.let { resolveScope(request.generation.value, it, filter) }
-        if (scope is ScopeResolution.Response) return scope.value
-
         val candidates =
             search
                 .search(
                     query = request.query.terms.joinToString(" "),
                     definitions = filter.definitions,
-                    allowedResources = (scope as? ScopeResolution.Resources)?.ids,
+                    contexts = request.contexts.mapTo(linkedSetOf()) { ResourceId(it.value) },
                     selectors = selectors,
-                    limit = MAX_SEARCH_CANDIDATES,
-                ).take(MAX_SEARCH_RESULTS)
-        val facets = request.facets.map { it.resolve(candidates) }
+                    assignableTo = filter.assignableTo,
+                    limit = MAX_SEARCH_RESULTS,
+                )
         val selections =
-            listOf(
-                GraphSelection(
-                    SEARCH_SELECTION,
-                    ResourceSeed.Ids(candidates.map(IndexedAuthoringSearchCandidate::resource), filter.assignableTo),
-                ),
-                GraphSelection(
-                    SEARCH_OWNER_SELECTION,
-                    ResourceSeed.Ids(candidates.flatMap(IndexedAuthoringSearchCandidate::ownerPath).distinct()),
-                ),
-            )
+            buildList {
+                add(
+                    com.typewritermc.realm.repository.GraphSelection(
+                        SEARCH_SELECTION,
+                        ResourceSeed.Ids(candidates.map(IndexedAuthoringSearchCandidate::resource), filter.assignableTo),
+                    ),
+                )
+                add(
+                    com.typewritermc.realm.repository.GraphSelection(
+                        SEARCH_OWNER_SELECTION,
+                        ResourceSeed.Ids(candidates.flatMap(IndexedAuthoringSearchCandidate::ownerPath).distinct()),
+                    ),
+                )
+                candidates
+                    .groupBy(IndexedAuthoringSearchCandidate::definition)
+                    .forEach { (definition, definitionCandidates) ->
+                        val requirement = subjects.graphRequirement(definition)
+                        add(
+                            requirement.toSelection(
+                                key = "search-presentation-${definition.value}",
+                                seed = ResourceSeed.Ids(definitionCandidates.map(IndexedAuthoringSearchCandidate::resource)),
+                            ),
+                        )
+                    }
+            }
         return when (val result = graph.query(request.generation.value, selections)) {
-            is AuthoringGraphQueryResult.CatalogChanged -> result.toWire()
-            is AuthoringGraphQueryResult.Invalid -> result.toWire()
-            is AuthoringGraphQueryResult.Success -> result.toSearchResponse(candidates, request.query.terms, facets)
-        }
-    }
-
-    private suspend fun resolveScope(
-        generation: String,
-        scope: GraphSelection,
-        filter: ResourceFilter,
-    ): ScopeResolution {
-        val constrained =
-            scope.copy(
-                seed =
-                    when (val seed = scope.seed) {
-                        is ResourceSeed.Ids -> seed
-                        is ResourceSeed.Scan -> ResourceSeed.Scan(seed.filter.intersect(filter))
-                    },
-            )
-        return when (val result = graph.query(generation, listOf(constrained))) {
             is AuthoringGraphQueryResult.CatalogChanged -> {
-                ScopeResolution.Response(result.toWire())
+                result.toWire()
             }
 
             is AuthoringGraphQueryResult.Invalid -> {
-                ScopeResolution.Response(result.toWire())
+                result.toWire()
             }
 
             is AuthoringGraphQueryResult.Success -> {
-                ScopeResolution.Resources(
-                    result.snapshot.selections
-                        .single()
-                        .resourceIds
-                        .toSet(),
-                )
+                result.toSearchResponse(candidates, request.query.terms, request.facets)
             }
         }
     }
@@ -124,39 +114,38 @@ internal class AuthoringGraphSearchRoutes(
     private fun AuthoringGraphQueryResult.Success.toSearchResponse(
         candidates: List<IndexedAuthoringSearchCandidate>,
         terms: List<String>,
-        facets: List<SearchFacetResult>,
+        facetRequests: List<SearchFacetRequest>,
     ): SearchAuthoringGraphResponse {
         val resources = snapshot.resources.associateBy(AuthoringGraphResource::id)
+        val compatible = snapshot.compatibleSearchCandidateIds()
+        val compatibleCandidates = candidates.filter { it.resource in compatible }
         val hits =
-            candidates.mapNotNull { candidate ->
-                val resource = resources[candidate.resource] ?: return@mapNotNull null
-                AuthoringSearchHit(
-                    resource = resource.id.toWire(),
-                    definition = resource.definition.toWire(),
-                    subject = subjects.toWire(subjects.project(resource, candidate.ownerPath, snapshot.toWorkingGraph())),
-                    context = subjects.encode(candidate.context(terms)),
-                    ownerPath = candidate.ownerPath.map(ResourceId::toWire),
-                )
-            }
+            compatibleCandidates
+                .mapNotNull { candidate ->
+                    val resource = resources[candidate.resource] ?: return@mapNotNull null
+                    AuthoringSearchHit(
+                        resource = resource.id.toWire(),
+                        definition = resource.definition.toWire(),
+                        subject = subjects.toWire(subjects.project(resource, candidate.ownerPath, snapshot.toWorkingGraph())),
+                        context = subjects.encode(candidate.context(terms)),
+                        ownerPath = candidate.ownerPath.map(ResourceId::toWire),
+                    )
+                }.take(MAX_SEARCH_RESULTS)
         return SearchAuthoringGraphResponse.createSuccess(
             generation = CatalogGeneration(value = snapshot.generation),
             sequence = snapshot.sequence,
             hits = hits,
-            facets = facets,
+            facets = facetRequests.map { it.resolve(compatibleCandidates, metadata) },
             diagnostics = emptyList(),
         )
     }
 }
 
-private sealed interface ScopeResolution {
-    data class Resources(
-        val ids: Set<ResourceId>,
-    ) : ScopeResolution
-
-    data class Response(
-        val value: SearchAuthoringGraphResponse,
-    ) : ScopeResolution
-}
+internal fun AuthoringGraphSnapshot.compatibleSearchCandidateIds(): Set<ResourceId> =
+    selections
+        .single { selection -> selection.key == SEARCH_SELECTION }
+        .resourceIds
+        .toSet()
 
 private fun AuthoringGraphQueryResult.CatalogChanged.toWire(): SearchAuthoringGraphResponse =
     SearchAuthoringGraphResponse.createCatalogChanged(actualGeneration = CatalogGeneration(value = actualGeneration))
@@ -179,39 +168,38 @@ private fun Throwable.toInvalidSearchResponse(): SearchAuthoringGraphResponse =
             ),
     )
 
-private fun skirout.editor.v1.search.RealmSearchQuery.toIndexedSelectorFilter(): IndexedSelectorFilter =
-    selectorExpression?.toIndexedSelectorFilter()
+private fun skirout.editor.v1.search.RealmSearchQuery.toIndexedSelectorFilter(metadata: AuthoringSearchMetadata): IndexedSelectorFilter =
+    selectorExpression?.toIndexedSelectorFilter(metadata)
         ?: selectors
-            .map(RealmSearchSelector::toIndexedSelectorFilter)
+            .map { it.toIndexedSelectorFilter(metadata) }
             .fold<IndexedSelectorFilter, IndexedSelectorFilter>(IndexedSelectorFilter.All, IndexedSelectorFilter::And)
 
-private fun RealmSearchSelector.toIndexedSelectorFilter(): IndexedSelectorFilter =
+private fun RealmSearchSelector.toIndexedSelectorFilter(metadata: AuthoringSearchMetadata): IndexedSelectorFilter =
     value
         ?.trim()
-        ?.lowercase()
         ?.takeIf(String::isNotEmpty)
-        ?.let { IndexedSelectorFilter.Match(selectorId, it) }
+        ?.let { IndexedSelectorFilter.Match(selectorId, metadata.normalize(selectorId, it)) }
         ?: IndexedSelectorFilter.All
 
-private fun RealmSearchSelectorExpression.toIndexedSelectorFilter(): IndexedSelectorFilter =
+private fun RealmSearchSelectorExpression.toIndexedSelectorFilter(metadata: AuthoringSearchMetadata): IndexedSelectorFilter =
     when (this) {
         is RealmSearchSelectorExpression.SelectorWrapper -> {
-            value.toIndexedSelectorFilter()
+            value.toIndexedSelectorFilter(metadata)
         }
 
         is RealmSearchSelectorExpression.BinaryWrapper -> {
             when (value.operator_) {
                 RealmSearchSelectorOperator.AND -> {
                     IndexedSelectorFilter.And(
-                        value.left.toIndexedSelectorFilter(),
-                        value.right.toIndexedSelectorFilter(),
+                        value.left.toIndexedSelectorFilter(metadata),
+                        value.right.toIndexedSelectorFilter(metadata),
                     )
                 }
 
                 RealmSearchSelectorOperator.OR -> {
                     IndexedSelectorFilter.Or(
-                        value.left.toIndexedSelectorFilter(),
-                        value.right.toIndexedSelectorFilter(),
+                        value.left.toIndexedSelectorFilter(metadata),
+                        value.right.toIndexedSelectorFilter(metadata),
                     )
                 }
 
@@ -222,7 +210,7 @@ private fun RealmSearchSelectorExpression.toIndexedSelectorFilter(): IndexedSele
         }
 
         is RealmSearchSelectorExpression.NotWrapper -> {
-            IndexedSelectorFilter.Not(value.expression.toIndexedSelectorFilter())
+            IndexedSelectorFilter.Not(value.expression.toIndexedSelectorFilter(metadata))
         }
 
         else -> {
@@ -230,15 +218,20 @@ private fun RealmSearchSelectorExpression.toIndexedSelectorFilter(): IndexedSele
         }
     }
 
-private fun SearchFacetRequest.resolve(candidates: List<IndexedAuthoringSearchCandidate>): SearchFacetResult {
-    val values = candidates.flatMap { it.selectors[facetId.value].orEmpty() }.distinct().sorted()
-    val normalized = values.map(String::lowercase).toSet()
-    val prefix = partial?.trim()?.lowercase().orEmpty()
+private fun SearchFacetRequest.resolve(
+    candidates: List<IndexedAuthoringSearchCandidate>,
+    metadata: AuthoringSearchMetadata,
+): SearchFacetResult {
+    val selector = metadata.selectorForFacet(facetId.value)
+    val values = candidates.flatMap { it.selectors[selector].orEmpty() }.distinct().sorted()
+    val normalized = values.map { metadata.normalize(selector, it) }.toSet()
+    val prefix = partial?.let { metadata.normalize(selector, it) }.orEmpty()
     return SearchFacetResult(
         facetId = facetId,
-        suggestions = values.filter { prefix.isEmpty() || it.lowercase().startsWith(prefix) }.take(MAX_FACET_RESULTS),
-        accepted = validate.filter { it.lowercase() in normalized },
-        rejected = validate.filterNot { it.lowercase() in normalized },
+        suggestions =
+            values.filter { prefix.isEmpty() || metadata.normalize(selector, it).startsWith(prefix) }.take(MAX_FACET_RESULTS),
+        accepted = validate.filter { metadata.normalize(selector, it) in normalized },
+        rejected = validate.filterNot { metadata.normalize(selector, it) in normalized },
     )
 }
 
@@ -256,18 +249,7 @@ private fun IndexedAuthoringSearchCandidate.context(terms: List<String>): Author
 private fun ResourceFilter.withTarget(target: skirout.editor.v1.type_catalog.TypeExpression?): ResourceFilter =
     if (target == null) this else copy(assignableTo = SkirTypeCodec.decode(target).getOrThrow())
 
-private fun ResourceFilter.intersect(other: ResourceFilter): ResourceFilter =
-    ResourceFilter(
-        when {
-            definitions.isEmpty() -> other.definitions
-            other.definitions.isEmpty() -> definitions
-            else -> definitions intersect other.definitions
-        },
-        other.assignableTo ?: assignableTo,
-    )
-
 private const val SEARCH_SELECTION = "search"
 private const val SEARCH_OWNER_SELECTION = "search:owners"
-private const val MAX_SEARCH_CANDIDATES = 256
 private const val MAX_SEARCH_RESULTS = 100
 private const val MAX_FACET_RESULTS = 20

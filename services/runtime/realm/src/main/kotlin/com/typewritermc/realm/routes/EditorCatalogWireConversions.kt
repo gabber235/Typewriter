@@ -14,6 +14,7 @@ import com.typewritermc.pages.PageCatalogEntry
 import com.typewritermc.pages.PageDescriptor
 import com.typewritermc.pages.PageDiagnostic
 import com.typewritermc.pages.ResolvedPageEditorDefinition
+import com.typewritermc.realm.corePageCreationSlotId
 import com.typewritermc.types.TypePrototypeRegistry
 import com.typewritermc.types.TypedValueEnvelope
 import com.typewritermc.types.skir.getOrThrow
@@ -26,6 +27,7 @@ import skirout.editor.v1.element_catalog.AvailabilityNot
 import skirout.editor.v1.element_catalog.ElementEligibility
 import skirout.editor.v1.element_catalog.ElementTypeId
 import skirout.editor.v1.type_catalog.DeclaredTypeId
+import skirout.editor.v1.authoring.AuthoringCreationSlotId as SkirAuthoringCreationSlotId
 import skirout.editor.v1.element_catalog.AvailabilityExpression as SkirAvailabilityExpression
 import skirout.editor.v1.element_catalog.ElementCatalogEntry as SkirElementCatalogEntry
 import skirout.editor.v1.element_catalog.ElementDescriptor as SkirElementDescriptor
@@ -180,6 +182,17 @@ private fun PageDescriptor.toSkir(): SkirPageDescriptor =
         color = color.toSkir(),
         editor = editor.toSkir(),
         authoringRules = authoringRules.map(PageAuthoringRuleRef::toSkir),
+        elementCreationSlot =
+            SkirAuthoringCreationSlotId(
+                value =
+                    corePageCreationSlotId(
+                        kind,
+                        when (editor) {
+                            is ResolvedPageEditorDefinition.Graph -> "graph"
+                            is ResolvedPageEditorDefinition.Timeline -> "timeline"
+                        },
+                    ).value,
+            ),
     )
 
 private fun PageAuthoringRuleRef.toSkir(): SkirPageAuthoringRuleRef =

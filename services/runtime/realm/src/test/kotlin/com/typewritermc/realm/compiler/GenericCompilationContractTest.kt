@@ -9,6 +9,7 @@ import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.library.Page
+import com.typewritermc.realm.CoreResourceDefinitionIds
 import com.typewritermc.realm.repository.AuthoringGraphDelta
 import com.typewritermc.realm.repository.AuthoringWorkingGraph
 import com.typewritermc.realm.repository.loadTestPrototypes
@@ -99,6 +100,8 @@ val GenericCompilationContractTest by testSuite {
         val projection = PageCompilationProjection(prototypes, catalogRevision = { "test" })
 
         projection.root shouldBe TypeExpression.Named(prototypes.require(Page::class).type)
+        projection.graphRequirement.definitions shouldBe
+            setOf(CoreResourceDefinitionIds.PAGE, CoreResourceDefinitionIds.ELEMENT)
     }
 }
 

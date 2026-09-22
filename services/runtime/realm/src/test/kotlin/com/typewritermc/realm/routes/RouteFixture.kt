@@ -43,6 +43,8 @@ import kotlin.time.Duration.Companion.seconds
 internal class RouteFixture(
     editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
     presentationSearch: RealmPresentationSearchSource = UnavailableRealmPresentationSearchSource(),
+    authoring: AuthoringRepository = EmptyAuthoringRepository,
+    onCompilationInvalidated: (List<CompilationRoot>) -> Unit = {},
 ) : AutoCloseable {
     val compiledContent: RegisteredCompiledContentRepository = EmptyCompiledContentRepository()
     val transport = FakeMessageTransport()
@@ -52,11 +54,12 @@ internal class RouteFixture(
     private val router: CommunicatorRouter =
         communicator.createRouter(
             RealmRouteFactory(
-                authoring = EmptyAuthoringRepository,
+                authoring = authoring,
                 authoringGraph = EmptyAuthoringGraphRepository,
                 compiledContent = compiledContent,
                 editorCatalog = editorCatalog,
                 presentationSearch = presentationSearch,
+                onCompilationInvalidated = onCompilationInvalidated,
                 prototypes = TypePrototypeRegistry(emptyList()),
                 authoringPolicies = RealmAuthoringPolicyAssembler.assemble(emptyList(), TypeCatalog(emptyList())),
             ).create(RealmAddress("realm", "organization"), communicator),
@@ -158,7 +161,7 @@ private class EmptyCompiledContentRepository : RegisteredCompiledContentReposito
         catalogRevision: String,
         roots: Collection<CompilationRoot>,
         diagnostics: List<CompileDiagnostic>,
-    ) = Unit
+    ) = true
 
     override suspend fun publish(
         manifest: CompiledArtifactManifest,

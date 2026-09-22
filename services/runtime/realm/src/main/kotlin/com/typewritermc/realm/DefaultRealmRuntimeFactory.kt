@@ -174,6 +174,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             ),
                         ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
                     catalog = assembled.discovery.types,
+                    relations = assembled.runtimeDiscovery.relations,
                 )
             val realmModule =
                 module {

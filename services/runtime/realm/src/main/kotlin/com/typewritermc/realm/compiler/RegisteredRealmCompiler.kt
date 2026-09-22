@@ -36,17 +36,20 @@ internal class RegisteredRealmCompiler(
             }
         val blocked = results.filterIsInstance<CompilationResult.Blocked>()
         if (blocked.isNotEmpty()) {
-            val roots = results.map(CompilationResult::root)
-            content.recordBlocked(
-                sourceRevision = sourceRevision,
-                catalogRevision = catalogRevision,
-                roots = roots,
-                diagnostics = blocked.flatMap(CompilationResult.Blocked::diagnostics),
-            )
+            val roots = blocked.map(CompilationResult.Blocked::root)
+            val recorded =
+                content.recordBlocked(
+                    sourceRevision = sourceRevision,
+                    catalogRevision = catalogRevision,
+                    roots = roots,
+                    diagnostics = blocked.flatMap(CompilationResult.Blocked::diagnostics),
+                )
+            if (!recorded) return RegisteredCompileResult.Stale
             onStatesChanged(sourceRevision, content.states(roots.toSet()))
             return RegisteredCompileResult.Blocked(blocked.flatMap(CompilationResult.Blocked::diagnostics))
         }
         val active = content.activeManifest()
+        val activeActivation = content.activeActivation()
         val replaced = results.mapTo(linkedSetOf(), CompilationResult::root)
         val references =
             active
@@ -68,7 +71,13 @@ internal class RegisteredRealmCompiler(
                 artifacts = ordered,
             )
         val successful = results.filterIsInstance<CompilationResult.Success>().map(CompilationResult.Success::artifact)
-        val activation = artifacts.store(content.nextActivationRevision(), manifest, successful)
+        val activation =
+            artifacts.store(
+                activationRevision = content.nextActivationRevision(),
+                manifest = manifest,
+                artifacts = successful,
+                previousActivation = activeActivation,
+            )
         if (!content.publish(manifest, successful, activation)) return RegisteredCompileResult.Stale
         onStatesChanged(sourceRevision, content.states(replaced))
         return RegisteredCompileResult.Activated(manifest, activation)

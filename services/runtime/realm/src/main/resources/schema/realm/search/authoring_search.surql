@@ -4,6 +4,7 @@ DEFINE TABLE OVERWRITE authoring_search SCHEMAFULL
 DEFINE FIELD OVERWRITE resource ON authoring_search TYPE record<resource>;
 DEFINE FIELD OVERWRITE definition ON authoring_search TYPE string
     ASSERT string::trim($value) != "";
+DEFINE FIELD OVERWRITE root ON authoring_search TYPE object FLEXIBLE;
 DEFINE FIELD OVERWRITE text ON authoring_search TYPE string;
 DEFINE FIELD OVERWRITE owner_path ON authoring_search TYPE array<string>;
 

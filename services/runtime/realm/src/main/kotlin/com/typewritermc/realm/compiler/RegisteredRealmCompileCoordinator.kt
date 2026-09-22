@@ -20,59 +20,89 @@ internal class RegisteredRealmCompileCoordinator(
     private val sourceRevision: suspend () -> String,
     private val catalogRevision: () -> String,
     private val scope: CoroutineScope,
+    private val onFailure: suspend (Throwable) -> Unit,
 ) {
-    private val invalidations = Channel<CompilationImpact?>(Channel.UNLIMITED)
+    private val invalidations = Channel<CompileRequest>(Channel.UNLIMITED)
     private var worker: Job? = null
+    private val retryJobs = mutableSetOf<Job>()
 
     fun start() {
         check(worker == null) { "Registered Realm compiler is already started." }
+        while (invalidations.tryReceive().isSuccess) {
+            // Discard work retained from a previous lifecycle.
+        }
+        invalidations.trySend(CompileRequest(null)).getOrThrow()
         worker =
             scope.launch {
-                compileAll()
-                for (impact in invalidations) {
-                    if (impact == null) compileAll() else compile(impact)
+                for (request in invalidations) {
+                    compile(request)
                 }
             }
     }
 
     fun invalidate(roots: Collection<CompilationRoot>) {
+        if (worker == null) return
         val grouped = roots.groupBy({ it.projection }, { it.resource }).mapValues { it.value.toSet() }
-        invalidations.trySend(CompilationImpact(grouped)).getOrThrow()
+        invalidations.trySend(CompileRequest(CompilationImpact(grouped))).getOrThrow()
     }
 
     fun invalidateAll() {
-        invalidations.trySend(null).getOrThrow()
+        if (worker == null) return
+        invalidations.trySend(CompileRequest(null)).getOrThrow()
     }
 
     suspend fun stop() {
         worker?.cancelAndJoin()
         worker = null
+        val retries = synchronized(retryJobs) { retryJobs.toList().also { retryJobs.clear() } }
+        retries.forEach { it.cancelAndJoin() }
+        while (invalidations.tryReceive().isSuccess) {
+            // A stopped coordinator must not replay stale invalidations after restart.
+        }
     }
 
-    private suspend fun compileAll() {
+    private suspend fun compileAll(): CompilationImpact {
         val allRoots =
             projections.projections.associate { projection ->
                 val workingGraph = graph(projection, null)
                 projection.id to projection.roots(workingGraph)
             }
-        compile(CompilationImpact(allRoots))
+        return CompilationImpact(allRoots)
     }
 
-    private suspend fun compile(impact: CompilationImpact) {
-        while (true) {
-            try {
-                compiler.compile(
-                    sourceRevision = sourceRevision(),
-                    catalogRevision = catalogRevision(),
-                    impact = impact,
-                    graph = { projection, root -> graph(projection, root) },
-                )
-                return
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Throwable) {
-                delay(1.seconds)
+    private suspend fun compile(request: CompileRequest) {
+        try {
+            val impact = request.impact ?: compileAll()
+            compiler.compile(
+                sourceRevision = sourceRevision(),
+                catalogRevision = catalogRevision(),
+                impact = impact,
+                graph = { projection, root -> graph(projection, root) },
+            )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Throwable) {
+            onFailure(failure)
+            if (request.attempt < MAX_RETRY_ATTEMPTS) {
+                val retry =
+                    scope.launch {
+                        delay((request.attempt + 1).seconds)
+                        if (worker != null) {
+                            invalidations.send(request.copy(attempt = request.attempt + 1))
+                        }
+                    }
+                synchronized(retryJobs) { retryJobs += retry }
+                retry.invokeOnCompletion { synchronized(retryJobs) { retryJobs -= retry } }
             }
         }
+    }
+
+    private data class CompileRequest(
+        val impact: CompilationImpact?,
+        val attempt: Int = 0,
+    )
+
+    private companion object {
+        const val MAX_RETRY_ATTEMPTS = 3
     }
 }

@@ -8,9 +8,12 @@ import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
+import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
@@ -19,6 +22,351 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 
 val SurrealBoundedAuthoringGraphLoaderTest by testSuite {
+    test("resource storage preserves generic root arguments") {
+        val genericRoot = rootType.copy(arguments = listOf(TypeExpression.Any))
+        withGraph(
+            resources = listOf(StoredFixture("generic", root = genericRoot)),
+            relations = emptyList(),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(), TypeCatalog(emptyList())).load(
+                        transaction,
+                        listOf(GraphSelection("generic", ResourceSeed.Ids(listOf(id("generic"))))),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.single().root shouldBe genericRoot
+        }
+    }
+
+    test("definition scans compare complete generic root identities") {
+        val requestedRoot = rootType.copy(arguments = listOf(TypeExpression.Any))
+        withGraph(
+            resources =
+                listOf(
+                    StoredFixture("a-incompatible", root = rootType),
+                    StoredFixture("z-compatible", root = requestedRoot),
+                ),
+            relations = emptyList(),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 1),
+                        TypeCatalog(emptyList()),
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                "generic-scan",
+                                ResourceSeed.Scan(
+                                    ResourceFilter(
+                                        definitions = setOf(DEFAULT_DEFINITION),
+                                        assignableTo = TypeExpression.Named(requestedRoot),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("z-compatible")
+        }
+    }
+
+    test("Any scans accept resources without catalog definitions") {
+        withGraph(
+            resources = listOf(StoredFixture("resource")),
+            relations = emptyList(),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 1),
+                        TypeCatalog(emptyList()),
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                "any-scan",
+                                ResourceSeed.Scan(
+                                    ResourceFilter(
+                                        definitions = setOf(DEFAULT_DEFINITION),
+                                        assignableTo = TypeExpression.Any,
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("resource")
+        }
+    }
+
+    test("incompatible id seeds remain diagnostics without consuming resource budgets") {
+        val parent = type("01010101010101010101010101010101")
+        val child = type("02020202020202020202020202020202")
+        val unrelated = type("03030303030303030303030303030303")
+        val catalog =
+            TypeCatalog(
+                listOf(
+                    TypeDefinition(id = parent, kind = NominalTypeKind.OPEN_ABSTRACT),
+                    TypeDefinition(id = child, kind = NominalTypeKind.CONCRETE, parents = listOf(parent)),
+                    TypeDefinition(id = unrelated, kind = NominalTypeKind.CONCRETE),
+                ),
+            )
+        withGraph(
+            resources =
+                listOf(
+                    StoredFixture("compatible", root = child),
+                    StoredFixture("incompatible", root = unrelated),
+                ),
+            relations = emptyList(),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 1),
+                        catalog,
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                key = "typed-ids",
+                                seed =
+                                    ResourceSeed.Ids(
+                                        values = listOf(id("compatible"), id("incompatible")),
+                                        requireAssignableTo = TypeExpression.Named(parent),
+                                    ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("compatible")
+            slice.diagnosticResources.map { it.id.value } shouldContainExactly listOf("incompatible")
+        }
+    }
+
+    test("incompatible scan seeds are filtered before the database result limit") {
+        val parent = type("04040404040404040404040404040404")
+        val child = type("05050505050505050505050505050505")
+        val unrelated = type("06060606060606060606060606060606")
+        val catalog =
+            TypeCatalog(
+                listOf(
+                    TypeDefinition(id = parent, kind = NominalTypeKind.OPEN_ABSTRACT),
+                    TypeDefinition(id = child, kind = NominalTypeKind.CONCRETE, parents = listOf(parent)),
+                    TypeDefinition(id = unrelated, kind = NominalTypeKind.CONCRETE),
+                ),
+            )
+        withGraph(
+            resources =
+                listOf(
+                    StoredFixture("a-incompatible", root = unrelated),
+                    StoredFixture("z-compatible", root = child),
+                ),
+            relations = emptyList(),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 1),
+                        catalog,
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                key = "typed-scan",
+                                seed =
+                                    ResourceSeed.Scan(
+                                        ResourceFilter(
+                                            definitions = setOf(DEFAULT_DEFINITION),
+                                            assignableTo = TypeExpression.Named(parent),
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("z-compatible")
+            slice.diagnosticResources shouldBe emptyList()
+        }
+    }
+
+    test("incompatible traversal candidates do not consume resource or edge budgets") {
+        val parent = type("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        val child = type("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+        val unrelated = type("cccccccccccccccccccccccccccccccc")
+        val catalog =
+            TypeCatalog(
+                listOf(
+                    TypeDefinition(id = parent, kind = NominalTypeKind.OPEN_ABSTRACT),
+                    TypeDefinition(id = unrelated, kind = NominalTypeKind.CONCRETE),
+                    TypeDefinition(id = child, kind = NominalTypeKind.CONCRETE, parents = listOf(parent)),
+                ),
+            )
+        withGraph(
+            resources =
+                listOf(
+                    StoredFixture("root", root = child),
+                    StoredFixture("incompatible", root = unrelated),
+                    StoredFixture("compatible", root = child),
+                ),
+            relations =
+                listOf(
+                    declared("root-incompatible", "root", "incompatible"),
+                    declared("root-compatible", "root", "compatible"),
+                ),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 2, maxEdges = 1),
+                        catalog,
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                key = "typed",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                                steps =
+                                    listOf(
+                                        RelationStep(
+                                            direction = RelationDirection.OUTGOING,
+                                            target =
+                                                ResourceFilter(
+                                                    assignableTo = TypeExpression.Named(parent),
+                                                ),
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("compatible", "root")
+            slice.relations.map(StoredResourceRelation::id) shouldContainExactly listOf("root-compatible")
+        }
+    }
+
+    test("ordinary reference expected targets are filtered before edge budgets") {
+        val parent = type("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+        val child = type("ffffffffffffffffffffffffffffffff")
+        val unrelated = type("12121212121212121212121212121212")
+        val catalog =
+            TypeCatalog(
+                listOf(
+                    TypeDefinition(id = parent, kind = NominalTypeKind.OPEN_ABSTRACT),
+                    TypeDefinition(id = unrelated, kind = NominalTypeKind.CONCRETE),
+                    TypeDefinition(id = child, kind = NominalTypeKind.CONCRETE, parents = listOf(parent)),
+                ),
+            )
+        withGraph(
+            resources = listOf("root", "compatible", "incompatible").map(::StoredFixture),
+            relations =
+                listOf(
+                    reference("reference-incompatible", "root", "incompatible", TypeExpression.Named(unrelated)),
+                    reference("reference-compatible", "root", "compatible", TypeExpression.Named(child)),
+                ),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 3, maxEdges = 1),
+                        catalog,
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                key = "references",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                                steps =
+                                    listOf(
+                                        RelationStep(
+                                            relations =
+                                                RelationFilter.OrdinaryReferences(
+                                                    expectedTarget = TypeExpression.Named(parent),
+                                                ),
+                                            direction = RelationDirection.OUTGOING,
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("compatible", "root")
+            slice.relations.map(StoredResourceRelation::id) shouldContainExactly listOf("reference-compatible")
+        }
+    }
+
+    test("ordinary reference filtering continues beyond one database page") {
+        val parent = type("13131313131313131313131313131313")
+        val child = type("14141414141414141414141414141414")
+        val unrelated = type("15151515151515151515151515151515")
+        val catalog =
+            TypeCatalog(
+                listOf(
+                    TypeDefinition(id = parent, kind = NominalTypeKind.OPEN_ABSTRACT),
+                    TypeDefinition(id = child, kind = NominalTypeKind.CONCRETE, parents = listOf(parent)),
+                    TypeDefinition(id = unrelated, kind = NominalTypeKind.CONCRETE),
+                ),
+            )
+        withGraph(
+            resources = listOf("root", "compatible", "incompatible").map(::StoredFixture),
+            relations =
+                List(300) { index ->
+                    reference(
+                        relationId = "a-incompatible-${index.toString().padStart(3, '0')}",
+                        source = "root",
+                        target = "incompatible",
+                        expectedTarget = TypeExpression.Named(unrelated),
+                    )
+                } + reference("z-compatible", "root", "compatible", TypeExpression.Named(child)),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 2, maxEdges = 1),
+                        catalog,
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                key = "references",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                                steps =
+                                    listOf(
+                                        RelationStep(
+                                            relations =
+                                                RelationFilter.OrdinaryReferences(
+                                                    expectedTarget = TypeExpression.Named(parent),
+                                                ),
+                                            direction = RelationDirection.OUTGOING,
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("compatible", "root")
+            slice.relations.map(StoredResourceRelation::id) shouldContainExactly listOf("z-compatible")
+        }
+    }
+
     test("selection loading reads only the selected resource neighborhood") {
         withGraph(
             resources = listOf("root", "child", "unrelated").map(::StoredFixture),
@@ -26,7 +374,10 @@ val SurrealBoundedAuthoringGraphLoaderTest by testSuite {
         ) { database ->
             val result =
                 database.inTransaction { transaction ->
-                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(maxResources = 10, maxEdges = 10)).load(
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 10, maxEdges = 10),
+                        TypeCatalog(emptyList()),
+                    ).load(
                         transaction,
                         listOf(
                             GraphSelection(
@@ -44,13 +395,161 @@ val SurrealBoundedAuthoringGraphLoaderTest by testSuite {
         }
     }
 
+    test("policy dependency loading expands declared and reference edges from one frontier") {
+        withGraph(
+            resources = listOf("root", "declared", "referenced").map(::StoredFixture),
+            relations =
+                listOf(
+                    declared("root-declared", "root", "declared"),
+                    reference("root-referenced", "root", "referenced"),
+                ),
+        ) { database ->
+            val requirement =
+                GraphReadRequirement(
+                    relations = setOf(RelationId(RELATION_DEFINITION_ID)),
+                    direction = GraphReadRequirement.Direction.OUTGOING,
+                    outgoingReferences = true,
+                    maximumDepth = 1,
+                )
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 3, maxEdges = 2),
+                        TypeCatalog(emptyList()),
+                    ).load(
+                        transaction,
+                        listOf(
+                            requirement.toSelection(
+                                key = "policy",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("declared", "referenced", "root")
+            slice.relations.map(StoredResourceRelation::id) shouldContainExactly listOf("root-declared", "root-referenced")
+        }
+    }
+
+    test("policy dependency loading expands both reference directions from one frontier") {
+        withGraph(
+            resources = listOf("root", "incoming", "outgoing").map(::StoredFixture),
+            relations =
+                listOf(
+                    reference("incoming-root", "incoming", "root"),
+                    reference("root-outgoing", "root", "outgoing"),
+                ),
+        ) { database ->
+            val requirement =
+                GraphReadRequirement(
+                    incomingReferences = true,
+                    outgoingReferences = true,
+                    maximumDepth = 1,
+                )
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 3, maxEdges = 2),
+                        TypeCatalog(emptyList()),
+                    ).load(
+                        transaction,
+                        listOf(
+                            requirement.toSelection(
+                                key = "policy",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("incoming", "outgoing", "root")
+            slice.relations.map(StoredResourceRelation::id) shouldContainExactly listOf("incoming-root", "root-outgoing")
+        }
+    }
+
+    test("policy dependency loading rejects an incomplete depth bounded slice") {
+        withGraph(
+            resources = listOf("root", "child", "grandchild").map(::StoredFixture),
+            relations =
+                listOf(
+                    declared("root-child", "root", "child"),
+                    declared("child-grandchild", "child", "grandchild"),
+                ),
+        ) { database ->
+            val requirement =
+                GraphReadRequirement(
+                    relations = setOf(RelationId(RELATION_DEFINITION_ID)),
+                    direction = GraphReadRequirement.Direction.OUTGOING,
+                    maximumDepth = 1,
+                )
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(), TypeCatalog(emptyList())).load(
+                        transaction,
+                        listOf(
+                            requirement.toSelection(
+                                key = "policy",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                            ),
+                        ),
+                    )
+                }
+
+            val invalid = (result as BoundedGraphLoadResult.Invalid).result
+            invalid.code shouldBe "query-too-large"
+            invalid.message shouldBe "Authoring graph depth limit 1 was exceeded."
+        }
+    }
+
+    test("selection loading retains edges that return to an already visited resource") {
+        withGraph(
+            resources = listOf("root", "child").map(::StoredFixture),
+            relations =
+                listOf(
+                    declared("root-child", "root", "child"),
+                    declared("child-root", "child", "root"),
+                ),
+        ) { database ->
+            val result =
+                database.inTransaction { transaction ->
+                    SurrealBoundedAuthoringGraphLoader(
+                        AuthoringGraphLimits(maxResources = 10, maxEdges = 10),
+                        TypeCatalog(emptyList()),
+                    ).load(
+                        transaction,
+                        listOf(
+                            GraphSelection(
+                                key = "cyclic-neighborhood",
+                                seed = ResourceSeed.Ids(listOf(id("root"))),
+                                steps =
+                                    listOf(
+                                        RelationStep(
+                                            RelationFilter.Any,
+                                            RelationDirection.BOTH,
+                                            maxDepth = 2,
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    )
+                }
+
+            val slice = (result as BoundedGraphLoadResult.Success).slice
+            slice.resources.map { it.id.value } shouldContainExactly listOf("child", "root")
+            slice.relations.map(StoredResourceRelation::id) shouldContainExactly listOf("child-root", "root-child")
+        }
+    }
+
     test("unbounded scans fail before a database scan") {
         Surreal().use { database ->
             database.connect("memory")
             database.useNs("test").useDb("test")
             val result =
                 database.inTransaction { transaction ->
-                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits()).load(
+                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(), TypeCatalog(emptyList())).load(
                         transaction,
                         listOf(GraphSelection("all", ResourceSeed.Scan())),
                     )
@@ -79,7 +578,7 @@ val SurrealBoundedAuthoringGraphLoaderTest by testSuite {
         ) { database ->
             val result =
                 database.inTransaction { transaction ->
-                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits()).load(
+                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(), TypeCatalog(emptyList())).load(
                         transaction,
                         listOf(
                             GraphSelection(
@@ -118,7 +617,7 @@ val SurrealBoundedAuthoringGraphLoaderTest by testSuite {
         ) { database ->
             val result =
                 database.inTransaction { transaction ->
-                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(maxResources = 1)).load(
+                    SurrealBoundedAuthoringGraphLoader(AuthoringGraphLimits(maxResources = 1), TypeCatalog(emptyList())).load(
                         transaction,
                         listOf(
                             GraphSelection(
@@ -250,7 +749,7 @@ private fun withGraph(
                         StoredTypedResource(
                             id = id(fixture.id),
                             definition = fixture.definition,
-                            root = rootType,
+                            root = fixture.root,
                             valueWithSlots = DataValue.Record(emptyMap()),
                         )
                     stored.id to DecomposedResourceValue(stored, emptyList())
@@ -273,6 +772,7 @@ private fun withGraph(
 private data class StoredFixture(
     val id: String,
     val definition: ResourceDefinitionId = DEFAULT_DEFINITION,
+    val root: ResolvedTypeRef = rootType,
 )
 
 private fun id(value: String) = ResourceId(value)
@@ -288,12 +788,17 @@ private fun reference(
     relationId: String,
     source: String,
     target: String,
+    expectedTarget: TypeExpression = TypeExpression.Any,
 ) = StoredResourceRelation(
     relationId,
     id(source),
     id(target),
-    ResourceRelationOrigin.Reference(ReferenceSlotId("target"), DataPath(), TypeExpression.Any),
+    ResourceRelationOrigin.Reference(ReferenceSlotId("target"), DataPath(), expectedTarget),
 )
+
+private fun type(value: String) = ResolvedTypeRef(TypeId.Declared(DeclaredTypeId.parse(value)), 1)
+
+private fun named(value: String) = TypeExpression.Named(type(value))
 
 private val DEFAULT_DEFINITION = ResourceDefinitionId("test.resource")
 private const val RELATION_DEFINITION_ID = "11111111111111111111111111111111"

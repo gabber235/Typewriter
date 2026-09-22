@@ -91,32 +91,6 @@ typealias AuthoringCreationSlotId = com.typewritermc.authoring.AuthoringCreation
 typealias AuthoringResourceDefinition = com.typewritermc.authoring.AuthoringResourceDefinition
 typealias ResourceDefinitionId = com.typewritermc.authoring.ResourceDefinitionId
 
-/** Contributes resource definitions without requiring a central resource family switch. */
-fun interface AuthoringResourceDefinitionProvider {
-    fun definitions(): Collection<AuthoringResourceDefinition>
-}
-
-/** Validated definition catalog shared by Realm persistence and authoring routes. */
-class AuthoringResourceDefinitionCatalog private constructor(
-    definitions: Collection<AuthoringResourceDefinition>,
-) {
-    val definitions: List<AuthoringResourceDefinition> = definitions.toList()
-    private val byId = this.definitions.associateBy(AuthoringResourceDefinition::id)
-
-    init {
-        require(this.definitions.size == byId.size) {
-            "Resource definition ids must be unique."
-        }
-    }
-
-    operator fun get(id: ResourceDefinitionId): AuthoringResourceDefinition? = byId[id]
-
-    companion object {
-        fun assemble(providers: Collection<AuthoringResourceDefinitionProvider>): AuthoringResourceDefinitionCatalog =
-            AuthoringResourceDefinitionCatalog(providers.flatMap(AuthoringResourceDefinitionProvider::definitions))
-    }
-}
-
 /** Stable ids for the definitions supplied by the core Realm runtime. */
 object CoreResourceDefinitionIds {
     val BOOK = ResourceDefinitionId("typewriter.book")
