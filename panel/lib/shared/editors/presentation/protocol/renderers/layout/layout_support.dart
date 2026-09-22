@@ -30,9 +30,16 @@ extension on PresentationAxisChild {
     FlexiblePresentationAxisChild(:final child, :final flex, :final fit) =>
       Flexible(
         flex: flex,
-        fit: fit == PresentationFlexFit.tight ? FlexFit.tight : FlexFit.loose,
+        fit: fit.flutterFit,
         child: PresentationNodeRenderer(node: child, scope: scope),
       ),
+  };
+}
+
+extension on PresentationFlexFit {
+  FlexFit get flutterFit => switch (this) {
+    PresentationFlexFit.tight => FlexFit.tight,
+    PresentationFlexFit.loose => FlexFit.loose,
   };
 }
 
