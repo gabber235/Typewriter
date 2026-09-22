@@ -343,7 +343,16 @@ final class CreationDraft extends ChangeNotifier
           ),
         ]);
       }
-      final next = switch (initialized) {
+      EditorMutationResult replaceIfCurrent(PolymorphicDraftValue next) {
+        final current = _locate(_root, rootType, path.segments, 0, _registry);
+        if (current case (final PolymorphicDraftValue latest, NamedType())
+            when identical(latest, draft)) {
+          return _replaceStructure(path, next);
+        }
+        return const EditorMutationResult.conflict();
+      }
+
+      return switch (initialized) {
         ConcreteTypeInitialized(:final value)
             when value.rootType == type &&
                 value.rootValue
@@ -352,52 +361,37 @@ final class CreationDraft extends ChangeNotifier
                       registry: _registry,
                     )
                     .isEmpty =>
+          replaceIfCurrent(
+            PolymorphicDraftValue(
+              draft.id,
+              concreteType: type,
+              payload: _freshDraft(resolved.representation, value.rootValue),
+            ),
+          ),
+        ConcreteTypeInitialized() => EditorMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Realm returned a value for the wrong concrete type",
+            path: path,
+          ),
+        ]),
+        ConcreteTypeNeedsInput(:final suppliedValue) => replaceIfCurrent(
           PolymorphicDraftValue(
             draft.id,
             concreteType: type,
-            payload: _freshDraft(resolved.representation, value.rootValue),
+            payload: suppliedValue == null
+                ? _reidentify(
+                    planCreationDraftWithoutDefaults(
+                      type: resolved.representation,
+                      registry: _registry,
+                    ),
+                  )
+                : _freshDraft(resolved.representation, suppliedValue),
           ),
-        ConcreteTypeNeedsInput(:final suppliedValue) => PolymorphicDraftValue(
-          draft.id,
-          concreteType: type,
-          payload: suppliedValue == null
-              ? _reidentify(
-                  planCreationDraftWithoutDefaults(
-                    type: resolved.representation,
-                    registry: _registry,
-                  ),
-                )
-              : _freshDraft(resolved.representation, suppliedValue),
         ),
-        ConcreteTypeInitializationRejected() => null,
-        ConcreteTypeInitialized() => null,
+        ConcreteTypeInitializationRejected(:final diagnostics) =>
+          EditorMutationResult.invalid(diagnostics),
       };
-      if (next == null) {
-        return switch (initialized) {
-          ConcreteTypeInitializationRejected(:final diagnostics) =>
-            EditorMutationResult.invalid(diagnostics),
-          ConcreteTypeInitialized() => EditorMutationResult.invalid([
-            TypeDiagnostic(
-              code: TypeDiagnosticCode.invalidValue,
-              message: "Realm returned a value for the wrong concrete type",
-              path: path,
-            ),
-          ]),
-          ConcreteTypeNeedsInput() => EditorMutationResult.invalid([
-            TypeDiagnostic(
-              code: TypeDiagnosticCode.invalidValue,
-              message: "Realm returned an invalid initialization draft",
-              path: path,
-            ),
-          ]),
-        };
-      }
-      final current = _locate(_root, rootType, path.segments, 0, _registry);
-      if (current case (final PolymorphicDraftValue latest, NamedType())
-          when identical(latest, draft)) {
-        return _replaceStructure(path, next);
-      }
-      return const EditorMutationResult.conflict();
     }
     return _invalidPath(path);
   }

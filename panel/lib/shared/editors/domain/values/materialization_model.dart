@@ -1,4 +1,7 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "materialization_model.freezed.dart";
 
 extension type const DraftNodeId(int value) {}
 
@@ -118,27 +121,20 @@ final class EditorPolymorphicStructure {
 
 /// Result returned by the authoritative type initializer when a polymorphic
 /// editor selects a concrete type.
-sealed class ConcreteTypeInitializationResult {
-  const ConcreteTypeInitializationResult();
-}
+@freezed
+sealed class ConcreteTypeInitializationResult
+    with _$ConcreteTypeInitializationResult {
+  const factory ConcreteTypeInitializationResult.initialized(
+    TypedValueEnvelope value,
+  ) = ConcreteTypeInitialized;
 
-final class ConcreteTypeInitialized extends ConcreteTypeInitializationResult {
-  const ConcreteTypeInitialized(this.value);
+  const factory ConcreteTypeInitializationResult.needsInput({
+    DataValue? suppliedValue,
+  }) = ConcreteTypeNeedsInput;
 
-  final TypedValueEnvelope value;
-}
-
-final class ConcreteTypeNeedsInput extends ConcreteTypeInitializationResult {
-  const ConcreteTypeNeedsInput({this.suppliedValue});
-
-  final DataValue? suppliedValue;
-}
-
-final class ConcreteTypeInitializationRejected
-    extends ConcreteTypeInitializationResult {
-  const ConcreteTypeInitializationRejected(this.diagnostics);
-
-  final List<TypeDiagnostic> diagnostics;
+  const factory ConcreteTypeInitializationResult.rejected(
+    List<TypeDiagnostic> diagnostics,
+  ) = ConcreteTypeInitializationRejected;
 }
 
 typedef ConcreteTypeInitializer =
