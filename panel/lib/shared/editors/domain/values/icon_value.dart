@@ -62,29 +62,20 @@ extension IconValueValidation on IconValue {
 /// boundary and return `null` rather than being coerced.
 extension DataValueIcon on DataValue {
   IconValue? get iconValueOrNull => switch (this) {
-    PolymorphicValue(concreteType: final type, value: final value)
+    PolymorphicValue(
+      concreteType: final type,
+      value: RecordValue(fields: {"value": StringValue(:final value)}),
+    )
         when type == standardTypeRefs.iconifyIcon =>
-      _iconifyRecord(value),
-    PolymorphicValue(concreteType: final type, value: final value)
+      IconValue.iconify(value),
+    PolymorphicValue(
+      concreteType: final type,
+      value: RecordValue(fields: {"source": StringValue(:final value)}),
+    )
         when type == standardTypeRefs.svgIcon =>
-      _svgRecord(value),
+      IconValue.svg(value),
     _ => null,
   };
-}
-
-String? _recordString(DataValue value, String field) =>
-    value is RecordValue && value.fields[field] is StringValue
-    ? (value.fields[field]! as StringValue).value
-    : null;
-
-IconValue? _iconifyRecord(DataValue value) {
-  final text = _recordString(value, "value");
-  return text == null ? null : IconValue.iconify(text);
-}
-
-IconValue? _svgRecord(DataValue value) {
-  final text = _recordString(value, "source");
-  return text == null ? null : IconValue.svg(text);
 }
 
 /// Syntax and safety checks shared by icon constructors and validation.
