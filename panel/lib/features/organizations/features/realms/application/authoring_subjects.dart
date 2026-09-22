@@ -1,60 +1,34 @@
-import "package:flutter/foundation.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "authoring_subjects.freezed.dart";
 part "authoring_subjects.g.dart";
 
 /// Requested resources for one generation pinned subject batch.
-@immutable
-final class AuthoringSubjectScope {
-  const AuthoringSubjectScope({
-    required this.organizationId,
-    required this.realmId,
-    required this.resources,
-  });
-
-  final skir.RecordId organizationId;
-  final skir.RecordId realmId;
-  final Map<skir.ResourceId, ResolvedTypeRef> resources;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AuthoringSubjectScope &&
-          organizationId == other.organizationId &&
-          realmId == other.realmId &&
-          mapEquals(resources, other.resources);
-
-  @override
-  int get hashCode => Object.hash(
-    organizationId,
-    realmId,
-    Object.hashAllUnordered(
-      resources.entries.map((entry) => Object.hash(entry.key, entry.value)),
-    ),
-  );
+@freezed
+abstract class AuthoringSubjectScope with _$AuthoringSubjectScope {
+  const factory AuthoringSubjectScope({
+    required skir.RecordId organizationId,
+    required skir.RecordId realmId,
+    required Map<skir.ResourceId, ResolvedTypeRef> resources,
+  }) = _AuthoringSubjectScope;
 }
 
 /// Complete typed subject result for one canonical session observation.
-final class AuthoringSubjectProjection {
-  const AuthoringSubjectProjection({
-    required this.catalog,
-    required this.generation,
-    required this.sequence,
-    required this.subjects,
-    required this.collections,
-    required this.diagnostics,
-  });
-
-  final RealmEditorCatalogSnapshot catalog;
-  final CatalogGeneration generation;
-  final int sequence;
-  final Map<skir.ResourceId, TypedPresentationSubject> subjects;
-  final Map<PresentationCollectionSourceId, PresentationCollectionSource>
-  collections;
-  final List<TypeDiagnostic> diagnostics;
+@freezed
+abstract class AuthoringSubjectProjection with _$AuthoringSubjectProjection {
+  const factory AuthoringSubjectProjection({
+    required RealmEditorCatalogSnapshot catalog,
+    required CatalogGeneration generation,
+    required int sequence,
+    required Map<skir.ResourceId, TypedPresentationSubject> subjects,
+    required Map<PresentationCollectionSourceId, PresentationCollectionSource>
+    collections,
+    required List<TypeDiagnostic> diagnostics,
+  }) = _AuthoringSubjectProjection;
 }
 
 /// Resolves a whole visible resource scope under one exact catalog generation.
