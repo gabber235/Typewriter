@@ -53,6 +53,7 @@ import skirout.editor.v1.catalog.WatchEditorCatalogRequest
 import skirout.editor.v1.diagnostic.DiagnosticCode
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.TypeDiagnostic
+import skirout.editor.v1.presentation.PresentationDefinition
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.authoring.AuthoringCreationSlotId as WireAuthoringCreationSlotId
 import skirout.editor.v1.authoring.RelationCardinality as SkirRelationCardinality
@@ -390,26 +391,12 @@ private fun RealmDiscoverySnapshot.closure(
             }
         }
         presentationIds.mapNotNull(presentationsById::get).forEach { presentation ->
-            presentation.inputs.forEach { discoveryCollector.includeExpression(SkirTypeCodec.decode(it.valueType).getOrThrow()) }
-            presentation.dependencies.types.forEach { discoveryCollector.includeReference(SkirTypeCodec.decode(it).getOrThrow()) }
-            presentation.dependencies.collections.forEach { collection ->
-                discoveryCollector.includeExpression(SkirTypeCodec.decode(collection.rowType).getOrThrow())
-                discoveryCollector.includeExpression(SkirTypeCodec.decode(collection.key.resultType).getOrThrow())
-                discoveryCollector.includeExpression(SkirTypeCodec.decode(collection.selectability.resultType).getOrThrow())
-                collection.relations.forEach { relation ->
-                    discoveryCollector.includeExpression(SkirTypeCodec.decode(relation.targets.resultType).getOrThrow())
-                }
-            }
+            discoveryCollector.includePresentationTypeDependencies(presentation)
             presentation.dependencies.presentations.forEach { presentationIds += PresentationId(it.namespace, it.name) }
             presentation.dependencies.capabilities.forEach { capabilityIds += CapabilityId(it.value) }
         }
         capabilityIds.mapNotNull(capabilitiesById::get).forEach { capability ->
-            discoveryCollector.includeReference(capability.requestType)
-            when (capability) {
-                is RealmCapabilityDescriptor.Search -> discoveryCollector.includeReference(capability.resultType)
-                is RealmCapabilityDescriptor.Computation -> discoveryCollector.includeReference(capability.resultType)
-                is RealmCapabilityDescriptor.Command -> Unit
-            }
+            discoveryCollector.includeCapabilityTypeDependencies(capability)
         }
     }
 
@@ -502,24 +489,10 @@ private fun RealmDiscoverySnapshot.closure(
     val finalCollector = TypeClosureCollector(discovery.types)
     requestedTypes.forEach(finalCollector::includeReference)
     validPresentationIds.mapNotNull(presentationsById::get).forEach { presentation ->
-        presentation.inputs.forEach { finalCollector.includeExpression(SkirTypeCodec.decode(it.valueType).getOrThrow()) }
-        presentation.dependencies.types.forEach { finalCollector.includeReference(SkirTypeCodec.decode(it).getOrThrow()) }
-        presentation.dependencies.collections.forEach { collection ->
-            finalCollector.includeExpression(SkirTypeCodec.decode(collection.rowType).getOrThrow())
-            finalCollector.includeExpression(SkirTypeCodec.decode(collection.key.resultType).getOrThrow())
-            finalCollector.includeExpression(SkirTypeCodec.decode(collection.selectability.resultType).getOrThrow())
-            collection.relations.forEach { relation ->
-                finalCollector.includeExpression(SkirTypeCodec.decode(relation.targets.resultType).getOrThrow())
-            }
-        }
+        finalCollector.includePresentationTypeDependencies(presentation)
     }
     validCapabilityIds.mapNotNull(capabilitiesById::get).forEach { capability ->
-        finalCollector.includeReference(capability.requestType)
-        when (capability) {
-            is RealmCapabilityDescriptor.Search -> finalCollector.includeReference(capability.resultType)
-            is RealmCapabilityDescriptor.Computation -> finalCollector.includeReference(capability.resultType)
-            is RealmCapabilityDescriptor.Command -> Unit
-        }
+        finalCollector.includeCapabilityTypeDependencies(capability)
     }
     return RealmEditorCatalogClosure(
         types = TypeCatalog(finalCollector.definitions),
@@ -527,6 +500,28 @@ private fun RealmDiscoverySnapshot.closure(
         capabilities = validCapabilityIds.mapNotNull(capabilitiesById::get),
         diagnostics = diagnostics.distinct(),
     )
+}
+
+private fun TypeClosureCollector.includePresentationTypeDependencies(presentation: PresentationDefinition) {
+    presentation.inputs.forEach { includeExpression(SkirTypeCodec.decode(it.valueType).getOrThrow()) }
+    presentation.dependencies.types.forEach { includeReference(SkirTypeCodec.decode(it).getOrThrow()) }
+    presentation.dependencies.collections.forEach { collection ->
+        includeExpression(SkirTypeCodec.decode(collection.rowType).getOrThrow())
+        includeExpression(SkirTypeCodec.decode(collection.key.resultType).getOrThrow())
+        includeExpression(SkirTypeCodec.decode(collection.selectability.resultType).getOrThrow())
+        collection.relations.forEach { relation ->
+            includeExpression(SkirTypeCodec.decode(relation.targets.resultType).getOrThrow())
+        }
+    }
+}
+
+private fun TypeClosureCollector.includeCapabilityTypeDependencies(capability: RealmCapabilityDescriptor) {
+    includeReference(capability.requestType)
+    when (capability) {
+        is RealmCapabilityDescriptor.Search -> includeReference(capability.resultType)
+        is RealmCapabilityDescriptor.Computation -> includeReference(capability.resultType)
+        is RealmCapabilityDescriptor.Command -> Unit
+    }
 }
 
 private fun closureDiagnostic(message: String): TypeDiagnostic =
