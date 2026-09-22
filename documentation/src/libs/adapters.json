@@ -49404,6 +49404,21 @@
                                 "kind": "primitive",
                                 "type": "string"
                             }
+                        },
+                        "self": {
+                            "kind": "custom",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "Also apply this effect to the target's own view of themselves. Their own body turns invisible or see through, and the disguise blocks clicks on anything behind it."
+                                }
+                            ],
+                            "default": false,
+                            "editor": "var",
+                            "shape": {
+                                "kind": "primitive",
+                                "type": "boolean"
+                            }
                         }
                     }
                 },
@@ -49648,7 +49663,7 @@
                             "modifiers": [
                                 {
                                     "name": "help",
-                                    "data": "The name the viewer reads on the target. Leave this empty to keep their real name."
+                                    "data": "The name the viewer reads on the target. Leave this empty to keep their real name. Placeholders resolve against the target."
                                 }
                             ],
                             "default": "",
@@ -50050,6 +50065,21 @@
                                         }
                                     }
                                 }
+                            }
+                        },
+                        "self": {
+                            "kind": "custom",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "Also apply this effect to the target's own view of themselves. Their client respawns in place to show it, which closes an open inventory."
+                                }
+                            ],
+                            "default": false,
+                            "editor": "var",
+                            "shape": {
+                                "kind": "primitive",
+                                "type": "boolean"
                             }
                         }
                     }
