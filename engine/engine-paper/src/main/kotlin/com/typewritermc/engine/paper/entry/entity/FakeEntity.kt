@@ -25,6 +25,14 @@ abstract class FakeEntity(
     val uuid: UUID
         get() = identity.entityUuid
 
+    /**
+     * The entry a client scoreboard lists this entity under. A team only applies to the entity, its
+     * glow color included, when it contains this entry. Players are listed by their profile name and
+     * every other entity by its uuid, so a fake player overrides this.
+     */
+    open val scoreboardMember: String
+        get() = uuid.toString()
+
     abstract val state: EntityState
 
     fun consumeProperties(vararg properties: EntityProperty) {

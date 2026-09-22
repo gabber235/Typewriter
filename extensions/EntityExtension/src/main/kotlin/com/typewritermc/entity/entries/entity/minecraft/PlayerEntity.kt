@@ -98,6 +98,9 @@ class PlayerEntity(
     override val state: EntityState
         get() = entity.entityType.state(properties)
 
+    override val scoreboardMember: String
+        get() = entity.username.take(16)
+
     init {
         val uuid = stableId?.let { claimProfile(player.uniqueId, it) } ?: UUID.randomUUID()
         var entityId: Int
@@ -169,7 +172,7 @@ class PlayerEntity(
             "typewriter-$entityId",
             WrapperPlayServerTeams.TeamMode.CREATE,
             info,
-            entity.username.take(16)
+            scoreboardMember
         ) sendPacketTo player
 
         super.spawn(location)
