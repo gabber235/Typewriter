@@ -60,26 +60,17 @@ AsyncValue<RealmAuthoringCreationSlot> pageCreationSlotForPage(
 @riverpod
 AsyncValue<Map<PageKindRef, RealmAuthoringCreationSlot>>
 compatiblePageCreationSlots(Ref ref, ResolvedTypeRef elementType) {
-  final catalog = ref.watch(realmEditorCatalogProvider);
-  if (catalog.mapUnready<Map<PageKindRef, RealmAuthoringCreationSlot>>()
+  final slots = ref.watch(pageCreationSlotsProvider);
+  if (slots.mapUnready<Map<PageKindRef, RealmAuthoringCreationSlot>>()
       case final value?) {
     return value;
   }
-  final snapshot = catalog.requireValue.snapshot;
-  if (snapshot == null) {
-    return AsyncError(
-      ApiException.badRequest("The editor catalog is unavailable"),
-      StackTrace.current,
-    );
-  }
-  final slots = <PageKindRef, RealmAuthoringCreationSlot>{};
-  for (final definition in snapshot.pageCatalog.definitions.values) {
-    final slot = definition.creationSlot(snapshot);
-    if (slot?.acceptsRoot(elementType) == true) {
-      slots[definition.kind] = slot!;
-    }
-  }
-  return AsyncData(Map.unmodifiable(slots));
+  return AsyncData(
+    Map.unmodifiable({
+      for (final entry in slots.requireValue.entries)
+        if (entry.value.acceptsRoot(elementType)) entry.key: entry.value,
+    }),
+  );
 }
 
 /// Returns the creation slot selected for every page kind in the catalog.

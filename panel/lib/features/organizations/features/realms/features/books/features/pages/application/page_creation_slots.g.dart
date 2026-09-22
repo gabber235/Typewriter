@@ -299,7 +299,7 @@ final class CompatiblePageCreationSlotsProvider
 }
 
 String _$compatiblePageCreationSlotsHash() =>
-    r'95070ff9fda692d4b441a7615507e253c8e04c42';
+    r'92d060bb40e85cbe44bca93a63a3721c8924f066';
 
 /// Returns every page slot that accepts [elementType].
 
