@@ -8,7 +8,7 @@ value class SearchSelectorId(
     val value: String,
 ) {
     init {
-        require(value.isNotBlank()) { "Search facet ids must not be blank." }
+        require(value.isNotBlank()) { "Search selector ids must not be blank." }
     }
 }
 
@@ -22,7 +22,6 @@ data class AuthoringSearchDocument(
 ) {
     init {
         require(text.isNotBlank()) { "Search documents must contain searchable text." }
-        require(selectors.keys.all { it.value.isNotBlank() }) { "Search facet ids must not be blank." }
     }
 }
 

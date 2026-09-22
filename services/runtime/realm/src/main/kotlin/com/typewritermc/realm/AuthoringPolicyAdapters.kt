@@ -189,7 +189,7 @@ internal fun RealmAuthoringPolicyCatalog.searchDefinition(): AuthoringSearchDefi
         selectors =
             searchSelectors.map { selector ->
                 SearchSelectorDefinition(
-                    selectorId = selector.id,
+                    selectorId = selector.id.value,
                     key = selector.key,
                     valueBindingId = BindingId(value = 0),
                     values =
@@ -213,7 +213,7 @@ internal fun RealmAuthoringPolicyCatalog.searchDefinition(): AuthoringSearchDefi
             },
         facets =
             searchFacets.map { facet ->
-                AuthoringSearchFacetDefinition(facet.id, facet.label, facet.selectorId)
+                AuthoringSearchFacetDefinition(facet.id, facet.label, facet.selectorId.value)
             },
     )
 
@@ -261,7 +261,7 @@ private fun com.typewritermc.authoring.AuthoringValidationRule.toRealm(catalog: 
 
 private fun toRealmSearch(
     projection: com.typewritermc.authoring.AuthoringSearchProjection,
-    selectors: Set<String>,
+    selectors: Set<SearchSelectorId>,
 ): RealmSearchProjection =
     object : RealmSearchProjection {
         override val definition: ResourceDefinitionId = projection.resourceDefinition
@@ -280,10 +280,10 @@ private fun toRealmSearch(
                 "Search projection ${projection.resourceDefinition.value} returned definition ${document.definition.value} " +
                     "while projecting ${resource.definition.value}."
             }
-            require(document.selectors.keys.all { it.value in selectors }) {
+            require(document.selectors.keys.all { it in selectors }) {
                 "Search projection ${projection.resourceDefinition.value} returned unregistered selectors: " +
                     document.selectors.keys
-                        .filterNot { it.value in selectors }
+                        .filterNot { it in selectors }
                         .map(SearchSelectorId::value) + "."
             }
             return com.typewritermc.realm.search.AuthoringSearchDocument(

@@ -71,18 +71,18 @@ internal class CoreAuthoringPolicyProvider(
 
     private fun coreSearchSelectors() =
         listOf(
-            com.typewritermc.authoring.AuthoringSearchSelector("book", "book:"),
-            com.typewritermc.authoring.AuthoringSearchSelector("page", "page:"),
-            com.typewritermc.authoring.AuthoringSearchSelector("tag", "tag:"),
-            com.typewritermc.authoring.AuthoringSearchSelector("type", "type:"),
+            com.typewritermc.authoring.AuthoringSearchSelector(SearchSelectorId("book"), "book:"),
+            com.typewritermc.authoring.AuthoringSearchSelector(SearchSelectorId("page"), "page:"),
+            com.typewritermc.authoring.AuthoringSearchSelector(SearchSelectorId("tag"), "tag:"),
+            com.typewritermc.authoring.AuthoringSearchSelector(SearchSelectorId("type"), "type:"),
         )
 
     private fun coreSearchFacets() =
         listOf(
-            com.typewritermc.authoring.AuthoringSearchFacet("book", "Book", "book"),
-            com.typewritermc.authoring.AuthoringSearchFacet("page", "Page", "page"),
-            com.typewritermc.authoring.AuthoringSearchFacet("tag", "Tag", "tag"),
-            com.typewritermc.authoring.AuthoringSearchFacet("type", "Type", "type"),
+            com.typewritermc.authoring.AuthoringSearchFacet("book", "Book", SearchSelectorId("book")),
+            com.typewritermc.authoring.AuthoringSearchFacet("page", "Page", SearchSelectorId("page")),
+            com.typewritermc.authoring.AuthoringSearchFacet("tag", "Tag", SearchSelectorId("tag")),
+            com.typewritermc.authoring.AuthoringSearchFacet("type", "Type", SearchSelectorId("type")),
         )
 
     private fun coreDefinitions() =

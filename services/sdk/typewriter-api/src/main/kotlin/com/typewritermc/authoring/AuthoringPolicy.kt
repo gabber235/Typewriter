@@ -111,7 +111,7 @@ data class AuthoringCreationSlotDefinition(
 
 /** Describes one selector key understood by the indexed authoring search endpoint. */
 data class AuthoringSearchSelector(
-    val id: String,
+    val id: SearchSelectorId,
     val key: String,
     val values: AuthoringSearchSelectorValues = AuthoringSearchSelectorValues.FreeText,
     val caseSensitive: Boolean = false,
@@ -119,7 +119,6 @@ data class AuthoringSearchSelector(
     val colorValue: Long? = null,
 ) {
     init {
-        require(id.isNotBlank()) { "Search selector ids must not be blank." }
         require(key.isNotBlank()) { "Search selector keys must not be blank." }
     }
 }
@@ -147,12 +146,11 @@ enum class AuthoringSearchSelectorMultiplicity {
 data class AuthoringSearchFacet(
     val id: String,
     val label: String,
-    val selectorId: String,
+    val selectorId: SearchSelectorId,
 ) {
     init {
         require(id.isNotBlank()) { "Search facet ids must not be blank." }
         require(label.isNotBlank()) { "Search facet labels must not be blank." }
-        require(selectorId.isNotBlank()) { "Search facet selector ids must not be blank." }
     }
 }
 
@@ -222,7 +220,7 @@ class AuthoringPolicyCatalog private constructor(
         private val definitions = linkedMapOf<ResourceDefinitionId, AuthoringResourceDefinition>()
         private val validations = linkedMapOf<AuthoringValidationRuleId, AuthoringValidationRule>()
         private val search = linkedMapOf<ResourceDefinitionId, AuthoringSearchProjection>()
-        private val searchSelectors = linkedMapOf<String, AuthoringSearchSelector>()
+        private val searchSelectors = linkedMapOf<SearchSelectorId, AuthoringSearchSelector>()
         private val searchFacets = linkedMapOf<String, AuthoringSearchFacet>()
         private val presentations = linkedMapOf<ResourceDefinitionId, AuthoringPresentationProjection>()
         private val creationSlots = linkedMapOf<AuthoringCreationSlotId, AuthoringCreationSlotDefinition>()
@@ -281,7 +279,7 @@ class AuthoringPolicyCatalog private constructor(
                 definitions = definitions.toSortedMap(compareBy(ResourceDefinitionId::value)),
                 validations = validations.toSortedMap(compareBy(AuthoringValidationRuleId::value)),
                 search = search.toSortedMap(compareBy(ResourceDefinitionId::value)),
-                searchSelectors = searchSelectors.values.sortedBy(AuthoringSearchSelector::id),
+                searchSelectors = searchSelectors.values.sortedBy { it.id.value },
                 searchFacets = searchFacets.values.sortedBy(AuthoringSearchFacet::id),
                 presentations = presentations.toSortedMap(compareBy(ResourceDefinitionId::value)),
                 creationSlots = creationSlots.toSortedMap(compareBy(AuthoringCreationSlotId::value)),

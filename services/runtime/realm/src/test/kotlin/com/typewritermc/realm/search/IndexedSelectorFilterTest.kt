@@ -4,6 +4,7 @@ import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringSearchFacet
 import com.typewritermc.authoring.AuthoringSearchSelector
+import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.NominalTypeKind
@@ -80,10 +81,10 @@ val IndexedSelectorFilterTest by testSuite {
             AuthoringSearchMetadata(
                 selectors =
                     listOf(
-                        AuthoringSearchSelector("insensitive", "Insensitive"),
-                        AuthoringSearchSelector("sensitive", "Sensitive", caseSensitive = true),
+                        AuthoringSearchSelector(SearchSelectorId("insensitive"), "Insensitive"),
+                        AuthoringSearchSelector(SearchSelectorId("sensitive"), "Sensitive", caseSensitive = true),
                     ),
-                facets = listOf(AuthoringSearchFacet("group", "Group", "sensitive")),
+                facets = listOf(AuthoringSearchFacet("group", "Group", SearchSelectorId("sensitive"))),
             )
 
         metadata.normalize("insensitive", "  MixedCase  ") shouldBe "mixedcase"

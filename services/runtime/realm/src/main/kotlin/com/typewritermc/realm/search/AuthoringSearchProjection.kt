@@ -4,6 +4,7 @@ import com.surrealdb.RecordId
 import com.surrealdb.Transaction
 import com.typewritermc.authoring.AuthoringSearchFacet
 import com.typewritermc.authoring.AuthoringSearchSelector
+import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.compiler.GraphReadRequirement
 import com.typewritermc.realm.repository.AuthoringGraphResource
@@ -74,11 +75,12 @@ internal class AuthoringSearchMetadata(
         selector: String,
         value: String,
     ): String {
-        val definition = requireNotNull(selectors[selector]) { "Search selector $selector is not registered." }
+        val definition = requireNotNull(selectors[SearchSelectorId(selector)]) { "Search selector $selector is not registered." }
         return value.trim().let { if (definition.caseSensitive) it else it.lowercase() }
     }
 
-    fun selectorForFacet(facet: String): String = requireNotNull(facets[facet]) { "Search facet $facet is not registered." }.selectorId
+    fun selectorForFacet(facet: String): String =
+        requireNotNull(facets[facet]) { "Search facet $facet is not registered." }.selectorId.value
 }
 
 /** Validates the open projection set and resolves a projection without a definition switch. */
