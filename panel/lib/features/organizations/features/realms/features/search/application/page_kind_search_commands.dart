@@ -42,14 +42,26 @@ SearchCommand createPageCommand({
         message: "Select exactly one book before creating a page",
       );
     }
+    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    final root = catalog
+        ?.creationSlots[CoreAuthoringCreationSlotIds.page]
+        ?.concreteRoots
+        .singleOrNull;
+    if (root == null) {
+      return const SearchCommandResult.failed(
+        message: "Page creation is unavailable",
+      );
+    }
     final created = await execution.prompts.show(
       (context) => ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              kind: skir.ResourceKind.page,
+              slot: CoreAuthoringCreationSlotIds.page,
               title: "Create Page",
+              concreteRoot: root,
+              hosts: [book.bookId],
               partial: pageCreationPartial(
                 bookId: book.bookId,
                 kind: definition.kind,
@@ -63,11 +75,14 @@ SearchCommand createPageCommand({
     }
     return SearchCommandResult.completed(
       hostEffects: [
-        OpenAuthoringPageEffect(
+        OpenAuthoringResourceEffect(
           organizationId: organizationId,
           realmId: realmId,
+          resourceId: created.id,
+          definition: CoreResourceDefinitionIds.page,
           bookId: book.bookId,
-          pageId: created.id,
+          ownerId: book.bookId,
+          nestedIdentifier: null,
         ),
       ],
     );

@@ -14,9 +14,13 @@ const pageKindSearchResultType = SearchResultType(
 
 /// Lists page kinds available in the active realm catalog.
 final class PageKindSearchSource implements SearchSource {
-  PageKindSearchSource({required this.definitions});
+  PageKindSearchSource({
+    required this.definitions,
+    this.querySelectors = const [],
+  });
 
   final ValueListenable<AsyncValue<List<RealmPageDefinition>>> definitions;
+  final List<QuerySelectorDefinition> querySelectors;
   final _snapshots = BehaviorSubject<SearchSourceSnapshot>.seeded(.loading());
   var _disposed = false;
 
@@ -45,12 +49,8 @@ final class PageKindSearchSource implements SearchSource {
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
-  // Even though we don't handle them, we aren't swayed by these selectors.
   @override
-  List<QuerySelectorDefinition> get selectors => const [
-    authoringBookSearchSelector,
-    authoringTagSearchSelector,
-  ];
+  List<QuerySelectorDefinition> get selectors => querySelectors;
 
   @override
   void initialize(SearchQueryContext context) {

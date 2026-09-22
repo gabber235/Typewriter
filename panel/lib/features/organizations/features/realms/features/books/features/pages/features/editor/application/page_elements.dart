@@ -41,7 +41,10 @@ PageDocumentHealth? pageDocumentHealth(
   }
   final session = ref.watch(authoringSessionProvider(organizationId, realmId));
   if (!session.resources.containsKey(pageId)) return null;
-  final status = session.compiledStatuses[pageId];
+  final matchingStatuses = session.compiledStatuses.entries.where(
+    (entry) => entry.key.resource == pageId,
+  );
+  final status = matchingStatuses.isEmpty ? null : matchingStatuses.first.value;
   final diagnostics = session.diagnostics
       .where((diagnostic) => diagnostic.resource == pageId)
       .map((diagnostic) => diagnostic.message)
@@ -84,7 +87,11 @@ class PageElements extends _$PageElements
     }
     _sessionProvider = authoringSessionProvider(organizationId, realmId);
     final lease = ref.watch(
-      authoringPageScopeProvider(organizationId, realmId, _pageId),
+      authoringSelectionLeaseProvider(
+        organizationId,
+        realmId,
+        _pageId.pageAuthoringSelection,
+      ),
     );
     final documentsProvider = decodedRealmDocumentsProvider(
       organizationId,

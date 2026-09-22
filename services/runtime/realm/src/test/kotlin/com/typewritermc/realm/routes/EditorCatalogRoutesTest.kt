@@ -67,9 +67,12 @@ private class FakeRealmEditorCatalogSource : RealmEditorCatalogSource {
             elementEntries = emptyList(),
             pageEntries = emptyList(),
             pageDiagnostics = emptyList(),
-            resourceKindDefinitions = emptyList(),
+            resourceDefinitions = emptyList(),
             relationDefinitions = emptyList(),
             collectionProjectionDefinitions = emptyList(),
+            authoringCreationSlots = emptyList(),
+            authoringSearch = null,
+            authoringCompilationProjections = emptyList(),
         )
 
     override suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogWatchUpdate =

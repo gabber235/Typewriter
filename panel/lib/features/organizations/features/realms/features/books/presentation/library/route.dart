@@ -4,8 +4,6 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_framework/responsive_framework.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Book library route.
@@ -25,13 +23,20 @@ class LibraryPage extends HookConsumerWidget {
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
 
     Future<void> handleCreateBook() async {
+      final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+      final root = catalog
+          ?.creationSlots[CoreAuthoringCreationSlotIds.book]
+          ?.concreteRoots
+          .singleOrNull;
+      if (root == null) throw StateError("Book creation is unavailable");
       final created = await ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              kind: skir.ResourceKind.book,
+              slot: CoreAuthoringCreationSlotIds.book,
               title: "Create Book",
+              concreteRoot: root,
               partial: RecordValue({}),
             ),
           );

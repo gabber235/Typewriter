@@ -12,7 +12,8 @@ EditorTarget authoringElementTarget({
 }) {
   final id = skir.ResourceId(value: identity.id);
   final resource = state.resources[id];
-  if (resource == null || resource.kind != skir.ResourceKind.element) {
+  if (resource == null ||
+      resource.definition.toDomain() != CoreResourceDefinitionIds.element) {
     throw StateError("The editable element is not loaded");
   }
   final generation = state.generation;
@@ -79,7 +80,6 @@ final class ElementEditorSnapshot extends EditorSnapshot
     final wire = SkirEditorCodec(codec.registry);
     return skir.AuthoringOperation.createCommit(
       id: resource.id,
-      observedSequence: commit.expectedRevision,
       base: resource,
       proposed: proposed,
       changedPaths: commit.changedPaths.map(

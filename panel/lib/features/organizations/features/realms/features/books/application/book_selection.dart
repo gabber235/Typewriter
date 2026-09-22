@@ -82,7 +82,7 @@ class BookIdentifier extends SelectableIdentifier
     }
     return AsyncData(
       BookSelection(
-        resource: BookEditorResource(repository, bookId),
+        resource: TypedAuthoringEditorResource(repository, bookId),
         onOpen: () => router.navigate(routeFor(organization, realm)),
         id: this,
         book: book,

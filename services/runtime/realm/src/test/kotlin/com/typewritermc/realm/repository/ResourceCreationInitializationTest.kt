@@ -10,7 +10,7 @@ val ResourceCreationInitializationTest by testSuite {
         val prototypes = loadTestPrototypes()
         val root = prototypes.require(Book::class).type
 
-        val initialized = prototypes.initialize(root, DataValue.Record(emptyMap()))
+        val initialized = prototypes.initializeConcrete(root, DataValue.Record(emptyMap()))
         val book = prototypes.decodeAs<Book>(initialized)
 
         book.title shouldBe ""

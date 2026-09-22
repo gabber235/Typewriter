@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef TypedAuthoringResource = ({
   skir.ResourceId id,
-  skir.ResourceKind kind,
+  ResourceDefinitionId definition,
   TypedValueEnvelope content,
 });
 
@@ -27,6 +27,14 @@ typedef SubjectPresentationModel = ({
   PresentationModel model,
   PresentationId presentation,
 });
+
+extension ResourceDefinitionWireEncoding on ResourceDefinitionId {
+  skir.ResourceDefinitionId toWire() => skir.ResourceDefinitionId(value: value);
+}
+
+extension ResourceDefinitionWireDecoding on skir.ResourceDefinitionId {
+  ResourceDefinitionId toDomain() => ResourceDefinitionId(value);
+}
 
 /// Encodes one editor preview as a generic typed resource commit.
 ///
@@ -85,22 +93,37 @@ final class TypedAuthoringCodec {
   final TypeRegistry registry;
   final SkirEditorCodec _wire;
 
-  ResolvedTypeRef requireDefaultRoot(skir.ResourceKind kind) =>
-      catalog.resourceKinds[kind]?.defaultRoot ??
-      (throw StateError("The Realm catalog has no default root for $kind"));
+  ResolvedTypeRef requireConcreteRoot(ResourceDefinitionId definition) {
+    final accepted = catalog.resourceDefinitions[definition]?.acceptedRoot;
+    final root = switch (accepted) {
+      NamedType(:final reference) => reference,
+      _ => null,
+    };
+    if (root == null ||
+        registry.resolveExact(root).valueOrNull?.isConcrete != true) {
+      throw StateError(
+        "Resource definition '${definition.value}' requires an explicit concrete root",
+      );
+    }
+    return root;
+  }
 
   skir.AuthoringResource encodeResource(
     skir.ResourceId id,
-    skir.ResourceKind kind,
+    ResourceDefinitionId definition,
     TypedValueEnvelope content,
   ) => skir.AuthoringResource(
     id: id,
-    kind: kind,
+    definition: definition.toWire(),
     content: encodeEnvelope(content).valueOrNull!,
   );
 
-  bool isResourceType(TypedValueEnvelope content, skir.ResourceKind kind) =>
-      catalog.resourceKinds[kind]?.acceptedRoot == NamedType(content.rootType);
+  bool isResourceType(
+    TypedValueEnvelope content,
+    ResourceDefinitionId definition,
+  ) =>
+      catalog.resourceDefinitions[definition]?.acceptedRoot ==
+      NamedType(content.rootType);
 
   TypeResult<TypedValueEnvelope> decodeEnvelope(
     skir.TypedValueEnvelope envelope,
@@ -122,7 +145,11 @@ final class TypedAuthoringCodec {
     skir.AuthoringResource resource,
   ) => _mapResult(
     decodeEnvelope(resource.content),
-    (content) => (id: resource.id, kind: resource.kind, content: content),
+    (content) => (
+      id: resource.id,
+      definition: resource.definition.toDomain(),
+      content: content,
+    ),
   );
 
   TypedAuthoringResource decodeResourceOrThrow(
@@ -377,7 +404,6 @@ final class TypedAuthoringCodec {
       ..content = encodeEnvelope(proposed).valueOrNull!;
     return skir.AuthoringOperation.createCommit(
       id: baseResource.id,
-      observedSequence: commit.expectedRevision,
       base: baseResource,
       proposed: proposedResource,
       changedPaths: normalizedPaths.map(

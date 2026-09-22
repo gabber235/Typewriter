@@ -8,59 +8,49 @@ final resourceCreationProvider = Provider<ResourceCreationSession>(
   ResourceCreationSession.new,
 );
 
-final class ResourceRelationAttachment {
-  const ResourceRelationAttachment.toMany({
-    required this.owner,
-    required this.path,
-  });
-
-  final skir.ResourceId owner;
-  final DataPath path;
-}
-
 final class ResourceCreationRequest {
   factory ResourceCreationRequest({
-    required skir.ResourceKind kind,
+    required AuthoringCreationSlotId slot,
     required String title,
+    required ResolvedTypeRef concreteRoot,
     required DataValue partial,
-    ResolvedTypeRef? root,
-    List<ResourceRelationAttachment> relations = const [],
+    List<skir.ResourceId> hosts = const [],
     List<skir.ResourceId> referenceOrigins = const [],
   }) {
     final id = newResourceId();
     return ResourceCreationRequest._(
       id: id,
-      kind: kind,
+      slot: slot,
       title: title,
-      root: root,
+      concreteRoot: concreteRoot,
       partial: partial,
-      relationAttachments: List.unmodifiable(relations),
+      hosts: List.unmodifiable(hosts),
       referenceOrigins: List.unmodifiable(referenceOrigins),
     );
   }
 
   const ResourceCreationRequest._({
     required this.id,
-    required this.kind,
+    required this.slot,
     required this.title,
-    required this.root,
+    required this.concreteRoot,
     required this.partial,
-    required this.relationAttachments,
+    required this.hosts,
     required this.referenceOrigins,
   });
 
   final skir.ResourceId id;
-  final skir.ResourceKind kind;
+  final AuthoringCreationSlotId slot;
   final String title;
-  final ResolvedTypeRef? root;
+  final ResolvedTypeRef concreteRoot;
   final DataValue partial;
-  final List<ResourceRelationAttachment> relationAttachments;
+  final List<skir.ResourceId> hosts;
   final List<skir.ResourceId> referenceOrigins;
 }
 
 typedef CreatedAuthoringResource = ({
   skir.ResourceId id,
-  skir.ResourceKind kind,
+  ResourceDefinitionId definition,
   TypedValueEnvelope content,
 });
 
@@ -80,8 +70,31 @@ final class ResourceCreationSession {
     }
     final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
     if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final slot = catalog.creationSlots[request.slot];
+    if (slot == null) {
+      throw ApiException.badRequest("Creation slot is unavailable");
+    }
+    if (!slot.acceptsRoot(request.concreteRoot)) {
+      throw ApiException.badRequest(
+        "Concrete root is not accepted by the creation slot",
+      );
+    }
+    _validateHosts(slot, request.hosts);
     final codec = TypedAuthoringCodec(catalog);
-    final root = request.root ?? codec.requireDefaultRoot(request.kind);
+    final initializeConcreteType = ref
+        .read(realmEditorCatalogSourceProvider)
+        .concreteTypeInitializer(
+          route: RealmEditorCatalogRoute(
+            organizationId: organizationId,
+            realmId: realmId,
+          ),
+          generation: catalog.generation,
+          registry: codec.registry,
+        );
+    final suppliedPartial = slot.bindHostReferences(
+      request.partial,
+      request.hosts,
+    );
     final initialized = await ref
         .read(realmEditorCatalogSourceProvider)
         .initialize(
@@ -90,14 +103,14 @@ final class ResourceCreationSession {
             realmId: realmId,
           ),
           generation: catalog.generation,
-          partial: TypedValueEnvelope(
-            rootType: root,
-            rootValue: request.partial,
-          ),
+          root: request.concreteRoot,
+          supplied: suppliedPartial,
           registry: codec.registry,
         );
-    final materialized = switch (initialized) {
-      RealmTypedValueInitialized(:final value) => value,
+    final supplied = switch (initialized) {
+      RealmTypedValueInitialized(:final value) => value.rootValue,
+      RealmTypedValueInitializationNeedsInput(:final draft) =>
+        draft.suppliedValue,
       RealmTypedValueInitializationGenerationMismatch() =>
         throw ApiException.conflict("The Realm catalog changed"),
       RealmTypedValueInitializationRejected(:final diagnostics) =>
@@ -106,11 +119,18 @@ final class ResourceCreationSession {
         ),
     };
     if (!context.mounted) return null;
-    final draft = CreationDraft.fromMaterialized(
-      rootType: NamedType(materialized.rootType),
-      value: materialized.rootValue,
-      registry: codec.registry,
-    );
+    final draft = supplied == null
+        ? CreationDraft(
+            rootType: NamedType(request.concreteRoot),
+            registry: codec.registry,
+            concreteTypeInitializer: initializeConcreteType,
+          )
+        : CreationDraft.fromMaterialized(
+            rootType: NamedType(request.concreteRoot),
+            value: supplied,
+            registry: codec.registry,
+            concreteTypeInitializer: initializeConcreteType,
+          );
     try {
       final value = await promptResourceCreationEditor(
         context: context,
@@ -120,85 +140,121 @@ final class ResourceCreationSession {
         origins: request.referenceOrigins,
       );
       if (value == null || !ref.mounted) return null;
-      final content = materialized.copyWith(rootValue: value);
+      final completed = await ref
+          .read(realmEditorCatalogSourceProvider)
+          .initialize(
+            RealmEditorCatalogRoute(
+              organizationId: organizationId,
+              realmId: realmId,
+            ),
+            generation: catalog.generation,
+            root: request.concreteRoot,
+            supplied: value,
+            registry: codec.registry,
+          );
+      final content = switch (completed) {
+        RealmTypedValueInitialized(:final value) => value,
+        RealmTypedValueInitializationNeedsInput(:final draft) =>
+          throw ApiException.badRequest(
+            draft.requirements
+                .map((requirement) => requirement.path.toString())
+                .join("; "),
+          ),
+        RealmTypedValueInitializationGenerationMismatch() =>
+          throw ApiException.conflict("The Realm catalog changed"),
+        RealmTypedValueInitializationRejected(:final diagnostics) =>
+          throw ApiException.badRequest(
+            diagnostics.map((item) => item.message).join("; "),
+          ),
+      };
       final access = ref.readAuthoringSession();
       final operations = <skir.AuthoringOperation>[
         skir.AuthoringOperation.createCreate(
-          resource: codec.encodeResource(request.id, request.kind, content),
+          resource: codec.encodeResource(request.id, slot.creates, content),
         ),
-        ..._attachments(
-          access.state,
-          codec,
-          request.id,
-          request.relationAttachments,
-        ),
+        ..._declaredRelationAttachments(request.id, slot, request.hosts),
       ];
       final response = await access.notifier.apply(operations);
       response.requireApplied(conflictMessage: "The resource already exists");
-      return (id: request.id, kind: request.kind, content: content);
+      return (id: request.id, definition: slot.creates, content: content);
     } finally {
       draft.dispose();
     }
   }
 
-  List<skir.AuthoringOperation> _attachments(
-    AuthoringSessionState state,
-    TypedAuthoringCodec codec,
-    skir.ResourceId target,
-    List<ResourceRelationAttachment> attachments,
+  void _validateHosts(
+    RealmAuthoringCreationSlot slot,
+    List<skir.ResourceId> hosts,
   ) {
-    final sequence = state.sequence;
-    if (sequence == null) throw ApiException.notFound("Relation owner");
-    final grouped = <skir.ResourceId, List<ResourceRelationAttachment>>{};
-    for (final attachment in attachments) {
-      grouped.putIfAbsent(attachment.owner, () => []).add(attachment);
+    final cardinality = switch (slot.context) {
+      RealmStandaloneCreationContext() => null,
+      RealmDeclaredRelationCreationContext(:final cardinality) => cardinality,
+      RealmReferencePathCreationContext(:final cardinality) => cardinality,
+    };
+    switch (cardinality) {
+      case null when hosts.isNotEmpty:
+        throw ApiException.badRequest(
+          "Standalone creation does not accept hosts",
+        );
+      case RealmCreationHostCardinality.exactlyOne when hosts.length != 1:
+        throw ApiException.badRequest("Creation requires exactly one host");
+      case RealmCreationHostCardinality.oneOrMore when hosts.isEmpty:
+        throw ApiException.badRequest("Creation requires at least one host");
+      default:
+        break;
     }
-    final pathCodec = SkirEditorCodec(codec.registry);
+  }
+
+  List<skir.AuthoringOperation> _declaredRelationAttachments(
+    skir.ResourceId created,
+    RealmAuthoringCreationSlot slot,
+    List<skir.ResourceId> hosts,
+  ) {
+    final context = switch (slot.context) {
+      final RealmDeclaredRelationCreationContext value => value,
+      _ => null,
+    };
+    if (context == null || hosts.isEmpty) return const [];
     return [
-      for (final group in grouped.entries)
-        () {
-          final owner = state.resources[group.key];
-          if (owner == null) throw ApiException.notFound("Relation owner");
-          final decoded = codec.decodeResourceOrThrow(owner);
-          var rootValue = decoded.content.rootValue;
-          final changedPaths = <DataPath>{};
-          for (final attachment in group.value) {
-            final current = attachment.path.read(rootValue).valueOrNull;
-            if (current is! ListValue) {
-              throw ApiException.badRequest(
-                "Relation attachment must target a list",
-              );
-            }
-            final replacement = attachment.path
-                .replace(
-                  rootValue,
-                  ListValue([...current.values, ReferenceValue(target)]),
-                )
-                .valueOrNull;
-            if (replacement == null) {
-              throw ApiException.badRequest(
-                "Relation attachment path is invalid",
-              );
-            }
-            rootValue = replacement;
-            changedPaths.add(attachment.path);
-          }
-          final proposed = owner.toMutable()
-            ..content = codec
-                .encodeEnvelope(decoded.content.copyWith(rootValue: rootValue))
-                .valueOrNull!;
-          return skir.AuthoringOperation.createCommit(
-            id: owner.id,
-            observedSequence: sequence,
-            base: owner,
-            proposed: proposed,
-            changedPaths: [
-              for (final path in changedPaths)
-                pathCodec.encodePath(path).valueOrNull!,
-            ],
-          );
-        }(),
+      for (final host in hosts)
+        switch (context.direction) {
+          RealmCreationRelationDirection.outgoing =>
+            skir.AuthoringOperation.createDeclareRelation(
+              relation: skir.RelationId(value: context.relation),
+              source: host,
+              target: created,
+            ),
+          RealmCreationRelationDirection.incoming =>
+            skir.AuthoringOperation.createDeclareRelation(
+              relation: skir.RelationId(value: context.relation),
+              source: created,
+              target: host,
+            ),
+          RealmCreationRelationDirection.both => throw ApiException.badRequest(
+            "Creation relation direction must be explicit",
+          ),
+        },
     ];
+  }
+}
+
+extension on RealmAuthoringCreationSlot {
+  DataValue bindHostReferences(DataValue partial, List<skir.ResourceId> hosts) {
+    final context = this.context;
+    if (context case RealmReferencePathCreationContext(
+      :final path,
+      :final cardinality,
+    )) {
+      final value = switch (cardinality) {
+        RealmCreationHostCardinality.exactlyOne => ReferenceValue(hosts.single),
+        RealmCreationHostCardinality.oneOrMore => ListValue([
+          for (final host in hosts) ReferenceValue(host),
+        ]),
+      };
+      return path.replace(partial, value).valueOrNull ??
+          (throw ApiException.badRequest("Creation host path is invalid"));
+    }
+    return partial;
   }
 }
 

@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -5,52 +6,25 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm_authoring_search_commands.freezed.dart";
 
-const openAuthoringBookCommandId = SearchCommandId("authoring.book.open");
-const openAuthoringTagCommandId = SearchCommandId("authoring.tag.open");
-const openAuthoringPageCommandId = SearchCommandId("authoring.page.open");
-const openAuthoringElementCommandId = SearchCommandId("authoring.element.open");
+const openAuthoringResourceCommandId = SearchCommandId(
+  "authoring.resource.open",
+);
 
 List<SearchCommand> openAuthoringCommands(
   skir.RecordId organizationId,
   skir.RecordId realmId,
 ) => [
   _openAuthoringCommand<AuthoringSearchResultPayload>(
-    id: openAuthoringBookCommandId,
-    type: authoringBookSearchResultType,
-    effect: (value) => OpenAuthoringBookEffect(
+    id: openAuthoringResourceCommandId,
+    type: authoringResourceSearchResultType,
+    effect: (value) => OpenAuthoringResourceEffect(
       organizationId: organizationId,
       realmId: realmId,
-      bookId: value.id,
-    ),
-  ),
-  _openAuthoringCommand<AuthoringSearchResultPayload>(
-    id: openAuthoringTagCommandId,
-    type: authoringTagSearchResultType,
-    effect: (value) => OpenAuthoringTagEffect(
-      organizationId: organizationId,
-      realmId: realmId,
-      tagId: value.id,
-    ),
-  ),
-  _openAuthoringCommand<AuthoringSearchResultPayload>(
-    id: openAuthoringPageCommandId,
-    type: authoringPageSearchResultType,
-    effect: (value) => OpenAuthoringPageEffect(
-      organizationId: organizationId,
-      realmId: realmId,
-      bookId: value.owner!,
-      pageId: value.id,
-    ),
-  ),
-  _openAuthoringCommand<AuthoringSearchResultPayload>(
-    id: openAuthoringElementCommandId,
-    type: authoringElementSearchResultType,
-    effect: (value) => OpenAuthoringElementEffect(
-      organizationId: organizationId,
-      realmId: realmId,
-      bookId: value.contextReference("book")!,
-      pageId: value.owner!,
-      elementIdentifier: value.elementIdentifier,
+      resourceId: value.id,
+      definition: value.definition,
+      bookId: value.coreBookId,
+      ownerId: value.owner,
+      nestedIdentifier: value.nestedIdentifier,
     ),
   ),
 ];
@@ -68,54 +42,29 @@ SearchCommand _openAuthoringCommand<T extends Object>({
 );
 
 @freezed
-abstract class OpenAuthoringBookEffect
-    with _$OpenAuthoringBookEffect
+abstract class OpenAuthoringResourceEffect
+    with _$OpenAuthoringResourceEffect
     implements SearchHostEffect {
-  const factory OpenAuthoringBookEffect({
+  const factory OpenAuthoringResourceEffect({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
-    required skir.ResourceId bookId,
-  }) = _OpenAuthoringBookEffect;
-}
-
-@freezed
-abstract class OpenAuthoringTagEffect
-    with _$OpenAuthoringTagEffect
-    implements SearchHostEffect {
-  const factory OpenAuthoringTagEffect({
-    required skir.RecordId organizationId,
-    required skir.RecordId realmId,
-    required skir.ResourceId tagId,
-  }) = _OpenAuthoringTagEffect;
-}
-
-@freezed
-abstract class OpenAuthoringPageEffect
-    with _$OpenAuthoringPageEffect
-    implements SearchHostEffect {
-  const factory OpenAuthoringPageEffect({
-    required skir.RecordId organizationId,
-    required skir.RecordId realmId,
-    required skir.ResourceId bookId,
-    required skir.ResourceId pageId,
-  }) = _OpenAuthoringPageEffect;
-}
-
-@freezed
-abstract class OpenAuthoringElementEffect
-    with _$OpenAuthoringElementEffect
-    implements SearchHostEffect {
-  const factory OpenAuthoringElementEffect({
-    required skir.RecordId organizationId,
-    required skir.RecordId realmId,
-    required skir.ResourceId bookId,
-    required skir.ResourceId pageId,
-    required SelectableIdentifier? elementIdentifier,
-  }) = _OpenAuthoringElementEffect;
+    required skir.ResourceId resourceId,
+    required ResourceDefinitionId definition,
+    required skir.ResourceId? bookId,
+    required skir.ResourceId? ownerId,
+    required SelectableIdentifier? nestedIdentifier,
+  }) = _OpenAuthoringResourceEffect;
 }
 
 extension on AuthoringSearchResultPayload {
-  SelectableIdentifier? get elementIdentifier {
+  skir.ResourceId? get coreBookId => switch (definition) {
+    CoreResourceDefinitionIds.book => id,
+    CoreResourceDefinitionIds.page => ownerPath.firstOrNull,
+    CoreResourceDefinitionIds.element => ownerPath.lastOrNull,
+    _ => null,
+  };
+
+  SelectableIdentifier? get nestedIdentifier {
     final pageId = owner?.id;
     if (pageId == null) return null;
     final registry = TypeRegistry(presentation.model.catalog);
@@ -126,8 +75,12 @@ extension on AuthoringSearchResultPayload {
       subject.content.rootType.id,
       ...?resolved?.ancestors.map((type) => type.id),
     }.whereType<QualifiedTypeId>().map((id) => id.name).toSet();
-    return names.contains("Entry")
-        ? EntryIdentifier(id.id, pageId: pageId)
-        : CueIdentifier(pageId: pageId, id: id.id);
+    if (names.contains("Entry")) {
+      return EntryIdentifier(id.id, pageId: pageId);
+    }
+    if (names.contains("Cue")) {
+      return CueIdentifier(pageId: pageId, id: id.id);
+    }
+    return null;
   }
 }

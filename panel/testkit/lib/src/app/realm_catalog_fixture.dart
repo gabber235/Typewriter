@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const realmFixtureGeneration = CatalogGeneration("fixture");
@@ -45,7 +43,8 @@ RealmEditorCatalogSnapshot receivedRealmEditorCatalog({
   Map<CapabilityId, CapabilityDefinition> capabilities = const {},
   Map<String, RealmElementCatalogEntry> elements = const {},
   RealmPageCatalog pageCatalog = const RealmPageCatalog(),
-  Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds = const {},
+  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions =
+      const {},
   Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>
       collectionProjections =
       const {},
@@ -56,7 +55,7 @@ RealmEditorCatalogSnapshot receivedRealmEditorCatalog({
   capabilities: capabilities,
   elements: elements,
   pageCatalog: pageCatalog,
-  resourceKinds: resourceKinds,
+  resourceDefinitions: resourceDefinitions,
   collectionProjections: collectionProjections,
 );
 

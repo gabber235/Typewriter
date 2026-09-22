@@ -1234,7 +1234,6 @@ final class RemoveMapEntryAction_mutable
 sealed class ReplaceConcreteNominalTypeAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get concreteType;
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
 
   ReplaceConcreteNominalTypeAction toFrozen();
 }
@@ -1246,31 +1245,22 @@ final class ReplaceConcreteNominalTypeAction
   final _lib_editor_v1_binding.BindingRef target;
   @_core.override
   final _lib_editor_v1_type_catalog.ResolvedTypeRef concreteType;
-  @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ReplaceConcreteNominalTypeAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType,
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
   }) => ReplaceConcreteNominalTypeAction._(
     target.toFrozen(),
     concreteType.toFrozen(),
-    value.toFrozen(),
   );
 
-  ReplaceConcreteNominalTypeAction._(
-    this.target,
-    this.concreteType,
-    this.value,
-  );
+  ReplaceConcreteNominalTypeAction._(this.target, this.concreteType);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ReplaceConcreteNominalTypeAction._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
     _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -1279,7 +1269,6 @@ final class ReplaceConcreteNominalTypeAction
       ReplaceConcreteNominalTypeAction_mutable._(
         _lib_editor_v1_binding.BindingRef.defaultInstance,
         _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-        _lib_editor_v1_expression.TypedExpression.defaultInstance,
       );
 
   /// Returns this instance (no-op).
@@ -1292,7 +1281,6 @@ final class ReplaceConcreteNominalTypeAction
       ReplaceConcreteNominalTypeAction_mutable._(
         this.target,
         this.concreteType,
-        this.value,
       );
 
   @_core.override
@@ -1308,11 +1296,7 @@ final class ReplaceConcreteNominalTypeAction
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.concreteType,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.target, this.concreteType];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -1342,15 +1326,6 @@ final class ReplaceConcreteNominalTypeAction
         (it) => it.concreteType,
         (it, v) => it.concreteType = v,
       );
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1372,14 +1347,9 @@ final class ReplaceConcreteNominalTypeAction_mutable
     implements ReplaceConcreteNominalTypeAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable target;
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType;
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ReplaceConcreteNominalTypeAction_mutable._(
-    this.target,
-    this.concreteType,
-    this.value,
-  );
+  ReplaceConcreteNominalTypeAction_mutable._(this.target, this.concreteType);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -1405,25 +1375,12 @@ final class ReplaceConcreteNominalTypeAction_mutable
     }
   }
 
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
-          .toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   ReplaceConcreteNominalTypeAction toFrozen() =>
       ReplaceConcreteNominalTypeAction(
         target: this.target,
         concreteType: this.concreteType,
-        value: this.value,
       ).._u = this._u;
 }
 
@@ -1560,12 +1517,10 @@ sealed class LocalEditorAction {
   factory LocalEditorAction.createReplaceConcreteNominalType({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType,
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
   }) => LocalEditorAction.wrapReplaceConcreteNominalType(
     ReplaceConcreteNominalTypeAction(
       target: target,
       concreteType: concreteType,
-      value: value,
     ),
   );
 

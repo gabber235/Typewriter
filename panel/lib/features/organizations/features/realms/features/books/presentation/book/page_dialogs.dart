@@ -16,13 +16,22 @@ Future<Page?> promptAndCreatePage({
   if (kind == null) {
     throw ApiException.badRequest("No page kinds are available");
   }
+  final root = catalog
+      .creationSlots[CoreAuthoringCreationSlotIds.page]
+      ?.concreteRoots
+      .singleOrNull;
+  if (root == null) {
+    throw ApiException.badRequest("Page creation is unavailable");
+  }
   final created = await ref
       .read(resourceCreationProvider)
       .create(
         context: context,
         request: ResourceCreationRequest(
-          kind: skir.ResourceKind.page,
+          slot: CoreAuthoringCreationSlotIds.page,
           title: "Create Page",
+          concreteRoot: root,
+          hosts: [bookId],
           partial: pageCreationPartial(
             bookId: bookId,
             kind: kind,

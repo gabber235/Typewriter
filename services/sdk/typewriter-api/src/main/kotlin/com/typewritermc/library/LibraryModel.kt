@@ -2,6 +2,7 @@ package com.typewritermc.library
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.Placement
+import com.typewritermc.authoring.ReferenceResourceResolution
 import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ReferenceSlotId

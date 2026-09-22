@@ -10,6 +10,22 @@ void main() {
     revision: 1,
   );
 
+  test("Realm input drafts omit intrinsic type defaults", () {
+    final draft = planCreationDraftWithoutDefaults(
+      type: const RecordType(
+        fields: {
+          "name": TypeField(name: "name", type: StringType()),
+          "enabled": TypeField(name: "enabled", type: BooleanType()),
+        },
+      ),
+      registry: registry,
+    );
+
+    final record = draft as RecordDraftValue;
+    expect(record.fields["name"], isA<MissingDraftValue>());
+    expect(record.fields["enabled"], isA<MissingDraftValue>());
+  });
+
   test("required references remain missing until edited", () {
     final draft = CreationDraft(
       rootType: const ReferenceType(target: target),
@@ -124,6 +140,13 @@ void main() {
       ..appendMapEntry(DataPath.root)
       ..appendMapEntry(DataPath.root);
 
+    final entries = draft.mapStructure(DataPath.root)!.entries;
+    for (final entry in entries) {
+      draft
+        ..updateMapKey(DataPath.root, entry.id, const StringValue("duplicate"))
+        ..updateMapValue(DataPath.root, entry.id, const StringValue("value"));
+    }
+
     final structure = draft.mapStructure(DataPath.root)!;
     expect(structure.entries, hasLength(2));
     expect(structure.entries.expand((entry) => entry.diagnostics), isEmpty);
@@ -133,7 +156,7 @@ void main() {
     );
   });
 
-  test("abstract selection creates an editable nested draft", () {
+  test("abstract selection creates an editable nested draft", () async {
     const abstractType = ResolvedTypeRef(
       id: TypeId.qualified(namespace: "example", name: "Abstract"),
       revision: 1,
@@ -168,10 +191,12 @@ void main() {
     final draft = CreationDraft(
       rootType: const NamedType(abstractType),
       registry: types,
+      concreteTypeInitializer: ({required type, required supplied}) async =>
+          const ConcreteTypeNeedsInput(),
     );
     addTearDown(draft.dispose);
 
-    draft.selectConcreteType(DataPath.root, concreteType);
+    await draft.selectConcreteTypeAsync(DataPath.root, concreteType);
     expect(
       draft.concretePayloadValue(DataPath.root, DataPath.root.field("target")),
       isA<MissingEditorValue>(),

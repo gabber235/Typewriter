@@ -1,15 +1,14 @@
 package com.typewritermc.realm.routes
 
 import build.skir.Serializer
+import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompileDiagnostic
-import com.typewritermc.engine.CompiledContentActivation
-import com.typewritermc.engine.CompiledManifest
-import com.typewritermc.engine.CompiledPageShard
-import com.typewritermc.engine.ContentDigest
-import com.typewritermc.library.PageId
-import com.typewritermc.realm.compiler.CompiledContentRepository
-import com.typewritermc.realm.compiler.CompiledResourceState
-import com.typewritermc.realm.compiler.CompiledResourceStatus
+import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.engine.CompiledArtifactActivation
+import com.typewritermc.engine.CompiledArtifactManifest
+import com.typewritermc.realm.RealmAuthoringPolicyAssembler
+import com.typewritermc.realm.compiler.RegisteredCompiledContentRepository
+import com.typewritermc.realm.compiler.RegisteredCompiledState
 import com.typewritermc.realm.repository.AuthoringBatch
 import com.typewritermc.realm.repository.AuthoringBatchResult
 import com.typewritermc.realm.repository.AuthoringGraphQueryResult
@@ -28,6 +27,7 @@ import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypePrototypeRegistry
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -44,7 +44,7 @@ internal class RouteFixture(
     editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
     presentationSearch: RealmPresentationSearchSource = UnavailableRealmPresentationSearchSource(),
 ) : AutoCloseable {
-    val compiledContent: CompiledContentRepository = EmptyCompiledContentRepository()
+    val compiledContent: RegisteredCompiledContentRepository = EmptyCompiledContentRepository()
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     private val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
@@ -58,6 +58,7 @@ internal class RouteFixture(
                 editorCatalog = editorCatalog,
                 presentationSearch = presentationSearch,
                 prototypes = TypePrototypeRegistry(emptyList()),
+                authoringPolicies = RealmAuthoringPolicyAssembler.assemble(emptyList(), TypeCatalog(emptyList())),
             ).create(RealmAddress("realm", "organization"), communicator),
             scope,
         )
@@ -142,28 +143,26 @@ private object EmptyAuthoringGraphRepository : AuthoringGraphRepository {
         )
 }
 
-private class EmptyCompiledContentRepository : CompiledContentRepository {
-    override suspend fun resourceStatuses(resources: List<ResourceId>): List<CompiledResourceStatus> =
-        resources.map { CompiledResourceStatus(it, CompiledResourceState.NotCompiled) }
+private class EmptyCompiledContentRepository : RegisteredCompiledContentRepository {
+    override suspend fun activeManifest(): CompiledArtifactManifest? = null
 
-    override suspend fun findShard(inputFingerprint: ContentDigest): CompiledPageShard? = null
-
-    override suspend fun activeManifest(): CompiledManifest? = null
-
-    override suspend fun activeActivation(): CompiledContentActivation? = null
+    override suspend fun activeActivation(): CompiledArtifactActivation? = null
 
     override suspend fun nextActivationRevision(): Long = 1
+
+    override suspend fun states(roots: Set<CompilationRoot>): Map<CompilationRoot, RegisteredCompiledState> =
+        roots.associateWith { RegisteredCompiledState.NotCompiled }
 
     override suspend fun recordBlocked(
         sourceRevision: String,
         catalogRevision: String,
-        pages: List<PageId>,
+        roots: Collection<CompilationRoot>,
         diagnostics: List<CompileDiagnostic>,
     ) = Unit
 
     override suspend fun publish(
-        manifest: CompiledManifest,
-        shards: List<CompiledPageShard>,
-        activation: CompiledContentActivation,
+        manifest: CompiledArtifactManifest,
+        artifacts: Collection<CompiledArtifact>,
+        activation: CompiledArtifactActivation,
     ): Boolean = true
 }

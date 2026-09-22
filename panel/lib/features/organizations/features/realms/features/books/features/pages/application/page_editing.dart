@@ -95,13 +95,15 @@ final class PageEditing {
   Future<TypedMutationResult> edit(
     Map<skir.ResourceId, Map<DataPath, PageFieldEdit>> changes,
   ) async {
-    final leases = [for (final id in changes.keys) session.acquirePage(id)];
+    final leases = [
+      for (final id in changes.keys) session.acquire(id.pageAuthoringSelection),
+    ];
     final owners = EditorOwnerRegistry(workspace: workspace);
     try {
       await Future.wait(leases.map((lease) => lease.ready));
       final edits = <TransactionalEditorSource, Map<DataPath, DataValue>>{};
       for (final entry in changes.entries) {
-        final resource = PageEditorResource(repository, entry.key);
+        final resource = TypedAuthoringEditorResource(repository, entry.key);
         final snapshot = await resource.refresh();
         if (snapshot == null) {
           return unavailableMutation(
@@ -139,8 +141,4 @@ final class PageEditing {
       }
     }
   }
-}
-
-final class PageEditorResource extends TypedAuthoringEditorResource {
-  const PageEditorResource(super.repository, super.id);
 }

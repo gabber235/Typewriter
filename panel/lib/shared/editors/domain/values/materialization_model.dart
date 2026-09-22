@@ -116,8 +116,47 @@ final class EditorPolymorphicStructure {
   final EditorValue payload;
 }
 
+/// Result returned by the authoritative type initializer when a polymorphic
+/// editor selects a concrete type.
+sealed class ConcreteTypeInitializationResult {
+  const ConcreteTypeInitializationResult();
+}
+
+final class ConcreteTypeInitialized extends ConcreteTypeInitializationResult {
+  const ConcreteTypeInitialized(this.value);
+
+  final TypedValueEnvelope value;
+}
+
+final class ConcreteTypeNeedsInput extends ConcreteTypeInitializationResult {
+  const ConcreteTypeNeedsInput({this.suppliedValue});
+
+  final DataValue? suppliedValue;
+}
+
+final class ConcreteTypeInitializationRejected
+    extends ConcreteTypeInitializationResult {
+  const ConcreteTypeInitializationRejected(this.diagnostics);
+
+  final List<TypeDiagnostic> diagnostics;
+}
+
+typedef ConcreteTypeInitializer =
+    Future<ConcreteTypeInitializationResult> Function({
+      required ResolvedTypeRef type,
+      required DataValue? supplied,
+    });
+
+abstract interface class ConcreteTypeSelectionOwner {
+  Future<EditorMutationResult> selectConcreteTypeAsync(
+    DataPath path,
+    ResolvedTypeRef type,
+  );
+}
+
 /// Structural capability for an owner whose containers may be incomplete.
-abstract interface class EditorStructureOwner implements EditOwner {
+abstract interface class EditorStructureOwner
+    implements EditOwner, ConcreteTypeSelectionOwner {
   EditorListStructure? listStructure(DataPath path);
   EditorMapStructure? mapStructure(DataPath path);
   EditorPolymorphicStructure? polymorphicStructure(DataPath path);
@@ -140,7 +179,6 @@ abstract interface class EditorStructureOwner implements EditOwner {
     DataValue value,
   );
 
-  EditorMutationResult selectConcreteType(DataPath path, ResolvedTypeRef type);
   EditorValue concretePayloadValue(DataPath path, DataPath payloadPath);
   EditorMutationResult updateConcretePayloadAt(
     DataPath path,

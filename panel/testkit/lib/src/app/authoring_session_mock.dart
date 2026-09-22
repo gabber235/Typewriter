@@ -26,14 +26,7 @@ class AuthoringSessionMock extends AuthoringSession {
   Future<void> refresh() async {}
 
   @override
-  AuthoringScopeLease acquireLibrary() => const _ReadyAuthoringScopeLease();
-
-  @override
-  AuthoringScopeLease acquireBook(skir.ResourceId bookId) =>
-      const _ReadyAuthoringScopeLease();
-
-  @override
-  AuthoringScopeLease acquirePage(skir.ResourceId pageId) =>
+  AuthoringSelectionLease acquire(skir.GraphSelection selection) =>
       const _ReadyAuthoringScopeLease();
 
   @override
@@ -55,11 +48,13 @@ class AuthoringSessionMock extends AuthoringSession {
       batchId: batchId ?? "fixture",
       resources: const [],
       edges: const [],
+      presentations: const [],
+      compilationImpact: const [],
     );
   }
 }
 
-final class _ReadyAuthoringScopeLease implements AuthoringScopeLease {
+final class _ReadyAuthoringScopeLease implements AuthoringSelectionLease {
   const _ReadyAuthoringScopeLease();
 
   @override
@@ -114,11 +109,11 @@ AuthoringSessionState _fixtureState({
   );
   skir.AuthoringResource resource(
     skir.ResourceId id,
-    skir.ResourceKind kind,
+    ResourceDefinitionId definition,
     TypedValueEnvelope content,
   ) => skir.AuthoringResource(
     id: id,
-    kind: kind,
+    definition: definition.toWire(),
     content: skir.TypedValueEnvelope(
       rootType: codec.encodeType(content.rootType).valueOrNull!,
       rootValue: codec.encodeValue(content.rootValue).valueOrNull!,
@@ -129,13 +124,13 @@ AuthoringSessionState _fixtureState({
     for (final book in books)
       book.bookId: resource(
         book.bookId,
-        skir.ResourceKind.book,
+        CoreResourceDefinitionIds.book,
         book.content(bookType),
       ),
     for (final tag in tags)
       tag.tagId: resource(
         tag.tagId,
-        skir.ResourceKind.tag,
+        CoreResourceDefinitionIds.tag,
         tag.content(tagType),
       ),
   };
@@ -272,22 +267,20 @@ RealmEditorCatalogSnapshot authoringFixtureCatalog() {
         graphLabel: "Inheritance",
       ),
     },
-    resourceKinds: {
-      skir.ResourceKind.book: RealmResourceKindDefinition(
-        kind: skir.ResourceKind.book,
+    resourceDefinitions: {
+      CoreResourceDefinitionIds.book: RealmResourceDefinition(
+        id: CoreResourceDefinitionIds.book,
         acceptedRoot: const NamedType(bookType),
-        defaultRoot: bookType,
       ),
-      skir.ResourceKind.tag: RealmResourceKindDefinition(
-        kind: skir.ResourceKind.tag,
+      CoreResourceDefinitionIds.tag: RealmResourceDefinition(
+        id: CoreResourceDefinitionIds.tag,
         acceptedRoot: const NamedType(tagType),
-        defaultRoot: tagType,
       ),
     },
     collectionProjections: {
       authoringTagCollectionSourceId: RealmCollectionProjectionDefinition(
         sourceId: authoringTagCollectionSourceId,
-        kinds: const {skir.ResourceKind.tag},
+        definitions: const {CoreResourceDefinitionIds.tag},
         assignableTo: const NamedType(tagType),
         rowType: _tagCollectionRowType,
         fields: [

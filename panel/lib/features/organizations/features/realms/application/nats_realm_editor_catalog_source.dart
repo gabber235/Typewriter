@@ -1,5 +1,6 @@
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/editor_codec_support.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -61,20 +62,26 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
   Future<RealmTypedValueInitializationResult> initialize(
     RealmEditorCatalogRoute route, {
     required CatalogGeneration generation,
-    required TypedValueEnvelope partial,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
     required TypeRegistry registry,
   }) async {
     final types = SkirTypeCodec(registry);
-    final root = types.encodeReference(partial.rootType);
-    final value = SkirDataValueCodec(types).encode(partial.rootValue);
-    final diagnostics = [...root.diagnostics, ...value.diagnostics];
+    final encodedRoot = types.encodeReference(root);
+    final encodedValue = supplied == null
+        ? null
+        : SkirDataValueCodec(types).encode(supplied);
+    final diagnostics = [
+      ...encodedRoot.diagnostics,
+      ...?encodedValue?.diagnostics,
+    ];
     if (diagnostics.isNotEmpty) {
-      return RealmTypedValueInitializationRejected(diagnostics);
+      return RealmTypedValueInitializationResult.rejected(diagnostics);
     }
     final request = skir.InitializeTypedValueRequest(
       generation: skir.CatalogGeneration(value: generation.value),
-      rootType: root.valueOrNull!,
-      partialValue: value.valueOrNull!,
+      rootType: encodedRoot.valueOrNull!,
+      partialValue: encodedValue?.valueOrNull,
     );
     final response = await ref.requestSkir(
       route.initializationSubject,
@@ -83,19 +90,21 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
     );
     return switch (response) {
       skir.InitializeTypedValueResult_successWrapper(:final value) =>
-        _decodeInitializedValue(value, types),
+        value._decodeDomain(types),
+      skir.InitializeTypedValueResult_needsInputWrapper(:final value) =>
+        value._decodeDomain(types),
       skir.InitializeTypedValueResult_invalidWrapper(:final value) ||
       skir.InitializeTypedValueResult_unavailableWrapper(
         :final value,
-      ) => RealmTypedValueInitializationRejected(
+      ) => RealmTypedValueInitializationResult.rejected(
         value._decodeDiagnostics(registry: registry),
       ),
       skir.InitializeTypedValueResult_generationMismatchWrapper(:final value) =>
-        RealmTypedValueInitializationGenerationMismatch(
+        RealmTypedValueInitializationResult.generationMismatch(
           CatalogGeneration(value.actualGeneration.value),
         ),
       skir.InitializeTypedValueResult_unknown() =>
-        RealmTypedValueInitializationRejected([
+        RealmTypedValueInitializationResult.rejected([
           realmEditorCatalogUnavailableDiagnostic(
             "Realm returned an unknown typed value initialization response",
           ),
@@ -104,22 +113,89 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
   }
 }
 
-RealmTypedValueInitializationResult _decodeInitializedValue(
-  skir.TypedValueEnvelope value,
-  SkirTypeCodec types,
-) {
-  final root = types.decodeReference(value.rootType);
-  final decoded = SkirDataValueCodec(types).decode(value.rootValue);
-  final diagnostics = [...root.diagnostics, ...decoded.diagnostics];
-  if (diagnostics.isNotEmpty) {
-    return RealmTypedValueInitializationRejected(diagnostics);
+extension on skir.TypedValueEnvelope {
+  RealmTypedValueInitializationResult _decodeDomain(SkirTypeCodec types) {
+    final root = types.decodeReference(rootType);
+    final decoded = SkirDataValueCodec(types).decode(rootValue);
+    final diagnostics = [...root.diagnostics, ...decoded.diagnostics];
+    if (diagnostics.isNotEmpty) {
+      return RealmTypedValueInitializationResult.rejected(diagnostics);
+    }
+    return RealmTypedValueInitializationResult.initialized(
+      TypedValueEnvelope(
+        rootType: root.valueOrNull!,
+        rootValue: decoded.valueOrNull!,
+      ),
+    );
   }
-  return RealmTypedValueInitialized(
-    TypedValueEnvelope(
-      rootType: root.valueOrNull!,
-      rootValue: decoded.valueOrNull!,
-    ),
-  );
+}
+
+extension on skir.TypeInitializationDraft {
+  RealmTypedValueInitializationResult _decodeDomain(SkirTypeCodec types) {
+    final values = SkirDataValueCodec(types);
+    final paths = SkirDataPathCodec(values);
+    final decodedRoot = types.decodeReference(rootType);
+    final decodedSupplied = suppliedValue == null
+        ? null
+        : values.decode(suppliedValue);
+    final decodedRequirements = requirements.map(
+      (requirement) => requirement._decodeDomain(types, paths),
+    );
+    final diagnostics = [
+      ...decodedRoot.diagnostics,
+      ...?decodedSupplied?.diagnostics,
+      for (final requirement in decodedRequirements) ...requirement.diagnostics,
+    ];
+    if (diagnostics.isNotEmpty) {
+      return RealmTypedValueInitializationResult.rejected(diagnostics);
+    }
+    return RealmTypedValueInitializationResult.needsInput(
+      TypeInitializationDraft(
+        rootType: decodedRoot.valueOrNull!,
+        suppliedValue: decodedSupplied?.valueOrNull,
+        requirements: [
+          for (final requirement in decodedRequirements)
+            requirement.valueOrNull!,
+        ],
+      ),
+    );
+  }
+}
+
+extension on skir.TypeInitializationRequirement {
+  TypeResult<TypeInitializationRequirement> _decodeDomain(
+    SkirTypeCodec types,
+    SkirDataPathCodec paths,
+  ) {
+    final decodedPath = paths.decode(path);
+    final decodedExpected = types.decodeExpression(expected);
+    final diagnostics = [
+      ...decodedPath.diagnostics,
+      ...decodedExpected.diagnostics,
+    ];
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    final decodedReason = switch (reason) {
+      skir.TypeInitializationRequirementReason.missingValue =>
+        TypeInitializationRequirementReason.missingValue,
+      skir.TypeInitializationRequirementReason.concreteTypeRequired =>
+        TypeInitializationRequirementReason.concreteTypeRequired,
+      skir.TypeInitializationRequirementReason_unknown() => null,
+    };
+    if (decodedReason == null) {
+      return TypeResult.failure([
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm returned an unknown type initialization requirement reason",
+        ),
+      ]);
+    }
+    return TypeResult.success(
+      TypeInitializationRequirement(
+        path: decodedPath.valueOrNull!,
+        expected: decodedExpected.valueOrNull!,
+        reason: decodedReason,
+      ),
+    );
+  }
 }
 
 extension on Iterable<skir.ElementCatalogEntry> {
@@ -369,10 +445,10 @@ extension on skir.CatalogFetchSuccess {
       return RealmEditorCatalogFetchUnavailable(decoded.diagnostics);
     }
     final decodedParts = value._decodeCatalogParts(catalog);
-    final resourceKinds = value.resourceKindDefinitions._decodeDomain(
+    final resourceDefinitions = value.resourceDefinitions._decodeDomain(
       catalog.registry,
     );
-    if (resourceKinds case TypeFailure(:final diagnostics)) {
+    if (resourceDefinitions case TypeFailure(:final diagnostics)) {
       return RealmEditorCatalogFetchUnavailable(diagnostics);
     }
     final relations = value.relationDefinitions._decodeDomain(catalog.registry);
@@ -383,6 +459,25 @@ extension on skir.CatalogFetchSuccess {
         ._decodeDomain(catalog.registry);
     if (collectionProjections case TypeFailure(:final diagnostics)) {
       return RealmEditorCatalogFetchUnavailable(diagnostics);
+    }
+    final creationSlots = value.authoringCreationSlots._decodeDomain(
+      catalog.registry,
+    );
+    if (creationSlots case TypeFailure(:final diagnostics)) {
+      return RealmEditorCatalogFetchUnavailable(diagnostics);
+    }
+    final authoringSearch = value.authoringSearch?._decodeDomain();
+    if (authoringSearch case TypeFailure(:final diagnostics)) {
+      return RealmEditorCatalogFetchUnavailable(diagnostics);
+    }
+    final compilationProjections = value.authoringCompilationProjections
+        .map((projection) => projection._decodeDomain(catalog.registry))
+        .toList(growable: false);
+    final compilationDiagnostics = compilationProjections
+        .expand((projection) => projection.diagnostics)
+        .toList(growable: false);
+    if (compilationDiagnostics.isNotEmpty) {
+      return RealmEditorCatalogFetchUnavailable(compilationDiagnostics);
     }
     final decodedElements = value.elementEntries._decodeDomain(catalog.catalog);
 
@@ -422,11 +517,286 @@ extension on skir.CatalogFetchSuccess {
               )
               .toList(growable: false),
         ),
-        resourceKinds: resourceKinds.valueOrNull!,
+        resourceDefinitions: resourceDefinitions.valueOrNull!,
+        creationSlots: creationSlots.valueOrNull!,
         relations: relations.valueOrNull!,
         collectionProjections: collectionProjections.valueOrNull!,
+        compilationProjections: compilationProjections
+            .map((projection) => projection.valueOrNull!)
+            .toList(growable: false),
+        authoringSearch: authoringSearch?.valueOrNull,
       ),
     );
+  }
+}
+
+extension on skir.AuthoringCompilationProjectionDefinition {
+  TypeResult<RealmAuthoringCompilationProjection> _decodeDomain(
+    TypeRegistry registry,
+  ) {
+    final root = SkirEditorCodec(registry).typeCodec
+        .decodeExpression(this.root);
+    return root.mapValue(
+      (value) => RealmAuthoringCompilationProjection(
+        id: projection.value,
+        root: value,
+      ),
+    );
+  }
+}
+
+extension on skir.AuthoringSearchDefinition {
+  TypeResult<RealmAuthoringSearchDefinition> _decodeDomain() {
+    final diagnostics = <TypeDiagnostic>[];
+    final selectors = <SearchSelectorDefinition>[];
+    for (final selector in this.selectors) {
+      final values = switch (selector.values) {
+        skir.SearchSelectorValues.freeText =>
+          const TypeResult<SearchSelectorValues>.success(
+            SearchSelectorValues.freeText(),
+          ),
+        skir.SearchSelectorValues_enumerationWrapper(:final value) =>
+          value.values.isEmpty
+              ? invalidWire("Authoring search selector values are empty")
+              : TypeResult.success(
+                  SearchSelectorValues.enumeration(value.values.toList()),
+                ),
+        skir.SearchSelectorValues_unknown() => invalidWire(
+          "Unknown authoring search selector values",
+        ),
+      };
+      final multiplicity = switch (selector.multiplicity) {
+        skir.SearchSelectorMultiplicity.single =>
+          SearchSelectorMultiplicity.single,
+        skir.SearchSelectorMultiplicity.multiple =>
+          SearchSelectorMultiplicity.multiple,
+        skir.SearchSelectorMultiplicity_unknown() => null,
+      };
+      if (selector.selectorId.isEmpty) {
+        diagnostics.add(
+          wireDiagnostic("Authoring search selector ID is empty"),
+        );
+      }
+      if (selector.key.isEmpty) {
+        diagnostics.add(
+          wireDiagnostic("Authoring search selector key is empty"),
+        );
+      }
+      diagnostics.addAll(values.diagnostics);
+      if (multiplicity == null) {
+        diagnostics.add(
+          wireDiagnostic("Unknown authoring search selector multiplicity"),
+        );
+      }
+      final value = values.valueOrNull;
+      if (value != null && multiplicity != null) {
+        selectors.add(
+          SearchSelectorDefinition.keyValue(
+            id: selector.selectorId,
+            key: selector.key,
+            valueBindingId: BindingId(selector.valueBindingId.value),
+            values: value,
+            caseSensitive: selector.caseSensitive,
+            multiplicity: multiplicity,
+            colorValue: selector.color,
+          ),
+        );
+      }
+    }
+    final facets = <RealmAuthoringSearchFacetDefinition>[];
+    for (final facet in this.facets) {
+      if (facet.id.isEmpty || facet.label.isEmpty || facet.selectorId.isEmpty) {
+        diagnostics.add(
+          wireDiagnostic(
+            "Authoring search facets require ID, label, and selector ID",
+          ),
+        );
+      } else {
+        facets.add(
+          RealmAuthoringSearchFacetDefinition(
+            id: facet.id,
+            label: facet.label,
+            selectorId: facet.selectorId,
+          ),
+        );
+      }
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            RealmAuthoringSearchDefinition(
+              definitions: {
+                for (final definition in definitions)
+                  ResourceDefinitionId(definition.value),
+              },
+              selectors: selectors,
+              facets: facets,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+}
+
+extension on Iterable<skir.AuthoringCreationSlotDefinition> {
+  TypeResult<Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot>>
+  _decodeDomain(TypeRegistry registry) {
+    final codec = SkirEditorCodec(registry);
+    final result = <AuthoringCreationSlotId, RealmAuthoringCreationSlot>{};
+    final diagnostics = <TypeDiagnostic>[];
+    for (final value in this) {
+      final roots = <ResolvedTypeRef>[];
+      for (final root in value.concreteRoots) {
+        final decoded = codec.typeCodec.decodeReference(root);
+        diagnostics.addAll(decoded.diagnostics);
+        if (decoded.valueOrNull case final resolved?) roots.add(resolved);
+      }
+      final context = value.context._decodeDomain(codec);
+      diagnostics.addAll(context.diagnostics);
+      final slotId = AuthoringCreationSlotId(value.id.value);
+      final domain = context.valueOrNull;
+      if (domain == null || roots.length != value.concreteRoots.length) {
+        continue;
+      }
+      result[slotId] = RealmAuthoringCreationSlot(
+        id: slotId,
+        label: value.label,
+        creates: ResourceDefinitionId(value.creates.value),
+        context: domain,
+        concreteRoots: roots,
+      );
+    }
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    return TypeResult.success(result);
+  }
+}
+
+extension on skir.AuthoringCreationContext {
+  TypeResult<RealmAuthoringCreationContext> _decodeDomain(
+    SkirEditorCodec codec,
+  ) => switch (this) {
+    skir.AuthoringCreationContext_standaloneWrapper() =>
+      const TypeResult.success(RealmAuthoringCreationContext.standalone()),
+    skir.AuthoringCreationContext_declaredRelationWrapper(:final value) =>
+      value._decodeDomain(codec),
+    skir.AuthoringCreationContext_referencePathWrapper(:final value) =>
+      value._decodeDomain(codec),
+    skir.AuthoringCreationContext_unknown() => TypeResult.failure([
+      realmEditorCatalogUnavailableDiagnostic(
+        "Realm returned an unknown authoring creation context",
+      ),
+    ]),
+  };
+}
+
+extension on skir.AuthoringCreationContext_DeclaredRelation {
+  TypeResult<RealmAuthoringCreationContext> _decodeDomain(
+    SkirEditorCodec codec,
+  ) {
+    final hosts = valueHostFilter(codec);
+    final diagnostics = [...hosts.diagnostics];
+    final cardinalityValue = switch (cardinality.kind) {
+      skir.AuthoringCreationHostCardinality_kind.exactlyOneConst =>
+        RealmCreationHostCardinality.exactlyOne,
+      skir.AuthoringCreationHostCardinality_kind.oneOrMoreConst =>
+        RealmCreationHostCardinality.oneOrMore,
+      _ => null,
+    };
+    final directionValue = switch (direction.kind) {
+      skir.RelationDirection_kind.outgoingConst =>
+        RealmCreationRelationDirection.outgoing,
+      skir.RelationDirection_kind.incomingConst =>
+        RealmCreationRelationDirection.incoming,
+      skir.RelationDirection_kind.bothConst =>
+        RealmCreationRelationDirection.both,
+      _ => null,
+    };
+    if (cardinalityValue == null || directionValue == null) {
+      diagnostics.add(
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm returned an unknown authoring creation cardinality or direction",
+        ),
+      );
+    }
+    if (diagnostics.isNotEmpty ||
+        cardinalityValue == null ||
+        directionValue == null) {
+      return TypeResult.failure(diagnostics);
+    }
+    return TypeResult.success(
+      RealmAuthoringCreationContext.declaredRelation(
+        hosts: hosts.valueOrNull!,
+        cardinality: cardinalityValue,
+        relation: relation.value,
+        direction: directionValue,
+      ),
+    );
+  }
+
+  TypeResult<RealmCreationHostFilter> valueHostFilter(SkirEditorCodec codec) {
+    final assignableWire = hosts.assignableTo;
+    final assignable = assignableWire == null
+        ? null
+        : codec.typeCodec.decodeExpression(assignableWire);
+    final diagnostics = [...?assignable?.diagnostics];
+    final value = RealmCreationHostFilter(
+      definitions: hosts.definitions
+          .map((definition) => ResourceDefinitionId(definition.value))
+          .toSet(),
+      assignableTo: assignable?.valueOrNull,
+    );
+    return diagnostics.isEmpty
+        ? TypeResult.success(value)
+        : TypeResult.failure(diagnostics);
+  }
+}
+
+extension on skir.AuthoringCreationContext_ReferencePath {
+  TypeResult<RealmAuthoringCreationContext> _decodeDomain(
+    SkirEditorCodec codec,
+  ) {
+    final hosts = _decodeHosts(codec);
+    final path = codec.decodePath(this.path);
+    final cardinalityValue = switch (cardinality.kind) {
+      skir.AuthoringCreationHostCardinality_kind.exactlyOneConst =>
+        RealmCreationHostCardinality.exactlyOne,
+      skir.AuthoringCreationHostCardinality_kind.oneOrMoreConst =>
+        RealmCreationHostCardinality.oneOrMore,
+      _ => null,
+    };
+    final diagnostics = [...hosts.diagnostics, ...path.diagnostics];
+    if (cardinalityValue == null) {
+      diagnostics.add(
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm returned an unknown authoring creation cardinality",
+        ),
+      );
+    }
+    if (diagnostics.isNotEmpty || cardinalityValue == null) {
+      return TypeResult.failure(diagnostics);
+    }
+    return TypeResult.success(
+      RealmAuthoringCreationContext.referencePath(
+        hosts: hosts.valueOrNull!,
+        cardinality: cardinalityValue,
+        path: path.valueOrNull!,
+      ),
+    );
+  }
+
+  TypeResult<RealmCreationHostFilter> _decodeHosts(SkirEditorCodec codec) {
+    final assignableWire = hosts.assignableTo;
+    final assignable = assignableWire == null
+        ? null
+        : codec.typeCodec.decodeExpression(assignableWire);
+    final diagnostics = [...?assignable?.diagnostics];
+    final value = RealmCreationHostFilter(
+      definitions: hosts.definitions
+          .map((definition) => ResourceDefinitionId(definition.value))
+          .toSet(),
+      assignableTo: assignable?.valueOrNull,
+    );
+    return diagnostics.isEmpty
+        ? TypeResult.success(value)
+        : TypeResult.failure(diagnostics);
   }
 }
 
@@ -453,15 +823,12 @@ extension on Iterable<skir.CollectionProjectionDefinition> {
         ..addAll(assignableTo?.diagnostics ?? const [])
         ..addAll(rowType.diagnostics)
         ..addAll(fields.expand((field) => field.diagnostics));
-      final kinds = value.resources.kinds.where((kind) {
-        return kind == skir.ResourceKind.book ||
-            kind == skir.ResourceKind.tag ||
-            kind == skir.ResourceKind.page ||
-            kind == skir.ResourceKind.element;
-      }).toSet();
+      final definitions = value.resources.definitions
+          .map((definition) => ResourceDefinitionId(definition.value))
+          .toSet();
       if (value.sourceId.isEmpty ||
           result.containsKey(sourceId) ||
-          kinds.length != value.resources.kinds.length ||
+          definitions.length != value.resources.definitions.length ||
           (value.resources.assignableTo != null &&
               assignableTo?.valueOrNull == null) ||
           rowType.valueOrNull == null ||
@@ -475,7 +842,7 @@ extension on Iterable<skir.CollectionProjectionDefinition> {
       }
       result[sourceId] = RealmCollectionProjectionDefinition(
         sourceId: sourceId,
-        kinds: kinds,
+        definitions: definitions,
         assignableTo: assignableTo?.valueOrNull,
         rowType: rowType.valueOrNull!,
         fields: fields.map((field) => field.valueOrNull!).toList(),
@@ -641,42 +1008,30 @@ extension on skir.RelationDeletePolicy {
   };
 }
 
-extension on Iterable<skir.ResourceKindDefinition> {
-  TypeResult<Map<skir.ResourceKind, RealmResourceKindDefinition>> _decodeDomain(
+extension on Iterable<skir.ResourceDefinition> {
+  TypeResult<Map<ResourceDefinitionId, RealmResourceDefinition>> _decodeDomain(
     TypeRegistry registry,
   ) {
     final codec = SkirTypeCodec(registry);
-    final result = <skir.ResourceKind, RealmResourceKindDefinition>{};
+    final result = <ResourceDefinitionId, RealmResourceDefinition>{};
     final diagnostics = <TypeDiagnostic>[];
     for (final value in this) {
-      final kind = switch (value.kind) {
-        skir.ResourceKind.book ||
-        skir.ResourceKind.tag ||
-        skir.ResourceKind.page ||
-        skir.ResourceKind.element => value.kind,
-        _ => null,
-      };
+      final id = ResourceDefinitionId(value.id.value);
       final accepted = codec.decodeExpression(value.acceptedRoot);
-      final defaultRoot = value.defaultRoot == null
-          ? null
-          : codec.decodeReference(value.defaultRoot);
       diagnostics.addAll(accepted.diagnostics);
-      if (defaultRoot != null) diagnostics.addAll(defaultRoot.diagnostics);
-      if (kind == null ||
+      if (id.value.isEmpty ||
           accepted.valueOrNull == null ||
-          (value.defaultRoot != null && defaultRoot?.valueOrNull == null) ||
-          result.containsKey(kind)) {
+          result.containsKey(id)) {
         diagnostics.add(
           realmEditorCatalogUnavailableDiagnostic(
-            "Realm returned an invalid or duplicate resource kind definition",
+            "Realm returned an invalid or duplicate resource definition",
           ),
         );
         continue;
       }
-      result[kind] = RealmResourceKindDefinition(
-        kind: kind,
+      result[id] = RealmResourceDefinition(
+        id: id,
         acceptedRoot: accepted.valueOrNull!,
-        defaultRoot: defaultRoot?.valueOrNull,
       );
     }
     return diagnostics.isEmpty

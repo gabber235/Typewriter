@@ -5,6 +5,7 @@ import com.typewritermc.realm.repository.AuthoringPreviewResult
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.types.TypePrototypeRegistry
 
 /**
  * Owns the messaging boundary for Realm authoring reads and writes.
@@ -16,9 +17,10 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
 internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
     private val communicator: Communicator,
-    private val contracts: LibraryContracts,
+    private val contracts: EditorContracts,
     private val address: RealmAddress,
-    private val onCompilationInvalidated: () -> Unit,
+    private val prototypes: TypePrototypeRegistry,
+    private val onCompilationInvalidated: (List<com.typewritermc.engine.CompilationRoot>) -> Unit,
 ) {
     /**
      * Adds the snapshot and batch operations to a router being assembled for one Realm address.
@@ -43,10 +45,12 @@ internal class AuthoringRoutes(
                         )
                     }
                 if (result is AuthoringBatchResult.Applied) {
-                    communicator.publish(contracts.authoringChanged, address, result.change.toWire())
-                    if (result.affectsCompilation) onCompilationInvalidated()
+                    communicator.publish(contracts.authoringChanged, address, result.change.toWire(prototypes))
+                    if (result.change.compilationImpact.isNotEmpty()) {
+                        onCompilationInvalidated(result.change.compilationImpact)
+                    }
                 }
-                result.toWireResponse()
+                result.toWireResponse(prototypes)
             }
             unary(contracts.previewAuthoringBatch) { call ->
                 try {

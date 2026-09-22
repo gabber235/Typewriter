@@ -260,6 +260,7 @@ private class RealmLifecycleFixture(
             discoverySnapshots = RealmDiscoverySnapshotStore(),
             prototypes = com.typewritermc.types.TypePrototypeRegistry(emptyList()),
             host = host,
+            authoringPolicies = RealmAuthoringPolicyAssembler.assemble(emptyList(), com.typewritermc.types.TypeCatalog(emptyList())),
         )
 
     fun session(id: Long): TestSession {

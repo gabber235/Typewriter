@@ -223,7 +223,8 @@ final class _TrackingSource implements RealmEditorCatalogSource {
   Future<RealmTypedValueInitializationResult> initialize(
     RealmEditorCatalogRoute route, {
     required CatalogGeneration generation,
-    required TypedValueEnvelope partial,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
     required TypeRegistry registry,
   }) => Future.error(UnsupportedError("Initialization is outside this test"));
 
@@ -301,7 +302,8 @@ final class _ElementSource implements RealmEditorCatalogSource {
   Future<RealmTypedValueInitializationResult> initialize(
     RealmEditorCatalogRoute route, {
     required CatalogGeneration generation,
-    required TypedValueEnvelope partial,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
     required TypeRegistry registry,
   }) => Future.error(UnsupportedError("Initialization is outside this test"));
 

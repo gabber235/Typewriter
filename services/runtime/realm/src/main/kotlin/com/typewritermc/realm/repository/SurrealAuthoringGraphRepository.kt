@@ -3,6 +3,8 @@ package com.typewritermc.realm.repository
 import com.surrealdb.Surreal
 import com.surrealdb.Transaction
 import com.surrealdb.Value
+import com.typewritermc.realm.ResourceDefinitionId
+import com.typewritermc.realm.compiler.GraphReadRequirement
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.toUnifiedResourceId
@@ -10,11 +12,12 @@ import com.typewritermc.types.DataPath
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeId
 
-/** Loads one complete canonical graph and evaluates every named selection at one transaction sequence. */
+/** Loads bounded authoring graph slices and evaluates every named selection at one transaction sequence. */
 internal class SurrealAuthoringGraphRepository(
     private val database: Surreal,
     private val mapper: () -> ResourceValueMapper,
@@ -22,6 +25,23 @@ internal class SurrealAuthoringGraphRepository(
     private val generation: () -> String,
     private val limits: AuthoringGraphLimits = AuthoringGraphLimits(),
 ) : AuthoringGraphRepository {
+    internal suspend fun workingGraph(
+        requirement: GraphReadRequirement,
+        root: ResourceId?,
+    ): AuthoringWorkingGraph =
+        database.inTransaction { transaction ->
+            val selection = requirement.toSelection(root)
+            val bounded =
+                when (val loaded = SurrealBoundedAuthoringGraphLoader(limits).load(transaction, listOf(selection))) {
+                    is BoundedGraphLoadResult.Invalid -> error(loaded.result.message)
+                    is BoundedGraphLoadResult.Success -> loaded.slice
+                }
+            AuthoringWorkingGraph(
+                resources = bounded.resources.associateBy(StoredTypedResource::id),
+                relations = bounded.relations.associateBy(StoredResourceRelation::id),
+            )
+        }
+
     override suspend fun query(
         generation: String,
         selections: List<GraphSelection>,
@@ -29,15 +49,27 @@ internal class SurrealAuthoringGraphRepository(
         val initialGeneration = this.generation()
         if (generation != initialGeneration) return AuthoringGraphQueryResult.CatalogChanged(initialGeneration)
         return database.inTransaction { transaction ->
+            val bounded =
+                when (val loaded = SurrealBoundedAuthoringGraphLoader(limits).load(transaction, selections)) {
+                    is BoundedGraphLoadResult.Invalid -> {
+                        return@inTransaction loaded.result
+                    }
+
+                    is BoundedGraphLoadResult.Success -> {
+                        loaded.slice
+                    }
+                }
             val valueMapper = mapper()
-            val storedResources = transaction.loadStoredResources()
-            val relations = transaction.loadStoredRelations()
+            val relationsByResource =
+                bounded.relations
+                    .flatMap { relation -> listOf(relation.source to relation, relation.target to relation) }
+                    .groupBy({ it.first }, { it.second })
             val hydrated =
-                storedResources.map { resource ->
+                bounded.resources.map { resource ->
                     AuthoringGraphResource(
                         id = resource.id,
-                        kind = resource.kind,
-                        content = valueMapper.hydrate(resource, relations),
+                        definition = resource.definition,
+                        content = valueMapper.hydrate(resource, relationsByResource[resource.id].orEmpty()),
                     )
                 }
             val finalGeneration = this.generation()
@@ -48,7 +80,7 @@ internal class SurrealAuthoringGraphRepository(
                     generation = initialGeneration,
                     sequence = transaction.currentGraphSequence(),
                     resources = hydrated,
-                    edges = relations,
+                    edges = bounded.relations,
                     selections = selections,
                 )
             }
@@ -56,36 +88,76 @@ internal class SurrealAuthoringGraphRepository(
     }
 }
 
-internal fun Transaction.loadStoredResources(): List<StoredTypedResource> =
-    query("SELECT id, kind, type_id, type_revision, value FROM resource ORDER BY id;")
-        .take(0)
-        .getArray()
-        .map { value ->
-            val row = value.getObject()
-            StoredTypedResource(
-                id = row.get("id").getRecordId().toUnifiedResourceId(),
-                kind = AuthoringResourceKind.valueOf(row.get("kind").getString().uppercase()),
-                root =
-                    ResolvedTypeRef(
-                        TypeId.Declared(DeclaredTypeId.parse(row.get("type_id").getString())),
-                        row.get("type_revision").getLong().toInt(),
+private fun GraphReadRequirement.toSelection(root: ResourceId?): GraphSelection {
+    val relationSteps =
+        buildList {
+            if (relations.isNotEmpty()) {
+                add(
+                    RelationStep(
+                        relations = RelationFilter.Declared(relations),
+                        direction = direction.toRelationDirection(),
+                        maxDepth = maximumDepth,
+                        target = ResourceFilter(definitions = definitions),
                     ),
-                valueWithSlots =
-                    StructuredDatabaseCodec.decode(
-                        com.typewritermc.types.DataValue
-                            .serializer(),
-                        row.get("value"),
+                )
+            }
+            if (incomingReferences) {
+                add(
+                    RelationStep(
+                        relations = RelationFilter.OrdinaryReferences(),
+                        direction = RelationDirection.INCOMING,
+                        maxDepth = maximumDepth,
+                        target = ResourceFilter(definitions = definitions),
                     ),
-            )
+                )
+            }
+            if (outgoingReferences) {
+                add(
+                    RelationStep(
+                        relations = RelationFilter.OrdinaryReferences(),
+                        direction = RelationDirection.OUTGOING,
+                        maxDepth = maximumDepth,
+                        target = ResourceFilter(definitions = definitions),
+                    ),
+                )
+            }
         }
+    return GraphSelection(
+        key = "authoring-compilation-${root?.value ?: "roots"}",
+        seed =
+            root?.let { ResourceSeed.Ids(listOf(it)) }
+                ?: ResourceSeed.Scan(ResourceFilter(definitions = definitions)),
+        steps = relationSteps,
+    )
+}
 
-internal fun Transaction.loadStoredRelations(): List<StoredResourceRelation> =
-    query("SELECT id, in, out, origin FROM resource_relation ORDER BY id;")
-        .take(0)
-        .getArray()
-        .map(::parseStoredRelation)
+private fun GraphReadRequirement.Direction.toRelationDirection(): RelationDirection =
+    when (this) {
+        GraphReadRequirement.Direction.OUTGOING -> RelationDirection.OUTGOING
+        GraphReadRequirement.Direction.INCOMING -> RelationDirection.INCOMING
+        GraphReadRequirement.Direction.BOTH -> RelationDirection.BOTH
+    }
 
-private fun parseStoredRelation(value: Value): StoredResourceRelation {
+internal fun parseStoredResource(value: Value): StoredTypedResource {
+    val row = value.getObject()
+    return StoredTypedResource(
+        id = row.get("id").getRecordId().toUnifiedResourceId(),
+        definition = ResourceDefinitionId(row.get("definition").getString()),
+        root =
+            ResolvedTypeRef(
+                TypeId.Declared(DeclaredTypeId.parse(row.get("type_id").getString())),
+                row.get("type_revision").getLong().toInt(),
+            ),
+        valueWithSlots =
+            StructuredDatabaseCodec.decode(
+                com.typewritermc.types.DataValue
+                    .serializer(),
+                row.get("value"),
+            ),
+    )
+}
+
+internal fun parseStoredRelation(value: Value): StoredResourceRelation {
     val row = value.getObject()
     val origin = row.get("origin").getObject()
     val source = row.get("in").getRecordId().toUnifiedResourceId()

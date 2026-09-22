@@ -19,19 +19,20 @@ Future<ElementPageSelection?> promptElementPageSelection({
       }
       final books = ref.valued(projectedBooksProvider);
       final compatibleKinds = ref.valued(
-        compatiblePageEntryKindsProvider(elementDefinition.rootType),
+        compatiblePageCreationSlotsProvider(elementDefinition.rootType),
       );
       final initialBook = initialBookId == null
           ? null
           : ref.read(projectedBookProvider(initialBookId)).value;
+      final realmSource = RealmAuthoringSearchSource(
+        ref: ref,
+        organizationId: organizationId,
+        realmId: realmId,
+      );
       return SearchContribution(
         session: SearchSession(
           source: [
-            RealmAuthoringSearchSource(
-              ref: ref,
-              organizationId: organizationId,
-              realmId: realmId,
-            ).inSection(id: "compatible_pages", title: "Choose Page"),
+            realmSource.inSection(id: "compatible_pages", title: "Choose Page"),
             PageKindSearchSource(
               definitions: ref.valued(realmPageDefinitionsProvider),
             ),
@@ -48,20 +49,24 @@ Future<ElementPageSelection?> promptElementPageSelection({
             ),
             selectionMode: SearchSelectionMode.single,
           ),
-          initialQuery: authoringBookInitialQuery(initialBook),
+          initialQuery: authoringBookInitialQuery(
+            initialBook,
+            realmSource.selectors,
+          ),
         ),
       );
     },
     searchHint: "Choose or create a compatible page",
     rowRenderers: {
-      authoringPageSearchResultType.id: (context) => AuthoringSearchResultItem(
-        payload: context.result.payload as AuthoringSearchResultPayload,
-        focused: context.focused,
-        selected: context.selected,
-        loading: context.loading,
-        onTap: context.onTap,
-        shortcutActivator: context.shortcutActivator,
-      ),
+      authoringResourceSearchResultType.id: (context) =>
+          AuthoringSearchResultItem(
+            payload: context.result.payload as AuthoringSearchResultPayload,
+            focused: context.focused,
+            selected: context.selected,
+            loading: context.loading,
+            onTap: context.onTap,
+            shortcutActivator: context.shortcutActivator,
+          ),
       pageKindSearchResultType.id: (context) => PageKindSearchResultItem(
         definition: context.result.payload as RealmPageDefinition,
         focused: context.focused,

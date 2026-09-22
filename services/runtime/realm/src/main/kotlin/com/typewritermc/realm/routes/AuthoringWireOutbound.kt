@@ -7,21 +7,24 @@ import com.typewritermc.realm.repository.AuthoringPreviewResult
 import com.typewritermc.realm.repository.GraphEdgeChange
 import com.typewritermc.realm.repository.GraphResourceChange
 import com.typewritermc.realm.repository.PropertyConflict
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypePrototypeRegistry
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
-import skirout.library.v1.authoring.AuthoringConflict
-import skirout.library.v1.authoring.AuthoringEdgeChange
-import skirout.library.v1.authoring.AuthoringInvalid
-import skirout.library.v1.authoring.AuthoringPreview
-import skirout.library.v1.authoring.AuthoringResourceChange
-import skirout.library.v1.authoring.PreviewAuthoringBatchResponse
-import skirout.library.v1.authoring.PropertyConflict as WireConflict
+import skirout.editor.v1.authoring.ApplyAuthoringBatchResponse
+import skirout.editor.v1.authoring.AuthoringConflict
+import skirout.editor.v1.authoring.AuthoringEdgeChange
+import skirout.editor.v1.authoring.AuthoringInvalid
+import skirout.editor.v1.authoring.AuthoringPreview
+import skirout.editor.v1.authoring.AuthoringResourceChange
+import skirout.editor.v1.authoring.PresentationSubjectChange
+import skirout.editor.v1.authoring.PreviewAuthoringBatchResponse
+import skirout.editor.v1.authoring.PropertyConflict as WireConflict
 
-internal fun AuthoringBatchResult.toWireResponse(): ApplyAuthoringBatchResponse =
+internal fun AuthoringBatchResult.toWireResponse(prototypes: TypePrototypeRegistry): ApplyAuthoringBatchResponse =
     when (this) {
         is AuthoringBatchResult.Applied -> {
-            ApplyAuthoringBatchResponse.AppliedWrapper(change.toWire())
+            ApplyAuthoringBatchResponse.AppliedWrapper(change.toWire(prototypes))
         }
 
         is AuthoringBatchResult.Conflict -> {
@@ -53,7 +56,7 @@ internal fun AuthoringPreviewResult.toWireResponse(): PreviewAuthoringBatchRespo
                     affectedResources = affectedResources.map { it.toWire() },
                     affectedEdges =
                         affectedEdges.map {
-                            skirout.library.v1.authoring
+                            skirout.editor.v1.authoring
                                 .AuthoringEdgeId(value = it)
                         },
                 ),
@@ -81,8 +84,8 @@ internal fun AuthoringPreviewResult.toWireResponse(): PreviewAuthoringBatchRespo
         }
     }
 
-internal fun AuthoringChanged.toWire(): skirout.library.v1.authoring.AuthoringChanged =
-    skirout.library.v1.authoring.AuthoringChanged(
+internal fun AuthoringChanged.toWire(prototypes: TypePrototypeRegistry): skirout.editor.v1.authoring.AuthoringChanged =
+    skirout.editor.v1.authoring.AuthoringChanged(
         generation =
             skirout.editor.v1.type_catalog
                 .CatalogGeneration(value = generation),
@@ -107,6 +110,42 @@ internal fun AuthoringChanged.toWire(): skirout.library.v1.authoring.AuthoringCh
                     }
                 }
             },
+        presentations =
+            presentations.map { change ->
+                when (change) {
+                    is com.typewritermc.realm.repository.AuthoringPresentationChange.Upsert -> {
+                        PresentationSubjectChange.createUpsert(
+                            resource = change.resource.toWire(),
+                            subject = change.subject.toWire(prototypes),
+                        )
+                    }
+
+                    is com.typewritermc.realm.repository.AuthoringPresentationChange.Remove -> {
+                        PresentationSubjectChange.createRemove(value = change.resource.value)
+                    }
+                }
+            },
+        compilationImpact = compilationImpact.map { it.toWire() },
+    )
+
+private fun com.typewritermc.authoring.AuthoringPresentationSubject.toWire(prototypes: TypePrototypeRegistry) =
+    skirout.editor.v1.authoring.PresentationSubject(
+        content = content.toWire(),
+        descriptor = prototypes.encode(descriptor).toWire(),
+        identity = prototypes.encode(identity).toWire(),
+        resource = resource.toWire(),
+        definition = definition.toWire(),
+        ownerPath = ownerPath.map(ResourceId::toWire),
+    )
+
+private fun com.typewritermc.engine.CompilationRoot.toWire() =
+    skirout.editor.v1.compiled_content.CompilationRoot(
+        projection =
+            skirout.editor.v1.compiled_content
+                .CompilationProjectionId(value = projection.value),
+        resource =
+            skirout.editor.v1.type_catalog
+                .ResourceId(value = resource.value),
     )
 
 private fun PropertyConflict.toWire(): WireConflict =
@@ -117,8 +156,8 @@ private fun PropertyConflict.toWire(): WireConflict =
         actual = actual?.let { SkirDataValueCodec.encode(it).getOrThrow() },
     )
 
-internal fun AuthoringDiagnostic.toWire(): skirout.library.v1.authoring.AuthoringDiagnostic =
-    skirout.library.v1.authoring.AuthoringDiagnostic(
+internal fun AuthoringDiagnostic.toWire(): skirout.editor.v1.authoring.AuthoringDiagnostic =
+    skirout.editor.v1.authoring.AuthoringDiagnostic(
         code = code,
         message = message,
         resource = resource?.toWire(),

@@ -1,14 +1,17 @@
 library;
 
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Lets the author choose one concrete type for a nominal polymorphic value,
 /// then renders that type's presentation or its default representation editor.
 ///
-/// The concrete type selector replaces the whole polymorphic value with an
-/// initial valid payload. The payload editor writes back through the original
-/// binding, which keeps the scope as the sole update owner.
+/// The concrete type selector creates an incomplete typed draft. Realm owns
+/// concrete initialization and later completes the value through its type
+/// prototype before persistence. The payload editor writes back through the
+/// original binding, which keeps the scope as the sole update owner.
 extension PolymorphicInputElementRendering on PolymorphicInputElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
     final element = this;
@@ -28,6 +31,10 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
         final value = field.value as PolymorphicValue?;
         final reference = scope.canonical(element.control.binding);
         final owner = scope.editOwnerFor?.call(reference);
+        final selectionOwner = switch (owner) {
+          final ConcreteTypeSelectionOwner value => value,
+          _ => null,
+        };
         final structuralOwner = owner is EditorStructureOwner ? owner : null;
         final draft = structuralOwner?.polymorphicStructure(reference.path);
         final selectedType = draft?.concreteType ?? value?.concreteType;
@@ -79,10 +86,13 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
               enabled: field.editable,
               onSelected: (type) {
                 if (type == null) return;
-                if (structuralOwner != null) {
-                  structuralOwner.selectConcreteType(reference.path, type);
-                } else {
-                  type._replace(element, scope);
+                if (selectionOwner != null) {
+                  unawaited(
+                    selectionOwner.selectConcreteTypeAsync(
+                      reference.path,
+                      type,
+                    ),
+                  );
                 }
               },
             ),
@@ -225,29 +235,6 @@ extension on PolymorphicValue {
         element: const DefaultPresentationElement(binding: payloadReference),
       ),
       scope: childScope,
-    );
-  }
-}
-
-extension on ResolvedTypeRef? {
-  void _replace(
-    PolymorphicInputElement element,
-    PresentationRenderScope scope,
-  ) {
-    if (this == null) return;
-    final type = this!;
-    final concrete = scope.registry.resolve(NamedType(type));
-    final resolved = concrete.valueOrNull;
-
-    if (resolved == null || !resolved.isConcrete) return;
-    final initial = resolved.representation
-        .createInitialValue(registry: scope.registry)
-        .valueOrNull;
-
-    if (initial == null) return;
-    scope.update(
-      element.control.binding,
-      PolymorphicValue(concreteType: type, value: initial),
     );
   }
 }

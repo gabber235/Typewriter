@@ -7,6 +7,10 @@ Set<skir.ResourceId> _operationResources(skir.AuthoringOperation operation) =>
       },
       skir.AuthoringOperation_commitWrapper(:final value) => {value.id},
       skir.AuthoringOperation_deleteWrapper(:final value) => {value.id},
+      skir.AuthoringOperation_declareRelationWrapper(:final value) => {
+        value.source,
+        value.target,
+      },
       skir.AuthoringOperation_unknown() => throw ArgumentError(
         "Unknown authoring operation",
       ),

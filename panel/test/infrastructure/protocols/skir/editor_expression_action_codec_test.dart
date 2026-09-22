@@ -255,11 +255,7 @@ void main() {
       ),
       (
         EditorAction.local(
-          ReplaceConcreteTypeAction(
-            target: binding,
-            concreteType: named,
-            initialValue: text,
-          ),
+          ReplaceConcreteTypeAction(target: binding, concreteType: named),
         ),
         skir.LocalEditorAction_kind.replaceConcreteNominalTypeWrapper,
       ),

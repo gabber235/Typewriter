@@ -29,7 +29,6 @@ import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
-import com.typewritermc.realm.repository.AuthoringResourceKind
 import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
@@ -50,6 +49,8 @@ import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +60,8 @@ import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition
+import skirout.editor.v1.compiled_content.CompilationProjectionId
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
@@ -158,6 +161,20 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                 )
+            val authoringPolicies =
+                RealmAuthoringPolicyAssembler.assemble(
+                    providers =
+                        listOf(
+                            CoreAuthoringPolicyProvider(
+                                prototypes = loadedDiscovery.prototypes,
+                                pageCatalog = pageCatalog,
+                                elements = assembled.elements,
+                                types = assembled.discovery.types,
+                                catalogRevision = { assembled.discovery.generation.value },
+                            ),
+                        ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
+                    catalog = assembled.discovery.types,
+                )
             val realmModule =
                 module {
                     single<OpenTelemetry> { context.host.openTelemetry }
@@ -170,6 +187,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { loadedDiscovery.prototypes }
                     single { capabilityRegistry }
                     single { pageCatalog }
+                    single { authoringPolicies }
                     single<RealmEditorCatalogSource> {
                         SnapshotRealmEditorCatalogSource(get()) { get<RealmDiscoverySnapshotStore>().current() }
                     }
@@ -192,6 +210,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             get(),
                             get(),
                             capabilityInvocations = get(),
+                            authoringPolicies = get(),
                         )
                     }
                 }
@@ -207,30 +226,18 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
                 RealmDiscoverySnapshot(
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
-                    resourceKinds =
-                        listOf(
-                            RealmResourceKindDefinition(
-                                AuthoringResourceKind.BOOK,
-                                TypeExpression.Named(loadedDiscovery.prototypes.require(Book::class).type),
-                                loadedDiscovery.prototypes.require(Book::class).type,
-                            ),
-                            RealmResourceKindDefinition(
-                                AuthoringResourceKind.TAG,
-                                TypeExpression.Named(loadedDiscovery.prototypes.require(Tag::class).type),
-                                loadedDiscovery.prototypes.require(Tag::class).type,
-                            ),
-                            RealmResourceKindDefinition(
-                                AuthoringResourceKind.PAGE,
-                                TypeExpression.Named(loadedDiscovery.prototypes.require(Page::class).type),
-                                loadedDiscovery.prototypes.require(Page::class).type,
-                            ),
-                            RealmResourceKindDefinition(
-                                AuthoringResourceKind.ELEMENT,
-                                TypeExpression.Named(loadedDiscovery.prototypes.require(Element::class).type),
-                            ),
-                        ),
+                    resourceDefinitions = authoringPolicies.definitions,
                     relations = assembled.runtimeDiscovery.relations,
                     collectionProjections = coreLibraryCollectionProjections(loadedDiscovery.prototypes),
+                    creationSlots = authoringPolicies.creationSlots,
+                    authoringSearch = authoringPolicies.searchDefinition(),
+                    compilationProjections =
+                        authoringPolicies.compilation.projections.map { projection ->
+                            AuthoringCompilationProjectionDefinition(
+                                projection = CompilationProjectionId(value = projection.id.value),
+                                root = SkirTypeCodec.encode(projection.root).getOrThrow(),
+                            )
+                        },
                     elements = assembled.elements,
                     pages = pageCatalog,
                     presentations = presentationCatalog.definitions,

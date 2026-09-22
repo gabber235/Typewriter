@@ -7,11 +7,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("page scope exposes only compatible element definitions", () {
-    final policy = ValueNotifier<AsyncValue<PageEntryCreationPolicy>>(
-      AsyncData(_policy),
+    final slot = ValueNotifier<AsyncValue<RealmAuthoringCreationSlot>>(
+      AsyncData(_slot),
     );
-    addTearDown(policy.dispose);
-    final scope = pageElementTypeScope(policy: policy);
+    addTearDown(slot.dispose);
+    final scope = pageCreationSlotScope(slot: slot);
 
     expect(
       scope.evaluate(_result(_compatibleDefinition), SearchQueryContext.empty),
@@ -31,11 +31,11 @@ void main() {
   });
 
   test("page scope hides definitions while policy is unavailable", () {
-    final policy = ValueNotifier<AsyncValue<PageEntryCreationPolicy>>(
+    final slot = ValueNotifier<AsyncValue<RealmAuthoringCreationSlot>>(
       const AsyncLoading(),
     );
-    addTearDown(policy.dispose);
-    final scope = pageElementTypeScope(policy: policy);
+    addTearDown(slot.dispose);
+    final scope = pageCreationSlotScope(slot: slot);
 
     expect(
       scope.evaluate(_result(_compatibleDefinition), SearchQueryContext.empty),
@@ -44,10 +44,10 @@ void main() {
   });
 
   test("fixed page command follows live compatibility", () {
-    final policy = ValueNotifier<AsyncValue<PageEntryCreationPolicy>>(
-      AsyncData(_policy),
+    final slot = ValueNotifier<AsyncValue<RealmAuthoringCreationSlot>>(
+      AsyncData(_slot),
     );
-    addTearDown(policy.dispose);
+    addTearDown(slot.dispose);
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final command = container.read(
@@ -57,7 +57,7 @@ void main() {
           organizationId: recordId("organization:test"),
           realmId: recordId("realm:test"),
           pageId: skir.ResourceId(value: "test"),
-          policy: policy,
+          slot: slot,
         ),
       ),
     );
@@ -71,7 +71,7 @@ void main() {
       isA<SearchCommandHidden>(),
     );
 
-    policy.value = const AsyncLoading();
+    slot.value = const AsyncLoading();
 
     expect(
       command.evaluate(_target(_compatibleDefinition)),
@@ -88,9 +88,12 @@ final _incompatibleType = ResolvedTypeRef(
   id: DeclaredTypeId("fedcba9876543210fedcba9876543210"),
   revision: 1,
 );
-final _policy = PageEntryCreationPolicy(
-  placement: PageEntryCreationPlacement.graph,
-  types: {_compatibleType},
+final _slot = RealmAuthoringCreationSlot(
+  id: AuthoringCreationSlotId("test/graph"),
+  label: "Test graph",
+  creates: CoreResourceDefinitionIds.element,
+  context: const RealmStandaloneCreationContext(),
+  concreteRoots: [_compatibleType],
 );
 final _compatibleDefinition = _definition("Compatible", _compatibleType);
 final _incompatibleDefinition = _definition("Incompatible", _incompatibleType);

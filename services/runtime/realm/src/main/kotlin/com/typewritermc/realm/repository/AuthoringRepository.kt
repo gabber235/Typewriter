@@ -1,5 +1,9 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.authoring.AuthoringChangeSummary
+import com.typewritermc.authoring.AuthoringPresentationSubject
+import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
@@ -15,6 +19,15 @@ interface AuthoringRepository {
         generation: String,
         operations: List<AuthoringOperation>,
     ): AuthoringPreviewResult
+}
+
+/** Materializes the registered presentation subject for resources changed by one committed graph plan. */
+internal fun interface AuthoringPresentationMaterializer {
+    fun materialize(
+        before: AuthoringWorkingGraph,
+        proposed: AuthoringWorkingGraph,
+        change: AuthoringChangeSummary,
+    ): List<AuthoringPresentationChange>
 }
 
 @JvmInline
@@ -35,7 +48,8 @@ data class AuthoringBatch(
 ) {
     init {
         require(operations.isNotEmpty()) { "Authoring batches must not be empty." }
-        require(operations.map(AuthoringOperation::resourceId).distinct().size == operations.size) {
+        val direct = operations.mapNotNull(AuthoringOperation::directResourceId)
+        require(direct.distinct().size == direct.size) {
             "Authoring batches must contain at most one operation per resource."
         }
     }
@@ -43,37 +57,46 @@ data class AuthoringBatch(
 
 @Serializable
 sealed interface AuthoringOperation {
-    val resourceId: ResourceId
-
     @Serializable
     @SerialName("create")
     data class CreateResource(
         val id: ResourceId,
-        val kind: AuthoringResourceKind,
+        val definition: ResourceDefinitionId,
         val content: TypedValueEnvelope,
-    ) : AuthoringOperation {
-        override val resourceId: ResourceId = id
-    }
+    ) : AuthoringOperation
 
     @Serializable
     @SerialName("commit")
     data class CommitResource(
         val id: ResourceId,
-        val observedSequence: Long,
         val base: TypedValueEnvelope,
         val proposed: TypedValueEnvelope,
         val changedPaths: List<DataPath>,
-    ) : AuthoringOperation {
-        override val resourceId: ResourceId = id
-    }
+    ) : AuthoringOperation
 
     @Serializable
     @SerialName("delete")
     data class DeleteResource(
         val id: ResourceId,
-    ) : AuthoringOperation {
-        override val resourceId: ResourceId = id
-    }
+        val base: TypedValueEnvelope,
+    ) : AuthoringOperation
+
+    @Serializable
+    @SerialName("declare_relation")
+    data class DeclareRelation(
+        val relation: com.typewritermc.types.RelationId,
+        val source: ResourceId,
+        val target: ResourceId,
+    ) : AuthoringOperation
+
+    val directResourceId: ResourceId?
+        get() =
+            when (this) {
+                is CreateResource -> id
+                is CommitResource -> id
+                is DeleteResource -> id
+                is DeclareRelation -> null
+            }
 }
 
 @Serializable
@@ -83,7 +106,27 @@ data class AuthoringChanged(
     val batchId: BatchId,
     val resources: List<GraphResourceChange>,
     val edges: List<GraphEdgeChange>,
+    val presentations: List<AuthoringPresentationChange> = emptyList(),
+    val compilationImpact: List<CompilationRoot> = emptyList(),
 )
+
+@Serializable
+sealed interface AuthoringPresentationChange {
+    val resource: ResourceId
+
+    @Serializable
+    @SerialName("upsert")
+    data class Upsert(
+        override val resource: ResourceId,
+        val subject: AuthoringPresentationSubject,
+    ) : AuthoringPresentationChange
+
+    @Serializable
+    @SerialName("remove")
+    data class Remove(
+        override val resource: ResourceId,
+    ) : AuthoringPresentationChange
+}
 
 @Serializable
 sealed interface GraphResourceChange {
@@ -137,7 +180,6 @@ sealed interface AuthoringBatchResult {
     @SerialName("applied")
     data class Applied(
         val change: AuthoringChanged,
-        val affectsCompilation: Boolean,
     ) : AuthoringBatchResult
 
     @Serializable

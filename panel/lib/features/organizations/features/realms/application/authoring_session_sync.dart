@@ -1,69 +1,60 @@
 part of "authoring_session.dart";
 
 mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
-  final Map<_AuthoringScope, int> _scopeCounts = {};
-  final Map<_AuthoringScope, Future<void>> _scopeReadiness = {};
+  @override
+  late AuthoringResourceRepository _repository;
+  final Map<String, AuthoringSelectionLeaseState> _leases = {};
+  final Map<String, Future<void>> _selectionReadiness = {};
   final List<skir.AuthoringChanged> _buffer = [];
 
-  NatsSubscription? _subscription;
-  StreamSubscription<NatsMessage>? _messages;
-  NatsSubscription? _compiledSubscription;
-  StreamSubscription<NatsMessage>? _compiledMessages;
-  StreamSubscription<NatsConnectionState>? _lifecycle;
   Future<void>? _refreshOperation;
-  var _refreshRequested = false;
   late Future<void> _startOperation;
-  var _needsReconnectRefresh = false;
-  var _disposed = false;
-
-  late NatsClient _client;
-  @override
-  late RealmServiceAddress _address;
-
-  Future<void> _start() async {
-    try {
-      _lifecycle = _client.connectionStateChanges.listen(_onLifecycle);
-      _onLifecycle(_client.connectionState);
-      _subscription = await _client.subscribe(
-        _address.event("library.authoring.changed"),
+  final Set<String> _refreshSelections = {};
+  final Set<String> _seenBatchIds = {};
+  _AuthoringSelectionLease _acquire(skir.GraphSelection selection) {
+    final key = selection.key;
+    final existing = _leases[key];
+    if (existing != null && existing.selection != selection) {
+      throw StateError(
+        "Authoring selection key '$key' is already leased for a different selection",
       );
-      _compiledSubscription = await _client.subscribe(
-        _address.event("compiled.content.watch"),
-      );
-      if (_disposed) {
-        await _subscription?.unsubscribe();
-        await _compiledSubscription?.unsubscribe();
-        return;
-      }
-      _messages = _subscription?.messages.listen(
-        _onMessage,
-        onError: (Object _, StackTrace _) => _scheduleRefresh(),
-      );
-      _compiledMessages = _compiledSubscription?.messages.listen(
-        (_) => _scheduleRefresh(),
-        onError: (Object _, StackTrace _) => _scheduleRefresh(),
-      );
-    } on Object catch (error, stackTrace) {
-      if (!_disposed) Error.throwWithStackTrace(error, stackTrace);
     }
+    final added = existing == null;
+    _leases[key] = AuthoringSelectionLeaseState(
+      selection: selection,
+      retainCount: (existing?.retainCount ?? 0) + 1,
+      result: state.selections[key],
+    );
+    final ready = added
+        ? _selectionReadiness[key] = _startOperation.then((_) {
+            _refreshSelections.add(key);
+            return _refresh();
+          })
+        : _selectionReadiness[key] ?? _startOperation;
+    final retention = ref.keepAlive();
+    return _AuthoringSelectionLease(ready, () {
+      _release(key);
+      retention.close();
+    });
   }
 
-  void _onMessage(NatsMessage message) {
-    _accept(skir.AuthoringChanged.serializer.fromBytes(message.payload));
-  }
-
-  void _onLifecycle(NatsConnectionState connection) {
-    switch (connection) {
-      case NatsReconnecting() || NatsFailed():
-        _needsReconnectRefresh = true;
-      case NatsConnected() when _needsReconnectRefresh:
-        _needsReconnectRefresh = false;
-        _scheduleRefresh();
-      case NatsConnecting() || NatsConnected() || NatsClosed():
+  void _release(String key) {
+    final lease = _leases[key];
+    if (lease == null) return;
+    if (lease.retainCount == 1) {
+      _leases.remove(key);
+      _selectionReadiness.remove(key);
+      _refreshSelections.remove(key);
+    } else {
+      _leases[key] = lease.copyWith(retainCount: lease.retainCount - 1);
     }
   }
 
   void _accept(skir.AuthoringChanged change) {
+    if (!_seenBatchIds.add(change.batchId)) return;
+    if (_seenBatchIds.length > 512) {
+      _seenBatchIds.remove(_seenBatchIds.first);
+    }
     if (_refreshOperation != null || state.sequence == null) {
       _buffer.add(change);
       return;
@@ -78,6 +69,54 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     _applyEvent(change);
   }
 
+  void _acceptCompiled(skir.CompiledContentChanged change) {
+    final currentGeneration = state.generation;
+    if (currentGeneration != null && currentGeneration != change.generation) {
+      _scheduleRefresh();
+      return;
+    }
+    final currentSequence = state.sequence;
+    if (currentSequence == null || change.sourceSequence > currentSequence) {
+      _scheduleRefresh();
+      return;
+    }
+    if (change.sourceSequence < currentSequence) {
+      final affected = change.states
+          .map(
+            (state) => switch (state) {
+              skir.CompiledResourceStateChange_upsertWrapper(:final value) =>
+                value.root.resource,
+              skir.CompiledResourceStateChange_removeWrapper(:final value) =>
+                value.resource,
+              skir.CompiledResourceStateChange_unknown() => null,
+            },
+          )
+          .nonNulls
+          .toSet();
+      final selections = state.selections.entries
+          .where((entry) => entry.value.resourceIds.any(affected.contains))
+          .map((entry) => entry.key)
+          .toSet();
+      if (selections.isNotEmpty) _scheduleRefresh(selections);
+      return;
+    }
+    final statuses = Map<skir.CompilationRoot, skir.CompiledResourceState>.of(
+      state.compiledStatuses,
+    );
+    for (final stateChange in change.states) {
+      switch (stateChange) {
+        case skir.CompiledResourceStateChange_upsertWrapper(:final value):
+          statuses[value.root] = value.state;
+        case skir.CompiledResourceStateChange_removeWrapper(:final value):
+          statuses.remove(value);
+        case skir.CompiledResourceStateChange_unknown():
+          _scheduleRefresh();
+          return;
+      }
+    }
+    state = state.copyWith(compiledStatuses: Map.unmodifiable(statuses));
+  }
+
   void _applyEvent(skir.AuthoringChanged event) {
     if (state.generation != null && event.generation != state.generation) {
       _scheduleRefresh();
@@ -90,16 +129,21 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     final presentations = Map<skir.ResourceId, skir.PresentationSubject>.of(
       state.presentations,
     );
+    final compiledStatuses =
+        Map<skir.CompilationRoot, skir.CompiledResourceState>.of(
+          state.compiledStatuses,
+        );
     for (final change in event.resources) {
       switch (change) {
         case skir.AuthoringResourceChange_upsertWrapper(:final value):
           resources[value.id] = value;
-          presentations.remove(value.id);
         case skir.AuthoringResourceChange_removeWrapper(:final value):
           resources.remove(value);
           presentations.remove(value);
+          compiledStatuses.removeWhere((root, _) => root.resource == value);
         case skir.AuthoringResourceChange_unknown():
-          throw ApiException.unknownResponseMessage();
+          _scheduleRefresh();
+          return;
       }
     }
     for (final change in event.edges) {
@@ -109,47 +153,152 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
         case skir.AuthoringEdgeChange_removeWrapper(:final value):
           edges.remove(value);
         case skir.AuthoringEdgeChange_unknown():
-          throw ApiException.unknownResponseMessage();
+          _scheduleRefresh();
+          return;
       }
     }
+    for (final change in event.presentations) {
+      switch (change) {
+        case skir.PresentationSubjectChange_upsertWrapper(:final value):
+          presentations[value.resource] = value.subject;
+        case skir.PresentationSubjectChange_removeWrapper(:final value):
+          presentations.remove(value);
+        case skir.PresentationSubjectChange_unknown():
+          _scheduleRefresh();
+          return;
+      }
+    }
+    for (final root in event.compilationImpact) {
+      compiledStatuses[root] = skir.CompiledResourceState.notCompiled;
+    }
+    final selections = _applySelectionChanges(state.selections, event);
     state = state.copyWith(
       generation: event.generation,
       sequence: event.sequence,
       resources: Map.unmodifiable(resources),
       edges: Map.unmodifiable(edges),
       presentations: Map.unmodifiable(presentations),
+      compiledStatuses: Map.unmodifiable(compiledStatuses),
+      selections: Map.unmodifiable(selections),
     );
-    _scheduleRefresh();
+    final incomplete = _leases.keys.where((key) => !_canApplyEvent(key, event));
+    for (final key in incomplete) {
+      _refreshSelections.add(key);
+    }
+    if (incomplete.isNotEmpty) _scheduleRefresh();
   }
 
-  void _scheduleRefresh() {
+  bool _canApplyEvent(String key, skir.AuthoringChanged event) {
+    final selection = state.selections[key];
+    if (selection == null || selection.missingIds.isNotEmpty) return false;
+    final requested = _leases[key]?.selection;
+    if (requested == null) return false;
+    final resources = selection.resourceIds.toSet();
+    final edges = selection.edgeIds.toSet();
+    final hasTraversal = requested.steps.isNotEmpty;
+    final scans = requested.seed is skir.ResourceSeed_scanWrapper;
+    return event.resources.every(
+          (change) => switch (change) {
+            skir.AuthoringResourceChange_upsertWrapper(:final value) =>
+              resources.contains(value.id) || !scans,
+            skir.AuthoringResourceChange_removeWrapper(:final value) =>
+              !resources.contains(value) || !hasTraversal,
+            skir.AuthoringResourceChange_unknown() => false,
+          },
+        ) &&
+        event.edges.every(
+          (change) => switch (change) {
+            skir.AuthoringEdgeChange_upsertWrapper(:final value) =>
+              !hasTraversal ||
+                  (!resources.contains(value.source) &&
+                      !resources.contains(value.target)),
+            skir.AuthoringEdgeChange_removeWrapper(:final value) =>
+              !hasTraversal || !edges.contains(value),
+            skir.AuthoringEdgeChange_unknown() => false,
+          },
+        ) &&
+        event.presentations.every(
+          (change) => switch (change) {
+            skir.PresentationSubjectChange_upsertWrapper(:final value) =>
+              resources.contains(value.resource) || !scans,
+            skir.PresentationSubjectChange_removeWrapper(:final value) =>
+              !resources.contains(value) || !hasTraversal,
+            skir.PresentationSubjectChange_unknown() => false,
+          },
+        );
+  }
+
+  Map<String, skir.GraphSelectionResult> _applySelectionChanges(
+    Map<String, skir.GraphSelectionResult> current,
+    skir.AuthoringChanged event,
+  ) {
+    final selections = Map<String, skir.GraphSelectionResult>.of(current);
+    for (final entry in current.entries) {
+      final resources = entry.value.resourceIds.toSet();
+      final edges = entry.value.edgeIds.toSet();
+      for (final change in event.resources) {
+        if (change case skir.AuthoringResourceChange_removeWrapper(
+          :final value,
+        )) {
+          resources.remove(value);
+        }
+      }
+      for (final change in event.edges) {
+        if (change case skir.AuthoringEdgeChange_removeWrapper(:final value)) {
+          edges.remove(value);
+        }
+      }
+      selections[entry.key] = skir.GraphSelectionResult(
+        key: entry.value.key,
+        resourceIds: resources,
+        edgeIds: edges,
+        missingIds: entry.value.missingIds,
+        incompatibleIds: entry.value.incompatibleIds,
+      );
+    }
+    return selections;
+  }
+
+  void _scheduleRefresh([Set<String>? selectionKeys]) {
+    if (selectionKeys == null) {
+      _refreshSelections.addAll(_leases.keys);
+    } else {
+      _refreshSelections.addAll(selectionKeys);
+    }
     unawaited(_refresh().catchError((Object _) {}));
   }
 
   Future<void> _refresh() {
-    _refreshRequested = true;
     final active = _refreshOperation;
     if (active != null) return active;
-    return _refreshOperation = _runRefresh().whenComplete(
-      () => _refreshOperation = null,
-    );
+    return _refreshOperation = _runRefresh().whenComplete(() {
+      _refreshOperation = null;
+    });
   }
 
   Future<void> _runRefresh() async {
-    if (_disposed || _scopeCounts.isEmpty) return;
+    if (_leases.isEmpty) return;
     state = state.copyWith(refreshing: true);
     try {
-      while (_refreshRequested && !_disposed && _scopeCounts.isNotEmpty) {
-        _refreshRequested = false;
-        final snapshot = await _fetchSnapshot(_scopeCounts.keys.toList());
-        if (_disposed) return;
+      while (_refreshSelections.isNotEmpty && _leases.isNotEmpty) {
+        final keys = _refreshSelections
+            .where(_leases.containsKey)
+            .toList(growable: false);
+        _refreshSelections.removeAll(keys);
+        if (keys.isEmpty) continue;
+        final selections = keys
+            .map((key) => _leases[key]?.selection)
+            .whereType<skir.GraphSelection>()
+            .toList(growable: false);
+        final snapshot = await _fetchSnapshot(selections);
         if (snapshot.graph.sequence >= (state.sequence ?? 0)) {
           _applySnapshot(snapshot.graph, snapshot.compiledStatuses);
+          _synchronizeLeaseResults();
           _drainBuffer();
         }
       }
     } finally {
-      if (!_disposed) state = state.copyWith(refreshing: false);
+      state = state.copyWith(refreshing: false);
     }
   }
 
@@ -170,12 +319,14 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     }
   }
 
+  void _synchronizeLeaseResults() {
+    for (final key in _leases.keys.toList(growable: false)) {
+      final lease = _leases[key]!;
+      _leases[key] = lease.copyWith(result: state.selections[key]);
+    }
+  }
+
   Future<void> _dispose() async {
-    _disposed = true;
-    await _messages?.cancel();
-    await _compiledMessages?.cancel();
-    await _lifecycle?.cancel();
-    await _subscription?.unsubscribe();
-    await _compiledSubscription?.unsubscribe();
+    _refreshSelections.clear();
   }
 }

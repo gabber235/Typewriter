@@ -1,14 +1,14 @@
 package com.typewritermc.realm
 
+import com.typewritermc.authoring.AuthoringSearchContext
+import com.typewritermc.authoring.AuthoringSearchMatch
+import com.typewritermc.authoring.ResourceIdentity
+import com.typewritermc.authoring.ResourceTypeDescriptor
 import com.typewritermc.elements.Element
 import com.typewritermc.elements.Entry
-import com.typewritermc.library.AuthoringSearchContext
-import com.typewritermc.library.AuthoringSearchMatch
 import com.typewritermc.library.Book
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageKind
-import com.typewritermc.library.ResourceIdentity
-import com.typewritermc.library.ResourceTypeDescriptor
 import com.typewritermc.library.TAG_COLLECTION_SOURCE_ID
 import com.typewritermc.library.TAG_INHERITS_RELATION_ID
 import com.typewritermc.library.Tag
@@ -39,11 +39,11 @@ import com.typewritermc.types.TypePrototypeRegistry
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.library.v1.authoring.CollectionProjectionDefinition
-import skirout.library.v1.authoring.CollectionProjectionField
-import skirout.library.v1.authoring.CollectionProjectionSource
-import skirout.library.v1.authoring.ResourceFilter
-import skirout.library.v1.authoring.ResourceKind
+import skirout.editor.v1.authoring.CollectionProjectionDefinition
+import skirout.editor.v1.authoring.CollectionProjectionField
+import skirout.editor.v1.authoring.CollectionProjectionSource
+import skirout.editor.v1.authoring.ResourceDefinitionId
+import skirout.editor.v1.authoring.ResourceFilter
 import kotlin.reflect.KProperty1
 
 internal fun coreLibraryPresentationProviders(): List<PresentationProvider> =
@@ -191,7 +191,7 @@ internal fun coreLibraryCollectionProjections(prototypes: TypePrototypeRegistry)
             sourceId = TAG_COLLECTION_SOURCE_ID,
             resources =
                 ResourceFilter(
-                    kinds = listOf(ResourceKind.TAG),
+                    definitions = listOf(ResourceDefinitionId(value = CoreResourceDefinitionIds.TAG.value)),
                     assignableTo = SkirTypeCodec.encode(TypeExpression.Named(tag.type)).getOrThrow(),
                 ),
             rowType = SkirTypeCodec.encode(row.type).getOrThrow(),

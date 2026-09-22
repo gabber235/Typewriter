@@ -117,12 +117,6 @@ class TagsMock extends CanonicalTags {
       value: canonical.inspectorValue,
     );
   }
-
-  @override
-  Future<void> deleteTag(skir.ResourceId tagId) async {
-    final tags = await future;
-    state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
-  }
 }
 
 List<Override> tagsProviderOverrides({

@@ -1,8 +1,6 @@
 import "dart:typed_data";
 
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_value.freezed.dart";
@@ -51,7 +49,7 @@ sealed class DataValue with _$DataValue {
     required DataValue value,
   }) = PolymorphicValue;
 
-  const factory DataValue.reference(skir.ResourceId id) = ReferenceValue;
+  const factory DataValue.reference(ResourceId id) = ReferenceValue;
 }
 
 /// A string keyed object value whose fields can be addressed by [DataPath].

@@ -40,7 +40,7 @@ void main() {
       final snapshot = TypedAuthoringEditorSnapshot(
         resource: skir.AuthoringResource(
           id: skir.ResourceId(value: "test"),
-          kind: skir.ResourceKind.tag,
+          definition: CoreResourceDefinitionIds.tag.toWire(),
           content: codec
               .encodeEnvelope(
                 const TypedValueEnvelope(

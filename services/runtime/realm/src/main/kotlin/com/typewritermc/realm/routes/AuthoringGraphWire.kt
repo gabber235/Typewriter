@@ -1,8 +1,10 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.repository.AuthoringGraphQueryResult
 import com.typewritermc.realm.repository.AuthoringGraphResource
-import com.typewritermc.realm.repository.AuthoringResourceKind
+import com.typewritermc.realm.repository.AuthoringGraphSnapshot
+import com.typewritermc.realm.repository.AuthoringWorkingGraph
 import com.typewritermc.realm.repository.GraphSelection
 import com.typewritermc.realm.repository.RelationDirection
 import com.typewritermc.realm.repository.RelationFilter
@@ -20,27 +22,27 @@ import com.typewritermc.types.TypedValueEnvelope
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.authoring.AuthoringDiagnostic
+import skirout.editor.v1.authoring.AuthoringEdge
+import skirout.editor.v1.authoring.AuthoringEdgeId
+import skirout.editor.v1.authoring.AuthoringEdgeOrigin
+import skirout.editor.v1.authoring.AuthoringResource
+import skirout.editor.v1.authoring.AuthoringResourcePresentation
+import skirout.editor.v1.authoring.QueryAuthoringGraphRequest
+import skirout.editor.v1.authoring.QueryAuthoringGraphResponse
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.library.v1.authoring.AuthoringDiagnostic
-import skirout.library.v1.authoring.AuthoringEdge
-import skirout.library.v1.authoring.AuthoringEdgeId
-import skirout.library.v1.authoring.AuthoringEdgeOrigin
-import skirout.library.v1.authoring.AuthoringResource
-import skirout.library.v1.authoring.AuthoringResourcePresentation
-import skirout.library.v1.authoring.QueryAuthoringGraphRequest
-import skirout.library.v1.authoring.QueryAuthoringGraphResponse
+import skirout.editor.v1.authoring.GraphSelection as WireGraphSelection
+import skirout.editor.v1.authoring.GraphSelectionResult as WireGraphSelectionResult
+import skirout.editor.v1.authoring.RelationDirection as WireRelationDirection
+import skirout.editor.v1.authoring.RelationFilter as WireRelationFilter
+import skirout.editor.v1.authoring.RelationStep as WireRelationStep
+import skirout.editor.v1.authoring.ResourceDefinitionId as WireResourceDefinitionId
+import skirout.editor.v1.authoring.ResourceFilter as WireResourceFilter
+import skirout.editor.v1.authoring.ResourceSeed as WireResourceSeed
 import skirout.editor.v1.path.DataPath as WireDataPath
 import skirout.editor.v1.path.DataPathSegment as WireDataPathSegment
 import skirout.editor.v1.type_catalog.ResourceId as WireResourceId
 import skirout.editor.v1.typed_value.TypedValueEnvelope as WireTypedValueEnvelope
-import skirout.library.v1.authoring.GraphSelection as WireGraphSelection
-import skirout.library.v1.authoring.GraphSelectionResult as WireGraphSelectionResult
-import skirout.library.v1.authoring.RelationDirection as WireRelationDirection
-import skirout.library.v1.authoring.RelationFilter as WireRelationFilter
-import skirout.library.v1.authoring.RelationStep as WireRelationStep
-import skirout.library.v1.authoring.ResourceFilter as WireResourceFilter
-import skirout.library.v1.authoring.ResourceKind as WireResourceKind
-import skirout.library.v1.authoring.ResourceSeed as WireResourceSeed
 
 internal fun QueryAuthoringGraphRequest.toDomain(): List<GraphSelection> = selections.map(WireGraphSelection::toDomain)
 
@@ -71,7 +73,7 @@ private fun WireResourceSeed.toDomain(): ResourceSeed =
 
 internal fun WireResourceFilter.toDomain(): ResourceFilter =
     ResourceFilter(
-        kinds = kinds.map(WireResourceKind::toDomain).toSet(),
+        definitions = definitions.map(WireResourceDefinitionId::toDomain).toSet(),
         assignableTo = assignableTo?.let { SkirTypeCodec.decode(it).getOrThrow() },
     )
 
@@ -112,7 +114,7 @@ private fun WireRelationFilter.toDomain(): RelationFilter =
         }
     }
 
-internal fun AuthoringGraphQueryResult.toWire(subjects: AuthoringSubjectProjector): QueryAuthoringGraphResponse =
+internal fun AuthoringGraphQueryResult.toWire(subjects: AuthoringPresentationProjector): QueryAuthoringGraphResponse =
     when (this) {
         is AuthoringGraphQueryResult.CatalogChanged -> {
             QueryAuthoringGraphResponse.createCatalogChanged(
@@ -147,17 +149,33 @@ internal fun AuthoringGraphQueryResult.toWire(subjects: AuthoringSubjectProjecto
                     snapshot.resources.map { resource ->
                         AuthoringResourcePresentation(
                             resource = resource.id.toWire(),
-                            subject = subjects.project(resource, snapshot.edges),
+                            subject = subjects.toWire(subjects.project(resource, graph = snapshot.toWorkingGraph())),
                         )
                     },
             )
         }
     }
 
+internal fun AuthoringGraphSnapshot.toWorkingGraph(): AuthoringWorkingGraph =
+    AuthoringWorkingGraph(
+        resources =
+            resources
+                .associate { resource ->
+                    resource.id to
+                        com.typewritermc.realm.repository.StoredTypedResource(
+                            id = resource.id,
+                            definition = resource.definition,
+                            root = (resource.content.rootType as TypeExpression.Named).reference,
+                            valueWithSlots = resource.content.rootValue,
+                        )
+                }.toMap(),
+        relations = edges.associateBy(StoredResourceRelation::id),
+    )
+
 internal fun AuthoringGraphResource.toWire(): AuthoringResource =
     AuthoringResource(
         id = id.toWire(),
-        kind = kind.toWire(),
+        definition = definition.toWire(),
         content = content.toWire(),
     )
 
@@ -189,7 +207,7 @@ internal fun StoredResourceRelation.toWire(): AuthoringEdge =
                 is ResourceRelationOrigin.Declared -> {
                     AuthoringEdgeOrigin.createDeclaredRelation(
                         relationId =
-                            skirout.library.v1.authoring
+                            skirout.editor.v1.authoring
                                 .RelationId(value = value.relationId.value),
                     )
                 }
@@ -198,22 +216,9 @@ internal fun StoredResourceRelation.toWire(): AuthoringEdge =
 
 internal fun ResourceId.toWire(): WireResourceId = WireResourceId(value = value)
 
-private fun AuthoringResourceKind.toWire(): WireResourceKind =
-    when (this) {
-        AuthoringResourceKind.BOOK -> WireResourceKind.BOOK
-        AuthoringResourceKind.TAG -> WireResourceKind.TAG
-        AuthoringResourceKind.PAGE -> WireResourceKind.PAGE
-        AuthoringResourceKind.ELEMENT -> WireResourceKind.ELEMENT
-    }
+internal fun ResourceDefinitionId.toWire(): WireResourceDefinitionId = WireResourceDefinitionId(value = value)
 
-private fun WireResourceKind.toDomain(): AuthoringResourceKind =
-    when (this) {
-        WireResourceKind.BOOK -> AuthoringResourceKind.BOOK
-        WireResourceKind.TAG -> AuthoringResourceKind.TAG
-        WireResourceKind.PAGE -> AuthoringResourceKind.PAGE
-        WireResourceKind.ELEMENT -> AuthoringResourceKind.ELEMENT
-        else -> throw IllegalArgumentException("Unknown resource kind.")
-    }
+private fun WireResourceDefinitionId.toDomain(): ResourceDefinitionId = ResourceDefinitionId(value)
 
 private fun WireDataPath.toDomain(): DataPath =
     DataPath(

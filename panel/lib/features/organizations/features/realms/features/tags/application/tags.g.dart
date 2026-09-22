@@ -10,7 +10,7 @@ part of 'tags.dart';
 // ignore_for_file: type=lint, type=warning
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as
@@ -21,7 +21,7 @@ final canonicalTagsProvider = CanonicalTagsProvider._();
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as
@@ -30,7 +30,7 @@ final class CanonicalTagsProvider
     extends $AsyncNotifierProvider<CanonicalTags, List<Tag>> {
   /// Owns the current Realm tag projection and its authoring mutations.
   ///
-  /// The provider waits for the library scope before reading the session, then
+  /// The provider waits for its graph selection before reading the session, then
   /// follows session revisions through [ref.listen]. Creation and deletion use
   /// direct guarded operations. Editing is delegated to the shared editor owner
   /// so drafts, validation, and response reconciliation follow the same path as
@@ -54,11 +54,11 @@ final class CanonicalTagsProvider
   CanonicalTags create() => CanonicalTags();
 }
 
-String _$canonicalTagsHash() => r'cdc5c43bddf9da9c95edd843665817a34d9290b9';
+String _$canonicalTagsHash() => r'772d5dedb4f2193bc2a5ce406796e1abbb0a880a';
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as

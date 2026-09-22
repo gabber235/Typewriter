@@ -1,59 +1,54 @@
 part of "authoring_session.dart";
 
+extension RealmEditorCatalogCompilationRoots on RealmEditorCatalogSnapshot {
+  Set<skir.CompilationRoot> compilationRoots(
+    Iterable<skir.AuthoringResource> resources,
+  ) {
+    if (compilationProjections.isEmpty) return const {};
+    final registry = TypeRegistry(catalog);
+    final types = SkirTypeCodec(registry);
+    final roots = <skir.CompilationRoot>{};
+    for (final resource in resources) {
+      final rootType = types.decodeReference(resource.content.rootType);
+      final root = rootType.valueOrNull;
+      if (root == null) continue;
+      final actual = TypeExpression.named(root);
+      for (final projection in compilationProjections) {
+        if (!actual.isStructurallyAssignableTo(projection.root, registry)) {
+          continue;
+        }
+        roots.add(
+          skir.CompilationRoot(
+            projection: skir.CompilationProjectionId(value: projection.id),
+            resource: resource.id,
+          ),
+        );
+      }
+    }
+    return roots;
+  }
+}
+
 mixin _AuthoringSessionSnapshots on _$AuthoringSession {
-  RealmServiceAddress get _address;
+  AuthoringResourceRepository get _repository;
 
   Future<
     ({
       skir.AuthoringGraphSnapshot graph,
-      Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,
+      Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,
     })
   >
-  _fetchSnapshot(List<_AuthoringScope> scopes) async {
+  _fetchSnapshot(List<skir.GraphSelection> selections) async {
     final generation = state.generation ?? _catalogGeneration();
-    final request = skir.QueryAuthoringGraphRequest(
+    final graph = await _repository.fetchSelections(
+      selections,
       generation: generation,
-      selections: scopes.map((scope) => scope.selection),
     );
-    final response = await ref.requestSkir(
-      _address.request("library.authoring.graph.query"),
-      skir.QueryAuthoringGraphRequest.serializer.toBytes(request),
-      skir.QueryAuthoringGraphResponse.serializer,
+    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final compiledStatuses = await _repository.fetchCompiledStates(
+      catalog.compilationRoots(graph.resources),
     );
-    final graph = switch (response) {
-      skir.QueryAuthoringGraphResponse_successWrapper(:final value) => value,
-      skir.QueryAuthoringGraphResponse_invalidWrapper(:final value) =>
-        throw value.toApiException(),
-      skir.QueryAuthoringGraphResponse_catalogChangedWrapper() =>
-        throw StateError("The Realm catalog changed during graph acquisition"),
-      skir.QueryAuthoringGraphResponse_internalErrorWrapper() =>
-        throw ApiException.internalServerError(),
-      skir.QueryAuthoringGraphResponse_unknown() =>
-        throw ApiException.unknownResponseMessage(),
-    };
-    final statusRequest = skir.QueryCompiledResourceStatusRequest(
-      generation: graph.generation,
-      resources: graph.resources.map((resource) => resource.id),
-    );
-    final statusResponse = await ref.requestSkir(
-      _address.request("library.authoring.compiled.status.query"),
-      skir.QueryCompiledResourceStatusRequest.serializer.toBytes(statusRequest),
-      skir.QueryCompiledResourceStatusResponse.serializer,
-    );
-    final compiledStatuses = switch (statusResponse) {
-      skir.QueryCompiledResourceStatusResponse_successWrapper(:final value) =>
-        Map<skir.ResourceId, skir.CompiledResourceState>.unmodifiable({
-          for (final status in value.statuses) status.resource: status.state,
-        }),
-      skir.QueryCompiledResourceStatusResponse_invalidWrapper(:final value) =>
-        throw value.toApiException(),
-      skir.QueryCompiledResourceStatusResponse_catalogChangedWrapper() =>
-        throw StateError("The Realm catalog changed during status acquisition"),
-      skir.QueryCompiledResourceStatusResponse_internalErrorWrapper() =>
-        throw ApiException.internalServerError(),
-      skir.QueryCompiledResourceStatusResponse_unknown() =>
-        throw ApiException.unknownResponseMessage(),
-    };
     return (graph: graph, compiledStatuses: compiledStatuses);
   }
 
@@ -65,23 +60,45 @@ mixin _AuthoringSessionSnapshots on _$AuthoringSession {
 
   void _applySnapshot(
     skir.AuthoringGraphSnapshot snapshot,
-    Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,
+    Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,
   ) {
+    final replacedKeys = snapshot.selections.map((value) => value.key).toSet();
+    final retainedSelections = Map<String, skir.GraphSelectionResult>.of(
+      state.selections,
+    )..removeWhere((key, _) => replacedKeys.contains(key));
+    final retainedResourceIds = retainedSelections.values
+        .expand((value) => value.resourceIds)
+        .toSet();
+    final retainedEdgeIds = retainedSelections.values
+        .expand((value) => value.edgeIds)
+        .toSet();
     state = AuthoringSessionState(
       generation: snapshot.generation,
       sequence: snapshot.sequence,
       resources: Map.unmodifiable({
+        for (final entry in state.resources.entries)
+          if (retainedResourceIds.contains(entry.key)) entry.key: entry.value,
         for (final resource in snapshot.resources) resource.id: resource,
       }),
       edges: Map.unmodifiable({
+        for (final entry in state.edges.entries)
+          if (retainedEdgeIds.contains(entry.key)) entry.key: entry.value,
         for (final edge in snapshot.edges) edge.id: edge,
       }),
       presentations: Map.unmodifiable({
+        for (final entry in state.presentations.entries)
+          if (retainedResourceIds.contains(entry.key)) entry.key: entry.value,
         for (final presentation in snapshot.presentations)
           presentation.resource: presentation.subject,
       }),
-      compiledStatuses: compiledStatuses,
+      compiledStatuses: Map.unmodifiable({
+        for (final entry in state.compiledStatuses.entries)
+          if (retainedResourceIds.contains(entry.key.resource))
+            entry.key: entry.value,
+        ...compiledStatuses,
+      }),
       selections: Map.unmodifiable({
+        ...retainedSelections,
         for (final selection in snapshot.selections) selection.key: selection,
       }),
       diagnostics: List.unmodifiable(snapshot.diagnostics),

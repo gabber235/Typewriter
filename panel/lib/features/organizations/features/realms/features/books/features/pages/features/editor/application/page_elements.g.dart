@@ -98,7 +98,7 @@ final class PageDocumentHealthProvider
 }
 
 String _$pageDocumentHealthHash() =>
-    r'1f9b155b426e910acfa9ba421f12c6ba99c3b931';
+    r'c8328d82a85d0a404b9e7a67d7610a403b1e79f5';
 
 /// Projects compile diagnostics for the selected page without hiding the last
 /// active manifest when a new document is blocked.
@@ -194,7 +194,7 @@ final class PageElementsProvider
   }
 }
 
-String _$pageElementsHash() => r'5a691612609f98f7cd69bf62326e8a98f60c6fa1';
+String _$pageElementsHash() => r'd06e3534c1397c8f9471c5f9eb197ffed6b19957';
 
 /// Owns the page scoped editing coordinator.
 ///
@@ -348,7 +348,7 @@ final class DecodedRealmDocumentValuesProvider
 }
 
 String _$decodedRealmDocumentValuesHash() =>
-    r'81a5d7fe4eef089a8e09abf5dd54aaff80b8733b';
+    r'997b9b56d5f10519c09aa14adcef3dd3be5a05da';
 
 final class DecodedRealmDocumentValuesFamily extends $Family
     with
@@ -929,7 +929,7 @@ final class ProjectedPageElementValuesProvider
 }
 
 String _$projectedPageElementValuesHash() =>
-    r'25a92864a7947e3984eca88ff68325f8f884fb7d';
+    r'096ff9513eedca9b1fbf8b89b0c753ca9a9148d4';
 
 final class ProjectedPageElementValuesFamily extends $Family
     with

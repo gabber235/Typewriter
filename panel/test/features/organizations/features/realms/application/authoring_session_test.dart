@@ -10,13 +10,21 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/provider_test_utils.dart";
 
 const _graphSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.graph.query";
+    "service.to.realm1.organization.org1.realm.editor.authoring.graph.query";
 const _statusSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.compiled.status.query";
+    "service.to.realm1.organization.org1.realm.editor.authoring.compiled.status.query";
 const _batchSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.batch.apply";
+    "service.to.realm1.organization.org1.realm.editor.authoring.batch.apply";
 const _eventSubject =
-    "service.from.realm1.organization.org1.realm.library.authoring.changed";
+    "service.from.realm1.organization.org1.realm.editor.authoring.changed";
+
+final _librarySelection = authoringDefinitionSelection(
+  key: "library",
+  definitions: const [
+    CoreResourceDefinitionIds.book,
+    CoreResourceDefinitionIds.tag,
+  ],
+);
 
 void main() {
   test("buffers startup events and recovers sequence gaps", () async {
@@ -34,7 +42,9 @@ void main() {
 
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    final lease = harness.container.read(provider.notifier).acquireLibrary();
+    final lease = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
     await lease.ready;
     await waitForProvider(
       harness.container,
@@ -85,10 +95,15 @@ void main() {
 
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    final lease = harness.container.read(provider.notifier).acquireLibrary();
+    final lease = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
     await lease.ready;
     final response = await harness.container.read(provider.notifier).apply([
-      skir.AuthoringOperation.createDelete(id: _book),
+      skir.AuthoringOperation.createDelete(
+        id: _book,
+        base: _resource("Initial"),
+      ),
     ]);
 
     expect(response, isA<skir.ApplyAuthoringBatchResponse_conflictWrapper>());
@@ -99,6 +114,81 @@ void main() {
     );
 
     lease.release();
+    subscription.close();
+    await harness.dispose();
+  });
+
+  test(
+    "applies a covered event without refreshing the leased selection",
+    () async {
+      final harness = _Harness();
+      harness.nats.registerHandler(
+        _graphSubject,
+        (_) => _snapshot(1, title: "Initial", completeLibrary: true),
+      );
+
+      final provider = authoringSessionProvider(_org, _realm);
+      final subscription = harness.container.listen(provider, (_, _) {});
+      final lease = harness.container
+          .read(provider.notifier)
+          .acquire(_librarySelection);
+      await lease.ready;
+      final graphRequests = harness.nats.requests
+          .where((request) => request.subject == _graphSubject)
+          .length;
+
+      harness.emit(_change(2, title: "Changed"));
+      await waitForProvider(
+        harness.container,
+        provider,
+        (state) => state.sequence == 2,
+        description: "covered authoring event",
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        harness.nats.requests
+            .where((request) => request.subject == _graphSubject)
+            .length,
+        graphRequests,
+      );
+
+      lease.release();
+      subscription.close();
+      await harness.dispose();
+    },
+  );
+
+  test("rejects selection key collisions", () async {
+    final harness = _Harness();
+    harness.nats.registerHandler(
+      _graphSubject,
+      (_) => _snapshot(1, title: "Initial"),
+    );
+    final provider = authoringSessionProvider(_org, _realm);
+    final subscription = harness.container.listen(provider, (_, _) {});
+    final first = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
+    await first.ready;
+    expect(
+      () => harness.container
+          .read(provider.notifier)
+          .acquire(
+            skir.GraphSelection(
+              key: _librarySelection.key,
+              seed: skir.ResourceSeed.createScan(
+                filter: skir.ResourceFilter(
+                  definitions: [CoreResourceDefinitionIds.page.toWire()],
+                  assignableTo: null,
+                ),
+              ),
+              steps: const [],
+            ),
+          ),
+      throwsStateError,
+    );
+    first.release();
     subscription.close();
     await harness.dispose();
   });
@@ -113,18 +203,31 @@ final _bookType = ResolvedTypeRef(
   revision: 1,
 );
 
-Uint8List _snapshot(int sequence, {required String title}) =>
-    skir.QueryAuthoringGraphResponse.serializer.toBytes(
-      skir.QueryAuthoringGraphResponse.createSuccess(
-        generation: skir.CatalogGeneration(value: "1"),
-        sequence: sequence,
-        resources: [_resource(title)],
-        edges: const [],
-        selections: const [],
-        diagnostics: const [],
-        presentations: const [],
-      ),
-    );
+Uint8List _snapshot(
+  int sequence, {
+  required String title,
+  bool completeLibrary = false,
+}) => skir.QueryAuthoringGraphResponse.serializer.toBytes(
+  skir.QueryAuthoringGraphResponse.createSuccess(
+    generation: skir.CatalogGeneration(value: "1"),
+    sequence: sequence,
+    resources: [_resource(title)],
+    edges: const [],
+    selections: completeLibrary
+        ? [
+            skir.GraphSelectionResult(
+              key: _librarySelection.key,
+              resourceIds: [_book],
+              edgeIds: const [],
+              missingIds: const [],
+              incompatibleIds: const [],
+            ),
+          ]
+        : const [],
+    diagnostics: const [],
+    presentations: const [],
+  ),
+);
 
 skir.AuthoringChanged _change(int sequence, {required String title}) =>
     skir.AuthoringChanged(
@@ -133,11 +236,13 @@ skir.AuthoringChanged _change(int sequence, {required String title}) =>
       batchId: "batch:$sequence",
       resources: [skir.AuthoringResourceChange.wrapUpsert(_resource(title))],
       edges: const [],
+      presentations: const [],
+      compilationImpact: const [],
     );
 
 skir.AuthoringResource _resource(String title) => skir.AuthoringResource(
   id: _book,
-  kind: skir.ResourceKind.book,
+  definition: CoreResourceDefinitionIds.book.toWire(),
   content: skir.TypedValueEnvelope(
     rootType: _wireCodec.encodeType(_bookType).valueOrNull!,
     rootValue: _wireCodec.encodeValue(StringValue(title)).valueOrNull!,

@@ -42,20 +42,15 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
         onTap: context.onTap,
         shortcutActivator: context.shortcutActivator,
       ),
-      for (final type in [
-        authoringBookSearchResultType,
-        authoringTagSearchResultType,
-        authoringPageSearchResultType,
-        authoringElementSearchResultType,
-      ])
-        type.id: (context) => AuthoringSearchResultItem(
-          payload: context.result.payload as AuthoringSearchResultPayload,
-          focused: context.focused,
-          selected: context.selected,
-          loading: context.loading,
-          onTap: context.onTap,
-          shortcutActivator: context.shortcutActivator,
-        ),
+      authoringResourceSearchResultType.id: (context) =>
+          AuthoringSearchResultItem(
+            payload: context.result.payload as AuthoringSearchResultPayload,
+            focused: context.focused,
+            selected: context.selected,
+            loading: context.loading,
+            onTap: context.onTap,
+            shortcutActivator: context.shortcutActivator,
+          ),
       pageKindSearchResultType.id: (context) => PageKindSearchResultItem(
         definition: context.result.payload as RealmPageDefinition,
         focused: context.focused,
@@ -97,14 +92,27 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
     if (realmId != null) {
       final books = ref.valued(projectedBooksProvider);
       final pages = ref.valued(projectedPagesProvider);
-      final pagePolicies = ref.valued(pageEntryCreationPoliciesProvider);
+      final pageCreationSlots = ref.valued(pageCreationSlotsProvider);
       final catalog = ref.valued(realmEditorCatalogProvider);
+      final catalogSnapshot = ref
+          .read(realmEditorCatalogProvider)
+          .value
+          ?.snapshot;
       sources.addAll([
         PageKindSearchSource(
           definitions: ref.valued(realmPageDefinitionsProvider),
+          querySelectors: authoringQuerySelectors(catalogSnapshot, const {
+            authoringBookSelectorId,
+            authoringTagSelectorId,
+          }),
         ),
         ElementTypeSearchSource(
           definitions: ref.valued(availableElementDefinitionsFutureProvider),
+          querySelectors: authoringQuerySelectors(catalogSnapshot, const {
+            authoringBookSelectorId,
+            authoringPageSelectorId,
+            authoringTypeSelectorId,
+          }),
         ),
         RealmAuthoringSearchSource(
           ref: ref,
@@ -130,7 +138,7 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
       scope = primarySearchScope(
         books: books,
         pages: pages,
-        pagePolicies: pagePolicies,
+        pageCreationSlots: pageCreationSlots,
         catalog: catalog,
       );
     }
@@ -159,10 +167,7 @@ SearchCommandId? _primaryCommandId(SearchResult result) =>
       organizationSearchResultType => openOrganizationCommandId,
       createOrganizationSearchResultType => createOrganizationCommandId,
       realmSearchResultType => openRealmCommandId,
-      authoringBookSearchResultType => openAuthoringBookCommandId,
-      authoringTagSearchResultType => openAuthoringTagCommandId,
-      authoringPageSearchResultType => openAuthoringPageCommandId,
-      authoringElementSearchResultType => openAuthoringElementCommandId,
+      authoringResourceSearchResultType => openAuthoringResourceCommandId,
       pageKindSearchResultType => createPageCommandId,
       elementTypeSearchResultType => createElementCommandId,
       _ => null,
@@ -184,33 +189,61 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
         .read(appRouterProvider)
         .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));
   }),
-  SearchHostEffectExecutor<OpenAuthoringBookEffect>((effect) async {
-    await _openBook(ref, effect.organizationId, effect.realmId, effect.bookId);
-  }),
-  SearchHostEffectExecutor<OpenAuthoringTagEffect>((effect) async {
-    await _openTags(ref, effect.organizationId, effect.realmId);
-    ref.read(selectionProvider.notifier).select(TagIdentifier(effect.tagId));
-  }),
-  SearchHostEffectExecutor<OpenAuthoringPageEffect>((effect) async {
-    await _openBook(
-      ref,
-      effect.organizationId,
-      effect.realmId,
-      effect.bookId,
-      pageId: effect.pageId,
-    );
-  }),
-  SearchHostEffectExecutor<OpenAuthoringElementEffect>((effect) async {
-    await _openBook(
-      ref,
-      effect.organizationId,
-      effect.realmId,
-      effect.bookId,
-      pageId: effect.pageId,
-    );
-    final elementIdentifier = effect.elementIdentifier;
-    if (elementIdentifier == null) return;
-    ref.read(selectionProvider.notifier).select(elementIdentifier);
+  SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
+    switch (effect.definition) {
+      case CoreResourceDefinitionIds.book:
+        await _openBook(
+          ref,
+          effect.organizationId,
+          effect.realmId,
+          effect.resourceId,
+        );
+      case CoreResourceDefinitionIds.tag:
+        await _openTags(ref, effect.organizationId, effect.realmId);
+        ref
+            .read(selectionProvider.notifier)
+            .select(TagIdentifier(effect.resourceId));
+      case CoreResourceDefinitionIds.page:
+        final bookId = effect.bookId ?? effect.ownerId;
+        if (bookId == null) return;
+        await _openBook(
+          ref,
+          effect.organizationId,
+          effect.realmId,
+          bookId,
+          pageId: effect.resourceId,
+        );
+      case CoreResourceDefinitionIds.element:
+        final bookId = effect.bookId;
+        final pageId = effect.ownerId;
+        if (bookId == null || pageId == null) return;
+        await _openBook(
+          ref,
+          effect.organizationId,
+          effect.realmId,
+          bookId,
+          pageId: pageId,
+        );
+        final nestedIdentifier = effect.nestedIdentifier;
+        if (nestedIdentifier != null) {
+          ref.read(selectionProvider.notifier).select(nestedIdentifier);
+        }
+      default:
+        await ref
+            .read(appRouterProvider)
+            .navigate(
+              realmNavigationRoute(effect.organizationId, effect.realmId),
+            );
+        ref
+            .read(selectionProvider.notifier)
+            .select(
+              AuthoringResourceIdentifier(
+                organizationId: effect.organizationId,
+                realmId: effect.realmId,
+                resourceId: effect.resourceId,
+              ),
+            );
+    }
   }),
 ];
 

@@ -63,25 +63,41 @@ abstract class RealmEditorCatalogSnapshot with _$RealmEditorCatalogSnapshot {
     @Default({}) Map<String, RealmElementCatalogEntry> elements,
     @Default(RealmPageCatalog()) RealmPageCatalog pageCatalog,
     @Default({})
-    Map<skir.ResourceKind, RealmResourceKindDefinition> resourceKinds,
+    Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,
+    @Default({})
+    Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots,
     @Default({}) Map<String, RealmRelationDefinition> relations,
     @Default({})
     Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>
     collectionProjections,
+    @Default([])
+    List<RealmAuthoringCompilationProjection> compilationProjections,
+    RealmAuthoringSearchDefinition? authoringSearch,
   }) = _RealmEditorCatalogSnapshot;
+}
+
+/// Describes which resource roots a registered compilation projection accepts.
+final class RealmAuthoringCompilationProjection {
+  const RealmAuthoringCompilationProjection({
+    required this.id,
+    required this.root,
+  });
+
+  final String id;
+  final TypeExpression root;
 }
 
 final class RealmCollectionProjectionDefinition {
   const RealmCollectionProjectionDefinition({
     required this.sourceId,
-    required this.kinds,
+    required this.definitions,
     required this.assignableTo,
     required this.rowType,
     required this.fields,
   });
 
   final PresentationCollectionSourceId sourceId;
-  final Set<skir.ResourceKind> kinds;
+  final Set<ResourceDefinitionId> definitions;
   final TypeExpression? assignableTo;
   final ResolvedTypeRef rowType;
   final List<RealmCollectionProjectionField> fields;
@@ -117,16 +133,102 @@ final class RealmCollectionLiteral extends RealmCollectionProjectionSource {
   final DataValue value;
 }
 
-final class RealmResourceKindDefinition {
-  const RealmResourceKindDefinition({
-    required this.kind,
-    required this.acceptedRoot,
-    required this.defaultRoot,
-  });
+extension type const ResourceDefinitionId(String value) {}
 
-  final skir.ResourceKind kind;
+extension type const AuthoringCreationSlotId(String value) {}
+
+extension type const CoreResourceDefinitionIds._(Object _) {
+  static const book = ResourceDefinitionId("typewriter.book");
+  static const tag = ResourceDefinitionId("typewriter.tag");
+  static const page = ResourceDefinitionId("typewriter.page");
+  static const element = ResourceDefinitionId("typewriter.element");
+}
+
+extension type const CoreAuthoringCreationSlotIds._(Object _) {
+  static const book = AuthoringCreationSlotId("typewriter:book");
+  static const tag = AuthoringCreationSlotId("typewriter:tag");
+  static const page = AuthoringCreationSlotId("typewriter:page");
+
+  static AuthoringCreationSlotId pageElements(
+    PageKindRef kind,
+    String placement,
+  ) => AuthoringCreationSlotId(
+    "typewriter:page/${kind.id}/${kind.revision}/$placement",
+  );
+}
+
+final class RealmResourceDefinition {
+  const RealmResourceDefinition({required this.id, required this.acceptedRoot});
+
+  final ResourceDefinitionId id;
   final TypeExpression acceptedRoot;
-  final ResolvedTypeRef? defaultRoot;
+}
+
+@freezed
+abstract class RealmAuthoringSearchDefinition
+    with _$RealmAuthoringSearchDefinition {
+  const factory RealmAuthoringSearchDefinition({
+    @Default({}) Set<ResourceDefinitionId> definitions,
+    @Default([]) List<SearchSelectorDefinition> selectors,
+    @Default([]) List<RealmAuthoringSearchFacetDefinition> facets,
+  }) = _RealmAuthoringSearchDefinition;
+}
+
+@freezed
+abstract class RealmAuthoringSearchFacetDefinition
+    with _$RealmAuthoringSearchFacetDefinition {
+  const factory RealmAuthoringSearchFacetDefinition({
+    required String id,
+    required String label,
+    required String selectorId,
+  }) = _RealmAuthoringSearchFacetDefinition;
+}
+
+enum RealmCreationHostCardinality { exactlyOne, oneOrMore }
+
+enum RealmCreationRelationDirection { outgoing, incoming, both }
+
+@freezed
+sealed class RealmAuthoringCreationContext
+    with _$RealmAuthoringCreationContext {
+  const factory RealmAuthoringCreationContext.standalone() =
+      RealmStandaloneCreationContext;
+
+  const factory RealmAuthoringCreationContext.declaredRelation({
+    required RealmCreationHostFilter hosts,
+    required RealmCreationHostCardinality cardinality,
+    required String relation,
+    required RealmCreationRelationDirection direction,
+  }) = RealmDeclaredRelationCreationContext;
+
+  const factory RealmAuthoringCreationContext.referencePath({
+    required RealmCreationHostFilter hosts,
+    required RealmCreationHostCardinality cardinality,
+    required DataPath path,
+  }) = RealmReferencePathCreationContext;
+}
+
+@freezed
+abstract class RealmCreationHostFilter with _$RealmCreationHostFilter {
+  const factory RealmCreationHostFilter({
+    @Default({}) Set<ResourceDefinitionId> definitions,
+    TypeExpression? assignableTo,
+  }) = _RealmCreationHostFilter;
+}
+
+@freezed
+abstract class RealmAuthoringCreationSlot with _$RealmAuthoringCreationSlot {
+  const factory RealmAuthoringCreationSlot({
+    required AuthoringCreationSlotId id,
+    required String label,
+    required ResourceDefinitionId creates,
+    required RealmAuthoringCreationContext context,
+    required List<ResolvedTypeRef> concreteRoots,
+  }) = _RealmAuthoringCreationSlot;
+
+  const RealmAuthoringCreationSlot._();
+
+  bool acceptsRoot(ResolvedTypeRef root) => concreteRoots.contains(root);
 }
 
 enum RealmRelationDeletePolicy { restrict, cascade, clear }
@@ -188,29 +290,42 @@ sealed class RealmEditorCatalogFetchResult
   ) = RealmEditorCatalogFetchUnavailable;
 }
 
-sealed class RealmTypedValueInitializationResult {
-  const RealmTypedValueInitializationResult();
+enum TypeInitializationRequirementReason { missingValue, concreteTypeRequired }
+
+@freezed
+abstract class TypeInitializationRequirement
+    with _$TypeInitializationRequirement {
+  const factory TypeInitializationRequirement({
+    required DataPath path,
+    required TypeExpression expected,
+    required TypeInitializationRequirementReason reason,
+  }) = _TypeInitializationRequirement;
 }
 
-final class RealmTypedValueInitialized
-    extends RealmTypedValueInitializationResult {
-  const RealmTypedValueInitialized(this.value);
-
-  final TypedValueEnvelope value;
+@freezed
+abstract class TypeInitializationDraft with _$TypeInitializationDraft {
+  const factory TypeInitializationDraft({
+    required ResolvedTypeRef rootType,
+    required DataValue? suppliedValue,
+    required List<TypeInitializationRequirement> requirements,
+  }) = _TypeInitializationDraft;
 }
 
-final class RealmTypedValueInitializationRejected
-    extends RealmTypedValueInitializationResult {
-  const RealmTypedValueInitializationRejected(this.diagnostics);
-
-  final List<TypeDiagnostic> diagnostics;
-}
-
-final class RealmTypedValueInitializationGenerationMismatch
-    extends RealmTypedValueInitializationResult {
-  const RealmTypedValueInitializationGenerationMismatch(this.generation);
-
-  final CatalogGeneration generation;
+@freezed
+sealed class RealmTypedValueInitializationResult
+    with _$RealmTypedValueInitializationResult {
+  const factory RealmTypedValueInitializationResult.initialized(
+    TypedValueEnvelope value,
+  ) = RealmTypedValueInitialized;
+  const factory RealmTypedValueInitializationResult.needsInput(
+    TypeInitializationDraft draft,
+  ) = RealmTypedValueInitializationNeedsInput;
+  const factory RealmTypedValueInitializationResult.rejected(
+    List<TypeDiagnostic> diagnostics,
+  ) = RealmTypedValueInitializationRejected;
+  const factory RealmTypedValueInitializationResult.generationMismatch(
+    CatalogGeneration generation,
+  ) = RealmTypedValueInitializationGenerationMismatch;
 }
 
 /// Notification from the realm that the catalog generation changed or watching
@@ -248,9 +363,49 @@ abstract interface class RealmEditorCatalogSource {
   Future<RealmTypedValueInitializationResult> initialize(
     RealmEditorCatalogRoute route, {
     required CatalogGeneration generation,
-    required TypedValueEnvelope partial,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
     required TypeRegistry registry,
   });
+}
+
+extension RealmEditorCatalogConcreteTypeInitialization
+    on RealmEditorCatalogSource {
+  ConcreteTypeInitializer concreteTypeInitializer({
+    required RealmEditorCatalogRoute route,
+    required CatalogGeneration generation,
+    required TypeRegistry registry,
+  }) => ({required type, required supplied}) async {
+    final result = await initialize(
+      route,
+      generation: generation,
+      root: type,
+      supplied: supplied,
+      registry: registry,
+    );
+    return result.toConcreteTypeInitialization();
+  };
+}
+
+extension RealmTypedValueInitializationConversion
+    on RealmTypedValueInitializationResult {
+  ConcreteTypeInitializationResult
+  toConcreteTypeInitialization() => switch (this) {
+    RealmTypedValueInitialized(:final value) => ConcreteTypeInitialized(value),
+    RealmTypedValueInitializationNeedsInput(:final draft) =>
+      ConcreteTypeNeedsInput(suppliedValue: draft.suppliedValue),
+    RealmTypedValueInitializationRejected(:final diagnostics) =>
+      ConcreteTypeInitializationRejected(diagnostics),
+    RealmTypedValueInitializationGenerationMismatch(:final generation) =>
+      ConcreteTypeInitializationRejected([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidRevision,
+          message:
+              "The editor catalog changed to generation ${generation.value}",
+          pathPresent: false,
+        ),
+      ]),
+  };
 }
 
 /// Catalog source used when the realm transport cannot be constructed.
@@ -281,9 +436,11 @@ final class UnavailableRealmEditorCatalogSource
   Future<RealmTypedValueInitializationResult> initialize(
     RealmEditorCatalogRoute route, {
     required CatalogGeneration generation,
-    required TypedValueEnvelope partial,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
     required TypeRegistry registry,
-  }) async => RealmTypedValueInitializationRejected([_unavailableDiagnostic()]);
+  }) async =>
+      RealmTypedValueInitializationResult.rejected([_unavailableDiagnostic()]);
 }
 
 /// Converts source and decoding failures into diagnostics understood by editor

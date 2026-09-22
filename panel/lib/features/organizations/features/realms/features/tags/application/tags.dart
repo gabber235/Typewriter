@@ -48,7 +48,7 @@ RecordValue tagCreationPartial(
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as
@@ -79,7 +79,14 @@ class CanonicalTags extends _$CanonicalTags {
       }
     });
     final lease = ref.watch(
-      authoringLibraryScopeProvider(organizationId, realmId),
+      authoringSelectionLeaseProvider(
+        organizationId,
+        realmId,
+        authoringDefinitionSelection(
+          key: "tags",
+          definitions: const [CoreResourceDefinitionIds.tag],
+        ),
+      ),
     );
 
     await lease.ready;
@@ -121,13 +128,16 @@ class CanonicalTags extends _$CanonicalTags {
     try {
       final owner = owners.editor(
         TagSelectable(
-          resource: TagEditorResource(
+          resource: TypedAuthoringEditorResource(
             ref
                 .read(resourceRepositoriesProvider)
                 .authoring(commands.organizationId, commands.realmId),
             tag.tagId,
           ),
-          onDelete: () => deleteTag(tag.tagId),
+          onDelete: () => session.notifier.deleteResource(
+            tag.tagId,
+            conflictMessage: "The tag changed before deletion",
+          ),
           id: TagIdentifier(tag.tagId),
           tag: before,
           snapshot: TypedAuthoringEditorSnapshot(
@@ -177,16 +187,6 @@ class CanonicalTags extends _$CanonicalTags {
 
     await updateTag(child.copyWith(parentIds: parents), expected: child);
   }
-
-  /// Deletes [tagId] from the selected Realm.
-  ///
-  /// The authoring response is required to apply. A conflict reports that the
-  /// tag changed before deletion and leaves reconciliation to session refresh.
-  Future<void> deleteTag(skir.ResourceId tagId) async {
-    state.ensureReady();
-    final response = await ref.readAuthoringSession().notifier.deleteTag(tagId);
-    response.requireApplied(conflictMessage: "The tag changed before deletion");
-  }
 }
 
 /// Reads one tag from the canonical Realm projection.
@@ -200,8 +200,10 @@ List<Tag> _projectTags(AuthoringSessionState value, TypedAuthoringCodec codec) {
   return value.resources.values
       .map(codec.decodeResourceOrThrow)
       .where(
-        (resource) =>
-            codec.isResourceType(resource.content, skir.ResourceKind.tag),
+        (resource) => codec.isResourceType(
+          resource.content,
+          CoreResourceDefinitionIds.tag,
+        ),
       )
       .map(Tag.fromTyped)
       .toList();
@@ -217,7 +219,7 @@ extension AuthoringTagValue on AuthoringSessionState {
     final revision = sequence;
     if (value == null || revision == null) return null;
     final decoded = codec.decodeResourceOrThrow(value);
-    if (!codec.isResourceType(decoded.content, skir.ResourceKind.tag)) {
+    if (!codec.isResourceType(decoded.content, CoreResourceDefinitionIds.tag)) {
       return null;
     }
     return AuthoringValue(value: Tag.fromTyped(decoded), revision: revision);

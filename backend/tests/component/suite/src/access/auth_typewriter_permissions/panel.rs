@@ -153,11 +153,12 @@ async fn member_receives_all_organization_capabilities(
         "service.to.*.organization.writers.realm.shared.catalog.fetch",
         "service.to.*.organization.writers.realm.shared.publish",
         "service.to.*.organization.writers.realm.shared.blob.read",
-        "service.to.*.organization.writers.realm.library.authoring.batch.apply",
-        "service.to.*.organization.writers.realm.library.authoring.batch.preview",
-        "service.to.*.organization.writers.realm.library.authoring.graph.query",
-        "service.to.*.organization.writers.realm.library.authoring.graph.search",
-        "service.to.*.organization.writers.realm.library.authoring.compiled.status.query",
+        "service.to.*.organization.writers.realm.editor.authoring.batch.apply",
+        "service.to.*.organization.writers.realm.editor.authoring.batch.preview",
+        "service.to.*.organization.writers.realm.editor.authoring.graph.query",
+        "service.to.*.organization.writers.realm.editor.authoring.graph.search",
+        "service.to.*.organization.writers.realm.editor.authoring.compiled.status.query",
+        "service.to.*.organization.writers.realm.editor.authoring.compiled.watch",
         "service.to.*.organization.writers.realm.compiled.content.watch",
         "typewriter.presence.organization.writers.user.panel_user",
     ] {
@@ -169,10 +170,10 @@ async fn member_receives_all_organization_capabilities(
             .all(|subject| subject != "service.to.*.organization.writers.realm.editor.elements.fetch")
     );
     for obsolete in [
-        "library.authoring.content.search",
-        "library.authoring.resources.resolve",
-        "library.authoring.selector.suggest",
-        "library.authoring.snapshot.get",
+        "editor.authoring.content.search",
+        "editor.authoring.resources.resolve",
+        "editor.authoring.selector.suggest",
+        "editor.authoring.snapshot.get",
     ] {
         assert!(publish.iter().all(|subject| !subject.ends_with(obsolete)));
     }
@@ -185,7 +186,9 @@ async fn member_receives_all_organization_capabilities(
         "cloud.from.organization.writers.realm.list",
         "service.from.*.organization.writers.realm.editor.catalog.invalidate",
         "service.from.*.organization.writers.realm.editor.presentation.search",
-        "service.from.*.organization.writers.realm.library.authoring.changed",
+        "service.from.*.organization.writers.realm.editor.authoring.changed",
+        "service.from.*.organization.writers.realm.editor.authoring.compiled.activated",
+        "service.from.*.organization.writers.realm.editor.authoring.compiled.changed",
         "service.from.*.organization.writers.realm.compiled.content.watch",
         "typewriter.presence.organization.writers.user.*",
     ] {

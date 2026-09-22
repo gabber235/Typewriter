@@ -1,8 +1,8 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.repository.AuthoringBatch
 import com.typewritermc.realm.repository.AuthoringOperation
-import com.typewritermc.realm.repository.AuthoringResourceKind
 import com.typewritermc.realm.repository.BatchId
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataPathSegment
@@ -12,13 +12,13 @@ import com.typewritermc.types.expression
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.library.v1.authoring.ApplyAuthoringBatchRequest
-import skirout.library.v1.authoring.PreviewAuthoringBatchRequest
+import skirout.editor.v1.authoring.ApplyAuthoringBatchRequest
+import skirout.editor.v1.authoring.PreviewAuthoringBatchRequest
+import skirout.editor.v1.authoring.AuthoringOperation as WireOperation
+import skirout.editor.v1.authoring.AuthoringResource as WireResource
+import skirout.editor.v1.authoring.ResourceDefinitionId as WireResourceDefinitionId
 import skirout.editor.v1.path.DataPath as WireDataPath
 import skirout.editor.v1.path.DataPathSegment as WireDataPathSegment
-import skirout.library.v1.authoring.AuthoringOperation as WireOperation
-import skirout.library.v1.authoring.AuthoringResource as WireResource
-import skirout.library.v1.authoring.ResourceKind as WireResourceKind
 
 internal fun ApplyAuthoringBatchRequest.toDomain(): AuthoringBatch =
     AuthoringBatch(
@@ -34,17 +34,16 @@ private fun WireOperation.toDomain(): AuthoringOperation =
         is WireOperation.CreateWrapper -> {
             AuthoringOperation.CreateResource(
                 id = value.resource.id.toDomain(),
-                kind = value.resource.kind.toDomain(),
+                definition = value.resource.definition.toDomain(),
                 content = value.resource.content.toDomain(),
             )
         }
 
         is WireOperation.CommitWrapper -> {
             require(value.base.id == value.id && value.proposed.id == value.id) { "Commit resource ids must agree." }
-            require(value.base.kind == value.proposed.kind) { "Commit resource kinds must agree." }
+            require(value.base.definition == value.proposed.definition) { "Commit resource definitions must agree." }
             AuthoringOperation.CommitResource(
                 id = value.id.toDomain(),
-                observedSequence = value.observedSequence,
                 base = value.base.content.toDomain(),
                 proposed = value.proposed.content.toDomain(),
                 changedPaths = value.changedPaths.map(WireDataPath::toDomain),
@@ -52,7 +51,19 @@ private fun WireOperation.toDomain(): AuthoringOperation =
         }
 
         is WireOperation.DeleteWrapper -> {
-            AuthoringOperation.DeleteResource(value.id.toDomain())
+            require(value.base.id == value.id) { "Delete resource ids must agree." }
+            AuthoringOperation.DeleteResource(
+                id = value.id.toDomain(),
+                base = value.base.content.toDomain(),
+            )
+        }
+
+        is WireOperation.DeclareRelationWrapper -> {
+            AuthoringOperation.DeclareRelation(
+                relation = com.typewritermc.types.RelationId(value.relation.value),
+                source = value.source.toDomain(),
+                target = value.target.toDomain(),
+            )
         }
 
         is WireOperation.Unknown -> {
@@ -63,22 +74,15 @@ private fun WireOperation.toDomain(): AuthoringOperation =
 private fun WireResource.toDomain(): com.typewritermc.realm.repository.AuthoringGraphResource =
     com.typewritermc.realm.repository.AuthoringGraphResource(
         id = id.toDomain(),
-        kind = kind.toDomain(),
+        definition = definition.toDomain(),
         content = content.toDomain(),
     )
 
 private fun skirout.editor.v1.type_catalog.ResourceId.toDomain(): ResourceId = ResourceId(value)
 
-private fun WireResourceKind.toDomain(): AuthoringResourceKind =
-    when (this) {
-        WireResourceKind.BOOK -> AuthoringResourceKind.BOOK
-        WireResourceKind.TAG -> AuthoringResourceKind.TAG
-        WireResourceKind.PAGE -> AuthoringResourceKind.PAGE
-        WireResourceKind.ELEMENT -> AuthoringResourceKind.ELEMENT
-        else -> error("Unknown resource kind")
-    }
+private fun WireResourceDefinitionId.toDomain(): ResourceDefinitionId = ResourceDefinitionId(value)
 
-private fun skirout.editor.v1.typed_value.TypedValueEnvelope.toDomain(): TypedValueEnvelope =
+internal fun skirout.editor.v1.typed_value.TypedValueEnvelope.toDomain(): TypedValueEnvelope =
     TypedValueEnvelope(
         rootType = SkirTypeCodec.decode(rootType).getOrThrow().expression,
         rootValue = SkirDataValueCodec.decode(rootValue).getOrThrow(),

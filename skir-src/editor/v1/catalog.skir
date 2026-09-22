@@ -1,4 +1,14 @@
+import {
+  CollectionProjectionDefinition,
+  RelationDefinition,
+  RelationDirection,
+  RelationId,
+  ResourceDefinition,
+  ResourceDefinitionId,
+  ResourceFilter,
+} from "editor/v1/authoring.skir";
 import { CapabilityDefinition } from "editor/v1/capability.skir";
+import { CompilationProjectionId } from "editor/v1/compiled_content.skir";
 import { ConversionDefinition } from "editor/v1/conversion.skir";
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
 import { ElementCatalogEntry } from "editor/v1/element_catalog.skir";
@@ -6,20 +16,20 @@ import {
   PageCatalogEntry,
   PageDiagnostic,
 } from "editor/v1/page_catalog.skir";
-import { PresentationDefinition } from "editor/v1/presentation.skir";
+import { DataPath } from "editor/v1/path.skir";
+import {
+  PresentationDefinition,
+  SearchSelectorDefinition,
+} from "editor/v1/presentation.skir";
 import {
   CatalogGeneration,
   PresentationId,
   ResolvedTypeRef,
-  TypedValue,
   TypeDefinition,
+  TypeExpression,
+  TypedValue,
 } from "editor/v1/type_catalog.skir";
 import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
-import {
-  CollectionProjectionDefinition,
-  RelationDefinition,
-  ResourceKindDefinition,
-} from "library/v1/authoring.skir";
 
 // The editor catalog is one versioned capability boundary. A fetch assembles the
 // type system and the metadata that makes those types editable, searchable, and
@@ -37,6 +47,55 @@ struct SubtypeQuery(810900003) {
 struct SubtypeResult(810900004) {
   query_id: SubtypeQueryId = 0;
   matching_types: [ResolvedTypeRef] = 1;
+}
+
+struct AuthoringCreationSlotId(810900016) {
+  value: string = 0;
+}
+
+enum AuthoringCreationHostCardinality(810900017) {
+  exactly_one = 1;
+  one_or_more = 2;
+}
+
+enum AuthoringCreationContext(810900018) {
+  standalone: struct {} = 1;
+  declared_relation: struct {
+    hosts: ResourceFilter = 0;
+    cardinality: AuthoringCreationHostCardinality = 1;
+    relation: RelationId = 2;
+    direction: RelationDirection = 3;
+  } = 2;
+  reference_path: struct {
+    hosts: ResourceFilter = 0;
+    cardinality: AuthoringCreationHostCardinality = 1;
+    path: DataPath = 2;
+  } = 3;
+}
+
+struct AuthoringCreationSlotDefinition(810900019) {
+  id: AuthoringCreationSlotId = 0;
+  label: string = 1;
+  creates: ResourceDefinitionId = 2;
+  context: AuthoringCreationContext = 3;
+  concrete_roots: [ResolvedTypeRef] = 4;
+}
+
+struct AuthoringSearchFacetDefinition(810900020) {
+  id: string = 0;
+  label: string = 1;
+  selector_id: string = 2;
+}
+
+struct AuthoringSearchDefinition(810900021) {
+  definitions: [ResourceDefinitionId] = 0;
+  selectors: [SearchSelectorDefinition] = 1;
+  facets: [AuthoringSearchFacetDefinition] = 2;
+}
+
+struct AuthoringCompilationProjectionDefinition(810900022) {
+  projection: CompilationProjectionId = 0;
+  root: TypeExpression = 1;
 }
 
 struct CatalogFetchRequest(810900005) {
@@ -58,9 +117,12 @@ struct CatalogFetchSuccess(810900006) {
   element_entries: [ElementCatalogEntry] = 7;
   page_entries: [PageCatalogEntry] = 8;
   page_diagnostics: [PageDiagnostic] = 9;
-  resource_kind_definitions: [ResourceKindDefinition] = 10;
+  resource_definitions: [ResourceDefinition] = 10;
   relation_definitions: [RelationDefinition] = 11;
   collection_projection_definitions: [CollectionProjectionDefinition] = 12;
+  authoring_creation_slots: [AuthoringCreationSlotDefinition] = 13;
+  authoring_search: AuthoringSearchDefinition? = 14;
+  authoring_compilation_projections: [AuthoringCompilationProjectionDefinition] = 15;
 }
 
 // Reports a conditional fetch against a different catalog generation.
@@ -87,14 +149,32 @@ enum CatalogWatchUpdate(810900010) {
 struct InitializeTypedValueRequest(810900011) {
   generation: CatalogGeneration = 0;
   root_type: ResolvedTypeRef = 1;
-  partial_value: TypedValue = 2;
+  partial_value: TypedValue? = 2;
+}
+
+enum TypeInitializationRequirementReason(810900013) {
+  missing_value = 1;
+  concrete_type_required = 2;
+}
+
+struct TypeInitializationRequirement(810900014) {
+  path: DataPath = 0;
+  expected: TypeExpression = 1;
+  reason: TypeInitializationRequirementReason = 2;
+}
+
+struct TypeInitializationDraft(810900015) {
+  root_type: ResolvedTypeRef = 0;
+  supplied_value: TypedValue? = 1;
+  requirements: [TypeInitializationRequirement] = 2;
 }
 
 enum InitializeTypedValueResult(810900012) {
   success: TypedValueEnvelope = 1;
-  invalid: [TypeDiagnostic] = 2;
-  generation_mismatch: CatalogGenerationMismatch = 3;
-  unavailable: [TypeDiagnostic] = 4;
+  needs_input: TypeInitializationDraft = 2;
+  invalid: [TypeDiagnostic] = 3;
+  generation_mismatch: CatalogGenerationMismatch = 4;
+  unavailable: [TypeDiagnostic] = 5;
 }
 
 method FetchEditorCatalog(

@@ -217,7 +217,6 @@ extension on LocalAction {
       ReplaceConcreteTypeAction() => ReplaceConcreteTypeAction(
         target: value.target,
         concreteType: value.concreteType.substitute(substitutions),
-        initialValue: value.initialValue.substituteTypes(substitutions),
       ),
     };
   }

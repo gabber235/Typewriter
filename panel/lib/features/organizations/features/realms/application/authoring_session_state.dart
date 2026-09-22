@@ -16,7 +16,7 @@ abstract class AuthoringSessionState with _$AuthoringSessionState {
     @Default({}) Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,
     @Default({}) Map<skir.ResourceId, skir.PresentationSubject> presentations,
     @Default({})
-    Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,
+    Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,
     @Default({}) Map<String, skir.GraphSelectionResult> selections,
     @Default([]) List<skir.AuthoringDiagnostic> diagnostics,
     @Default(false) bool refreshing,
@@ -38,86 +38,25 @@ extension AuthoringGraphView on AuthoringSessionState {
           .whereType<skir.AuthoringEdge>();
 }
 
+/// Immutable state retained for one canonical graph selection.
 @freezed
-sealed class _AuthoringScope with _$AuthoringScope {
-  const _AuthoringScope._();
-
-  const factory _AuthoringScope.library() = _LibraryScope;
-  const factory _AuthoringScope.book(skir.ResourceId bookId) = _BookScope;
-  const factory _AuthoringScope.page(skir.ResourceId pageId) = _PageScope;
-
-  String get key => switch (this) {
-    _LibraryScope() => "library",
-    _BookScope(:final bookId) => "book:${bookId.value}",
-    _PageScope(:final pageId) => "page:${pageId.value}",
-  };
-
-  skir.GraphSelection get selection => switch (this) {
-    _LibraryScope() => skir.GraphSelection(
-      key: key,
-      seed: skir.ResourceSeed.createScan(
-        filter: skir.ResourceFilter(
-          kinds: [skir.ResourceKind.book, skir.ResourceKind.tag],
-          assignableTo: null,
-        ),
-      ),
-      steps: const [],
-    ),
-    _BookScope(:final bookId) => skir.GraphSelection(
-      key: key,
-      seed: skir.ResourceSeed.createIds(
-        values: [bookId],
-        requireAssignableTo: null,
-      ),
-      steps: [
-        skir.RelationStep(
-          relations: skir.RelationFilter.any,
-          direction: skir.RelationDirection.outgoing,
-          minDepth: 1,
-          maxDepth: 1,
-          target: skir.ResourceFilter(
-            kinds: [skir.ResourceKind.page],
-            assignableTo: null,
-          ),
-        ),
-      ],
-    ),
-    _PageScope(:final pageId) => skir.GraphSelection(
-      key: key,
-      seed: skir.ResourceSeed.createIds(
-        values: [pageId],
-        requireAssignableTo: null,
-      ),
-      steps: [
-        skir.RelationStep(
-          relations: skir.RelationFilter.any,
-          direction: skir.RelationDirection.outgoing,
-          minDepth: 1,
-          maxDepth: 1,
-          target: skir.ResourceFilter(
-            kinds: [skir.ResourceKind.element],
-            assignableTo: null,
-          ),
-        ),
-        skir.RelationStep(
-          relations: skir.RelationFilter.any,
-          direction: skir.RelationDirection.both,
-          minDepth: 1,
-          maxDepth: 1,
-          target: null,
-        ),
-      ],
-    ),
-  };
+abstract class AuthoringSelectionLeaseState
+    with _$AuthoringSelectionLeaseState {
+  const factory AuthoringSelectionLeaseState({
+    required skir.GraphSelection selection,
+    required int retainCount,
+    skir.GraphSelectionResult? result,
+  }) = _AuthoringSelectionLeaseState;
 }
 
-abstract interface class AuthoringScopeLease {
+/// A reference counted lease over one generic graph selection.
+abstract interface class AuthoringSelectionLease {
   Future<void> get ready;
   void release();
 }
 
-final class _AuthoringScopeLease implements AuthoringScopeLease {
-  _AuthoringScopeLease(this.ready, this._release);
+final class _AuthoringSelectionLease implements AuthoringSelectionLease {
+  _AuthoringSelectionLease(this.ready, this._release);
 
   @override
   final Future<void> ready;
@@ -131,4 +70,76 @@ final class _AuthoringScopeLease implements AuthoringScopeLease {
     _released = true;
     _release();
   }
+}
+
+skir.GraphSelection authoringDefinitionSelection({
+  required String key,
+  required Iterable<ResourceDefinitionId> definitions,
+}) => skir.GraphSelection(
+  key: key,
+  seed: skir.ResourceSeed.createScan(
+    filter: skir.ResourceFilter(
+      definitions: definitions.map((definition) => definition.toWire()),
+      assignableTo: null,
+    ),
+  ),
+  steps: [],
+);
+
+extension AuthoringResourceSelection on skir.ResourceId {
+  skir.GraphSelection get resourceAuthoringSelection => skir.GraphSelection(
+    key: "resource:$value",
+    seed: skir.ResourceSeed.createIds(
+      values: [this],
+      requireAssignableTo: null,
+    ),
+    steps: const [],
+  );
+
+  skir.GraphSelection get bookAuthoringSelection => skir.GraphSelection(
+    key: "book:$value",
+    seed: skir.ResourceSeed.createIds(
+      values: [this],
+      requireAssignableTo: null,
+    ),
+    steps: [
+      skir.RelationStep(
+        relations: skir.RelationFilter.any,
+        direction: skir.RelationDirection.outgoing,
+        minDepth: 1,
+        maxDepth: 1,
+        target: skir.ResourceFilter(
+          definitions: [CoreResourceDefinitionIds.page.toWire()],
+          assignableTo: null,
+        ),
+      ),
+    ],
+  );
+
+  skir.GraphSelection get pageAuthoringSelection => skir.GraphSelection(
+    key: "page:$value",
+    seed: skir.ResourceSeed.createIds(
+      values: [this],
+      requireAssignableTo: null,
+    ),
+    steps: [
+      skir.RelationStep(
+        relations: skir.RelationFilter.any,
+        direction: skir.RelationDirection.outgoing,
+        minDepth: 1,
+        maxDepth: 1,
+        target: skir.ResourceFilter(
+          definitions: [CoreResourceDefinitionIds.element.toWire()],
+          assignableTo: null,
+        ),
+      ),
+      skir.RelationStep(
+        relations: skir.RelationFilter.any,
+        direction: skir.RelationDirection.both,
+        minDepth: 1,
+        maxDepth: 1,
+        target: null,
+      ),
+    ],
+  );
 }

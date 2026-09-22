@@ -80,7 +80,7 @@ as AuthoringSessionState,
 @override
 @pragma('vm:prefer-inline')
 $AuthoringSessionStateCopyWith<$Res> get state {
-  
+
   return $AuthoringSessionStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -223,7 +223,7 @@ return $default(_that.notifier,_that.state);case _:
 
 class _AuthoringSessionAccess implements AuthoringSessionAccess {
   const _AuthoringSessionAccess({required this.notifier, required this.state});
-  
+
 
 @override final  AuthoringSession notifier;
 @override final  AuthoringSessionState state;
@@ -290,7 +290,7 @@ as AuthoringSessionState,
 @override
 @pragma('vm:prefer-inline')
 $AuthoringSessionStateCopyWith<$Res> get state {
-  
+
   return $AuthoringSessionStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -499,7 +499,7 @@ return $default(_that.value,_that.revision);case _:
 
 class _AuthoringValue<T> implements AuthoringValue<T> {
   const _AuthoringValue({required this.value, required this.revision});
-  
+
 
 @override final  T value;
 @override final  int revision;
@@ -567,7 +567,7 @@ as int,
 /// @nodoc
 mixin _$AuthoringSessionState {
 
- skir.CatalogGeneration? get generation; int? get sequence; Map<skir.ResourceId, skir.AuthoringResource> get resources; Map<skir.AuthoringEdgeId, skir.AuthoringEdge> get edges; Map<skir.ResourceId, skir.PresentationSubject> get presentations; Map<skir.ResourceId, skir.CompiledResourceState> get compiledStatuses; Map<String, skir.GraphSelectionResult> get selections; List<skir.AuthoringDiagnostic> get diagnostics; bool get refreshing;
+ skir.CatalogGeneration? get generation; int? get sequence; Map<skir.ResourceId, skir.AuthoringResource> get resources; Map<skir.AuthoringEdgeId, skir.AuthoringEdge> get edges; Map<skir.ResourceId, skir.PresentationSubject> get presentations; Map<skir.CompilationRoot, skir.CompiledResourceState> get compiledStatuses; Map<String, skir.GraphSelectionResult> get selections; List<skir.AuthoringDiagnostic> get diagnostics; bool get refreshing;
 /// Create a copy of AuthoringSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -603,7 +603,7 @@ abstract mixin class $AuthoringSessionStateCopyWith<$Res>  {
   factory $AuthoringSessionStateCopyWith(AuthoringSessionState value, $Res Function(AuthoringSessionState) _then) = _$AuthoringSessionStateCopyWithImpl;
 @useResult
 $Res call({
- skir.CatalogGeneration? generation, int? sequence, Map<skir.ResourceId, skir.AuthoringResource> resources, Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges, Map<skir.ResourceId, skir.PresentationSubject> presentations, Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses, Map<String, skir.GraphSelectionResult> selections, List<skir.AuthoringDiagnostic> diagnostics, bool refreshing
+ skir.CatalogGeneration? generation, int? sequence, Map<skir.ResourceId, skir.AuthoringResource> resources, Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges, Map<skir.ResourceId, skir.PresentationSubject> presentations, Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses, Map<String, skir.GraphSelectionResult> selections, List<skir.AuthoringDiagnostic> diagnostics, bool refreshing
 });
 
 
@@ -628,7 +628,7 @@ as int?,resources: null == resources ? _self.resources : resources // ignore: ca
 as Map<skir.ResourceId, skir.AuthoringResource>,edges: null == edges ? _self.edges : edges // ignore: cast_nullable_to_non_nullable
 as Map<skir.AuthoringEdgeId, skir.AuthoringEdge>,presentations: null == presentations ? _self.presentations : presentations // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, skir.PresentationSubject>,compiledStatuses: null == compiledStatuses ? _self.compiledStatuses : compiledStatuses // ignore: cast_nullable_to_non_nullable
-as Map<skir.ResourceId, skir.CompiledResourceState>,selections: null == selections ? _self.selections : selections // ignore: cast_nullable_to_non_nullable
+as Map<skir.CompilationRoot, skir.CompiledResourceState>,selections: null == selections ? _self.selections : selections // ignore: cast_nullable_to_non_nullable
 as Map<String, skir.GraphSelectionResult>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<skir.AuthoringDiagnostic>,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -716,7 +716,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState() when $default != null:
 return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_that.presentations,_that.compiledStatuses,_that.selections,_that.diagnostics,_that.refreshing);case _:
@@ -737,7 +737,7 @@ return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState():
 return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_that.presentations,_that.compiledStatuses,_that.selections,_that.diagnostics,_that.refreshing);case _:
@@ -757,7 +757,7 @@ return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.CatalogGeneration? generation,  int? sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources,  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,  Map<skir.ResourceId, skir.PresentationSubject> presentations,  Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,  Map<String, skir.GraphSelectionResult> selections,  List<skir.AuthoringDiagnostic> diagnostics,  bool refreshing)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState() when $default != null:
 return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_that.presentations,_that.compiledStatuses,_that.selections,_that.diagnostics,_that.refreshing);case _:
@@ -772,8 +772,8 @@ return $default(_that.generation,_that.sequence,_that.resources,_that.edges,_tha
 
 
 class _AuthoringSessionState implements AuthoringSessionState {
-  const _AuthoringSessionState({this.generation, this.sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources = const {},  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges = const {},  Map<skir.ResourceId, skir.PresentationSubject> presentations = const {},  Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses = const {},  Map<String, skir.GraphSelectionResult> selections = const {},  List<skir.AuthoringDiagnostic> diagnostics = const [], this.refreshing = false}): _resources = resources,_edges = edges,_presentations = presentations,_compiledStatuses = compiledStatuses,_selections = selections,_diagnostics = diagnostics;
-  
+  const _AuthoringSessionState({this.generation, this.sequence,  Map<skir.ResourceId, skir.AuthoringResource> resources = const {},  Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges = const {},  Map<skir.ResourceId, skir.PresentationSubject> presentations = const {},  Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses = const {},  Map<String, skir.GraphSelectionResult> selections = const {},  List<skir.AuthoringDiagnostic> diagnostics = const [], this.refreshing = false}): _resources = resources,_edges = edges,_presentations = presentations,_compiledStatuses = compiledStatuses,_selections = selections,_diagnostics = diagnostics;
+
 
 @override final  skir.CatalogGeneration? generation;
 @override final  int? sequence;
@@ -798,8 +798,8 @@ class _AuthoringSessionState implements AuthoringSessionState {
   return EqualUnmodifiableMapView(_presentations);
 }
 
- final  Map<skir.ResourceId, skir.CompiledResourceState> _compiledStatuses;
-@override@JsonKey() Map<skir.ResourceId, skir.CompiledResourceState> get compiledStatuses {
+ final  Map<skir.CompilationRoot, skir.CompiledResourceState> _compiledStatuses;
+@override@JsonKey() Map<skir.CompilationRoot, skir.CompiledResourceState> get compiledStatuses {
   if (_compiledStatuses is EqualUnmodifiableMapView) return _compiledStatuses;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_compiledStatuses);
@@ -853,7 +853,7 @@ abstract mixin class _$AuthoringSessionStateCopyWith<$Res> implements $Authoring
   factory _$AuthoringSessionStateCopyWith(_AuthoringSessionState value, $Res Function(_AuthoringSessionState) _then) = __$AuthoringSessionStateCopyWithImpl;
 @override @useResult
 $Res call({
- skir.CatalogGeneration? generation, int? sequence, Map<skir.ResourceId, skir.AuthoringResource> resources, Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges, Map<skir.ResourceId, skir.PresentationSubject> presentations, Map<skir.ResourceId, skir.CompiledResourceState> compiledStatuses, Map<String, skir.GraphSelectionResult> selections, List<skir.AuthoringDiagnostic> diagnostics, bool refreshing
+ skir.CatalogGeneration? generation, int? sequence, Map<skir.ResourceId, skir.AuthoringResource> resources, Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges, Map<skir.ResourceId, skir.PresentationSubject> presentations, Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses, Map<String, skir.GraphSelectionResult> selections, List<skir.AuthoringDiagnostic> diagnostics, bool refreshing
 });
 
 
@@ -878,7 +878,7 @@ as int?,resources: null == resources ? _self._resources : resources // ignore: c
 as Map<skir.ResourceId, skir.AuthoringResource>,edges: null == edges ? _self._edges : edges // ignore: cast_nullable_to_non_nullable
 as Map<skir.AuthoringEdgeId, skir.AuthoringEdge>,presentations: null == presentations ? _self._presentations : presentations // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, skir.PresentationSubject>,compiledStatuses: null == compiledStatuses ? _self._compiledStatuses : compiledStatuses // ignore: cast_nullable_to_non_nullable
-as Map<skir.ResourceId, skir.CompiledResourceState>,selections: null == selections ? _self._selections : selections // ignore: cast_nullable_to_non_nullable
+as Map<skir.CompilationRoot, skir.CompiledResourceState>,selections: null == selections ? _self._selections : selections // ignore: cast_nullable_to_non_nullable
 as Map<String, skir.GraphSelectionResult>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<skir.AuthoringDiagnostic>,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -889,37 +889,75 @@ as bool,
 }
 
 /// @nodoc
-mixin _$AuthoringScope {
+mixin _$AuthoringSelectionLeaseState {
 
-
+ skir.GraphSelection get selection; int get retainCount; skir.GraphSelectionResult? get result;
+/// Create a copy of AuthoringSelectionLeaseState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthoringSelectionLeaseStateCopyWith<AuthoringSelectionLeaseState> get copyWith => _$AuthoringSelectionLeaseStateCopyWithImpl<AuthoringSelectionLeaseState>(this as AuthoringSelectionLeaseState, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringScope);
+  final _this = this as AuthoringSelectionLeaseState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringSelectionLeaseState&&(identical(other.selection, _this.selection) || other.selection == _this.selection)&&(identical(other.retainCount, _this.retainCount) || other.retainCount == _this.retainCount)&&(identical(other.result, _this.result) || other.result == _this.result));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode {
+  final _this = this as AuthoringSelectionLeaseState;
+  return Object.hash(runtimeType,_this.selection,_this.retainCount,_this.result);
+}
 
 @override
 String toString() {
-    return '_AuthoringScope()';
+  final _this = this as AuthoringSelectionLeaseState;
+  return 'AuthoringSelectionLeaseState(selection: ${_this.selection}, retainCount: ${_this.retainCount}, result: ${_this.result})';
 }
 
 
 }
 
 /// @nodoc
-class _$AuthoringScopeCopyWith<$Res>  {
-_$AuthoringScopeCopyWith(_AuthoringScope _, $Res Function(_AuthoringScope) __);
+abstract mixin class $AuthoringSelectionLeaseStateCopyWith<$Res>  {
+  factory $AuthoringSelectionLeaseStateCopyWith(AuthoringSelectionLeaseState value, $Res Function(AuthoringSelectionLeaseState) _then) = _$AuthoringSelectionLeaseStateCopyWithImpl;
+@useResult
+$Res call({
+ skir.GraphSelection selection, int retainCount, skir.GraphSelectionResult? result
+});
+
+
+
+
+}
+/// @nodoc
+class _$AuthoringSelectionLeaseStateCopyWithImpl<$Res>
+    implements $AuthoringSelectionLeaseStateCopyWith<$Res> {
+  _$AuthoringSelectionLeaseStateCopyWithImpl(this._self, this._then);
+
+  final AuthoringSelectionLeaseState _self;
+  final $Res Function(AuthoringSelectionLeaseState) _then;
+
+/// Create a copy of AuthoringSelectionLeaseState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? selection = null,Object? retainCount = null,Object? result = freezed,}) {
+  return _then(AuthoringSelectionLeaseState(
+selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as skir.GraphSelection,retainCount: null == retainCount ? _self.retainCount : retainCount // ignore: cast_nullable_to_non_nullable
+as int,result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as skir.GraphSelectionResult?,
+  ));
+}
+
 }
 
 
-/// Adds pattern-matching-related methods to [_AuthoringScope].
-extension _AuthoringScopePatterns on _AuthoringScope {
+/// Adds pattern-matching-related methods to [AuthoringSelectionLeaseState].
+extension AuthoringSelectionLeaseStatePatterns on AuthoringSelectionLeaseState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -932,13 +970,11 @@ extension _AuthoringScopePatterns on _AuthoringScope {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LibraryScope value)?  library,TResult Function( _BookScope value)?  book,TResult Function( _PageScope value)?  page,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AuthoringSelectionLeaseState value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _LibraryScope() when library != null:
-return library(_that);case _BookScope() when book != null:
-return book(_that);case _PageScope() when page != null:
-return page(_that);case _:
+case _AuthoringSelectionLeaseState() when $default != null:
+return $default(_that);case _:
   return orElse();
 
 }
@@ -956,13 +992,14 @@ return page(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LibraryScope value)  library,required TResult Function( _BookScope value)  book,required TResult Function( _PageScope value)  page,}){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AuthoringSelectionLeaseState value)  $default,){
 final _that = this;
 switch (_that) {
-case _LibraryScope():
-return library(_that);case _BookScope():
-return book(_that);case _PageScope():
-return page(_that);}
+case _AuthoringSelectionLeaseState():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -976,13 +1013,11 @@ return page(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LibraryScope value)?  library,TResult? Function( _BookScope value)?  book,TResult? Function( _PageScope value)?  page,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AuthoringSelectionLeaseState value)?  $default,){
 final _that = this;
 switch (_that) {
-case _LibraryScope() when library != null:
-return library(_that);case _BookScope() when book != null:
-return book(_that);case _PageScope() when page != null:
-return page(_that);case _:
+case _AuthoringSelectionLeaseState() when $default != null:
+return $default(_that);case _:
   return null;
 
 }
@@ -999,12 +1034,10 @@ return page(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  library,TResult Function( skir.ResourceId bookId)?  book,TResult Function( skir.ResourceId pageId)?  page,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.GraphSelection selection,  int retainCount,  skir.GraphSelectionResult? result)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _LibraryScope() when library != null:
-return library();case _BookScope() when book != null:
-return book(_that.bookId);case _PageScope() when page != null:
-return page(_that.pageId);case _:
+case _AuthoringSelectionLeaseState() when $default != null:
+return $default(_that.selection,_that.retainCount,_that.result);case _:
   return orElse();
 
 }
@@ -1022,12 +1055,13 @@ return page(_that.pageId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  library,required TResult Function( skir.ResourceId bookId)  book,required TResult Function( skir.ResourceId pageId)  page,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.GraphSelection selection,  int retainCount,  skir.GraphSelectionResult? result)  $default,) {final _that = this;
 switch (_that) {
-case _LibraryScope():
-return library();case _BookScope():
-return book(_that.bookId);case _PageScope():
-return page(_that.pageId);}
+case _AuthoringSelectionLeaseState():
+return $default(_that.selection,_that.retainCount,_that.result);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1041,12 +1075,10 @@ return page(_that.pageId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  library,TResult? Function( skir.ResourceId bookId)?  book,TResult? Function( skir.ResourceId pageId)?  page,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.GraphSelection selection,  int retainCount,  skir.GraphSelectionResult? result)?  $default,) {final _that = this;
 switch (_that) {
-case _LibraryScope() when library != null:
-return library();case _BookScope() when book != null:
-return book(_that.bookId);case _PageScope() when page != null:
-return page(_that.pageId);case _:
+case _AuthoringSelectionLeaseState() when $default != null:
+return $default(_that.selection,_that.retainCount,_that.result);case _:
   return null;
 
 }
@@ -1057,77 +1089,47 @@ return page(_that.pageId);case _:
 /// @nodoc
 
 
-class _LibraryScope extends _AuthoringScope {
-  const _LibraryScope(): super._();
-  
+class _AuthoringSelectionLeaseState implements AuthoringSelectionLeaseState {
+  const _AuthoringSelectionLeaseState({required this.selection, required this.retainCount, this.result});
 
 
+@override final  skir.GraphSelection selection;
+@override final  int retainCount;
+@override final  skir.GraphSelectionResult? result;
 
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LibraryScope);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return '_AuthoringScope.library()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class _BookScope extends _AuthoringScope {
-  const _BookScope(this.bookId): super._();
-  
-
- final  skir.ResourceId bookId;
-
-/// Create a copy of _AuthoringScope
+/// Create a copy of AuthoringSelectionLeaseState
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$BookScopeCopyWith<_BookScope> get copyWith => __$BookScopeCopyWithImpl<_BookScope>(this, _$identity);
+_$AuthoringSelectionLeaseStateCopyWith<_AuthoringSelectionLeaseState> get copyWith => __$AuthoringSelectionLeaseStateCopyWithImpl<_AuthoringSelectionLeaseState>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BookScope&&(identical(other.bookId, bookId) || other.bookId == bookId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringSelectionLeaseState&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.retainCount, retainCount) || other.retainCount == retainCount)&&(identical(other.result, result) || other.result == result));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,bookId);
+    return Object.hash(runtimeType,selection,retainCount,result);
 }
 
 @override
 String toString() {
-    return '_AuthoringScope.book(bookId: $bookId)';
+    return 'AuthoringSelectionLeaseState(selection: $selection, retainCount: $retainCount, result: $result)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$BookScopeCopyWith<$Res> implements _$AuthoringScopeCopyWith<$Res> {
-  factory _$BookScopeCopyWith(_BookScope value, $Res Function(_BookScope) _then) = __$BookScopeCopyWithImpl;
-@useResult
+abstract mixin class _$AuthoringSelectionLeaseStateCopyWith<$Res> implements $AuthoringSelectionLeaseStateCopyWith<$Res> {
+  factory _$AuthoringSelectionLeaseStateCopyWith(_AuthoringSelectionLeaseState value, $Res Function(_AuthoringSelectionLeaseState) _then) = __$AuthoringSelectionLeaseStateCopyWithImpl;
+@override @useResult
 $Res call({
- skir.ResourceId bookId
+ skir.GraphSelection selection, int retainCount, skir.GraphSelectionResult? result
 });
 
 
@@ -1135,87 +1137,21 @@ $Res call({
 
 }
 /// @nodoc
-class __$BookScopeCopyWithImpl<$Res>
-    implements _$BookScopeCopyWith<$Res> {
-  __$BookScopeCopyWithImpl(this._self, this._then);
+class __$AuthoringSelectionLeaseStateCopyWithImpl<$Res>
+    implements _$AuthoringSelectionLeaseStateCopyWith<$Res> {
+  __$AuthoringSelectionLeaseStateCopyWithImpl(this._self, this._then);
 
-  final _BookScope _self;
-  final $Res Function(_BookScope) _then;
+  final _AuthoringSelectionLeaseState _self;
+  final $Res Function(_AuthoringSelectionLeaseState) _then;
 
-/// Create a copy of _AuthoringScope
+/// Create a copy of AuthoringSelectionLeaseState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? bookId = null,}) {
-  return _then(_BookScope(
-null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.ResourceId,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class _PageScope extends _AuthoringScope {
-  const _PageScope(this.pageId): super._();
-  
-
- final  skir.ResourceId pageId;
-
-/// Create a copy of _AuthoringScope
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$PageScopeCopyWith<_PageScope> get copyWith => __$PageScopeCopyWithImpl<_PageScope>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PageScope&&(identical(other.pageId, pageId) || other.pageId == pageId));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,pageId);
-}
-
-@override
-String toString() {
-    return '_AuthoringScope.page(pageId: $pageId)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$PageScopeCopyWith<$Res> implements _$AuthoringScopeCopyWith<$Res> {
-  factory _$PageScopeCopyWith(_PageScope value, $Res Function(_PageScope) _then) = __$PageScopeCopyWithImpl;
-@useResult
-$Res call({
- skir.ResourceId pageId
-});
-
-
-
-
-}
-/// @nodoc
-class __$PageScopeCopyWithImpl<$Res>
-    implements _$PageScopeCopyWith<$Res> {
-  __$PageScopeCopyWithImpl(this._self, this._then);
-
-  final _PageScope _self;
-  final $Res Function(_PageScope) _then;
-
-/// Create a copy of _AuthoringScope
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? pageId = null,}) {
-  return _then(_PageScope(
-null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.ResourceId,
+@override @pragma('vm:prefer-inline') $Res call({Object? selection = null,Object? retainCount = null,Object? result = freezed,}) {
+  return _then(_AuthoringSelectionLeaseState(
+selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as skir.GraphSelection,retainCount: null == retainCount ? _self.retainCount : retainCount // ignore: cast_nullable_to_non_nullable
+as int,result: freezed == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as skir.GraphSelectionResult?,
   ));
 }
 

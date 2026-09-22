@@ -10,7 +10,14 @@ void main() {
     final definitions = ValueNotifier<AsyncValue<List<ElementDefinition>>>(
       const AsyncData([]),
     );
-    final source = ElementTypeSearchSource(definitions: definitions);
+    final source = ElementTypeSearchSource(
+      definitions: definitions,
+      querySelectors: const [
+        KeyValueSelectorDefinition(id: authoringBookSelectorId, key: "book:"),
+        KeyValueSelectorDefinition(id: authoringPageSelectorId, key: "page:"),
+        KeyValueSelectorDefinition(id: authoringTypeSelectorId, key: "type:"),
+      ],
+    );
     addTearDown(definitions.dispose);
     addTearDown(source.dispose);
 
@@ -126,7 +133,7 @@ void main() {
     scope: primarySearchScope(
       books: books,
       pages: pages,
-      pagePolicies: policies,
+      pageCreationSlots: policies,
       catalog: catalog,
     ),
     dispose: () {
@@ -232,9 +239,12 @@ final _unrelatedType = ResolvedTypeRef(
 final _parentDefinition = _definition(_parentType, "Parent");
 final _childDefinition = _definition(_childType, "Child");
 final _unrelatedDefinition = _definition(_unrelatedType, "Unrelated");
-final _pagePolicy = PageEntryCreationPolicy(
-  placement: PageEntryCreationPlacement.graph,
-  types: {_childType},
+final _pagePolicy = RealmAuthoringCreationSlot(
+  id: AuthoringCreationSlotId("test/graph"),
+  label: "Test graph",
+  creates: CoreResourceDefinitionIds.element,
+  context: const RealmStandaloneCreationContext(),
+  concreteRoots: [_childType],
 );
 
 ElementDefinition _definition(ResolvedTypeRef type, String name) =>

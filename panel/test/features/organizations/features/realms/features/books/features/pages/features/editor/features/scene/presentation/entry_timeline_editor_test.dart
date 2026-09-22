@@ -464,7 +464,7 @@ List<Override> _pageElementOverrides(_TestPageElements notifier) => [
 ];
 
 const _snapshotSubject =
-    "service.to.test.organization.test.realm.library.authoring.graph.query";
+    "service.to.test.organization.test.realm.editor.authoring.graph.query";
 
 List<PageElement> _sceneElements() {
   return [

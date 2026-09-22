@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Display state for one stored reference, including retained missing targets.
@@ -13,7 +11,7 @@ final class ReferenceResourceSummary {
     this.diagnostics = const [],
   });
 
-  final skir.ResourceId id;
+  final ResourceId id;
   final bool exists;
   final String? title;
   final String? subtitle;
@@ -24,7 +22,7 @@ final class ReferenceResourceSummary {
 /// Builds a scoped authoring source for one reference target type.
 typedef ReferenceSearchSourceBuilder = SearchSource Function({
   required ResolvedTypeRef target,
-  required List<skir.ResourceId> origins,
+  required List<ResourceId> origins,
   required TypeRegistry registry,
 });
 
@@ -32,13 +30,13 @@ typedef ReferenceSearchSourceBuilder = SearchSource Function({
 typedef ReferenceResourceResolver =
     Future<List<ReferenceResourceSummary>> Function({
       required ResolvedTypeRef target,
-      required List<skir.ResourceId> ids,
+      required List<ResourceId> ids,
       required TypeRegistry registry,
     });
 
 /// Shared payload contract for resource nodes dropped onto reference controls.
 abstract interface class ReferenceResourceDragData {
-  skir.ResourceId get referenceId;
+  ResourceId get referenceId;
   List<ResolvedTypeRef> get referenceTypes;
 }
 

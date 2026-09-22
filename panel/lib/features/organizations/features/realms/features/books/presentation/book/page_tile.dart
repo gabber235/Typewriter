@@ -126,7 +126,7 @@ class _PageTile extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
 
-    final elementTypes = ref.watch(pageElementTypesProvider(page.kind)).value;
+    final creationSlot = ref.watch(pageCreationSlotProvider(page.kind)).value;
 
     final backgroundColor = isSelected
         ? context.theme.colorScheme.primaryContainer
@@ -154,15 +154,12 @@ class _PageTile extends HookConsumerWidget {
       builder: (context, constraints) {
         return DragTarget<EntryDragPayload>(
           onWillAcceptWithDetails: (details) {
-            return switch (elementTypes) {
-              PageElementTypesReady(:final types) => details.data.entries.every(
-                (entry) {
+            return creationSlot != null &&
+                details.data.entries.every((entry) {
                   final elementType = entry.elementType;
-                  return elementType != null && types.contains(elementType);
-                },
-              ),
-              _ => false,
-            };
+                  return elementType != null &&
+                      creationSlot.acceptsRoot(elementType);
+                });
           },
           onAcceptWithDetails: (details) async {
             final payload = details.data;

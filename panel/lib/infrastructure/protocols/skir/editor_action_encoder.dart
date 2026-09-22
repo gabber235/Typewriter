@@ -152,17 +152,13 @@ final class SkirActionEncoder {
   TypeResult<wire.LocalEditorAction> _replace(ReplaceConcreteTypeAction value) {
     final target = expressions.binding(value.target);
     final type = values.typeCodec.encodeReference(value.concreteType);
-    final initial = expressions.encode(value.initialValue);
-    return combineThreeResults(
+    return combineResults(
       target,
       type,
-      initial,
-      (target, type, initial) =>
-          wire.LocalEditorAction.createReplaceConcreteNominalType(
-            target: target,
-            concreteType: type,
-            value: initial,
-          ),
+      (target, type) => wire.LocalEditorAction.createReplaceConcreteNominalType(
+        target: target,
+        concreteType: type,
+      ),
     );
   }
 

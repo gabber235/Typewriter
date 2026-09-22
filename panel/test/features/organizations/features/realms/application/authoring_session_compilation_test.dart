@@ -8,11 +8,11 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/provider_test_utils.dart";
 
 const _graphSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.graph.query";
+    "service.to.realm1.organization.org1.realm.editor.authoring.graph.query";
 const _statusSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.compiled.status.query";
+    "service.to.realm1.organization.org1.realm.editor.authoring.compiled.status.query";
 const _compiledSubject =
-    "service.from.realm1.organization.org1.realm.compiled.content.watch";
+    "service.from.realm1.organization.org1.realm.editor.authoring.compiled.changed";
 
 void main() {
   test("compiled content changes refresh resource compilation state", () async {
@@ -39,7 +39,7 @@ void main() {
         return skir.QueryCompiledResourceStatusResponse.serializer.toBytes(
           skir.QueryCompiledResourceStatusResponse.createSuccess(
             statuses: [
-              skir.CompiledResourceStatus(resource: _page, state: status),
+              skir.CompiledResourceStatus(root: _pageRoot, state: status),
             ],
           ),
         );
@@ -66,11 +66,13 @@ void main() {
     );
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = container.listen(provider, (_, _) {});
-    final lease = container.read(provider.notifier).acquirePage(_page);
+    final lease = container
+        .read(provider.notifier)
+        .acquire(_page.pageAuthoringSelection);
     await lease.ready;
 
     expect(
-      container.read(provider).compiledStatuses[_page],
+      container.read(provider).compiledStatuses[_pageRoot],
       skir.CompiledResourceState.notCompiled,
     );
 
@@ -80,19 +82,28 @@ void main() {
     );
     nats.emitMessageOnSubject(
       _compiledSubject,
-      skir.WatchCompiledContentResponse.serializer.toBytes(
-        skir.WatchCompiledContentResponse.createBlocked(),
+      skir.CompiledContentChanged.serializer.toBytes(
+        skir.CompiledContentChanged(
+          generation: skir.CatalogGeneration(value: "1"),
+          sourceSequence: 1,
+          states: [
+            skir.CompiledResourceStateChange.createUpsert(
+              root: _pageRoot,
+              state: status,
+            ),
+          ],
+        ),
       ),
     );
     await waitForProvider(
       container,
       provider,
       (state) =>
-          state.compiledStatuses[_page]
+          state.compiledStatuses[_pageRoot]
               is skir.CompiledResourceState_blockedWrapper,
       description: "blocked resource compilation state",
     );
-    expect(statusRequests, greaterThanOrEqualTo(2));
+    expect(statusRequests, 1);
 
     lease.release();
     subscription.close();
@@ -104,6 +115,10 @@ void main() {
 final _org = recordId("organization:org1");
 final _realm = recordId("service:realm1");
 final _page = skir.ResourceId(value: "page1");
+final _pageRoot = skir.CompilationRoot(
+  projection: skir.CompilationProjectionId(value: "typewriter.page"),
+  resource: _page,
+);
 final _wireCodec = SkirEditorCodec(TypeRegistry(const TypeCatalog([])));
 final _pageType = ResolvedTypeRef(
   id: DeclaredTypeId("22222222222222222222222222222222"),
@@ -111,7 +126,7 @@ final _pageType = ResolvedTypeRef(
 );
 final _pageResource = skir.AuthoringResource(
   id: _page,
-  kind: skir.ResourceKind.page,
+  definition: CoreResourceDefinitionIds.page.toWire(),
   content: skir.TypedValueEnvelope(
     rootType: _wireCodec.encodeType(_pageType).valueOrNull!,
     rootValue: _wireCodec.encodeValue(const StringValue("Page")).valueOrNull!,

@@ -1,0 +1,428 @@
+package com.typewritermc.realm
+
+import com.typewritermc.authoring.AuthoringChangeSummary
+import com.typewritermc.authoring.AuthoringGraphRelation
+import com.typewritermc.authoring.AuthoringGraphResource
+import com.typewritermc.authoring.AuthoringPolicyCatalog
+import com.typewritermc.authoring.AuthoringPolicyProvider
+import com.typewritermc.authoring.AuthoringRelationOrigin
+import com.typewritermc.authoring.AuthoringSearchFacet
+import com.typewritermc.authoring.AuthoringSearchSelector
+import com.typewritermc.authoring.AuthoringSearchSelectorMultiplicity
+import com.typewritermc.authoring.AuthoringSearchSelectorValues
+import com.typewritermc.authoring.AuthoringWorkingGraph
+import com.typewritermc.authoring.GraphReadRequirement
+import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.engine.CompilationResult
+import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.engine.ContentDigest
+import com.typewritermc.realm.compiler.AuthoringCompilationProjection
+import com.typewritermc.realm.compiler.AuthoringCompilationProjectionRegistry
+import com.typewritermc.realm.repository.AuthoringGraphDelta
+import com.typewritermc.realm.repository.AuthoringGraphRule
+import com.typewritermc.realm.repository.AuthoringGraphValidationContext
+import com.typewritermc.realm.repository.AuthoringMutationPlan
+import com.typewritermc.realm.repository.ResourceRelationOrigin
+import com.typewritermc.realm.repository.StoredResourceRelation
+import com.typewritermc.realm.repository.StoredTypedResource
+import com.typewritermc.realm.routes.AuthoringPresentationRegistry
+import com.typewritermc.realm.search.AuthoringSearchGraph
+import com.typewritermc.realm.search.AuthoringSearchProjectionRegistry
+import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypedValueEnvelope
+import skirout.editor.v1.binding.BindingId
+import skirout.editor.v1.presentation.SearchSelectorDefinition
+import skirout.editor.v1.presentation.SearchSelectorMultiplicity
+import skirout.editor.v1.presentation.SearchSelectorValues
+import com.typewritermc.realm.compiler.GraphReadRequirement as RealmGraphReadRequirement
+import com.typewritermc.realm.repository.AuthoringGraphResource as RealmGraphResource
+import com.typewritermc.realm.repository.AuthoringWorkingGraph as RealmWorkingGraph
+import com.typewritermc.realm.routes.AuthoringPresentationProjection as RealmPresentationProjection
+import com.typewritermc.realm.search.AuthoringSearchProjection as RealmSearchProjection
+
+/** The policy set consumed by Realm after public SDK policies are adapted to runtime storage types. */
+internal data class RealmAuthoringPolicyCatalog(
+    val definitions: List<AuthoringResourceDefinition>,
+    val validations: List<AuthoringGraphRule>,
+    val graphRequirements: List<RealmGraphReadRequirement>,
+    val search: AuthoringSearchProjectionRegistry,
+    val searchSelectors: List<AuthoringSearchSelector>,
+    val searchFacets: List<AuthoringSearchFacet>,
+    val presentations: AuthoringPresentationRegistry,
+    val creationSlots: List<AuthoringCreationSlotDefinition>,
+    val compilation: AuthoringCompilationProjectionRegistry,
+)
+
+/** Assembles extension policies once, then exposes only Realm owned policy implementations internally. */
+internal object RealmAuthoringPolicyAssembler {
+    fun assemble(
+        providers: Collection<AuthoringPolicyProvider>,
+        catalog: TypeCatalog,
+    ): RealmAuthoringPolicyCatalog {
+        val policies = AuthoringPolicyCatalog.assemble(providers)
+        policies.validateTypeRoots(catalog)
+        return RealmAuthoringPolicyCatalog(
+            definitions = policies.definitions.values.map { it.toRealm() },
+            validations = policies.validations.values.map { it.toRealm(catalog) },
+            graphRequirements =
+                policies.validations.values.map { it.graphRequirement.toRealm() } +
+                    policies.search.values.map { it.graphRequirement.toRealm() } +
+                    policies.presentations.values.map { it.graphRequirement.toRealm() } +
+                    policies.compilation.values.map { it.graphRequirement.toRealm() },
+            search =
+                AuthoringSearchProjectionRegistry(
+                    policies.search.values.map(::toRealmSearch),
+                ),
+            searchSelectors = policies.searchSelectors,
+            searchFacets = policies.searchFacets,
+            presentations =
+                AuthoringPresentationRegistry(
+                    policies.presentations.values.associate { it.resourceDefinition to toRealmPresentation(it) },
+                ),
+            creationSlots = policies.creationSlots.values.map { it.toRealm() },
+            compilation =
+                AuthoringCompilationProjectionRegistry(
+                    policies.compilation.values.map(::toRealmCompilation),
+                ),
+        )
+    }
+
+    private fun AuthoringPolicyCatalog.validateTypeRoots(catalog: TypeCatalog) {
+        definitions.values.forEach { definition ->
+            catalog.requireKnownRoot(definition.acceptedRoot, "resource definition ${definition.id.value}")
+        }
+        creationSlots.values.forEach { slot ->
+            slot.concreteRoots.forEach { root ->
+                val type = catalog.requireKnownRoot(root, "creation slot ${slot.id.value}")
+                require(type.kind == NominalTypeKind.CONCRETE) {
+                    "Creation slot ${slot.id.value} must reference concrete type root $root."
+                }
+            }
+        }
+        compilation.values.forEach { projection ->
+            catalog.requireKnownRoot(projection.root, "compilation projection ${projection.id.value}")
+        }
+    }
+}
+
+private fun TypeCatalog.requireKnownRoot(
+    expression: TypeExpression,
+    owner: String,
+): com.typewritermc.types.TypeDefinition? =
+    when (expression) {
+        TypeExpression.Any -> null
+        is TypeExpression.Named -> requireKnownRoot(expression.reference, owner)
+        else -> null
+    }
+
+private fun TypeCatalog.requireKnownRoot(
+    reference: com.typewritermc.types.ResolvedTypeRef,
+    owner: String,
+): com.typewritermc.types.TypeDefinition {
+    val definition = definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }
+    require(definition != null) {
+        "$owner references type root $reference, but the type is absent from the TypeCatalog."
+    }
+    return definition
+}
+
+internal fun RealmAuthoringPolicyCatalog.searchDefinition(): AuthoringSearchDefinition =
+    AuthoringSearchDefinition(
+        definitions = search.all().map(RealmSearchProjection::definition),
+        selectors =
+            searchSelectors.map { selector ->
+                SearchSelectorDefinition(
+                    selectorId = selector.id,
+                    key = selector.key,
+                    valueBindingId = BindingId(value = 0),
+                    values =
+                        when (val values = selector.values) {
+                            AuthoringSearchSelectorValues.FreeText -> {
+                                SearchSelectorValues.FREE_TEXT
+                            }
+
+                            is AuthoringSearchSelectorValues.Enumeration -> {
+                                SearchSelectorValues.createEnumeration(values = values.values)
+                            }
+                        },
+                    caseSensitive = selector.caseSensitive,
+                    multiplicity =
+                        when (selector.multiplicity) {
+                            AuthoringSearchSelectorMultiplicity.SINGLE -> SearchSelectorMultiplicity.SINGLE
+                            AuthoringSearchSelectorMultiplicity.MULTIPLE -> SearchSelectorMultiplicity.MULTIPLE
+                        },
+                    color = selector.colorValue,
+                )
+            },
+        facets =
+            searchFacets.map { facet ->
+                AuthoringSearchFacetDefinition(facet.id, facet.label, facet.selectorId)
+            },
+    )
+
+private fun com.typewritermc.authoring.AuthoringResourceDefinition.toRealm(): AuthoringResourceDefinition =
+    AuthoringResourceDefinition(id, acceptedRoot)
+
+private fun com.typewritermc.authoring.AuthoringCreationSlotDefinition.toRealm(): AuthoringCreationSlotDefinition =
+    AuthoringCreationSlotDefinition(
+        id = id,
+        label = label,
+        creates = creates,
+        context = context,
+        concreteRoots = concreteRoots,
+    )
+
+private fun com.typewritermc.authoring.AuthoringValidationRule.toRealm(catalog: TypeCatalog): AuthoringGraphRule =
+    object : AuthoringGraphRule {
+        override val id: String = this@toRealm.id.value
+        override val graphRequirement: RealmGraphReadRequirement = this@toRealm.graphRequirement.toRealm()
+
+        override fun validate(context: AuthoringGraphValidationContext): List<com.typewritermc.realm.repository.AuthoringDiagnostic> {
+            val change =
+                AuthoringChangeSummary(
+                    changedResources = context.changedResources,
+                    changedEdges = context.changedEdges,
+                    deletedResources = context.deletedResources,
+                )
+            return this@toRealm
+                .validate(
+                    com.typewritermc.authoring.AuthoringValidationContext(
+                        catalog = catalog,
+                        before = context.before.toPublic(),
+                        proposed = context.proposed.toPublic(),
+                        change = change,
+                    ),
+                ).map { diagnostic ->
+                    com.typewritermc.realm.repository.AuthoringDiagnostic(
+                        code = diagnostic.code,
+                        message = diagnostic.message,
+                        resource = diagnostic.resources.firstOrNull(),
+                    )
+                }
+        }
+    }
+
+private fun toRealmSearch(projection: com.typewritermc.authoring.AuthoringSearchProjection): RealmSearchProjection =
+    object : RealmSearchProjection {
+        override val definition: ResourceDefinitionId = projection.resourceDefinition
+
+        override fun project(
+            resource: RealmGraphResource,
+            graph: AuthoringSearchGraph,
+        ): com.typewritermc.realm.search.AuthoringSearchDocument {
+            val document = projection.project(resource.toPublic(), graph.toPublic())
+            return com.typewritermc.realm.search.AuthoringSearchDocument(
+                resource = document.resource,
+                definition = document.definition,
+                text = listOf(document.text),
+                selectors = document.selectors.mapKeys { it.key.value },
+                ownerPath = document.ownerPath,
+            )
+        }
+
+        override fun affectedResources(plan: AuthoringMutationPlan): Set<ResourceId> =
+            projection.affectedResources(
+                change = plan.changeSummary(),
+                before = plan.before.toPublic(),
+                proposed = plan.proposed.toPublic(),
+            )
+    }
+
+private fun toRealmPresentation(projection: com.typewritermc.authoring.AuthoringPresentationProjection): RealmPresentationProjection =
+    object : RealmPresentationProjection {
+        override fun project(
+            resource: RealmGraphResource,
+            graph: RealmWorkingGraph,
+        ) = projection.project(resource = resource.toPublic(), graph = graph.toPublic())
+
+        override fun affectedResources(
+            change: AuthoringChangeSummary,
+            before: RealmWorkingGraph,
+            proposed: RealmWorkingGraph,
+        ): Set<ResourceId> =
+            projection.affectedResources(
+                change = change,
+                before = before.toPublic(),
+                proposed = proposed.toPublic(),
+            )
+    }
+
+private fun toRealmCompilation(projection: com.typewritermc.authoring.AuthoringCompilationProjection): AuthoringCompilationProjection =
+    object : AuthoringCompilationProjection {
+        override val id: CompilationProjectionId = CompilationProjectionId(projection.id.value)
+        override val root: TypeExpression = projection.root
+        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm()
+
+        override fun affectedRoots(
+            change: AuthoringGraphDelta,
+            before: RealmWorkingGraph,
+            proposed: RealmWorkingGraph,
+        ): Set<ResourceId> =
+            projection.affectedRoots(
+                change = change.toSummary(),
+                before = before.toPublic(),
+                proposed = proposed.toPublic(),
+            )
+
+        override suspend fun compile(
+            root: ResourceId,
+            graph: RealmWorkingGraph,
+        ): CompilationResult = projection.compile(root, graph.toPublic()).toRealm()
+    }
+
+private fun GraphReadRequirement.toRealm(): RealmGraphReadRequirement =
+    RealmGraphReadRequirement(
+        definitions = definitions,
+        relations = declaredRelations,
+        incomingReferences = incomingReferences,
+        outgoingReferences = outgoingReferences,
+        direction =
+            when (direction) {
+                GraphReadRequirement.Direction.OUTGOING -> RealmGraphReadRequirement.Direction.OUTGOING
+                GraphReadRequirement.Direction.INCOMING -> RealmGraphReadRequirement.Direction.INCOMING
+                GraphReadRequirement.Direction.BOTH -> RealmGraphReadRequirement.Direction.BOTH
+            },
+        maximumDepth = maximumDepth,
+        maximumResources = maximumResources,
+        maximumEdges = maximumEdges,
+    )
+
+private fun AuthoringWorkingGraph.toSearchGraph(): AuthoringSearchGraph =
+    AuthoringSearchGraph(
+        resources = resources.mapValues { (_, resource) -> resource.toRealm() },
+        relations = relations.values.map { relation -> relation.toRealm() },
+    )
+
+private fun AuthoringSearchGraph.toPublic(): AuthoringWorkingGraph =
+    AuthoringWorkingGraph(
+        resources = resources.mapValues { (_, resource) -> resource.toPublic() },
+        relations = relations.associateBy(StoredResourceRelation::id).mapValues { (_, relation) -> relation.toPublic() },
+    )
+
+private fun RealmGraphResource.toPublic(): AuthoringGraphResource =
+    AuthoringGraphResource(id = id, definition = definition, content = content)
+
+private fun AuthoringGraphResource.toRealm(): RealmGraphResource = RealmGraphResource(id, definition, content)
+
+private fun StoredTypedResource.toPublic(): AuthoringGraphResource =
+    AuthoringGraphResource(
+        id = id,
+        definition = definition,
+        content = TypedValueEnvelope(TypeExpression.Named(root), valueWithSlots),
+    )
+
+private fun StoredResourceRelation.toPublic(): AuthoringGraphRelation =
+    AuthoringGraphRelation(
+        id = id,
+        source = source,
+        target = target,
+        origin =
+            when (val relationOrigin = origin) {
+                is ResourceRelationOrigin.Reference -> {
+                    AuthoringRelationOrigin.Reference(
+                        slot = relationOrigin.slot.value,
+                        sourcePath = relationOrigin.sourcePath,
+                        expectedTarget = relationOrigin.expectedTarget,
+                    )
+                }
+
+                is ResourceRelationOrigin.Declared -> {
+                    AuthoringRelationOrigin.Declared(relationOrigin.relationId)
+                }
+            },
+    )
+
+private fun AuthoringGraphRelation.toRealm(): StoredResourceRelation =
+    StoredResourceRelation(
+        id = id,
+        source = source,
+        target = target,
+        origin =
+            when (val relationOrigin = origin) {
+                is AuthoringRelationOrigin.Reference -> {
+                    ResourceRelationOrigin.Reference(
+                        slot = com.typewritermc.elements.ReferenceSlotId(relationOrigin.slot),
+                        sourcePath = relationOrigin.sourcePath,
+                        expectedTarget = relationOrigin.expectedTarget,
+                    )
+                }
+
+                is AuthoringRelationOrigin.Declared -> {
+                    ResourceRelationOrigin.Declared(relationOrigin.relationId)
+                }
+            },
+    )
+
+private fun RealmWorkingGraph.toPublic(): AuthoringWorkingGraph =
+    AuthoringWorkingGraph(
+        resources = resources.mapValues { (_, resource) -> resource.toPublic() },
+        relations = relations.mapValues { (_, relation) -> relation.toPublic() },
+    )
+
+private fun AuthoringMutationPlan.changeSummary(): AuthoringChangeSummary =
+    AuthoringChangeSummary(
+        changedResources = changedResources,
+        changedEdges = changedEdges,
+        deletedResources = delta.resourceRemovals,
+    )
+
+private fun AuthoringGraphDelta.toSummary(): AuthoringChangeSummary =
+    AuthoringChangeSummary(
+        changedResources = resourceUpserts.keys + resourceRemovals,
+        changedEdges = relationUpserts.keys + relationRemovals,
+        deletedResources = resourceRemovals,
+    )
+
+private fun com.typewritermc.authoring.AuthoringCompilationResult.toRealm(): CompilationResult =
+    when (this) {
+        is com.typewritermc.authoring.AuthoringCompilationResult.Success -> {
+            CompilationResult.Success(artifact.toRealm())
+        }
+
+        is com.typewritermc.authoring.AuthoringCompilationResult.Removed -> {
+            CompilationResult.Removed(root.toRealm())
+        }
+
+        is com.typewritermc.authoring.AuthoringCompilationResult.Blocked -> {
+            CompilationResult.Blocked(
+                root = root.toRealm(),
+                inputFingerprint = ContentDigest(inputFingerprint.value),
+                diagnostics =
+                    diagnostics.map { diagnostic ->
+                        com.typewritermc.engine.CompileDiagnostic(
+                            code = diagnostic.code,
+                            message = diagnostic.message,
+                            severity =
+                                when (diagnostic.severity) {
+                                    com.typewritermc.authoring.AuthoringCompileDiagnostic.Severity.ERROR -> {
+                                        com.typewritermc.engine.CompileDiagnosticSeverity.ERROR
+                                    }
+
+                                    com.typewritermc.authoring.AuthoringCompileDiagnostic.Severity.WARNING -> {
+                                        com.typewritermc.engine.CompileDiagnosticSeverity.WARNING
+                                    }
+                                },
+                            source = diagnostic.source,
+                            target = diagnostic.target,
+                        )
+                    },
+            )
+        }
+    }
+
+private fun com.typewritermc.authoring.AuthoringCompiledArtifact.toRealm(): CompiledArtifact =
+    CompiledArtifact(
+        root = root.toRealm(),
+        formatRevision = formatRevision,
+        mediaType = mediaType,
+        inputFingerprint = ContentDigest(inputFingerprint.value),
+        semanticDigest = ContentDigest(semanticDigest.value),
+        payload = payload,
+    )
+
+private fun com.typewritermc.authoring.AuthoringCompilationRoot.toRealm(): CompilationRoot =
+    CompilationRoot(CompilationProjectionId(projection.value), resource)

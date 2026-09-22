@@ -2,8 +2,6 @@ import "dart:convert";
 import "dart:typed_data";
 
 import "package:json_annotation/json_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_value_json_cursor.dart";
@@ -110,7 +108,7 @@ final class _DataValueDecoder {
         value: decode(json.required("value")),
       ),
       "reference" => ReferenceValue(
-        skir.ResourceId(value: json.required("value").string()),
+        ResourceId(value: json.required("value").string()),
       ),
       _ => throw FormatException(
         "Expected a known data value kind at ${json.required("kind").path}, "

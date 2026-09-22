@@ -10,19 +10,6 @@ extension ElementCommands on AuthoringSession {
     (await preview(batch)).requireValid();
     return apply(batch);
   }
-
-  Future<skir.ApplyAuthoringBatchResponse> createElements(
-    Iterable<skir.AuthoringResource> resources,
-  ) => apply([
-    for (final resource in resources)
-      skir.AuthoringOperation.createCreate(resource: resource),
-  ]);
-
-  Future<skir.ApplyAuthoringBatchResponse> deleteElements(
-    Iterable<skir.ResourceId> ids,
-  ) => apply([
-    for (final id in ids) skir.AuthoringOperation.createDelete(id: id),
-  ]);
 }
 
 extension on skir.PreviewAuthoringBatchResponse {

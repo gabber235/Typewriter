@@ -66,7 +66,7 @@ final class CanonicalBookPagesProvider
 }
 
 String _$canonicalBookPagesHash() =>
-    r'a80d2515989660d62a0d8717d0135f379e8c4462';
+    r'060f0ee8130a123f49c09a15b018439f8dc3ec22';
 
 /// Retains and exposes canonical pages belonging to one book.
 ///
@@ -189,7 +189,7 @@ final class CanonicalPageProvider
   }
 }
 
-String _$canonicalPageHash() => r'57e0de7b2e3fd56fffb4af56e019f1f14ef09e0a';
+String _$canonicalPageHash() => r'0ba1cbb08766b74f6f63a0582141723a52c99810';
 
 /// Retains one canonical page through a page scope lease.
 ///

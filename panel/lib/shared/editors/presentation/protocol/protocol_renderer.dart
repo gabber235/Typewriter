@@ -49,6 +49,7 @@ class EditorProtocolRenderer extends StatefulWidget {
     this.presentation,
     this.diagnostics = const [],
     this.onRealmAction,
+    this.concreteTypeInitializer,
     this.realmSearchSourceBuilder,
     this.executePanelInstruction,
     this.headerShortcuts = const {},
@@ -66,6 +67,7 @@ class EditorProtocolRenderer extends StatefulWidget {
   final PresentationNode? presentation;
   final List<TypeDiagnostic> diagnostics;
   final RealmActionExecutor? onRealmAction;
+  final ConcreteTypeInitializer? concreteTypeInitializer;
   final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
   final FutureOr<void> Function(PanelInstruction instruction)?
   executePanelInstruction;
@@ -94,6 +96,7 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
             rootType: NamedType(widget.envelope.rootType),
             typeCatalog: widget.typeCatalog,
             value: widget.envelope.rootValue,
+            concreteTypeInitializer: widget.concreteTypeInitializer,
           );
   }
 

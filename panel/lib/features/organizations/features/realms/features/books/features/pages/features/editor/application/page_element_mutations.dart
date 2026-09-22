@@ -85,9 +85,11 @@ mixin _PageElementMutations
     state.ensureReady();
     if (elementIds.isEmpty) return;
     await _submit(
-      _commands.deleteElements([
-        for (final id in elementIds) skir.ResourceId(value: id),
-      ]),
+      _commands.apply(
+        elementIds
+            .map((id) => skir.ResourceId(value: id))
+            .map(_commands.deleteOperation),
+      ),
     );
   }
 
@@ -184,7 +186,7 @@ mixin _PageElementMutations
         skir.AuthoringOperation.createCreate(
           resource: conversion.authoring.encodeResource(
             copies[resource.id]!,
-            skir.ResourceKind.element,
+            CoreResourceDefinitionIds.element,
             decoded.content.copyWith(rootValue: content),
           ),
         ),
@@ -290,7 +292,6 @@ mixin _PageElementMutations
       _commands.applyPreviewed([
         skir.AuthoringOperation.createCommit(
           id: resource.id,
-          observedSequence: _authoring.sequence!,
           base: resource,
           proposed: proposed,
           changedPaths: [
@@ -348,7 +349,6 @@ mixin _PageElementMutations
           .valueOrNull!;
     return skir.AuthoringOperation.createCommit(
       id: resource.id,
-      observedSequence: _authoring.sequence!,
       base: resource,
       proposed: proposed,
       changedPaths: [

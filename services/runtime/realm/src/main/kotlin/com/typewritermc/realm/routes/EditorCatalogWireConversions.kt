@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.authoring.ResourceTypeDescriptor
 import com.typewritermc.elements.AvailabilityExpression
 import com.typewritermc.elements.ElementCatalogEntry
 import com.typewritermc.elements.ElementDescriptor
@@ -7,7 +8,6 @@ import com.typewritermc.elements.ElementSearchDefinition
 import com.typewritermc.elements.ElementSearchMode
 import com.typewritermc.elements.ElementSearchPolicy
 import com.typewritermc.elements.ElementSearchPropertyOverride
-import com.typewritermc.library.ResourceTypeDescriptor
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageAuthoringRuleRef
 import com.typewritermc.pages.PageCatalogEntry

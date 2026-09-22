@@ -6,7 +6,6 @@ import "package:flutter/foundation.dart";
 enum PanelMutationOperation {
   createTag,
   deleteService,
-  deleteTag,
   signOut,
   updateService,
   updateTag,
@@ -16,7 +15,6 @@ extension on PanelMutationOperation {
   String get description => switch (this) {
     PanelMutationOperation.createTag => "creating a tag",
     PanelMutationOperation.deleteService => "deleting a service",
-    PanelMutationOperation.deleteTag => "deleting a tag",
     PanelMutationOperation.signOut => "signing out",
     PanelMutationOperation.updateService => "updating a service",
     PanelMutationOperation.updateTag => "updating a tag",

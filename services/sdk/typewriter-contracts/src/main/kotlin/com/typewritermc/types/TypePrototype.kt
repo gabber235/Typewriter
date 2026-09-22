@@ -6,10 +6,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import java.math.BigInteger
 import kotlin.reflect.KClass
-import kotlin.time.Duration
-import kotlin.time.Instant
 
 /** Supplies dependencies needed while encoding a Kotlin value into portable data. */
 interface TypeEncodingContext {
@@ -84,6 +81,41 @@ interface AbstractTypePrototype<T : Any> : TypePrototype<T> {
         decoding: TypeDecodingContext,
     )
     fun decode(value: DataValue): T
+}
+
+/** Why concrete value initialization cannot yet construct a complete value. */
+enum class TypeInitializationRequirementReason {
+    MISSING_VALUE,
+    CONCRETE_TYPE_REQUIRED,
+}
+
+/** One explicit caller obligation discovered while planning concrete value initialization. */
+data class TypeInitializationRequirement(
+    val path: DataPath,
+    val expected: TypeExpression,
+    val reason: TypeInitializationRequirementReason,
+)
+
+/**
+ * Result of planning one concrete value initialization.
+ *
+ * [Ready] contains a value that can be decoded through the concrete serializer. [NeedsInput] retains the canonical
+ * partial value while identifying every unresolved path. Constructor default fields remain absent from both results
+ * so the serializer remains their only owner.
+ */
+sealed interface TypeInitializationPlan {
+    data class Ready(
+        val supplied: DataValue,
+    ) : TypeInitializationPlan
+
+    data class NeedsInput(
+        val supplied: DataValue?,
+        val requirements: List<TypeInitializationRequirement>,
+    ) : TypeInitializationPlan {
+        init {
+            require(requirements.isNotEmpty()) { "Incomplete initialization must contain at least one requirement." }
+        }
+    }
 }
 
 /**
@@ -183,20 +215,38 @@ class TypePrototypeRegistry(
     /** Decodes a concrete envelope and verifies its reified runtime supertype. */
     inline fun <reified T : Any> decodeAs(value: TypedValueEnvelope): T = decodeAs(value, T::class)
 
-    /** Completes a partial concrete value by executing its Kotlin serializer defaults. */
-    fun initialize(
+    /**
+     * Plans initialization for an exact concrete type without inventing semantic values.
+     *
+     * Supplied values and declared editor initial values are preserved. Unit is the only missing value inferred
+     * automatically. Constructor default fields remain absent until [initializeConcrete] decodes the ready plan.
+     */
+    fun planInitialization(
         root: ResolvedTypeRef,
-        partial: DataValue,
+        supplied: DataValue?,
+    ): TypeInitializationPlan {
+        require(require(root) is ConcreteTypePrototype<*>) {
+            "Typed value initialization requires a concrete prototype: $root"
+        }
+        return ConcreteInitializationPlanner(this).plan(root, supplied)
+    }
+
+    /** Executes the concrete serializer after every initialization requirement has been supplied. */
+    fun initializeConcrete(
+        root: ResolvedTypeRef,
+        supplied: DataValue,
     ): TypedValueEnvelope {
-        val prototype =
-            require(root) as? ConcreteTypePrototype<*>
-                ?: error("Typed value initialization requires a concrete prototype: $root")
+        val prototype = concrete(root)
+        val plan = planInitialization(root, supplied)
+        require(plan is TypeInitializationPlan.Ready) {
+            val requirements = (plan as TypeInitializationPlan.NeedsInput).requirements.joinToString { it.path.toString() }
+            "Typed value initialization still requires input at $requirements."
+        }
         val decoding =
             object : TypeDecodingContext {
                 override val prototypes: TypePrototypeRegistry = this@TypePrototypeRegistry
             }
-        val materialized = DraftValueMaterializer(this).materialize(TypeExpression.Named(root), partial)
-        val value = with(decoding) { prototype.decode(materialized) }
+        val value = with(decoding) { prototype.decode(plan.supplied) }
         val encoding =
             object : TypeEncodingContext {
                 override val prototypes: TypePrototypeRegistry = this@TypePrototypeRegistry
@@ -250,6 +300,15 @@ class TypePrototypeRegistry(
         definitionsByReference[reference.copy(arguments = emptyList())]
             ?: error("Type definition is unavailable: $reference")
 
+    internal fun isConcreteSubtypeOf(
+        candidate: ResolvedTypeRef,
+        parent: ResolvedTypeRef,
+    ): Boolean {
+        val definition = definition(candidate)
+        return definition.kind == NominalTypeKind.CONCRETE &&
+            definition.isSubtypeOf(parent.id, emptySet())
+    }
+
     internal fun concrete(reference: ResolvedTypeRef): ConcreteTypePrototype<*> =
         require(reference) as? ConcreteTypePrototype<*>
             ?: error("Type prototype is not concrete: $reference")
@@ -291,149 +350,6 @@ class TypePrototypeRegistry(
                 ?.isSubtypeOf(target, nextVisited) == true
         }
     }
-}
-
-/** Builds a decodable value while leaving constructor default fields absent. */
-private class DraftValueMaterializer(
-    private val prototypes: TypePrototypeRegistry,
-) {
-    fun materialize(
-        type: TypeExpression,
-        partial: DataValue? = null,
-    ): DataValue {
-        val resolved = prototypes.dataFormat.materialize(type)
-        return when (resolved) {
-            TypeExpression.Any -> {
-                partial ?: DataValue.Unit
-            }
-
-            TypeExpression.Unit -> {
-                partial ?: DataValue.Unit
-            }
-
-            TypeExpression.Boolean -> {
-                partial ?: DataValue.Boolean(false)
-            }
-
-            is TypeExpression.StringType -> {
-                partial ?: DataValue.StringValue(resolved.allowedValues.firstOrNull().orEmpty())
-            }
-
-            is TypeExpression.Bytes -> {
-                partial ?: DataValue.Bytes(byteArrayOf())
-            }
-
-            is TypeExpression.Integer -> {
-                partial ?: DataValue.Integer(integerBaseline(resolved))
-            }
-
-            is TypeExpression.Float -> {
-                partial ?: DataValue.Float(floatBaseline(resolved))
-            }
-
-            is TypeExpression.Decimal -> {
-                partial ?: DataValue.Decimal(resolved.minimum ?: resolved.maximum ?: "0")
-            }
-
-            is TypeExpression.Timestamp -> {
-                partial
-                    ?: DataValue.Timestamp(resolved.minimum ?: resolved.maximum ?: Instant.fromEpochMilliseconds(0))
-            }
-
-            is TypeExpression.Duration -> {
-                partial ?: DataValue.Duration(resolved.minimum ?: resolved.maximum ?: Duration.ZERO)
-            }
-
-            is TypeExpression.Enumeration -> {
-                partial ?: resolved.values.first()
-            }
-
-            is TypeExpression.ListType -> {
-                val values = (partial as? DataValue.ListValue)?.values.orEmpty()
-                DataValue.ListValue(values.map { materialize(resolved.element, it) })
-            }
-
-            is TypeExpression.MapType -> {
-                val entries = (partial as? DataValue.MapValue)?.entries.orEmpty()
-                DataValue.MapValue(
-                    entries.map { entry ->
-                        DataMapEntry(
-                            materialize(resolved.key, entry.key),
-                            materialize(resolved.value, entry.value),
-                        )
-                    },
-                )
-            }
-
-            is TypeExpression.Record -> {
-                materializeRecord(resolved, partial)
-            }
-
-            is TypeExpression.Named -> {
-                materializeAbstract(resolved, partial)
-            }
-
-            is TypeExpression.Reference -> {
-                partial ?: DataValue.Reference(ResourceId("new"))
-            }
-
-            is TypeExpression.Parameter -> {
-                error("Unresolved type parameter ${resolved.name} cannot be materialized.")
-            }
-        }
-    }
-
-    private fun materializeRecord(
-        type: TypeExpression.Record,
-        partial: DataValue?,
-    ): DataValue.Record {
-        val supplied = (partial as? DataValue.Record)?.fields.orEmpty()
-        val known = type.fields.mapTo(hashSetOf(), TypeField::name)
-        require(supplied.keys.all { it in known }) { "Partial value contains fields outside its declared record." }
-        return DataValue.Record(
-            buildMap {
-                type.fields.forEach { field ->
-                    when {
-                        field.name in supplied -> put(field.name, materialize(field.type, supplied.getValue(field.name)))
-                        field.initialValue != null -> put(field.name, materialize(field.type, field.initialValue))
-                        field.defaulted -> Unit
-                        else -> put(field.name, materialize(field.type))
-                    }
-                }
-            },
-        )
-    }
-
-    private fun materializeAbstract(
-        type: TypeExpression.Named,
-        partial: DataValue?,
-    ): DataValue {
-        if (type.reference.id == TypeId.Option) {
-            return partial ?: noneValue(type.reference.arguments.single())
-        }
-        val polymorphic =
-            partial as? DataValue.Polymorphic
-                ?: error("Abstract type ${type.reference} requires a concrete value.")
-        return polymorphic.copy(
-            value = materialize(TypeExpression.Named(polymorphic.concreteType), polymorphic.value),
-        )
-    }
-
-    private fun integerBaseline(type: TypeExpression.Integer): BigInteger {
-        val zero = BigInteger.ZERO
-        return when {
-            type.minimum != null && zero < type.minimum -> type.minimum
-            type.maximum != null && zero > type.maximum -> type.maximum
-            else -> zero
-        }
-    }
-
-    private fun floatBaseline(type: TypeExpression.Float): Double =
-        when {
-            type.minimum != null && 0.0 < type.minimum -> type.minimum
-            type.maximum != null && 0.0 > type.maximum -> type.maximum
-            else -> 0.0
-        }
 }
 
 /**

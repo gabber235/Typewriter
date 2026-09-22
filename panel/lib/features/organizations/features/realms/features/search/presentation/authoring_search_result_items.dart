@@ -42,11 +42,11 @@ class AuthoringSearchResultItem extends StatelessWidget {
         child: ComposedEditor(
           model: payload.presentation.model,
           readOnly: true,
-          historyNamespace: "authoring.search.${payload.kind.name}",
+          historyNamespace: "authoring.search.${payload.definition.value}",
         ),
       ),
       suffix: SearchResultSuffix(
-        label: payload.kind.name,
+        label: payload.definition.value,
         shortcutActivator: shortcutActivator,
         selected: selected,
       ),

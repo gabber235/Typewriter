@@ -138,33 +138,6 @@ data class CompiledPageShard(
 )
 
 /**
- * Links a page in the manifest to the semantic digest of its compiled shard.
- *
- * The reference is the manifest authority for page membership. The shard payload must be fetched through the
- * activation pointer and then checked against both this digest and page identity.
- */
-@Serializable
-data class CompiledPageReference(
-    val page: Ref<Page>,
-    val shard: ContentDigest,
-)
-
-/**
- * Selects the page shards forming one compiled content revision.
- *
- * Source and catalog revisions record compilation inputs. The manifest is metadata, so loading requires the
- * referenced shards and validation of their page identities.
- */
-@Serializable
-data class CompiledManifest(
-    val formatRevision: Int,
-    val digest: ContentDigest,
-    val sourceRevision: String,
-    val catalogRevision: String,
-    val pages: List<CompiledPageReference>,
-)
-
-/**
  * Addresses serialized compiled bytes by digest and exact size in bytes.
  *
  * Size must be nonnegative. Readers verify both size and digest before decoding the payload.
@@ -176,73 +149,6 @@ data class CompiledBlobPointer(
 ) {
     init {
         require(size >= 0) { "Compiled blob size must not be negative." }
-    }
-}
-
-/**
- * Maps a semantic shard digest to the blob containing its serialized representation.
- *
- * Keep the two identities distinct when resolving manifest pages and verifying downloaded bytes.
- */
-@Serializable
-data class CompiledShardPointer(
-    val shard: ContentDigest,
-    val blob: CompiledBlobPointer,
-)
-
-/**
- * Announces a positive activation revision and the blob pointers needed to load it.
- *
- * Shard identities must be unique. [manifestDigest] is the semantic manifest identity, while [manifest] verifies
- * its serialized blob. Consumers use activation revision to reject stale delivery.
- */
-@Serializable
-data class CompiledContentActivation(
-    val activationRevision: Long,
-    val manifestDigest: ContentDigest,
-    val manifest: CompiledBlobPointer,
-    val shards: List<CompiledShardPointer>,
-) {
-    init {
-        require(activationRevision > 0) { "Compiled content activation revisions must be positive." }
-        require(shards.map(CompiledShardPointer::shard).distinct().size == shards.size) {
-            "Compiled content activation must not contain duplicate shards."
-        }
-    }
-}
-
-/**
- * Groups a decoded manifest with all page shards it references.
- *
- * Construction rejects duplicate shard digests and missing or mismatched page shards. It does not recompute
- * content digests or forbid extra unreferenced shards.
- */
-@Serializable
-data class CompiledContentBundle(
-    val manifest: CompiledManifest,
-    val shards: List<CompiledPageShard>,
-) {
-    init {
-        val byDigest = shards.associateBy(CompiledPageShard::digest)
-        require(byDigest.size == shards.size) { "Compiled content bundles must not contain duplicate shards." }
-        require(manifest.pages.all { page -> byDigest[page.shard]?.page == page.page }) {
-            "Compiled content bundles must contain every manifest shard with matching page identity."
-        }
-    }
-}
-
-/**
- * Pairs loaded content with the positive delivery revision used to order runtime application.
- *
- * The revision describes activation order, not the schema or file format revision.
- */
-@Serializable
-data class ActivatedCompiledContent(
-    val activationRevision: Long,
-    val content: CompiledContentBundle,
-) {
-    init {
-        require(activationRevision > 0) { "Compiled content activation revisions must be positive." }
     }
 }
 

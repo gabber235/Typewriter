@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 enum ReferenceSelectionTransition { add, remove, replace }
@@ -7,7 +5,7 @@ enum ReferenceSelectionTransition { add, remove, replace }
 final class ReferenceCandidate {
   const ReferenceCandidate({required this.id, this.types = const []});
 
-  final skir.ResourceId id;
+  final ResourceId id;
   final List<ResolvedTypeRef> types;
 }
 
@@ -59,7 +57,7 @@ final class ReferenceCandidatePolicyContext {
   final EditOwner? owner;
   final DataPath path;
   final ReferenceSelectionTransition transition;
-  final Set<skir.ResourceId> currentSelection;
+  final Set<ResourceId> currentSelection;
   final ReferenceCandidate candidate;
 }
 

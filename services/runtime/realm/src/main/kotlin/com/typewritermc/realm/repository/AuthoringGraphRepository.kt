@@ -1,5 +1,6 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
@@ -10,7 +11,7 @@ import com.typewritermc.types.TypedValueEnvelope
 @kotlinx.serialization.Serializable
 data class AuthoringGraphResource(
     val id: ResourceId,
-    val kind: AuthoringResourceKind,
+    val definition: ResourceDefinitionId,
     val content: TypedValueEnvelope,
 )
 
@@ -26,7 +27,7 @@ internal sealed interface ResourceSeed {
 }
 
 internal data class ResourceFilter(
-    val kinds: Set<AuthoringResourceKind> = emptySet(),
+    val definitions: Set<ResourceDefinitionId> = emptySet(),
     val assignableTo: TypeExpression? = null,
 )
 
@@ -226,7 +227,7 @@ internal class AuthoringGraphQueryEngine(
     }
 
     private fun AuthoringGraphResource.matches(filter: ResourceFilter): Boolean {
-        if (filter.kinds.isNotEmpty() && kind !in filter.kinds) return false
+        if (filter.definitions.isNotEmpty() && definition !in filter.definitions) return false
         val target = filter.assignableTo ?: return true
         return catalog.isAssignable(content.rootType, target)
     }

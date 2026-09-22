@@ -1,6 +1,6 @@
 package com.typewritermc.realm
 
-import com.typewritermc.realm.routes.LibraryContracts
+import com.typewritermc.realm.routes.EditorContracts
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.requirePublished
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -44,7 +44,7 @@ class RealmCatalogInvalidationProcess internal constructor(
         address: RealmAddress,
     ) {
         stop()
-        val contract = LibraryContracts(address).watchEditorCatalog
+        val contract = EditorContracts(address).watchEditorCatalog
         publisher =
             scope.launch(start = CoroutineStart.UNDISPATCHED) {
                 snapshots.changes

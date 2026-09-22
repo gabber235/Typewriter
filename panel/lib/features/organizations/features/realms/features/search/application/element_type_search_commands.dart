@@ -14,7 +14,7 @@ const createElementOnPageCommandId = SearchCommandId(
 
 /// Requests selection of an element created on the already visible page.
 ///
-/// Unlike [OpenAuthoringElementEffect], this effect never navigates. Contextual
+/// Unlike [OpenAuthoringResourceEffect], this effect never navigates. Contextual
 /// page search owns the executor and rejects an effect for another page.
 final class SelectCreatedElementEffect implements SearchHostEffect {
   const SelectCreatedElementEffect({
@@ -48,7 +48,7 @@ SearchCommand createElementCommand({
     final books = ref.read(projectedBooksProvider).value ?? const <Book>[];
     final pages = ref.read(projectedPagesProvider).value ?? const <Page>[];
     final selectedBook = resolveSearchBook(target.query, books);
-    if (hasSearchSelector(target.query, authoringBookSearchSelector) &&
+    if (hasSearchSelector(target.query, authoringBookSelectorId) &&
         selectedBook == null) {
       return const SearchCommandResult.failed(
         message: "The selected book is unavailable",
@@ -65,29 +65,25 @@ SearchCommand createElementCommand({
       pages: pages,
       currentPage: currentPage,
     );
-    if (hasSearchSelector(target.query, authoringPageSearchSelector) &&
+    if (hasSearchSelector(target.query, authoringPageSelectorId) &&
         preferredPage == null) {
       return const SearchCommandResult.failed(
         message: "The selected page is unavailable",
       );
     }
-    final preferredPolicy = preferredPage == null
+    final preferredSlot = preferredPage == null
         ? null
-        : ref
-              .read(
-                pageEntryCreationPolicyForPageProvider(preferredPage.pageId),
-              )
-              .value;
+        : ref.read(pageCreationSlotForPageProvider(preferredPage.pageId)).value;
 
     skir.ResourceId? targetPageId;
     skir.ResourceId targetBookId;
-    PageEntryCreationPolicy targetPolicy;
+    RealmAuthoringCreationSlot targetSlot;
     if (preferredPage != null &&
-        preferredPolicy?.accepts(definition.rootType) == true) {
+        preferredSlot?.acceptsRoot(definition.rootType) == true) {
       targetPageId = preferredPage.pageId;
       targetBookId = preferredPage.bookId;
-      targetPolicy = preferredPolicy!;
-    } else if (hasSearchSelector(target.query, authoringPageSearchSelector)) {
+      targetSlot = preferredSlot!;
+    } else if (hasSearchSelector(target.query, authoringPageSelectorId)) {
       return const SearchCommandResult.failed(
         message: "The selected page is no longer compatible",
       );
@@ -102,16 +98,16 @@ SearchCommand createElementCommand({
       if (selection == null || !ref.mounted) {
         return const SearchCommandResult.cancelled();
       }
-      targetPolicy = selection.policy;
+      targetSlot = selection.slot;
       targetPageId = selection.pageId;
       targetBookId = selection.bookId;
     }
 
     final livePolicy = ref
-        .read(pageEntryCreationPolicyForPageProvider(targetPageId))
+        .read(pageCreationSlotForPageProvider(targetPageId))
         .value;
-    final policy = livePolicy ?? targetPolicy;
-    if (!policy.accepts(definition.rootType)) {
+    final slot = livePolicy ?? targetSlot;
+    if (!slot.acceptsRoot(definition.rootType)) {
       return const SearchCommandResult.failed(
         message: "The selected page is no longer compatible",
       );
@@ -121,21 +117,20 @@ SearchCommand createElementCommand({
       execution: execution,
       pageId: targetPageId,
       definition: definition,
-      policy: policy,
+      slot: slot,
       preferredGraphAnchor: null,
     );
     if (elementId == null) return const SearchCommandResult.cancelled();
     return SearchCommandResult.completed(
       hostEffects: [
-        OpenAuthoringElementEffect(
+        OpenAuthoringResourceEffect(
           organizationId: organizationId,
           realmId: realmId,
+          resourceId: skir.ResourceId(value: elementId),
+          definition: CoreResourceDefinitionIds.element,
           bookId: targetBookId,
-          pageId: targetPageId,
-          elementIdentifier: EntryIdentifier(
-            elementId,
-            pageId: targetPageId.id,
-          ),
+          ownerId: targetPageId,
+          nestedIdentifier: EntryIdentifier(elementId, pageId: targetPageId.id),
         ),
       ],
     );
@@ -151,7 +146,7 @@ SearchCommand createElementOnPageCommand({
   required skir.RecordId organizationId,
   required skir.RecordId realmId,
   required skir.ResourceId pageId,
-  required ValueListenable<AsyncValue<PageEntryCreationPolicy>> policy,
+  required ValueListenable<AsyncValue<RealmAuthoringCreationSlot>> slot,
   Offset? preferredGraphAnchor,
 }) => SearchCommand.single<ElementDefinition>(
   id: createElementOnPageCommandId,
@@ -160,9 +155,9 @@ SearchCommand createElementOnPageCommand({
     icon: MaterialSymbols.add_rounded,
   ),
   matcher: const SearchResultMatcher(elementTypeSearchResultType),
-  dependencies: [policy],
+  dependencies: [slot],
   evaluate: (definition, target) {
-    final current = policy.value;
+    final current = slot.value;
     if (current.isLoading) {
       return const SearchCommandState.disabled(
         "Page compatibility is still loading",
@@ -173,7 +168,7 @@ SearchCommand createElementOnPageCommand({
         "Page compatibility is unavailable",
       );
     }
-    if (!current.requireValue.accepts(definition.rootType)) {
+    if (!current.requireValue.acceptsRoot(definition.rootType)) {
       return const SearchCommandState.hidden();
     }
     return const SearchCommandState.enabled();
@@ -193,15 +188,13 @@ SearchCommand createElementOnPageCommand({
       );
     }
 
-    final livePolicy = ref
-        .read(pageEntryCreationPolicyForPageProvider(pageId))
-        .value;
+    final livePolicy = ref.read(pageCreationSlotForPageProvider(pageId)).value;
     if (livePolicy == null) {
       return const SearchCommandResult.failed(
         message: "Page compatibility is unavailable",
       );
     }
-    if (!livePolicy.accepts(definition.rootType)) {
+    if (!livePolicy.acceptsRoot(definition.rootType)) {
       return const SearchCommandResult.failed(
         message: "The selected page is no longer compatible",
       );
@@ -212,7 +205,7 @@ SearchCommand createElementOnPageCommand({
       execution: execution,
       pageId: pageId,
       definition: definition,
-      policy: livePolicy,
+      slot: livePolicy,
       preferredGraphAnchor: preferredGraphAnchor,
     );
     if (elementId == null) return const SearchCommandResult.cancelled();
@@ -232,36 +225,33 @@ Future<String?> _createElementOnPage({
   required SearchCommandExecutionContext execution,
   required skir.ResourceId pageId,
   required ElementDefinition definition,
-  required PageEntryCreationPolicy policy,
+  required RealmAuthoringCreationSlot slot,
   Offset? preferredGraphAnchor,
 }) async {
   final placement = await ref.withReadyPageElements(
     pageId.id,
-    (elements) => elements.creationPlacement(switch (policy.placement) {
-      PageEntryCreationPlacement.graph => EntryPlacementKind.graph,
-      PageEntryCreationPlacement.timelineTrack =>
+    (elements) => elements.creationPlacement(switch (slot.pagePlacement) {
+      RealmPageCreationPlacement.graph => EntryPlacementKind.graph,
+      RealmPageCreationPlacement.timelineTrack =>
         EntryPlacementKind.timelineEntry,
     }, preferredGraphAnchor: preferredGraphAnchor),
   );
+  final page = ref.read(projectedPageProvider(pageId)).value;
+  if (page == null) return null;
   final created = await execution.prompts.show(
     (context) => ref
         .read(resourceCreationProvider)
         .create(
           context: context,
           request: ResourceCreationRequest(
-            kind: skir.ResourceKind.element,
+            slot: slot.id,
             title: "Create ${definition.name}",
-            root: definition.rootType,
+            concreteRoot: definition.rootType,
+            hosts: [pageId],
             partial: RecordValue({
               "name": StringValue(definition.name),
               "placement": placementValue(placement),
             }),
-            relations: [
-              ResourceRelationAttachment.toMany(
-                owner: pageId,
-                path: DataPath.root.field("elements"),
-              ),
-            ],
             referenceOrigins: [pageId],
           ),
         ),

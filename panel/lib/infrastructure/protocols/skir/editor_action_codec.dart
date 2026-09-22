@@ -151,16 +151,11 @@ final class SkirActionDecoder {
   ) {
     final target = expressions.binding(value.target);
     final type = types.decodeReference(value.concreteType);
-    final initial = expressions.decode(value.value);
-    return combineThreeResults(
+    return combineResults(
       target,
       type,
-      initial,
-      (target, type, initial) => ReplaceConcreteTypeAction(
-        target: target,
-        concreteType: type,
-        initialValue: initial,
-      ),
+      (target, type) =>
+          ReplaceConcreteTypeAction(target: target, concreteType: type),
     );
   }
 

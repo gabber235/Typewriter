@@ -22,22 +22,20 @@ Future<void> showAddElementSearch(
     }
 
     final targetPageId = skir.ResourceId(value: pageId);
-    final policy = ref.valued(
-      pageEntryCreationPolicyForPageProvider(targetPageId),
-    );
+    final slot = ref.valued(pageCreationSlotForPageProvider(targetPageId));
 
     return SearchContribution(
       session: SearchSession(
         source: ElementTypeSearchSource(
           definitions: ref.valued(availableElementDefinitionsFutureProvider),
         ),
-        scope: pageElementTypeScope(policy: policy),
+        scope: pageCreationSlotScope(slot: slot),
         interaction: SearchInteraction(
           activation: SearchActivation.command(
             resolve: (result) => result.type == elementTypeSearchResultType
                 ? createElementOnPageCommandId
                 : null,
-            dependencies: [policy],
+            dependencies: [slot],
           ),
           selectionMode: SearchSelectionMode.single,
           commands: [
@@ -46,7 +44,7 @@ Future<void> showAddElementSearch(
               organizationId: organizationId,
               realmId: realmId,
               pageId: targetPageId,
-              policy: policy,
+              slot: slot,
               preferredGraphAnchor: preferredGraphAnchor,
             ),
           ],

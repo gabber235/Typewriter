@@ -3,13 +3,13 @@ package com.typewritermc.realm.routes
 import com.typewritermc.realm.repository.AuthoringGraphQueryResult
 import com.typewritermc.realm.repository.AuthoringGraphRepository
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import skirout.library.v1.authoring.AuthoringDiagnostic
-import skirout.library.v1.authoring.QueryAuthoringGraphResponse
+import skirout.editor.v1.authoring.AuthoringDiagnostic
+import skirout.editor.v1.authoring.QueryAuthoringGraphResponse
 
 internal class AuthoringGraphRoutes(
     private val repository: AuthoringGraphRepository,
-    private val contracts: LibraryContracts,
-    private val subjects: AuthoringSubjectProjector,
+    private val contracts: EditorContracts,
+    private val subjects: AuthoringPresentationProjector,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {

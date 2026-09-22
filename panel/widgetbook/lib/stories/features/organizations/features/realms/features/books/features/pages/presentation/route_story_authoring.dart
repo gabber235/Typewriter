@@ -20,7 +20,7 @@ AuthoringSessionState pageStoryAuthoring(
   final content = page.content(referenceResourceTypes.page);
   final resource = skir.AuthoringResource(
     id: page.pageId,
-    kind: skir.ResourceKind.page,
+    definition: CoreResourceDefinitionIds.page.toWire(),
     content: skir.TypedValueEnvelope(
       rootType: codec.encodeType(content.rootType).valueOrNull!,
       rootValue: codec.encodeValue(content.rootValue).valueOrNull!,
@@ -77,7 +77,7 @@ skir.AuthoringResource _wireElement(
   };
   return skir.AuthoringResource(
     id: skir.ResourceId(value: id),
-    kind: skir.ResourceKind.element,
+    definition: CoreResourceDefinitionIds.element.toWire(),
     content: skir.TypedValueEnvelope(
       rootType: codec.encodeType(definition.rootType).valueOrNull!,
       rootValue: codec

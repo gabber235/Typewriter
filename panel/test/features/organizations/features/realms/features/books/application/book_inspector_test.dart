@@ -91,7 +91,7 @@ _bookSelection(
   final snapshot = TypedAuthoringEditorSnapshot(
     resource: skir.AuthoringResource(
       id: skir.ResourceId(value: id),
-      kind: skir.ResourceKind.book,
+      definition: CoreResourceDefinitionIds.book.toWire(),
       content: TypedAuthoringCodec(snapshotCatalog)
           .encodeEnvelope(
             TypedValueEnvelope(rootType: _bookType, rootValue: StringValue(id)),

@@ -16,11 +16,6 @@ RecordValue pageCreationPartial({
   "priority": 0.asValue,
 });
 
-extension PageCommands on AuthoringSession {
-  Future<skir.ApplyAuthoringBatchResponse> deletePage(skir.ResourceId id) =>
-      apply([skir.AuthoringOperation.createDelete(id: id)]);
-}
-
 String replacePageChapter(
   String chapter,
   String oldChapter,

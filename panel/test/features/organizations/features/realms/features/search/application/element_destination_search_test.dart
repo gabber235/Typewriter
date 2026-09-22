@@ -9,7 +9,7 @@ void main() {
   test("destination scope exposes only compatible pages and kinds", () {
     final books = ValueNotifier<AsyncValue<List<Book>>>(AsyncData([_book]));
     final compatibleKinds = ValueNotifier(
-      AsyncValue.data({_compatibleKind: _policy}),
+      AsyncValue.data({_compatibleKind: _slot}),
     );
     addTearDown(books.dispose);
     addTearDown(compatibleKinds.dispose);
@@ -39,7 +39,7 @@ void main() {
   test("activation returns the selected existing page", () async {
     final books = ValueNotifier<AsyncValue<List<Book>>>(AsyncData([_book]));
     final compatibleKinds = ValueNotifier(
-      AsyncValue.data({_compatibleKind: _policy}),
+      AsyncValue.data({_compatibleKind: _slot}),
     );
     addTearDown(books.dispose);
     addTearDown(compatibleKinds.dispose);
@@ -63,7 +63,7 @@ void main() {
         (outcome as SearchActivationComplete<ElementPageSelection>).value;
     expect(selection.pageId, _pageId);
     expect(selection.bookId, _book.bookId);
-    expect(selection.policy, _policy);
+    expect(selection.slot, _slot);
   });
 }
 
@@ -81,9 +81,12 @@ final _elementType = ResolvedTypeRef(
   id: DeclaredTypeId("0123456789abcdef0123456789abcdef"),
   revision: 1,
 );
-final _policy = PageEntryCreationPolicy(
-  placement: PageEntryCreationPlacement.graph,
-  types: {_elementType},
+final _slot = RealmAuthoringCreationSlot(
+  id: AuthoringCreationSlotId("test/graph"),
+  label: "Test graph",
+  creates: CoreResourceDefinitionIds.element,
+  context: const RealmStandaloneCreationContext(),
+  concreteRoots: [_elementType],
 );
 final _bookQuery = SearchQueryContext(
   normalizedQuery: "",
@@ -95,7 +98,7 @@ final _bookQuery = SearchQueryContext(
 
 SearchResult _pageResult(PageKindRef kind) => SearchResult(
   id: "page:${kind.id}",
-  type: authoringPageSearchResultType,
+  type: authoringResourceSearchResultType,
   payload: _pagePayload(kind),
 );
 
@@ -138,7 +141,8 @@ AuthoringSearchResultPayload _pagePayload(PageKindRef kind) {
       ),
       presentation: const PresentationId(namespace: "test", name: "page"),
     ),
-    kind: AuthoringSearchResultKind.page,
+    definition: CoreResourceDefinitionIds.page,
+    ownerPath: [_book.bookId],
   );
 }
 

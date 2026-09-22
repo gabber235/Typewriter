@@ -11,7 +11,6 @@ part "book_inspector_definition.dart";
 part "book_model.dart";
 part "book_queries.dart";
 part "book_selection.dart";
-part "book_editor_resource.dart";
 part "books.freezed.dart";
 part "books.g.dart";
 
@@ -49,7 +48,14 @@ class CanonicalBooks extends _$CanonicalBooks {
       }
     });
     final lease = ref.watch(
-      authoringLibraryScopeProvider(organizationId, realmId),
+      authoringSelectionLeaseProvider(
+        organizationId,
+        realmId,
+        authoringDefinitionSelection(
+          key: "books",
+          definitions: const [CoreResourceDefinitionIds.book],
+        ),
+      ),
     );
     await lease.ready;
     return _projectBooks(ref.read(provider), codec);
@@ -90,7 +96,7 @@ class CanonicalBooks extends _$CanonicalBooks {
     try {
       final owner = owners.editor(
         BookSelection(
-          resource: BookEditorResource(
+          resource: TypedAuthoringEditorResource(
             ref
                 .read(resourceRepositoriesProvider)
                 .authoring(commands.organizationId, commands.realmId),
@@ -128,8 +134,10 @@ List<Book> _projectBooks(
   return value.resources.values
       .map(codec.decodeResourceOrThrow)
       .where(
-        (resource) =>
-            codec.isResourceType(resource.content, skir.ResourceKind.book),
+        (resource) => codec.isResourceType(
+          resource.content,
+          CoreResourceDefinitionIds.book,
+        ),
       )
       .map(Book.fromTyped)
       .toList();
@@ -146,7 +154,10 @@ extension AuthoringBookValue on AuthoringSessionState {
     final revision = sequence;
     if (value == null || revision == null) return null;
     final decoded = codec.decodeResourceOrThrow(value);
-    if (!codec.isResourceType(decoded.content, skir.ResourceKind.book)) {
+    if (!codec.isResourceType(
+      decoded.content,
+      CoreResourceDefinitionIds.book,
+    )) {
       return null;
     }
     return AuthoringValue(value: Book.fromTyped(decoded), revision: revision);

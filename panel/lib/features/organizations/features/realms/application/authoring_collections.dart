@@ -73,8 +73,8 @@ AuthoringCollectionProjection decodeAuthoringCollections({
     }
     final rows = <DataValue>[];
     for (final wire in session.resources.values) {
-      if (projection.kinds.isNotEmpty &&
-          !projection.kinds.contains(wire.kind)) {
+      if (projection.definitions.isNotEmpty &&
+          !projection.definitions.contains(wire.definition.toDomain())) {
         continue;
       }
       final decoded = codec.decodeResource(wire);

@@ -5,8 +5,6 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hosts tag creation and the projected inheritance graph.
@@ -26,13 +24,20 @@ class TagsPage extends HookConsumerWidget {
 
     Future<void> handleCreateTag() async {
       final tags = tagsAsync.value ?? const <Tag>[];
+      final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+      final root = catalog
+          ?.creationSlots[CoreAuthoringCreationSlotIds.tag]
+          ?.concreteRoots
+          .singleOrNull;
+      if (root == null) throw StateError("Tag creation is unavailable");
       final created = await ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              kind: skir.ResourceKind.tag,
+              slot: CoreAuthoringCreationSlotIds.tag,
               title: "Create Tag",
+              concreteRoot: root,
               partial: tagCreationPartial(
                 tags,
                 preferredGraphAnchor: viewportCenter.value,

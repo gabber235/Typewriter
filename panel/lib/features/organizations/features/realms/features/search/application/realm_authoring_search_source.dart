@@ -1,83 +1,35 @@
 import "dart:async";
 
+import "package:collection/collection.dart";
+import "package:flutter/widgets.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-const authoringBookSearchResultType = SearchResultType(
-  id: "authoring.book",
-  rowRendererId: "authoring.book",
-  label: "Book",
+const authoringResourceSearchResultType = SearchResultType(
+  id: "authoring.resource",
+  rowRendererId: "typed.presentation.subject",
+  label: "Resource",
 );
-const authoringTagSearchResultType = SearchResultType(
-  id: "authoring.tag",
-  rowRendererId: "authoring.tag",
-  label: "Tag",
-);
-const authoringPageSearchResultType = SearchResultType(
-  id: "authoring.page",
-  rowRendererId: "authoring.page",
-  label: "Page",
-);
-const authoringElementSearchResultType = SearchResultType(
-  id: "authoring.element",
-  rowRendererId: "authoring.element",
-  label: "Element",
-);
-
-const authoringBookSearchSelector = KeyValueSelectorDefinition(
-  id: "book",
-  key: "book:",
-  value: QuerySelectorValue.sourceBacked(),
-);
-const authoringPageSearchSelector = KeyValueSelectorDefinition(
-  id: "page",
-  key: "page:",
-  value: QuerySelectorValue.sourceBacked(),
-);
-const authoringTagSearchSelector = KeyValueSelectorDefinition(
-  id: "tag",
-  key: "tag:",
-  value: QuerySelectorValue.sourceBacked(),
-);
-const authoringTypeSearchSelector = KeyValueSelectorDefinition(
-  id: "type",
-  key: "type:",
-  value: QuerySelectorValue.sourceBacked(),
-);
-
-const authoringSearchSelectors = <QuerySelectorDefinition>[
-  authoringBookSearchSelector,
-  authoringPageSearchSelector,
-  authoringTagSearchSelector,
-  authoringTypeSearchSelector,
-];
-
-enum AuthoringSearchResultKind { book, tag, page, element }
 
 final class AuthoringSearchResultPayload {
   const AuthoringSearchResultPayload({
+    required this.definition,
     required this.subject,
     required this.context,
     required this.presentation,
-    required this.kind,
+    required this.ownerPath,
   });
 
+  final ResourceDefinitionId definition;
   final TypedPresentationSubject subject;
   final TypedValueEnvelope context;
   final SubjectPresentationModel presentation;
-  final AuthoringSearchResultKind kind;
+  final List<skir.ResourceId> ownerPath;
 
   skir.ResourceId get id => subject.identity.id;
   skir.ResourceId? get owner => subject.identity.owner;
-
-  skir.ResourceId? contextReference(String field) =>
-      switch (context.rootValue) {
-        RecordValue(:final fields) when fields[field] is ReferenceValue =>
-          (fields[field]! as ReferenceValue).id,
-        _ => null,
-      };
 
   PageKindRef? get pageKind {
     final content = subject.content.rootValue;
@@ -123,8 +75,12 @@ final class RealmAuthoringSearchSource
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  List<QuerySelectorDefinition> get selectors =>
-      referenceTarget == null ? authoringSearchSelectors : const [];
+  List<QuerySelectorDefinition> get selectors => referenceTarget == null
+      ? _catalogOrNull?.authoringSearch?.selectors
+                .map((selector) => selector.toQuerySelector())
+                .toList(growable: false) ??
+            const []
+      : const [];
 
   @override
   void initialize(SearchQueryContext context) => search(context);
@@ -146,13 +102,13 @@ final class RealmAuthoringSearchSource
         RealmServiceAddress(
           organizationId: organizationId,
           realmId: realmId,
-        ).request("library.authoring.graph.search"),
+        ).request("editor.authoring.graph.search"),
         skir.SearchAuthoringGraphRequest.serializer.toBytes(
           skir.SearchAuthoringGraphRequest(
             generation: skir.CatalogGeneration(value: catalog.generation.value),
             query: query,
             resources: skir.ResourceFilter(
-              kinds: const [],
+              definitions: _resourceDefinitions(catalog),
               assignableTo: target,
             ),
             scope: _scope(target),
@@ -177,6 +133,19 @@ final class RealmAuthoringSearchSource
     }
     return snapshot;
   }
+
+  RealmEditorCatalogSnapshot? get _catalogOrNull =>
+      ref.read(realmEditorCatalogProvider).value?.snapshot;
+
+  List<skir.ResourceDefinitionId> _resourceDefinitions(
+    RealmEditorCatalogSnapshot catalog,
+  ) =>
+      catalog.authoringSearch?.definitions
+          .map(
+            (definition) => skir.ResourceDefinitionId(value: definition.value),
+          )
+          .toList(growable: false) ??
+      const [];
 
   skir.TypeExpression? _encodedTarget(RealmEditorCatalogSnapshot catalog) {
     final target = referenceTarget;
@@ -212,7 +181,10 @@ final class RealmAuthoringSearchSource
           maxDepth: contextPage == null ? 1 : 2,
           target: target == null
               ? null
-              : skir.ResourceFilter(kinds: const [], assignableTo: target),
+              : skir.ResourceFilter(
+                  definitions: const [],
+                  assignableTo: target,
+                ),
         ),
       ],
     );
@@ -223,7 +195,7 @@ final class RealmAuthoringSearchSource
     for (final selector in query.selectors) {
       final value = selector.value;
       if (value != null) {
-        values.putIfAbsent(selector.selectorId, () => []).add(value);
+        values.putIfAbsent(_facetId(selector.selectorId), () => []).add(value);
       }
     }
     return [
@@ -235,6 +207,12 @@ final class RealmAuthoringSearchSource
         ),
     ];
   }
+
+  String _facetId(String selectorId) =>
+      _catalogOrNull?.authoringSearch?.facets
+          .firstWhereOrNull((facet) => facet.selectorId == selectorId)
+          ?.id ??
+      selectorId;
 
   Future<void> _publish(
     skir.SearchAuthoringGraphResponse response,
@@ -348,17 +326,25 @@ final class RealmAuthoringSearchSource
       return (result: null, diagnostics: const []);
     }
     return target == null
-        ? _authoringResult(subject, context, snapshot, codec)
+        ? _authoringResult(
+            hit.definition.toDomain(),
+            subject,
+            context,
+            hit.ownerPath.toList(growable: false),
+            snapshot,
+            codec,
+          )
         : _referenceResult(subject, codec);
   }
 
   ({SearchResult? result, List<TypeDiagnostic> diagnostics}) _authoringResult(
+    ResourceDefinitionId definition,
     TypedPresentationSubject subject,
     TypedValueEnvelope context,
+    List<skir.ResourceId> ownerPath,
     RealmEditorCatalogSnapshot snapshot,
     TypedAuthoringCodec codec,
   ) {
-    final kind = _resultKind(subject.content.rootType);
     final presentationResult = codec.subjectPresentation(
       subject,
       PresentationRole.authoringResult,
@@ -383,18 +369,14 @@ final class RealmAuthoringSearchSource
         );
     return (
       result: SearchResult(
-        id: "${kind.name}:${subject.identity.id.value}",
-        type: switch (kind) {
-          AuthoringSearchResultKind.book => authoringBookSearchResultType,
-          AuthoringSearchResultKind.tag => authoringTagSearchResultType,
-          AuthoringSearchResultKind.page => authoringPageSearchResultType,
-          AuthoringSearchResultKind.element => authoringElementSearchResultType,
-        },
+        id: "${definition.value}:${subject.identity.id.value}",
+        type: authoringResourceSearchResultType,
         payload: AuthoringSearchResultPayload(
+          definition: definition,
           subject: subject,
           context: context,
           presentation: presentation,
-          kind: kind,
+          ownerPath: ownerPath,
         ),
         title: subject.identity.id.value,
       ),
@@ -476,9 +458,7 @@ final class RealmAuthoringSearchSource
   Future<SearchSelectorCompletionResult> completeSelector(
     SearchSelectorCompletionRequest request,
   ) async {
-    if (!authoringSearchSelectors.any(
-      (item) => item.id == request.selectorId,
-    )) {
+    if (!selectors.any((item) => item.id == request.selectorId)) {
       return const SearchSelectorCompletionResult();
     }
     final catalog = _catalog();
@@ -487,7 +467,7 @@ final class RealmAuthoringSearchSource
       RealmServiceAddress(
         organizationId: organizationId,
         realmId: realmId,
-      ).request("library.authoring.graph.search"),
+      ).request("editor.authoring.graph.search"),
       skir.SearchAuthoringGraphRequest.serializer.toBytes(
         skir.SearchAuthoringGraphRequest(
           generation: skir.CatalogGeneration(value: catalog.generation.value),
@@ -499,12 +479,15 @@ final class RealmAuthoringSearchSource
                 : encodeRealmSearchSelectorExpression(request.scope!),
             terms: const [],
           ),
-          resources: skir.ResourceFilter(kinds: const [], assignableTo: target),
+          resources: skir.ResourceFilter(
+            definitions: _resourceDefinitions(catalog),
+            assignableTo: target,
+          ),
           scope: _scope(target),
           referenceTarget: target,
           facets: [
             skir.SearchFacetRequest(
-              facetId: skir.SearchFacetId(value: request.selectorId),
+              facetId: skir.SearchFacetId(value: _facetId(request.selectorId)),
               partial: request.partial,
               validate: const [],
             ),
@@ -534,16 +517,44 @@ final class RealmAuthoringSearchSource
   }
 }
 
-AuthoringSearchResultKind _resultKind(ResolvedTypeRef type) =>
-    switch (type.id) {
-      QualifiedTypeId(namespace: "com.typewritermc.library", name: "Book") =>
-        AuthoringSearchResultKind.book,
-      QualifiedTypeId(namespace: "com.typewritermc.library", name: "Tag") =>
-        AuthoringSearchResultKind.tag,
-      QualifiedTypeId(namespace: "com.typewritermc.library", name: "Page") =>
-        AuthoringSearchResultKind.page,
-      _ => AuthoringSearchResultKind.element,
-    };
+List<QuerySelectorDefinition> authoringQuerySelectors(
+  RealmEditorCatalogSnapshot? catalog,
+  Set<String> ids,
+) =>
+    catalog?.authoringSearch?.selectors
+        .where((selector) => ids.contains(selector.id))
+        .map((selector) => selector.toQuerySelector())
+        .toList(growable: false) ??
+    const [];
+
+extension AuthoringSearchSelectorQueryDefinition on SearchSelectorDefinition {
+  QuerySelectorDefinition toQuerySelector() => switch (this) {
+    KeyValueSearchSelectorDefinition(
+      :final id,
+      :final key,
+      :final values,
+      :final caseSensitive,
+      :final multiplicity,
+      :final colorValue,
+    ) =>
+      KeyValueSelectorDefinition(
+        id: id,
+        key: key,
+        value: switch (values) {
+          FreeTextSearchSelectorValues() => QuerySelectorValue.freeText(),
+          EnumeratedSearchSelectorValues(:final values) =>
+            QuerySelectorValue.enumValue(values),
+        },
+        caseSensitive: caseSensitive,
+        multiplicity: switch (multiplicity) {
+          SearchSelectorMultiplicity.single => QueryMultiplicity.single,
+          SearchSelectorMultiplicity.multiple => QueryMultiplicity.multiple,
+        },
+        color: colorValue == null ? null : Color(colorValue),
+      ),
+    _ => throw StateError("Unknown authoring search selector definition"),
+  };
+}
 
 Future<List<ReferenceResourceSummary>> resolveAuthoringReferences({
   required Ref ref,

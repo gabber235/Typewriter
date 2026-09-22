@@ -3,25 +3,28 @@ import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+const authoringBookSelectorId = "book";
+const authoringPageSelectorId = "page";
+const authoringTagSelectorId = "tag";
+const authoringTypeSelectorId = "type";
+
 Book? resolveSearchBook(SearchQueryContext query, List<Book> books) {
-  final value = _singleSelectorValue(query, authoringBookSearchSelector.id);
+  final value = _singleSelectorValue(query, authoringBookSelectorId);
   if (value == null) return null;
   return books
       .where((book) => book.title.toLowerCase() == value.toLowerCase())
       .singleOrNull;
 }
 
-bool hasSearchSelector(
-  SearchQueryContext query,
-  QuerySelectorDefinition selector,
-) => query.selectors.any((value) => value.selectorId == selector.id);
+bool hasSearchSelector(SearchQueryContext query, String selectorId) =>
+    query.selectors.any((value) => value.selectorId == selectorId);
 
 Page? resolveSearchPage(
   SearchQueryContext query,
   List<Book> books,
   List<Page> pages,
 ) {
-  final value = _singleSelectorValue(query, authoringPageSearchSelector.id);
+  final value = _singleSelectorValue(query, authoringPageSelectorId);
   if (value == null) return null;
   final book = resolveSearchBook(query, books);
   return pages
@@ -40,10 +43,10 @@ Page? resolveElementCreationPage({
   required List<Page> pages,
   required Page? currentPage,
 }) {
-  if (hasSearchSelector(query, authoringPageSearchSelector)) {
+  if (hasSearchSelector(query, authoringPageSelectorId)) {
     return resolveSearchPage(query, books, pages);
   }
-  if (hasSearchSelector(query, authoringBookSearchSelector)) {
+  if (hasSearchSelector(query, authoringBookSelectorId)) {
     final selectedBook = resolveSearchBook(query, books);
     if (currentPage?.bookId != selectedBook?.bookId) return null;
   }
@@ -59,24 +62,32 @@ String? _singleSelectorValue(SearchQueryContext query, String selectorId) {
   return values.singleOrNull;
 }
 
-String authoringBookInitialQuery(Book? book) {
+String authoringBookInitialQuery(
+  Book? book,
+  Iterable<QuerySelectorDefinition> selectors,
+) {
   if (book == null) return "";
+  final selector = selectors
+      .where((selector) => selector.id == authoringBookSelectorId)
+      .whereType<KeyValueSelectorDefinition>()
+      .singleOrNull;
+  if (selector == null) return "";
   final value = book.title.contains(" ")
       ? "\"${book.title.replaceAll("\"", "")}\""
       : book.title;
-  return "${authoringBookSearchSelector.key}$value";
+  return "${selector.key}$value";
 }
 
 SearchScope primarySearchScope({
   required ValueListenable<AsyncValue<List<Book>>> books,
   required ValueListenable<AsyncValue<List<Page>>> pages,
   required ValueListenable<
-    AsyncValue<Map<PageKindRef, PageEntryCreationPolicy>>
+    AsyncValue<Map<PageKindRef, RealmAuthoringCreationSlot>>
   >
-  pagePolicies,
+  pageCreationSlots,
   required ValueListenable<AsyncValue<RealmEditorCatalogState>> catalog,
 }) => PredicateSearchScope(
-  dependencies: [books, pages, pagePolicies, catalog],
+  dependencies: [books, pages, pageCreationSlots, catalog],
   evaluate: (result, query) {
     if (result.payload case RealmPageDefinition()) {
       final values = books.value.value;
@@ -85,20 +96,20 @@ SearchScope primarySearchScope({
           : const SearchResultVisibility.hidden();
     }
     if (result.payload case ElementDefinition(:final rootType)) {
-      if (hasSearchSelector(query, authoringPageSearchSelector)) {
+      if (hasSearchSelector(query, authoringPageSelectorId)) {
         final bookValues = books.value.value;
         final pageValues = pages.value.value;
-        final policies = pagePolicies.value.value;
-        if (bookValues == null || pageValues == null || policies == null) {
+        final slots = pageCreationSlots.value.value;
+        if (bookValues == null || pageValues == null || slots == null) {
           return const SearchResultVisibility.hidden();
         }
         final page = resolveSearchPage(query, bookValues, pageValues);
-        if (page == null || policies[page.kind]?.accepts(rootType) != true) {
+        if (page == null || slots[page.kind]?.acceptsRoot(rootType) != true) {
           return const SearchResultVisibility.hidden();
         }
       }
 
-      if (hasSearchSelector(query, authoringTypeSearchSelector)) {
+      if (hasSearchSelector(query, authoringTypeSelectorId)) {
         final snapshot = catalog.value.value?.snapshot;
         if (snapshot == null) return const SearchResultVisibility.hidden();
         final definitions = snapshot.elements.values
@@ -128,9 +139,7 @@ bool _matchesTypeSelectors(
   TypeRegistry registry,
 ) {
   final selected = query.selectors
-      .where(
-        (selector) => selector.selectorId == authoringTypeSearchSelector.id,
-      )
+      .where((selector) => selector.selectorId == authoringTypeSelectorId)
       .map((selector) => selector.value)
       .nonNulls
       .map((value) => _resolveElementType(value, definitions))
@@ -167,15 +176,15 @@ ElementDefinition? _resolveElementType(
 /// Unavailable policy state exposes no definitions. The source remains the
 /// owner of loading and catalog failures, while the command revalidates the
 /// policy immediately before mutation.
-SearchScope pageElementTypeScope({
-  required ValueListenable<AsyncValue<PageEntryCreationPolicy>> policy,
+SearchScope pageCreationSlotScope({
+  required ValueListenable<AsyncValue<RealmAuthoringCreationSlot>> slot,
 }) => PredicateSearchScope(
-  dependencies: [policy],
+  dependencies: [slot],
   evaluate: (result, query) {
-    final current = policy.value.value;
+    final current = slot.value.value;
     return switch (result.payload) {
       ElementDefinition(:final rootType)
-          when current?.accepts(rootType) == true =>
+          when current?.acceptsRoot(rootType) == true =>
         const SearchResultVisibility.visible(),
       _ => const SearchResultVisibility.hidden(),
     };
@@ -185,21 +194,21 @@ SearchScope pageElementTypeScope({
 SearchScope elementDestinationScope({
   required ValueListenable<AsyncValue<List<Book>>> books,
   required ValueListenable<
-    AsyncValue<Map<PageKindRef, PageEntryCreationPolicy>>
+    AsyncValue<Map<PageKindRef, RealmAuthoringCreationSlot>>
   >
   compatibleKinds,
 }) => PredicateSearchScope(
   dependencies: [books, compatibleKinds],
   evaluate: (result, query) {
-    final policies = compatibleKinds.value.value;
-    if (policies == null) return const SearchResultVisibility.hidden();
+    final slots = compatibleKinds.value.value;
+    if (slots == null) return const SearchResultVisibility.hidden();
     return switch (result.payload) {
       AuthoringSearchResultPayload(:final pageKind) when pageKind != null =>
-        policies.containsKey(pageKind)
+        slots.containsKey(pageKind)
             ? const SearchResultVisibility.visible()
             : const SearchResultVisibility.hidden(),
       RealmPageDefinition(:final kind) =>
-        policies.containsKey(kind) &&
+        slots.containsKey(kind) &&
                 books.value.value != null &&
                 resolveSearchBook(query, books.value.requireValue) != null
             ? const SearchResultVisibility.visible()

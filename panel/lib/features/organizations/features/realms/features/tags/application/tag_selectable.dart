@@ -5,7 +5,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "tag_editor_resource.dart";
 part "tag_inspector_definition.dart";
 
 /// Stable selection and graph drag identity for one tag record.
@@ -43,7 +42,6 @@ class TagIdentifier extends SelectableIdentifier
         StackTrace.current,
       );
     }
-    final tagsCommands = ref.watch(canonicalTagsProvider.notifier);
     final session = ref.watch(authoringSessionProvider(organization, realm));
     ref.watch(
       realmEditorCatalogLeaseProvider(
@@ -83,13 +81,18 @@ class TagIdentifier extends SelectableIdentifier
     }
     return AsyncValue.data(
       TagSelectable(
-        resource: TagEditorResource(
+        resource: TypedAuthoringEditorResource(
           ref
               .watch(resourceRepositoriesProvider)
               .authoring(organization, realm),
           tagId,
         ),
-        onDelete: () => tagsCommands.deleteTag(tagId),
+        onDelete: () => ref
+            .read(authoringSessionProvider(organization, realm).notifier)
+            .deleteResource(
+              tagId,
+              conflictMessage: "The tag changed before deletion",
+            ),
         id: this,
         tag: tag,
         snapshot: TypedAuthoringEditorSnapshot(

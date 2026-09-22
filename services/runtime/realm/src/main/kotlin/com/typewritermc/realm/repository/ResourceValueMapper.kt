@@ -5,6 +5,7 @@ import com.typewritermc.elements.ReferenceDecomposer
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.elements.StoredElementValue
 import com.typewritermc.elements.StoredReference
+import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataPathSegment
 import com.typewritermc.types.DataValue
@@ -24,18 +25,10 @@ import java.security.MessageDigest
 @kotlinx.serialization.Serializable
 data class StoredTypedResource(
     val id: ResourceId,
-    val kind: AuthoringResourceKind,
+    val definition: ResourceDefinitionId,
     val root: ResolvedTypeRef,
     val valueWithSlots: DataValue,
 )
-
-@kotlinx.serialization.Serializable
-enum class AuthoringResourceKind {
-    BOOK,
-    TAG,
-    PAGE,
-    ELEMENT,
-}
 
 /** One normalized edge stored independently from resource scalar state. */
 @kotlinx.serialization.Serializable
@@ -78,6 +71,18 @@ internal class ResourceValueMapper(
     private val decomposer: ReferenceDecomposer = ReferenceDecomposer(),
     private val assembler: ReferenceAssembler = ReferenceAssembler(),
 ) {
+    fun declaredRelation(
+        relation: RelationId,
+        source: ResourceId,
+        target: ResourceId,
+    ): StoredResourceRelation =
+        StoredResourceRelation(
+            id = edgeId(source, target, "declared:${relation.value}"),
+            source = source,
+            target = target,
+            origin = ResourceRelationOrigin.Declared(relation),
+        )
+
     private val relations = relationDefinitions.associateBy(RelationDefinition::id)
 
     fun graph(root: TypeExpression): com.typewritermc.types.TypeGraph = prototypes.graph(root)
@@ -91,7 +96,7 @@ internal class ResourceValueMapper(
 
     fun decompose(
         id: ResourceId,
-        kind: AuthoringResourceKind,
+        definition: ResourceDefinitionId,
         value: TypedValueEnvelope,
     ): DecomposedResourceValue {
         val root = value.requireNamedRoot()
@@ -115,7 +120,7 @@ internal class ResourceValueMapper(
                 )
             }
         return DecomposedResourceValue(
-            StoredTypedResource(id, kind, root, stored.valueWithSlots),
+            StoredTypedResource(id, definition, root, stored.valueWithSlots),
             (declared + ordinary).sortedBy(StoredResourceRelation::id),
         )
     }

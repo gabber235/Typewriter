@@ -182,36 +182,22 @@ List<Override> pageElementsProviderOverrides({
   DisplayState state = DisplayState.loading,
   List<PageElement>? elements,
 }) {
-  final ready = switch (state) {
-    DisplayState.loading || DisplayState.error => null,
-    DisplayState.noItems => const <PageElement>[],
-    DisplayState.fewItems || DisplayState.manyItems =>
-      elements ?? state.generateReadyBatch(_randomPageElements)!,
-  };
   return [
     pageElementsProvider.overrideWith2(
       (_) => PageElementsMock(displayState: state, elements: elements),
     ),
     authoringPageElementsProvider.overrideWith((ref, argument) {
-      if (state == DisplayState.loading) return const AsyncLoading();
-      if (state == DisplayState.error) {
-        return AsyncError(
-          Exception("Failed to load items"),
-          StackTrace.current,
-        );
-      }
-      return AsyncData(AuthoringValue(value: ready!, revision: 1));
+      final elements = ref.watch(
+        pageElementsProvider(argument.$1, argument.$2, argument.$3),
+      );
+      return elements.when(
+        data: (value) => AsyncData(AuthoringValue(value: value, revision: 1)),
+        error: AsyncError.new,
+        loading: AsyncLoading.new,
+      );
     }),
   ];
 }
-
-List<PageElement> _randomPageElements(int count) => [
-  for (final definition in layoutGraphEntries(
-    List.generate(count, (_) => generateRandomEntryDefinition()),
-    direction: GraphDirection.leftToRight,
-  ))
-    PageElement.entry(entry: PageEntry.definition(definition: definition)),
-];
 
 List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
   entryProvider.overrideWith2((_) => EntryMock(definition: definition)),

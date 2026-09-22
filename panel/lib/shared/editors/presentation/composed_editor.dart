@@ -1,6 +1,4 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Coordinates one presentation tree over its independently owned edit sources.
@@ -28,7 +26,7 @@ class ComposedEditor extends StatefulWidget {
   final PresentationModel model;
   final List<ConversionDefinition> conversions;
   final EditorHostCapabilities host;
-  final List<skir.ResourceId> referenceOrigins;
+  final List<ResourceId> referenceOrigins;
   final RenderedBindingFocusController? bindingFocusController;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
@@ -93,7 +91,7 @@ class _ComposedEditorState extends State<ComposedEditor> {
           if (input case PresentationEditInput(:final owner))
             for (final source in _resources(owner))
               if (source case TransactionalEditorSource(:final resource?))
-                if (resource.key.identity case final skir.ResourceId identity)
+                if (resource.key.identity case final ResourceId identity)
                   identity,
       ],
       referencePolicies:

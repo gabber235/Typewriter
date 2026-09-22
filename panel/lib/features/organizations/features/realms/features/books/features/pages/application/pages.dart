@@ -134,8 +134,10 @@ class CanonicalBookPages extends _$CanonicalBookPages {
       return value.resources.values
           .map(codec.decodeResourceOrThrow)
           .where(
-            (resource) =>
-                codec.isResourceType(resource.content, skir.ResourceKind.page),
+            (resource) => codec.isResourceType(
+              resource.content,
+              CoreResourceDefinitionIds.page,
+            ),
           )
           .map(Page.fromTyped)
           .where((page) => page.bookId == bookId)
@@ -150,7 +152,11 @@ class CanonicalBookPages extends _$CanonicalBookPages {
     });
 
     final lease = ref.watch(
-      authoringBookScopeProvider(organizationId, realmId, bookId),
+      authoringSelectionLeaseProvider(
+        organizationId,
+        realmId,
+        bookId.bookAuthoringSelection,
+      ),
     );
     await lease.ready;
     return project(ref.read(provider));
@@ -194,7 +200,11 @@ class CanonicalPage extends _$CanonicalPage {
     });
 
     final lease = ref.watch(
-      authoringPageScopeProvider(organizationId, realmId, pageId),
+      authoringSelectionLeaseProvider(
+        organizationId,
+        realmId,
+        pageId.pageAuthoringSelection,
+      ),
     );
     await lease.ready;
     final value = ref.read(provider);

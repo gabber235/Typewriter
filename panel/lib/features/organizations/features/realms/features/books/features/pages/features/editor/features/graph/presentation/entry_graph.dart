@@ -260,15 +260,17 @@ class EntryGraph extends HookConsumerWidget {
             }
           }
         }
-        final subjects = ref.watch(
-          authoringSubjectsProvider(
-            AuthoringSubjectScope(
-              organizationId: organizationId,
-              realmId: realmId,
-              resources: resources,
-            ),
-          ),
-        );
+        final subjects = resources.isEmpty
+            ? const AsyncLoading<AuthoringSubjectProjection>()
+            : ref.watch(
+                authoringSubjectsProvider(
+                  AuthoringSubjectScope(
+                    organizationId: organizationId,
+                    realmId: realmId,
+                    resources: resources,
+                  ),
+                ),
+              );
         return FloatingButton(
           icon: const Icon(Icons.add),
           onPressed: () => showAddElementSearch(

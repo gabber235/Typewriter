@@ -192,16 +192,14 @@ RealmEditorCatalogState pageStoryPageCatalog(
       pageCatalog: RealmPageCatalog(
         definitions: {pageDefinition.kind: pageDefinition},
       ),
-      resourceKinds: {
-        skir.ResourceKind.page: RealmResourceKindDefinition(
-          kind: skir.ResourceKind.page,
+      resourceDefinitions: {
+        CoreResourceDefinitionIds.page: RealmResourceDefinition(
+          id: CoreResourceDefinitionIds.page,
           acceptedRoot: NamedType(referenceResourceTypes.page),
-          defaultRoot: referenceResourceTypes.page,
         ),
-        skir.ResourceKind.element: RealmResourceKindDefinition(
-          kind: skir.ResourceKind.element,
+        CoreResourceDefinitionIds.element: RealmResourceDefinition(
+          id: CoreResourceDefinitionIds.element,
           acceptedRoot: NamedType(referenceResourceTypes.element),
-          defaultRoot: null,
         ),
       },
     ),

@@ -181,11 +181,12 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "editor.presentation.search",
         "editor.presentation.search.cancel",
         "editor.typed.value.initialize",
-        "library.authoring.batch.apply",
-        "library.authoring.batch.preview",
-        "library.authoring.compiled.status.query",
-        "library.authoring.graph.query",
-        "library.authoring.graph.search",
+        "editor.authoring.batch.apply",
+        "editor.authoring.batch.preview",
+        "editor.authoring.compiled.status.query",
+        "editor.authoring.compiled.watch",
+        "editor.authoring.graph.query",
+        "editor.authoring.graph.search",
         "shared.blob.begin",
         "shared.blob.complete",
         "shared.blob.metadata",
@@ -203,7 +204,9 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "compiled.content.watch",
         "editor.catalog.invalidate",
         "editor.presentation.search",
-        "library.authoring.changed",
+        "editor.authoring.changed",
+        "editor.authoring.compiled.activated",
+        "editor.authoring.compiled.changed",
     ] {
         assert!(publish.contains(&format!(
             "service.from.quests.organization.writers.realm.{suffix}"

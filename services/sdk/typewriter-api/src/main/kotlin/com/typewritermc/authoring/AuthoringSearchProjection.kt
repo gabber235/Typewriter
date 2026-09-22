@@ -1,0 +1,44 @@
+package com.typewritermc.authoring
+
+import com.typewritermc.types.ResourceId
+
+/** Stable open identifier for a search selector facet. */
+@JvmInline
+value class SearchFacetId(
+    val value: String,
+) {
+    init {
+        require(value.isNotBlank()) { "Search facet ids must not be blank." }
+    }
+}
+
+/** One indexed search document produced by a Realm policy. */
+data class AuthoringSearchDocument(
+    val resource: ResourceId,
+    val definition: ResourceDefinitionId,
+    val text: String,
+    val selectors: Map<SearchFacetId, Set<String>> = emptyMap(),
+    val ownerPath: List<ResourceId> = emptyList(),
+) {
+    init {
+        require(text.isNotBlank()) { "Search documents must contain searchable text." }
+        require(selectors.keys.all { it.value.isNotBlank() }) { "Search facet ids must not be blank." }
+    }
+}
+
+/** Projects one resource and its declared graph dependencies into indexed search state. */
+interface AuthoringSearchProjection {
+    val resourceDefinition: ResourceDefinitionId
+    val graphRequirement: GraphReadRequirement
+
+    fun project(
+        resource: AuthoringGraphResource,
+        graph: AuthoringWorkingGraph,
+    ): AuthoringSearchDocument
+
+    fun affectedResources(
+        change: AuthoringChangeSummary,
+        before: AuthoringWorkingGraph,
+        proposed: AuthoringWorkingGraph,
+    ): Set<ResourceId> = change.changedResources
+}

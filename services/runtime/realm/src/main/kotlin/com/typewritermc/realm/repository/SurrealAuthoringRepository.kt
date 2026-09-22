@@ -3,9 +3,14 @@ package com.typewritermc.realm.repository
 import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.surrealdb.Transaction
-import com.typewritermc.realm.RealmResourceKindDefinition
+import com.typewritermc.authoring.AuthoringChangeSummary
+import com.typewritermc.realm.AuthoringResourceDefinition
+import com.typewritermc.realm.ResourceDefinitionId
+import com.typewritermc.realm.compiler.AuthoringCompilationProjectionRegistry
+import com.typewritermc.realm.compiler.GraphReadRequirement
 import com.typewritermc.realm.repository.utils.inPreviewTransaction
 import com.typewritermc.realm.repository.utils.inTransaction
+import com.typewritermc.realm.search.AuthoringSearchIndexer
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeCatalog
@@ -19,9 +24,14 @@ internal class SurrealAuthoringRepository(
     private val database: Surreal,
     private val prototypes: TypePrototypeRegistry,
     private val catalogGeneration: () -> String,
-    private val resourceKinds: () -> List<RealmResourceKindDefinition>,
+    private val resourceDefinitions: () -> List<AuthoringResourceDefinition>,
     private val relations: () -> List<RelationDefinition>,
     private val typeCatalog: () -> TypeCatalog,
+    private val validationRules: () -> List<AuthoringGraphRule>,
+    private val policyGraphRequirements: () -> List<GraphReadRequirement>,
+    private val compilationProjections: () -> AuthoringCompilationProjectionRegistry,
+    private val searchIndexer: () -> AuthoringSearchIndexer,
+    private val presentationMaterializer: () -> AuthoringPresentationMaterializer,
 ) : AuthoringRepository {
     override suspend fun apply(batch: AuthoringBatch): AuthoringBatchResult {
         val initialGeneration = catalogGeneration()
@@ -30,13 +40,34 @@ internal class SurrealAuthoringRepository(
             database.inTransaction { transaction ->
                 val requestHash = canonicalJson.encodeToString(batch).sha256()
                 transaction.replay(batch.id, requestHash)?.let { return@inTransaction it }
-                val mutation = transaction.mutate(batch.operations)
+                val plan = transaction.plan(batch.operations)
                 val finalGeneration = catalogGeneration()
                 if (finalGeneration != initialGeneration) {
                     throw AuthoringRejected(AuthoringBatchResult.CatalogChanged(finalGeneration))
                 }
+                SurrealResourceGraphStore().apply(transaction, plan.delta)
+                searchIndexer().apply(transaction, plan)
                 val sequence = transaction.advanceCollaborationRevision()
                 transaction.query("UPDATE ONLY authoring_head:current SET revision += 1;").take(0)
+                val mutation = plan.toMutationResult()
+                val compilationImpact =
+                    compilationProjections()
+                        .impact(plan.delta, plan.before, plan.proposed)
+                        .roots
+                        .flatMap { (projection, roots) ->
+                            roots.map { root -> com.typewritermc.engine.CompilationRoot(projection, root) }
+                        }
+                val presentations =
+                    presentationMaterializer()
+                        .materialize(
+                            plan.before,
+                            plan.proposed,
+                            AuthoringChangeSummary(
+                                changedResources = plan.changedResources,
+                                changedEdges = plan.changedEdges,
+                                deletedResources = plan.before.resources.keys - plan.proposed.resources.keys,
+                            ),
+                        )
                 val result =
                     AuthoringBatchResult.Applied(
                         change =
@@ -46,8 +77,9 @@ internal class SurrealAuthoringRepository(
                                 batchId = batch.id,
                                 resources = mutation.resourceChanges,
                                 edges = mutation.edgeChanges,
+                                presentations = presentations,
+                                compilationImpact = compilationImpact,
                             ),
-                        affectsCompilation = true,
                     )
                 transaction.store(batch.id, requestHash, result)
                 result
@@ -64,19 +96,20 @@ internal class SurrealAuthoringRepository(
         val initialGeneration = catalogGeneration()
         if (generation != initialGeneration) return AuthoringPreviewResult.CatalogChanged(initialGeneration)
         require(operations.isNotEmpty()) { "Authoring previews must not be empty." }
-        require(operations.map(AuthoringOperation::resourceId).distinct().size == operations.size) {
+        val direct = operations.mapNotNull(AuthoringOperation::directResourceId)
+        require(direct.distinct().size == direct.size) {
             "Authoring previews must contain at most one operation per resource."
         }
         return try {
             database.inPreviewTransaction { transaction ->
-                val mutation = transaction.mutate(operations)
+                val plan = transaction.plan(operations)
                 val finalGeneration = catalogGeneration()
                 if (finalGeneration != initialGeneration) {
                     AuthoringPreviewResult.CatalogChanged(finalGeneration)
                 } else {
                     AuthoringPreviewResult.Valid(
-                        affectedResources = mutation.resourceChanges.mapTo(linkedSetOf()) { it.resourceId },
-                        affectedEdges = mutation.edgeChanges.mapTo(linkedSetOf()) { it.edgeId },
+                        affectedResources = plan.changedResources,
+                        affectedEdges = plan.changedEdges,
                     )
                 }
             }
@@ -90,74 +123,108 @@ internal class SurrealAuthoringRepository(
         }
     }
 
-    private fun Transaction.mutate(operations: List<AuthoringOperation>): MutationResult {
+    private fun Transaction.plan(operations: List<AuthoringOperation>): AuthoringMutationPlan {
         val mapper = ResourceValueMapper(prototypes, relations())
-        val mutation =
-            GenericResourceMutation(
-                transaction = this,
+        val rules = validationRules()
+        val planner =
+            AuthoringMutationPlanner(
                 mapper = mapper,
-                store = SurrealResourceGraphStore(mapper),
-                resourceKinds = resourceKinds(),
+                resourceDefinitions = resourceDefinitions(),
                 relations = relations(),
                 catalog = typeCatalog(),
+                rules = rules,
             )
-        operations.forEach { operation ->
-            when (operation) {
-                is AuthoringOperation.CreateResource -> mutation.create(operation)
-                is AuthoringOperation.CommitResource -> mutation.commit(operation)
-                is AuthoringOperation.DeleteResource -> mutation.delete(operation)
+        val roots =
+            operations.flatMapTo(linkedSetOf()) { operation ->
+                when (operation) {
+                    is AuthoringOperation.CreateResource -> listOf(operation.id)
+                    is AuthoringOperation.CommitResource -> listOf(operation.id)
+                    is AuthoringOperation.DeleteResource -> listOf(operation.id)
+                    is AuthoringOperation.DeclareRelation -> listOf(operation.source, operation.target)
+                }
             }
+        operations
+            .asSequence()
+            .mapNotNull { operation ->
+                val content =
+                    when (operation) {
+                        is AuthoringOperation.CreateResource -> operation.content
+                        is AuthoringOperation.CommitResource -> operation.proposed
+                        else -> null
+                    } ?: return@mapNotNull null
+                runCatching {
+                    mapper.decompose(operation.directResourceId ?: return@runCatching null, ResourceDefinitionId("mutation.probe"), content)
+                }.getOrNull()
+            }.flatMap { value -> value.relations.asSequence() }
+            .flatMapTo(roots) { relation -> sequenceOf(relation.source, relation.target) }
+        val requirement =
+            (rules.map(AuthoringGraphRule::graphRequirement) + policyGraphRequirements())
+                .fold(
+                    mutationGraphRequirement(
+                        definitions = resourceDefinitions().mapTo(linkedSetOf(), AuthoringResourceDefinition::id),
+                        relations = relations().mapTo(linkedSetOf(), RelationDefinition::id),
+                    ),
+                    GraphReadRequirement::plus,
+                )
+        val before =
+            when (val loaded = SurrealMutationGraphLoader().load(this, roots, requirement)) {
+                is MutationGraphLoadResult.Success -> {
+                    loaded.graph
+                }
+
+                is MutationGraphLoadResult.Invalid -> {
+                    throw AuthoringRejected(AuthoringBatchResult.Invalid(listOf(loaded.diagnostic)))
+                }
+            }
+        return when (val result = planner.plan(before, operations)) {
+            is AuthoringMutationPlanResult.Valid -> result.plan
+            is AuthoringMutationPlanResult.Conflict -> throw AuthoringRejected(AuthoringBatchResult.Conflict(result.conflicts))
+            is AuthoringMutationPlanResult.Invalid -> throw AuthoringRejected(AuthoringBatchResult.Invalid(result.diagnostics))
         }
-        val storedRelations = loadStoredRelations()
-        val storedResources = loadStoredResources().associateBy(StoredTypedResource::id)
-        val affected =
-            buildSet {
-                addAll(mutation.upserts.keys)
-                addAll(mutation.affectedResources)
-            }
-        val resourceChanges =
-            buildList {
-                affected.sortedBy(ResourceId::value).forEach { id ->
-                    val stored = storedResources[id] ?: return@forEach
-                    add(
-                        GraphResourceChange.Upsert(
-                            AuthoringGraphResource(
-                                id = id,
-                                kind = stored.kind,
-                                content = mapper.hydrate(stored, storedRelations),
-                            ),
+    }
+
+    private fun AuthoringMutationPlan.toMutationResult(): MutationResult {
+        val mapper = ResourceValueMapper(prototypes, relations())
+        val resources =
+            changedResources
+                .sortedBy(ResourceId::value)
+                .mapNotNull { id ->
+                    val stored = proposed.resources[id] ?: return@mapNotNull null
+                    GraphResourceChange.Upsert(
+                        AuthoringGraphResource(
+                            id = id,
+                            definition = stored.definition,
+                            content = mapper.hydrate(stored, proposed.relations.values),
                         ),
                     )
-                }
-                mutation.removals.sortedBy(ResourceId::value).forEach { add(GraphResourceChange.Remove(it)) }
-            }
-        val edgeChanges =
-            mutation.edgeUpserts.values
+                } + delta.resourceRemovals.sortedBy(ResourceId::value).map(GraphResourceChange::Remove)
+        val edges =
+            delta.relationUpserts.values
                 .sortedBy(StoredResourceRelation::id)
                 .map(GraphEdgeChange::Upsert) +
-                mutation.edgeRemovals.sorted().map(GraphEdgeChange::Remove)
-        return MutationResult(resourceChanges, edgeChanges)
+                delta.relationRemovals.sorted().map(GraphEdgeChange::Remove)
+        return MutationResult(resources, edges)
     }
 }
+
+private fun mutationGraphRequirement(
+    definitions: Set<ResourceDefinitionId>,
+    relations: Set<com.typewritermc.types.RelationId>,
+) = GraphReadRequirement(
+    definitions = definitions,
+    relations = relations,
+    incomingReferences = true,
+    outgoingReferences = true,
+    direction = GraphReadRequirement.Direction.BOTH,
+    maximumDepth = 16,
+    maximumResources = 100_000,
+    maximumEdges = 250_000,
+)
 
 private data class MutationResult(
     val resourceChanges: List<GraphResourceChange>,
     val edgeChanges: List<GraphEdgeChange>,
 )
-
-private val GraphResourceChange.resourceId: ResourceId
-    get() =
-        when (this) {
-            is GraphResourceChange.Upsert -> resource.id
-            is GraphResourceChange.Remove -> id
-        }
-
-private val GraphEdgeChange.edgeId: String
-    get() =
-        when (this) {
-            is GraphEdgeChange.Upsert -> edge.id
-            is GraphEdgeChange.Remove -> id
-        }
 
 private fun Transaction.advanceCollaborationRevision(): Long =
     query("UPDATE ONLY collaboration_head:current SET revision += 1 RETURN VALUE revision;").take(0).getLong()

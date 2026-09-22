@@ -28,7 +28,8 @@ List<PageElement> _decodePageElements(
         if (edge.origin
             case skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value)
             when value.relationId.value == ownershipRelation.id &&
-                byId[edge.target]?.kind == skir.ResourceKind.element)
+                byId[edge.target]?.definition.toDomain() ==
+                    CoreResourceDefinitionIds.element)
           edge.target,
   };
   final ordinaryEdges = [

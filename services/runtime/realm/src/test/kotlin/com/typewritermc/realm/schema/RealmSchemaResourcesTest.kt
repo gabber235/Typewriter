@@ -9,15 +9,23 @@ val RealmSchemaResourcesTest by testSuite {
         MigrationResources().loadRealmSchema().map(SchemaResource::path) shouldBe
             listOf(
                 "search/authoring_text.surql",
+                "search/authoring_search.surql",
                 "resource/resource.surql",
                 "resource/authoring_batch.surql",
-                "compile/compiled_page_shard.surql",
-                "compile/compiled_manifest.surql",
-                "compile/active_compiled_manifest.surql",
+                "compile/compiled_artifact.surql",
+                "compile/compile_attempt_root.surql",
+                "compile/active_compiled_artifact_manifest.surql",
                 "compile/authoring_head.surql",
                 "compile/collaboration_head.surql",
                 "compile/compile_attempt.surql",
             )
+    }
+
+    test("compile attempt roots use only the normalized projection relation") {
+        val schema = MigrationResources().loadRealmSchema().associateBy(SchemaResource::path)
+
+        schema.getValue("compile/compile_attempt.surql").script.contains("FIELD OVERWRITE roots") shouldBe false
+        schema.getValue("compile/compile_attempt_root.surql").script.contains("DEFINE TABLE OVERWRITE compile_attempt_root") shouldBe true
     }
 
     test("Realm schema catalog preserves declared dependency order") {

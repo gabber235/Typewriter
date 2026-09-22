@@ -65,10 +65,7 @@ Widget primarySearchButtonStory({
               initialQuery: initialQuery,
             ),
             hostEffectExecutors: [
-              SearchHostEffectExecutor<OpenAuthoringBookEffect>((_) async {}),
-              SearchHostEffectExecutor<OpenAuthoringTagEffect>((_) async {}),
-              SearchHostEffectExecutor<OpenAuthoringPageEffect>((_) async {}),
-              SearchHostEffectExecutor<OpenAuthoringElementEffect>(
+              SearchHostEffectExecutor<OpenAuthoringResourceEffect>(
                 (_) async {},
               ),
             ],

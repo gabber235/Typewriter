@@ -423,7 +423,7 @@ final class _ReferenceBindingShape {
   final bool optional;
   final DataValue Function(DataValue) wrapSelection;
   final bool Function(EditorValue, DataValue) matches;
-  final List<skir.ResourceId> Function(DataValue?) ids;
+  final List<ResourceId> Function(DataValue?) ids;
   final DataValue? emptyValue;
 
   bool accepts(ReferenceResourceDragData data, TypeRegistry registry) {
@@ -527,7 +527,7 @@ class _ReferenceSummary extends HookWidget {
   });
 
   final ResolvedTypeRef target;
-  final List<skir.ResourceId> ids;
+  final List<ResourceId> ids;
   final ReferenceResourceResolver? resolver;
   final TypeRegistry registry;
   final ValueChanged<int>? onRemoveAt;

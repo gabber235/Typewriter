@@ -3,6 +3,7 @@ package com.typewritermc.realm.repository
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.library.BOOK_PAGES_RELATION_ID
 import com.typewritermc.library.PAGE_ELEMENTS_RELATION_ID
+import com.typewritermc.realm.CoreResourceDefinitionIds
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
@@ -83,17 +84,17 @@ val AuthoringGraphQueryEngineTest by testSuite {
 private val rootType =
     ResolvedTypeRef(TypeId.Declared(DeclaredTypeId.parse("11111111111111111111111111111111")), 1)
 
-private val book = resource("book", AuthoringResourceKind.BOOK)
-private val page = resource("page", AuthoringResourceKind.PAGE)
-private val localEntry = resource("local-entry", AuthoringResourceKind.ELEMENT)
-private val externalEntry = resource("external-entry", AuthoringResourceKind.ELEMENT)
+private val book = resource("book", CoreResourceDefinitionIds.BOOK)
+private val page = resource("page", CoreResourceDefinitionIds.PAGE)
+private val localEntry = resource("local-entry", CoreResourceDefinitionIds.ELEMENT)
+private val externalEntry = resource("external-entry", CoreResourceDefinitionIds.ELEMENT)
 
 private fun resource(
     id: String,
-    kind: AuthoringResourceKind,
+    definition: com.typewritermc.realm.ResourceDefinitionId,
 ) = AuthoringGraphResource(
     id = ResourceId(id),
-    kind = kind,
+    definition = definition,
     content = TypedValueEnvelope(TypeExpression.Named(rootType), DataValue.Record(emptyMap())),
 )
 

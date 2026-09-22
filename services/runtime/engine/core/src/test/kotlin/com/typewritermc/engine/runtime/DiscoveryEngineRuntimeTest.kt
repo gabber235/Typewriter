@@ -6,10 +6,9 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.engine.ActivatedCompiledContent
-import com.typewritermc.engine.CompiledContentBundle
-import com.typewritermc.engine.CompiledManifest
+import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.LoadedCompiledContent
 import com.typewritermc.types.TypePrototypeRegistry
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -81,12 +80,12 @@ val DiscoveryEngineRuntimeTest by testSuite {
                 gateway.apply(
                     active.copy(
                         activationRevision = 2,
-                        content = active.content.copy(manifest = active.content.manifest.copy(formatRevision = 2)),
+                        manifest = active.manifest.copy(formatRevision = 2),
                     ),
                 )
             }
 
-            gateway.snapshot.value?.manifest shouldBe active.content.manifest
+            gateway.snapshot.value?.manifest shouldBe active.manifest
         }
     }
 
@@ -130,14 +129,12 @@ private fun TestScope.runtime(
 private fun content(
     revision: Long,
     digestCharacter: Char,
-): ActivatedCompiledContent {
+): LoadedCompiledContent {
     val digest = ContentDigest(digestCharacter.toString().repeat(64))
-    return ActivatedCompiledContent(
-        revision,
-        CompiledContentBundle(
-            CompiledManifest(1, digest, "realm:$revision", "catalog:1", emptyList()),
-            emptyList(),
-        ),
+    return LoadedCompiledContent(
+        activationRevision = revision,
+        manifest = CompiledArtifactManifest(1, digest, "realm:$revision", "catalog:1", emptyList()),
+        artifacts = emptyList(),
     )
 }
 

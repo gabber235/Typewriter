@@ -1,4 +1,4 @@
-/// Application services for page metadata, projections, editing, and element type policy.
+/// Application services for page metadata, projections, editing, and creation.
 ///
 /// This layer keeps the authoring session as the canonical source, then adapts
 /// it for callers that need local editor drafts, conditional mutations, or the
@@ -6,6 +6,6 @@
 library;
 
 export "page_commands.dart";
+export "page_creation_slots.dart";
 export "page_editing.dart";
-export "page_element_type_policy.dart";
 export "pages.dart";

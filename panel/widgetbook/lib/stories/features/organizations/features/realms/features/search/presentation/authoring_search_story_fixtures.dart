@@ -11,13 +11,13 @@ final class AuthoringSearchStoryFixtures {
     mainQuest = _payload(
       id: _resourceId("book", "main_quest"),
       type: referenceResourceTypes.book,
-      kind: AuthoringSearchResultKind.book,
+      definition: CoreResourceDefinitionIds.book,
       label: "Main Quest",
     );
     seasonalEvents = _payload(
       id: _resourceId("book", "seasonal_events"),
       type: referenceResourceTypes.book,
-      kind: AuthoringSearchResultKind.book,
+      definition: CoreResourceDefinitionIds.book,
       label: "Seasonal Events",
     );
     villageArrival = _page(
@@ -73,19 +73,19 @@ final class AuthoringSearchStoryFixtures {
   final mainQuestTag = _payload(
     id: _resourceId("tag", "main_quest"),
     type: referenceResourceTypes.tag,
-    kind: AuthoringSearchResultKind.tag,
+    definition: CoreResourceDefinitionIds.tag,
     label: "Main Quest",
   );
   final storyTag = _payload(
     id: _resourceId("tag", "story"),
     type: referenceResourceTypes.tag,
-    kind: AuthoringSearchResultKind.tag,
+    definition: CoreResourceDefinitionIds.tag,
     label: "Story",
   );
   final eventTag = _payload(
     id: _resourceId("tag", "event"),
     type: referenceResourceTypes.tag,
-    kind: AuthoringSearchResultKind.tag,
+    definition: CoreResourceDefinitionIds.tag,
     label: "Event",
   );
 
@@ -134,58 +134,58 @@ final class AuthoringSearchStoryFixtures {
   List<SearchNode> get nodes => [
     _node(
       "book:main_quest",
-      authoringBookSearchResultType,
+      authoringResourceSearchResultType,
       mainQuest,
       "Main Quest",
     ),
     _node(
       "page:meet_the_mayor",
-      authoringPageSearchResultType,
+      authoringResourceSearchResultType,
       meetTheMayor,
       "Meet the Mayor",
       "quest.intro.dialogue / Main Quest",
     ),
     _node(
       "element:mayor_greeting",
-      authoringElementSearchResultType,
+      authoringResourceSearchResultType,
       mayorGreeting,
       "Mayor Greeting",
       "Meet the Mayor",
     ),
     _node(
       "element:welcome_bundle",
-      authoringElementSearchResultType,
+      authoringResourceSearchResultType,
       welcomeBundle,
       "Give Welcome Bundle",
       "Village Arrival",
     ),
     _node(
       "tag:main_quest",
-      authoringTagSearchResultType,
+      authoringResourceSearchResultType,
       mainQuestTag,
       "Main Quest",
     ),
     _node(
       "book:seasonal_events",
-      authoringBookSearchResultType,
+      authoringResourceSearchResultType,
       seasonalEvents,
       "Seasonal Events",
     ),
     _node(
       "page:winter_festival",
-      authoringPageSearchResultType,
+      authoringResourceSearchResultType,
       winterFestival,
       "Winter Festival",
       "winter.opening / Seasonal Events",
     ),
     _node(
       "element:festival_announcement",
-      authoringElementSearchResultType,
+      authoringResourceSearchResultType,
       festivalAnnouncement,
       "Festival Announcement",
       "Winter Festival",
     ),
-    _node("tag:event", authoringTagSearchResultType, eventTag, "Event"),
+    _node("tag:event", authoringResourceSearchResultType, eventTag, "Event"),
   ];
 
   SearchSource source({
@@ -204,10 +204,7 @@ final class AuthoringSearchStoryFixtures {
     interaction: SearchInteraction(
       activation: SearchActivation.command(
         resolve: (result) => switch (result.type) {
-          authoringBookSearchResultType => openAuthoringBookCommandId,
-          authoringTagSearchResultType => openAuthoringTagCommandId,
-          authoringPageSearchResultType => openAuthoringPageCommandId,
-          authoringElementSearchResultType => openAuthoringElementCommandId,
+          authoringResourceSearchResultType => openAuthoringResourceCommandId,
           _ => null,
         },
         dependencies: const [],
@@ -229,7 +226,7 @@ AuthoringSearchResultPayload _page({
   id: _resourceId("page", id),
   owner: bookId,
   type: referenceResourceTypes.page,
-  kind: AuthoringSearchResultKind.page,
+  definition: CoreResourceDefinitionIds.page,
   label: name,
   context: {"book": ReferenceValue(bookId)},
   content: {
@@ -248,13 +245,17 @@ AuthoringSearchResultPayload _element({
   required String text,
   required String highlight,
 }) {
+  final bookId = page.owner;
+  if (bookId == null) {
+    throw ArgumentError.value(page, "page", "must have a book owner");
+  }
   return _payload(
     id: _resourceId("element", id),
     owner: page.id,
     type: ResolvedTypeRef(id: DeclaredTypeId(elementType), revision: 1),
-    kind: AuthoringSearchResultKind.element,
+    definition: CoreResourceDefinitionIds.element,
     label: name,
-    context: {"book": ReferenceValue(page.owner!)},
+    context: {"book": ReferenceValue(bookId)},
     matchText: text,
     highlight: highlight,
   );
@@ -263,7 +264,7 @@ AuthoringSearchResultPayload _element({
 AuthoringSearchResultPayload _payload({
   required skir.ResourceId id,
   required ResolvedTypeRef type,
-  required AuthoringSearchResultKind kind,
+  required ResourceDefinitionId definition,
   required String label,
   skir.ResourceId? owner,
   Map<String, DataValue> content = const {},
@@ -327,11 +328,18 @@ AuthoringSearchResultPayload _payload({
       model: PresentationModel(
         catalog: catalog,
         inputs: const {},
-        root: PresentationNode(id: "story.search.${kind.name}", element: body),
+        root: PresentationNode(
+          id: "story.search.${definition.value}",
+          element: body,
+        ),
       ),
-      presentation: PresentationId(namespace: "widgetbook", name: kind.name),
+      presentation: PresentationId(
+        namespace: "widgetbook",
+        name: definition.value,
+      ),
     ),
-    kind: kind,
+    definition: definition,
+    ownerPath: [?owner, if (context["book"] case ReferenceValue(:final id)) id],
   );
 }
 

@@ -195,7 +195,8 @@ TypedValueEnvelope? _projectSubjectContent({
       RecordValue(fields: {"value": final value}) => value,
       _ => null,
     };
-    if (resource?.kind == skir.ResourceKind.element && elementValue != null) {
+    if (resource?.definition.toDomain() == CoreResourceDefinitionIds.element &&
+        elementValue != null) {
       final relative = LocalEditorValue(
         value: elementValue,
         editedPaths: {

@@ -88,8 +88,17 @@ class TagGraph extends HookConsumerWidget {
                 .create(
                   context: context,
                   request: ResourceCreationRequest(
-                    kind: skir.ResourceKind.tag,
+                    slot: CoreAuthoringCreationSlotIds.tag,
                     title: "Create Tag",
+                    concreteRoot:
+                        ref
+                            .read(realmEditorCatalogProvider)
+                            .value
+                            ?.snapshot
+                            ?.creationSlots[CoreAuthoringCreationSlotIds.tag]
+                            ?.concreteRoots
+                            .singleOrNull ??
+                        (throw StateError("Tag creation is unavailable")),
                     partial: tagCreationPartial(tagList),
                   ),
                 ),

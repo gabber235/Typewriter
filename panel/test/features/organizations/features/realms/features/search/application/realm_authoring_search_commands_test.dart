@@ -4,43 +4,36 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("publishes the Realm authoring selectors", () {
-    expect(authoringSearchSelectors.map((selector) => selector.id), [
-      "book",
-      "page",
-      "tag",
-      "type",
-    ]);
-  });
-
-  test("book command retains scope and typed payload", () async {
+  test("resource command retains scope and typed payload", () async {
     final bookId = _resourceId("main");
     final book = _payload(
       id: bookId,
       type: referenceResourceTypes.book,
-      kind: AuthoringSearchResultKind.book,
+      definition: CoreResourceDefinitionIds.book,
     );
 
-    final searchResult = _result(authoringBookSearchResultType, book);
+    final searchResult = _result(authoringResourceSearchResultType, book);
     final command = openAuthoringCommands(
       _organization,
       _realm,
-    ).singleWhere((command) => command.id == openAuthoringBookCommandId);
+    ).singleWhere((command) => command.id == openAuthoringResourceCommandId);
     final result = await command.execute(
       const SearchCommandExecutionContext(
         prompts: UnsupportedSearchPromptHost(),
       ),
       _target(searchResult),
     );
-    final effect = (result as SearchCommandResultCompleted).hostEffects.single;
+    final effect =
+        (result as SearchCommandResultCompleted).hostEffects.single
+            as OpenAuthoringResourceEffect;
 
-    expect(effect, isA<OpenAuthoringBookEffect>());
-    expect((effect as OpenAuthoringBookEffect).organizationId, _organization);
+    expect(effect.organizationId, _organization);
     expect(effect.realmId, _realm);
-    expect(effect.bookId, bookId);
+    expect(effect.resourceId, bookId);
+    expect(effect.definition, CoreResourceDefinitionIds.book);
   });
 
-  test("element command cannot emit a page or book effect", () async {
+  test("resource command classifies Entry identifiers safely", () async {
     final bookId = _resourceId("main");
     final pageId = _resourceId("intro");
     final elementId = _resourceId("greeting");
@@ -52,33 +45,33 @@ void main() {
       id: elementId,
       owner: pageId,
       type: entryType,
-      kind: AuthoringSearchResultKind.element,
+      definition: CoreResourceDefinitionIds.element,
       context: {"book": ReferenceValue(bookId)},
     );
 
-    final searchResult = _result(authoringElementSearchResultType, element);
+    final searchResult = _result(authoringResourceSearchResultType, element);
     final command = openAuthoringCommands(
       _organization,
       _realm,
-    ).singleWhere((command) => command.id == openAuthoringElementCommandId);
+    ).singleWhere((command) => command.id == openAuthoringResourceCommandId);
     final result = await command.execute(
       const SearchCommandExecutionContext(
         prompts: UnsupportedSearchPromptHost(),
       ),
       _target(searchResult),
     );
-    final effect = (result as SearchCommandResultCompleted).hostEffects.single;
+    final effect =
+        (result as SearchCommandResultCompleted).hostEffects.single
+            as OpenAuthoringResourceEffect;
 
-    expect(effect, isA<OpenAuthoringElementEffect>());
-    expect(
-      (effect as OpenAuthoringElementEffect).organizationId,
-      _organization,
-    );
+    expect(effect.organizationId, _organization);
     expect(effect.realmId, _realm);
+    expect(effect.resourceId, elementId);
+    expect(effect.definition, CoreResourceDefinitionIds.element);
     expect(effect.bookId, bookId);
-    expect(effect.pageId, pageId);
+    expect(effect.ownerId, pageId);
     expect(
-      effect.elementIdentifier,
+      effect.nestedIdentifier,
       EntryIdentifier(elementId.id, pageId: pageId.id),
     );
   });
@@ -104,7 +97,7 @@ SearchCommandTarget _target(SearchResult result) => SearchCommandTarget(
 AuthoringSearchResultPayload _payload({
   required skir.ResourceId id,
   required ResolvedTypeRef type,
-  required AuthoringSearchResultKind kind,
+  required ResourceDefinitionId definition,
   skir.ResourceId? owner,
   Map<String, DataValue> context = const {},
 }) {
@@ -141,6 +134,7 @@ AuthoringSearchResultPayload _payload({
       ),
       presentation: const PresentationId(namespace: "test", name: "result"),
     ),
-    kind: kind,
+    definition: definition,
+    ownerPath: [?owner, if (context["book"] case ReferenceValue(:final id)) id],
   );
 }

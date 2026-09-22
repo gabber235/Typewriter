@@ -343,17 +343,18 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
     final rootTypes = {
       for (final entry in cached) entry.definition.elementDefinition.rootType,
     };
-    final pages = (await Future.wait([
-      for (final page in placementCompatiblePages)
-        ref.read(pageElementTypesProvider(page.kind).future).then((state) {
-          return switch (state) {
-            PageElementTypesReady(:final types)
-                when rootTypes.every(types.contains) =>
-              page,
-            _ => null,
-          };
-        }),
-    ])).nonNulls.toList(growable: false);
+    final pages = placementCompatiblePages
+        .where(
+          (page) =>
+              ref
+                  .read(pageCreationSlotProvider(page.kind))
+                  .value
+                  ?.concreteRoots
+                  .toSet()
+                  .containsAll(rootTypes) ??
+              false,
+        )
+        .toList(growable: false);
 
     if (!ref.context.mounted) return;
     final target = await _selectTargetPage(ref, pages);
@@ -445,7 +446,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
   bool accepts(SearchResult result) {
     final payload = result.payload;
     if (payload is! AuthoringSearchResultPayload ||
-        payload.kind != AuthoringSearchResultKind.element ||
+        payload.definition != CoreResourceDefinitionIds.element ||
         selectedIds.contains(payload.id.id)) {
       return false;
     }
@@ -476,8 +477,8 @@ Future<EntryIdentifier?> _selectLinkTarget(
   return showSearchModal<EntryIdentifier>(
     ref.context,
     (modalRef, promptContext) {
-      final policy = modalRef.valued(
-        pageEntryCreationPolicyForPageProvider(sourcePageResourceId),
+      final slot = modalRef.valued(
+        pageCreationSlotForPageProvider(sourcePageResourceId),
       );
       return SearchContribution(
         session: SearchSession(
@@ -510,7 +511,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
           ),
           interaction: SearchInteraction(
             activation: SearchActivation.custom(
-              dependencies: [policy],
+              dependencies: [slot],
               evaluate: (context, result) {
                 if (accepts(result)) {
                   return const SearchActivationState.enabled();
@@ -560,7 +561,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
                 organizationId: organizationId,
                 realmId: realmId,
                 pageId: sourcePageResourceId,
-                policy: policy,
+                slot: slot,
               ),
             ],
           ),
@@ -577,7 +578,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
     },
     searchHint: "Choose entry to link",
     rowRenderers: {
-      authoringElementSearchResultType.id: (context) =>
+      authoringResourceSearchResultType.id: (context) =>
           AuthoringSearchResultItem(
             payload: context.result.payload as AuthoringSearchResultPayload,
             focused: context.focused,
@@ -746,14 +747,15 @@ Future<Page?> _selectTargetPage(WidgetRef ref, List<Page> pages) {
     ),
     searchHint: "Move to page",
     rowRenderers: {
-      authoringPageSearchResultType.id: (context) => AuthoringSearchResultItem(
-        payload: context.result.payload as AuthoringSearchResultPayload,
-        focused: context.focused,
-        selected: context.selected,
-        loading: context.loading,
-        onTap: context.onTap,
-        shortcutActivator: context.shortcutActivator,
-      ),
+      authoringResourceSearchResultType.id: (context) =>
+          AuthoringSearchResultItem(
+            payload: context.result.payload as AuthoringSearchResultPayload,
+            focused: context.focused,
+            selected: context.selected,
+            loading: context.loading,
+            onTap: context.onTap,
+            shortcutActivator: context.shortcutActivator,
+          ),
     },
   );
 }
@@ -772,16 +774,16 @@ Future<ElementDefinition?> _selectReplacementType(
       final definitions = modalRef.valued(
         availableElementDefinitionsFutureProvider,
       );
-      final policy = modalRef.valued(
-        pageEntryCreationPolicyForPageProvider(skir.ResourceId(value: pageId)),
+      final slot = modalRef.valued(
+        pageCreationSlotForPageProvider(skir.ResourceId(value: pageId)),
       );
       return SearchContribution(
         session: SearchSession(
           source: ElementTypeSearchSource(definitions: definitions),
-          scope: pageElementTypeScope(policy: policy),
+          scope: pageCreationSlotScope(slot: slot),
           interaction: SearchInteraction(
             activation: SearchActivation.custom(
-              dependencies: [policy],
+              dependencies: [slot],
               evaluate: (context, result) => switch (result.payload) {
                 ElementDefinition(:final rootType)
                     when rootType !=
@@ -837,11 +839,27 @@ Future<RecordValue?> _prepareReplacementValue(
     entry.name,
   );
   retained.add("name");
+  final organizationId = ref.read(organizationIdProvider);
+  final realmId = ref.read(realmIdProvider);
+  if (organizationId == null || realmId == null) {
+    throw StateError("No Realm is selected");
+  }
+  final initializeConcreteType = ref
+      .read(realmEditorCatalogSourceProvider)
+      .concreteTypeInitializer(
+        route: RealmEditorCatalogRoute(
+          organizationId: organizationId,
+          realmId: realmId,
+        ),
+        generation: snapshot.generation,
+        registry: registry,
+      );
 
   final draft = CreationDraft(
     rootType: NamedType(replacement.rootType),
     registry: registry,
     fixedValues: fixedValues,
+    concreteTypeInitializer: initializeConcreteType,
   );
   try {
     final prepared =

@@ -311,13 +311,9 @@ void main() {
       targetId: "entry",
       label: "Entry name",
       document: EditorDocument(
-        rootType: RecordType(
-          fields: {
-            "value": TypeField(name: "value", type: NamedType(_rootType)),
-          },
-        ),
+        rootType: NamedType(_rootType),
         typeCatalog: catalog,
-        confirmedValue: RecordValue({"value": value}),
+        confirmedValue: value,
         revision: 1,
       ),
       commit: (commit) async =>
