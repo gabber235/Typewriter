@@ -536,7 +536,9 @@ data class ConversionId(
  *
  * [id] must have no type arguments and parameter names must be unique. Catalog assembly may attach presentations
  * without changing the structural representation. Parent references describe subtype relationships; executable
- * codecs live in prototypes.
+ * codecs live in prototypes. [initialValue] supplies the portable value used when authoring initializes this type
+ * without an explicit value. Abstract type initial values must retain their selected concrete subtype through
+ * [DataValue.Polymorphic].
  */
 @Serializable
 data class TypeDefinition(
@@ -552,6 +554,7 @@ data class TypeDefinition(
     val rolePresentations: Map<PresentationRole, PresentationId> = emptyMap(),
     val fieldMergePolicies: List<FieldMergePolicy> = emptyList(),
     val declarationOwner: String = defaultDeclarationOwner(id),
+    val initialValue: DataValue? = null,
 ) {
     init {
         require(id.arguments.isEmpty()) { "Type definition identity must not contain type arguments." }
@@ -616,7 +619,111 @@ data class TypeCatalog(
             .filter { it.isSubtypeOf(target, definitionsById, emptySet()) }
             .sortedBy { it.id.stableSortKey }
     }
+
+    /** Returns whether a candidate named type can be used where the target type is required. */
+    fun isAssignableExactly(
+        candidate: TypeExpression,
+        target: TypeExpression,
+    ): Boolean {
+        if (target == TypeExpression.Any || candidate == target) return true
+        return when {
+            candidate is TypeExpression.Named && target is TypeExpression.Named -> {
+                isAssignableExactly(candidate.reference, target.reference)
+            }
+
+            candidate is TypeExpression.Reference && target is TypeExpression.Reference -> {
+                isAssignableExactly(candidate.target, target.target)
+            }
+
+            candidate is TypeExpression.ListType && target is TypeExpression.ListType -> {
+                candidate.minimumLength == target.minimumLength &&
+                    candidate.maximumLength == target.maximumLength &&
+                    candidate.unique == target.unique &&
+                    isAssignableExactly(candidate.element, target.element)
+            }
+
+            candidate is TypeExpression.MapType && target is TypeExpression.MapType -> {
+                candidate.minimumLength == target.minimumLength &&
+                    candidate.maximumLength == target.maximumLength &&
+                    isAssignableExactly(candidate.key, target.key) &&
+                    isAssignableExactly(candidate.value, target.value)
+            }
+
+            else -> {
+                false
+            }
+        }
+    }
+
+    /** Returns whether a candidate named type can be used where the target named type is required. */
+    fun isAssignableExactly(
+        candidate: ResolvedTypeRef,
+        target: ResolvedTypeRef,
+    ): Boolean {
+        if (candidate == target) return true
+        val definitionsById = definitions.associateBy(TypeDefinition::id)
+        return isAssignableExactly(candidate, target, definitionsById, emptySet())
+    }
 }
+
+private fun isAssignableExactly(
+    candidate: ResolvedTypeRef,
+    target: ResolvedTypeRef,
+    definitions: Map<ResolvedTypeRef, TypeDefinition>,
+    visited: Set<ResolvedTypeRef>,
+): Boolean {
+    if (candidate in visited) return false
+    val definition = definitions[candidate.copy(arguments = emptyList())] ?: return false
+    val nextVisited = visited + candidate
+    val bindings =
+        definition.parameters
+            .mapIndexedNotNull { index, parameter ->
+                candidate.arguments.getOrNull(index)?.let { parameter.name to it }
+            }.toMap()
+    return definition.parents
+        .map { parent -> parent.resolveTypeBindings(bindings) }
+        .any { parent ->
+            parent == target || isAssignableExactly(parent, target, definitions, nextVisited)
+        }
+}
+
+internal fun ResolvedTypeRef.resolveTypeBindings(bindings: Map<String, TypeExpression>): ResolvedTypeRef =
+    copy(arguments = arguments.map { it.resolveTypeBindings(bindings) })
+
+internal fun TypeExpression.resolveTypeBindings(bindings: Map<String, TypeExpression>): TypeExpression =
+    when (this) {
+        is TypeExpression.Parameter -> {
+            bindings[name] ?: this
+        }
+
+        is TypeExpression.Named -> {
+            TypeExpression.Named(reference.resolveTypeBindings(bindings))
+        }
+
+        is TypeExpression.Reference -> {
+            TypeExpression.Reference(target.resolveTypeBindings(bindings))
+        }
+
+        is TypeExpression.ListType -> {
+            copy(element = element.resolveTypeBindings(bindings))
+        }
+
+        is TypeExpression.MapType -> {
+            copy(key = key.resolveTypeBindings(bindings), value = value.resolveTypeBindings(bindings))
+        }
+
+        is TypeExpression.Enumeration -> {
+            copy(valueType = valueType.resolveTypeBindings(bindings))
+        }
+
+        is TypeExpression.Record -> {
+            copy(fields = fields.map { it.copy(type = it.type.resolveTypeBindings(bindings)) })
+        }
+
+        else -> {
+            this
+        }
+    }
 
 private fun TypeDefinition.isSubtypeOf(
     target: ResolvedTypeRef,
@@ -624,13 +731,49 @@ private fun TypeDefinition.isSubtypeOf(
     visited: Set<ResolvedTypeRef>,
 ): Boolean {
     if (id in visited) return false
-    if (parents.any { it.id == target.id && it.revision == target.revision }) return true
+    if (parents.any { it.matches(target) }) return true
     val nextVisited = visited + id
     return parents.any { parent ->
         definitions[parent.copy(arguments = emptyList())]
             ?.isSubtypeOf(target, definitions, nextVisited) == true
     }
 }
+
+private fun ResolvedTypeRef.matches(target: ResolvedTypeRef): Boolean =
+    id == target.id &&
+        revision == target.revision &&
+        arguments.size == target.arguments.size &&
+        arguments.zip(target.arguments).all { (pattern, value) -> pattern.matches(value) }
+
+private fun TypeExpression.matches(value: TypeExpression): Boolean =
+    when {
+        this is TypeExpression.Parameter -> {
+            true
+        }
+
+        this is TypeExpression.Named && value is TypeExpression.Named -> {
+            reference.matches(value.reference)
+        }
+
+        this is TypeExpression.ListType && value is TypeExpression.ListType -> {
+            minimumLength == value.minimumLength && maximumLength == value.maximumLength && element.matches(value.element)
+        }
+
+        this is TypeExpression.MapType && value is TypeExpression.MapType -> {
+            minimumLength == value.minimumLength &&
+                maximumLength == value.maximumLength &&
+                key.matches(value.key) &&
+                this.value.matches(value.value)
+        }
+
+        this is TypeExpression.Reference && value is TypeExpression.Reference -> {
+            target.matches(value.target)
+        }
+
+        else -> {
+            this == value
+        }
+    }
 
 private val ResolvedTypeRef.stableSortKey: String
     get() = "$id:$revision:${arguments.joinToString()}"

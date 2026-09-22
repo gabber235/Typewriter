@@ -103,6 +103,7 @@ private fun ConversionScope.encode(definition: TypeDefinition): SkirTypeDefiniti
                 SkirRolePresentation(role = encode(role), presentationId = encode(id))
             },
         fieldMergePolicies = definition.fieldMergePolicies.map(::encode),
+        initializer = definition.initialValue?.let(::encodeDataValue),
     )
 
 private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefinition {
@@ -134,6 +135,7 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
                     }
                 }.toMap(),
         fieldMergePolicies = definition.fieldMergePolicies.map(::decode),
+        initialValue = definition.initializer?.let(::decodeDataValue),
     )
 }
 

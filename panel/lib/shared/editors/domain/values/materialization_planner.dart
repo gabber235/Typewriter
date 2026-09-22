@@ -98,6 +98,10 @@ final class _DraftPlanner {
     }
     final resolved = registry.resolve(type).valueOrNull;
     if (resolved == null) return MissingDraftValue(_id());
+    if (includeInitialValues) {
+      final initial = resolved.initialValue;
+      if (initial != null) return _fromValue(type, initial, location);
+    }
     if (resolved.isConcrete) return build(resolved.representation, location);
     final options = registry.concreteDescendantsOf(type.reference).toList();
     if (includeInitialValues && options.length == 1) {

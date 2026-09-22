@@ -216,10 +216,10 @@ class TypePrototypeRegistry(
     inline fun <reified T : Any> decodeAs(value: TypedValueEnvelope): T = decodeAs(value, T::class)
 
     /**
-     * Plans initialization for an exact concrete type without inventing semantic values.
+     * Plans initialization for an exact concrete type using declared type and field initial values.
      *
-     * Supplied values and declared editor initial values are preserved. Unit is the only missing value inferred
-     * automatically. Constructor default fields remain absent until [initializeConcrete] decodes the ready plan.
+     * Supplied values and declared editor initial values are preserved. Constructor default fields remain absent
+     * until [initializeConcrete] decodes the ready plan.
      */
     fun planInitialization(
         root: ResolvedTypeRef,
@@ -293,7 +293,7 @@ class TypePrototypeRegistry(
      */
     fun concreteImplementationsOf(parent: ResolvedTypeRef): List<ConcreteTypePrototype<*>> =
         concrete
-            .filter { prototype -> prototype.definition.isSubtypeOf(parent.id, emptySet()) }
+            .filter { prototype -> prototype.definition.isPotentialSubtypeOf(parent, emptySet()) }
             .sortedBy { it.type.toString() }
 
     internal fun definition(reference: ResolvedTypeRef): TypeDefinition =
@@ -306,7 +306,7 @@ class TypePrototypeRegistry(
     ): Boolean {
         val definition = definition(candidate)
         return definition.kind == NominalTypeKind.CONCRETE &&
-            definition.isSubtypeOf(parent.id, emptySet())
+            definition.isExactSubtypeOf(candidate, parent, emptySet())
     }
 
     internal fun concrete(reference: ResolvedTypeRef): ConcreteTypePrototype<*> =
@@ -337,20 +337,49 @@ class TypePrototypeRegistry(
         }
     }
 
-    private fun TypeDefinition.isSubtypeOf(
-        target: TypeId,
-        visited: Set<TypeId>,
+    private fun TypeDefinition.isPotentialSubtypeOf(
+        target: ResolvedTypeRef,
+        visited: Set<ResolvedTypeRef>,
     ): Boolean {
-        if (id.id in visited) return false
-        if (parents.any { it.id == target }) return true
-        val nextVisited = visited + id.id
+        if (id in visited) return false
+        if (parents.any { it.matchesPattern(target) }) return true
+        val nextVisited = visited + id
         return parents.any { reference ->
             byReference[reference.copy(arguments = emptyList())]
                 ?.definition
-                ?.isSubtypeOf(target, nextVisited) == true
+                ?.isPotentialSubtypeOf(target, nextVisited) == true
+        }
+    }
+
+    private fun TypeDefinition.isExactSubtypeOf(
+        current: ResolvedTypeRef,
+        target: ResolvedTypeRef,
+        visited: Set<ResolvedTypeRef>,
+    ): Boolean {
+        if (current in visited) return false
+        val bindings =
+            parameters
+                .mapIndexedNotNull { index, parameter ->
+                    current.arguments.getOrNull(index)?.let { parameter.name to it }
+                }.toMap()
+        val resolvedParents = parents.map { it.resolveTypeBindings(bindings) }
+        if (target in resolvedParents) return true
+        val nextVisited = visited + current
+        return resolvedParents.any { reference ->
+            byReference[reference.copy(arguments = emptyList())]
+                ?.definition
+                ?.isExactSubtypeOf(reference, target, nextVisited) == true
         }
     }
 }
+
+private fun ResolvedTypeRef.matchesPattern(target: ResolvedTypeRef): Boolean =
+    id == target.id &&
+        revision == target.revision &&
+        arguments.size == target.arguments.size &&
+        arguments.zip(target.arguments).all { (pattern, value) ->
+            pattern is TypeExpression.Parameter || pattern == value
+        }
 
 /**
  * Supplies abstract dispatch directly from catalog metadata without generating an extra provider class.

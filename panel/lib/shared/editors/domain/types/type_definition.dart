@@ -47,7 +47,8 @@ abstract class TypeParameter with _$TypeParameter {
 ///
 /// The representation is the editable structural view. Parents add inherited
 /// constraints. The registry owns resolution, substitution, inheritance
-/// checks, and the resulting ancestor set; this value remains immutable input.
+/// checks, and the resulting ancestor set. The initial value is the portable
+/// value used when authoring starts without an explicit value.
 @freezed
 abstract class TypeDefinition with _$TypeDefinition {
   const factory TypeDefinition({
@@ -61,6 +62,7 @@ abstract class TypeDefinition with _$TypeDefinition {
     @Default({}) Map<String, PresentationId> namedPresentations,
     @Default({}) Map<PresentationRole, PresentationId> rolePresentations,
     @Default([]) List<FieldMergePolicy> fieldMergePolicies,
+    DataValue? initialValue,
   }) = _TypeDefinition;
 }
 
@@ -83,6 +85,7 @@ abstract class ResolvedType with _$ResolvedType {
     required TypeExpression representation,
     required Set<ResolvedTypeRef> ancestors,
     @Default({}) Set<ResolvedTypeRef> directParents,
+    DataValue? initialValue,
   }) = _ResolvedType;
 
   const ResolvedType._();

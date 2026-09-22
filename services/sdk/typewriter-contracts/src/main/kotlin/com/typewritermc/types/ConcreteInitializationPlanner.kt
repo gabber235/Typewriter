@@ -21,6 +21,12 @@ internal class ConcreteInitializationPlanner(
         supplied: DataValue?,
         path: DataPath,
     ): PlannedValue {
+        val effectiveValue =
+            if (supplied == null && type is TypeExpression.Named) {
+                type.initialValue()
+            } else {
+                supplied
+            }
         val resolved = prototypes.dataFormat.materialize(type)
         return when (resolved) {
             TypeExpression.Unit -> PlannedValue(DataValue.Unit)
@@ -36,15 +42,15 @@ internal class ConcreteInitializationPlanner(
             is TypeExpression.Duration,
             is TypeExpression.Enumeration,
             is TypeExpression.Reference,
-            -> supplied.orRequirement(path, resolved)
+            -> effectiveValue.orRequirement(path, resolved)
 
-            is TypeExpression.ListType -> planList(resolved, supplied, path)
+            is TypeExpression.ListType -> planList(resolved, effectiveValue, path)
 
-            is TypeExpression.MapType -> planMap(resolved, supplied, path)
+            is TypeExpression.MapType -> planMap(resolved, effectiveValue, path)
 
-            is TypeExpression.Record -> planRecord(resolved, supplied, path)
+            is TypeExpression.Record -> planRecord(resolved, effectiveValue, path)
 
-            is TypeExpression.Named -> planAbstract(resolved, supplied, path)
+            is TypeExpression.Named -> planAbstract(resolved, effectiveValue, path)
 
             is TypeExpression.Parameter -> error("Unresolved type parameter ${resolved.name} cannot be initialized.")
         }
@@ -183,6 +189,16 @@ internal class ConcreteInitializationPlanner(
 
     private fun DataPath.append(segment: DataPathSegment): DataPath = DataPath(segments + segment)
 
+    private fun TypeExpression.Named.initialValue(): DataValue? {
+        val definition = prototypes.definition(reference)
+        val substitutions =
+            definition.parameters
+                .mapIndexedNotNull { index, parameter ->
+                    reference.arguments.getOrNull(index)?.let { parameter.name to it }
+                }.toMap()
+        return definition.initialValue?.substituteTypes(substitutions)
+    }
+
     private data class PlannedValue(
         val value: DataValue?,
         val requirements: List<TypeInitializationRequirement> = emptyList(),
@@ -193,3 +209,84 @@ internal class ConcreteInitializationPlanner(
         val requirements: List<TypeInitializationRequirement>,
     )
 }
+
+private fun DataValue.substituteTypes(substitutions: Map<String, TypeExpression>): DataValue =
+    when (this) {
+        DataValue.Unit,
+        is DataValue.Boolean,
+        is DataValue.Bytes,
+        is DataValue.Decimal,
+        is DataValue.Duration,
+        is DataValue.Float,
+        is DataValue.Integer,
+        is DataValue.Reference,
+        is DataValue.StringValue,
+        is DataValue.Timestamp,
+        -> {
+            this
+        }
+
+        is DataValue.ListValue -> {
+            copy(values = values.map { it.substituteTypes(substitutions) })
+        }
+
+        is DataValue.MapValue -> {
+            copy(
+                entries =
+                    entries.map { entry ->
+                        DataMapEntry(
+                            entry.key.substituteTypes(substitutions),
+                            entry.value.substituteTypes(substitutions),
+                        )
+                    },
+            )
+        }
+
+        is DataValue.Record -> {
+            copy(fields = fields.mapValues { (_, value) -> value.substituteTypes(substitutions) })
+        }
+
+        is DataValue.Polymorphic -> {
+            copy(
+                concreteType = concreteType.substituteTypes(substitutions),
+                value = value.substituteTypes(substitutions),
+            )
+        }
+    }
+
+private fun ResolvedTypeRef.substituteTypes(substitutions: Map<String, TypeExpression>): ResolvedTypeRef =
+    withArguments(arguments.map { it.substituteTypes(substitutions) })
+
+private fun TypeExpression.substituteTypes(substitutions: Map<String, TypeExpression>): TypeExpression =
+    when (this) {
+        is TypeExpression.Parameter -> {
+            substitutions[name] ?: this
+        }
+
+        is TypeExpression.ListType -> {
+            copy(element = element.substituteTypes(substitutions))
+        }
+
+        is TypeExpression.MapType -> {
+            copy(
+                key = key.substituteTypes(substitutions),
+                value = value.substituteTypes(substitutions),
+            )
+        }
+
+        is TypeExpression.Record -> {
+            copy(fields = fields.map { field -> field.copy(type = field.type.substituteTypes(substitutions)) })
+        }
+
+        is TypeExpression.Named -> {
+            copy(reference = reference.substituteTypes(substitutions))
+        }
+
+        is TypeExpression.Reference -> {
+            copy(target = target.substituteTypes(substitutions))
+        }
+
+        else -> {
+            this
+        }
+    }

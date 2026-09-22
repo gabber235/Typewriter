@@ -5876,6 +5876,7 @@ sealed class TypeDefinition_orMutable {
   _core.Iterable<RolePresentation_orMutable> get rolePresentations;
   _core.Iterable<FieldMergePolicy_orMutable> get fieldMergePolicies;
   _core.String get declarationOwner;
+  TypedValue? get initializer;
 
   TypeDefinition toFrozen();
 }
@@ -5908,6 +5909,8 @@ final class TypeDefinition implements TypeDefinition_orMutable {
   final _core.Iterable<FieldMergePolicy> fieldMergePolicies;
   @_core.override
   final _core.String declarationOwner;
+  @_core.override
+  final TypedValue? initializer;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TypeDefinition({
@@ -5924,6 +5927,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     required _core.Iterable<RolePresentation_orMutable> rolePresentations,
     required _core.Iterable<FieldMergePolicy_orMutable> fieldMergePolicies,
     required _core.String declarationOwner,
+    required TypedValue? initializer,
   }) => TypeDefinition._(
     displayName,
     _skir.internal__keyedMappedCopy(
@@ -5951,6 +5955,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.internal__frozenMappedCopy(rolePresentations, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(fieldMergePolicies, (it) => it.toFrozen()),
     declarationOwner,
+    initializer,
   );
 
   TypeDefinition._(
@@ -5967,6 +5972,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.rolePresentations,
     this.fieldMergePolicies,
     this.declarationOwner,
+    this.initializer,
   );
 
   /// Default instance with all fields set to their default values.
@@ -5984,6 +5990,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     "",
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -6002,6 +6009,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     "",
+    null,
   );
 
   /// Returns this instance (no-op).
@@ -6024,6 +6032,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.rolePresentations,
     this.fieldMergePolicies,
     this.declarationOwner,
+    this.initializer,
   );
 
   @_core.override
@@ -6053,6 +6062,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.rolePresentations,
     this.fieldMergePolicies,
     this.declarationOwner,
+    this.initializer,
   ];
 
   @_core.override
@@ -6187,6 +6197,15 @@ final class TypeDefinition implements TypeDefinition_orMutable {
         (it) => it.declarationOwner,
         (it, v) => it.declarationOwner = v,
       );
+      _serializerBuilder.addField(
+        "initializer",
+        "initializer",
+        13,
+        _skir.Serializers.optional(TypedValue.serializer),
+        "",
+        (it) => it.initializer,
+        (it, v) => it.initializer = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -6218,6 +6237,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
   _core.Iterable<RolePresentation_orMutable> rolePresentations;
   _core.Iterable<FieldMergePolicy_orMutable> fieldMergePolicies;
   _core.String declarationOwner;
+  TypedValue? initializer;
   _skir.internal__UnrecognizedFields? _u;
 
   TypeDefinition_mutable._(
@@ -6234,6 +6254,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     this.rolePresentations,
     this.fieldMergePolicies,
     this.declarationOwner,
+    this.initializer,
   );
 
   /// If the value of [parameters] is already mutable, returns it as-is.
@@ -6320,6 +6341,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     rolePresentations: this.rolePresentations,
     fieldMergePolicies: this.fieldMergePolicies,
     declarationOwner: this.declarationOwner,
+    initializer: this.initializer,
   ).._u = this._u;
 }
 

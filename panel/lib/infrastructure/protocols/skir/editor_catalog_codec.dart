@@ -31,10 +31,16 @@ extension TypeCatalogWireEncoding on TypeCatalog {
     final diagnostics = <TypeDiagnostic>[];
     for (final definition in this.definitions) {
       final representation = codec.encodeExpression(definition.representation);
+      final initialValue = definition.initialValue == null
+          ? const TypeResult<wire.TypedValue?>.success(null)
+          : SkirDataValueCodec(codec)
+                .encode(definition.initialValue!)
+                .mapValue((value) => value);
       final id = codec.encodeReference(definition.id);
       final parents = <wire.ResolvedTypeRef>[];
       diagnostics
         ..addAll(representation.diagnostics)
+        ..addAll(initialValue.diagnostics)
         ..addAll(id.diagnostics);
       for (final parent in definition.parents) {
         final encoded = codec.encodeReference(parent);
@@ -106,6 +112,7 @@ extension TypeCatalogWireEncoding on TypeCatalog {
                 strategy: policy.strategy._encodeWire,
               ),
           ],
+          initializer: initialValue.valueOrNull,
         ),
       );
     }
@@ -178,9 +185,15 @@ extension on wire.TypeDefinition {
   ) {
     final value = this;
     final representation = codec.decodeExpression(value.representation);
+    final initialValue = value.initializer == null
+        ? const TypeResult<DataValue?>.success(null)
+        : SkirDataValueCodec(codec)
+              .decode(value.initializer)
+              .mapValue((value) => value);
     final kind = value.kind._decodeDomain();
     final diagnostics = <TypeDiagnostic>[
       ...representation.diagnostics,
+      ...initialValue.diagnostics,
       ...kind.diagnostics,
     ];
     final parents = <ResolvedTypeRef>[];
@@ -268,6 +281,7 @@ extension on wire.TypeDefinition {
         namedPresentations: namedPresentations,
         rolePresentations: rolePresentations,
         fieldMergePolicies: fieldMergePolicies,
+        initialValue: initialValue.valueOrNull,
       ),
     );
   }

@@ -270,6 +270,7 @@ struct TypeDefinition(810100026) {
   role_presentations: [RolePresentation] = 10;
   field_merge_policies: [FieldMergePolicy] = 11;
   declaration_owner: string = 12;
+  initializer: TypedValue? = 13;
 }
 
 struct TypeCatalog(810100027) {

@@ -248,6 +248,33 @@ val ConcreteInitializationTest by testSuite {
         registry.decodeAs<CreatureRoot>(initialized) shouldBe CreatureRoot(Cat("Milo"))
     }
 
+    test("abstract type initial values select a concrete subtype for nested entries") {
+        val initialCreature =
+            DataValue.Polymorphic(
+                concreteType = catType,
+                value = DataValue.Record(mapOf("name" to DataValue.StringValue("Default cat"))),
+            )
+        val registry = registry(creaturePrototype(initialCreature), catPrototype(), creatureRootPrototype())
+
+        val planned = registry.planInitialization(creatureRootType, DataValue.Record(emptyMap()))
+
+        planned shouldBe
+            TypeInitializationPlan.Ready(
+                DataValue.Record(mapOf("creature" to initialCreature)),
+            )
+        val initialized = registry.initializeConcrete(creatureRootType, DataValue.Record(emptyMap()))
+        registry.decodeAs<CreatureRoot>(initialized) shouldBe CreatureRoot(Cat("Default cat"))
+    }
+
+    test("concrete type initial values initialize the root representation") {
+        val initialValue = DataValue.Record(mapOf("enabled" to DataValue.Boolean(false)))
+        val prototype = defaultsPrototype(initialValue)
+        val registry = registry(prototype)
+
+        registry.planInitialization(defaultsType, null) shouldBe TypeInitializationPlan.Ready(initialValue)
+        registry.decodeAs<Defaults>(registry.initializeConcrete(defaultsType, initialValue)) shouldBe Defaults(enabled = false)
+    }
+
     test("abstract fields reject unrelated concrete types") {
         val registry = registry(creaturePrototype(), catPrototype(), creatureRootPrototype(), defaultsPrototype())
         val supplied =
@@ -264,6 +291,16 @@ val ConcreteInitializationTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             registry.planInitialization(creatureRootType, supplied)
         }
+    }
+
+    test("concrete subtype lookup requires the exact parent revision and arguments") {
+        val registry = registry(creaturePrototype(), catPrototype())
+
+        registry.concreteImplementationsOf(creatureType.copy(revision = 2)) shouldBe emptyList()
+        registry.concreteImplementationsOf(
+            creatureType.withArguments(listOf(TypeExpression.StringType())),
+        ) shouldBe emptyList()
+        registry.concreteImplementationsOf(creatureType).map(TypePrototype<*>::type) shouldBe listOf(catType)
     }
 
     test("minimum collection cardinality is reported at nested list and map paths") {
@@ -431,7 +468,7 @@ private fun nestedRootPrototype() =
         serializer = NestedRoot.serializer(),
     )
 
-private fun defaultsPrototype() =
+private fun defaultsPrototype(initialValue: DataValue? = null) =
     SerializationConcreteTypePrototype(
         runtimeType = Defaults::class,
         type = defaultsType,
@@ -446,6 +483,7 @@ private fun defaultsPrototype() =
                             TypeField("title", TypeExpression.StringType(), defaulted = true),
                         ),
                     ),
+                initialValue = initialValue,
             ),
         serializer = Defaults.serializer(),
     )
@@ -481,7 +519,7 @@ private fun optionalPrototype() =
         serializer = OptionalValue.serializer(),
     )
 
-private fun creaturePrototype() =
+private fun creaturePrototype(initialValue: DataValue? = null) =
     CatalogAbstractTypePrototype(
         runtimeType = Creature::class,
         type = creatureType,
@@ -489,6 +527,7 @@ private fun creaturePrototype() =
             TypeDefinition(
                 id = creatureType,
                 kind = NominalTypeKind.OPEN_ABSTRACT,
+                initialValue = initialValue,
             ),
     )
 

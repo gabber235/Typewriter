@@ -167,14 +167,23 @@ final class TypeRegistry {
       representation: effective,
       ancestors: ancestors,
       directParents: directParents,
+      initialValue: definition.initialValue?.substituteTypes(substitutions),
     );
 
     _cache[reference] = result;
 
     final resolvedDiagnostics = effective.validateResolvedValues(this);
-    if (resolvedDiagnostics.isNotEmpty) {
+    final initialValueDiagnostics = result.initialValue?.validateAgainst(
+      NamedType(reference),
+      registry: this,
+    );
+    if (resolvedDiagnostics.isNotEmpty ||
+        (initialValueDiagnostics?.isNotEmpty ?? false)) {
       _cache.remove(reference);
-      return TypeResult.failure(resolvedDiagnostics);
+      return TypeResult.failure([
+        ...resolvedDiagnostics,
+        ...?initialValueDiagnostics,
+      ]);
     }
     return TypeResult.success(result);
   }
