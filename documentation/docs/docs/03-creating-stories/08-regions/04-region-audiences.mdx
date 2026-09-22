@@ -39,8 +39,9 @@ it applies to whoever is standing inside the region, the same pattern as the amb
 - `Prevent Damage Audience` makes players immune to every damage source. The damage never lands, so there is
   no hurt animation and no knockback.
 - `Lock Health Audience` holds health at a configurable value, defaulting to 20. Damage does land, so the
-  hurt animation, sound, and knockback still play, and the health is put back right after. Values above the
-  player's maximum are clamped.
+  hurt animation, sound, and knockback still play, and the health is put back right after. A hit that would
+  kill the player still plays but deals no damage, so a player held above zero never dies. Only `/kill` and
+  the void still kill them. Values above the player's maximum are clamped.
 - `Prevent Hunger Loss Audience` keeps the hunger bar from dropping. Eating still fills it.
 - `Prevent Block Place Audience` stops players from placing blocks anywhere.
 - `Prevent Block Break Audience` stops players from breaking blocks anywhere.
