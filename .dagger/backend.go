@@ -60,7 +60,8 @@ func (m *Typewriter) backendContainer(source *dagger.Workspace, cacheScope strin
 }
 
 func (m *Typewriter) backendTestContainer(source *dagger.Workspace) *dagger.Container {
-	return m.backendContainer(source, "component-test")
+	return m.backendContainer(source, "component-test").
+		WithFile("/usr/local/bin/nats-server", dag.Container().From("nats:2.14.6-alpine").File("/usr/local/bin/nats-server"))
 }
 
 // +check

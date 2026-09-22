@@ -12,6 +12,7 @@ mod diagnostic;
 mod http_mock;
 mod manifest;
 mod messaging_mock;
+mod nats;
 mod outgoing;
 mod runtime;
 mod telemetry;
@@ -38,6 +39,7 @@ use std::{
     time::Instant,
 };
 
+use crate::nats::NatsDriver;
 use anyhow::Result;
 use component_test_model::{FixtureDescriptor, TestDescriptor};
 use futures_util::FutureExt;
@@ -48,7 +50,7 @@ use tokio::{
     sync::{OwnedSemaphorePermit, Semaphore},
 };
 use tracing_subscriber::prelude::*;
-use wash_runtime::{engine::Engine, plugin::wasmcloud_messaging::InMemoryMessagingDriver};
+use wash_runtime::engine::Engine;
 
 /// Result returned by a component test body.
 pub type TestResult = anyhow::Result<()>;
@@ -67,7 +69,7 @@ pub trait FixtureDeclaration: Send + Sync + 'static {
 pub struct TestContext<F> {
     descriptor: &'static TestDescriptor,
     http: Option<(SocketAddr, String)>,
-    messaging: Option<InMemoryMessagingDriver>,
+    messaging: Option<NatsDriver>,
     messaging_mock: Option<MessagingMock>,
     handles: HashMap<TypeId, Arc<dyn Any + Send + Sync>>,
     transcript: VecDeque<String>,
@@ -114,7 +116,7 @@ impl<F> TestContext<F> {
             .map(|value| (*value).clone())
             .map_err(|_| anyhow::anyhow!("registered marker is not an HTTP mock"))
     }
-    /// Returns the in memory client for publishing or requesting through the workload broker.
+    /// Returns the NATS client for publishing or requesting through the workload broker.
     pub fn messaging(&self) -> Result<MessagingClient> {
         self.messaging
             .clone()
@@ -184,9 +186,9 @@ impl IncomingHttpClient {
     }
 }
 
-/// Client for exercising the fixture's in memory broker connections.
+/// Client for exercising the fixture's isolated NATS server.
 #[derive(Clone)]
-pub struct MessagingClient(InMemoryMessagingDriver);
+pub struct MessagingClient(NatsDriver);
 impl MessagingClient {
     /// Publishes a one way message to the workload broker.
     pub async fn publish(
@@ -212,20 +214,16 @@ impl MessagingClient {
             .await?
             .body)
     }
-    /// Waits until the in memory broker has finished queued delivery.
+    /// Waits until the broker delivery queues and guest handlers are idle.
     pub async fn wait_idle(&self) -> Result<()> {
         self.0.wait_idle().await.map_err(Into::into)
     }
 }
-fn host_message(
-    subject: impl Into<String>,
-    body: impl Into<Vec<u8>>,
-) -> wash_runtime::plugin::wasmcloud_messaging::HostMessage {
-    wash_runtime::plugin::wasmcloud_messaging::HostMessage {
+fn host_message(subject: impl Into<String>, body: impl Into<Vec<u8>>) -> crate::nats::HostMessage {
+    crate::nats::HostMessage {
         subject: subject.into(),
         reply_to: None,
         body: body.into(),
-        trace_context: None,
     }
 }
 
@@ -561,6 +559,11 @@ where
             .and_then(|value| value)
         {
             failures.push(format!("stopping host: {error:#}"));
+        }
+        if let Some(messaging) = &fixture.messaging {
+            if let Err(error) = messaging.close().await {
+                failures.push(format!("stopping NATS: {error:#}"));
+            }
         }
     }
     diagnostic.phase("cleaning extensions");

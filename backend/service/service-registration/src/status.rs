@@ -25,7 +25,7 @@ use wasmcloud_utils::{
         ServiceBinding, ServiceBinding_Bound, ServiceBinding_Unbound,
     },
     skir_domain_result, skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use crate::utils;
@@ -45,7 +45,7 @@ struct StatusQueryResult {
 /// operator to consume the token. It does not prove service liveness.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_status(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<GetServiceStatusResponse, otel_wasi::Error> {
     let service_id = extract_param!(params, service_id)?;

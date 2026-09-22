@@ -7,8 +7,9 @@
 
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:nats/jetstream@0.1.0": wasmcloud_utils::wasmcloud::messaging::jetstream,
+        "wasmcloud:nats/core@0.1.0": wasmcloud_utils::wasmcloud::messaging::core,
+        "wasmcloud:nats/core-handler@0.1.0": wasmcloud_utils::wasmcloud::messaging::core_handler,
     },
     generate_all,
 });
@@ -29,7 +30,7 @@ mod watch_topology;
 
 use wasmcloud_utils::{
     dispatch_actions,
-    wasmcloud::messaging::{handler::Guest, parse_subject, types},
+    wasmcloud::messaging::{core_handler::Guest, parse_subject, types},
 };
 
 struct Component;
@@ -37,7 +38,7 @@ wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "service-registration", export)]
-    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+    async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         handle_message_async(msg).await
     }
 }
@@ -47,7 +48,7 @@ impl Guest for Component {
 /// Heartbeat and shutdown are matched explicitly because they have no request response. All
 /// other subjects are expanded by `dispatch_actions!`, which supplies the path parameters used by
 /// the handlers.
-async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
     if let Ok(params) = parse_subject(
         "[typewriter.from.]service.<service_id>.heartbeat",
         &msg.subject,

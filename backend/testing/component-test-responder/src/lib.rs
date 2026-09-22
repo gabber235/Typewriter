@@ -6,20 +6,21 @@
 
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:nats/jetstream@0.1.0": wasmcloud_utils::wasmcloud::messaging::jetstream,
+        "wasmcloud:nats/core@0.1.0": wasmcloud_utils::wasmcloud::messaging::core,
+        "wasmcloud:nats/core-handler@0.1.0": wasmcloud_utils::wasmcloud::messaging::core_handler,
     },
     generate_all,
 });
 
-use wasmcloud_utils::wasmcloud::messaging::{self, handler::Guest, types};
+use wasmcloud_utils::wasmcloud::messaging::{self, core_handler::Guest, types};
 
 struct Component;
 wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     /// Echoes dependency requests through the broker reply route.
-    async fn handle_message(message: types::BrokerMessage) -> Result<(), String> {
+    async fn handle_message(message: types::NatsMessage) -> Result<(), String> {
         // Ignore unrelated subjects so the dependency remains safe to compose with other routes.
         if message.subject == "dependency.echo" {
             messaging::reply(message.clone(), message.body)

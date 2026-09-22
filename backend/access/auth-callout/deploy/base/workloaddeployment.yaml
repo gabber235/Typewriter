@@ -23,13 +23,14 @@ spec:
           interfaces:
             - tracing
         - namespace: wasmcloud
-          package: messaging
-          version: "0.4.0"
+          package: nats
+          version: "0.1.0"
           interfaces:
-            - handler
-            - consumer
+            - core-handler
+            - core
+            - jetstream
           config:
-            subscriptions: $SYS.REQ.USER.AUTH
+            core-subscriptions: $SYS.REQ.USER.AUTH:typewriter.auth-auth-callout
         - namespace: wasi
           package: http
           interfaces:

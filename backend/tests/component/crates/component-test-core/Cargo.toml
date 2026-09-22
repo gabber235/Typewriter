@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 async-trait.workspace = true
+async-nats.workspace = true
 bytes.workspace = true
 component-test-model.workspace = true
 futures-util.workspace = true
@@ -23,6 +24,7 @@ serde_json.workspace = true
 reqwest.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+tempfile.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true

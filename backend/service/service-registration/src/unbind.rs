@@ -25,7 +25,7 @@ use wasmcloud_utils::{
         UnbindServiceResponse_ServiceNotFoundError, UnbindServiceResponse_Success,
     },
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 /// Removes the addressed organization's binding from a service.
@@ -36,7 +36,7 @@ use wasmcloud_utils::{
 /// differently owned services return `ServiceNotFoundError` without changing state.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_unbind(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<UnbindServiceResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

@@ -14,11 +14,10 @@ use wash_runtime::{
         http::{DynamicRouter, Ingress},
     },
     plugin::{
-        HostPlugin,
+        HostPlugin, PluginBindingSet, PluginBindings, WorkloadConfigPolicy,
         wasi_config::DynamicConfig,
         wasi_logging::TracingLogger,
         wasi_otel::{WasiOtel, WasiOtelConfig},
-        wasmcloud_messaging::{InMemoryMessaging, InMemoryMessagingDriver},
     },
     types::{Component, LocalResources, Workload, WorkloadStartRequest, WorkloadState},
     wit::WitInterface,
@@ -78,10 +77,8 @@ pub(crate) struct RunningFixture<F> {
     pub host: Arc<Host>,
     pub workload_id: String,
     pub http: Option<(SocketAddr, String)>,
-    pub messaging: Option<InMemoryMessagingDriver>,
+    pub messaging: Option<crate::nats::NatsDriver>,
     pub messaging_mock: Option<MessagingMock>,
-    messaging_monitors: Vec<tokio::task::JoinHandle<Result<()>>>,
-    messaging_monitor_stop: Option<tokio::sync::watch::Sender<bool>>,
     pub diagnostics: Diagnostics,
     marker: PhantomData<F>,
 }
@@ -169,24 +166,31 @@ pub(crate) async fn start<F: FixtureDeclaration>(
         server = Some(value);
     }
     let mut messaging = None;
+    let mut plugin_bindings = PluginBindings::new();
     if builder.messaging {
-        let plugin = InMemoryMessaging::new();
-        let driver = plugin
-            .reserve_workload(&workload_id)
-            .await
-            .context("reserving messaging workload")?;
-        plugins.push(Arc::new(plugin));
-        let mut interface = WitInterface::from("wasmcloud:messaging/handler,consumer@0.4.0");
-        interface.config.insert(
-            "subscriptions".into(),
-            builder
-                .components
-                .values()
-                .flat_map(|c| c.subscriptions.iter().cloned())
-                .collect::<Vec<_>>()
-                .join(","),
+        let driver = crate::nats::NatsDriver::start(&workload_id).await?;
+        plugins.push(driver.plugin.clone());
+        plugin_bindings = plugin_bindings.with_plugin(
+            PluginBindingSet::new("wasmcloud-nats")
+                .with_workload_config(WorkloadConfigPolicy::Deny)
+                .with_base(HashMap::from([
+                    ("servers".into(), driver.endpoint.clone()),
+                    ("subject-allow".into(), ">".into()),
+                    ("stream-allow".into(), "TYPEWRITER_MEMBERSHIP".into()),
+                ])),
         );
-        merge_interface(&mut interfaces, interface)?;
+        for descriptor in F::DESCRIPTOR.components() {
+            let config = &builder.components[descriptor.package];
+            let mut interface =
+                WitInterface::from("wasmcloud:nats/core-handler,core,jetstream@0.1.0");
+            interface
+                .config
+                .insert("component".into(), descriptor.target.into());
+            interface
+                .config
+                .insert("core-subscriptions".into(), config.subscriptions.join(","));
+            interfaces.push(interface);
+        }
         messaging = Some(driver);
     }
     let mut ids = HashSet::new();
@@ -197,6 +201,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
     }
     let mut host_builder = HostBuilder::new()
         .with_engine(engine)
+        .with_plugin_bindings(plugin_bindings)
         .with_friendly_name(format!("component-test-{workload_id}"));
     if let Some(server) = server {
         host_builder = host_builder.with_http_handler(server);
@@ -224,7 +229,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
             .with_context(|| format!("missing component configuration `{}`", descriptor.package))?;
         let mut local_config = config.config.clone();
         if builder.messaging {
-            local_config.insert("subscriptions".into(), config.subscriptions.join(","));
+            local_config.insert("core-subscriptions".into(), config.subscriptions.join(","));
         }
         components.push(Component {
             name: descriptor.target.to_string(),
@@ -240,6 +245,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
             pool_size: 1,
             max_invocations: -1,
             max_concurrency: 1,
+            ..Default::default()
         });
     }
     let workload = Workload {
@@ -280,26 +286,18 @@ pub(crate) async fn start<F: FixtureDeclaration>(
         bail!("workload did not reach Running: {state:?}: {message}");
     }
     let messaging_mock = messaging.as_ref().map(|_| builder.messaging_mock.clone());
-    let (messaging_monitors, messaging_monitor_stop) =
-        if let (Some(driver), Some(mock)) = (&messaging, &messaging_mock) {
-            match start_messaging_monitors(driver, mock).await {
-                Ok(monitors) => monitors,
-                Err(error) => {
-                    cleanup_failed_start(&host, &workload_id, builder.stop_timeout).await;
-                    return Err(error);
-                }
-            }
-        } else {
-            (Vec::new(), None)
-        };
+    if let (Some(driver), Some(mock)) = (&messaging, &messaging_mock) {
+        if let Err(error) = driver.observe(mock.clone()).await {
+            cleanup_failed_start(&host, &workload_id, builder.stop_timeout).await;
+            return Err(error);
+        }
+    }
     Ok(RunningFixture {
         host,
         workload_id,
         http,
         messaging,
         messaging_mock,
-        messaging_monitors,
-        messaging_monitor_stop,
         diagnostics,
         marker: PhantomData,
     })
@@ -320,93 +318,13 @@ async fn cleanup_failed_start(
     let _ = tokio::time::timeout(timeout, Arc::clone(host).stop()).await;
 }
 
-async fn start_messaging_monitors(
-    driver: &InMemoryMessagingDriver,
-    mock: &MessagingMock,
-) -> Result<(
-    Vec<tokio::task::JoinHandle<Result<()>>>,
-    Option<tokio::sync::watch::Sender<bool>>,
-)> {
-    let mut observations = driver
-        .observe(128)
-        .await
-        .context("creating messaging observer")?;
-    let single_responder = driver
-        .register_responder("*", 128)
-        .await
-        .context("creating messaging responder")?;
-    let nested_responder = driver
-        .register_responder(">", 128)
-        .await
-        .context("creating nested messaging responder")?;
-    let (stop, stop_receiver) = tokio::sync::watch::channel(false);
-    let observation_mock = mock.clone();
-    let mut observation_stop = stop_receiver.clone();
-    let observation = tokio::spawn(async move {
-        loop {
-            tokio::select! {
-                biased;
-                event = observations.recv() => match event {
-                    Some(event) if event.operation == wash_runtime::plugin::wasmcloud_messaging::ObservedOperation::Publish => observation_mock.record_publish(&event.message),
-                    Some(_) => {},
-                    None => return Ok(()),
-                },
-                changed = observation_stop.changed() => if changed.is_err() || *observation_stop.borrow() { return Ok(()); },
-            }
-        }
-    });
-    fn responder(
-        mut receiver: wash_runtime::plugin::wasmcloud_messaging::ResponderReceiver,
-        request_mock: MessagingMock,
-        mut request_stop: tokio::sync::watch::Receiver<bool>,
-    ) -> tokio::task::JoinHandle<Result<()>> {
-        tokio::spawn(async move {
-            loop {
-                tokio::select! {
-                    biased;
-                    request = receiver.recv() => match request {
-                        Some(request) => if let Some(response) = request_mock.record_request(&request) { response.send(request).await?; },
-                        None => return Ok(()),
-                    },
-                    changed = request_stop.changed() => if changed.is_err() || *request_stop.borrow() { return Ok(()); },
-                }
-            }
-        })
-    }
-    Ok((
-        vec![
-            observation,
-            responder(single_responder, mock.clone(), stop_receiver.clone()),
-            responder(nested_responder, mock.clone(), stop_receiver),
-        ],
-        Some(stop),
-    ))
-}
-
 impl<F> RunningFixture<F> {
     pub(crate) async fn stop_messaging_monitors(
         &mut self,
         timeout: std::time::Duration,
     ) -> Result<()> {
-        if let Some(stop) = self.messaging_monitor_stop.take() {
-            let _ = stop.send(true);
-        }
-        let deadline = tokio::time::Instant::now() + timeout;
-        let mut failures = Vec::new();
-        for mut monitor in self.messaging_monitors.drain(..) {
-            match tokio::time::timeout_at(deadline, &mut monitor).await {
-                Ok(Ok(Ok(()))) => {}
-                Ok(Ok(Err(error))) => failures.push(format!("{error:#}")),
-                Ok(Err(error)) => failures.push(format!("monitor task: {error}")),
-                Err(_) => {
-                    monitor.abort();
-                    let _ = monitor.await;
-                    failures.push(format!("monitor shutdown timed out after {timeout:?}"));
-                }
-            }
-        }
-        if !failures.is_empty() {
-            bail!(failures.join("; "));
+        if let Some(driver) = &self.messaging {
+            tokio::time::timeout(timeout, driver.stop_observer()).await??;
         }
         Ok(())
     }

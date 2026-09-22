@@ -6,20 +6,21 @@
 
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:nats/jetstream@0.1.0": wasmcloud_utils::wasmcloud::messaging::jetstream,
+        "wasmcloud:nats/core@0.1.0": wasmcloud_utils::wasmcloud::messaging::core,
+        "wasmcloud:nats/core-handler@0.1.0": wasmcloud_utils::wasmcloud::messaging::core_handler,
     },
     generate_all,
 });
 
-use wasmcloud_utils::wasmcloud::messaging::{self, handler::Guest, types};
+use wasmcloud_utils::wasmcloud::messaging::{self, core_handler::Guest, types};
 
 struct Component;
 wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     /// Runs the messaging scenario selected by the incoming subject.
-    async fn handle_message(message: types::BrokerMessage) -> Result<(), String> {
+    async fn handle_message(message: types::NatsMessage) -> Result<(), String> {
         match message.subject.as_str() {
             "test.publish" => messaging::publish("component.out".into(), message.body)
                 .await

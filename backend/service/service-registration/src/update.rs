@@ -31,7 +31,7 @@ use wasmcloud_utils::{
         service::Service,
     },
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -64,7 +64,7 @@ impl ServiceUpdateOutcome {
 /// publication failure occurs after durable mutation and is therefore not rolled back.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_update(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<UpdateOrganizationServiceResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

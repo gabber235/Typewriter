@@ -15,7 +15,7 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -42,7 +42,7 @@ impl JoinCodeGenerationOutcome {
 /// code change stream. Expired codes are excluded by the database snapshot query.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchOrganizationJoinCodesResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
@@ -66,7 +66,7 @@ pub async fn handle_watch(
 /// records the committed result for operation replay, and publishes the code addition afterward.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_generate(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<GenerateOrganizationJoinCodeResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
@@ -228,7 +228,7 @@ RETURN {
 /// result, while reusing it for different input is rejected.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_revoke(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<RevokeOrganizationJoinCodeResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

@@ -20,7 +20,7 @@ use wasmcloud_utils::{
         WatchOrganizationTopologyResponse_List,
     },
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -37,7 +37,7 @@ struct TopologyListRecord {
 /// tracing context supplied by the subject, while the request body currently carries no fields
 /// beyond the Skir boundary.
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchOrganizationTopologyResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

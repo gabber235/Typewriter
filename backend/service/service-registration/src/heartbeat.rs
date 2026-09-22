@@ -14,7 +14,7 @@ use wasmcloud_utils::{
     skir::base::service::v1::{
         lifecycle::ServiceHeartbeatNotification, organization::WatchOrganizationServicesResponse,
     },
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::service::ServiceRecord;
@@ -25,7 +25,7 @@ use wasmcloud_utils::database::service::ServiceRecord;
 /// The notification body carries no state to merge. Its subject identifies the service, while
 /// `update_state` owns the database write and the conditional organization publication.
 pub async fn handle_heartbeat(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<(), otel_wasi::Error> {
     let service_id = extract_param!(params, service_id)?;

@@ -125,7 +125,11 @@ builder
     })
 ```
 
-Tests inject through `context.messaging()?`. Component-originated publish/request traffic is verified through `context.messaging_mock()?`. Host-injected traffic never satisfies outbound expectations. `wait_idle` includes queued and running component handlers.
+Each fixture starts an isolated NATS server and uses the production `wasmcloud:nats` plugin. Dagger supplies the pinned server binary. For runner diagnostics outside Dagger, install `nats-server` or set `NATS_SERVER_BIN`.
+
+Tests inject through `context.messaging()?`. Guest publish and request traffic is verified through `context.messaging_mock()?`, including calls between real components. Injected input never satisfies outbound expectations. `wait_idle` fences broker subscriptions and waits for queued deliveries, running handlers, and observed output. It does not infer completion from a socket flush.
+
+`expect_persisted_publish` observes an event accepted by the real `TYPEWRITER_MEMBERSHIP` JetStream stream. It does not fabricate an acknowledgement.
 
 ## Typewriter helpers
 
@@ -185,4 +189,4 @@ Run one exact case with `dagger call backend-test-case`. Lifecycle phases have b
 - `suite`: central fixture catalog and examples.
 - `xtask`: artifact builds, selection, manifests, sharding, and execution.
 
-The framework validates embedded runtime behavior only. OCI packaging, NATS transport, containers, Kubernetes, operator reconciliation, and ingress require separate coverage.
+The framework validates embedded runtime behavior only. OCI packaging, container images, Kubernetes, operator reconciliation, and ingress require separate coverage. Core NATS transport and membership persistence run against a real isolated broker.
