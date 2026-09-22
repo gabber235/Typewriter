@@ -167,7 +167,7 @@ authorization {
 }
 `
 	nats := dag.Container().
-		From("nats:2.14.6-alpine").
+		From("nats:2.15.0-alpine").
 		WithNewFile("/etc/nats/nats.conf", config).
 		WithExposedPort(4222).
 		AsService(dagger.ContainerAsServiceOpts{
