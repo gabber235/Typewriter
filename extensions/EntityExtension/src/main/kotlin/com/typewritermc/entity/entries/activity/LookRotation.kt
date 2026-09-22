@@ -1,8 +1,7 @@
 package com.typewritermc.entity.entries.activity
 
-import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.max
+import kotlin.math.hypot
 
 fun normalizeYaw(yaw: Float): Float {
     return (yaw + 180) % 360 - 180
@@ -52,7 +51,7 @@ fun getLookYaw(dx: Double, dz: Double): Float {
 }
 
 fun getLookPitch(dx: Double, dy: Double, dz: Double): Float {
-    val radians = -atan2(dy, max(abs(dx), abs(dz)))
+    val radians = -atan2(dy, hypot(dx, dz))
     return Math.toDegrees(radians).toFloat()
 }
 
