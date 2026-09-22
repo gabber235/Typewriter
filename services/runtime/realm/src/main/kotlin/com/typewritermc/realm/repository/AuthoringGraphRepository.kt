@@ -152,7 +152,7 @@ internal class AuthoringGraphQueryEngine(
         val selectedEdgeIds = linkedSetOf<String>()
         val results = mutableListOf<GraphSelectionResult>()
 
-        selections.forEach { selection ->
+        for (selection in selections) {
             val missing = mutableListOf<ResourceId>()
             val incompatible = mutableListOf<ResourceId>()
             var frontier =
@@ -186,17 +186,17 @@ internal class AuthoringGraphQueryEngine(
                 }
             val membership = linkedSetOf<ResourceId>().apply { addAll(frontier) }
             val traversedEdges = linkedSetOf<String>()
-            selection.steps.forEach { step ->
+            for (step in selection.steps) {
                 val stepFrontier = linkedSetOf<ResourceId>()
                 var depthFrontier = frontier
                 val visitedAtStep = linkedSetOf<ResourceId>().apply { addAll(frontier) }
                 for (depth in 1..step.maxDepth) {
                     val next = linkedSetOf<ResourceId>()
-                    orderedEdges.forEach { edge ->
-                        if (!edge.matches(step.relations)) return@forEach
-                        val adjacent = edge.adjacent(depthFrontier, step) ?: return@forEach
-                        val target = byId[adjacent] ?: return@forEach
-                        if (step.target != null && !target.matches(step.target)) return@forEach
+                    for (edge in orderedEdges) {
+                        if (!edge.matches(step.relations)) continue
+                        val adjacent = edge.adjacent(depthFrontier, step) ?: continue
+                        val target = byId[adjacent] ?: continue
+                        if (step.target != null && !target.matches(step.target)) continue
                         traversedEdges += edge.id
                         if (visitedAtStep.add(adjacent)) next += adjacent
                     }
