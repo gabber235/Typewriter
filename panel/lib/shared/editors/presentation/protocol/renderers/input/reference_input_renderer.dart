@@ -49,12 +49,9 @@ extension ReferenceInputElementRendering on ReferenceInputElement {
                   id: (payload.selectedValue as ReferenceValue).id,
                 ),
               );
-              final local = _evaluateReferenceCandidate(
-                scope: scope,
-                binding: field.binding,
-                shape: shape,
-                policyId: candidatePolicy,
-                candidate: evaluation.context.candidate,
+              final local = scope.referencePolicies.evaluate(
+                candidatePolicy,
+                evaluation.context,
               );
               return _candidateActivation(
                 evaluateEligibility(evaluation, local),
@@ -104,12 +101,9 @@ extension ReferenceInputElementRendering on ReferenceInputElement {
                   types: resource.referenceTypes,
                 ),
               );
-              final local = _evaluateReferenceCandidate(
-                scope: scope,
-                binding: field.binding,
-                shape: shape,
-                policyId: candidatePolicy,
-                candidate: evaluation.context.candidate,
+              final local = scope.referencePolicies.evaluate(
+                candidatePolicy,
+                evaluation.context,
               );
               return evaluateEligibility(evaluation, local)
                   is ReferenceCandidateAllowed;
@@ -242,133 +236,6 @@ class _ReferenceEligibilityBoundaryState
 
   @override
   Widget build(BuildContext context) => widget.builder(context, _evaluate);
-}
-
-/// Caches Realm authorization only for one explicit evaluator version.
-///
-/// A unique token owns each pending request. Replacing an evaluator and then
-/// evaluating the same candidate cannot let the older response consume or
-/// overwrite the new request.
-final class ReferenceEligibilityController {
-  ReferenceEligibilityController(this._evaluator);
-
-  ReferenceEligibilityEvaluator? _evaluator;
-  final _results = <Object, ReferenceCandidateDecision>{};
-  final _pending = <Object, int>{};
-  var _nextToken = 0;
-
-  void updateEvaluator(ReferenceEligibilityEvaluator? evaluator) {
-    if (identical(_evaluator, evaluator) &&
-        _evaluator?.version == evaluator?.version) {
-      return;
-    }
-    _evaluator = evaluator;
-    _results.clear();
-    _pending.clear();
-  }
-
-  ReferenceCandidateDecision evaluate(
-    ReferenceEligibilityEvaluation evaluation,
-    ReferenceCandidateDecision local, {
-    required void Function() changed,
-  }) {
-    final evaluator = _evaluator;
-    if (evaluator == null) return local;
-    final key = (
-      evaluator.version,
-      evaluation.context.owner,
-      evaluation.context.path,
-      evaluation.context.candidate.id,
-      evaluation.context.transition,
-      evaluation.proposedValue,
-      _ownerRevision(evaluation.context.owner),
-    );
-    final result = _results[key];
-    if (result != null) return result;
-    if (!_pending.containsKey(key)) {
-      final token = ++_nextToken;
-      _pending[key] = token;
-      unawaited(
-        evaluator(evaluation).then(
-          (decision) => _complete(
-            evaluator: evaluator,
-            key: key,
-            token: token,
-            decision: decision,
-            changed: changed,
-          ),
-          onError: (Object error, StackTrace stackTrace) => _complete(
-            evaluator: evaluator,
-            key: key,
-            token: token,
-            decision: const ReferenceCandidateDecision.unavailable(
-              ReferencePolicyIssue(
-                code: "reference.eligibility.unavailable",
-                message: "Reference eligibility is unavailable",
-              ),
-            ),
-            changed: changed,
-          ),
-        ),
-      );
-    }
-    return const ReferenceCandidateDecision.unavailable(
-      ReferencePolicyIssue(
-        code: "reference.eligibility.pending",
-        message: "Checking reference eligibility",
-      ),
-    );
-  }
-
-  void _complete({
-    required ReferenceEligibilityEvaluator evaluator,
-    required Object key,
-    required int token,
-    required ReferenceCandidateDecision decision,
-    required void Function() changed,
-  }) {
-    if (!identical(_evaluator, evaluator) || _pending[key] != token) return;
-    _pending.remove(key);
-    _results[key] = decision;
-    changed();
-  }
-}
-
-Object? _ownerRevision(EditOwner? owner) => switch (owner) {
-  TransactionalEditorSource(:final localRevision, :final document) => (
-    localRevision,
-    document.revision,
-  ),
-  ProjectedEditOwner(:final owner) => _ownerRevision(owner),
-  MultiEditOwner(:final owners) => Object.hashAll(owners.map(_ownerRevision)),
-  _ => null,
-};
-
-ReferenceCandidateDecision _evaluateReferenceCandidate({
-  required PresentationRenderScope scope,
-  required InspectedBinding binding,
-  required _ReferenceBindingShape shape,
-  required ReferencePolicyId? policyId,
-  required ReferenceCandidate candidate,
-}) {
-  final current = shape.ids(binding.value.valueOrNull).toSet();
-  final selected = current.contains(candidate.id);
-  final transition = selected && (shape.multiple || shape.optional)
-      ? ReferenceSelectionTransition.remove
-      : current.isEmpty
-      ? ReferenceSelectionTransition.add
-      : ReferenceSelectionTransition.replace;
-  final reference = scope.canonical(binding.reference);
-  return scope.referencePolicies.evaluate(
-    policyId,
-    ReferenceCandidatePolicyContext(
-      owner: scope.editOwnerFor?.call(reference),
-      path: reference.path,
-      transition: transition,
-      currentSelection: current,
-      candidate: candidate,
-    ),
-  );
 }
 
 SearchActivationState _candidateActivation(
