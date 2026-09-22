@@ -17,7 +17,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
 
-/** Accepts a verified generic activation at the engine content boundary. */
+/**
+ * Accepts loaded compiled content at the engine content boundary.
+ *
+ * Successful return means the implementation applied its own content contract. Ordering and stale revision
+ * rejection belong to the runtime invoking this gateway.
+ */
 fun interface EngineContentGateway {
     suspend fun apply(content: LoadedCompiledContent)
 }
@@ -143,17 +148,24 @@ class AssemblingEngineContentGateway(
 
 private val json = Json { ignoreUnknownKeys = true }
 
-/** Reports whether a generic activation became current, was stale, or had no receiving gateway. */
+/**
+ * Distinguishes newly applied content, a stale activation, and runtimes without a content gateway.
+ *
+ * Ignored reports the current activation and manifest, not the rejected incoming revision.
+ */
 sealed interface ContentApplicationResult {
+    /** The gateway accepted the incoming activation and it became the current content. */
     data class Applied(
         val activationRevision: Long,
         val manifest: ContentDigest,
     ) : ContentApplicationResult
 
+    /** The activation was stale or repeated; the current content remains authoritative. */
     data class Ignored(
         val activationRevision: Long,
         val currentManifest: ContentDigest,
     ) : ContentApplicationResult
 
+    /** No content gateway is configured, so the activation could not be applied. */
     data object Unsupported : ContentApplicationResult
 }
