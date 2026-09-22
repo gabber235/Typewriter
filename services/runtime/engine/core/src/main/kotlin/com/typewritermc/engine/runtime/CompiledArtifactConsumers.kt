@@ -13,20 +13,20 @@ import com.typewritermc.loader.api.artifact.DigestAlgorithm
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 
-/** Decodes one projection and media type without leaking its payload model into generic delivery. */
-interface CompiledArtifactConsumer<out Value : Any> {
+/** Contributes every artifact for one projection and media type to an atomic engine content snapshot. */
+interface CompiledArtifactConsumer {
     val projection: com.typewritermc.engine.CompilationProjectionId
     val mediaType: String
 
-    fun decode(
-        reference: CompiledArtifactReference,
-        payload: ByteArray,
-    ): Value
+    fun contribute(
+        artifacts: List<LoadedCompiledArtifact>,
+        target: EngineContentBuilder,
+    )
 }
 
-/** Dispatches opaque artifact descriptors to exactly one registered consumer. */
+/** Dispatches opaque artifacts to exactly one registered consumer before publishing any contributed state. */
 class CompiledArtifactConsumerRegistry(
-    consumers: Collection<CompiledArtifactConsumer<*>>,
+    consumers: Collection<CompiledArtifactConsumer>,
 ) {
     private val consumersByKey =
         consumers.associateBy { it.projection to it.mediaType }.also { values ->
@@ -35,13 +35,19 @@ class CompiledArtifactConsumerRegistry(
             }
         }
 
-    fun decode(
-        reference: CompiledArtifactReference,
-        payload: ByteArray,
-    ): Any =
-        requireNotNull(consumersByKey[reference.root.projection to reference.mediaType]) {
-            "No compiled artifact consumer for ${reference.root.projection.value} and ${reference.mediaType}."
-        }.decode(reference, payload)
+    fun contribute(
+        content: LoadedCompiledContent,
+        target: EngineContentBuilder,
+    ) {
+        val grouped =
+            content.artifacts.groupBy { artifact ->
+                requireNotNull(consumersByKey[artifact.reference.root.projection to artifact.reference.mediaType]) {
+                    "No compiled artifact consumer for ${artifact.reference.root.projection.value} and " +
+                        "${artifact.reference.mediaType}."
+                }
+            }
+        grouped.forEach { (consumer, artifacts) -> consumer.contribute(artifacts, target) }
+    }
 }
 
 /** Loads and verifies generic compiled artifacts while leaving their payloads opaque. */

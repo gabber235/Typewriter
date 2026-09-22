@@ -71,7 +71,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
         runTest {
             val gateway =
                 AssemblingEngineContentGateway(
-                    EngineContentAssembler(ElementCatalog(emptyList()), TypePrototypeRegistry(emptyList())),
+                    listOf(PageCompiledArtifactConsumer(ElementCatalog(emptyList()), TypePrototypeRegistry(emptyList()))),
                 )
             val active = content(1, '4')
             gateway.apply(active)

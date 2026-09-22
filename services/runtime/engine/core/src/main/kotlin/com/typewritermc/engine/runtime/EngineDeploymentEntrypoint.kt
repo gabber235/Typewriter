@@ -85,7 +85,10 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 deployment = deployment,
                 registrars = deployment.application.koin.getAll<RuntimeRegistrar>(),
                 parentScope = parentScope,
-                contentGateway = AssemblingEngineContentGateway(EngineContentAssembler(elementCatalog, deployment.prototypes)),
+                contentGateway =
+                    AssemblingEngineContentGateway(
+                        listOf(PageCompiledArtifactConsumer(elementCatalog, deployment.prototypes)),
+                    ),
                 contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, parentScope),
             )
         } catch (failure: Throwable) {

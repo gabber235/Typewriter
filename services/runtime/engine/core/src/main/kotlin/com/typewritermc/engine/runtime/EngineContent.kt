@@ -8,6 +8,7 @@ import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledElementKey
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedCompiledContent
 import com.typewritermc.types.ConcreteTypePrototype
 import com.typewritermc.types.TypeDecodingContext
@@ -21,21 +22,58 @@ fun interface EngineContentGateway {
     suspend fun apply(content: LoadedCompiledContent)
 }
 
-/** Publishes decoded elements after all registered compiled artifacts assemble successfully. */
+/** Typed identity for one independently contributed engine content facet. */
+class EngineContentFacet<Value : Any>(
+    val id: String,
+) {
+    init {
+        require(id.isNotBlank()) { "Engine content facet ids must not be blank." }
+    }
+
+    override fun equals(other: Any?): Boolean = other is EngineContentFacet<*> && id == other.id
+
+    override fun hashCode(): Int = id.hashCode()
+}
+
+/** Mutable assembly target that rejects competing owners for one content facet. */
+class EngineContentBuilder {
+    private val values = linkedMapOf<EngineContentFacet<*>, Any>()
+
+    fun <Value : Any> set(
+        facet: EngineContentFacet<Value>,
+        value: Value,
+    ) {
+        require(values.put(facet, value) == null) { "Engine content facet ${facet.id} was contributed more than once." }
+    }
+
+    internal fun build(manifest: CompiledArtifactManifest): EngineContentSnapshot = EngineContentSnapshot(manifest, values.toMap())
+}
+
+/** Publishes all registered content facets after every consumer assembles successfully. */
 data class EngineContentSnapshot(
     val manifest: CompiledArtifactManifest,
-    val elements: Map<CompiledElementKey, Element>,
-)
+    private val facets: Map<EngineContentFacet<*>, Any>,
+) {
+    @Suppress("UNCHECKED_CAST")
+    operator fun <Value : Any> get(facet: EngineContentFacet<Value>): Value? = facets[facet] as? Value
 
-/** Decodes the Page projection without making the generic delivery path Page specific. */
-class EngineContentAssembler(
+    val elements: Map<CompiledElementKey, Element>
+        get() = get(Elements) ?: emptyMap()
+
+    companion object {
+        val Elements = EngineContentFacet<Map<CompiledElementKey, Element>>("typewriter.elements")
+    }
+}
+
+/** Decodes and contributes the Page projection without making the generic delivery path Page specific. */
+class PageCompiledArtifactConsumer(
     private val catalog: ElementCatalog,
     private val prototypes: TypePrototypeRegistry,
-) : CompiledArtifactConsumer<CompiledPageShard> {
+) : CompiledArtifactConsumer {
     override val projection: CompilationProjectionId = CompilationProjectionId("typewriter.page")
     override val mediaType: String = PAGE_MEDIA_TYPE
 
-    override fun decode(
+    private fun decode(
         reference: CompiledArtifactReference,
         payload: ByteArray,
     ): CompiledPageShard {
@@ -46,19 +84,20 @@ class EngineContentAssembler(
         require(shard.digest == reference.semanticDigest) {
             "Compiled Page artifact identity does not match its manifest."
         }
+        require(shard.formatRevision == reference.formatRevision) {
+            "Compiled Page artifact format does not match its manifest."
+        }
         return shard
     }
 
-    fun assemble(
-        manifest: CompiledArtifactManifest,
-        shards: List<CompiledPageShard>,
-    ): EngineContentSnapshot {
-        require(manifest.formatRevision == 1) {
-            "Unsupported compiled content format ${manifest.formatRevision}."
-        }
+    override fun contribute(
+        artifacts: List<LoadedCompiledArtifact>,
+        target: EngineContentBuilder,
+    ) {
+        val shards = artifacts.map { decode(it.reference, it.payload) }
         val context =
             object : TypeDecodingContext {
-                override val prototypes: TypePrototypeRegistry = this@EngineContentAssembler.prototypes
+                override val prototypes: TypePrototypeRegistry = this@PageCompiledArtifactConsumer.prototypes
             }
         val compiledElements = shards.flatMap(CompiledPageShard::elements)
         require(compiledElements.map { it.key }.distinct().size == compiledElements.size) {
@@ -76,7 +115,7 @@ class EngineContentAssembler(
                 require(decoded is Element) { "Decoded value for ${descriptor.type} is not an Element." }
                 element.key to decoded
             }
-        return EngineContentSnapshot(manifest, elements)
+        target.set(EngineContentSnapshot.Elements, elements)
     }
 
     companion object {
@@ -86,24 +125,19 @@ class EngineContentAssembler(
 
 /** Applies a generic activation only after every registered artifact has been decoded and assembled. */
 class AssemblingEngineContentGateway(
-    private val assembler: EngineContentAssembler,
-    private val consumers: CompiledArtifactConsumerRegistry =
-        CompiledArtifactConsumerRegistry(listOf(assembler)),
+    consumers: Collection<CompiledArtifactConsumer>,
 ) : EngineContentGateway {
+    private val consumers = CompiledArtifactConsumerRegistry(consumers)
     private val mutableSnapshot = MutableStateFlow<EngineContentSnapshot?>(null)
     val snapshot: StateFlow<EngineContentSnapshot?> = mutableSnapshot
 
     override suspend fun apply(content: LoadedCompiledContent) {
-        val decoded =
-            content.artifacts.map { artifact ->
-                consumers.decode(artifact.reference, artifact.payload)
-            }
-        val shards =
-            decoded.map { value ->
-                value as? CompiledPageShard
-                    ?: error("Engine content consumer returned an unsupported value.")
-            }
-        mutableSnapshot.value = assembler.assemble(content.manifest, shards)
+        require(content.manifest.formatRevision == 1) {
+            "Unsupported compiled content format ${content.manifest.formatRevision}."
+        }
+        val target = EngineContentBuilder()
+        consumers.contribute(content, target)
+        mutableSnapshot.value = target.build(content.manifest)
     }
 }
 

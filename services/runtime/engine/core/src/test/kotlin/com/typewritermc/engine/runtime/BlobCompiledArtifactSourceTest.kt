@@ -104,7 +104,7 @@ private fun activation(
             CompiledArtifactReference(
                 root = CompilationRoot(CompilationProjectionId("typewriter.page"), shard.page.id),
                 formatRevision = shard.formatRevision,
-                mediaType = EngineContentAssembler.PAGE_MEDIA_TYPE,
+                mediaType = PageCompiledArtifactConsumer.PAGE_MEDIA_TYPE,
                 semanticDigest = shard.digest,
             )
         }
