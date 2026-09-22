@@ -24,7 +24,6 @@ Future<void> delayedSnack(
 }) async {
   await Future.delayed(delay);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(text), action: action));
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(text), action: action));
 }

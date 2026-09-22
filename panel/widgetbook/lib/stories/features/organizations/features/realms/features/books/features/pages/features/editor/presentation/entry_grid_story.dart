@@ -100,9 +100,7 @@ EntryDefinition _storyEntry(
     deprecated: deprecated,
   ),
   placement: EntryPlacement(x: 0, y: 0, width: width, height: height),
-  data: RecordValue({
-    "name": StringValue(name),
-  }),
+  data: RecordValue({"name": StringValue(name)}),
   inwardEdges: const [],
   outwardEdges: const [],
 );

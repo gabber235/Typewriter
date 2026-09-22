@@ -95,7 +95,6 @@ Widget searchInputPlayground(BuildContext context) {
   );
 }
 
-
 _StoryConfiguration _configuration(_Scenario scenario) => switch (scenario) {
   _Scenario.ready => _StoryConfiguration(staticEffectsProvider()),
   _Scenario.selectors => _StoryConfiguration(selectorRichEffectsProvider()),

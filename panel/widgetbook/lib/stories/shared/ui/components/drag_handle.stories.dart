@@ -79,9 +79,9 @@ Widget _dragHandleUseCase(BuildContext context, Axis axis) {
 
                 return DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
                     borderRadius: .circular(12),
                   ),
                   child: ClipRRect(
@@ -93,9 +93,9 @@ Widget _dragHandleUseCase(BuildContext context, Axis axis) {
                         Expanded(
                           child: Container(
                             alignment: .center,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerLow,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLow,
                             child: const Text("Content"),
                           ),
                         ),
