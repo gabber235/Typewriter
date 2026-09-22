@@ -120,17 +120,11 @@ internal class CapabilityGraphContentSource(
 }
 
 internal fun interface ManifestContentTransform {
-    fun apply(
-        context: ManifestAssemblyContext,
-        content: ManifestContent,
-    ): ManifestContent
+    fun apply(content: ManifestContent): ManifestContent
 }
 
 internal data object ValidateContributionKeys : ManifestContentTransform {
-    override fun apply(
-        context: ManifestAssemblyContext,
-        content: ManifestContent,
-    ): ManifestContent {
+    override fun apply(content: ManifestContent): ManifestContent {
         val duplicates =
             content.contributions
                 .groupBy { contribution ->
@@ -149,10 +143,7 @@ internal data object ValidateContributionKeys : ManifestContentTransform {
 }
 
 internal data object RequireHostedRuntimeEntrypoint : ManifestContentTransform {
-    override fun apply(
-        context: ManifestAssemblyContext,
-        content: ManifestContent,
-    ): ManifestContent {
+    override fun apply(content: ManifestContent): ManifestContent {
         require(content.runtimeEntrypoints.size == 1) {
             "A hosted artifact must declare exactly one runtime entrypoint, but found " +
                 "${content.runtimeEntrypoints.size}."
@@ -162,10 +153,7 @@ internal data object RequireHostedRuntimeEntrypoint : ManifestContentTransform {
 }
 
 internal data object RejectRuntimeEntrypoints : ManifestContentTransform {
-    override fun apply(
-        context: ManifestAssemblyContext,
-        content: ManifestContent,
-    ): ManifestContent {
+    override fun apply(content: ManifestContent): ManifestContent {
         require(content.runtimeEntrypoints.isEmpty()) {
             "Only hosted Imprint artifacts may declare a runtime entrypoint."
         }
@@ -174,10 +162,7 @@ internal data object RejectRuntimeEntrypoints : ManifestContentTransform {
 }
 
 internal data object CanonicalizeManifestContent : ManifestContentTransform {
-    override fun apply(
-        context: ManifestAssemblyContext,
-        content: ManifestContent,
-    ): ManifestContent =
+    override fun apply(content: ManifestContent): ManifestContent =
         content.copy(
             contributions =
                 content.contributions.sortedWith(
@@ -197,7 +182,7 @@ internal class ManifestContentPipeline(
     private val transforms: List<ManifestContentTransform>,
 ) {
     fun assemble(context: ManifestAssemblyContext): ManifestContent =
-        transforms.fold(source.read(context)) { content, transform -> transform.apply(context, content) }
+        transforms.fold(source.read(context)) { content, transform -> transform.apply(content) }
 }
 
 internal fun realmContentPipeline(
