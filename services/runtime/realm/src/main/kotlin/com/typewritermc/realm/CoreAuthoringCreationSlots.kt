@@ -62,15 +62,15 @@ internal fun coreAuthoringCreationSlots(
     return definitions +
         pageCatalog.definitions.flatMap { page ->
             val editor = page.editor
-            val (suffix, roots) =
+            val editorDetails =
                 when (editor) {
-                    is ResolvedPageEditorDefinition.Graph -> "graph" to editor.nodes
-                    is ResolvedPageEditorDefinition.Timeline -> "timeline" to editor.tracks
+                    is ResolvedPageEditorDefinition.Graph -> PageCreationEditor("graph", "node", editor.nodes)
+                    is ResolvedPageEditorDefinition.Timeline -> PageCreationEditor("timeline", "track", editor.tracks)
                 }
             listOf(
                 AuthoringCreationSlotDefinition(
-                    id = corePageCreationSlotId(page.kind, suffix),
-                    label = "${page.name} ${if (suffix == "graph") "node" else "track"}",
+                    id = corePageCreationSlotId(page.kind, editorDetails.suffix),
+                    label = "${page.name} ${editorDetails.label}",
                     creates = CoreResourceDefinitionIds.ELEMENT,
                     context =
                         AuthoringCreationContext.DeclaredRelation(
@@ -83,11 +83,17 @@ internal fun coreAuthoringCreationSlots(
                             relation = RelationId(PAGE_ELEMENTS_RELATION_ID),
                             direction = AuthoringCreationRelationDirection.OUTGOING,
                         ),
-                    concreteRoots = roots.flatMap { types.concreteSubtypesOf(it) }.distinct(),
+                    concreteRoots = editorDetails.roots.flatMap { types.concreteSubtypesOf(it) }.distinct(),
                 ),
             )
         }
 }
+
+private data class PageCreationEditor(
+    val suffix: String,
+    val label: String,
+    val roots: List<ResolvedTypeRef>,
+)
 
 internal fun corePageCreationSlotId(
     kind: PageKindRef,
