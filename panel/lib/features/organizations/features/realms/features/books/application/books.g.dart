@@ -11,7 +11,7 @@ part of 'books.dart';
 /// Owns the confirmed book collection for the selected organization and realm.
 ///
 /// The realm authoring session remains the source of truth. This provider waits
-/// for the library scope to become ready, then projects session records into
+/// for the registered book selection to become ready, then projects records into
 /// immutable [Book] values and listens for later session sequences. Consumers
 /// that render or edit immediately should choose [projectedBooksProvider] or
 /// [projectedBookProvider] when local editor values must be visible.
@@ -22,7 +22,7 @@ final canonicalBooksProvider = CanonicalBooksProvider._();
 /// Owns the confirmed book collection for the selected organization and realm.
 ///
 /// The realm authoring session remains the source of truth. This provider waits
-/// for the library scope to become ready, then projects session records into
+/// for the registered book selection to become ready, then projects records into
 /// immutable [Book] values and listens for later session sequences. Consumers
 /// that render or edit immediately should choose [projectedBooksProvider] or
 /// [projectedBookProvider] when local editor values must be visible.
@@ -31,7 +31,7 @@ final class CanonicalBooksProvider
   /// Owns the confirmed book collection for the selected organization and realm.
   ///
   /// The realm authoring session remains the source of truth. This provider waits
-  /// for the library scope to become ready, then projects session records into
+  /// for the registered book selection to become ready, then projects records into
   /// immutable [Book] values and listens for later session sequences. Consumers
   /// that render or edit immediately should choose [projectedBooksProvider] or
   /// [projectedBookProvider] when local editor values must be visible.
@@ -54,12 +54,12 @@ final class CanonicalBooksProvider
   CanonicalBooks create() => CanonicalBooks();
 }
 
-String _$canonicalBooksHash() => r'd8487ecf2261cdee974b6fb758a6ef88df21cbb8';
+String _$canonicalBooksHash() => r'423848561bc7d427d3fc28e70293f987840e83b6';
 
 /// Owns the confirmed book collection for the selected organization and realm.
 ///
 /// The realm authoring session remains the source of truth. This provider waits
-/// for the library scope to become ready, then projects session records into
+/// for the registered book selection to become ready, then projects records into
 /// immutable [Book] values and listens for later session sequences. Consumers
 /// that render or edit immediately should choose [projectedBooksProvider] or
 /// [projectedBookProvider] when local editor values must be visible.

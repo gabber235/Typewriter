@@ -84,12 +84,9 @@ mixin _PageElementMutations
   Future<void> deleteAll(List<String> elementIds) async {
     state.ensureReady();
     if (elementIds.isEmpty) return;
-    await _submit(
-      _commands.apply(
-        elementIds
-            .map((id) => skir.ResourceId(value: id))
-            .map(_commands.deleteOperation),
-      ),
+    await _commands.deleteResources(
+      elementIds.map((id) => skir.ResourceId(value: id)),
+      conflictMessage: "The page changed while it was being edited",
     );
   }
 
@@ -173,6 +170,9 @@ mixin _PageElementMutations
       }
     }
     final operations = <skir.AuthoringOperation>[];
+    final creationSlot = ref
+        .read(pageCreationSlotForPageProvider(_pageId))
+        .requireValue;
     for (final resource in selected) {
       final decoded = conversion.authoring.decodeResourceOrThrow(resource);
       var content = _rewriteReferences(decoded.content.rootValue, copies);
@@ -189,10 +189,13 @@ mixin _PageElementMutations
             CoreResourceDefinitionIds.element,
             decoded.content.copyWith(rootValue: content),
           ),
+          creationSlot: skir.AuthoringCreationSlotId(
+            value: creationSlot.id.value,
+          ),
+          hosts: [_pageId],
         ),
       );
     }
-    operations.add(_pageMembershipCommit(_pageId, add: copies.values));
     if (linkPath != null) {
       for (final resource in selected) {
         final decoded = conversion.authoring.decodeResourceOrThrow(resource);
@@ -238,10 +241,15 @@ mixin _PageElementMutations
     final targetId = skir.ResourceId(value: targetPageId);
     if (elementIds.isEmpty || targetId == _pageId) return;
     final ids = [for (final id in elementIds) skir.ResourceId(value: id)];
+    final creationSlot = ref
+        .read(pageCreationSlotForPageProvider(_pageId))
+        .requireValue;
     await ref.withReadyPageElements(targetPageId, (target) async {
       final operations = <skir.AuthoringOperation>[
-        _pageMembershipCommit(_pageId, remove: ids),
-        _pageMembershipCommit(targetId, add: ids),
+        for (final id in ids) ...[
+          _pageRelationOperation(creationSlot, _pageId, id, remove: true),
+          _pageRelationOperation(creationSlot, targetId, id),
+        ],
       ];
       final graphs = <({skir.ResourceId id, GraphGridRect rect})>[];
       for (final id in ids) {
@@ -358,30 +366,37 @@ mixin _PageElementMutations
     );
   }
 
-  skir.AuthoringOperation _pageMembershipCommit(
-    skir.ResourceId pageId, {
-    Iterable<skir.ResourceId> add = const [],
-    Iterable<skir.ResourceId> remove = const [],
+  skir.AuthoringOperation _pageRelationOperation(
+    RealmAuthoringCreationSlot slot,
+    skir.ResourceId page,
+    skir.ResourceId element, {
+    bool remove = false,
   }) {
-    final conversion = _codec();
-    final page = _resource(pageId);
-    final decoded = conversion.authoring.decodeResourceOrThrow(page);
-    final root = decoded.content.rootValue;
-    if (root is! RecordValue || root.fields["elements"] is! ListValue) {
-      throw StateError("The Page elements relation is unavailable");
+    final context = slot.context;
+    if (context is! RealmDeclaredRelationCreationContext) {
+      throw StateError(
+        "The Page element creation slot must declare a relation",
+      );
     }
-    final current = (root.fields["elements"]! as ListValue).values;
-    final removed = remove.toSet();
-    final values = <skir.ResourceId>{
-      for (final value in current)
-        if (value case ReferenceValue(:final id) when !removed.contains(id)) id,
-      ...add,
+    final (source, target) = switch (context.direction) {
+      RealmCreationRelationDirection.outgoing => (page, element),
+      RealmCreationRelationDirection.incoming => (element, page),
+      RealmCreationRelationDirection.both => throw StateError(
+        "The Page element creation slot has an ambiguous relation direction",
+      ),
     };
-    final proposed = root.withField(
-      "elements",
-      ListValue([for (final id in values) ReferenceValue(id)]),
-    );
-    return _contentCommit(page, proposed, {DataPath.root.field("elements")});
+    final relation = skir.RelationId(value: context.relation);
+    return remove
+        ? skir.AuthoringOperation.createRemoveRelation(
+            relation: relation,
+            source: source,
+            target: target,
+          )
+        : skir.AuthoringOperation.createDeclareRelation(
+            relation: relation,
+            source: source,
+            target: target,
+          );
   }
 
   List<GraphGridRect> _placeGraphRects({

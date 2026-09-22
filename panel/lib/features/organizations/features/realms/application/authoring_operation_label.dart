@@ -8,6 +8,7 @@ String _authoringLabel(Iterable<skir.AuthoringOperation> operations) {
           skir.AuthoringOperation_commitWrapper() => "Edit resource",
           skir.AuthoringOperation_deleteWrapper() => "Delete resource",
           skir.AuthoringOperation_declareRelationWrapper() => "Attach resource",
+          skir.AuthoringOperation_removeRelationWrapper() => "Detach resource",
           skir.AuthoringOperation_unknown() => "Save content",
         },
       )

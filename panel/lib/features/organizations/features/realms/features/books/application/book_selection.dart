@@ -59,10 +59,20 @@ class BookIdentifier extends SelectableIdentifier
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
     final book = bookValue.value;
+    final presentations = catalog.presentations.values.toList(growable: false);
+    if (!ref.retainAuthoringCollections(
+      organizationId: organization,
+      realmId: realm,
+      catalog: catalog,
+      presentations: presentations,
+      session: session,
+    )) {
+      return const AsyncLoading();
+    }
     final collections = decodeAuthoringCollections(
       session: session,
       catalog: catalog,
-      presentations: catalog.presentations.values,
+      presentations: presentations,
     );
     final tags = collections.sources[authoringTagCollectionSourceId];
     if (tags == null) {
@@ -92,9 +102,7 @@ class BookIdentifier extends SelectableIdentifier
           revision: bookValue.revision,
           codec: codec,
         ),
-        catalogPresentations: catalog.presentations.values.toList(
-          growable: false,
-        ),
+        catalogPresentations: presentations,
         tagCollection: tags,
         presentationDiagnostics: collections.diagnostics,
       ),
@@ -128,7 +136,8 @@ class BookIdentifier extends SelectableIdentifier
 /// revision used to create an editor snapshot, while [resource] owns loading,
 /// draft reconciliation, commit, and disposal. Opening is deliberately
 /// single select because navigation targets one book route.
-class BookSelection extends EditableSelectable<BookIdentifier> {
+class BookSelection extends EditableSelectable<BookIdentifier>
+    implements RealmAuthoringSelection {
   const BookSelection({
     required this.resource,
     required this.onOpen,
@@ -151,11 +160,17 @@ class BookSelection extends EditableSelectable<BookIdentifier> {
 
   final PresentationCollectionSource tagCollection;
   final List<PresentationDefinition> catalogPresentations;
+  @override
   final List<TypeDiagnostic> presentationDiagnostics;
 
   @override
   MultiInspectionDefinition get multiInspection =>
-      const BookMultiInspectionDefinition();
+      const RealmAuthoringMultiInspectionDefinition(
+        CoreResourceDefinitionIds.book,
+      );
+
+  @override
+  ResourceDefinitionId get resourceDefinition => CoreResourceDefinitionIds.book;
 
   @override
   String get name => book.title;

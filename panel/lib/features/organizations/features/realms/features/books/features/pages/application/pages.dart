@@ -110,7 +110,7 @@ abstract class Page with _$Page {
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 @riverpod
 class CanonicalBookPages extends _$CanonicalBookPages {
@@ -134,10 +134,8 @@ class CanonicalBookPages extends _$CanonicalBookPages {
       return value.resources.values
           .map(codec.decodeResourceOrThrow)
           .where(
-            (resource) => codec.isResourceType(
-              resource.content,
-              CoreResourceDefinitionIds.page,
-            ),
+            (resource) =>
+                codec.isResourceType(resource, CoreResourceDefinitionIds.page),
           )
           .map(Page.fromTyped)
           .where((page) => page.bookId == bookId)
@@ -163,7 +161,7 @@ class CanonicalBookPages extends _$CanonicalBookPages {
   }
 }
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
@@ -193,7 +191,11 @@ class CanonicalPage extends _$CanonicalPage {
       final decoded = resource == null
           ? null
           : codec.decodeResourceOrThrow(resource);
-      final page = decoded == null ? null : Page.fromTyped(decoded);
+      final page =
+          decoded == null ||
+              !codec.isResourceType(decoded, CoreResourceDefinitionIds.page)
+          ? null
+          : Page.fromTyped(decoded);
       state = page == null
           ? AsyncError(ApiException.notFound("Page"), StackTrace.current)
           : AsyncData(page);
@@ -212,7 +214,10 @@ class CanonicalPage extends _$CanonicalPage {
     final decoded = resource == null
         ? null
         : codec.decodeResourceOrThrow(resource);
-    if (decoded == null) throw ApiException.notFound("Page");
+    if (decoded == null ||
+        !codec.isResourceType(decoded, CoreResourceDefinitionIds.page)) {
+      throw ApiException.notFound("Page");
+    }
     return Page.fromTyped(decoded);
   }
 }

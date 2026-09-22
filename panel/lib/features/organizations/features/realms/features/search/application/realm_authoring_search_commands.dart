@@ -1,4 +1,3 @@
-import "package:collection/collection.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -22,9 +21,8 @@ List<SearchCommand> openAuthoringCommands(
       realmId: realmId,
       resourceId: value.id,
       definition: value.definition,
-      bookId: value.coreBookId,
-      ownerId: value.owner,
-      nestedIdentifier: value.nestedIdentifier,
+      ownerPath: value.ownerPath,
+      rootType: value.subject.content.rootType,
     ),
   ),
 ];
@@ -50,37 +48,7 @@ abstract class OpenAuthoringResourceEffect
     required skir.RecordId realmId,
     required skir.ResourceId resourceId,
     required ResourceDefinitionId definition,
-    required skir.ResourceId? bookId,
-    required skir.ResourceId? ownerId,
-    required SelectableIdentifier? nestedIdentifier,
+    required List<skir.ResourceId> ownerPath,
+    required ResolvedTypeRef rootType,
   }) = _OpenAuthoringResourceEffect;
-}
-
-extension on AuthoringSearchResultPayload {
-  skir.ResourceId? get coreBookId => switch (definition) {
-    CoreResourceDefinitionIds.book => id,
-    CoreResourceDefinitionIds.page => ownerPath.firstOrNull,
-    CoreResourceDefinitionIds.element => ownerPath.lastOrNull,
-    _ => null,
-  };
-
-  SelectableIdentifier? get nestedIdentifier {
-    final pageId = owner?.id;
-    if (pageId == null) return null;
-    final registry = TypeRegistry(presentation.model.catalog);
-    final resolved = registry
-        .resolveExact(subject.content.rootType)
-        .valueOrNull;
-    final names = {
-      subject.content.rootType.id,
-      ...?resolved?.ancestors.map((type) => type.id),
-    }.whereType<QualifiedTypeId>().map((id) => id.name).toSet();
-    if (names.contains("Entry")) {
-      return EntryIdentifier(id.id, pageId: pageId);
-    }
-    if (names.contains("Cue")) {
-      return CueIdentifier(pageId: pageId, id: id.id);
-    }
-    return null;
-  }
 }

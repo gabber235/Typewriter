@@ -1,3 +1,6 @@
+import "package:riverpod/riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoringTagCollectionSourceId = PresentationCollectionSourceId(
@@ -13,6 +16,57 @@ typedef AuthoringCollectionProjection = ({
   Map<PresentationCollectionSourceId, PresentationCollectionSource> sources,
   List<TypeDiagnostic> diagnostics,
 });
+
+extension RealmAuthoringCollectionSelections on RealmEditorCatalogSnapshot {
+  List<skir.GraphSelection> collectionSelections(
+    Iterable<PresentationDefinition> presentations,
+  ) {
+    final sourceIds = {
+      for (final presentation in presentations)
+        ...presentation.collections.keys,
+    };
+    final types = SkirTypeCodec(TypeRegistry(catalog));
+    return [
+      for (final projection in collectionProjections.values)
+        if (sourceIds.contains(projection.sourceId))
+          skir.GraphSelection(
+            key: "collection:${projection.sourceId.value}",
+            seed: skir.ResourceSeed.createScan(
+              filter: skir.ResourceFilter(
+                definitions: projection.definitions.map(
+                  (definition) => definition.toWire(),
+                ),
+                assignableTo: projection.assignableTo == null
+                    ? null
+                    : types
+                          .encodeExpression(projection.assignableTo!)
+                          .valueOrNull,
+              ),
+            ),
+            steps: const [],
+          ),
+    ];
+  }
+}
+
+extension AuthoringCollectionLeases on Ref {
+  bool retainAuthoringCollections({
+    required skir.RecordId organizationId,
+    required skir.RecordId realmId,
+    required RealmEditorCatalogSnapshot catalog,
+    required Iterable<PresentationDefinition> presentations,
+    required AuthoringSessionState session,
+  }) {
+    var ready = true;
+    for (final selection in catalog.collectionSelections(presentations)) {
+      watch(
+        authoringSelectionLeaseProvider(organizationId, realmId, selection),
+      );
+      ready = ready && session.selections.containsKey(selection.key);
+    }
+    return ready;
+  }
+}
 
 AuthoringCollectionProjection decodeAuthoringCollections({
   required AuthoringSessionState session,

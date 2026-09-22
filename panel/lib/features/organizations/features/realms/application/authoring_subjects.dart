@@ -191,26 +191,7 @@ TypedValueEnvelope? _projectSubjectContent({
         identity: id,
       )];
   if (draft != null) {
-    final elementValue = switch (draft.value) {
-      RecordValue(fields: {"value": final value}) => value,
-      _ => null,
-    };
-    if (resource?.definition.toDomain() == CoreResourceDefinitionIds.element &&
-        elementValue != null) {
-      final relative = LocalEditorValue(
-        value: elementValue,
-        editedPaths: {
-          for (final path in draft.editedPaths)
-            if (path.isAtOrBelow(elementValuePath))
-              DataPath(
-                path.segments.skip(elementValuePath.segments.length).toList(),
-              ),
-        },
-      );
-      canonical = relative.projectOnto(canonical);
-    } else {
-      canonical = draft.projectOnto(canonical);
-    }
+    canonical = draft.projectOnto(canonical);
   }
   return subject.content.copyWith(rootValue: canonical);
 }

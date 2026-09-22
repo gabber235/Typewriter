@@ -11,7 +11,7 @@ part of 'pages.dart';
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 
 @ProviderFor(CanonicalBookPages)
@@ -20,14 +20,14 @@ final canonicalBookPagesProvider = CanonicalBookPagesFamily._();
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 final class CanonicalBookPagesProvider
     extends $AsyncNotifierProvider<CanonicalBookPages, List<Page>> {
   /// Retains and exposes canonical pages belonging to one book.
   ///
   /// The realm authoring session owns the data and server sequence. This provider
-  /// leases the book scope for its lifetime, refreshes on sequenced session
+  /// leases the registered book page selection, refreshes on sequenced session
   /// observations, and does not include local editor drafts.
   CanonicalBookPagesProvider._({
     required CanonicalBookPagesFamily super.from,
@@ -66,12 +66,12 @@ final class CanonicalBookPagesProvider
 }
 
 String _$canonicalBookPagesHash() =>
-    r'060f0ee8130a123f49c09a15b018439f8dc3ec22';
+    r'a7768b53aef528a8b6d1c0f15d577168004bd7dc';
 
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 
 final class CanonicalBookPagesFamily extends $Family
@@ -95,7 +95,7 @@ final class CanonicalBookPagesFamily extends $Family
   /// Retains and exposes canonical pages belonging to one book.
   ///
   /// The realm authoring session owns the data and server sequence. This provider
-  /// leases the book scope for its lifetime, refreshes on sequenced session
+  /// leases the registered book page selection, refreshes on sequenced session
   /// observations, and does not include local editor drafts.
 
   CanonicalBookPagesProvider call(skir.ResourceId bookId) =>
@@ -108,7 +108,7 @@ final class CanonicalBookPagesFamily extends $Family
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 
 abstract class _$CanonicalBookPages extends $AsyncNotifier<List<Page>> {
@@ -132,7 +132,7 @@ abstract class _$CanonicalBookPages extends $AsyncNotifier<List<Page>> {
   }
 }
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
@@ -141,14 +141,14 @@ abstract class _$CanonicalBookPages extends $AsyncNotifier<List<Page>> {
 @ProviderFor(CanonicalPage)
 final canonicalPageProvider = CanonicalPageFamily._();
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
 /// [projectedPage], not this provider.
 final class CanonicalPageProvider
     extends $AsyncNotifierProvider<CanonicalPage, Page> {
-  /// Retains one canonical page through a page scope lease.
+  /// Retains one canonical page through a typed resource selection lease.
   ///
   /// Missing pages become a not found outcome after the authoritative snapshot or
   /// a later sequenced removal. Draft values are intentionally supplied by
@@ -189,9 +189,9 @@ final class CanonicalPageProvider
   }
 }
 
-String _$canonicalPageHash() => r'0ba1cbb08766b74f6f63a0582141723a52c99810';
+String _$canonicalPageHash() => r'651d6fc417753c91f75c5c75e0e43c0026423bfa';
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
@@ -215,7 +215,7 @@ final class CanonicalPageFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Retains one canonical page through a page scope lease.
+  /// Retains one canonical page through a typed resource selection lease.
   ///
   /// Missing pages become a not found outcome after the authoritative snapshot or
   /// a later sequenced removal. Draft values are intentionally supplied by
@@ -228,7 +228,7 @@ final class CanonicalPageFamily extends $Family
   String toString() => r'canonicalPageProvider';
 }
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by

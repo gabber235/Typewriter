@@ -37,8 +37,33 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
       if (session.sequence == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
+    final rootType = SkirTypeCodec(TypeRegistry(const TypeCatalog([])))
+        .decodeReference(resource.content.rootType)
+        .valueOrNull;
+    if (rootType == null) {
+      return AsyncError(
+        StateError("The resource root type is invalid"),
+        StackTrace.current,
+      );
+    }
+    final catalog = ref
+        .watch(realmEditorCatalogForTypeProvider(rootType))
+        .value
+        ?.snapshot;
     if (catalog == null || session.sequence == null) {
+      return const AsyncLoading();
+    }
+    if (session.generation?.value != catalog.generation.value) {
+      return const AsyncLoading();
+    }
+    final presentations = catalog.presentations.values.toList(growable: false);
+    if (!ref.retainAuthoringCollections(
+      organizationId: organizationId,
+      realmId: realmId,
+      catalog: catalog,
+      presentations: presentations,
+      session: session,
+    )) {
       return const AsyncLoading();
     }
     final codec = TypedAuthoringCodec(catalog);
@@ -53,11 +78,12 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
     final collections = decodeAuthoringCollections(
       session: session,
       catalog: catalog,
-      presentations: catalog.presentations.values,
+      presentations: presentations,
     );
     return AsyncData(
       AuthoringSelectableResource(
         id: this,
+        resourceDefinition: resource.definition.toDomain(),
         resource: TypedAuthoringEditorResource(
           ref
               .watch(resourceRepositoriesProvider)
@@ -70,7 +96,7 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
           revision: session.sequence!,
           codec: codec,
         ),
-        presentations: catalog.presentations.values.toList(growable: false),
+        presentations: presentations,
         collections: collections.sources.values.toList(growable: false),
         diagnostics: collections.diagnostics,
         onDelete: () => ref
@@ -96,9 +122,11 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
 
 /// Generic inspector adapter backed entirely by Realm catalog metadata.
 final class AuthoringSelectableResource
-    extends EditableSelectable<AuthoringResourceIdentifier> {
+    extends EditableSelectable<AuthoringResourceIdentifier>
+    implements RealmAuthoringSelection {
   const AuthoringSelectableResource({
     required this.id,
+    required this.resourceDefinition,
     required this.resource,
     required this.snapshot,
     required this.presentations,
@@ -109,6 +137,8 @@ final class AuthoringSelectableResource
 
   @override
   final AuthoringResourceIdentifier id;
+  @override
+  final ResourceDefinitionId resourceDefinition;
   @override
   final EditableResource resource;
   @override
@@ -122,6 +152,13 @@ final class AuthoringSelectableResource
 
   @override
   String get name => id.resourceId.value;
+
+  @override
+  MultiInspectionDefinition get multiInspection =>
+      RealmAuthoringMultiInspectionDefinition(resourceDefinition);
+
+  @override
+  List<TypeDiagnostic> get presentationDiagnostics => diagnostics;
 
   @override
   List<SelectionCapability> get capabilities => [

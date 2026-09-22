@@ -62,9 +62,9 @@ PageDocumentHealth? pageDocumentHealth(
   );
 }
 
-/// Owns the page scoped editing coordinator.
+/// Adapts the shared authoring session to the page element editor.
 ///
-/// The provider acquires the page lease, waits for the authoring session and
+/// The provider acquires a typed resource selection, waits for the authoring session and
 /// catalog projection, then exposes mutations that submit through the shared
 /// editor owners. Callers should use [withReadyPageElements] when invoking it
 /// outside a widget that already holds the page lifecycle.

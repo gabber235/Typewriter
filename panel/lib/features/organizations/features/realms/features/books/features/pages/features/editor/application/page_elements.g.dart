@@ -134,9 +134,9 @@ final class PageDocumentHealthFamily extends $Family
   String toString() => r'pageDocumentHealthProvider';
 }
 
-/// Owns the page scoped editing coordinator.
+/// Adapts the shared authoring session to the page element editor.
 ///
-/// The provider acquires the page lease, waits for the authoring session and
+/// The provider acquires a typed resource selection, waits for the authoring session and
 /// catalog projection, then exposes mutations that submit through the shared
 /// editor owners. Callers should use [withReadyPageElements] when invoking it
 /// outside a widget that already holds the page lifecycle.
@@ -144,17 +144,17 @@ final class PageDocumentHealthFamily extends $Family
 @ProviderFor(PageElements)
 final pageElementsProvider = PageElementsFamily._();
 
-/// Owns the page scoped editing coordinator.
+/// Adapts the shared authoring session to the page element editor.
 ///
-/// The provider acquires the page lease, waits for the authoring session and
+/// The provider acquires a typed resource selection, waits for the authoring session and
 /// catalog projection, then exposes mutations that submit through the shared
 /// editor owners. Callers should use [withReadyPageElements] when invoking it
 /// outside a widget that already holds the page lifecycle.
 final class PageElementsProvider
     extends $AsyncNotifierProvider<PageElements, List<PageElement>> {
-  /// Owns the page scoped editing coordinator.
+  /// Adapts the shared authoring session to the page element editor.
   ///
-  /// The provider acquires the page lease, waits for the authoring session and
+  /// The provider acquires a typed resource selection, waits for the authoring session and
   /// catalog projection, then exposes mutations that submit through the shared
   /// editor owners. Callers should use [withReadyPageElements] when invoking it
   /// outside a widget that already holds the page lifecycle.
@@ -196,9 +196,9 @@ final class PageElementsProvider
 
 String _$pageElementsHash() => r'd06e3534c1397c8f9471c5f9eb197ffed6b19957';
 
-/// Owns the page scoped editing coordinator.
+/// Adapts the shared authoring session to the page element editor.
 ///
-/// The provider acquires the page lease, waits for the authoring session and
+/// The provider acquires a typed resource selection, waits for the authoring session and
 /// catalog projection, then exposes mutations that submit through the shared
 /// editor owners. Callers should use [withReadyPageElements] when invoking it
 /// outside a widget that already holds the page lifecycle.
@@ -221,9 +221,9 @@ final class PageElementsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Owns the page scoped editing coordinator.
+  /// Adapts the shared authoring session to the page element editor.
   ///
-  /// The provider acquires the page lease, waits for the authoring session and
+  /// The provider acquires a typed resource selection, waits for the authoring session and
   /// catalog projection, then exposes mutations that submit through the shared
   /// editor owners. Callers should use [withReadyPageElements] when invoking it
   /// outside a widget that already holds the page lifecycle.
@@ -241,9 +241,9 @@ final class PageElementsFamily extends $Family
   String toString() => r'pageElementsProvider';
 }
 
-/// Owns the page scoped editing coordinator.
+/// Adapts the shared authoring session to the page element editor.
 ///
-/// The provider acquires the page lease, waits for the authoring session and
+/// The provider acquires a typed resource selection, waits for the authoring session and
 /// catalog projection, then exposes mutations that submit through the shared
 /// editor owners. Callers should use [withReadyPageElements] when invoking it
 /// outside a widget that already holds the page lifecycle.
@@ -348,7 +348,7 @@ final class DecodedRealmDocumentValuesProvider
 }
 
 String _$decodedRealmDocumentValuesHash() =>
-    r'997b9b56d5f10519c09aa14adcef3dd3be5a05da';
+    r'5be0897f619f49e1a956d86129be90cc7bf6bef8';
 
 final class DecodedRealmDocumentValuesFamily extends $Family
     with

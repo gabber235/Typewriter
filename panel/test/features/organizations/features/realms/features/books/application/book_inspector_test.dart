@@ -13,7 +13,13 @@ void main() {
 
       expect(fixture.selection.presentations, [fixture.presentation]);
       expect(fixture.selection.collections, [fixture.collection]);
-      expect(fixture.selection.multiInspection.id, fixture.presentation.id);
+      expect(
+        fixture.selection.multiInspection.id,
+        const PresentationId(
+          namespace: "typewriter.authoring",
+          name: "typewriter.book",
+        ),
+      );
     },
   );
 
@@ -34,10 +40,9 @@ void main() {
       registry.dispose();
     });
 
-    final result = const BookMultiInspectionDefinition().build([
-      first.selection,
-      second.selection,
-    ], context);
+    final result = const RealmAuthoringMultiInspectionDefinition(
+      CoreResourceDefinitionIds.book,
+    ).build([first.selection, second.selection], context);
 
     expect(result.diagnostics, isEmpty);
     final model = result.valueOrNull!.model;
@@ -63,10 +68,9 @@ void main() {
       registry.dispose();
     });
 
-    final result = const BookMultiInspectionDefinition().build([
-      first.selection,
-      second.selection,
-    ], context);
+    final result = const RealmAuthoringMultiInspectionDefinition(
+      CoreResourceDefinitionIds.book,
+    ).build([first.selection, second.selection], context);
 
     expect(result.valueOrNull, isNull);
     expect(result.diagnostics.single.message, contains("Realm presentations"));

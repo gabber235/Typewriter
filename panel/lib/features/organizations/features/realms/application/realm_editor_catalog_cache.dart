@@ -266,6 +266,11 @@ final class RealmEditorCatalogCache {
     return result;
   }
 
+  /// Returns the complete currently requested projection from exactly [generation].
+  Future<RealmEditorCatalogFetchResult> fetchExactCurrent(
+    CatalogGeneration generation,
+  ) => fetchExact(generation, _requested);
+
   /// Reconciles current demand against the latest known catalog generation.
   Future<void> refresh() =>
       _refresh(expectedGeneration: _state.snapshot?.generation);

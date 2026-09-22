@@ -11,7 +11,7 @@ const elementTypeSearchResultType = SearchResultType(
   label: "Element Type",
 );
 
-/// Lists element definitions that can be added through primary search.
+/// Lists element definitions for contextual Page authoring workflows.
 final class ElementTypeSearchSource implements SearchSource {
   ElementTypeSearchSource({
     required this.definitions,

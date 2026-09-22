@@ -2,20 +2,13 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("graph slot accepts only its published concrete roots", () {
+  test("creation slot accepts only its published concrete roots", () {
     final root = _type("GraphEntry");
     final other = _type("OtherEntry");
     final slot = _slot("page/test/1/graph", [root]);
 
-    expect(slot.pagePlacement, RealmPageCreationPlacement.graph);
     expect(slot.acceptsRoot(root), isTrue);
     expect(slot.acceptsRoot(other), isFalse);
-  });
-
-  test("timeline slot exposes timeline placement through slot metadata", () {
-    final slot = _slot("page/test/1/timeline", [_type("Track")]);
-
-    expect(slot.pagePlacement, RealmPageCreationPlacement.timelineTrack);
   });
 }
 

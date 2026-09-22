@@ -214,7 +214,7 @@ return $default(_that.id,_that.revision);case _:
 
 class _PageKindRef extends PageKindRef {
   const _PageKindRef({required this.id, required this.revision}): super._();
-  
+
 
 @override final  String id;
 @override final  int revision;
@@ -444,7 +444,7 @@ return timeline(_that.trackTypes,_that.segmentTypes,_that.keyframeTypes);case _:
 
 class RealmGraphPageEditor implements RealmPageEditor {
   const RealmGraphPageEditor({required this.direction, required  List<ResolvedTypeRef> nodeTypes}): _nodeTypes = nodeTypes;
-  
+
 
  final  GraphDirection direction;
  final  List<ResolvedTypeRef> _nodeTypes;
@@ -520,7 +520,7 @@ as List<ResolvedTypeRef>,
 
 class RealmTimelinePageEditor implements RealmPageEditor {
   const RealmTimelinePageEditor({required  List<ResolvedTypeRef> trackTypes, required  List<ResolvedTypeRef> segmentTypes, required  List<ResolvedTypeRef> keyframeTypes}): _trackTypes = trackTypes,_segmentTypes = segmentTypes,_keyframeTypes = keyframeTypes;
-  
+
 
  final  List<ResolvedTypeRef> _trackTypes;
  List<ResolvedTypeRef> get trackTypes {
@@ -608,7 +608,7 @@ as List<ResolvedTypeRef>,
 /// @nodoc
 mixin _$RealmPageDefinition {
 
- PageKindRef get kind; String get name; String? get description; IconValue get icon; Color get color; RealmPageEditor get editor; TypedCatalogPresentationSubject get presentationSubject; String get originArtifactId; String get sourcePart; List<RealmPageAuthoringRuleRef> get authoringRules;
+ PageKindRef get kind; String get name; String? get description; IconValue get icon; Color get color; RealmPageEditor get editor; AuthoringCreationSlotId get elementCreationSlot; TypedCatalogPresentationSubject get presentationSubject; String get originArtifactId; String get sourcePart; List<RealmPageAuthoringRuleRef> get authoringRules;
 /// Create a copy of RealmPageDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -620,20 +620,20 @@ $RealmPageDefinitionCopyWith<RealmPageDefinition> get copyWith => _$RealmPageDef
 @override
 bool operator ==(Object other) {
   final _this = this as RealmPageDefinition;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmPageDefinition&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.editor, _this.editor) || other.editor == _this.editor)&&(identical(other.presentationSubject, _this.presentationSubject) || other.presentationSubject == _this.presentationSubject)&&(identical(other.originArtifactId, _this.originArtifactId) || other.originArtifactId == _this.originArtifactId)&&(identical(other.sourcePart, _this.sourcePart) || other.sourcePart == _this.sourcePart)&&const DeepCollectionEquality().equals(other.authoringRules, _this.authoringRules));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmPageDefinition&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.editor, _this.editor) || other.editor == _this.editor)&&(identical(other.elementCreationSlot, _this.elementCreationSlot) || other.elementCreationSlot == _this.elementCreationSlot)&&(identical(other.presentationSubject, _this.presentationSubject) || other.presentationSubject == _this.presentationSubject)&&(identical(other.originArtifactId, _this.originArtifactId) || other.originArtifactId == _this.originArtifactId)&&(identical(other.sourcePart, _this.sourcePart) || other.sourcePart == _this.sourcePart)&&const DeepCollectionEquality().equals(other.authoringRules, _this.authoringRules));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RealmPageDefinition;
-  return Object.hash(runtimeType,_this.kind,_this.name,_this.description,_this.icon,_this.color,_this.editor,_this.presentationSubject,_this.originArtifactId,_this.sourcePart,const DeepCollectionEquality().hash(_this.authoringRules));
+  return Object.hash(runtimeType,_this.kind,_this.name,_this.description,_this.icon,_this.color,_this.editor,_this.elementCreationSlot,_this.presentationSubject,_this.originArtifactId,_this.sourcePart,const DeepCollectionEquality().hash(_this.authoringRules));
 }
 
 @override
 String toString() {
   final _this = this as RealmPageDefinition;
-  return 'RealmPageDefinition(kind: ${_this.kind}, name: ${_this.name}, description: ${_this.description}, icon: ${_this.icon}, color: ${_this.color}, editor: ${_this.editor}, presentationSubject: ${_this.presentationSubject}, originArtifactId: ${_this.originArtifactId}, sourcePart: ${_this.sourcePart}, authoringRules: ${_this.authoringRules})';
+  return 'RealmPageDefinition(kind: ${_this.kind}, name: ${_this.name}, description: ${_this.description}, icon: ${_this.icon}, color: ${_this.color}, editor: ${_this.editor}, elementCreationSlot: ${_this.elementCreationSlot}, presentationSubject: ${_this.presentationSubject}, originArtifactId: ${_this.originArtifactId}, sourcePart: ${_this.sourcePart}, authoringRules: ${_this.authoringRules})';
 }
 
 
@@ -644,7 +644,7 @@ abstract mixin class $RealmPageDefinitionCopyWith<$Res>  {
   factory $RealmPageDefinitionCopyWith(RealmPageDefinition value, $Res Function(RealmPageDefinition) _then) = _$RealmPageDefinitionCopyWithImpl;
 @useResult
 $Res call({
- PageKindRef kind, String name, String? description, IconValue icon, Color color, RealmPageEditor editor, TypedCatalogPresentationSubject presentationSubject, String originArtifactId, String sourcePart, List<RealmPageAuthoringRuleRef> authoringRules
+ PageKindRef kind, String name, String? description, IconValue icon, Color color, RealmPageEditor editor, AuthoringCreationSlotId elementCreationSlot, TypedCatalogPresentationSubject presentationSubject, String originArtifactId, String sourcePart, List<RealmPageAuthoringRuleRef> authoringRules
 });
 
 
@@ -661,7 +661,7 @@ class _$RealmPageDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of RealmPageDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? name = null,Object? description = freezed,Object? icon = null,Object? color = null,Object? editor = null,Object? presentationSubject = null,Object? originArtifactId = null,Object? sourcePart = null,Object? authoringRules = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? name = null,Object? description = freezed,Object? icon = null,Object? color = null,Object? editor = null,Object? elementCreationSlot = null,Object? presentationSubject = null,Object? originArtifactId = null,Object? sourcePart = null,Object? authoringRules = null,}) {
   return _then(RealmPageDefinition(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as PageKindRef,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -669,7 +669,8 @@ as String,description: freezed == description ? _self.description : description 
 as String?,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconValue,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,editor: null == editor ? _self.editor : editor // ignore: cast_nullable_to_non_nullable
-as RealmPageEditor,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
+as RealmPageEditor,elementCreationSlot: null == elementCreationSlot ? _self.elementCreationSlot : elementCreationSlot // ignore: cast_nullable_to_non_nullable
+as AuthoringCreationSlotId,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
 as TypedCatalogPresentationSubject,originArtifactId: null == originArtifactId ? _self.originArtifactId : originArtifactId // ignore: cast_nullable_to_non_nullable
 as String,sourcePart: null == sourcePart ? _self.sourcePart : sourcePart // ignore: cast_nullable_to_non_nullable
 as String,authoringRules: null == authoringRules ? _self.authoringRules : authoringRules // ignore: cast_nullable_to_non_nullable
@@ -681,7 +682,7 @@ as List<RealmPageAuthoringRuleRef>,
 @override
 @pragma('vm:prefer-inline')
 $PageKindRefCopyWith<$Res> get kind {
-  
+
   return $PageKindRefCopyWith<$Res>(_self.kind, (value) {
     return _then(_self.copyWith(kind: value));
   });
@@ -690,7 +691,7 @@ $PageKindRefCopyWith<$Res> get kind {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-  
+
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -699,7 +700,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $RealmPageEditorCopyWith<$Res> get editor {
-  
+
   return $RealmPageEditorCopyWith<$Res>(_self.editor, (value) {
     return _then(_self.copyWith(editor: value));
   });
@@ -785,10 +786,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PageKindRef kind,  String name,  String? description,  IconValue icon,  Color color,  RealmPageEditor editor,  TypedCatalogPresentationSubject presentationSubject,  String originArtifactId,  String sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PageKindRef kind,  String name,  String? description,  IconValue icon,  Color color,  RealmPageEditor editor,  AuthoringCreationSlotId elementCreationSlot,  TypedCatalogPresentationSubject presentationSubject,  String originArtifactId,  String sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmPageDefinition() when $default != null:
-return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_that.editor,_that.presentationSubject,_that.originArtifactId,_that.sourcePart,_that.authoringRules);case _:
+return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_that.editor,_that.elementCreationSlot,_that.presentationSubject,_that.originArtifactId,_that.sourcePart,_that.authoringRules);case _:
   return orElse();
 
 }
@@ -806,10 +807,10 @@ return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PageKindRef kind,  String name,  String? description,  IconValue icon,  Color color,  RealmPageEditor editor,  TypedCatalogPresentationSubject presentationSubject,  String originArtifactId,  String sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PageKindRef kind,  String name,  String? description,  IconValue icon,  Color color,  RealmPageEditor editor,  AuthoringCreationSlotId elementCreationSlot,  TypedCatalogPresentationSubject presentationSubject,  String originArtifactId,  String sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules)  $default,) {final _that = this;
 switch (_that) {
 case _RealmPageDefinition():
-return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_that.editor,_that.presentationSubject,_that.originArtifactId,_that.sourcePart,_that.authoringRules);case _:
+return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_that.editor,_that.elementCreationSlot,_that.presentationSubject,_that.originArtifactId,_that.sourcePart,_that.authoringRules);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -826,10 +827,10 @@ return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PageKindRef kind,  String name,  String? description,  IconValue icon,  Color color,  RealmPageEditor editor,  TypedCatalogPresentationSubject presentationSubject,  String originArtifactId,  String sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PageKindRef kind,  String name,  String? description,  IconValue icon,  Color color,  RealmPageEditor editor,  AuthoringCreationSlotId elementCreationSlot,  TypedCatalogPresentationSubject presentationSubject,  String originArtifactId,  String sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmPageDefinition() when $default != null:
-return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_that.editor,_that.presentationSubject,_that.originArtifactId,_that.sourcePart,_that.authoringRules);case _:
+return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_that.editor,_that.elementCreationSlot,_that.presentationSubject,_that.originArtifactId,_that.sourcePart,_that.authoringRules);case _:
   return null;
 
 }
@@ -841,8 +842,8 @@ return $default(_that.kind,_that.name,_that.description,_that.icon,_that.color,_
 
 
 class _RealmPageDefinition extends RealmPageDefinition {
-  const _RealmPageDefinition({required this.kind, required this.name, required this.description, required this.icon, required this.color, required this.editor, required this.presentationSubject, required this.originArtifactId, required this.sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules = const []}): _authoringRules = authoringRules,super._();
-  
+  const _RealmPageDefinition({required this.kind, required this.name, required this.description, required this.icon, required this.color, required this.editor, required this.elementCreationSlot, required this.presentationSubject, required this.originArtifactId, required this.sourcePart,  List<RealmPageAuthoringRuleRef> authoringRules = const []}): _authoringRules = authoringRules,super._();
+
 
 @override final  PageKindRef kind;
 @override final  String name;
@@ -850,6 +851,7 @@ class _RealmPageDefinition extends RealmPageDefinition {
 @override final  IconValue icon;
 @override final  Color color;
 @override final  RealmPageEditor editor;
+@override final  AuthoringCreationSlotId elementCreationSlot;
 @override final  TypedCatalogPresentationSubject presentationSubject;
 @override final  String originArtifactId;
 @override final  String sourcePart;
@@ -871,18 +873,18 @@ _$RealmPageDefinitionCopyWith<_RealmPageDefinition> get copyWith => __$RealmPage
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmPageDefinition&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.editor, editor) || other.editor == editor)&&(identical(other.presentationSubject, presentationSubject) || other.presentationSubject == presentationSubject)&&(identical(other.originArtifactId, originArtifactId) || other.originArtifactId == originArtifactId)&&(identical(other.sourcePart, sourcePart) || other.sourcePart == sourcePart)&&const DeepCollectionEquality().equals(other.authoringRules, _authoringRules));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmPageDefinition&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.editor, editor) || other.editor == editor)&&(identical(other.elementCreationSlot, elementCreationSlot) || other.elementCreationSlot == elementCreationSlot)&&(identical(other.presentationSubject, presentationSubject) || other.presentationSubject == presentationSubject)&&(identical(other.originArtifactId, originArtifactId) || other.originArtifactId == originArtifactId)&&(identical(other.sourcePart, sourcePart) || other.sourcePart == sourcePart)&&const DeepCollectionEquality().equals(other.authoringRules, _authoringRules));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,kind,name,description,icon,color,editor,presentationSubject,originArtifactId,sourcePart,const DeepCollectionEquality().hash(_authoringRules));
+    return Object.hash(runtimeType,kind,name,description,icon,color,editor,elementCreationSlot,presentationSubject,originArtifactId,sourcePart,const DeepCollectionEquality().hash(_authoringRules));
 }
 
 @override
 String toString() {
-    return 'RealmPageDefinition(kind: $kind, name: $name, description: $description, icon: $icon, color: $color, editor: $editor, presentationSubject: $presentationSubject, originArtifactId: $originArtifactId, sourcePart: $sourcePart, authoringRules: $authoringRules)';
+    return 'RealmPageDefinition(kind: $kind, name: $name, description: $description, icon: $icon, color: $color, editor: $editor, elementCreationSlot: $elementCreationSlot, presentationSubject: $presentationSubject, originArtifactId: $originArtifactId, sourcePart: $sourcePart, authoringRules: $authoringRules)';
 }
 
 
@@ -893,7 +895,7 @@ abstract mixin class _$RealmPageDefinitionCopyWith<$Res> implements $RealmPageDe
   factory _$RealmPageDefinitionCopyWith(_RealmPageDefinition value, $Res Function(_RealmPageDefinition) _then) = __$RealmPageDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- PageKindRef kind, String name, String? description, IconValue icon, Color color, RealmPageEditor editor, TypedCatalogPresentationSubject presentationSubject, String originArtifactId, String sourcePart, List<RealmPageAuthoringRuleRef> authoringRules
+ PageKindRef kind, String name, String? description, IconValue icon, Color color, RealmPageEditor editor, AuthoringCreationSlotId elementCreationSlot, TypedCatalogPresentationSubject presentationSubject, String originArtifactId, String sourcePart, List<RealmPageAuthoringRuleRef> authoringRules
 });
 
 
@@ -910,7 +912,7 @@ class __$RealmPageDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of RealmPageDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? name = null,Object? description = freezed,Object? icon = null,Object? color = null,Object? editor = null,Object? presentationSubject = null,Object? originArtifactId = null,Object? sourcePart = null,Object? authoringRules = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? name = null,Object? description = freezed,Object? icon = null,Object? color = null,Object? editor = null,Object? elementCreationSlot = null,Object? presentationSubject = null,Object? originArtifactId = null,Object? sourcePart = null,Object? authoringRules = null,}) {
   return _then(_RealmPageDefinition(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as PageKindRef,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -918,7 +920,8 @@ as String,description: freezed == description ? _self.description : description 
 as String?,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconValue,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,editor: null == editor ? _self.editor : editor // ignore: cast_nullable_to_non_nullable
-as RealmPageEditor,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
+as RealmPageEditor,elementCreationSlot: null == elementCreationSlot ? _self.elementCreationSlot : elementCreationSlot // ignore: cast_nullable_to_non_nullable
+as AuthoringCreationSlotId,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
 as TypedCatalogPresentationSubject,originArtifactId: null == originArtifactId ? _self.originArtifactId : originArtifactId // ignore: cast_nullable_to_non_nullable
 as String,sourcePart: null == sourcePart ? _self.sourcePart : sourcePart // ignore: cast_nullable_to_non_nullable
 as String,authoringRules: null == authoringRules ? _self._authoringRules : authoringRules // ignore: cast_nullable_to_non_nullable
@@ -931,7 +934,7 @@ as List<RealmPageAuthoringRuleRef>,
 @override
 @pragma('vm:prefer-inline')
 $PageKindRefCopyWith<$Res> get kind {
-  
+
   return $PageKindRefCopyWith<$Res>(_self.kind, (value) {
     return _then(_self.copyWith(kind: value));
   });
@@ -940,7 +943,7 @@ $PageKindRefCopyWith<$Res> get kind {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-  
+
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -949,7 +952,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $RealmPageEditorCopyWith<$Res> get editor {
-  
+
   return $RealmPageEditorCopyWith<$Res>(_self.editor, (value) {
     return _then(_self.copyWith(editor: value));
   });
@@ -1174,7 +1177,7 @@ return $default(_that.code,_that.message,_that.originArtifactId,_that.sourcePart
 
 class _RealmPageDiagnostic implements RealmPageDiagnostic {
   const _RealmPageDiagnostic({required this.code, required this.message, required this.originArtifactId, required this.sourcePart, required this.declarationName, required this.kind});
-  
+
 
 @override final  String code;
 @override final  String message;
@@ -1461,7 +1464,7 @@ return $default(_that.definitions,_that.diagnostics);case _:
 
 class _RealmPageCatalog implements RealmPageCatalog {
   const _RealmPageCatalog({ Map<PageKindRef, RealmPageDefinition> definitions = const {},  List<RealmPageDiagnostic> diagnostics = const []}): _definitions = definitions,_diagnostics = diagnostics;
-  
+
 
  final  Map<PageKindRef, RealmPageDefinition> _definitions;
 @override@JsonKey() Map<PageKindRef, RealmPageDefinition> get definitions {

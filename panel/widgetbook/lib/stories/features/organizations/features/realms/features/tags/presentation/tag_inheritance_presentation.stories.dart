@@ -86,7 +86,8 @@ Widget _story({
   TextDirection textDirection = TextDirection.ltr,
 }) {
   final catalog = authoringFixtureCatalog();
-  final presentation = catalog.presentations[authoringFixtureTagPresentationId]!;
+  final presentation =
+      catalog.presentations[authoringFixtureTagPresentationId]!;
   final inheritance = switch (presentation.root.element) {
     ColumnElement(:final children) => switch (children.last) {
       FixedPresentationAxisChild(:final child) => child,
@@ -108,7 +109,7 @@ Widget _story({
         child: SizedBox(
           width: width,
           child: EditorProtocolRenderer(
-            envelope: subject.content(authoringFixtureTagType),
+            envelope: subject.authoringFixtureContent(authoringFixtureTagType),
             typeCatalog: catalog.catalog,
             presentations: catalog.presentations.values.toList(),
             collections: [authoringFixtureTagCollection(tags)],

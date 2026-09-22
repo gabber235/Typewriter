@@ -24,17 +24,17 @@ class LibraryPage extends HookConsumerWidget {
 
     Future<void> handleCreateBook() async {
       final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-      final root = catalog
-          ?.creationSlots[CoreAuthoringCreationSlotIds.book]
-          ?.concreteRoots
-          .singleOrNull;
+      final slot = catalog?.standaloneCreationSlot(
+        CoreResourceDefinitionIds.book,
+      );
+      final root = slot?.concreteRoots.singleOrNull;
       if (root == null) throw StateError("Book creation is unavailable");
       final created = await ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              slot: CoreAuthoringCreationSlotIds.book,
+              slot: slot!.id,
               title: "Create Book",
               concreteRoot: root,
               partial: RecordValue({}),

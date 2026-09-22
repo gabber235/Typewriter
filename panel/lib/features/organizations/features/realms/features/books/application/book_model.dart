@@ -34,7 +34,4 @@ abstract class Book with _$Book {
     if (decoded == null) throw StateError("The Book content is invalid");
     return decoded;
   }
-
-  TypedValueEnvelope content(ResolvedTypeRef rootType) =>
-      TypedValueEnvelope(rootType: rootType, rootValue: inspectorValue);
 }

@@ -13,7 +13,7 @@ final class ResourceCreationRequest {
     required AuthoringCreationSlotId slot,
     required String title,
     required ResolvedTypeRef concreteRoot,
-    required DataValue partial,
+    DataValue? partial,
     List<skir.ResourceId> hosts = const [],
     List<skir.ResourceId> referenceOrigins = const [],
   }) {
@@ -43,7 +43,7 @@ final class ResourceCreationRequest {
   final AuthoringCreationSlotId slot;
   final String title;
   final ResolvedTypeRef concreteRoot;
-  final DataValue partial;
+  final DataValue? partial;
   final List<skir.ResourceId> hosts;
   final List<skir.ResourceId> referenceOrigins;
 }
@@ -81,43 +81,31 @@ final class ResourceCreationSession {
     }
     _validateHosts(slot, request.hosts);
     final codec = TypedAuthoringCodec(catalog);
-    final initializeConcreteType = ref
-        .read(realmEditorCatalogSourceProvider)
-        .concreteTypeInitializer(
-          route: RealmEditorCatalogRoute(
-            organizationId: organizationId,
-            realmId: realmId,
-          ),
-          generation: catalog.generation,
-          registry: codec.registry,
-        );
-    final suppliedPartial = slot.bindHostReferences(
-      request.partial,
-      request.hosts,
+    final route = RealmEditorCatalogRoute(
+      organizationId: organizationId,
+      realmId: realmId,
     );
-    final initialized = await ref
-        .read(realmEditorCatalogSourceProvider)
-        .initialize(
-          RealmEditorCatalogRoute(
-            organizationId: organizationId,
-            realmId: realmId,
-          ),
-          generation: catalog.generation,
-          root: request.concreteRoot,
-          supplied: suppliedPartial,
-          registry: codec.registry,
-        );
-    final supplied = switch (initialized) {
-      RealmTypedValueInitialized(:final value) => value.rootValue,
-      RealmTypedValueInitializationNeedsInput(:final draft) =>
-        draft.suppliedValue,
-      RealmTypedValueInitializationGenerationMismatch() =>
-        throw ApiException.conflict("The Realm catalog changed"),
-      RealmTypedValueInitializationRejected(:final diagnostics) =>
-        throw ApiException.badRequest(
-          diagnostics.map((item) => item.message).join("; "),
-        ),
-    };
+    final source = ref.read(realmEditorCatalogSourceProvider);
+    final initializeConcreteType = source.concreteTypeInitializer(
+      route: route,
+      generation: catalog.generation,
+      registry: codec.registry,
+    );
+    final basePartial = (await source.initialize(
+      route,
+      generation: catalog.generation,
+      root: request.concreteRoot,
+      supplied: request.partial,
+      registry: codec.registry,
+    )).creationDraftValue;
+    final suppliedPartial = slot.bindHostReferences(basePartial, request.hosts);
+    final supplied = (await source.initialize(
+      route,
+      generation: catalog.generation,
+      root: request.concreteRoot,
+      supplied: suppliedPartial,
+      registry: codec.registry,
+    )).creationDraftValue;
     if (!context.mounted) return null;
     final draft = supplied == null
         ? CreationDraft(
@@ -140,18 +128,13 @@ final class ResourceCreationSession {
         origins: request.referenceOrigins,
       );
       if (value == null || !ref.mounted) return null;
-      final completed = await ref
-          .read(realmEditorCatalogSourceProvider)
-          .initialize(
-            RealmEditorCatalogRoute(
-              organizationId: organizationId,
-              realmId: realmId,
-            ),
-            generation: catalog.generation,
-            root: request.concreteRoot,
-            supplied: value,
-            registry: codec.registry,
-          );
+      final completed = await source.initialize(
+        route,
+        generation: catalog.generation,
+        root: request.concreteRoot,
+        supplied: value,
+        registry: codec.registry,
+      );
       final content = switch (completed) {
         RealmTypedValueInitialized(:final value) => value,
         RealmTypedValueInitializationNeedsInput(:final draft) =>
@@ -171,8 +154,9 @@ final class ResourceCreationSession {
       final operations = <skir.AuthoringOperation>[
         skir.AuthoringOperation.createCreate(
           resource: codec.encodeResource(request.id, slot.creates, content),
+          creationSlot: skir.AuthoringCreationSlotId(value: slot.id.value),
+          hosts: request.hosts,
         ),
-        ..._declaredRelationAttachments(request.id, slot, request.hosts),
       ];
       final response = await access.notifier.apply(operations);
       response.requireApplied(conflictMessage: "The resource already exists");
@@ -204,42 +188,27 @@ final class ResourceCreationSession {
         break;
     }
   }
-
-  List<skir.AuthoringOperation> _declaredRelationAttachments(
-    skir.ResourceId created,
-    RealmAuthoringCreationSlot slot,
-    List<skir.ResourceId> hosts,
-  ) {
-    final context = switch (slot.context) {
-      final RealmDeclaredRelationCreationContext value => value,
-      _ => null,
-    };
-    if (context == null || hosts.isEmpty) return const [];
-    return [
-      for (final host in hosts)
-        switch (context.direction) {
-          RealmCreationRelationDirection.outgoing =>
-            skir.AuthoringOperation.createDeclareRelation(
-              relation: skir.RelationId(value: context.relation),
-              source: host,
-              target: created,
-            ),
-          RealmCreationRelationDirection.incoming =>
-            skir.AuthoringOperation.createDeclareRelation(
-              relation: skir.RelationId(value: context.relation),
-              source: created,
-              target: host,
-            ),
-          RealmCreationRelationDirection.both => throw ApiException.badRequest(
-            "Creation relation direction must be explicit",
-          ),
-        },
-    ];
-  }
 }
 
-extension on RealmAuthoringCreationSlot {
-  DataValue bindHostReferences(DataValue partial, List<skir.ResourceId> hosts) {
+extension on RealmTypedValueInitializationResult {
+  DataValue? get creationDraftValue => switch (this) {
+    RealmTypedValueInitialized(:final value) => value.rootValue,
+    RealmTypedValueInitializationNeedsInput(:final draft) =>
+      draft.suppliedValue,
+    RealmTypedValueInitializationGenerationMismatch() =>
+      throw ApiException.conflict("The Realm catalog changed"),
+    RealmTypedValueInitializationRejected(:final diagnostics) =>
+      throw ApiException.badRequest(
+        diagnostics.map((item) => item.message).join("; "),
+      ),
+  };
+}
+
+extension RealmAuthoringCreationReferenceBinding on RealmAuthoringCreationSlot {
+  DataValue? bindHostReferences(
+    DataValue? partial,
+    List<skir.ResourceId> hosts,
+  ) {
     final context = this.context;
     if (context case RealmReferencePathCreationContext(
       :final path,
@@ -251,7 +220,7 @@ extension on RealmAuthoringCreationSlot {
           for (final host in hosts) ReferenceValue(host),
         ]),
       };
-      return path.replace(partial, value).valueOrNull ??
+      return path.replace(partial ?? RecordValue({}), value).valueOrNull ??
           (throw ApiException.badRequest("Creation host path is invalid"));
     }
     return partial;

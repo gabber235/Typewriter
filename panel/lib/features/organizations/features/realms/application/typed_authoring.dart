@@ -83,6 +83,39 @@ TypeResult<RealmEditorCatalogRequest> presentationSubjectCatalogRequest(
   );
 }
 
+/// Requests the exact catalog type closure required by an authoring graph.
+///
+/// Resource root references and presentation envelope references are structural
+/// wire data, so they can be decoded before the catalog is available. The
+/// returned request is used to fetch the matching catalog generation before any
+/// resource or subject value is decoded.
+TypeResult<RealmEditorCatalogRequest> authoringGraphCatalogRequest(
+  Iterable<skir.AuthoringResource> resources,
+  Iterable<skir.PresentationSubject> subjects,
+) {
+  final types = SkirTypeCodec(TypeRegistry(const TypeCatalog([])));
+  final resourceRoots = [
+    for (final resource in resources)
+      types.decodeReference(resource.content.rootType),
+  ];
+  final subjectRequest = presentationSubjectCatalogRequest(subjects);
+  final diagnostics = [
+    ...resourceRoots.expand((result) => result.diagnostics),
+    ...subjectRequest.diagnostics,
+  ];
+  if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+  return TypeResult.success(
+    RealmEditorCatalogRequest(
+      types: {
+        ...resourceRoots.map((result) => result.valueOrNull!),
+        ...subjectRequest.valueOrNull!.types,
+      },
+      presentations: subjectRequest.valueOrNull!.presentations,
+      subtypeQueries: subjectRequest.valueOrNull!.subtypeQueries,
+    ),
+  );
+}
+
 /// Decodes and encodes typed authoring values against one pinned catalog.
 final class TypedAuthoringCodec {
   TypedAuthoringCodec(this.catalog)
@@ -92,21 +125,6 @@ final class TypedAuthoringCodec {
   final RealmEditorCatalogSnapshot catalog;
   final TypeRegistry registry;
   final SkirEditorCodec _wire;
-
-  ResolvedTypeRef requireConcreteRoot(ResourceDefinitionId definition) {
-    final accepted = catalog.resourceDefinitions[definition]?.acceptedRoot;
-    final root = switch (accepted) {
-      NamedType(:final reference) => reference,
-      _ => null,
-    };
-    if (root == null ||
-        registry.resolveExact(root).valueOrNull?.isConcrete != true) {
-      throw StateError(
-        "Resource definition '${definition.value}' requires an explicit concrete root",
-      );
-    }
-    return root;
-  }
 
   skir.AuthoringResource encodeResource(
     skir.ResourceId id,
@@ -119,11 +137,15 @@ final class TypedAuthoringCodec {
   );
 
   bool isResourceType(
-    TypedValueEnvelope content,
+    TypedAuthoringResource resource,
     ResourceDefinitionId definition,
-  ) =>
-      catalog.resourceDefinitions[definition]?.acceptedRoot ==
-      NamedType(content.rootType);
+  ) {
+    final accepted = catalog.resourceDefinitions[definition]?.acceptedRoot;
+    return resource.definition == definition &&
+        accepted != null &&
+        NamedType(resource.content.rootType)
+            .isStructurallyAssignableTo(accepted, registry);
+  }
 
   TypeResult<TypedValueEnvelope> decodeEnvelope(
     skir.TypedValueEnvelope envelope,

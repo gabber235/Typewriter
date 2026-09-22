@@ -286,6 +286,9 @@ extension on Iterable<skir.PageCatalogEntry> {
         icon: entry.descriptor.icon._decodeDomain(),
         color: entry.descriptor.color.toFlutterColor(),
         editor: editor,
+        elementCreationSlot: AuthoringCreationSlotId(
+          entry.descriptor.elementCreationSlot.value,
+        ),
         presentationSubject: presentationSubject.valueOrNull!,
         authoringRules: [
           for (final rule in entry.descriptor.authoringRules)
@@ -1032,6 +1035,7 @@ extension on Iterable<skir.ResourceDefinition> {
       result[id] = RealmResourceDefinition(
         id: id,
         acceptedRoot: accepted.valueOrNull!,
+        navigationHandler: value.navigationHandler,
       );
     }
     return diagnostics.isEmpty

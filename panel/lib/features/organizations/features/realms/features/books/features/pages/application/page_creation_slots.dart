@@ -5,14 +5,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "page_creation_slots.g.dart";
 
-enum RealmPageCreationPlacement { graph, timelineTrack }
-
-extension RealmPageCreationSlotPresentation on RealmAuthoringCreationSlot {
-  RealmPageCreationPlacement get pagePlacement => id.value.endsWith("/graph")
-      ? RealmPageCreationPlacement.graph
-      : RealmPageCreationPlacement.timelineTrack;
-}
-
 /// Returns the Realm supplied creation slot for one page kind.
 ///
 /// The page catalog only chooses which slot applies to the page editor. The
@@ -119,13 +111,6 @@ extension on RealmPageDefinition {
   RealmAuthoringCreationSlot? creationSlot(
     RealmEditorCatalogSnapshot snapshot,
   ) {
-    final placement = switch (editor) {
-      RealmGraphPageEditor() => "graph",
-      RealmTimelinePageEditor() => "timeline",
-    };
-    return snapshot.creationSlots[CoreAuthoringCreationSlotIds.pageElements(
-      kind,
-      placement,
-    )];
+    return snapshot.creationSlots[elementCreationSlot];
   }
 }

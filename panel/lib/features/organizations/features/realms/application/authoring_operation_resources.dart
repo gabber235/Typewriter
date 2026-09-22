@@ -11,6 +11,10 @@ Set<skir.ResourceId> _operationResources(skir.AuthoringOperation operation) =>
         value.source,
         value.target,
       },
+      skir.AuthoringOperation_removeRelationWrapper(:final value) => {
+        value.source,
+        value.target,
+      },
       skir.AuthoringOperation_unknown() => throw ArgumentError(
         "Unknown authoring operation",
       ),

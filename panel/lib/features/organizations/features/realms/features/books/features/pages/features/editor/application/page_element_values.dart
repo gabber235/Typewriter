@@ -91,37 +91,21 @@ mixin _PageElementValues on _$PageElements, _PageElementMutationContext {
     final current = state.requireValue.singleWhere(
       (element) => element.id == elementId,
     );
-    final definition = switch (current) {
-      PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-        definition.elementDefinition,
-      PageElementCue(:final cue) => cue.elementDefinition,
-      _ => throw ApiException.badRequest("The element has no editable value"),
-    };
+    switch (current) {
+      case PageElementEntry(entry: DefinitionPageEntry()) || PageElementCue():
+        break;
+      default:
+        throw ApiException.badRequest("The element has no editable value");
+    }
     final codec = _codec();
     final session = ref.read(_sessionProvider);
-    final revision = session.sequence;
-    final resource = session.resources[skir.ResourceId(value: elementId)];
-    if (revision == null || resource == null) {
-      throw ApiException.notFound("Element");
-    }
-    final decoded = codec.authoring.decodeResource(resource).valueOrNull;
-    if (decoded == null) {
-      throw ApiException.badRequest("The element value cannot be decoded");
-    }
-
-    return authoringElementTarget(
+    return session.authoringResourceTarget(
       repository: ref
           .read(resourceRepositoriesProvider)
           .authoring(this.organizationId, this.realmId),
-      state: session,
       identity: EntryIdentifier(elementId),
       label: _elementName(current),
-      document: EditorDocument(
-        rootType: NamedType(definition.rootType),
-        typeCatalog: codec.registry.catalog,
-        confirmedValue: decoded.content.rootValue,
-        revision: revision,
-      ),
+      typeCatalog: codec.registry.catalog,
     );
   }
 }

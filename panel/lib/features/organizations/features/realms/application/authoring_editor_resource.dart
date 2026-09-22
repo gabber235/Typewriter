@@ -78,13 +78,7 @@ abstract class AuthoringEditorResource implements EditableResource {
                         await refresh(),
                       _ => null,
                     };
-                    accept(
-                      await acceptElementCommit(
-                        value,
-                        commit,
-                        actual?.document,
-                      ),
-                    );
+                    accept(await value.acceptCommit(commit, actual?.document));
                   default:
                     break;
                 }

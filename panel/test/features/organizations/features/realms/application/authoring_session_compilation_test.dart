@@ -53,8 +53,14 @@ void main() {
           AsyncData(
             RealmEditorCatalogState.ready(
               RealmEditorCatalogSnapshot(
-                catalog: const TypeCatalog([]),
+                catalog: _catalog,
                 generation: const CatalogGeneration("1"),
+                compilationProjections: [
+                  RealmAuthoringCompilationProjection(
+                    id: "typewriter.page",
+                    root: TypeExpression.named(_pageType),
+                  ),
+                ],
               ),
             ),
           ),
@@ -105,6 +111,31 @@ void main() {
     );
     expect(statusRequests, 1);
 
+    final unrelatedRoot = skir.CompilationRoot(
+      projection: skir.CompilationProjectionId(value: "typewriter.page"),
+      resource: skir.ResourceId(value: "unrelated"),
+    );
+    nats.emitMessageOnSubject(
+      _compiledSubject,
+      skir.CompiledContentChanged.serializer.toBytes(
+        skir.CompiledContentChanged(
+          generation: skir.CatalogGeneration(value: "1"),
+          sourceSequence: 1,
+          states: [
+            skir.CompiledResourceStateChange.createUpsert(
+              root: unrelatedRoot,
+              state: skir.CompiledResourceState.notCompiled,
+            ),
+          ],
+        ),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      container.read(provider).compiledStatuses.containsKey(unrelatedRoot),
+      isFalse,
+    );
+
     lease.release();
     subscription.close();
     container.dispose();
@@ -124,6 +155,13 @@ final _pageType = ResolvedTypeRef(
   id: DeclaredTypeId("22222222222222222222222222222222"),
   revision: 1,
 );
+final _catalog = TypeCatalog([
+  TypeDefinition(
+    id: _pageType,
+    kind: NominalTypeKind.concrete,
+    representation: const StringType(),
+  ),
+]);
 final _pageResource = skir.AuthoringResource(
   id: _page,
   definition: CoreResourceDefinitionIds.page.toWire(),

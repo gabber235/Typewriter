@@ -92,30 +92,12 @@ final class AuthoringResourceRepository {
   Future<skir.AuthoringGraphSnapshot> fetch(
     skir.GraphSelection selection, {
     CatalogGeneration? generation,
-  }) async {
-    session.checkActive();
-    final resolvedGeneration = generation == null
-        ? await _currentGeneration()
-        : skir.CatalogGeneration(value: generation.value);
-    final request = skir.QueryAuthoringGraphRequest(
-      generation: resolvedGeneration,
-      selections: [selection],
-    );
-    final response = await session.transport.request(
-      address.request("editor.authoring.graph.query"),
-      skir.QueryAuthoringGraphRequest.serializer.toBytes(request),
-      skir.QueryAuthoringGraphResponse.serializer,
-    );
-    session.checkActive();
-    return switch (response) {
-      skir.QueryAuthoringGraphResponse_successWrapper(:final value) => value,
-      skir.QueryAuthoringGraphResponse_invalidWrapper(:final value) =>
-        throw value.toApiException(),
-      skir.QueryAuthoringGraphResponse_catalogChangedWrapper() =>
-        throw StateError("The Realm catalog changed during graph acquisition"),
-      _ => throw ApiException.internalServerError(),
-    };
-  }
+  }) => fetchSelections(
+    [selection],
+    generation: generation == null
+        ? null
+        : skir.CatalogGeneration(value: generation.value),
+  );
 
   /// Fetches one bounded graph snapshot through this repository.
   Future<skir.AuthoringGraphSnapshot> fetchSelections(
@@ -162,6 +144,19 @@ final class AuthoringResourceRepository {
         }),
       _ => throw ApiException.internalServerError(),
     };
+  }
+
+  Future<skir.SearchAuthoringGraphResponse> search(
+    skir.SearchAuthoringGraphRequest request,
+  ) async {
+    session.checkActive();
+    final response = await session.transport.request(
+      address.request("editor.authoring.graph.search"),
+      skir.SearchAuthoringGraphRequest.serializer.toBytes(request),
+      skir.SearchAuthoringGraphResponse.serializer,
+    );
+    session.checkActive();
+    return response;
   }
 
   Future<skir.CatalogGeneration> _currentGeneration() async {

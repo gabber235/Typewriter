@@ -40,11 +40,10 @@ decodedRealmDocumentValues(
         AuthoringValue(
           value: {
             for (final selection in session.selections.entries)
-              if (selection.key.startsWith("page:"))
-                selection.key.substring("page:".length): _decodePageElements(
-                  skir.ResourceId(
-                    value: selection.key.substring("page:".length),
-                  ),
+              if (PageAuthoringSelectionKey.parse(selection.key)
+                  case final key?)
+                key.page.value: _decodePageElements(
+                  key.page,
                   selection.value.resourceIds
                       .map((id) => session.resources[id])
                       .nonNulls,

@@ -68,17 +68,11 @@ class EntryIdentifier extends SelectableIdentifier
     return catalogState.resolveElement(
       value.elementDefinition,
       (catalog, presentations) => EntrySelection(
-        target: authoringElementTarget(
+        target: state.authoringResourceTarget(
           repository: repository,
-          state: state,
           identity: identity,
           label: value.name,
-          document: EditorDocument(
-            rootType: NamedType(value.elementDefinition.rootType),
-            typeCatalog: catalog,
-            confirmedValue: value.data,
-            revision: indexed.revision,
-          ),
+          typeCatalog: catalog,
         ),
         id: identity,
         definition: value,

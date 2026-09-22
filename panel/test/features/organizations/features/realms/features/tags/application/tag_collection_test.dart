@@ -80,7 +80,13 @@ void main() {
 
       expect(selection.presentations, [presentation]);
       expect(selection.collections, [collection]);
-      expect(selection.multiInspection.id, presentation.id);
+      expect(
+        selection.multiInspection.id,
+        const PresentationId(
+          namespace: "typewriter.authoring",
+          name: "typewriter.tag",
+        ),
+      );
     },
   );
 }

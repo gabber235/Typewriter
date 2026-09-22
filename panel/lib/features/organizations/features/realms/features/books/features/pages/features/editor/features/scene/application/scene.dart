@@ -110,17 +110,11 @@ class CueIdentifier extends SelectableIdentifier {
     return catalogState.resolveElement(
       resolvedCue.elementDefinition,
       (catalog, presentations) => CueSelection(
-        target: authoringElementTarget(
+        target: state.authoringResourceTarget(
           repository: repository,
-          state: state,
           identity: this,
           label: resolvedCue.elementDefinition.name,
-          document: EditorDocument(
-            rootType: NamedType(resolvedCue.elementDefinition.rootType),
-            typeCatalog: catalog,
-            confirmedValue: resolvedCue.data,
-            revision: indexed.revision,
-          ),
+          typeCatalog: catalog,
         ),
         id: this,
         cue: resolvedCue,

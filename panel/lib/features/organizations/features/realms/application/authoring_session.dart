@@ -70,6 +70,16 @@ class AuthoringSession extends _$AuthoringSession
     final invalidations = repository.invalidations.listen(
       (_) => _scheduleRefresh(),
     );
+    ref.listen(realmEditorCatalogProvider, (_, next) {
+      final catalogGeneration = next.value?.snapshot?.generation.value;
+      final sessionGeneration = state.generation?.value;
+      if (catalogGeneration != null &&
+          sessionGeneration != null &&
+          catalogGeneration != sessionGeneration) {
+        state = state.copyWith(generation: null);
+        _scheduleRefresh();
+      }
+    });
     ref
       ..onDispose(results.cancel)
       ..onDispose(compiledChanges.cancel)
@@ -155,6 +165,10 @@ class AuthoringSession extends _$AuthoringSession
       operations: operations,
     );
   }
+
+  Future<skir.SearchAuthoringGraphResponse> search(
+    skir.SearchAuthoringGraphRequest request,
+  ) => _repository.search(request);
 }
 
 extension AuthoringResourceMutations on AuthoringSession {

@@ -62,21 +62,6 @@ abstract class Tag with _$Tag {
       ),
     );
   }
-
-  TypedValueEnvelope content(ResolvedTypeRef rootType) => TypedValueEnvelope(
-    rootType: rootType,
-    rootValue: RecordValue({
-      "name": name.asValue,
-      "color": color.asValue,
-      "parents": ListValue(parentIds.map(ReferenceValue.new).toList()),
-      "placement": RecordValue({
-        "x": placement.x.asValue,
-        "y": placement.y.asValue,
-        "width": placement.width.asValue,
-        "height": placement.height.asValue,
-      }),
-    }),
-  );
 }
 
 /// Converts a tag to and from the structural value used by the editor.

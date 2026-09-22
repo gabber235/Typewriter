@@ -115,7 +115,7 @@ final class AuthoringSessionProvider
   }
 }
 
-String _$authoringSessionHash() => r'e19b3a4b2baaa5abcd13a02700a35e3223ca41e9';
+String _$authoringSessionHash() => r'58180f4f305e30329020ea57578df098785b7108';
 
 /// Owns the canonical authoring state for one organization and realm.
 ///

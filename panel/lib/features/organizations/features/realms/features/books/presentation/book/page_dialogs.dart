@@ -16,10 +16,11 @@ Future<Page?> promptAndCreatePage({
   if (kind == null) {
     throw ApiException.badRequest("No page kinds are available");
   }
-  final root = catalog
-      .creationSlots[CoreAuthoringCreationSlotIds.page]
-      ?.concreteRoots
-      .singleOrNull;
+  final slot = catalog.hostedCreationSlot(
+    definition: CoreResourceDefinitionIds.page,
+    hostDefinition: CoreResourceDefinitionIds.book,
+  );
+  final root = slot?.concreteRoots.singleOrNull;
   if (root == null) {
     throw ApiException.badRequest("Page creation is unavailable");
   }
@@ -28,7 +29,7 @@ Future<Page?> promptAndCreatePage({
       .create(
         context: context,
         request: ResourceCreationRequest(
-          slot: CoreAuthoringCreationSlotIds.page,
+          slot: slot!.id,
           title: "Create Page",
           concreteRoot: root,
           hosts: [bookId],

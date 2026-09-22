@@ -159,6 +159,7 @@ SearchResult _kindResult(PageKindRef kind) => SearchResult(
       direction: GraphDirection.leftToRight,
       nodeTypes: [_elementType],
     ),
+    elementCreationSlot: const AuthoringCreationSlotId("test:graph"),
     originArtifactId: "test",
     sourcePart: "test",
     presentationSubject: _catalogSubject(referenceResourceTypes.pageKind),

@@ -68,12 +68,8 @@ void main() {
     expect(effect.realmId, _realm);
     expect(effect.resourceId, elementId);
     expect(effect.definition, CoreResourceDefinitionIds.element);
-    expect(effect.bookId, bookId);
-    expect(effect.ownerId, pageId);
-    expect(
-      effect.nestedIdentifier,
-      EntryIdentifier(elementId.id, pageId: pageId.id),
-    );
+    expect(effect.ownerPath, [pageId, bookId]);
+    expect(effect.rootType, entryType);
   });
 }
 

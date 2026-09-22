@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Builds the shared element type row used by global and contextual search.
+/// Builds the shared element type row used by contextual Page search.
 Widget buildElementTypeSearchResultItem(SearchResultRowContext context) =>
     ElementTypeSearchResultItem(
       definition: context.result.payload as ElementDefinition,
@@ -12,6 +12,53 @@ Widget buildElementTypeSearchResultItem(SearchResultRowContext context) =>
       onTap: context.onTap,
       shortcutActivator: context.shortcutActivator,
     );
+
+Widget buildAuthoringCreationSearchResultItem(SearchResultRowContext context) {
+  return AuthoringCreationSearchResultItem(
+    option: context.result.payload as AuthoringCreationOption,
+    selected: context.selected,
+    focused: context.focused,
+    onTap: context.onTap,
+    shortcutActivator: context.shortcutActivator,
+  );
+}
+
+class AuthoringCreationSearchResultItem extends StatelessWidget {
+  const AuthoringCreationSearchResultItem({
+    required this.option,
+    required this.selected,
+    required this.focused,
+    required this.onTap,
+    required this.shortcutActivator,
+    super.key,
+  });
+
+  final AuthoringCreationOption option;
+  final bool selected;
+  final bool focused;
+  final VoidCallback? onTap;
+  final ShortcutActivator? shortcutActivator;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return SearchResultCard(
+      color: color,
+      selected: selected,
+      focused: focused,
+      onTap: onTap,
+      content: ListTile(
+        title: Text(option.label),
+        subtitle: Text(option.root.id.toString()),
+      ),
+      suffix: SearchResultSuffix(
+        label: "resource",
+        shortcutActivator: shortcutActivator,
+        selected: selected,
+      ),
+    );
+  }
+}
 
 class PageKindSearchResultItem extends ConsumerWidget {
   const PageKindSearchResultItem({

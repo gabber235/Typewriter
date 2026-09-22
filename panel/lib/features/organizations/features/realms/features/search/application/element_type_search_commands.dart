@@ -7,7 +7,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-const createElementCommandId = SearchCommandId("authoring.element.create");
 const createElementOnPageCommandId = SearchCommandId(
   "authoring.element.create_on_page",
 );
@@ -25,117 +24,6 @@ final class SelectCreatedElementEffect implements SearchHostEffect {
   final skir.ResourceId pageId;
   final EntryIdentifier elementIdentifier;
 }
-
-SearchCommand createElementCommand({
-  required Ref ref,
-  required skir.RecordId organizationId,
-  required skir.RecordId realmId,
-}) => SearchCommand.single<ElementDefinition>(
-  id: createElementCommandId,
-  presentation: const SearchCommandPresentation(
-    label: "Add Element",
-    icon: MaterialSymbols.add_rounded,
-  ),
-  matcher: const SearchResultMatcher(elementTypeSearchResultType),
-  execute: (execution, definition, target) async {
-    if (ref.read(organizationIdProvider) != organizationId ||
-        ref.read(realmIdProvider) != realmId) {
-      return const SearchCommandResult.failed(
-        message: "The selected realm changed while creating the element",
-      );
-    }
-
-    final books = ref.read(projectedBooksProvider).value ?? const <Book>[];
-    final pages = ref.read(projectedPagesProvider).value ?? const <Page>[];
-    final selectedBook = resolveSearchBook(target.query, books);
-    if (hasSearchSelector(target.query, authoringBookSelectorId) &&
-        selectedBook == null) {
-      return const SearchCommandResult.failed(
-        message: "The selected book is unavailable",
-      );
-    }
-
-    final currentPageId = ref.read(pageIdProvider);
-    final currentPage = currentPageId == null
-        ? null
-        : ref.read(projectedPageProvider(currentPageId)).value;
-    final preferredPage = resolveElementCreationPage(
-      query: target.query,
-      books: books,
-      pages: pages,
-      currentPage: currentPage,
-    );
-    if (hasSearchSelector(target.query, authoringPageSelectorId) &&
-        preferredPage == null) {
-      return const SearchCommandResult.failed(
-        message: "The selected page is unavailable",
-      );
-    }
-    final preferredSlot = preferredPage == null
-        ? null
-        : ref.read(pageCreationSlotForPageProvider(preferredPage.pageId)).value;
-
-    skir.ResourceId? targetPageId;
-    skir.ResourceId targetBookId;
-    RealmAuthoringCreationSlot targetSlot;
-    if (preferredPage != null &&
-        preferredSlot?.acceptsRoot(definition.rootType) == true) {
-      targetPageId = preferredPage.pageId;
-      targetBookId = preferredPage.bookId;
-      targetSlot = preferredSlot!;
-    } else if (hasSearchSelector(target.query, authoringPageSelectorId)) {
-      return const SearchCommandResult.failed(
-        message: "The selected page is no longer compatible",
-      );
-    } else {
-      final selection = await execution.prompts.show(
-        (context) => promptElementPageSelection(
-          context: context,
-          initialBookId: selectedBook?.bookId ?? ref.read(bookIdProvider),
-          elementDefinition: definition,
-        ),
-      );
-      if (selection == null || !ref.mounted) {
-        return const SearchCommandResult.cancelled();
-      }
-      targetSlot = selection.slot;
-      targetPageId = selection.pageId;
-      targetBookId = selection.bookId;
-    }
-
-    final livePolicy = ref
-        .read(pageCreationSlotForPageProvider(targetPageId))
-        .value;
-    final slot = livePolicy ?? targetSlot;
-    if (!slot.acceptsRoot(definition.rootType)) {
-      return const SearchCommandResult.failed(
-        message: "The selected page is no longer compatible",
-      );
-    }
-    final elementId = await _createElementOnPage(
-      ref: ref,
-      execution: execution,
-      pageId: targetPageId,
-      definition: definition,
-      slot: slot,
-      preferredGraphAnchor: null,
-    );
-    if (elementId == null) return const SearchCommandResult.cancelled();
-    return SearchCommandResult.completed(
-      hostEffects: [
-        OpenAuthoringResourceEffect(
-          organizationId: organizationId,
-          realmId: realmId,
-          resourceId: skir.ResourceId(value: elementId),
-          definition: CoreResourceDefinitionIds.element,
-          bookId: targetBookId,
-          ownerId: targetPageId,
-          nestedIdentifier: EntryIdentifier(elementId, pageId: targetPageId.id),
-        ),
-      ],
-    );
-  },
-);
 
 /// Creates an element on one fixed page without offering another destination.
 ///
@@ -228,16 +116,23 @@ Future<String?> _createElementOnPage({
   required RealmAuthoringCreationSlot slot,
   Offset? preferredGraphAnchor,
 }) async {
-  final placement = await ref.withReadyPageElements(
-    pageId.id,
-    (elements) => elements.creationPlacement(switch (slot.pagePlacement) {
-      RealmPageCreationPlacement.graph => EntryPlacementKind.graph,
-      RealmPageCreationPlacement.timelineTrack =>
-        EntryPlacementKind.timelineEntry,
-    }, preferredGraphAnchor: preferredGraphAnchor),
-  );
   final page = ref.read(projectedPageProvider(pageId)).value;
   if (page == null) return null;
+  final pageEditor = ref
+      .read(realmEditorCatalogProvider)
+      .value
+      ?.snapshot
+      ?.pageCatalog
+      .definitions[page.kind]
+      ?.editor;
+  if (pageEditor == null) return null;
+  final placement = await ref.withReadyPageElements(
+    pageId.id,
+    (elements) => elements.creationPlacement(switch (pageEditor) {
+      RealmGraphPageEditor() => EntryPlacementKind.graph,
+      RealmTimelinePageEditor() => EntryPlacementKind.timelineEntry,
+    }, preferredGraphAnchor: preferredGraphAnchor),
+  );
   final created = await execution.prompts.show(
     (context) => ref
         .read(resourceCreationProvider)

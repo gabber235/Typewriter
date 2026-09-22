@@ -54,7 +54,7 @@ final class CanonicalTagsProvider
   CanonicalTags create() => CanonicalTags();
 }
 
-String _$canonicalTagsHash() => r'772d5dedb4f2193bc2a5ce406796e1abbb0a880a';
+String _$canonicalTagsHash() => r'afbf68b1d1404cdfe94344e72758df8660f082d1';
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///

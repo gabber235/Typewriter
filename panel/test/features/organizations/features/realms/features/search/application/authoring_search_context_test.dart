@@ -48,130 +48,7 @@ void main() {
       isNull,
     );
   });
-
-  test("page selector exposes only element types accepted by that page", () {
-    final dependencies = _scopeDependencies();
-    addTearDown(dependencies.dispose);
-    final scope = dependencies.scope;
-    final query = _query(book: _otherBook.title, page: _otherPage.name);
-
-    expect(
-      scope.evaluate(_elementResult(_childDefinition), query),
-      isA<SearchResultVisible>(),
-    );
-    expect(
-      scope.evaluate(_elementResult(_unrelatedDefinition), query),
-      isA<SearchResultHidden>(),
-    );
-  });
-
-  test("type selector includes concrete descendants", () {
-    final dependencies = _scopeDependencies();
-    addTearDown(dependencies.dispose);
-    final scope = dependencies.scope;
-
-    expect(
-      scope.evaluate(
-        _elementResult(_childDefinition),
-        _query(type: _parentDefinition.name),
-      ),
-      isA<SearchResultVisible>(),
-    );
-    expect(
-      scope.evaluate(
-        _elementResult(_unrelatedDefinition),
-        _query(type: _parentDefinition.name),
-      ),
-      isA<SearchResultHidden>(),
-    );
-  });
 }
-
-({SearchScope scope, void Function() dispose}) _scopeDependencies() {
-  final books = ValueNotifier<AsyncValue<List<Book>>>(
-    AsyncData([_currentBook, _otherBook]),
-  );
-  final pages = ValueNotifier<AsyncValue<List<Page>>>(
-    AsyncData([_currentPage, _otherPage]),
-  );
-  final policies = ValueNotifier(AsyncValue.data({_pageKind: _pagePolicy}));
-  final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogState>>(
-    AsyncData(
-      RealmEditorCatalogState.ready(
-        RealmEditorCatalogSnapshot(
-          catalog: TypeCatalog([
-            TypeDefinition(
-              id: _parentType,
-              kind: NominalTypeKind.concrete,
-              representation: const RecordType(fields: {}),
-            ),
-            TypeDefinition(
-              id: _childType,
-              kind: NominalTypeKind.concrete,
-              representation: const RecordType(fields: {}),
-              parents: [_parentType],
-            ),
-            TypeDefinition(
-              id: _unrelatedType,
-              kind: NominalTypeKind.concrete,
-              representation: const RecordType(fields: {}),
-            ),
-          ]),
-          generation: const CatalogGeneration("test"),
-          elements: {
-            _parentDefinition.typeId.uuid: _catalogEntry(_parentDefinition),
-            _childDefinition.typeId.uuid: _catalogEntry(_childDefinition),
-            _unrelatedDefinition.typeId.uuid: _catalogEntry(
-              _unrelatedDefinition,
-            ),
-          },
-        ),
-      ),
-    ),
-  );
-  return (
-    scope: primarySearchScope(
-      books: books,
-      pages: pages,
-      pageCreationSlots: policies,
-      catalog: catalog,
-    ),
-    dispose: () {
-      books.dispose();
-      pages.dispose();
-      policies.dispose();
-      catalog.dispose();
-    },
-  );
-}
-
-RealmElementCatalogEntry _catalogEntry(ElementDefinition definition) =>
-    RealmElementCatalogEntry(
-      originArtifactId: "test",
-      sourcePart: "test",
-      definition: DiscoveredElementDefinition(
-        id: definition.typeId.uuid,
-        type: definition.rootType,
-        name: definition.name,
-        description: definition.description,
-        icon: definition.icon,
-        color: definition.color,
-        availability: const ElementAvailability.always(),
-      ),
-      presentationSubject: (
-        target: definition.rootType,
-        descriptor: TypedValueEnvelope(
-          rootType: definition.rootType,
-          rootValue: RecordValue({}),
-        ),
-        identity: TypedValueEnvelope(
-          rootType: definition.rootType,
-          rootValue: RecordValue({}),
-        ),
-      ),
-      eligible: true,
-      available: true,
-    );
 
 SearchQueryContext _query({String? book, String? page, String? type}) =>
     SearchQueryContext(
@@ -185,13 +62,6 @@ SearchQueryContext _query({String? book, String? page, String? type}) =>
           SearchParsedSelector(selectorId: "type", key: "type:", value: type),
       ],
     );
-
-SearchResult _elementResult(ElementDefinition definition) => SearchResult(
-  id: definition.typeId.uuid,
-  type: elementTypeSearchResultType,
-  payload: definition,
-  title: definition.name,
-);
 
 final _currentBook = Book(
   bookId: skir.ResourceId(value: "current"),
@@ -224,33 +94,3 @@ final _otherPage = Page(
   chapter: "",
   priority: 0,
 );
-final _parentType = ResolvedTypeRef(
-  id: DeclaredTypeId("10000000000000000000000000000001"),
-  revision: 1,
-);
-final _childType = ResolvedTypeRef(
-  id: DeclaredTypeId("10000000000000000000000000000002"),
-  revision: 1,
-);
-final _unrelatedType = ResolvedTypeRef(
-  id: DeclaredTypeId("10000000000000000000000000000003"),
-  revision: 1,
-);
-final _parentDefinition = _definition(_parentType, "Parent");
-final _childDefinition = _definition(_childType, "Child");
-final _unrelatedDefinition = _definition(_unrelatedType, "Unrelated");
-final _pagePolicy = RealmAuthoringCreationSlot(
-  id: AuthoringCreationSlotId("test/graph"),
-  label: "Test graph",
-  creates: CoreResourceDefinitionIds.element,
-  context: const RealmStandaloneCreationContext(),
-  concreteRoots: [_childType],
-);
-
-ElementDefinition _definition(ResolvedTypeRef type, String name) =>
-    ElementDefinition(
-      rootType: type,
-      name: name,
-      description: "$name element",
-      icon: const IconValue.iconify("mdi:test-tube"),
-    );

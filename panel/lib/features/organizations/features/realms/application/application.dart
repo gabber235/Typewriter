@@ -13,13 +13,15 @@
 library;
 
 export "authoring_collections.dart";
-export "authoring_element_editor.dart";
-export "authoring_element_submission.dart";
+export "authoring_multi_inspection.dart";
 export "authoring_placement.dart";
+export "authoring_resource_mutation.dart";
+export "authoring_resource_target.dart";
 export "authoring_selectable_resource.dart";
 export "authoring_session.dart";
 export "authoring_subject_role.dart";
 export "authoring_subjects.dart";
+export "authoring_submission.dart";
 export "nats_realm_capability_transport.dart";
 export "nats_realm_editor_catalog_source.dart";
 export "nats_realm_presentation_search_transport.dart";

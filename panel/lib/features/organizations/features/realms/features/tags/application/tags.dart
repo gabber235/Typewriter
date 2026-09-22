@@ -70,6 +70,15 @@ class CanonicalTags extends _$CanonicalTags {
     final catalogState = await ref.watch(realmEditorCatalogProvider.future);
     final catalog = catalogState.snapshot;
     if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final collectionLeases = [
+      for (final selection in catalog.collectionSelections(
+        catalog.presentations.values,
+      ))
+        ref.watch(
+          authoringSelectionLeaseProvider(organizationId, realmId, selection),
+        ),
+    ];
+    await Future.wait(collectionLeases.map((lease) => lease.ready));
     final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
     ref.listen(provider, (_, value) {
@@ -101,64 +110,18 @@ class CanonicalTags extends _$CanonicalTags {
   /// content, including fields changed remotely in the same revision.
   Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
     state.ensureReady();
-    final session = ref.readAuthoringSession();
-    final current = session.state.resources[tag.tagId];
-    if (current == null || session.state.sequence == null) {
-      throw ApiException.notFound("Tag");
-    }
-    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-    if (catalog == null) throw StateError("The editor catalog is unavailable");
-    final codec = TypedAuthoringCodec(catalog);
-    final decoded = codec.decodeResource(current).valueOrNull;
-    if (decoded == null) throw StateError("The Tag content is invalid");
-    final collections = decodeAuthoringCollections(
-      session: session.state,
-      catalog: catalog,
-      presentations: catalog.presentations.values,
+    final before =
+        expected ??
+        state.requireValue.singleWhere(
+          (candidate) => candidate.tagId == tag.tagId,
+          orElse: () => throw ApiException.notFound("Tag"),
+        );
+    return ref.updateAuthoringResource(
+      id: tag.tagId,
+      expected: before.inspectorValue,
+      proposed: tag.inspectorValue,
+      label: "Tag",
     );
-    final tagCollection = collections.sources[authoringTagCollectionSourceId];
-    if (tagCollection == null) {
-      throw StateError("The Realm Tag collection is unavailable");
-    }
-    final before = expected ?? Tag.fromTyped(decoded);
-    final commands = session.notifier;
-    final owners = EditorOwnerRegistry(
-      workspace: ref.read(localWorkControllerProvider),
-    );
-    try {
-      final owner = owners.editor(
-        TagSelectable(
-          resource: TypedAuthoringEditorResource(
-            ref
-                .read(resourceRepositoriesProvider)
-                .authoring(commands.organizationId, commands.realmId),
-            tag.tagId,
-          ),
-          onDelete: () => session.notifier.deleteResource(
-            tag.tagId,
-            conflictMessage: "The tag changed before deletion",
-          ),
-          id: TagIdentifier(tag.tagId),
-          tag: before,
-          snapshot: TypedAuthoringEditorSnapshot(
-            resource: current,
-            content: decoded.content,
-            revision: session.state.sequence!,
-            codec: codec,
-          ),
-          catalogPresentations: catalog.presentations.values.toList(
-            growable: false,
-          ),
-          tagCollection: tagCollection,
-          presentationDiagnostics: collections.diagnostics,
-        ),
-      );
-      return await owner.applyChanges(
-        editorValueChanges(before.inspectorValue, tag.inspectorValue),
-      );
-    } finally {
-      owners.dispose();
-    }
   }
 
   /// Applies the graph drop action for [childId] and [parentId].
@@ -200,10 +163,8 @@ List<Tag> _projectTags(AuthoringSessionState value, TypedAuthoringCodec codec) {
   return value.resources.values
       .map(codec.decodeResourceOrThrow)
       .where(
-        (resource) => codec.isResourceType(
-          resource.content,
-          CoreResourceDefinitionIds.tag,
-        ),
+        (resource) =>
+            codec.isResourceType(resource, CoreResourceDefinitionIds.tag),
       )
       .map(Tag.fromTyped)
       .toList();
@@ -219,7 +180,7 @@ extension AuthoringTagValue on AuthoringSessionState {
     final revision = sequence;
     if (value == null || revision == null) return null;
     final decoded = codec.decodeResourceOrThrow(value);
-    if (!codec.isResourceType(decoded.content, CoreResourceDefinitionIds.tag)) {
+    if (!codec.isResourceType(decoded, CoreResourceDefinitionIds.tag)) {
       return null;
     }
     return AuthoringValue(value: Tag.fromTyped(decoded), revision: revision);

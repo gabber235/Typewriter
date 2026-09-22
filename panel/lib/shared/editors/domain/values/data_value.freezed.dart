@@ -814,13 +814,13 @@ $ReferenceValueCopyWith<ReferenceValue> get copyWith => _$ReferenceValueCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceValue&&const DeepCollectionEquality().equals(other.id, id));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceValue&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(id));
+    return Object.hash(runtimeType,id);
 }
 
 @override
@@ -853,9 +853,9 @@ class _$ReferenceValueCopyWithImpl<$Res>
 
 /// Create a copy of DataValue
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? id = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
   return _then(ReferenceValue(
-freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as ResourceId,
   ));
 }

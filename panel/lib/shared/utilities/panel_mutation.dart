@@ -3,21 +3,13 @@ import "dart:async";
 import "package:flutter/foundation.dart";
 
 /// User visible operation context attached to an unexpected panel mutation error.
-enum PanelMutationOperation {
-  createTag,
-  deleteService,
-  signOut,
-  updateService,
-  updateTag,
-}
+enum PanelMutationOperation { deleteService, signOut, updateService }
 
 extension on PanelMutationOperation {
   String get description => switch (this) {
-    PanelMutationOperation.createTag => "creating a tag",
     PanelMutationOperation.deleteService => "deleting a service",
     PanelMutationOperation.signOut => "signing out",
     PanelMutationOperation.updateService => "updating a service",
-    PanelMutationOperation.updateTag => "updating a tag",
   };
 }
 

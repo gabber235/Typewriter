@@ -144,24 +144,16 @@ extension type const CoreResourceDefinitionIds._(Object _) {
   static const element = ResourceDefinitionId("typewriter.element");
 }
 
-extension type const CoreAuthoringCreationSlotIds._(Object _) {
-  static const book = AuthoringCreationSlotId("typewriter:book");
-  static const tag = AuthoringCreationSlotId("typewriter:tag");
-  static const page = AuthoringCreationSlotId("typewriter:page");
-
-  static AuthoringCreationSlotId pageElements(
-    PageKindRef kind,
-    String placement,
-  ) => AuthoringCreationSlotId(
-    "typewriter:page/${kind.id}/${kind.revision}/$placement",
-  );
-}
-
 final class RealmResourceDefinition {
-  const RealmResourceDefinition({required this.id, required this.acceptedRoot});
+  const RealmResourceDefinition({
+    required this.id,
+    required this.acceptedRoot,
+    this.navigationHandler = "generic",
+  });
 
   final ResourceDefinitionId id;
   final TypeExpression acceptedRoot;
+  final String navigationHandler;
 }
 
 @freezed
@@ -229,6 +221,46 @@ abstract class RealmAuthoringCreationSlot with _$RealmAuthoringCreationSlot {
   const RealmAuthoringCreationSlot._();
 
   bool acceptsRoot(ResolvedTypeRef root) => concreteRoots.contains(root);
+}
+
+extension RealmEditorCatalogCreationSlots on RealmEditorCatalogSnapshot {
+  RealmAuthoringCreationSlot? standaloneCreationSlot(
+    ResourceDefinitionId definition,
+  ) => _uniqueCreationSlot(
+    creationSlots.values.where(
+      (slot) =>
+          slot.creates == definition &&
+          slot.context is RealmStandaloneCreationContext,
+    ),
+  );
+
+  RealmAuthoringCreationSlot? hostedCreationSlot({
+    required ResourceDefinitionId definition,
+    required ResourceDefinitionId hostDefinition,
+    ResolvedTypeRef? root,
+  }) => _uniqueCreationSlot(
+    creationSlots.values.where((slot) {
+      if (slot.creates != definition ||
+          (root != null && !slot.acceptsRoot(root))) {
+        return false;
+      }
+      final filter = switch (slot.context) {
+        RealmStandaloneCreationContext() => null,
+        RealmDeclaredRelationCreationContext(:final hosts) => hosts,
+        RealmReferencePathCreationContext(:final hosts) => hosts,
+      };
+      return filter != null &&
+          (filter.definitions.isEmpty ||
+              filter.definitions.contains(hostDefinition));
+    }),
+  );
+
+  RealmAuthoringCreationSlot? _uniqueCreationSlot(
+    Iterable<RealmAuthoringCreationSlot> candidates,
+  ) {
+    final values = candidates.take(2).toList(growable: false);
+    return values.length == 1 ? values.single : null;
+  }
 }
 
 enum RealmRelationDeletePolicy { restrict, cascade, clear }

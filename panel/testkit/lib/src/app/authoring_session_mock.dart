@@ -125,13 +125,13 @@ AuthoringSessionState _fixtureState({
       book.bookId: resource(
         book.bookId,
         CoreResourceDefinitionIds.book,
-        book.content(bookType),
+        book.authoringFixtureContent(bookType),
       ),
     for (final tag in tags)
       tag.tagId: resource(
         tag.tagId,
         CoreResourceDefinitionIds.tag,
-        tag.content(tagType),
+        tag.authoringFixtureContent(tagType),
       ),
   };
   return AuthoringSessionState(
@@ -139,6 +139,16 @@ AuthoringSessionState _fixtureState({
     sequence: 1,
     resources: resources,
   );
+}
+
+extension AuthoringFixtureBookContent on Book {
+  TypedValueEnvelope authoringFixtureContent(ResolvedTypeRef rootType) =>
+      TypedValueEnvelope(rootType: rootType, rootValue: inspectorValue);
+}
+
+extension AuthoringFixtureTagContent on Tag {
+  TypedValueEnvelope authoringFixtureContent(ResolvedTypeRef rootType) =>
+      TypedValueEnvelope(rootType: rootType, rootValue: inspectorValue);
 }
 
 RealmEditorCatalogSnapshot authoringFixtureCatalog() {

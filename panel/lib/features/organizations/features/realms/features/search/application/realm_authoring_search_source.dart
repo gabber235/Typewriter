@@ -30,19 +30,6 @@ final class AuthoringSearchResultPayload {
 
   skir.ResourceId get id => subject.identity.id;
   skir.ResourceId? get owner => subject.identity.owner;
-
-  PageKindRef? get pageKind {
-    final content = subject.content.rootValue;
-    if (content is! RecordValue || content.fields["kind"] is! RecordValue) {
-      return null;
-    }
-    final fields = (content.fields["kind"]! as RecordValue).fields;
-    final id = fields["id"];
-    final revision = fields["revision"];
-    return id is StringValue && revision is IntegerValue
-        ? PageKindRef(id: id.value, revision: revision.value.toInt())
-        : null;
-  }
 }
 
 final class RealmAuthoringSearchSource
@@ -51,18 +38,22 @@ final class RealmAuthoringSearchSource
     required this.ref,
     required this.organizationId,
     required this.realmId,
-    this.contextPage,
+    this.contextResource,
     this.referenceTarget,
+    this.assignableTo,
     this.referenceOrigins = const [],
+    this.definitionFilter,
     this.typeRegistry,
   });
 
   final Ref ref;
   final skir.RecordId organizationId;
   final skir.RecordId realmId;
-  final skir.ResourceId? contextPage;
+  final skir.ResourceId? contextResource;
   final ResolvedTypeRef? referenceTarget;
+  final TypeExpression? assignableTo;
   final List<skir.ResourceId> referenceOrigins;
+  final Set<ResourceDefinitionId>? definitionFilter;
   final TypeRegistry? typeRegistry;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
@@ -98,25 +89,20 @@ final class RealmAuthoringSearchSource
       final catalog = _catalog();
       final query = encodeRealmSearchQuery(context);
       final target = _encodedTarget(catalog);
-      final response = await ref.requestSkir(
-        RealmServiceAddress(
-          organizationId: organizationId,
-          realmId: realmId,
-        ).request("editor.authoring.graph.search"),
-        skir.SearchAuthoringGraphRequest.serializer.toBytes(
-          skir.SearchAuthoringGraphRequest(
-            generation: skir.CatalogGeneration(value: catalog.generation.value),
-            query: query,
-            resources: skir.ResourceFilter(
-              definitions: _resourceDefinitions(catalog),
-              assignableTo: target,
-            ),
-            scope: _scope(target),
-            referenceTarget: target,
-            facets: _validationFacets(query),
+      final response = await ref.readAuthoringSession().notifier.search(
+        skir.SearchAuthoringGraphRequest(
+          generation: skir.CatalogGeneration(value: catalog.generation.value),
+          query: query,
+          resources: skir.ResourceFilter(
+            definitions: _resourceDefinitions(catalog),
+            assignableTo: target,
           ),
+          contexts: referenceOrigins.isNotEmpty
+              ? referenceOrigins
+              : [?contextResource],
+          referenceTarget: target,
+          facets: _validationFacets(query),
         ),
-        skir.SearchAuthoringGraphResponse.serializer,
       );
       if (_disposed || revision != _revision) return;
       await _publish(response, revision);
@@ -139,55 +125,30 @@ final class RealmAuthoringSearchSource
 
   List<skir.ResourceDefinitionId> _resourceDefinitions(
     RealmEditorCatalogSnapshot catalog,
-  ) =>
-      catalog.authoringSearch?.definitions
-          .map(
-            (definition) => skir.ResourceDefinitionId(value: definition.value),
-          )
-          .toList(growable: false) ??
-      const [];
+  ) {
+    final searchable = catalog.authoringSearch?.definitions.toSet() ?? const {};
+    final requested = definitionFilter;
+    final definitions = requested == null || requested.isEmpty
+        ? searchable
+        : requested.where(searchable.contains);
+    return definitions
+        .map((definition) => skir.ResourceDefinitionId(value: definition.value))
+        .toList(growable: false);
+  }
 
   skir.TypeExpression? _encodedTarget(RealmEditorCatalogSnapshot catalog) {
-    final target = referenceTarget;
+    final target =
+        assignableTo ??
+        (referenceTarget == null ? null : NamedType(referenceTarget!));
     if (target == null) return null;
     final registry = typeRegistry ?? TypeRegistry(catalog.catalog);
-    final encoded = SkirTypeCodec(registry).encodeExpression(NamedType(target));
+    final encoded = SkirTypeCodec(registry).encodeExpression(target);
     if (encoded.valueOrNull == null) {
       throw StateError(
         encoded.diagnostics.map((item) => item.message).join(", "),
       );
     }
     return encoded.valueOrNull;
-  }
-
-  skir.GraphSelection? _scope(skir.TypeExpression? target) {
-    final seeds = referenceOrigins.isNotEmpty
-        ? referenceOrigins
-        : contextPage == null
-        ? const <skir.ResourceId>[]
-        : [contextPage!];
-    if (seeds.isEmpty) return null;
-    return skir.GraphSelection(
-      key: "search.scope",
-      seed: skir.ResourceSeed.createIds(
-        values: seeds,
-        requireAssignableTo: null,
-      ),
-      steps: [
-        skir.RelationStep(
-          relations: skir.RelationFilter.any,
-          direction: skir.RelationDirection.both,
-          minDepth: 1,
-          maxDepth: contextPage == null ? 1 : 2,
-          target: target == null
-              ? null
-              : skir.ResourceFilter(
-                  definitions: const [],
-                  assignableTo: target,
-                ),
-        ),
-      ],
-    );
   }
 
   List<skir.SearchFacetRequest> _validationFacets(skir.RealmSearchQuery query) {
@@ -443,7 +404,11 @@ final class RealmAuthoringSearchSource
 
   @override
   Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    throw UnimplementedError();
+    return Future.value(
+      const SearchPreviewRequestResult.error(
+        message: "Authoring resources do not provide a separate preview",
+      ),
+    );
   }
 
   @override
@@ -463,38 +428,33 @@ final class RealmAuthoringSearchSource
     }
     final catalog = _catalog();
     final target = _encodedTarget(catalog);
-    final response = await ref.requestSkir(
-      RealmServiceAddress(
-        organizationId: organizationId,
-        realmId: realmId,
-      ).request("editor.authoring.graph.search"),
-      skir.SearchAuthoringGraphRequest.serializer.toBytes(
-        skir.SearchAuthoringGraphRequest(
-          generation: skir.CatalogGeneration(value: catalog.generation.value),
-          query: skir.RealmSearchQuery(
-            normalizedQuery: "",
-            selectors: const [],
-            selectorExpression: request.scope == null
-                ? null
-                : encodeRealmSearchSelectorExpression(request.scope!),
-            terms: const [],
-          ),
-          resources: skir.ResourceFilter(
-            definitions: _resourceDefinitions(catalog),
-            assignableTo: target,
-          ),
-          scope: _scope(target),
-          referenceTarget: target,
-          facets: [
-            skir.SearchFacetRequest(
-              facetId: skir.SearchFacetId(value: _facetId(request.selectorId)),
-              partial: request.partial,
-              validate: const [],
-            ),
-          ],
+    final response = await ref.readAuthoringSession().notifier.search(
+      skir.SearchAuthoringGraphRequest(
+        generation: skir.CatalogGeneration(value: catalog.generation.value),
+        query: skir.RealmSearchQuery(
+          normalizedQuery: "",
+          selectors: const [],
+          selectorExpression: request.scope == null
+              ? null
+              : encodeRealmSearchSelectorExpression(request.scope!),
+          terms: const [],
         ),
+        resources: skir.ResourceFilter(
+          definitions: _resourceDefinitions(catalog),
+          assignableTo: target,
+        ),
+        contexts: referenceOrigins.isNotEmpty
+            ? referenceOrigins
+            : [?contextResource],
+        referenceTarget: target,
+        facets: [
+          skir.SearchFacetRequest(
+            facetId: skir.SearchFacetId(value: _facetId(request.selectorId)),
+            partial: request.partial,
+            validate: const [],
+          ),
+        ],
       ),
-      skir.SearchAuthoringGraphResponse.serializer,
     );
     return switch (response) {
       skir.SearchAuthoringGraphResponse_successWrapper(:final value) =>

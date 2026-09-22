@@ -1,11 +1,8 @@
-import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-part "tag_inspector_definition.dart";
 
 /// Stable selection and graph drag identity for one tag record.
 ///
@@ -58,10 +55,20 @@ class TagIdentifier extends SelectableIdentifier
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
     final tag = tagValue.value;
+    final presentations = catalog.presentations.values.toList(growable: false);
+    if (!ref.retainAuthoringCollections(
+      organizationId: organization,
+      realmId: realm,
+      catalog: catalog,
+      presentations: presentations,
+      session: session,
+    )) {
+      return const AsyncLoading();
+    }
     final collections = decodeAuthoringCollections(
       session: session,
       catalog: catalog,
-      presentations: catalog.presentations.values,
+      presentations: presentations,
     );
     final tags = collections.sources[authoringTagCollectionSourceId];
     if (tags == null) {
@@ -101,9 +108,7 @@ class TagIdentifier extends SelectableIdentifier
           revision: tagValue.revision,
           codec: codec,
         ),
-        catalogPresentations: catalog.presentations.values.toList(
-          growable: false,
-        ),
+        catalogPresentations: presentations,
         tagCollection: tags,
         presentationDiagnostics: collections.diagnostics,
       ),
@@ -129,7 +134,8 @@ class TagIdentifier extends SelectableIdentifier
 /// Its editor resource owns persistence, while the selectable exposes the
 /// presentation, collection, deletion capability, and snapshot needed by
 /// selection consumers.
-class TagSelectable extends EditableSelectable<TagIdentifier> {
+class TagSelectable extends EditableSelectable<TagIdentifier>
+    implements RealmAuthoringSelection {
   const TagSelectable({
     required this.resource,
     required this.onDelete,
@@ -149,11 +155,17 @@ class TagSelectable extends EditableSelectable<TagIdentifier> {
   final EditorSnapshot snapshot;
   final PresentationCollectionSource tagCollection;
   final List<PresentationDefinition> catalogPresentations;
+  @override
   final List<TypeDiagnostic> presentationDiagnostics;
 
   @override
   MultiInspectionDefinition get multiInspection =>
-      const TagMultiInspectionDefinition();
+      const RealmAuthoringMultiInspectionDefinition(
+        CoreResourceDefinitionIds.tag,
+      );
+
+  @override
+  ResourceDefinitionId get resourceDefinition => CoreResourceDefinitionIds.tag;
 
   @override
   String get name => tag.name;

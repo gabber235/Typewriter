@@ -64,6 +64,7 @@ abstract class RealmPageDefinition with _$RealmPageDefinition {
     required IconValue icon,
     required Color color,
     required RealmPageEditor editor,
+    required AuthoringCreationSlotId elementCreationSlot,
     required TypedCatalogPresentationSubject presentationSubject,
     required String originArtifactId,
     required String sourcePart,

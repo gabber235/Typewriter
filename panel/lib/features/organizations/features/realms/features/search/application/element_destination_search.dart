@@ -68,10 +68,11 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
           return const SearchActivationResult.cancelled();
         }
         final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-        final root = catalog
-            ?.creationSlots[CoreAuthoringCreationSlotIds.page]
-            ?.concreteRoots
-            .singleOrNull;
+        final pageSlot = catalog?.hostedCreationSlot(
+          definition: CoreResourceDefinitionIds.page,
+          hostDefinition: CoreResourceDefinitionIds.book,
+        );
+        final root = pageSlot?.concreteRoots.singleOrNull;
         if (root == null) return const SearchActivationResult.cancelled();
         final created = await context.prompts.show(
           (promptContext) => ref
@@ -79,7 +80,7 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
               .create(
                 context: promptContext,
                 request: ResourceCreationRequest(
-                  slot: CoreAuthoringCreationSlotIds.page,
+                  slot: pageSlot!.id,
                   title: "Create Page",
                   concreteRoot: root,
                   hosts: [book.bookId],

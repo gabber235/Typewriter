@@ -11,6 +11,12 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   late Future<void> _startOperation;
   final Set<String> _refreshSelections = {};
   final Set<String> _seenBatchIds = {};
+
+  @override
+  bool _isSelectionActive(String key) => _leases.containsKey(key);
+
+  @override
+  Set<String> get _activeSelectionKeys => _leases.keys.toSet();
   _AuthoringSelectionLease _acquire(skir.GraphSelection selection) {
     final key = selection.key;
     final existing = _leases[key];
@@ -45,9 +51,41 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
       _leases.remove(key);
       _selectionReadiness.remove(key);
       _refreshSelections.remove(key);
+      _pruneReleasedSelection(key);
     } else {
       _leases[key] = lease.copyWith(retainCount: lease.retainCount - 1);
     }
+  }
+
+  void _pruneReleasedSelection(String key) {
+    final selections = Map<String, skir.GraphSelectionResult>.of(
+      state.selections,
+    )..remove(key);
+    final resourceIds = selections.values
+        .expand((selection) => selection.resourceIds)
+        .toSet();
+    final edgeIds = selections.values
+        .expand((selection) => selection.edgeIds)
+        .toSet();
+    state = state.copyWith(
+      resources: Map.unmodifiable({
+        for (final entry in state.resources.entries)
+          if (resourceIds.contains(entry.key)) entry.key: entry.value,
+      }),
+      edges: Map.unmodifiable({
+        for (final entry in state.edges.entries)
+          if (edgeIds.contains(entry.key)) entry.key: entry.value,
+      }),
+      presentations: Map.unmodifiable({
+        for (final entry in state.presentations.entries)
+          if (resourceIds.contains(entry.key)) entry.key: entry.value,
+      }),
+      compiledStatuses: Map.unmodifiable({
+        for (final entry in state.compiledStatuses.entries)
+          if (resourceIds.contains(entry.key.resource)) entry.key: entry.value,
+      }),
+      selections: Map.unmodifiable(selections),
+    );
   }
 
   void _accept(skir.AuthoringChanged change) {
@@ -103,12 +141,15 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     final statuses = Map<skir.CompilationRoot, skir.CompiledResourceState>.of(
       state.compiledStatuses,
     );
+    final activeResources = _activeResourceIds;
     for (final stateChange in change.states) {
       switch (stateChange) {
         case skir.CompiledResourceStateChange_upsertWrapper(:final value):
-          statuses[value.root] = value.state;
+          if (activeResources.contains(value.root.resource)) {
+            statuses[value.root] = value.state;
+          }
         case skir.CompiledResourceStateChange_removeWrapper(:final value):
-          statuses.remove(value);
+          if (activeResources.contains(value.resource)) statuses.remove(value);
         case skir.CompiledResourceStateChange_unknown():
           _scheduleRefresh();
           return;
@@ -168,10 +209,18 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
           return;
       }
     }
-    for (final root in event.compilationImpact) {
-      compiledStatuses[root] = skir.CompiledResourceState.notCompiled;
-    }
     final selections = _applySelectionChanges(state.selections, event);
+    final activeResources = selections.values
+        .expand((selection) => selection.resourceIds)
+        .toSet();
+    if (activeResources.isEmpty && _activeSelectionKeys.isNotEmpty) {
+      activeResources.addAll(resources.keys);
+    }
+    for (final root in event.compilationImpact) {
+      if (activeResources.contains(root.resource)) {
+        compiledStatuses[root] = skir.CompiledResourceState.notCompiled;
+      }
+    }
     state = state.copyWith(
       generation: event.generation,
       sequence: event.sequence,
@@ -234,13 +283,15 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   ) {
     final selections = Map<String, skir.GraphSelectionResult>.of(current);
     for (final entry in current.entries) {
-      final resources = entry.value.resourceIds.toSet();
-      final edges = entry.value.edgeIds.toSet();
+      final resources = <skir.ResourceId>{...entry.value.resourceIds};
+      final edges = <skir.AuthoringEdgeId>{...entry.value.edgeIds};
+      final missingIds = <skir.ResourceId>{...entry.value.missingIds};
       for (final change in event.resources) {
         if (change case skir.AuthoringResourceChange_removeWrapper(
           :final value,
         )) {
           resources.remove(value);
+          if (_exactSeedIds(entry.key).contains(value)) missingIds.add(value);
         }
       }
       for (final change in event.edges) {
@@ -252,7 +303,7 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
         key: entry.value.key,
         resourceIds: resources,
         edgeIds: edges,
-        missingIds: entry.value.missingIds,
+        missingIds: missingIds,
         incompatibleIds: entry.value.incompatibleIds,
       );
     }
@@ -271,9 +322,26 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
   Future<void> _refresh() {
     final active = _refreshOperation;
     if (active != null) return active;
-    return _refreshOperation = _runRefresh().whenComplete(() {
-      _refreshOperation = null;
-    });
+    return _refreshOperation = _runRefresh()
+        .onError((error, stackTrace) {
+          state = state.copyWith(
+            diagnostics: [
+              skir.AuthoringDiagnostic(
+                code: "authoring-refresh-failed",
+                message: "Could not refresh authoring state: $error",
+                resource: null,
+                path: null,
+              ),
+            ],
+          );
+          Error.throwWithStackTrace(
+            error ?? StateError("Authoring refresh failed without an error"),
+            stackTrace,
+          );
+        })
+        .whenComplete(() {
+          _refreshOperation = null;
+        });
   }
 
   Future<void> _runRefresh() async {
@@ -324,6 +392,22 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
       final lease = _leases[key]!;
       _leases[key] = lease.copyWith(result: state.selections[key]);
     }
+  }
+
+  Set<skir.ResourceId> get _activeResourceIds {
+    final ids = {
+      for (final key in _leases.keys) ...?state.selections[key]?.resourceIds,
+    };
+    if (ids.isEmpty && _leases.isNotEmpty) ids.addAll(state.resources.keys);
+    return ids;
+  }
+
+  Set<skir.ResourceId> _exactSeedIds(String key) {
+    final seed = _leases[key]?.selection.seed;
+    return switch (seed) {
+      skir.ResourceSeed_idsWrapper(:final value) => value.values.toSet(),
+      _ => const {},
+    };
   }
 
   Future<void> _dispose() async {
