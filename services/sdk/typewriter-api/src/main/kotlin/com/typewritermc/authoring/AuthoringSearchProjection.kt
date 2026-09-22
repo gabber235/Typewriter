@@ -2,9 +2,9 @@ package com.typewritermc.authoring
 
 import com.typewritermc.types.ResourceId
 
-/** Stable open identifier for a search selector facet. */
+/** Stable open identifier for an indexed search selector. */
 @JvmInline
-value class SearchFacetId(
+value class SearchSelectorId(
     val value: String,
 ) {
     init {
@@ -17,7 +17,7 @@ data class AuthoringSearchDocument(
     val resource: ResourceId,
     val definition: ResourceDefinitionId,
     val text: String,
-    val selectors: Map<SearchFacetId, Set<String>> = emptyMap(),
+    val selectors: Map<SearchSelectorId, Set<String>> = emptyMap(),
     val ownerPath: List<ResourceId> = emptyList(),
 ) {
     init {

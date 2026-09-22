@@ -530,138 +530,6 @@ class SubtypeResult private constructor(
     }
 }
 
-sealed interface AuthoringCreationSlotId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.catalog.AuthoringCreationSlotId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class AuthoringCreationSlotId private constructor(
-    override val value: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringCreationSlotId>? =
-        null,
-): skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringCreationSlotId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.catalog.AuthoringCreationSlotId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.AuthoringCreationSlotId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.catalog.AuthoringCreationSlotId.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [AuthoringCreationSlotId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringCreationSlotId>? =
-            null,
-    ): skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.catalog.AuthoringCreationSlotId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.catalog.AuthoringCreationSlotId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [AuthoringCreationSlotId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.catalog.AuthoringCreationSlotId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/catalog.skir:AuthoringCreationSlotId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [AuthoringCreationSlotId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [AuthoringCreationSlotId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "value",
-                "value",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
 /** Deeply immutable. */
 sealed class AuthoringCreationHostCardinality private constructor() {
     /** The kind of variant held by a `AuthoringCreationHostCardinality`. */
@@ -1526,7 +1394,7 @@ sealed class AuthoringCreationContext private constructor() {
 }
 
 sealed interface AuthoringCreationSlotDefinition_OrMutable {
-    val id: skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable;
+    val id: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable;
     val label: kotlin.String;
     val creates: skirout.editor.v1.authoring.ResourceDefinitionId_OrMutable;
     val context: skirout.editor.v1.catalog.AuthoringCreationContext;
@@ -1538,7 +1406,7 @@ sealed interface AuthoringCreationSlotDefinition_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringCreationSlotDefinition private constructor(
-    override val id: skirout.editor.v1.catalog.AuthoringCreationSlotId,
+    override val id: skirout.editor.v1.authoring.AuthoringCreationSlotId,
     override val label: kotlin.String,
     override val creates: skirout.editor.v1.authoring.ResourceDefinitionId,
     override val context: skirout.editor.v1.catalog.AuthoringCreationContext,
@@ -1549,7 +1417,7 @@ class AuthoringCreationSlotDefinition private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable,
+        id: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable,
         label: kotlin.String,
         creates: skirout.editor.v1.authoring.ResourceDefinitionId_OrMutable,
         context: skirout.editor.v1.catalog.AuthoringCreationContext,
@@ -1581,7 +1449,7 @@ class AuthoringCreationSlotDefinition private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable =
+        id: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
             this.id,
         label: kotlin.String =
             this.label,
@@ -1622,8 +1490,8 @@ class AuthoringCreationSlotDefinition private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var id: skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable =
-            skirout.editor.v1.catalog.AuthoringCreationSlotId.partial(),
+        override var id: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
+            skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
         override var label: kotlin.String =
             "",
         override var creates: skirout.editor.v1.authoring.ResourceDefinitionId_OrMutable =
@@ -1649,15 +1517,15 @@ class AuthoringCreationSlotDefinition private constructor(
          * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
-        val mutableId: skirout.editor.v1.catalog.AuthoringCreationSlotId.Mutable get() {
+        val mutableId: skirout.editor.v1.authoring.AuthoringCreationSlotId.Mutable get() {
             var value = this.id;
             return when (value) {
-                is skirout.editor.v1.catalog.AuthoringCreationSlotId -> {
+                is skirout.editor.v1.authoring.AuthoringCreationSlotId -> {
                     value = value.toMutable();
                     this.id = value;
                     return value;
                 }
-                is skirout.editor.v1.catalog.AuthoringCreationSlotId.Mutable -> value;
+                is skirout.editor.v1.authoring.AuthoringCreationSlotId.Mutable -> value;
             }
         }
 
@@ -1697,7 +1565,7 @@ class AuthoringCreationSlotDefinition private constructor(
     companion object {
         private val default =
             skirout.editor.v1.catalog.AuthoringCreationSlotDefinition(
-                skirout.editor.v1.catalog.AuthoringCreationSlotId.partial(),
+                skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
                 "",
                 skirout.editor.v1.authoring.ResourceDefinitionId.partial(),
                 skirout.editor.v1.catalog.AuthoringCreationContext.UNKNOWN,
@@ -1715,8 +1583,8 @@ class AuthoringCreationSlotDefinition private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.catalog.AuthoringCreationSlotId_OrMutable =
-                skirout.editor.v1.catalog.AuthoringCreationSlotId.partial(),
+            id: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
+                skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
             label: kotlin.String =
                 "",
             creates: skirout.editor.v1.authoring.ResourceDefinitionId_OrMutable =
@@ -1755,7 +1623,7 @@ class AuthoringCreationSlotDefinition private constructor(
                 "id",
                 "id",
                 0,
-                skirout.editor.v1.catalog.AuthoringCreationSlotId.serializer,
+                skirout.editor.v1.authoring.AuthoringCreationSlotId.serializer,
                 "",
                 { it.id },
                 { mut, v -> mut.id = v },

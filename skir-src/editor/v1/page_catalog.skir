@@ -1,3 +1,4 @@
+import { AuthoringCreationSlotId } from "editor/v1/authoring.skir";
 import { CatalogPresentationSubject } from "editor/v1/catalog_presentation.skir";
 import { ResolvedTypeRef } from "editor/v1/type_catalog.skir";
 import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
@@ -40,6 +41,7 @@ struct PageDescriptor(811300005) {
   color: Color = 4;
   editor: PageEditorDefinition = 5;
   authoring_rules: [PageAuthoringRuleRef] = 6;
+  element_creation_slot: AuthoringCreationSlotId = 7;
 }
 
 struct PageCatalogEntry(811300006) {

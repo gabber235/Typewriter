@@ -15,9 +15,14 @@ struct ResourceDefinitionId(812200001) {
   value: string = 0;
 }
 
+struct AuthoringCreationSlotId(810900016) {
+  value: string = 0;
+}
+
 struct ResourceDefinition(812200002) {
   id: ResourceDefinitionId = 0;
   accepted_root: TypeExpression = 1;
+  navigation_handler: string = 2;
 }
 
 struct RelationId(812200003) {
@@ -166,6 +171,8 @@ struct AuthoringGraphSnapshot(812200023) {
 
 struct CreateResource(812200024) {
   resource: AuthoringResource = 0;
+  creation_slot: AuthoringCreationSlotId = 1;
+  hosts: [ResourceId] = 2;
 }
 
 struct CommitResource(812200025) {
@@ -186,11 +193,18 @@ struct DeclareRelation(812200059) {
   target: ResourceId = 2;
 }
 
+struct RemoveRelation(812200060) {
+  relation: RelationId = 0;
+  source: ResourceId = 1;
+  target: ResourceId = 2;
+}
+
 enum AuthoringOperation(812200027) {
   create: CreateResource = 1;
   commit: CommitResource = 2;
   delete: DeleteResource = 3;
   declare_relation: DeclareRelation = 4;
+  remove_relation: RemoveRelation = 5;
 }
 
 enum AuthoringResourceChange(812200028) {
@@ -319,7 +333,7 @@ method SearchAuthoringGraph(
     generation: CatalogGeneration = 0;
     query: RealmSearchQuery = 1;
     resources: ResourceFilter = 2;
-    scope: GraphSelection? = 3;
+    contexts: [ResourceId] = 3;
     reference_target: TypeExpression? = 4;
     facets: [SearchFacetRequest] = 5;
   }

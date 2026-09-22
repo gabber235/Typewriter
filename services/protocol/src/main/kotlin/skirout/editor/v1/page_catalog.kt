@@ -766,6 +766,7 @@ sealed interface PageDescriptor_OrMutable {
     val color: skirout.kernel.v1.color.Color_OrMutable;
     val editor: skirout.editor.v1.page_catalog.PageEditorDefinition;
     val authoringRules: kotlin.collections.List<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable>;
+    val elementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.page_catalog.PageDescriptor;
 }
@@ -780,6 +781,7 @@ class PageDescriptor private constructor(
     override val color: skirout.kernel.v1.color.Color,
     override val editor: skirout.editor.v1.page_catalog.PageEditorDefinition,
     override val authoringRules: kotlin.collections.List<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>,
+    override val elementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDescriptor>? =
         null,
 ): skirout.editor.v1.page_catalog.PageDescriptor_OrMutable {
@@ -793,6 +795,7 @@ class PageDescriptor private constructor(
         color: skirout.kernel.v1.color.Color_OrMutable,
         editor: skirout.editor.v1.page_catalog.PageEditorDefinition,
         authoringRules: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable>,
+        elementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDescriptor>? =
             null,
     ): this(
@@ -803,6 +806,7 @@ class PageDescriptor private constructor(
         color.toFrozen(),
         editor,
         build.skir.internal.toFrozenList(authoringRules, { it.toFrozen() }),
+        elementCreationSlot.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -818,6 +822,7 @@ class PageDescriptor private constructor(
         color = this.color,
         editor = this.editor,
         authoringRules = this.authoringRules,
+        elementCreationSlot = this.elementCreationSlot,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -838,6 +843,8 @@ class PageDescriptor private constructor(
             this.editor,
         authoringRules: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> =
             this.authoringRules,
+        elementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
+            this.elementCreationSlot,
     ) = skirout.editor.v1.page_catalog.PageDescriptor(
         kind.toFrozen(),
         name,
@@ -846,6 +853,7 @@ class PageDescriptor private constructor(
         color.toFrozen(),
         editor,
         build.skir.internal.toFrozenList(authoringRules, { it.toFrozen() }),
+        elementCreationSlot.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -853,11 +861,11 @@ class PageDescriptor private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.PageDescriptor && this.kind == other.kind && this.name == other.name && this.description == other.description && this.icon == other.icon && this.color == other.color && this.editor == other.editor && this.authoringRules == other.authoringRules);
+        return this === other || (other is skirout.editor.v1.page_catalog.PageDescriptor && this.kind == other.kind && this.name == other.name && this.description == other.description && this.icon == other.icon && this.color == other.color && this.editor == other.editor && this.authoringRules == other.authoringRules && this.elementCreationSlot == other.elementCreationSlot);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.kind, this.name, this.description, this.icon, this.color, this.editor, this.authoringRules).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.kind, this.name, this.description, this.icon, this.color, this.editor, this.authoringRules, this.elementCreationSlot).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -885,6 +893,8 @@ class PageDescriptor private constructor(
             skirout.editor.v1.page_catalog.PageEditorDefinition.UNKNOWN,
         override var authoringRules: kotlin.collections.List<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>(),
+        override var elementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
+            skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDescriptor>? =
             null,
     ): skirout.editor.v1.page_catalog.PageDescriptor_OrMutable {
@@ -897,6 +907,7 @@ class PageDescriptor private constructor(
             color = this.color,
             editor = this.editor,
             authoringRules = this.authoringRules,
+            elementCreationSlot = this.elementCreationSlot,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -947,6 +958,22 @@ class PageDescriptor private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [elementCreationSlot] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [elementCreationSlot] and returns it.
+         */
+        val mutableElementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId.Mutable get() {
+            var value = this.elementCreationSlot;
+            return when (value) {
+                is skirout.editor.v1.authoring.AuthoringCreationSlotId -> {
+                    value = value.toMutable();
+                    this.elementCreationSlot = value;
+                    return value;
+                }
+                is skirout.editor.v1.authoring.AuthoringCreationSlotId.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -959,6 +986,7 @@ class PageDescriptor private constructor(
                 skirout.kernel.v1.color.Color.partial(),
                 skirout.editor.v1.page_catalog.PageEditorDefinition.UNKNOWN,
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>(),
+                skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -986,6 +1014,8 @@ class PageDescriptor private constructor(
                 skirout.editor.v1.page_catalog.PageEditorDefinition.UNKNOWN,
             authoringRules: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>(),
+            elementCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
+                skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
         ) = skirout.editor.v1.page_catalog.PageDescriptor(
             kind = kind,
             name = name,
@@ -994,6 +1024,7 @@ class PageDescriptor private constructor(
             color = color,
             editor = editor,
             authoringRules = authoringRules,
+            elementCreationSlot = elementCreationSlot,
             _unrecognizedFields = null,
         );
 
@@ -1080,6 +1111,15 @@ class PageDescriptor private constructor(
                 "",
                 { it.authoringRules },
                 { mut, v -> mut.authoringRules = v },
+            );
+            serializerImpl.addField(
+                "element_creation_slot",
+                "elementCreationSlot",
+                7,
+                skirout.editor.v1.authoring.AuthoringCreationSlotId.serializer,
+                "",
+                { it.elementCreationSlot },
+                { mut, v -> mut.elementCreationSlot = v },
             );
             serializerImpl.finalizeStruct();
         }

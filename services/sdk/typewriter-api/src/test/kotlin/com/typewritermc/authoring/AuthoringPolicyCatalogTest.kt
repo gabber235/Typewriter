@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 
 val AuthoringPolicyCatalogTest by testSuite {
     test("assembles an extension policy without Realm types") {
-        val definition = AuthoringResourceDefinition(ResourceDefinitionId("example.quest"), TypeExpression.Any)
+        val definition = AuthoringResourceDefinition(ResourceDefinitionId("example.document"), TypeExpression.Any)
         val catalog =
             AuthoringPolicyCatalog.assemble(
                 listOf(
@@ -26,7 +26,7 @@ val AuthoringPolicyCatalogTest by testSuite {
     }
 
     test("rejects duplicate policy identities") {
-        val definition = AuthoringResourceDefinition(ResourceDefinitionId("example.quest"), TypeExpression.Any)
+        val definition = AuthoringResourceDefinition(ResourceDefinitionId("example.document"), TypeExpression.Any)
         shouldThrow<IllegalArgumentException> {
             AuthoringPolicyCatalog.assemble(
                 listOf(

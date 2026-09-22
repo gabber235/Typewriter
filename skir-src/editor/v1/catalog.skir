@@ -1,4 +1,5 @@
 import {
+  AuthoringCreationSlotId,
   CollectionProjectionDefinition,
   RelationDefinition,
   RelationDirection,
@@ -47,10 +48,6 @@ struct SubtypeQuery(810900003) {
 struct SubtypeResult(810900004) {
   query_id: SubtypeQueryId = 0;
   matching_types: [ResolvedTypeRef] = 1;
-}
-
-struct AuthoringCreationSlotId(810900016) {
-  value: string = 0;
 }
 
 enum AuthoringCreationHostCardinality(810900017) {

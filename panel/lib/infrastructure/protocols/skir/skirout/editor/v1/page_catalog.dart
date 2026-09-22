@@ -15,6 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "./authoring.dart" as _lib_editor_v1_authoring;
 import "./catalog_presentation.dart" as _lib_editor_v1_catalog_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
@@ -714,6 +715,8 @@ sealed class PageDescriptor_orMutable {
   _lib_kernel_v1_color.Color_orMutable get color;
   PageEditorDefinition get editor;
   _core.Iterable<PageAuthoringRuleRef_orMutable> get authoringRules;
+  _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable
+  get elementCreationSlot;
 
   PageDescriptor toFrozen();
 }
@@ -734,6 +737,8 @@ final class PageDescriptor implements PageDescriptor_orMutable {
   final PageEditorDefinition editor;
   @_core.override
   final _core.Iterable<PageAuthoringRuleRef> authoringRules;
+  @_core.override
+  final _lib_editor_v1_authoring.AuthoringCreationSlotId elementCreationSlot;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PageDescriptor({
@@ -744,6 +749,8 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     required _lib_kernel_v1_color.Color_orMutable color,
     required PageEditorDefinition editor,
     required _core.Iterable<PageAuthoringRuleRef_orMutable> authoringRules,
+    required _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable
+    elementCreationSlot,
   }) => PageDescriptor._(
     kind.toFrozen(),
     name,
@@ -752,6 +759,7 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     color.toFrozen(),
     editor,
     _skir.internal__frozenMappedCopy(authoringRules, (it) => it.toFrozen()),
+    elementCreationSlot.toFrozen(),
   );
 
   PageDescriptor._(
@@ -762,6 +770,7 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     this.color,
     this.editor,
     this.authoringRules,
+    this.elementCreationSlot,
   );
 
   /// Default instance with all fields set to their default values.
@@ -773,6 +782,7 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     _lib_kernel_v1_color.Color.defaultInstance,
     PageEditorDefinition.unknown,
     _skir.KeyedIterable.empty,
+    _lib_editor_v1_authoring.AuthoringCreationSlotId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -785,6 +795,7 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     _lib_kernel_v1_color.Color.defaultInstance,
     PageEditorDefinition.unknown,
     _skir.KeyedIterable.empty,
+    _lib_editor_v1_authoring.AuthoringCreationSlotId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -801,6 +812,7 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     this.color,
     this.editor,
     this.authoringRules,
+    this.elementCreationSlot,
   );
 
   @_core.override
@@ -824,6 +836,7 @@ final class PageDescriptor implements PageDescriptor_orMutable {
     this.color,
     this.editor,
     this.authoringRules,
+    this.elementCreationSlot,
   ];
 
   @_core.override
@@ -896,6 +909,15 @@ final class PageDescriptor implements PageDescriptor_orMutable {
         (it) => it.authoringRules,
         (it, v) => it.authoringRules = v,
       );
+      _serializerBuilder.addField(
+        "element_creation_slot",
+        "elementCreationSlot",
+        7,
+        _lib_editor_v1_authoring.AuthoringCreationSlotId.serializer,
+        "",
+        (it) => it.elementCreationSlot,
+        (it, v) => it.elementCreationSlot = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -921,6 +943,8 @@ final class PageDescriptor_mutable implements PageDescriptor_orMutable {
   _lib_kernel_v1_color.Color_orMutable color;
   PageEditorDefinition editor;
   _core.Iterable<PageAuthoringRuleRef_orMutable> authoringRules;
+  _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable
+  elementCreationSlot;
   _skir.internal__UnrecognizedFields? _u;
 
   PageDescriptor_mutable._(
@@ -931,6 +955,7 @@ final class PageDescriptor_mutable implements PageDescriptor_orMutable {
     this.color,
     this.editor,
     this.authoringRules,
+    this.elementCreationSlot,
   );
 
   /// If the value of [kind] is already mutable, returns it as-is.
@@ -967,6 +992,20 @@ final class PageDescriptor_mutable implements PageDescriptor_orMutable {
     }
   }
 
+  /// If the value of [elementCreationSlot] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [elementCreationSlot] and returns it.
+  _lib_editor_v1_authoring.AuthoringCreationSlotId_mutable
+  get mutableElementCreationSlot {
+    final value = this.elementCreationSlot;
+    if (value is _lib_editor_v1_authoring.AuthoringCreationSlotId_mutable) {
+      return value;
+    } else {
+      return this.elementCreationSlot =
+          (value as _lib_editor_v1_authoring.AuthoringCreationSlotId)
+              .toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PageDescriptor toFrozen() => PageDescriptor(
@@ -977,6 +1016,7 @@ final class PageDescriptor_mutable implements PageDescriptor_orMutable {
     color: this.color,
     editor: this.editor,
     authoringRules: this.authoringRules,
+    elementCreationSlot: this.elementCreationSlot,
   ).._u = this._u;
 }
 

@@ -52,6 +52,44 @@ impl ResourceDefinitionId {
 }
 
 // ==============================================================================
+// struct AuthoringCreationSlotId
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringCreationSlotId {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringCreationSlotId>>,
+}
+
+impl AuthoringCreationSlotId {
+    pub fn default_ref() -> &'static AuthoringCreationSlotId {
+        static D: std::sync::LazyLock<AuthoringCreationSlotId> = std::sync::LazyLock::new(AuthoringCreationSlotId::default);
+        &D
+    }
+}
+
+impl AuthoringCreationSlotId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/authoring.skir",
+                    "AuthoringCreationSlotId",
+                    "",
+                    |x: &AuthoringCreationSlotId| &x._unrecognized,
+                    |x: &mut AuthoringCreationSlotId, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringCreationSlotId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AuthoringCreationSlotId::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct ResourceDefinition
 // ==============================================================================
 
@@ -59,6 +97,7 @@ impl ResourceDefinitionId {
 pub struct ResourceDefinition {
     pub id: ResourceDefinitionId,
     pub accepted_root: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub navigation_handler: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceDefinition>>,
 }
@@ -1195,6 +1234,8 @@ impl AuthoringGraphSnapshot {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CreateResource {
     pub resource: AuthoringResource,
+    pub creation_slot: AuthoringCreationSlotId,
+    pub hosts: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreateResource>>,
 }
@@ -1347,6 +1388,46 @@ impl DeclareRelation {
 }
 
 // ==============================================================================
+// struct RemoveRelation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RemoveRelation {
+    pub relation: RelationId,
+    pub source: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub target: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RemoveRelation>>,
+}
+
+impl RemoveRelation {
+    pub fn default_ref() -> &'static RemoveRelation {
+        static D: std::sync::LazyLock<RemoveRelation> = std::sync::LazyLock::new(RemoveRelation::default);
+        &D
+    }
+}
+
+impl RemoveRelation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RemoveRelation> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RemoveRelation>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/authoring.skir",
+                    "RemoveRelation",
+                    "",
+                    |x: &RemoveRelation| &x._unrecognized,
+                    |x: &mut RemoveRelation, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RemoveRelation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RemoveRelation::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum AuthoringOperation
 // ==============================================================================
 
@@ -1357,6 +1438,7 @@ pub enum AuthoringOperation {
     Commit(Box<CommitResource>),
     Delete(Box<DeleteResource>),
     DeclareRelation(Box<DeclareRelation>),
+    RemoveRelation(Box<RemoveRelation>),
 }
 
 impl Default for AuthoringOperation {
@@ -1376,6 +1458,7 @@ impl AuthoringOperation {
                         AuthoringOperation::Commit(_) => 2,
                         AuthoringOperation::Delete(_) => 3,
                         AuthoringOperation::DeclareRelation(_) => 4,
+                        AuthoringOperation::RemoveRelation(_) => 5,
                     },
                     |u| AuthoringOperation::Unknown(Some(u)),
                     |x: &AuthoringOperation| match x { AuthoringOperation::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -2222,7 +2305,7 @@ pub struct SearchAuthoringGraphRequest {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub query: crate::skirout::base::editor::v1::search::RealmSearchQuery,
     pub resources: ResourceFilter,
-    pub scope: Option<GraphSelection>,
+    pub contexts: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
     pub reference_target: Option<crate::skirout::base::editor::v1::type_catalog::TypeExpression>,
     pub facets: Vec<SearchFacetRequest>,
     /// Set this to None when you're creating a struct.
@@ -2490,9 +2573,15 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId> = AuthoringCreationSlotId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &AuthoringCreationSlotId| &x.value, |x: &mut AuthoringCreationSlotId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ResourceDefinition> = ResourceDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("id", 0, crate::skir_client::internal::struct_serializer_from_static(ResourceDefinitionId::_adapter()), "", |x: &ResourceDefinition| &x.id, |x: &mut ResourceDefinition, v| x.id = v);
                 (*a).add_field("accepted_root", 1, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &ResourceDefinition| &x.accepted_root, |x: &mut ResourceDefinition, v| x.accepted_root = v);
+                (*a).add_field("navigation_handler", 2, crate::skir_client::Serializer::string(), "", |x: &ResourceDefinition| &x.navigation_handler, |x: &mut ResourceDefinition, v| x.navigation_handler = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2681,6 +2770,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CreateResource> = CreateResource::_adapter() as *const _ as *mut _;
                 (*a).add_field("resource", 0, crate::skir_client::internal::struct_serializer_from_static(AuthoringResource::_adapter()), "", |x: &CreateResource| &x.resource, |x: &mut CreateResource, v| x.resource = v);
+                (*a).add_field("creation_slot", 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringCreationSlotId::_adapter()), "", |x: &CreateResource| &x.creation_slot, |x: &mut CreateResource, v| x.creation_slot = v);
+                (*a).add_field("hosts", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer()), "", |x: &CreateResource| &x.hosts, |x: &mut CreateResource, v| x.hosts = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2705,11 +2796,19 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RemoveRelation> = RemoveRelation::_adapter() as *const _ as *mut _;
+                (*a).add_field("relation", 0, crate::skir_client::internal::struct_serializer_from_static(RelationId::_adapter()), "", |x: &RemoveRelation| &x.relation, |x: &mut RemoveRelation, v| x.relation = v);
+                (*a).add_field("source", 1, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &RemoveRelation| &x.source, |x: &mut RemoveRelation, v| x.source = v);
+                (*a).add_field("target", 2, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &RemoveRelation| &x.target, |x: &mut RemoveRelation, v| x.target = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringOperation> = AuthoringOperation::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("create", 1, 1, crate::skir_client::internal::struct_serializer_from_static(CreateResource::_adapter()), "", |v| AuthoringOperation::Create(Box::new(v)), |x| match x { AuthoringOperation::Create(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("commit", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CommitResource::_adapter()), "", |v| AuthoringOperation::Commit(Box::new(v)), |x| match x { AuthoringOperation::Commit(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("delete", 3, 3, crate::skir_client::internal::struct_serializer_from_static(DeleteResource::_adapter()), "", |v| AuthoringOperation::Delete(Box::new(v)), |x| match x { AuthoringOperation::Delete(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("declare_relation", 4, 4, crate::skir_client::internal::struct_serializer_from_static(DeclareRelation::_adapter()), "", |v| AuthoringOperation::DeclareRelation(Box::new(v)), |x| match x { AuthoringOperation::DeclareRelation(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("remove_relation", 5, 5, crate::skir_client::internal::struct_serializer_from_static(RemoveRelation::_adapter()), "", |v| AuthoringOperation::RemoveRelation(Box::new(v)), |x| match x { AuthoringOperation::RemoveRelation(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -2860,7 +2959,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &SearchAuthoringGraphRequest| &x.generation, |x: &mut SearchAuthoringGraphRequest, v| x.generation = v);
                 (*a).add_field("query", 1, crate::skirout::base::editor::v1::search::RealmSearchQuery::serializer(), "", |x: &SearchAuthoringGraphRequest| &x.query, |x: &mut SearchAuthoringGraphRequest, v| x.query = v);
                 (*a).add_field("resources", 2, crate::skir_client::internal::struct_serializer_from_static(ResourceFilter::_adapter()), "", |x: &SearchAuthoringGraphRequest| &x.resources, |x: &mut SearchAuthoringGraphRequest, v| x.resources = v);
-                (*a).add_field("scope", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(GraphSelection::_adapter())), "", |x: &SearchAuthoringGraphRequest| &x.scope, |x: &mut SearchAuthoringGraphRequest, v| x.scope = v);
+                (*a).add_field("contexts", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer()), "", |x: &SearchAuthoringGraphRequest| &x.contexts, |x: &mut SearchAuthoringGraphRequest, v| x.contexts = v);
                 (*a).add_field("reference_target", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer()), "", |x: &SearchAuthoringGraphRequest| &x.reference_target, |x: &mut SearchAuthoringGraphRequest, v| x.reference_target = v);
                 (*a).add_field("facets", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SearchFacetRequest::_adapter())), "", |x: &SearchAuthoringGraphRequest| &x.facets, |x: &mut SearchAuthoringGraphRequest, v| x.facets = v);
                 (*a).finalize();

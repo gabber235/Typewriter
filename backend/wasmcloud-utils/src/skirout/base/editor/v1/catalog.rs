@@ -130,44 +130,6 @@ impl SubtypeResult {
 }
 
 // ==============================================================================
-// struct AuthoringCreationSlotId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct AuthoringCreationSlotId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringCreationSlotId>>,
-}
-
-impl AuthoringCreationSlotId {
-    pub fn default_ref() -> &'static AuthoringCreationSlotId {
-        static D: std::sync::LazyLock<AuthoringCreationSlotId> = std::sync::LazyLock::new(AuthoringCreationSlotId::default);
-        &D
-    }
-}
-
-impl AuthoringCreationSlotId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/catalog.skir",
-                    "AuthoringCreationSlotId",
-                    "",
-                    |x: &AuthoringCreationSlotId| &x._unrecognized,
-                    |x: &mut AuthoringCreationSlotId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringCreationSlotId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(AuthoringCreationSlotId::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum AuthoringCreationHostCardinality
 // ==============================================================================
 
@@ -377,7 +339,7 @@ impl AuthoringCreationContext {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringCreationSlotDefinition {
-    pub id: AuthoringCreationSlotId,
+    pub id: crate::skirout::base::editor::v1::authoring::AuthoringCreationSlotId,
     pub label: String,
     pub creates: crate::skirout::base::editor::v1::authoring::ResourceDefinitionId,
     pub context: AuthoringCreationContext,
@@ -1061,11 +1023,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId> = AuthoringCreationSlotId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &AuthoringCreationSlotId| &x.value, |x: &mut AuthoringCreationSlotId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringCreationHostCardinality> = AuthoringCreationHostCardinality::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("exactly_one", 1, 1, "", AuthoringCreationHostCardinality::ExactlyOne);
                 (*a).add_constant_variant("one_or_more", 2, 2, "", AuthoringCreationHostCardinality::OneOrMore);
@@ -1099,7 +1056,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<AuthoringCreationSlotDefinition> = AuthoringCreationSlotDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skir_client::internal::struct_serializer_from_static(AuthoringCreationSlotId::_adapter()), "", |x: &AuthoringCreationSlotDefinition| &x.id, |x: &mut AuthoringCreationSlotDefinition, v| x.id = v);
+                (*a).add_field("id", 0, crate::skirout::base::editor::v1::authoring::AuthoringCreationSlotId::serializer(), "", |x: &AuthoringCreationSlotDefinition| &x.id, |x: &mut AuthoringCreationSlotDefinition, v| x.id = v);
                 (*a).add_field("label", 1, crate::skir_client::Serializer::string(), "", |x: &AuthoringCreationSlotDefinition| &x.label, |x: &mut AuthoringCreationSlotDefinition, v| x.label = v);
                 (*a).add_field("creates", 2, crate::skirout::base::editor::v1::authoring::ResourceDefinitionId::serializer(), "", |x: &AuthoringCreationSlotDefinition| &x.creates, |x: &mut AuthoringCreationSlotDefinition, v| x.creates = v);
                 (*a).add_field("context", 3, crate::skir_client::internal::enum_serializer_from_static(AuthoringCreationContext::_adapter()), "", |x: &AuthoringCreationSlotDefinition| &x.context, |x: &mut AuthoringCreationSlotDefinition, v| x.context = v);

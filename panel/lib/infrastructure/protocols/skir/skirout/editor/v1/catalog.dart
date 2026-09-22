@@ -420,109 +420,6 @@ final class SubtypeResult_mutable implements SubtypeResult_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct AuthoringCreationSlotId
-// -----------------------------------------------------------------------------
-
-sealed class AuthoringCreationSlotId_orMutable {
-  _core.String get value;
-
-  AuthoringCreationSlotId toFrozen();
-}
-
-/// Deeply immutable.
-final class AuthoringCreationSlotId
-    implements AuthoringCreationSlotId_orMutable {
-  @_core.override
-  final _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory AuthoringCreationSlotId({required _core.String value}) =>
-      AuthoringCreationSlotId._(value);
-
-  AuthoringCreationSlotId._(this.value);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringCreationSlotId._("");
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static AuthoringCreationSlotId_mutable mutable() =>
-      AuthoringCreationSlotId_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  AuthoringCreationSlotId toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  AuthoringCreationSlotId_mutable toMutable() =>
-      AuthoringCreationSlotId_mutable._(this.value);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! AuthoringCreationSlotId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.value];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `AuthoringCreationSlotId` instances.
-  static _skir.StructSerializer<
-    AuthoringCreationSlotId,
-    AuthoringCreationSlotId_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:AuthoringCreationSlotId",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringCreationSlotId_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [AuthoringCreationSlotId].
-final class AuthoringCreationSlotId_mutable
-    implements AuthoringCreationSlotId_orMutable {
-  _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  AuthoringCreationSlotId_mutable._(this.value);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  AuthoringCreationSlotId toFrozen() =>
-      AuthoringCreationSlotId(value: this.value).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum AuthoringCreationHostCardinality
 // -----------------------------------------------------------------------------
 
@@ -1334,7 +1231,7 @@ final class AuthoringCreationContext_referencePathWrapper
 // -----------------------------------------------------------------------------
 
 sealed class AuthoringCreationSlotDefinition_orMutable {
-  AuthoringCreationSlotId_orMutable get id;
+  _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable get id;
   _core.String get label;
   _lib_editor_v1_authoring.ResourceDefinitionId_orMutable get creates;
   AuthoringCreationContext get context;
@@ -1348,7 +1245,7 @@ sealed class AuthoringCreationSlotDefinition_orMutable {
 final class AuthoringCreationSlotDefinition
     implements AuthoringCreationSlotDefinition_orMutable {
   @_core.override
-  final AuthoringCreationSlotId id;
+  final _lib_editor_v1_authoring.AuthoringCreationSlotId id;
   @_core.override
   final _core.String label;
   @_core.override
@@ -1361,7 +1258,7 @@ final class AuthoringCreationSlotDefinition
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringCreationSlotDefinition({
-    required AuthoringCreationSlotId_orMutable id,
+    required _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable id,
     required _core.String label,
     required _lib_editor_v1_authoring.ResourceDefinitionId_orMutable creates,
     required AuthoringCreationContext context,
@@ -1387,7 +1284,7 @@ final class AuthoringCreationSlotDefinition
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringCreationSlotDefinition._(
-    AuthoringCreationSlotId.defaultInstance,
+    _lib_editor_v1_authoring.AuthoringCreationSlotId.defaultInstance,
     "",
     _lib_editor_v1_authoring.ResourceDefinitionId.defaultInstance,
     AuthoringCreationContext.unknown,
@@ -1398,7 +1295,7 @@ final class AuthoringCreationSlotDefinition
   /// Fields are initialized to their default values.
   static AuthoringCreationSlotDefinition_mutable mutable() =>
       AuthoringCreationSlotDefinition_mutable._(
-        AuthoringCreationSlotId.defaultInstance,
+        _lib_editor_v1_authoring.AuthoringCreationSlotId.defaultInstance,
         "",
         _lib_editor_v1_authoring.ResourceDefinitionId.defaultInstance,
         AuthoringCreationContext.unknown,
@@ -1455,7 +1352,7 @@ final class AuthoringCreationSlotDefinition
         "id",
         "id",
         0,
-        AuthoringCreationSlotId.serializer,
+        _lib_editor_v1_authoring.AuthoringCreationSlotId.serializer,
         "",
         (it) => it.id,
         (it, v) => it.id = v,
@@ -1517,7 +1414,7 @@ final class AuthoringCreationSlotDefinition
 /// Mutable version of [AuthoringCreationSlotDefinition].
 final class AuthoringCreationSlotDefinition_mutable
     implements AuthoringCreationSlotDefinition_orMutable {
-  AuthoringCreationSlotId_orMutable id;
+  _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable id;
   _core.String label;
   _lib_editor_v1_authoring.ResourceDefinitionId_orMutable creates;
   AuthoringCreationContext context;
@@ -1535,12 +1432,14 @@ final class AuthoringCreationSlotDefinition_mutable
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  AuthoringCreationSlotId_mutable get mutableId {
+  _lib_editor_v1_authoring.AuthoringCreationSlotId_mutable get mutableId {
     final value = this.id;
-    if (value is AuthoringCreationSlotId_mutable) {
+    if (value is _lib_editor_v1_authoring.AuthoringCreationSlotId_mutable) {
       return value;
     } else {
-      return this.id = (value as AuthoringCreationSlotId).toMutable();
+      return this.id =
+          (value as _lib_editor_v1_authoring.AuthoringCreationSlotId)
+              .toMutable();
     }
   }
 

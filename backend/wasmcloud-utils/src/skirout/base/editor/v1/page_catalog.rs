@@ -193,6 +193,7 @@ pub struct PageDescriptor {
     pub color: crate::skirout::base::kernel::v1::color::Color,
     pub editor: PageEditorDefinition,
     pub authoring_rules: Vec<PageAuthoringRuleRef>,
+    pub element_creation_slot: crate::skirout::base::editor::v1::authoring::AuthoringCreationSlotId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageDescriptor>>,
 }
@@ -391,6 +392,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("color", 4, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &PageDescriptor| &x.color, |x: &mut PageDescriptor, v| x.color = v);
                 (*a).add_field("editor", 5, crate::skir_client::internal::enum_serializer_from_static(PageEditorDefinition::_adapter()), "", |x: &PageDescriptor| &x.editor, |x: &mut PageDescriptor, v| x.editor = v);
                 (*a).add_field("authoring_rules", 6, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PageAuthoringRuleRef::_adapter())), "", |x: &PageDescriptor| &x.authoring_rules, |x: &mut PageDescriptor, v| x.authoring_rules = v);
+                (*a).add_field("element_creation_slot", 7, crate::skirout::base::editor::v1::authoring::AuthoringCreationSlotId::serializer(), "", |x: &PageDescriptor| &x.element_creation_slot, |x: &mut PageDescriptor, v| x.element_creation_slot = v);
                 (*a).finalize();
             }
             unsafe {

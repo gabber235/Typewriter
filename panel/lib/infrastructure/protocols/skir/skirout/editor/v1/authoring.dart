@@ -125,12 +125,116 @@ final class ResourceDefinitionId_mutable
 }
 
 // -----------------------------------------------------------------------------
+// struct AuthoringCreationSlotId
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringCreationSlotId_orMutable {
+  _core.String get value;
+
+  AuthoringCreationSlotId toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringCreationSlotId
+    implements AuthoringCreationSlotId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringCreationSlotId({required _core.String value}) =>
+      AuthoringCreationSlotId._(value);
+
+  AuthoringCreationSlotId._(this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringCreationSlotId._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringCreationSlotId_mutable mutable() =>
+      AuthoringCreationSlotId_mutable._("");
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringCreationSlotId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringCreationSlotId_mutable toMutable() =>
+      AuthoringCreationSlotId_mutable._(this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringCreationSlotId) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringCreationSlotId` instances.
+  static _skir.StructSerializer<
+    AuthoringCreationSlotId,
+    AuthoringCreationSlotId_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/authoring.skir:AuthoringCreationSlotId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringCreationSlotId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringCreationSlotId].
+final class AuthoringCreationSlotId_mutable
+    implements AuthoringCreationSlotId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringCreationSlotId_mutable._(this.value);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringCreationSlotId toFrozen() =>
+      AuthoringCreationSlotId(value: this.value).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct ResourceDefinition
 // -----------------------------------------------------------------------------
 
 sealed class ResourceDefinition_orMutable {
   ResourceDefinitionId_orMutable get id;
   _lib_editor_v1_type_catalog.TypeExpression get acceptedRoot;
+  _core.String get navigationHandler;
 
   ResourceDefinition toFrozen();
 }
@@ -141,19 +245,23 @@ final class ResourceDefinition implements ResourceDefinition_orMutable {
   final ResourceDefinitionId id;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeExpression acceptedRoot;
+  @_core.override
+  final _core.String navigationHandler;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourceDefinition({
     required ResourceDefinitionId_orMutable id,
     required _lib_editor_v1_type_catalog.TypeExpression acceptedRoot,
-  }) => ResourceDefinition._(id.toFrozen(), acceptedRoot);
+    required _core.String navigationHandler,
+  }) => ResourceDefinition._(id.toFrozen(), acceptedRoot, navigationHandler);
 
-  ResourceDefinition._(this.id, this.acceptedRoot);
+  ResourceDefinition._(this.id, this.acceptedRoot, this.navigationHandler);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResourceDefinition._(
     ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    "",
   );
 
   /// Returns a new mutable instance.
@@ -161,6 +269,7 @@ final class ResourceDefinition implements ResourceDefinition_orMutable {
   static ResourceDefinition_mutable mutable() => ResourceDefinition_mutable._(
     ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    "",
   );
 
   /// Returns this instance (no-op).
@@ -169,8 +278,11 @@ final class ResourceDefinition implements ResourceDefinition_orMutable {
   ResourceDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ResourceDefinition_mutable toMutable() =>
-      ResourceDefinition_mutable._(this.id, this.acceptedRoot);
+  ResourceDefinition_mutable toMutable() => ResourceDefinition_mutable._(
+    this.id,
+    this.acceptedRoot,
+    this.navigationHandler,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
@@ -185,7 +297,11 @@ final class ResourceDefinition implements ResourceDefinition_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.id, this.acceptedRoot];
+  _core.List get _equality_proxy => [
+    this.id,
+    this.acceptedRoot,
+    this.navigationHandler,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -212,6 +328,15 @@ final class ResourceDefinition implements ResourceDefinition_orMutable {
         (it) => it.acceptedRoot,
         (it, v) => it.acceptedRoot = v,
       );
+      _serializerBuilder.addField(
+        "navigation_handler",
+        "navigationHandler",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.navigationHandler,
+        (it, v) => it.navigationHandler = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -232,9 +357,14 @@ final class ResourceDefinition implements ResourceDefinition_orMutable {
 final class ResourceDefinition_mutable implements ResourceDefinition_orMutable {
   ResourceDefinitionId_orMutable id;
   _lib_editor_v1_type_catalog.TypeExpression acceptedRoot;
+  _core.String navigationHandler;
   _skir.internal__UnrecognizedFields? _u;
 
-  ResourceDefinition_mutable._(this.id, this.acceptedRoot);
+  ResourceDefinition_mutable._(
+    this.id,
+    this.acceptedRoot,
+    this.navigationHandler,
+  );
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -249,9 +379,11 @@ final class ResourceDefinition_mutable implements ResourceDefinition_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ResourceDefinition toFrozen() =>
-      ResourceDefinition(id: this.id, acceptedRoot: this.acceptedRoot)
-        .._u = this._u;
+  ResourceDefinition toFrozen() => ResourceDefinition(
+    id: this.id,
+    acceptedRoot: this.acceptedRoot,
+    navigationHandler: this.navigationHandler,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4497,6 +4629,8 @@ final class AuthoringGraphSnapshot_mutable
 
 sealed class CreateResource_orMutable {
   AuthoringResource_orMutable get resource;
+  AuthoringCreationSlotId_orMutable get creationSlot;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get hosts;
 
   CreateResource toFrozen();
 }
@@ -4505,22 +4639,39 @@ sealed class CreateResource_orMutable {
 final class CreateResource implements CreateResource_orMutable {
   @_core.override
   final AuthoringResource resource;
+  @_core.override
+  final AuthoringCreationSlotId creationSlot;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> hosts;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory CreateResource({required AuthoringResource_orMutable resource}) =>
-      CreateResource._(resource.toFrozen());
+  factory CreateResource({
+    required AuthoringResource_orMutable resource,
+    required AuthoringCreationSlotId_orMutable creationSlot,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    hosts,
+  }) => CreateResource._(
+    resource.toFrozen(),
+    creationSlot.toFrozen(),
+    _skir.internal__frozenMappedCopy(hosts, (it) => it.toFrozen()),
+  );
 
-  CreateResource._(this.resource);
+  CreateResource._(this.resource, this.creationSlot, this.hosts);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CreateResource._(
     AuthoringResource.defaultInstance,
+    AuthoringCreationSlotId.defaultInstance,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CreateResource_mutable mutable() =>
-      CreateResource_mutable._(AuthoringResource.defaultInstance);
+  static CreateResource_mutable mutable() => CreateResource_mutable._(
+    AuthoringResource.defaultInstance,
+    AuthoringCreationSlotId.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4528,7 +4679,8 @@ final class CreateResource implements CreateResource_orMutable {
   CreateResource toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CreateResource_mutable toMutable() => CreateResource_mutable._(this.resource);
+  CreateResource_mutable toMutable() =>
+      CreateResource_mutable._(this.resource, this.creationSlot, this.hosts);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -4543,7 +4695,11 @@ final class CreateResource implements CreateResource_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.resource];
+  _core.List get _equality_proxy => [
+    this.resource,
+    this.creationSlot,
+    this.hosts,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -4560,6 +4716,26 @@ final class CreateResource implements CreateResource_orMutable {
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
+      );
+      _serializerBuilder.addField(
+        "creation_slot",
+        "creationSlot",
+        1,
+        AuthoringCreationSlotId.serializer,
+        "",
+        (it) => it.creationSlot,
+        (it, v) => it.creationSlot = v,
+      );
+      _serializerBuilder.addField(
+        "hosts",
+        "hosts",
+        2,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ResourceId.serializer,
+        ),
+        "",
+        (it) => it.hosts,
+        (it, v) => it.hosts = v,
       );
       _serializerBuilder.finalize();
     }
@@ -4580,9 +4756,11 @@ final class CreateResource implements CreateResource_orMutable {
 /// Mutable version of [CreateResource].
 final class CreateResource_mutable implements CreateResource_orMutable {
   AuthoringResource_orMutable resource;
+  AuthoringCreationSlotId_orMutable creationSlot;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> hosts;
   _skir.internal__UnrecognizedFields? _u;
 
-  CreateResource_mutable._(this.resource);
+  CreateResource_mutable._(this.resource, this.creationSlot, this.hosts);
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
@@ -4595,10 +4773,39 @@ final class CreateResource_mutable implements CreateResource_orMutable {
     }
   }
 
+  /// If the value of [creationSlot] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [creationSlot] and returns it.
+  AuthoringCreationSlotId_mutable get mutableCreationSlot {
+    final value = this.creationSlot;
+    if (value is AuthoringCreationSlotId_mutable) {
+      return value;
+    } else {
+      return this.creationSlot = (value as AuthoringCreationSlotId).toMutable();
+    }
+  }
+
+  /// If the value of [hosts] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  get mutableHosts {
+    final value = this.hosts;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ResourceId_orMutable
+        >) {
+      return value;
+    } else {
+      return this.hosts = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CreateResource toFrozen() =>
-      CreateResource(resource: this.resource).._u = this._u;
+  CreateResource toFrozen() => CreateResource(
+    resource: this.resource,
+    creationSlot: this.creationSlot,
+    hosts: this.hosts,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5141,6 +5348,182 @@ final class DeclareRelation_mutable implements DeclareRelation_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// struct RemoveRelation
+// -----------------------------------------------------------------------------
+
+sealed class RemoveRelation_orMutable {
+  RelationId_orMutable get relation;
+  _lib_editor_v1_type_catalog.ResourceId_orMutable get source;
+  _lib_editor_v1_type_catalog.ResourceId_orMutable get target;
+
+  RemoveRelation toFrozen();
+}
+
+/// Deeply immutable.
+final class RemoveRelation implements RemoveRelation_orMutable {
+  @_core.override
+  final RelationId relation;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ResourceId source;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ResourceId target;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RemoveRelation({
+    required RelationId_orMutable relation,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable source,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable target,
+  }) => RemoveRelation._(
+    relation.toFrozen(),
+    source.toFrozen(),
+    target.toFrozen(),
+  );
+
+  RemoveRelation._(this.relation, this.source, this.target);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RemoveRelation._(
+    RelationId.defaultInstance,
+    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RemoveRelation_mutable mutable() => RemoveRelation_mutable._(
+    RelationId.defaultInstance,
+    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RemoveRelation toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RemoveRelation_mutable toMutable() =>
+      RemoveRelation_mutable._(this.relation, this.source, this.target);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RemoveRelation) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.relation, this.source, this.target];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RemoveRelation` instances.
+  static _skir.StructSerializer<RemoveRelation, RemoveRelation_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "relation",
+        "relation",
+        0,
+        RelationId.serializer,
+        "",
+        (it) => it.relation,
+        (it, v) => it.relation = v,
+      );
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        1,
+        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
+        "target",
+        "target",
+        2,
+        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        "",
+        (it) => it.target,
+        (it, v) => it.target = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/authoring.skir:RemoveRelation",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RemoveRelation_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RemoveRelation].
+final class RemoveRelation_mutable implements RemoveRelation_orMutable {
+  RelationId_orMutable relation;
+  _lib_editor_v1_type_catalog.ResourceId_orMutable source;
+  _lib_editor_v1_type_catalog.ResourceId_orMutable target;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RemoveRelation_mutable._(this.relation, this.source, this.target);
+
+  /// If the value of [relation] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
+  RelationId_mutable get mutableRelation {
+    final value = this.relation;
+    if (value is RelationId_mutable) {
+      return value;
+    } else {
+      return this.relation = (value as RelationId).toMutable();
+    }
+  }
+
+  /// If the value of [source] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSource {
+    final value = this.source;
+    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+      return value;
+    } else {
+      return this.source = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [target] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableTarget {
+    final value = this.target;
+    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+      return value;
+    } else {
+      return this.target = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RemoveRelation toFrozen() => RemoveRelation(
+    relation: this.relation,
+    source: this.source,
+    target: this.target,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum AuthoringOperation
 // -----------------------------------------------------------------------------
 
@@ -5152,6 +5535,7 @@ final class DeclareRelation_mutable implements DeclareRelation_orMutable {
 ///     case AuthoringOperation_commit(:var value): { ... }
 ///     case AuthoringOperation_delete(:var value): { ... }
 ///     case AuthoringOperation_declareRelation(:var value): { ... }
+///     case AuthoringOperation_removeRelation(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -5169,7 +5553,16 @@ sealed class AuthoringOperation {
   /// Same as `wrapCreate(CreateResource(...))`.
   factory AuthoringOperation.createCreate({
     required AuthoringResource_orMutable resource,
-  }) => AuthoringOperation.wrapCreate(CreateResource(resource: resource));
+    required AuthoringCreationSlotId_orMutable creationSlot,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    hosts,
+  }) => AuthoringOperation.wrapCreate(
+    CreateResource(
+      resource: resource,
+      creationSlot: creationSlot,
+      hosts: hosts,
+    ),
+  );
 
   /// Create a 'commit' variant wrapping around the given value.
   factory AuthoringOperation.wrapCommit(CommitResource value) =>
@@ -5212,6 +5605,19 @@ sealed class AuthoringOperation {
     required _lib_editor_v1_type_catalog.ResourceId_orMutable target,
   }) => AuthoringOperation.wrapDeclareRelation(
     DeclareRelation(relation: relation, source: source, target: target),
+  );
+
+  /// Create a 'remove_relation' variant wrapping around the given value.
+  factory AuthoringOperation.wrapRemoveRelation(RemoveRelation value) =>
+      AuthoringOperation_removeRelationWrapper._(value);
+
+  /// Same as `wrapRemoveRelation(RemoveRelation(...))`.
+  factory AuthoringOperation.createRemoveRelation({
+    required RelationId_orMutable relation,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable source,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable target,
+  }) => AuthoringOperation.wrapRemoveRelation(
+    RemoveRelation(relation: relation, source: source, target: target),
   );
 
   /// Returns the kind of variant held by this AuthoringOperation.
@@ -5260,6 +5666,16 @@ sealed class AuthoringOperation {
         (it) => it.value,
         ordinal: AuthoringOperation_kind.declareRelationWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "remove_relation",
+        "wrapRemoveRelation",
+        RemoveRelation.serializer,
+        "",
+        AuthoringOperation_removeRelationWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringOperation_kind.removeRelationWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -5283,7 +5699,8 @@ enum AuthoringOperation_kind {
   createWrapper(1),
   commitWrapper(2),
   deleteWrapper(3),
-  declareRelationWrapper(4);
+  declareRelationWrapper(4),
+  removeRelationWrapper(5);
 
   final _core.int _ordinal;
 
@@ -5365,6 +5782,17 @@ final class AuthoringOperation_declareRelationWrapper
   @_core.override
   AuthoringOperation_kind get kind =>
       AuthoringOperation_kind.declareRelationWrapper;
+}
+
+final class AuthoringOperation_removeRelationWrapper
+    extends _AuthoringOperation_wrapper {
+  final RemoveRelation value;
+
+  AuthoringOperation_removeRelationWrapper._(this.value);
+
+  @_core.override
+  AuthoringOperation_kind get kind =>
+      AuthoringOperation_kind.removeRelationWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -9158,7 +9586,7 @@ sealed class SearchAuthoringGraphRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _lib_editor_v1_search.RealmSearchQuery_orMutable get query;
   ResourceFilter_orMutable get resources;
-  GraphSelection_orMutable? get scope;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get contexts;
   _lib_editor_v1_type_catalog.TypeExpression? get referenceTarget;
   _core.Iterable<SearchFacetRequest_orMutable> get facets;
 
@@ -9175,7 +9603,7 @@ final class SearchAuthoringGraphRequest
   @_core.override
   final ResourceFilter resources;
   @_core.override
-  final GraphSelection? scope;
+  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> contexts;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeExpression? referenceTarget;
   @_core.override
@@ -9186,14 +9614,15 @@ final class SearchAuthoringGraphRequest
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _lib_editor_v1_search.RealmSearchQuery_orMutable query,
     required ResourceFilter_orMutable resources,
-    required GraphSelection_orMutable? scope,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    contexts,
     required _lib_editor_v1_type_catalog.TypeExpression? referenceTarget,
     required _core.Iterable<SearchFacetRequest_orMutable> facets,
   }) => SearchAuthoringGraphRequest._(
     generation.toFrozen(),
     query.toFrozen(),
     resources.toFrozen(),
-    (scope != null) ? scope.toFrozen() : null,
+    _skir.internal__frozenMappedCopy(contexts, (it) => it.toFrozen()),
     referenceTarget,
     _skir.internal__frozenMappedCopy(facets, (it) => it.toFrozen()),
   );
@@ -9202,7 +9631,7 @@ final class SearchAuthoringGraphRequest
     this.generation,
     this.query,
     this.resources,
-    this.scope,
+    this.contexts,
     this.referenceTarget,
     this.facets,
   );
@@ -9212,7 +9641,7 @@ final class SearchAuthoringGraphRequest
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_search.RealmSearchQuery.defaultInstance,
     ResourceFilter.defaultInstance,
-    null,
+    _skir.KeyedIterable.empty,
     null,
     _skir.KeyedIterable.empty,
   );
@@ -9224,7 +9653,7 @@ final class SearchAuthoringGraphRequest
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
         _lib_editor_v1_search.RealmSearchQuery.defaultInstance,
         ResourceFilter.defaultInstance,
-        null,
+        _skir.KeyedIterable.empty,
         null,
         _skir.KeyedIterable.empty,
       );
@@ -9240,7 +9669,7 @@ final class SearchAuthoringGraphRequest
         this.generation,
         this.query,
         this.resources,
-        this.scope,
+        this.contexts,
         this.referenceTarget,
         this.facets,
       );
@@ -9262,7 +9691,7 @@ final class SearchAuthoringGraphRequest
     this.generation,
     this.query,
     this.resources,
-    this.scope,
+    this.contexts,
     this.referenceTarget,
     this.facets,
   ];
@@ -9305,13 +9734,15 @@ final class SearchAuthoringGraphRequest
         (it, v) => it.resources = v,
       );
       _serializerBuilder.addField(
-        "scope",
-        "scope",
+        "contexts",
+        "contexts",
         3,
-        _skir.Serializers.optional(GraphSelection.serializer),
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ResourceId.serializer,
+        ),
         "",
-        (it) => it.scope,
-        (it, v) => it.scope = v,
+        (it) => it.contexts,
+        (it, v) => it.contexts = v,
       );
       _serializerBuilder.addField(
         "reference_target",
@@ -9355,7 +9786,7 @@ final class SearchAuthoringGraphRequest_mutable
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _lib_editor_v1_search.RealmSearchQuery_orMutable query;
   ResourceFilter_orMutable resources;
-  GraphSelection_orMutable? scope;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> contexts;
   _lib_editor_v1_type_catalog.TypeExpression? referenceTarget;
   _core.Iterable<SearchFacetRequest_orMutable> facets;
   _skir.internal__UnrecognizedFields? _u;
@@ -9364,7 +9795,7 @@ final class SearchAuthoringGraphRequest_mutable
     this.generation,
     this.query,
     this.resources,
-    this.scope,
+    this.contexts,
     this.referenceTarget,
     this.facets,
   );
@@ -9404,6 +9835,21 @@ final class SearchAuthoringGraphRequest_mutable
     }
   }
 
+  /// If the value of [contexts] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [contexts] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  get mutableContexts {
+    final value = this.contexts;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ResourceId_orMutable
+        >) {
+      return value;
+    } else {
+      return this.contexts = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// If the value of [facets] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [facets] and returns it.
   _core.List<SearchFacetRequest_orMutable> get mutableFacets {
@@ -9421,7 +9867,7 @@ final class SearchAuthoringGraphRequest_mutable
     generation: this.generation,
     query: this.query,
     resources: this.resources,
-    scope: this.scope,
+    contexts: this.contexts,
     referenceTarget: this.referenceTarget,
     facets: this.facets,
   ).._u = this._u;

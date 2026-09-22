@@ -41,10 +41,16 @@ value class ResourceDefinitionId(
 data class AuthoringResourceDefinition(
     val id: ResourceDefinitionId,
     val acceptedRoot: TypeExpression,
-)
+    val navigationHandler: String = "generic",
+) {
+    init {
+        require(navigationHandler.isNotBlank()) { "Resource navigation handlers must not be blank." }
+    }
+}
 
 /** Stable identity for one editor creation context. */
 @JvmInline
+@Serializable
 value class AuthoringCreationSlotId(
     val value: String,
 ) {
@@ -172,6 +178,22 @@ class AuthoringPolicyCatalog private constructor(
         val unknownSearch = search.keys - known
         val unknownPresentations = presentations.keys - known
         val unknownCreation = creationSlots.values.filterNot { it.creates in known }
+        val unknownCreationHosts =
+            creationSlots.values
+                .flatMap { slot ->
+                    when (val context = slot.context) {
+                        AuthoringCreationContext.Standalone -> emptySet()
+                        is AuthoringCreationContext.DeclaredRelation -> context.hosts.definitions - known
+                        is AuthoringCreationContext.ReferencePath -> context.hosts.definitions - known
+                    }
+                }.toSet()
+        val unknownGraphDefinitions =
+            (
+                validations.values.map(AuthoringValidationRule::graphRequirement) +
+                    search.values.map(AuthoringSearchProjection::graphRequirement) +
+                    presentations.values.map(AuthoringPresentationProjection::graphRequirement) +
+                    compilation.values.map(AuthoringCompilationProjection::graphRequirement)
+            ).flatMap { it.definitions - known }.toSet()
         require(unknownSearch.isEmpty()) {
             "Search policies reference unknown definitions: ${unknownSearch.sortedBy(ResourceDefinitionId::value)}."
         }
@@ -181,6 +203,14 @@ class AuthoringPolicyCatalog private constructor(
         }
         require(unknownCreation.isEmpty()) {
             "Creation slots reference unknown definitions: ${unknownCreation.map { it.id.value }}."
+        }
+        require(unknownCreationHosts.isEmpty()) {
+            "Creation slot host filters reference unknown definitions: " +
+                unknownCreationHosts.sortedBy(ResourceDefinitionId::value) + "."
+        }
+        require(unknownGraphDefinitions.isEmpty()) {
+            "Graph requirements reference unknown definitions: " +
+                unknownGraphDefinitions.sortedBy(ResourceDefinitionId::value) + "."
         }
         val selectors = searchSelectors.mapTo(mutableSetOf(), AuthoringSearchSelector::id)
         require(searchFacets.all { it.selectorId in selectors }) {
