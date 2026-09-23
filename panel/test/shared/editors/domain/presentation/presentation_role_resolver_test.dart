@@ -82,6 +82,72 @@ void main() {
       TypeDiagnosticCode.unknownType,
     );
   });
+
+  test("optional creation role falls back only when no association exists", () {
+    final base = _definition("Base");
+    final leaf = _definition("Leaf", parents: [base.id]);
+    final registry = TypeRegistry(TypeCatalog([base, leaf]));
+
+    expect(
+      registry.resolveOptionalPresentationRole(
+        leaf.id,
+        PresentationRole.creation,
+      ),
+      isA<TypeSuccess<PresentationId?>>(),
+    );
+    expect(
+      registry
+          .resolveOptionalPresentationRole(leaf.id, PresentationRole.creation)
+          .valueOrNull,
+      isNull,
+    );
+  });
+
+  test("creation editor invokes its role presentation and otherwise uses the default", () {
+    const defaultId = PresentationId(namespace: "test", name: "default");
+    const creationId = PresentationId(namespace: "test", name: "creation");
+    final reference = _reference("Resource");
+    final presentations = [
+      for (final id in [defaultId, creationId])
+        PresentationDefinition.single(
+          id: id,
+          target: NamedType(reference),
+          root: const PresentationNode(id: "root", element: DividerElement()),
+        ),
+    ];
+
+    PresentationId selected(Map<PresentationRole, PresentationId> roles) {
+      final registry = TypeRegistry(
+        TypeCatalog([
+          TypeDefinition(
+            id: reference,
+            kind: NominalTypeKind.concrete,
+            representation: const StringType(),
+            defaultPresentationId: defaultId,
+            rolePresentations: roles,
+          ),
+        ]),
+      );
+      final draft = CreationDraft(
+        rootType: NamedType(reference),
+        registry: registry,
+      );
+      try {
+        final model = PresentationModel.editor(
+          owner: draft,
+          presentations: presentations,
+          preferredRole: PresentationRole.creation,
+        );
+        return (model.root.element as PresentationInvocationElement)
+            .presentationId;
+      } finally {
+        draft.dispose();
+      }
+    }
+
+    expect(selected(const {PresentationRole.creation: creationId}), creationId);
+    expect(selected(const {}), defaultId);
+  });
 }
 
 TypeDefinition _definition(

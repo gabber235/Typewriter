@@ -11,6 +11,24 @@ extension PresentationRoleResolution on TypeRegistry {
     ResolvedTypeRef actual,
     PresentationRole role,
   ) {
+    final result = resolveOptionalPresentationRole(actual, role);
+    if (result case TypeFailure(:final diagnostics)) {
+      return TypeResult.failure(diagnostics);
+    }
+    final presentation = result.valueOrNull;
+    return presentation == null
+        ? _roleFailure(
+            "Presentation role '${role.name}' is unavailable for '$actual'",
+            actual,
+          )
+        : TypeResult.success(presentation);
+  }
+
+  /// Returns null when no ancestor supplies the role and fails on ambiguity.
+  TypeResult<PresentationId?> resolveOptionalPresentationRole(
+    ResolvedTypeRef actual,
+    PresentationRole role,
+  ) {
     var frontier = <ResolvedTypeRef>{actual};
     final visited = <ResolvedTypeRef>{};
 
@@ -47,20 +65,15 @@ extension PresentationRoleResolution on TypeRegistry {
       frontier = next;
     }
 
-    return _roleFailure(
-      "Presentation role '${role.name}' is unavailable for '$actual'",
-      actual,
-    );
+    return const TypeResult.success(null);
   }
 }
 
-TypeFailure<PresentationId> _roleFailure(
-  String message,
-  ResolvedTypeRef type,
-) => TypeFailure([
-  TypeDiagnostic(
-    code: TypeDiagnosticCode.invalidPresentation,
-    message: message,
-    type: type,
-  ),
-]);
+TypeFailure<T> _roleFailure<T>(String message, ResolvedTypeRef type) =>
+    TypeFailure([
+      TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidPresentation,
+        message: message,
+        type: type,
+      ),
+    ]);

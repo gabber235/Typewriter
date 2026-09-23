@@ -348,52 +348,59 @@ final class _ResourceCreationEditorState
     final value = result.valueOrNull;
     final model = PresentationModel.editor(
       owner: widget.draft,
+      preferredRole: PresentationRole.creation,
       presentations: widget.presentations,
       diagnostics: result.diagnostics,
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-          child: Text(
-            widget.title,
-            style: Theme.of(context).textTheme.headlineSmall,
+
+    return Surface(
+      color: DialogTheme.of(context).backgroundColor!,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+            child: Text(
+              widget.title,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
-        ),
-        Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: SingleChildScrollView(
+          Expanded(
+            child: Scrollbar(
               controller: _scrollController,
-              padding: const EdgeInsets.all(24),
-              child: ComposedEditor(
-                model: model,
-                host: runtime?.host() ?? const EditorHostCapabilities(),
-                referenceOrigins: widget.origins,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(24),
+                child: ComposedEditor(
+                  model: model,
+                  host: runtime?.host() ?? const EditorHostCapabilities(),
+                  referenceOrigins: widget.origins,
+                ),
               ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-          child: OverflowBar(
-            alignment: MainAxisAlignment.end,
-            spacing: 8,
-            overflowAlignment: OverflowBarAlignment.end,
-            children: [
-              TextButton(
-                onPressed: widget.onCancel,
-                child: const Text("Cancel"),
-              ),
-              FilledButton(
-                onPressed: value == null ? null : () => widget.onCreate(value),
-                child: const Text("Create"),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+            child: OverflowBar(
+              alignment: MainAxisAlignment.end,
+              spacing: 8,
+              overflowAlignment: OverflowBarAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: widget.onCancel,
+                  child: const Text("Cancel"),
+                ),
+                FilledButton(
+                  onPressed: value == null
+                      ? null
+                      : () => widget.onCreate(value),
+                  child: const Text("Create"),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

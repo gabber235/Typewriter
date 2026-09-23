@@ -31,7 +31,10 @@ extension ContainerElementRendering on ContainerElement {
     );
     final content = background == null
         ? decorated
-        : Surface(color: background, child: decorated);
+        : Surface(
+            color: Color.alphaBlend(background, Surface.colorOf(context)),
+            child: decorated,
+          );
     if (resolvedBorder?.valueOrNull case final borderValue?) {
       return CustomPaint(
         foregroundPainter: _SectionBorderPainter(

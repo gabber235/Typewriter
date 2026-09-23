@@ -90,6 +90,11 @@ internal fun coreLibraryPresentationProviders(): List<PresentationProvider> =
         ),
         coreProvider("book.default", default = true, specification = ::bookDefault),
         coreProvider(
+            "book.creation",
+            roles = setOf(PresentationRole.CREATION),
+            specification = ::bookCreation,
+        ),
+        coreProvider(
             "book.reference.summary",
             roles = setOf(PresentationRole.REFERENCE_SUMMARY),
             specification = { bookSubjectRole(it, "book.reference.summary") },
@@ -136,6 +141,11 @@ internal fun coreLibraryPresentationProviders(): List<PresentationProvider> =
             specification = { tagSubjectRole(it, "tag.inspector.header") },
         ),
         coreProvider("page.default", default = true, specification = ::pageDefault),
+        coreProvider(
+            "page.creation",
+            roles = setOf(PresentationRole.CREATION),
+            specification = ::pageCreation,
+        ),
         coreProvider(
             "page.reference.summary",
             roles = setOf(PresentationRole.REFERENCE_SUMMARY),
@@ -379,7 +389,6 @@ private fun bookDefault(context: PresentationBuildContext): PresentationSpec<Boo
             section("icon", "Icon") { defaultEditor(content.field(Book::icon)) }
             section("color", "Color") { defaultEditor(content.field(Book::color)) }
             section("tags", "Direct Tags") { defaultEditor(content.field(Book::tags)) }
-            section("pages", "Pages") { defaultEditor(content.field(Book::pages)) }
             section("effective-tags", "Effective Tags", initiallyExpanded = true) {
                 collectionGraph(
                     collection = tagCollection,
@@ -389,6 +398,17 @@ private fun bookDefault(context: PresentationBuildContext): PresentationSpec<Boo
                     color = TagCollectionRow::color,
                 )
             }
+        }
+    }
+
+private fun bookCreation(context: PresentationBuildContext): PresentationSpec<Book> =
+    context(context) {
+        rolePresentation<Book>("book.creation") {
+            val content = editableInput<Book>("content")
+            section("title", "Title") { defaultEditor(content.field(Book::title)) }
+            section("icon", "Icon") { defaultEditor(content.field(Book::icon)) }
+            section("color", "Color") { defaultEditor(content.field(Book::color)) }
+            section("tags", "Direct Tags") { defaultEditor(content.field(Book::tags)) }
         }
     }
 
@@ -420,7 +440,16 @@ private fun pageDefault(context: PresentationBuildContext): PresentationSpec<Pag
             section("name", "Name") { defaultEditor(content.field(Page::name)) }
             section("chapter", "Chapter") { defaultEditor(content.field(Page::chapter)) }
             section("priority", "Priority") { defaultEditor(content.field(Page::priority)) }
-            section("elements", "Elements") { defaultEditor(content.field(Page::elements)) }
+        }
+    }
+
+private fun pageCreation(context: PresentationBuildContext): PresentationSpec<Page> =
+    context(context) {
+        rolePresentation<Page>("page.creation") {
+            val content = editableInput<Page>("content")
+            section("name", "Name") { defaultEditor(content.field(Page::name)) }
+            section("chapter", "Chapter") { defaultEditor(content.field(Page::chapter)) }
+            section("priority", "Priority") { defaultEditor(content.field(Page::priority)) }
         }
     }
 

@@ -505,6 +505,7 @@ extension RealmEditorCatalogElementResolution
         ...[
           ?type.defaultPresentationId,
           ...type.namedPresentations.values,
+          ...type.rolePresentations.values,
         ].where((id) => !availablePresentationIds.contains(id)),
     };
     if (missingPresentationIds.isNotEmpty) {

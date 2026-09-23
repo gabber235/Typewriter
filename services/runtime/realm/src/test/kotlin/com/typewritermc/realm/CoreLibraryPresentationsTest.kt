@@ -29,6 +29,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.Expression
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PresentationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.SearchProvider
 
@@ -129,6 +130,10 @@ val CoreLibraryPresentationsTest by testSuite {
             PresentationId(CORE_NAMESPACE, "tag.default")
         definition(catalog.types, prototypes.require(Page::class).type).defaultPresentationId shouldBe
             PresentationId(CORE_NAMESPACE, "page.default")
+        resolveRole(catalog.types, prototypes.require(Book::class).type, PresentationRole.CREATION) shouldBe
+            PresentationId(CORE_NAMESPACE, "book.creation")
+        resolveRole(catalog.types, prototypes.require(Page::class).type, PresentationRole.CREATION) shouldBe
+            PresentationId(CORE_NAMESPACE, "page.creation")
         definition(catalog.types, element.id).rolePresentations.keys.shouldContainExactlyInAnyOrder(
             PresentationRole.REFERENCE_SUMMARY,
             PresentationRole.REFERENCE_OPTION,
@@ -145,6 +150,17 @@ val CoreLibraryPresentationsTest by testSuite {
             .dependencies.collections
             .single()
             .sourceId shouldBe TAG_COLLECTION_SOURCE_ID
+        catalog.definitions
+            .single { it.presentationId.name == "book.creation" }
+            .dependencies.collections shouldBe emptyList()
+        sectionNames(catalog.definitions.single { it.presentationId.name == "book.default" }) shouldBe
+            listOf("title", "icon", "color", "tags", "effective-tags")
+        sectionNames(catalog.definitions.single { it.presentationId.name == "book.creation" }) shouldBe
+            listOf("title", "icon", "color", "tags")
+        sectionNames(catalog.definitions.single { it.presentationId.name == "page.default" }) shouldBe
+            listOf("book", "name", "chapter", "priority")
+        sectionNames(catalog.definitions.single { it.presentationId.name == "page.creation" }) shouldBe
+            listOf("name", "chapter", "priority")
         catalog.definitions
             .single { it.presentationId.name == "tag.default" }
             .dependencies.collections
@@ -166,6 +182,11 @@ private fun searchLeaf(provider: SearchProvider): SearchProvider =
     }
 
 private const val CORE_NAMESPACE = "typewriter.core"
+
+private fun sectionNames(definition: PresentationDefinition): List<String> {
+    val children = (definition.root.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
+    return children.value.children.map { (it as AxisChild.FixedWrapper).value.nodeId }
+}
 
 private fun qualified(
     namespace: String,

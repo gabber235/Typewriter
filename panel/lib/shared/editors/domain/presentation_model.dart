@@ -126,29 +126,37 @@ abstract class PresentationModel with _$PresentationModel {
     required EditOwner owner,
     DataPath path = DataPath.root,
     PresentationNode? presentation,
+    PresentationRole? preferredRole,
     List<PresentationDefinition> presentations = const [],
     List<PresentationCollectionSource> collections = const [],
     List<TypeDiagnostic> diagnostics = const [],
   }) {
+    final declared =
+        owner.rootType
+            .resolvePath(path, registry: TypeRegistry(owner.typeCatalog))
+            .valueOrNull ??
+        owner.rootType;
+    final registry = TypeRegistry(owner.typeCatalog);
+    final roleResult = preferredRole != null && declared is NamedType
+        ? registry.resolveOptionalPresentationRole(
+            declared.reference,
+            preferredRole,
+          )
+        : null;
     return PresentationModel(
       catalog: owner.typeCatalog,
       inputs: {const BindingId(0): PresentationInput.edit(owner, path: path)},
       root:
           presentation ??
           _singlePresentationRoot(
-            owner.rootType
-                    .resolvePath(
-                      path,
-                      registry: TypeRegistry(owner.typeCatalog),
-                    )
-                    .valueOrNull ??
-                owner.rootType,
+            declared,
             owner.typeCatalog,
             presentations,
+            preferredPresentationId: roleResult?.valueOrNull,
           ),
       presentations: presentations,
       collections: PresentationCollections(collections),
-      diagnostics: diagnostics,
+      diagnostics: [...diagnostics, ...?roleResult?.diagnostics],
     );
   }
 
@@ -174,15 +182,18 @@ abstract class PresentationModel with _$PresentationModel {
 PresentationNode _singlePresentationRoot(
   TypeExpression declared,
   TypeCatalog catalog,
-  List<PresentationDefinition> presentations,
-) {
+  List<PresentationDefinition> presentations, {
+  PresentationId? preferredPresentationId,
+}) {
   final registry = TypeRegistry(catalog);
   final resolved = declared is NamedType
       ? registry.resolve(declared).valueOrNull?.representation ?? declared
       : declared;
-  final selected = declared is NamedType
-      ? registry.definition(declared.reference)?.defaultPresentationId
-      : null;
+  final selected =
+      preferredPresentationId ??
+      (declared is NamedType
+          ? registry.definition(declared.reference)?.defaultPresentationId
+          : null);
   final definition = presentations
       .where(
         (definition) =>
