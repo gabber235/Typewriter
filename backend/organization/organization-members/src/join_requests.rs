@@ -19,7 +19,7 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -81,7 +81,7 @@ impl ApprovalOutcome {
 /// use a different sequence and are published by the corresponding mutation path.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchOrganizationJoinRequestsResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
@@ -106,7 +106,7 @@ pub async fn handle_watch(
 /// member projections, while each affected user also receives request and organization changes.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_approve(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<ApproveOrganizationJoinRequestsResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
@@ -275,7 +275,7 @@ pub async fn handle_approve(
 /// separately so both projections can converge.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_decline(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<DeclineOrganizationJoinRequestResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

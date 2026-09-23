@@ -16,7 +16,7 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -70,7 +70,7 @@ impl MemberUpdateOutcome {
 /// watch requests before the database read.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchOrganizationMembersResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
@@ -94,7 +94,7 @@ pub async fn handle_watch(
 /// The returned event describes the full updated member values and is published after commit.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_update(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<UpdateOrganizationMemberRolesResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
@@ -206,7 +206,7 @@ pub async fn handle_update(
 /// organization member sequence and the user's organization sequence, then publishes both changes.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_remove(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<RemoveOrganizationMemberResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

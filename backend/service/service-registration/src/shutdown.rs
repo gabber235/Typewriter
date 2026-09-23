@@ -8,7 +8,7 @@ use wasmcloud_utils::database::{RecordId, service::ServiceStatusRecord};
 
 use wasmcloud_utils::{
     decode_skir, extract_param, skir::base::service::v1::lifecycle::ServiceShutdownNotification,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[tracing::instrument(skip(msg, params))]
@@ -17,7 +17,7 @@ use wasmcloud_utils::{
 /// The shared `heartbeat::update_state` path keeps shutdown and heartbeat consistent for the
 /// state write, timestamp, missing service error, and conditional organization publication.
 pub async fn handle_shutdown(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<(), otel_wasi::Error> {
     let service_id = extract_param!(params, service_id)?;

@@ -25,7 +25,7 @@ use wasmcloud_utils::{
         WatchHostExecutionRequest, WatchHostExecutionResponse, WatchHostExecutionResponse_Desired,
     },
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -55,7 +55,7 @@ enum ReportExecutionOutcome {
 /// same desired state. The query returns joined resource views, which preserves owner and Realm
 /// context for the runtime without exposing database records directly.
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchHostExecutionResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;
@@ -106,7 +106,7 @@ pub async fn handle_watch(
 /// only when every currently assigned child is active. Failed, rolled back, or drifted child
 /// states determine the corresponding host status; otherwise it remains reconciling.
 pub async fn handle_report(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<ReportHostExecutionResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;

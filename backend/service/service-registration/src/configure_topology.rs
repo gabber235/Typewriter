@@ -32,7 +32,7 @@ use wasmcloud_utils::{
         WatchOrganizationTopologyResponse,
     },
     skir_transaction_outcome, skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -69,7 +69,7 @@ enum ConfigureTopologyOutcome {
 /// resources, not runtime readiness. Invalid assignments and stale revisions return domain
 /// responses without publishing a topology change.
 pub async fn handle_configure(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<ConfigureServiceHostResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

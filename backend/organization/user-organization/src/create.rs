@@ -7,7 +7,7 @@ use wasmcloud_utils::{
     decode_skir, extract_param,
     skir::base::organization::v1::organization::*,
     skir_domain_result, skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::organization::OrganizationRecord;
@@ -30,7 +30,7 @@ struct CreatedOrganization {
 /// replayable, while event persistence remains a separate post transaction effect.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_create(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;

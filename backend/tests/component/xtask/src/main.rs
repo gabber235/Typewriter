@@ -113,13 +113,7 @@ fn run() -> Result<i32> {
                 .or_insert(component);
         }
     }
-    let mut artifacts = BTreeMap::new();
-    for ((package, target), _) in builds {
-        artifacts.insert(
-            (package, target),
-            build_component(&roots, &metadata, package, target)?,
-        );
-    }
+    let artifacts = build_components(&roots, &metadata, builds.keys().copied())?;
 
     let manifest_path = write_manifest(&roots, &selected_fixtures, &artifacts)?;
     run_tests(&args, &roots, &tests, &selected_tests, &manifest_path)
@@ -430,96 +424,109 @@ fn shard<'a>(tests: &[&'a TestDescriptor], index: usize, count: usize) -> Vec<&'
         .collect()
 }
 
-fn build_component(
+fn build_components<'a>(
     roots: &Roots,
     metadata: &Metadata,
-    package_name: &str,
-    target_name: &str,
-) -> Result<BuiltArtifact> {
-    let packages = metadata
-        .packages
-        .iter()
-        .filter(|package| package.name == package_name)
-        .collect::<Vec<_>>();
-    ensure!(
-        packages.len() == 1,
-        "build phase: package `{package_name}` matched {} backend packages",
-        packages.len()
-    );
-    let package = packages[0];
-    let manifest = package.manifest_path.as_std_path();
-    let args = [
-        "build",
-        "--manifest-path",
-        manifest
-            .to_str()
-            .context("build phase: non-UTF-8 manifest path")?,
-        "-p",
-        package_name,
-        "--target",
-        COMPONENT_TARGET,
-        "--release",
-        "--message-format=json-render-diagnostics",
+    builds: impl IntoIterator<Item = (&'a str, &'a str)>,
+) -> Result<BTreeMap<(&'a str, &'a str), BuiltArtifact>> {
+    let mut expected = BTreeMap::new();
+    let mut packages_to_build = BTreeSet::new();
+    let mut args = vec![
+        "build".to_string(),
+        "--manifest-path".to_string(),
+        roots.backend.join("Cargo.toml").display().to_string(),
+        "--target".to_string(),
+        COMPONENT_TARGET.to_string(),
+        "--release".to_string(),
+        "--message-format=json-render-diagnostics".to_string(),
     ];
+    for (package_name, target_name) in builds {
+        let packages = metadata
+            .packages
+            .iter()
+            .filter(|package| package.name == package_name)
+            .collect::<Vec<_>>();
+        ensure!(
+            packages.len() == 1,
+            "build phase: package `{package_name}` matched {} backend packages",
+            packages.len()
+        );
+        expected.insert(
+            (packages[0].id.clone(), target_name.to_string()),
+            (package_name, target_name),
+        );
+        if packages_to_build.insert(packages[0].id.clone()) {
+            args.extend(["-p".to_string(), package_name.to_string()]);
+        }
+    }
+    ensure!(!expected.is_empty(), "build phase: no components selected");
+
     let command_text = format!("cargo {}", args.join(" "));
     let mut child = cargo_command()
-        .args(args)
+        .args(&args)
         .current_dir(&roots.backend)
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
         .with_context(|| {
-            format!(
-                "build phase: fixture package `{package_name}` failed to start `{command_text}`"
-            )
+            format!("build phase: component build failed to start `{command_text}`")
         })?;
     let stdout = child
         .stdout
         .take()
         .context("build phase: cargo stdout unavailable")?;
-    let (candidates, finished) =
-        collect_artifacts(BufReader::new(stdout), &package.id, target_name)?;
+    let (candidates, finished) = collect_artifacts(BufReader::new(stdout), &expected)?;
     let status = child
         .wait()
         .with_context(|| format!("build phase: failed waiting for `{command_text}`"))?;
     ensure!(
         status.success() && finished,
-        "build phase: package `{package_name}` command `{command_text}` failed (status {status}, build-finished={finished})"
+        "build phase: command `{command_text}` failed (status {status}, build-finished={finished})"
     );
-    ensure!(
-        candidates.len() == 1,
-        "artifact phase: package `{package_name}` target `{target_name}` expected exactly one .wasm artifact, found {}",
-        candidates.len()
-    );
-    let artifact = &candidates[0];
-    Ok(BuiltArtifact {
-        package_id: package.id.to_string(),
-        package: package_name.into(),
-        target: target_name.into(),
-        path: artifact
-            .filenames
-            .iter()
-            .find(|p| p.extension() == Some("wasm"))
-            .unwrap()
-            .as_std_path()
-            .to_path_buf(),
-        fresh: artifact.fresh,
-    })
+
+    expected
+        .into_iter()
+        .map(|((package_id, target), (package_name, target_name))| {
+            let artifacts = candidates
+                .get(&(package_id.clone(), target))
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            ensure!(
+                artifacts.len() == 1,
+                "artifact phase: package `{package_name}` target `{target_name}` expected exactly one .wasm artifact, found {}",
+                artifacts.len()
+            );
+            let artifact = &artifacts[0];
+            Ok(((package_name, target_name), BuiltArtifact {
+                package_id: package_id.to_string(),
+                package: package_name.into(),
+                target: target_name.into(),
+                path: artifact
+                    .filenames
+                    .iter()
+                    .find(|path| path.extension() == Some("wasm"))
+                    .expect("candidate has one Wasm artifact")
+                    .as_std_path()
+                    .to_path_buf(),
+                fresh: artifact.fresh,
+            }))
+        })
+        .collect()
 }
 
 fn collect_artifacts(
     reader: impl std::io::BufRead,
-    package_id: &PackageId,
-    target: &str,
-) -> Result<(Vec<Artifact>, bool)> {
-    let mut artifacts = Vec::new();
+    expected: &BTreeMap<(PackageId, String), (&str, &str)>,
+) -> Result<(BTreeMap<(PackageId, String), Vec<Artifact>>, bool)> {
+    let mut artifacts = BTreeMap::<_, Vec<_>>::new();
     let mut finished = false;
     for message in Message::parse_stream(reader) {
         match message.context("build phase: invalid cargo JSON message")? {
-            Message::CompilerArtifact(artifact)
-                if artifact_candidate(&artifact, package_id, target) =>
-            {
-                artifacts.push(artifact)
+            Message::CompilerArtifact(artifact) => {
+                let key = (artifact.package_id.clone(), artifact.target.name.clone());
+                if expected.contains_key(&key) && artifact_candidate(&artifact, &key.0, &key.1) {
+                    artifacts.entry(key).or_default().push(artifact);
+                }
             }
             Message::CompilerMessage(message) => {
                 if let Some(rendered) = message.message.rendered {
@@ -785,6 +792,38 @@ mod tests {
             &artifact.package_id,
             "other"
         ));
+    }
+
+    #[test]
+    fn collects_every_expected_artifact_from_one_build() {
+        let first = r#"{"reason":"compiler-artifact","package_id":"path+file:///tmp#one@0.1.0","manifest_path":"/tmp/one/Cargo.toml","target":{"kind":["cdylib"],"crate_types":["cdylib"],"name":"one_component","src_path":"/tmp/one/lib.rs","edition":"2021","doc":true,"doctest":false,"test":true},"profile":{"opt_level":"3","debuginfo":0,"debug_assertions":false,"overflow_checks":false,"test":false},"features":[],"filenames":["/tmp/one_component.wasm"],"executable":null,"fresh":true}"#;
+        let second = r#"{"reason":"compiler-artifact","package_id":"path+file:///tmp#two@0.1.0","manifest_path":"/tmp/two/Cargo.toml","target":{"kind":["cdylib"],"crate_types":["cdylib"],"name":"two_component","src_path":"/tmp/two/lib.rs","edition":"2021","doc":true,"doctest":false,"test":true},"profile":{"opt_level":"3","debuginfo":0,"debug_assertions":false,"overflow_checks":false,"test":false},"features":[],"filenames":["/tmp/two_component.wasm"],"executable":null,"fresh":false}"#;
+        let package_id = |message: &str| {
+            let Message::CompilerArtifact(artifact) = serde_json::from_str(message).unwrap() else {
+                panic!("expected artifact")
+            };
+            artifact.package_id
+        };
+        let expected = [
+            (
+                (package_id(first), "one_component".into()),
+                ("one", "one_component"),
+            ),
+            (
+                (package_id(second), "two_component".into()),
+                ("two", "two_component"),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        let messages =
+            format!("{first}\n{second}\n{{\"reason\":\"build-finished\",\"success\":true}}\n");
+
+        let (artifacts, finished) = collect_artifacts(messages.as_bytes(), &expected).unwrap();
+
+        assert!(finished);
+        assert_eq!(artifacts.len(), 2);
+        assert!(artifacts.values().all(|candidates| candidates.len() == 1));
     }
 
     #[test]

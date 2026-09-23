@@ -7,7 +7,7 @@ use wasmcloud_utils::{
     decode_skir, extract_param,
     skir::base::organization::v1::{join_request::*, role::OrganizationRole, user::*},
     skir_domain_result, skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::organization::{
@@ -64,7 +64,7 @@ struct CancelledJoinRequest {
 /// cancellation publish later changes on that same user stream.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchUserJoinRequestsResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
@@ -85,7 +85,7 @@ pub async fn handle_watch(
 /// resulting user and organization changes after commit and return the user scoped event.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_request(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
@@ -302,7 +302,7 @@ async fn publish_consumed_code(
 /// returned as a domain result and produces no change event.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_cancel(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
