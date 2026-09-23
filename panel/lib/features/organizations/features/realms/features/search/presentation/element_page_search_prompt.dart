@@ -58,7 +58,7 @@ Future<ElementPageSelection?> promptElementPageSelection({
     },
     searchHint: "Choose or create a compatible page",
     rowRenderers: {
-      authoringResourceSearchResultType.id: (context) =>
+      authoringResourceSearchResultType.rowRendererId: (context) =>
           AuthoringSearchResultItem(
             payload: context.result.payload as AuthoringSearchResultPayload,
             focused: context.focused,
@@ -67,14 +67,15 @@ Future<ElementPageSelection?> promptElementPageSelection({
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      pageKindSearchResultType.id: (context) => PageKindSearchResultItem(
-        definition: context.result.payload as RealmPageDefinition,
-        focused: context.focused,
-        selected: context.selected,
-        loading: context.loading,
-        onTap: context.onTap,
-        shortcutActivator: context.shortcutActivator,
-      ),
+      pageKindSearchResultType.rowRendererId: (context) =>
+          PageKindSearchResultItem(
+            definition: context.result.payload as RealmPageDefinition,
+            focused: context.focused,
+            selected: context.selected,
+            loading: context.loading,
+            onTap: context.onTap,
+            shortcutActivator: context.shortcutActivator,
+          ),
     },
   );
 }

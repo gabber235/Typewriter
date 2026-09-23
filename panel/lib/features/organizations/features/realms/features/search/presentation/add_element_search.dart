@@ -62,6 +62,6 @@ Future<void> showAddElementSearch(
   },
   searchHint: "Add element",
   rowRenderers: {
-    elementTypeSearchResultType.id: buildElementTypeSearchResultItem,
+    elementTypeSearchResultType.rowRendererId: buildElementTypeSearchResultItem,
   },
 );

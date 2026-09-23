@@ -325,7 +325,7 @@ extension AuthoringCreationHostSelection on RealmAuthoringCreationSlot {
       },
       searchHint: "Search host resources",
       rowRenderers: {
-        authoringResourceSearchResultType.id: (context) =>
+        authoringResourceSearchResultType.rowRendererId: (context) =>
             AuthoringSearchResultItem(
               payload: context.result.payload as AuthoringSearchResultPayload,
               focused: context.focused,

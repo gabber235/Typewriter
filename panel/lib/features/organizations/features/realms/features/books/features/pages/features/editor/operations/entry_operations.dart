@@ -578,7 +578,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
     },
     searchHint: "Choose entry to link",
     rowRenderers: {
-      authoringResourceSearchResultType.id: (context) =>
+      authoringResourceSearchResultType.rowRendererId: (context) =>
           AuthoringSearchResultItem(
             payload: context.result.payload as AuthoringSearchResultPayload,
             focused: context.focused,
@@ -587,7 +587,8 @@ Future<EntryIdentifier?> _selectLinkTarget(
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      elementTypeSearchResultType.id: buildElementTypeSearchResultItem,
+      elementTypeSearchResultType.rowRendererId:
+          buildElementTypeSearchResultItem,
     },
   );
 }
@@ -747,7 +748,7 @@ Future<Page?> _selectTargetPage(WidgetRef ref, List<Page> pages) {
     ),
     searchHint: "Move to page",
     rowRenderers: {
-      authoringResourceSearchResultType.id: (context) =>
+      authoringResourceSearchResultType.rowRendererId: (context) =>
           AuthoringSearchResultItem(
             payload: context.result.payload as AuthoringSearchResultPayload,
             focused: context.focused,
@@ -803,7 +804,8 @@ Future<ElementDefinition?> _selectReplacementType(
     },
     searchHint: "Replace with element type",
     rowRenderers: {
-      elementTypeSearchResultType.id: buildElementTypeSearchResultItem,
+      elementTypeSearchResultType.rowRendererId:
+          buildElementTypeSearchResultItem,
     },
   );
 }

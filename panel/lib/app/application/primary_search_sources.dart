@@ -17,7 +17,7 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
   return PrimarySearchRequest(
     searchHint: "Search ${searchables.join(", ")}",
     rowRenderers: {
-      organizationSearchResultType.id: (context) =>
+      organizationSearchResultType.rowRendererId: (context) =>
           OrganizationSearchResultItem.organization(
             organization: context.result.payload as OrganizationData,
             focused: context.focused,
@@ -26,7 +26,7 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      createOrganizationSearchResultType.id: (context) =>
+      createOrganizationSearchResultType.rowRendererId: (context) =>
           CreateOrganizationSearchResultItem(
             focused: context.focused,
             selected: context.selected,
@@ -34,15 +34,16 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      realmSearchResultType.id: (context) => RealmSearchResultItem.realm(
-        realm: context.result.payload as TopologyRealm,
-        focused: context.focused,
-        selected: context.selected,
-        loading: context.loading,
-        onTap: context.onTap,
-        shortcutActivator: context.shortcutActivator,
-      ),
-      authoringResourceSearchResultType.id: (context) =>
+      realmSearchResultType.rowRendererId: (context) =>
+          RealmSearchResultItem.realm(
+            realm: context.result.payload as TopologyRealm,
+            focused: context.focused,
+            selected: context.selected,
+            loading: context.loading,
+            onTap: context.onTap,
+            shortcutActivator: context.shortcutActivator,
+          ),
+      authoringResourceSearchResultType.rowRendererId: (context) =>
           AuthoringSearchResultItem(
             payload: context.result.payload as AuthoringSearchResultPayload,
             focused: context.focused,
@@ -51,7 +52,7 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      authoringCreationSearchResultType.id:
+      authoringCreationSearchResultType.rowRendererId:
           buildAuthoringCreationSearchResultItem,
     },
     previewRenderers: const {},
