@@ -101,6 +101,7 @@ PresentationNode _readOnlyField({
   TypedExpression? value,
   PresentationElement? content,
   TypedExpression? color,
+  TextParagraph? paragraph,
 }) => PresentationNode(
   id: id,
   properties: const PresentationProperties(readOnly: true),
@@ -109,7 +110,7 @@ PresentationNode _readOnlyField({
     headerPadding: const PresentationInsets.all(0),
     contentPadding: const PresentationInsets.only(top: 4),
   ),
-  element: content ?? TextElement(value!, color: color),
+  element: content ?? TextElement(value!, color: color, paragraph: paragraph),
 );
 
 PresentationNode _statusElement({
