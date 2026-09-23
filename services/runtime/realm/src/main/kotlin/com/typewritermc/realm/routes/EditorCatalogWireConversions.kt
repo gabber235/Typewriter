@@ -2,21 +2,19 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.ResourceTypeDescriptor
 import com.typewritermc.elements.AvailabilityExpression
-import com.typewritermc.elements.ElementCatalogEntry
-import com.typewritermc.elements.ElementDescriptor
-import com.typewritermc.elements.ElementSearchDefinition
-import com.typewritermc.elements.ElementSearchMode
-import com.typewritermc.elements.ElementSearchPolicy
-import com.typewritermc.elements.ElementSearchPropertyOverride
+import com.typewritermc.elements.ContentCatalogEntry
+import com.typewritermc.elements.ContentDescriptor
+import com.typewritermc.elements.ContentRole
+import com.typewritermc.elements.ContentSearchDefinition
+import com.typewritermc.elements.ContentSearchMode
+import com.typewritermc.elements.ContentSearchPolicy
+import com.typewritermc.elements.ContentSearchPropertyOverride
 import com.typewritermc.pages.GraphDirection
-import com.typewritermc.pages.PageAuthoringRuleRef
 import com.typewritermc.pages.PageCatalogEntry
 import com.typewritermc.pages.PageDescriptor
 import com.typewritermc.pages.PageDiagnostic
 import com.typewritermc.pages.ResolvedPageEditorDefinition
-import com.typewritermc.realm.corePageCreationSlotId
 import com.typewritermc.types.TypePrototypeRegistry
-import com.typewritermc.types.TypedValueEnvelope
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.skir.toSkir
 import skirout.editor.v1.catalog_presentation.CatalogPresentationSubject
@@ -24,32 +22,30 @@ import skirout.editor.v1.element_catalog.AvailabilityAll
 import skirout.editor.v1.element_catalog.AvailabilityAny
 import skirout.editor.v1.element_catalog.AvailabilityFact
 import skirout.editor.v1.element_catalog.AvailabilityNot
-import skirout.editor.v1.element_catalog.ElementEligibility
-import skirout.editor.v1.element_catalog.ElementTypeId
+import skirout.editor.v1.element_catalog.ContentEligibility
+import skirout.editor.v1.element_catalog.ContentTypeId
+import skirout.editor.v1.element_catalog.ContentRole as SkirContentRole
 import skirout.editor.v1.type_catalog.DeclaredTypeId
-import skirout.editor.v1.authoring.AuthoringCreationSlotId as SkirAuthoringCreationSlotId
 import skirout.editor.v1.element_catalog.AvailabilityExpression as SkirAvailabilityExpression
-import skirout.editor.v1.element_catalog.ElementCatalogEntry as SkirElementCatalogEntry
-import skirout.editor.v1.element_catalog.ElementDescriptor as SkirElementDescriptor
-import skirout.editor.v1.element_catalog.ElementSearchDefinition as SkirElementSearchDefinition
-import skirout.editor.v1.element_catalog.ElementSearchMode as SkirElementSearchMode
-import skirout.editor.v1.element_catalog.ElementSearchPolicy as SkirElementSearchPolicy
-import skirout.editor.v1.element_catalog.ElementSearchPropertyOverride as SkirElementSearchPropertyOverride
+import skirout.editor.v1.element_catalog.ContentCatalogEntry as SkirContentCatalogEntry
+import skirout.editor.v1.element_catalog.ContentDescriptor as SkirContentDescriptor
+import skirout.editor.v1.element_catalog.ContentSearchDefinition as SkirContentSearchDefinition
+import skirout.editor.v1.element_catalog.ContentSearchMode as SkirContentSearchMode
+import skirout.editor.v1.element_catalog.ContentSearchPolicy as SkirContentSearchPolicy
+import skirout.editor.v1.element_catalog.ContentSearchPropertyOverride as SkirContentSearchPropertyOverride
 import skirout.editor.v1.page_catalog.GraphDirection as SkirGraphDirection
-import skirout.editor.v1.page_catalog.PageAuthoringRuleRef as SkirPageAuthoringRuleRef
 import skirout.editor.v1.page_catalog.PageCatalogEntry as SkirPageCatalogEntry
 import skirout.editor.v1.page_catalog.PageDescriptor as SkirPageDescriptor
 import skirout.editor.v1.page_catalog.PageDiagnostic as SkirPageDiagnostic
 import skirout.editor.v1.page_catalog.PageEditorDefinition as SkirPageEditorDefinition
-import skirout.editor.v1.typed_value.TypedValueEnvelope as SkirTypedValueEnvelope
 
 /**
  * Preserves descriptor metadata, eligibility, and availability when exposing elements to the editor.
  *
  * Unavailable entries remain visible with reasons so the panel can explain deployment constraints.
  */
-internal fun ElementCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): SkirElementCatalogEntry =
-    SkirElementCatalogEntry(
+internal fun ContentCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): SkirContentCatalogEntry =
+    SkirContentCatalogEntry(
         originArtifactId = origin.value,
         sourcePart = sourcePart,
         descriptor = descriptor.toSkir(),
@@ -69,16 +65,16 @@ internal fun ElementCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): Skir
             ),
         eligibility =
             if (eligible) {
-                ElementEligibility.createEligible()
+                ContentEligibility.createEligible()
             } else {
-                ElementEligibility.createIneligible(reasons = ineligibilityReasons)
+                ContentEligibility.createIneligible(reasons = ineligibilityReasons)
             },
         available = available,
     )
 
-private fun ElementDescriptor.toSkir(): SkirElementDescriptor =
-    SkirElementDescriptor(
-        elementTypeId = ElementTypeId(value = DeclaredTypeId(value = id.value.toString())),
+private fun ContentDescriptor.toSkir(): SkirContentDescriptor =
+    SkirContentDescriptor(
+        contentTypeId = ContentTypeId(value = DeclaredTypeId(value = id.value.toString())),
         type = type.toSkir().getOrThrow(),
         name = name,
         description = description,
@@ -86,33 +82,37 @@ private fun ElementDescriptor.toSkir(): SkirElementDescriptor =
         color = color.toSkir(),
         availability = availability.toSkir(),
         searchDefinition = searchDefinition?.toSkir(),
+        role = when (role) {
+            ContentRole.ELEMENT -> SkirContentRole.createElement()
+            ContentRole.CUE -> SkirContentRole.createCue()
+        },
     )
 
-private fun ElementSearchDefinition.toSkir(): SkirElementSearchDefinition =
-    SkirElementSearchDefinition(
+private fun ContentSearchDefinition.toSkir(): SkirContentSearchDefinition =
+    SkirContentSearchDefinition(
         policy = policy.toSkir(),
-        propertyOverrides = propertyOverrides.map(ElementSearchPropertyOverride::toSkir),
+        propertyOverrides = propertyOverrides.map(ContentSearchPropertyOverride::toSkir),
         revisionFingerprintInputs = revisionFingerprintInputs.map { it.toSkir().getOrThrow() },
     )
 
-private fun ElementSearchPropertyOverride.toSkir(): SkirElementSearchPropertyOverride =
-    SkirElementSearchPropertyOverride(
+private fun ContentSearchPropertyOverride.toSkir(): SkirContentSearchPropertyOverride =
+    SkirContentSearchPropertyOverride(
         ownerType = ownerType.toSkir().getOrThrow(),
         field = field,
         mode = mode.toSkir(),
     )
 
-private fun ElementSearchPolicy.toSkir(): SkirElementSearchPolicy =
+private fun ContentSearchPolicy.toSkir(): SkirContentSearchPolicy =
     when (this) {
-        ElementSearchPolicy.ORDINARY_TEXT -> SkirElementSearchPolicy.createOrdinaryText()
+        ContentSearchPolicy.ORDINARY_TEXT -> SkirContentSearchPolicy.createOrdinaryText()
     }
 
-private fun ElementSearchMode.toSkir(): SkirElementSearchMode =
+private fun ContentSearchMode.toSkir(): SkirContentSearchMode =
     when (this) {
-        ElementSearchMode.SUMMARY -> SkirElementSearchMode.createSummary()
-        ElementSearchMode.BODY -> SkirElementSearchMode.createBody()
-        ElementSearchMode.KEYWORD -> SkirElementSearchMode.createKeyword()
-        ElementSearchMode.NONE -> SkirElementSearchMode.createNone()
+        ContentSearchMode.SUMMARY -> SkirContentSearchMode.createSummary()
+        ContentSearchMode.BODY -> SkirContentSearchMode.createBody()
+        ContentSearchMode.KEYWORD -> SkirContentSearchMode.createKeyword()
+        ContentSearchMode.NONE -> SkirContentSearchMode.createNone()
     }
 
 private fun AvailabilityExpression.toSkir(): SkirAvailabilityExpression =
@@ -175,37 +175,12 @@ private fun catalogPresentationSubject(
 
 private fun PageDescriptor.toSkir(): SkirPageDescriptor =
     SkirPageDescriptor(
-        kind = kind.toSkir(),
+        type = type.toSkir().getOrThrow(),
         name = name,
         description = description,
         icon = icon.toSkir(),
         color = color.toSkir(),
         editor = editor.toSkir(),
-        authoringRules = authoringRules.map(PageAuthoringRuleRef::toSkir),
-        elementCreationSlot =
-            SkirAuthoringCreationSlotId(
-                value =
-                    corePageCreationSlotId(
-                        kind,
-                        when (editor) {
-                            is ResolvedPageEditorDefinition.Graph -> "graph"
-                            is ResolvedPageEditorDefinition.Timeline -> "timeline"
-                        },
-                    ).value,
-            ),
-    )
-
-private fun PageAuthoringRuleRef.toSkir(): SkirPageAuthoringRuleRef =
-    SkirPageAuthoringRuleRef(
-        id = id.value,
-        revision = revision,
-        configuration =
-            configuration?.let {
-                SkirTypedValueEnvelope(
-                    rootType = it.type.toSkir().getOrThrow(),
-                    rootValue = it.value.toSkir().getOrThrow(),
-                )
-            },
     )
 
 internal fun PageDiagnostic.toSkir(): SkirPageDiagnostic =
@@ -215,7 +190,7 @@ internal fun PageDiagnostic.toSkir(): SkirPageDiagnostic =
         originArtifactId = namespace,
         sourcePart = sourcePart,
         declarationName = declarationName,
-        kind = kind?.toSkir(),
+        type = type?.toSkir()?.getOrThrow(),
     )
 
 private fun ResolvedPageEditorDefinition.toSkir(): SkirPageEditorDefinition =
@@ -223,17 +198,10 @@ private fun ResolvedPageEditorDefinition.toSkir(): SkirPageEditorDefinition =
         is ResolvedPageEditorDefinition.Graph -> {
             SkirPageEditorDefinition.createGraph(
                 direction = direction.toSkir(),
-                nodeTypes = nodes.map { it.toSkir().getOrThrow() },
             )
         }
 
-        is ResolvedPageEditorDefinition.Timeline -> {
-            SkirPageEditorDefinition.createTimeline(
-                trackTypes = tracks.map { it.toSkir().getOrThrow() },
-                segmentTypes = segments.map { it.toSkir().getOrThrow() },
-                keyframeTypes = keyframes.map { it.toSkir().getOrThrow() },
-            )
-        }
+        is ResolvedPageEditorDefinition.Timeline -> SkirPageEditorDefinition.createTimeline()
     }
 
 private fun GraphDirection.toSkir(): SkirGraphDirection =

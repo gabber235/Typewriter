@@ -331,7 +331,7 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
                   .value
                   ?.snapshot
                   ?.pageCatalog
-                  .definitions[page.kind]
+                  .definitions[page.rootType]
                   ?.editor;
               return switch (placementKinds.single) {
                 EntryPlacementKind.graph => editor is RealmGraphPageEditor,
@@ -343,17 +343,14 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
     final rootTypes = {
       for (final entry in cached) entry.definition.elementDefinition.rootType,
     };
+    final catalog = ref.read(realmEditorCatalogProvider).requireValue.snapshot!;
+    final registry = TypeRegistry(catalog.catalog);
     final pages = placementCompatiblePages
-        .where(
-          (page) =>
-              ref
-                  .read(pageCreationSlotProvider(page.kind))
-                  .value
-                  ?.concreteRoots
-                  .toSet()
-                  .containsAll(rootTypes) ??
-              false,
-        )
+        .where((page) {
+          final field = ref.read(pageElementsFieldProvider(page.rootType)).value;
+          return field != null &&
+              rootTypes.every((root) => field.accepts(root, registry));
+        })
         .toList(growable: false);
 
     if (!ref.context.mounted) return;
@@ -477,8 +474,8 @@ Future<EntryIdentifier?> _selectLinkTarget(
   return showSearchModal<EntryIdentifier>(
     ref.context,
     (modalRef, promptContext) {
-      final slot = modalRef.valued(
-        pageCreationSlotForPageProvider(sourcePageResourceId),
+      final field = modalRef.valued(
+        pageElementsFieldForPageProvider(sourcePageResourceId),
       );
       return SearchContribution(
         session: SearchSession(
@@ -511,7 +508,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
           ),
           interaction: SearchInteraction(
             activation: SearchActivation.custom(
-              dependencies: [slot],
+              dependencies: [field],
               evaluate: (context, result) {
                 if (accepts(result)) {
                   return const SearchActivationState.enabled();
@@ -561,7 +558,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
                 organizationId: organizationId,
                 realmId: realmId,
                 pageId: sourcePageResourceId,
-                slot: slot,
+                field: field,
               ),
             ],
           ),
@@ -775,16 +772,19 @@ Future<ElementDefinition?> _selectReplacementType(
       final definitions = modalRef.valued(
         availableElementDefinitionsFutureProvider,
       );
-      final slot = modalRef.valued(
-        pageCreationSlotForPageProvider(skir.ResourceId(value: pageId)),
+      final field = modalRef.valued(
+        pageElementsFieldForPageProvider(skir.ResourceId(value: pageId)),
       );
       return SearchContribution(
         session: SearchSession(
           source: ElementTypeSearchSource(definitions: definitions),
-          scope: pageCreationSlotScope(slot: slot),
+          scope: pageRelationFieldScope(
+            field: field,
+            catalog: modalRef.valued(realmEditorCatalogProvider),
+          ),
           interaction: SearchInteraction(
             activation: SearchActivation.custom(
-              dependencies: [slot],
+              dependencies: [field],
               evaluate: (context, result) => switch (result.payload) {
                 ElementDefinition(:final rootType)
                     when rootType !=

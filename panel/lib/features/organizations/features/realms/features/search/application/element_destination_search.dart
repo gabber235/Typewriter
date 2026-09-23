@@ -8,32 +8,32 @@ final class ElementPageSelection {
   const ElementPageSelection({
     required this.pageId,
     required this.bookId,
-    required this.slot,
+    required this.field,
   });
 
   final skir.ResourceId pageId;
   final skir.ResourceId bookId;
-  final RealmAuthoringCreationSlot slot;
+  final RealmRelationField field;
 }
 
 SearchActivation<ElementPageSelection> elementDestinationActivation({
   required ValueListenable<AsyncValue<List<Book>>> books,
   required ValueListenable<
-    AsyncValue<Map<PageKindRef, RealmAuthoringCreationSlot>>
+    AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>
   >
-  compatibleKinds,
+  compatibleFields,
   Ref? ref,
 }) => SearchActivation.custom(
-  dependencies: [books, compatibleKinds],
+  dependencies: [books, compatibleFields],
   evaluate: (context, result) {
-    final slots = compatibleKinds.value.value;
-    if (slots == null) return const SearchActivationState.hidden();
+    final fields = compatibleFields.value.value;
+    if (fields == null) return const SearchActivationState.hidden();
     return switch (result.payload) {
-      AuthoringSearchResultPayload(:final pageKind)
-          when pageKind != null && slots.containsKey(pageKind) =>
+      AuthoringSearchResultPayload(:final pageType)
+          when pageType != null && fields.containsKey(pageType) =>
         const SearchActivationState.enabled(),
-      RealmPageDefinition(:final kind)
-          when slots.containsKey(kind) &&
+      RealmPageDefinition(:final type)
+          when fields.containsKey(type) &&
               books.value.value != null &&
               resolveSearchBook(context.query, books.value.requireValue) !=
                   null =>
@@ -42,49 +42,52 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
     };
   },
   activate: (context, result) async {
-    final slots = compatibleKinds.value.value;
-    if (slots == null) return const SearchActivationResult.cancelled();
+    final fields = compatibleFields.value.value;
+    if (fields == null) return const SearchActivationResult.cancelled();
     switch (result.payload) {
       case AuthoringSearchResultPayload(
         :final id,
         :final owner,
-        :final pageKind,
+        :final pageType,
       ):
-        final slot = pageKind == null ? null : slots[pageKind];
-        if (slot == null || owner == null) {
+        final field = pageType == null ? null : fields[pageType];
+        if (field == null || owner == null) {
           return const SearchActivationResult.cancelled();
         }
         return SearchActivationResult.complete(
-          ElementPageSelection(pageId: id, bookId: owner, slot: slot),
+          ElementPageSelection(pageId: id, bookId: owner, field: field),
         );
-      case RealmPageDefinition(:final kind):
+      case RealmPageDefinition(:final type):
         if (ref == null) return const SearchActivationResult.cancelled();
-        final slot = slots[kind];
+        final field = fields[type];
         final bookValues = books.value.value;
         final book = bookValues == null
             ? null
             : resolveSearchBook(context.query, bookValues);
-        if (slot == null || book == null) {
+        if (field == null || book == null) {
           return const SearchActivationResult.cancelled();
         }
         final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-        final pageSlot = catalog?.hostedCreationSlot(
-          definition: CoreResourceDefinitionIds.page,
-          hostDefinition: CoreResourceDefinitionIds.book,
+        final bookType = catalog?.creatableRoots(CoreResourceDefinitionIds.book).singleOrNull;
+        final bookField = bookType == null ? null : catalog?.relationField(
+          bookType, DataPath.root.field("pages"),
         );
-        final root = pageSlot?.concreteRoots.singleOrNull;
-        if (root == null) return const SearchActivationResult.cancelled();
+        if (bookField == null) return const SearchActivationResult.cancelled();
         final created = await context.prompts.show(
           (promptContext) => ref
               .read(resourceCreationProvider)
               .create(
                 context: promptContext,
                 request: ResourceCreationRequest(
-                  slot: pageSlot!.id,
+                  definition: CoreResourceDefinitionIds.page,
+                  attachment: skir.CreationAttachment(
+                    host: book.bookId,
+                    relation: skir.RelationId(value: bookField.relation.id),
+                    hostSide: skir.RelationEndpointSide.source,
+                  ),
                   title: "Create Page",
-                  concreteRoot: root,
-                  hosts: [book.bookId],
-                  partial: pageCreationPartial(bookId: book.bookId, kind: kind),
+                  concreteRoot: type,
+                  partial: pageCreationPartial(bookId: book.bookId),
                   referenceOrigins: [book.bookId],
                 ),
               ),
@@ -94,7 +97,7 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
           ElementPageSelection(
             pageId: created.id,
             bookId: book.bookId,
-            slot: slot,
+            field: field,
           ),
         );
       default:

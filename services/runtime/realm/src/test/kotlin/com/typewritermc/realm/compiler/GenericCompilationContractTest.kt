@@ -97,11 +97,11 @@ val GenericCompilationContractTest by testSuite {
 
     test("Page compilation advertises the concrete Page root type") {
         val prototypes = loadTestPrototypes()
-        val projection = PageCompilationProjection(prototypes, catalogRevision = { "test" })
+        val projection = PageCompilationProjection(emptySet(), catalogRevision = { "test" })
 
-        projection.root shouldBe TypeExpression.Named(prototypes.require(Page::class).type)
+        projection.root shouldBe TypeExpression.Named(com.typewritermc.library.PAGE_CONTRACT_TYPE)
         projection.graphRequirement.definitions shouldBe
-            setOf(CoreResourceDefinitionIds.PAGE, CoreResourceDefinitionIds.ELEMENT)
+            setOf(CoreResourceDefinitionIds.PAGE, CoreResourceDefinitionIds.ELEMENT, CoreResourceDefinitionIds.CUE)
     }
 }
 

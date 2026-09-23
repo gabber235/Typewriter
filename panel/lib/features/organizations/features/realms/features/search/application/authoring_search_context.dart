@@ -83,15 +83,18 @@ String authoringBookInitialQuery(
 /// Unavailable policy state exposes no definitions. The source remains the
 /// owner of loading and catalog failures, while the command revalidates the
 /// policy immediately before mutation.
-SearchScope pageCreationSlotScope({
-  required ValueListenable<AsyncValue<RealmAuthoringCreationSlot>> slot,
+SearchScope pageRelationFieldScope({
+  required ValueListenable<AsyncValue<RealmRelationField>> field,
+  required ValueListenable<AsyncValue<RealmEditorCatalogState>> catalog,
 }) => PredicateSearchScope(
-  dependencies: [slot],
+  dependencies: [field, catalog],
   evaluate: (result, query) {
-    final current = slot.value.value;
+    final current = field.value.value;
+    final snapshot = catalog.value.value?.snapshot;
     return switch (result.payload) {
       ElementDefinition(:final rootType)
-          when current?.acceptsRoot(rootType) == true =>
+          when snapshot != null &&
+              current?.accepts(rootType, TypeRegistry(snapshot.catalog)) == true =>
         const SearchResultVisibility.visible(),
       _ => const SearchResultVisibility.hidden(),
     };
@@ -101,21 +104,21 @@ SearchScope pageCreationSlotScope({
 SearchScope elementDestinationScope({
   required ValueListenable<AsyncValue<List<Book>>> books,
   required ValueListenable<
-    AsyncValue<Map<PageKindRef, RealmAuthoringCreationSlot>>
+    AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>
   >
-  compatibleKinds,
+  compatibleFields,
 }) => PredicateSearchScope(
-  dependencies: [books, compatibleKinds],
+  dependencies: [books, compatibleFields],
   evaluate: (result, query) {
-    final slots = compatibleKinds.value.value;
-    if (slots == null) return const SearchResultVisibility.hidden();
+    final fields = compatibleFields.value.value;
+    if (fields == null) return const SearchResultVisibility.hidden();
     return switch (result.payload) {
-      AuthoringSearchResultPayload(:final pageKind) when pageKind != null =>
-        slots.containsKey(pageKind)
+      AuthoringSearchResultPayload(:final pageType) when pageType != null =>
+        fields.containsKey(pageType)
             ? const SearchResultVisibility.visible()
             : const SearchResultVisibility.hidden(),
-      RealmPageDefinition(:final kind) =>
-        slots.containsKey(kind) &&
+      RealmPageDefinition(:final type) =>
+        fields.containsKey(type) &&
                 books.value.value != null &&
                 resolveSearchBook(query, books.value.requireValue) != null
             ? const SearchResultVisibility.visible()

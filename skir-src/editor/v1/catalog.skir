@@ -1,18 +1,14 @@
 import {
-  AuthoringCreationSlotId,
   CollectionProjectionDefinition,
   RelationDefinition,
-  RelationDirection,
-  RelationId,
   ResourceDefinition,
   ResourceDefinitionId,
-  ResourceFilter,
 } from "editor/v1/authoring.skir";
 import { CapabilityDefinition } from "editor/v1/capability.skir";
 import { CompilationProjectionId } from "editor/v1/compiled_content.skir";
 import { ConversionDefinition } from "editor/v1/conversion.skir";
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
-import { ElementCatalogEntry } from "editor/v1/element_catalog.skir";
+import { ContentCatalogEntry } from "editor/v1/element_catalog.skir";
 import {
   PageCatalogEntry,
   PageDiagnostic,
@@ -50,34 +46,6 @@ struct SubtypeResult(810900004) {
   matching_types: [ResolvedTypeRef] = 1;
 }
 
-enum AuthoringCreationHostCardinality(810900017) {
-  exactly_one = 1;
-  one_or_more = 2;
-}
-
-enum AuthoringCreationContext(810900018) {
-  standalone: struct {} = 1;
-  declared_relation: struct {
-    hosts: ResourceFilter = 0;
-    cardinality: AuthoringCreationHostCardinality = 1;
-    relation: RelationId = 2;
-    direction: RelationDirection = 3;
-  } = 2;
-  reference_path: struct {
-    hosts: ResourceFilter = 0;
-    cardinality: AuthoringCreationHostCardinality = 1;
-    path: DataPath = 2;
-  } = 3;
-}
-
-struct AuthoringCreationSlotDefinition(810900019) {
-  id: AuthoringCreationSlotId = 0;
-  label: string = 1;
-  creates: ResourceDefinitionId = 2;
-  context: AuthoringCreationContext = 3;
-  concrete_roots: [ResolvedTypeRef] = 4;
-}
-
 struct AuthoringSearchFacetDefinition(810900020) {
   id: string = 0;
   label: string = 1;
@@ -111,15 +79,14 @@ struct CatalogFetchSuccess(810900006) {
   capability_definitions: [CapabilityDefinition] = 4;
   subtype_results: [SubtypeResult] = 5;
   diagnostics: [TypeDiagnostic] = 6;
-  element_entries: [ElementCatalogEntry] = 7;
+  content_entries: [ContentCatalogEntry] = 7;
   page_entries: [PageCatalogEntry] = 8;
   page_diagnostics: [PageDiagnostic] = 9;
   resource_definitions: [ResourceDefinition] = 10;
   relation_definitions: [RelationDefinition] = 11;
   collection_projection_definitions: [CollectionProjectionDefinition] = 12;
-  authoring_creation_slots: [AuthoringCreationSlotDefinition] = 13;
-  authoring_search: AuthoringSearchDefinition? = 14;
-  authoring_compilation_projections: [AuthoringCompilationProjectionDefinition] = 15;
+  authoring_search: AuthoringSearchDefinition? = 13;
+  authoring_compilation_projections: [AuthoringCompilationProjectionDefinition] = 14;
 }
 
 // Reports a conditional fetch against a different catalog generation.

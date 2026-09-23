@@ -69,6 +69,7 @@ List<Override> authoringSessionMockOverrides({
   Iterable<Book> books = const [],
   Iterable<Tag> tags = const [],
   bool includeCatalog = true,
+  RealmEditorCatalogSnapshot? catalog,
   FutureOr<void> Function(List<skir.AuthoringOperation> operations)? onApply,
 }) {
   assert(
@@ -83,7 +84,7 @@ List<Override> authoringSessionMockOverrides({
     if (includeCatalog) ...[
       realmEditorCatalogProvider.overrideWith(
         (ref) => Stream.value(
-          RealmEditorCatalogState.ready(authoringFixtureCatalog()),
+          RealmEditorCatalogState.ready(catalog ?? authoringFixtureCatalog()),
         ),
       ),
       realmEditorCatalogLeaseProvider.overrideWith((ref, request) => null),

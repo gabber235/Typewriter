@@ -6,7 +6,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 final class AuthoringSearchStoryFixtures {
   AuthoringSearchStoryFixtures({
     required String elementType,
-    required skir.PageKindRef pageKind,
+    required ResolvedTypeRef pageType,
   }) {
     mainQuest = _payload(
       id: _resourceId("book", "main_quest"),
@@ -23,21 +23,21 @@ final class AuthoringSearchStoryFixtures {
     villageArrival = _page(
       id: "village_arrival",
       name: "Village Arrival",
-      kind: pageKind,
+      pageType: pageType,
       bookId: mainQuest.id,
       chapter: "quest.intro",
     );
     meetTheMayor = _page(
       id: "meet_the_mayor",
       name: "Meet the Mayor",
-      kind: pageKind,
+      pageType: pageType,
       bookId: mainQuest.id,
       chapter: "quest.intro.dialogue",
     );
     winterFestival = _page(
       id: "winter_festival",
       name: "Winter Festival",
-      kind: pageKind,
+      pageType: pageType,
       bookId: seasonalEvents.id,
       chapter: "winter.opening",
     );
@@ -219,22 +219,17 @@ final class AuthoringSearchStoryFixtures {
 AuthoringSearchResultPayload _page({
   required String id,
   required String name,
-  required skir.PageKindRef kind,
+  required ResolvedTypeRef pageType,
   required skir.ResourceId bookId,
   required String chapter,
 }) => _payload(
   id: _resourceId("page", id),
   owner: bookId,
-  type: referenceResourceTypes.page,
+  type: pageType,
   definition: CoreResourceDefinitionIds.page,
   label: name,
   context: {"book": ReferenceValue(bookId)},
-  content: {
-    "kind": RecordValue({
-      "id": StringValue(kind.id.value),
-      "revision": IntegerValue(BigInt.from(kind.revision)),
-    }),
-  },
+  content: const {},
 );
 
 AuthoringSearchResultPayload _element({

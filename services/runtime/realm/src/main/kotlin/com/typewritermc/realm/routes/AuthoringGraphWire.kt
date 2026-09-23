@@ -209,6 +209,8 @@ internal fun StoredResourceRelation.toWire(): AuthoringEdge =
                         relationId =
                             skirout.editor.v1.authoring
                                 .RelationId(value = value.relationId.value),
+                        sourceIndex = value.sourceIndex,
+                        targetIndex = value.targetIndex,
                     )
                 }
             },

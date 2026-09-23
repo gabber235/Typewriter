@@ -8,6 +8,10 @@ import kotlinx.serialization.Serializable
 @TypewriterType(id = PLACEMENT_TYPE_ID)
 sealed interface Placement
 
+/** Positions an owned cue on a timeline. */
+@TypewriterType(id = TIMELINE_CUE_PLACEMENT_TYPE_ID)
+sealed interface TimelineCuePlacement : Placement
+
 /** Positions a rectangular resource in graph grid units. */
 @Serializable
 @SerialName("graph")
@@ -43,7 +47,7 @@ data class TimelineEntryPlacement(
 data class TimelineSegmentPlacement(
     val startFrame: Int,
     val endFrame: Int,
-) : Placement {
+) : TimelineCuePlacement {
     init {
         require(startFrame >= 0) { "Timeline segment start frame must not be negative." }
         require(endFrame >= startFrame) { "Timeline segment end frame must not precede its start frame." }
@@ -56,13 +60,14 @@ data class TimelineSegmentPlacement(
 @TypewriterType(id = TIMELINE_KEYFRAME_PLACEMENT_TYPE_ID)
 data class TimelineKeyframePlacement(
     val frame: Int,
-) : Placement {
+) : TimelineCuePlacement {
     init {
         require(frame >= 0) { "Timeline keyframe frame must not be negative." }
     }
 }
 
 const val PLACEMENT_TYPE_ID = "d134aec7caa54a288ab42275756cfe8d"
+const val TIMELINE_CUE_PLACEMENT_TYPE_ID = "ef4f2ac91a8d46a2879acc511d48713d"
 const val GRAPH_PLACEMENT_TYPE_ID = "578f0d42bc964b1fab52c8de5e02f9c5"
 const val TIMELINE_ENTRY_PLACEMENT_TYPE_ID = "bf3c5268557a4dfba0e7c1f72d3e67bd"
 const val TIMELINE_SEGMENT_PLACEMENT_TYPE_ID = "54e38e56871243d2ae747ed6c0083381"

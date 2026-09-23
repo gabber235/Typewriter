@@ -45,6 +45,7 @@ RealmEditorCatalogSnapshot receivedRealmEditorCatalog({
   RealmPageCatalog pageCatalog = const RealmPageCatalog(),
   Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions =
       const {},
+  Map<String, RealmRelationDefinition> relations = const {},
   Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>
       collectionProjections =
       const {},
@@ -56,6 +57,7 @@ RealmEditorCatalogSnapshot receivedRealmEditorCatalog({
   elements: elements,
   pageCatalog: pageCatalog,
   resourceDefinitions: resourceDefinitions,
+  relations: relations,
   collectionProjections: collectionProjections,
 );
 

@@ -15,5 +15,5 @@
 pub mod kernel;
 pub mod service;
 pub mod organization;
-pub mod access;
 pub mod editor;
+pub mod access;

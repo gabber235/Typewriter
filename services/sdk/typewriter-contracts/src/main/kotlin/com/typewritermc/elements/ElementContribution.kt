@@ -22,15 +22,15 @@ import kotlinx.serialization.encodeToByteArray
  * Deployment assembly checks uniqueness across artifacts.
  */
 @Serializable
-data class ElementDiscoveryContribution(
+data class ContentDiscoveryContribution(
     val schema: String = ELEMENT_DISCOVERY_SCHEMA,
     val version: Int = ELEMENT_DISCOVERY_VERSION,
-    val descriptors: List<ElementDescriptor>,
+    val descriptors: List<ContentDescriptor>,
 ) {
     init {
         require(schema == ELEMENT_DISCOVERY_SCHEMA) { "Unsupported element discovery schema $schema." }
         require(version == ELEMENT_DISCOVERY_VERSION) { "Unsupported element discovery version $version." }
-        require(descriptors.map(ElementDescriptor::id).distinct().size == descriptors.size) {
+        require(descriptors.map(ContentDescriptor::id).distinct().size == descriptors.size) {
             "An element contribution cannot contain duplicate descriptors."
         }
     }
@@ -43,10 +43,10 @@ data class ElementDiscoveryContribution(
  * independently against deployment facts; consumers must consider both before offering an element.
  */
 @Serializable
-data class ElementCatalogEntry(
+data class ContentCatalogEntry(
     val origin: ArtifactId,
     val sourcePart: String,
-    val descriptor: ElementDescriptor,
+    val descriptor: ContentDescriptor,
     val eligible: Boolean,
     val available: Boolean,
     val ineligibilityReasons: List<String> = emptyList(),
@@ -56,11 +56,11 @@ data class ElementCatalogEntry(
     }
 }
 
-data class KeyedElementContribution(
+data class KeyedContentContribution(
     /** Manifest identity used to distinguish contributions from the same artifact. */
     val key: ContributionKey,
     /** Decoded element descriptors for [key]. */
-    val contribution: ElementDiscoveryContribution,
+    val contribution: ContentDiscoveryContribution,
 )
 
 /**
@@ -69,9 +69,9 @@ data class KeyedElementContribution(
  * Other producers are ignored. Duplicate element contribution keys and malformed known payloads fail with
  * contribution context.
  */
-object ElementContributionReader {
+object ContentContributionReader {
     /** Reads known contributions and preserves their manifest provenance for catalog assembly. */
-    fun read(manifests: Collection<ImprintManifest>): List<KeyedElementContribution> =
+    fun read(manifests: Collection<ImprintManifest>): List<KeyedContentContribution> =
         manifests
             .flatMap(ImprintManifest::contributions)
             .filter { it.producer == ELEMENT_DISCOVERY_PRODUCER }
@@ -84,13 +84,13 @@ object ElementContributionReader {
                         ProducerId(generated.producer),
                         ContributionName(generated.name),
                     )
-                KeyedElementContribution(
+                KeyedContentContribution(
                     key,
-                    runCatching { ElementDiscoveryContributionCodec.decode(generated.payload) }
+                    runCatching { ContentDiscoveryContributionCodec.decode(generated.payload) }
                         .getOrElse { throw IllegalArgumentException("Malformed known contribution $key.", it) },
                 )
             }.also { contributions ->
-                require(contributions.map(KeyedElementContribution::key).distinct().size == contributions.size) {
+                require(contributions.map(KeyedContentContribution::key).distinct().size == contributions.size) {
                     "Element discovery contribution keys must be unique."
                 }
             }
@@ -102,13 +102,13 @@ object ElementContributionReader {
  * Missing source part eligibility is treated as ineligible. Availability is evaluated against facts, entries are
  * sorted by identity, and duplicate element identities across the deployment are rejected.
  */
-object ElementCatalogAssembler {
+object ContentCatalogAssembler {
     /** Combines generated contributions with source part eligibility and deployment facts. */
     fun assemble(
-        contributions: Collection<KeyedElementContribution>,
+        contributions: Collection<KeyedContentContribution>,
         sourceParts: Collection<SourcePartCatalogEntry>,
         facts: DeploymentFacts = DeploymentFacts(),
-    ): ElementCatalog {
+    ): ContentCatalog {
         val eligibility = sourceParts.associateBy { it.artifact to it.sourcePart }
         val entries =
             contributions
@@ -121,7 +121,7 @@ object ElementCatalogAssembler {
                                 is Eligibility.Ineligible -> value.reasons
                                 null -> listOf("Source part eligibility is unavailable.")
                             }
-                        ElementCatalogEntry(
+                        ContentCatalogEntry(
                             origin = keyed.key.origin,
                             sourcePart = keyed.key.sourcePart,
                             descriptor = descriptor,
@@ -136,7 +136,7 @@ object ElementCatalogAssembler {
                 }
         val duplicates = entries.groupBy { it.descriptor.id }.filterValues { it.size > 1 }
         require(duplicates.isEmpty()) { "Element ids must be unique across the deployment: ${duplicates.keys}." }
-        return ElementCatalog(entries)
+        return ContentCatalog(entries)
     }
 }
 
@@ -147,8 +147,8 @@ object ElementCatalogAssembler {
  * eligibility or availability.
  */
 @Serializable
-data class ElementCatalog(
-    val entries: List<ElementCatalogEntry>,
+data class ContentCatalog(
+    val entries: List<ContentCatalogEntry>,
 ) {
     init {
         require(entries.map { it.descriptor.id }.distinct().size == entries.size) {
@@ -157,7 +157,7 @@ data class ElementCatalog(
     }
 
     /** Finds the descriptor whose structural type exactly matches [type], if one exists. */
-    fun descriptor(type: ResolvedTypeRef): ElementDescriptor? = entries.singleOrNull { it.descriptor.type == type }?.descriptor
+    fun descriptor(type: ResolvedTypeRef): ContentDescriptor? = entries.singleOrNull { it.descriptor.type == type }?.descriptor
 }
 
 /**
@@ -166,14 +166,14 @@ data class ElementCatalog(
  * Decode failures propagate to the manifest reader, which supplies origin context.
  */
 @OptIn(ExperimentalSerializationApi::class)
-object ElementDiscoveryContributionCodec {
+object ContentDiscoveryContributionCodec {
     private val cbor = Cbor { encodeDefaults = true }
 
     /** Encodes a contribution for the manifest contribution payload. */
-    fun encode(contribution: ElementDiscoveryContribution): ByteArray = cbor.encodeToByteArray(contribution)
+    fun encode(contribution: ContentDiscoveryContribution): ByteArray = cbor.encodeToByteArray(contribution)
 
     /** Decodes one manifest contribution payload, rejecting malformed or unsupported data. */
-    fun decode(payload: ByteArray): ElementDiscoveryContribution = cbor.decodeFromByteArray(payload)
+    fun decode(payload: ByteArray): ContentDiscoveryContribution = cbor.decodeFromByteArray(payload)
 }
 
 /** Schema identifier for generated element discovery contributions. */

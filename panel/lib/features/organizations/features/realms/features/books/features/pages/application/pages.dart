@@ -20,7 +20,7 @@ abstract class Page with _$Page {
     required skir.ResourceId pageId,
     required skir.ResourceId bookId,
     required String name,
-    required PageKindRef kind,
+    required ResolvedTypeRef rootType,
     required String chapter,
     required int priority,
   }) = _Page;
@@ -32,26 +32,20 @@ abstract class Page with _$Page {
     if (value is! RecordValue) throw StateError("The Page content is invalid");
     final book = value.fields["book"];
     final name = value.fields["name"];
-    final kind = value.fields["kind"];
     final chapter = value.fields["chapter"];
     final priority = value.fields["priority"];
     if (book is! ReferenceValue ||
         name is! StringValue ||
-        kind is! RecordValue ||
         chapter is! StringValue ||
         priority is! IntegerValue ||
-        kind.fields["id"] is! StringValue ||
-        kind.fields["revision"] is! IntegerValue) {
+        resource.content.rootType is! NamedType) {
       throw StateError("The Page content is invalid");
     }
     return Page(
       pageId: resource.id,
       bookId: book.id,
       name: name.value,
-      kind: PageKindRef(
-        id: (kind.fields["id"]! as StringValue).value,
-        revision: (kind.fields["revision"]! as IntegerValue).value.toInt(),
-      ),
+      rootType: (resource.content.rootType as NamedType).reference,
       chapter: chapter.value,
       priority: priority.value.toInt(),
     );
@@ -62,10 +56,6 @@ abstract class Page with _$Page {
     rootValue: RecordValue({
       "book": ReferenceValue(this.bookId),
       "name": name.asValue,
-      "kind": RecordValue({
-        "id": kind.id.asValue,
-        "revision": kind.revision.asValue,
-      }),
       "chapter": chapter.asValue,
       "priority": priority.asValue,
     }),

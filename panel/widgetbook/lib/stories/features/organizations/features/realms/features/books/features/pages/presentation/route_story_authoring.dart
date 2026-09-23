@@ -8,7 +8,7 @@ AuthoringSessionState pageStoryAuthoring(
     pageId: skir.ResourceId(value: "page:example-page-id"),
     bookId: skir.ResourceId(value: "book:example-book-id"),
     name: "Example",
-    kind: pageDefinition.kind,
+    rootType: pageDefinition.type,
     chapter: "",
     priority: 0,
   );

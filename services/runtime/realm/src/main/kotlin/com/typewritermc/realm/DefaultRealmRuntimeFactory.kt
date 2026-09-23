@@ -170,6 +170,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                                 pageCatalog = pageCatalog,
                                 elements = assembled.elements,
                                 types = assembled.discovery.types,
+                                relations = assembled.runtimeDiscovery.relations,
                                 catalogRevision = { assembled.discovery.generation.value },
                             ),
                         ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
@@ -230,7 +231,6 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     resourceDefinitions = authoringPolicies.definitions,
                     relations = assembled.runtimeDiscovery.relations,
                     collectionProjections = coreLibraryCollectionProjections(loadedDiscovery.prototypes),
-                    creationSlots = authoringPolicies.creationSlots,
                     authoringSearch = authoringPolicies.searchDefinition(),
                     compilationProjections =
                         authoringPolicies.compilation.projections.map { projection ->

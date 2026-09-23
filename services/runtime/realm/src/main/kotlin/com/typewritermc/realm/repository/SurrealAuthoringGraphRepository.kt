@@ -30,14 +30,32 @@ internal class SurrealAuthoringGraphRepository(
         database.inTransaction { transaction ->
             val selection = requirement.toSelection(root)
             val bounded =
-                when (val loaded = SurrealBoundedAuthoringGraphLoader(limits, catalog()).load(transaction, listOf(selection))) {
+                when (val loaded = SurrealBoundedAuthoringGraphLoader(
+                    limits.copy(
+                        maxDepth = maxOf(limits.maxDepth, requirement.maximumDepth),
+                        maxResources = minOf(limits.maxResources, requirement.maximumResources),
+                        maxEdges = minOf(limits.maxEdges, requirement.maximumEdges),
+                    ),
+                    catalog(),
+                ).load(transaction, listOf(selection))) {
                     is BoundedGraphLoadResult.Invalid -> error(loaded.result.message)
                     is BoundedGraphLoadResult.Success -> loaded.slice
                 }
-            AuthoringWorkingGraph(
-                resources = bounded.resources.associateBy(StoredTypedResource::id),
-                relations = bounded.relations.associateBy(StoredResourceRelation::id),
-            )
+            val resources = bounded.resources.associateBy(StoredTypedResource::id)
+            val relations = bounded.relations.associateByTo(linkedMapOf(), StoredResourceRelation::id)
+            if (requirement.includeIncidentEdges && resources.isNotEmpty()) {
+                val incident = transaction.loadRelations(
+                    frontier = resources.keys,
+                    direction = RelationDirection.BOTH,
+                    filter = RelationFilter.Any,
+                    limit = requirement.maximumEdges - relations.size + 1,
+                )
+                incident.forEach { relations[it.id] = it }
+                require(relations.size <= requirement.maximumEdges) {
+                    "Compilation graph edge limit was exceeded."
+                }
+            }
+            AuthoringWorkingGraph(resources = resources, relations = relations)
         }
 
     override suspend fun query(
@@ -176,7 +194,11 @@ internal fun parseStoredRelation(value: Value): StoredResourceRelation {
                 }
 
                 "declared" -> {
-                    ResourceRelationOrigin.Declared(RelationId(origin.get("relation_id").getString()))
+                    ResourceRelationOrigin.Declared(
+                        relationId = RelationId(origin.get("relation_id").getString()),
+                        sourceIndex = origin.get("source_index").takeUnless(Value::isNull)?.getLong()?.toInt(),
+                        targetIndex = origin.get("target_index").takeUnless(Value::isNull)?.getLong()?.toInt(),
+                    )
                 }
 
                 else -> {

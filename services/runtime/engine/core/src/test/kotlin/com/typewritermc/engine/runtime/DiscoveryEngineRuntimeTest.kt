@@ -5,7 +5,6 @@ import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
-import com.typewritermc.elements.ElementCatalog
 import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledContent
@@ -71,7 +70,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
         runTest {
             val gateway =
                 AssemblingEngineContentGateway(
-                    listOf(PageCompiledArtifactConsumer(ElementCatalog(emptyList()), TypePrototypeRegistry(emptyList()))),
+                    listOf(PageCompiledArtifactConsumer(TypePrototypeRegistry(emptyList()), emptyList())),
                 )
             val active = content(1, '4')
             gateway.apply(active)
@@ -80,7 +79,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
                 gateway.apply(
                     active.copy(
                         activationRevision = 2,
-                        manifest = active.manifest.copy(formatRevision = 2),
+                        manifest = active.manifest.copy(formatRevision = 3),
                     ),
                 )
             }
@@ -133,7 +132,7 @@ private fun content(
     val digest = ContentDigest(digestCharacter.toString().repeat(64))
     return LoadedCompiledContent(
         activationRevision = revision,
-        manifest = CompiledArtifactManifest(1, digest, "realm:$revision", "catalog:1", emptyList()),
+        manifest = CompiledArtifactManifest(2, digest, "realm:$revision", "catalog:1", emptyList()),
         artifacts = emptyList(),
     )
 }

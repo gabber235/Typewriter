@@ -141,7 +141,37 @@ mixin _PageElementMutations
     final copies = {
       for (final id in elementIds) skir.ResourceId(value: id): newResourceId(),
     };
-    final selected = [for (final id in copies.keys) _resource(id)];
+    final ownershipRelations = {
+      for (final relation in conversion.catalog.relations.values)
+        if (relation.families.contains("resource.ownership")) relation.id,
+    };
+    final ownerEdges = {
+      for (final id in copies.keys)
+        id: _authoring.edges.values.singleWhere(
+          (edge) =>
+              edge.target == id &&
+              switch (edge.origin) {
+                skir.AuthoringEdgeOrigin_declaredRelationWrapper(
+                  :final value,
+                ) =>
+                  ownershipRelations.contains(value.relationId.value),
+                _ => false,
+              },
+        ),
+    };
+    final orderedIds = <skir.ResourceId>[];
+    final visited = <skir.ResourceId>{};
+    void visit(skir.ResourceId id) {
+      if (!visited.add(id)) return;
+      final parent = ownerEdges[id]?.source;
+      if (parent != null && copies.containsKey(parent)) visit(parent);
+      orderedIds.add(id);
+    }
+
+    for (final id in copies.keys) {
+      visit(id);
+    }
+    final selected = [for (final id in orderedIds) _resource(id)];
     final selectedGraphs =
         <({skir.AuthoringResource resource, GraphGridRect rect})>[];
     for (final resource in selected) {
@@ -170,12 +200,27 @@ mixin _PageElementMutations
       }
     }
     final operations = <skir.AuthoringOperation>[];
-    final creationSlot = ref
-        .read(pageCreationSlotForPageProvider(_pageId))
-        .requireValue;
     for (final resource in selected) {
       final decoded = conversion.authoring.decodeResourceOrThrow(resource);
       var content = _rewriteReferences(decoded.content.rootValue, copies);
+      for (final relation in conversion.catalog.relations.values) {
+        final endpoint = relation.sourceEndpoint;
+        if (!relation.families.contains("resource.ownership") ||
+            endpoint == null ||
+            endpoint.cardinality != RealmRelationCardinality.many) {
+          continue;
+        }
+        if (conversion.catalog
+                .relationField(decoded.content.rootType, endpoint.path)
+                ?.relation
+                .id !=
+            relation.id) {
+          continue;
+        }
+        content = endpoint.path
+            .replace(content, const ListValue([]))
+            .valueOrNull!;
+      }
       final rect = moved[resource.id];
       if (rect != null) {
         content = elementPlacementPath
@@ -186,13 +231,20 @@ mixin _PageElementMutations
         skir.AuthoringOperation.createCreate(
           resource: conversion.authoring.encodeResource(
             copies[resource.id]!,
-            CoreResourceDefinitionIds.element,
+            resource.definition.toDomain(),
             decoded.content.copyWith(rootValue: content),
           ),
-          creationSlot: skir.AuthoringCreationSlotId(
-            value: creationSlot.id.value,
+          attachment: skir.CreationAttachment(
+            host:
+                copies[ownerEdges[resource.id]!.source] ??
+                ownerEdges[resource.id]!.source,
+            relation:
+                (ownerEdges[resource.id]!.origin
+                        as skir.AuthoringEdgeOrigin_declaredRelationWrapper)
+                    .value
+                    .relationId,
+            hostSide: skir.RelationEndpointSide.source,
           ),
-          hosts: [_pageId],
         ),
       );
     }
@@ -241,14 +293,17 @@ mixin _PageElementMutations
     final targetId = skir.ResourceId(value: targetPageId);
     if (elementIds.isEmpty || targetId == _pageId) return;
     final ids = [for (final id in elementIds) skir.ResourceId(value: id)];
-    final creationSlot = ref
-        .read(pageCreationSlotForPageProvider(_pageId))
+    final sourceField = ref
+        .read(pageElementsFieldForPageProvider(_pageId))
+        .requireValue;
+    final targetField = ref
+        .read(pageElementsFieldForPageProvider(targetId))
         .requireValue;
     await ref.withReadyPageElements(targetPageId, (target) async {
       final operations = <skir.AuthoringOperation>[
         for (final id in ids) ...[
-          _pageRelationOperation(creationSlot, _pageId, id, remove: true),
-          _pageRelationOperation(creationSlot, targetId, id),
+          _pageRelationOperation(sourceField, _pageId, id, remove: true),
+          _pageRelationOperation(targetField, targetId, id),
         ],
       ];
       final graphs = <({skir.ResourceId id, GraphGridRect rect})>[];
@@ -367,25 +422,18 @@ mixin _PageElementMutations
   }
 
   skir.AuthoringOperation _pageRelationOperation(
-    RealmAuthoringCreationSlot slot,
+    RealmRelationField field,
     skir.ResourceId page,
     skir.ResourceId element, {
     bool remove = false,
   }) {
-    final context = slot.context;
-    if (context is! RealmDeclaredRelationCreationContext) {
-      throw StateError(
-        "The Page element creation slot must declare a relation",
-      );
-    }
-    final (source, target) = switch (context.direction) {
-      RealmCreationRelationDirection.outgoing => (page, element),
-      RealmCreationRelationDirection.incoming => (element, page),
-      RealmCreationRelationDirection.both => throw StateError(
-        "The Page element creation slot has an ambiguous relation direction",
-      ),
-    };
-    final relation = skir.RelationId(value: context.relation);
+    final (
+      source,
+      target,
+    ) = field.endpoint.side == RealmRelationEndpointSide.source
+        ? (page, element)
+        : (element, page);
+    final relation = skir.RelationId(value: field.relation.id);
     return remove
         ? skir.AuthoringOperation.createRemoveRelation(
             relation: relation,
@@ -396,6 +444,8 @@ mixin _PageElementMutations
             relation: relation,
             source: source,
             target: target,
+            sourceBefore: null,
+            targetBefore: null,
           );
   }
 

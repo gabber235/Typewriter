@@ -8,7 +8,6 @@ import com.typewritermc.elements.Element
 import com.typewritermc.elements.Entry
 import com.typewritermc.library.Book
 import com.typewritermc.library.Page
-import com.typewritermc.library.PageKind
 import com.typewritermc.library.TAG_COLLECTION_SOURCE_ID
 import com.typewritermc.library.TAG_INHERITS_RELATION_ID
 import com.typewritermc.library.Tag
@@ -348,7 +347,6 @@ private fun pageDefault(context: PresentationBuildContext): PresentationSpec<Pag
             val content = editableInput<Page>("content")
             section("book", "Book") { defaultEditor(content.field(Page::book)) }
             section("name", "Name") { defaultEditor(content.field(Page::name)) }
-            section("kind", "Kind") { defaultEditor(content.field(Page::kind)) }
             section("chapter", "Chapter") { defaultEditor(content.field(Page::chapter)) }
             section("priority", "Priority") { defaultEditor(content.field(Page::priority)) }
             section("elements", "Elements") { defaultEditor(content.field(Page::elements)) }
@@ -437,9 +435,9 @@ private fun pageSubjectRole(
 private fun pageCatalogRole(
     context: PresentationBuildContext,
     name: String,
-): PresentationSpec<PageKind> =
+): PresentationSpec<Page> =
     context(context) {
-        rolePresentation<PageKind>(name) {
+        rolePresentation<Page>(name) {
             val descriptor = input<ResourceTypeDescriptor>("descriptor")
             input<ResolvedTypeRef>("identity")
             subjectLayout(

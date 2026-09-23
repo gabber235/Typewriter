@@ -1,12 +1,8 @@
 import "dart:async";
 
 import "package:flutter/foundation.dart";
-import "package:flutter/material.dart" hide SearchController;
-import "package:flutter_animate/flutter_animate.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:rxdart/rxdart.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoringCreationSearchResultType = SearchResultType(
@@ -19,50 +15,29 @@ const createAuthoringResourceCommandId = SearchCommandId(
   "authoring.resource.create",
 );
 
-const _selectAuthoringCreationHostsCommandId = SearchCommandId(
-  "authoring.resource.creation-hosts.select",
-);
-
 final class AuthoringCreationOption {
   const AuthoringCreationOption({
-    required this.slot,
+    required this.definition,
     required this.root,
-    this.hosts = const [],
-    this.partial,
-    this.referenceOrigins = const [],
-    this.ownerPath = const [],
+    required this.label,
   });
 
-  final RealmAuthoringCreationSlot slot;
+  final ResourceDefinitionId definition;
   final ResolvedTypeRef root;
-  final List<skir.ResourceId> hosts;
-  final DataValue? partial;
-  final List<skir.ResourceId> referenceOrigins;
-  final List<skir.ResourceId> ownerPath;
+  final String label;
 
-  String get id => "${slot.id.value}:$root";
-  String get label =>
-      slot.concreteRoots.length == 1 ? slot.label : "${slot.label} ($root)";
+  String get id => "${definition.value}:$root";
 }
 
-/// Exposes every Realm creation slot without resource family code.
+/// Lists resource types that do not require an ownership attachment.
 final class AuthoringCreationSearchSource implements SearchSource {
-  AuthoringCreationSearchSource(
-    this.catalog, {
-    this.hosts,
-    this.partial,
-    this.referenceOrigins = const [],
-    this.ownerPath = const [],
-  });
+  AuthoringCreationSearchSource(this.catalog, {this.field});
 
   final ValueListenable<AsyncValue<RealmEditorCatalogState>> catalog;
-  final List<AuthoringCreationHost>? hosts;
-  final DataValue? partial;
-  final List<skir.ResourceId> referenceOrigins;
-  final List<skir.ResourceId> ownerPath;
+  final ValueListenable<AsyncValue<RealmRelationField>>? field;
   final _snapshots = BehaviorSubject<SearchSourceSnapshot>.seeded(.loading());
   late final _refresher = SearchRefresher(
-    [catalog],
+    [catalog, ?field],
     search,
     onChange: _publish,
   );
@@ -72,20 +47,36 @@ final class AuthoringCreationSearchSource implements SearchSource {
   List<AuthoringCreationOption> get _options {
     final snapshot = catalog.value.value?.snapshot;
     if (snapshot == null) return const [];
+    final selectedField = field?.value.value;
+    if (field != null && selectedField == null) return const [];
+    final registry = TypeRegistry(snapshot.catalog);
     return [
-      for (final slot in snapshot.creationSlots.values)
-        if (hosts == null || slot.acceptsHosts(hosts!, snapshot))
-          for (final root in slot.concreteRoots)
-            AuthoringCreationOption(
-              slot: slot,
-              root: root,
-              hosts:
-                  hosts?.map((host) => host.id).toList(growable: false) ??
-                  const [],
-              partial: partial,
-              referenceOrigins: referenceOrigins,
-              ownerPath: ownerPath,
-            ),
+      for (final type in snapshot.catalog.definitions)
+        if (type.kind == NominalTypeKind.concrete)
+          if (snapshot.resourceDefinitionFor(type.id) case final definition?)
+            if (selectedField != null &&
+                    selectedField.accepts(type.id, registry) ||
+                selectedField == null &&
+                    !snapshot.relations.values.any(
+                      (relation) =>
+                          relation.families.contains("resource.ownership") &&
+                          NamedType(type.id).isStructurallyAssignableTo(
+                            NamedType(relation.target),
+                            registry,
+                          ),
+                    ))
+              AuthoringCreationOption(
+                definition: definition.id,
+                root: type.id,
+                label:
+                    snapshot.pageCatalog.definitions[type.id]?.name ??
+                    snapshot.elements.values
+                        .where((entry) => entry.definition.type == type.id)
+                        .firstOrNull
+                        ?.definition
+                        .name ??
+                    type.id.toString(),
+              ),
     ];
   }
 
@@ -117,12 +108,12 @@ final class AuthoringCreationSearchSource implements SearchSource {
         )
         .take(20)
         .toList(growable: false);
-    final error = catalog.value.error;
+    final error = catalog.value.error ?? field?.value.error;
     _snapshots.add(
       SearchSourceSnapshot(
         status: error != null
             ? SearchSourceStatus.error
-            : catalog.value.isLoading
+            : catalog.value.isLoading || field?.value.isLoading == true
             ? SearchSourceStatus.loading
             : SearchSourceStatus.ready,
         nodes: options.isEmpty
@@ -182,34 +173,15 @@ SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
       presentation: const SearchCommandPresentation(label: "Create"),
       matcher: const SearchResultMatcher(authoringCreationSearchResultType),
       execute: (execution, option, target) async {
-        final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-        if (catalog == null) {
-          return const SearchCommandResult.failed(
-            message: "The Realm editor catalog is unavailable",
-          );
-        }
-        final hosts = option.hosts.isNotEmpty
-            ? option.hosts
-            : await execution.prompts.show(
-                (context) => option.slot.selectCreationHosts(
-                  context: context,
-                  ref: ref,
-                  catalog: catalog,
-                ),
-              );
-        if (hosts == null) return const SearchCommandResult.cancelled();
         final created = await execution.prompts.show(
           (context) => ref
               .read(resourceCreationProvider)
               .create(
                 context: context,
                 request: ResourceCreationRequest(
-                  slot: option.slot.id,
-                  title: "Create ${option.slot.label}",
+                  definition: option.definition,
+                  title: "Create ${option.label}",
                   concreteRoot: option.root,
-                  hosts: hosts,
-                  partial: option.partial,
-                  referenceOrigins: option.referenceOrigins,
                 ),
               ),
         );
@@ -228,151 +200,10 @@ SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
               realmId: realmId,
               resourceId: created.id,
               definition: created.definition,
-              ownerPath: option.ownerPath,
+              ownerPath: const [],
               rootType: option.root,
             ),
           ],
         );
       },
     );
-
-final class AuthoringCreationHost {
-  const AuthoringCreationHost({
-    required this.id,
-    required this.definition,
-    required this.root,
-  });
-
-  final skir.ResourceId id;
-  final ResourceDefinitionId definition;
-  final ResolvedTypeRef root;
-}
-
-final class _CompleteAuthoringCreationHosts implements SearchHostEffect {
-  const _CompleteAuthoringCreationHosts(this.hosts);
-
-  final List<skir.ResourceId> hosts;
-}
-
-extension AuthoringCreationHostSelection on RealmAuthoringCreationSlot {
-  Future<List<skir.ResourceId>?> selectCreationHosts({
-    required BuildContext context,
-    required Ref ref,
-    required RealmEditorCatalogSnapshot catalog,
-  }) {
-    final hostPolicy = switch (this.context) {
-      RealmStandaloneCreationContext() => null,
-      RealmDeclaredRelationCreationContext(:final hosts, :final cardinality) =>
-        (filter: hosts, cardinality: cardinality),
-      RealmReferencePathCreationContext(:final hosts, :final cardinality) => (
-        filter: hosts,
-        cardinality: cardinality,
-      ),
-    };
-    if (hostPolicy == null) return Future.value(const []);
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (organizationId == null || realmId == null) return Future.value();
-    final multiple =
-        hostPolicy.cardinality == RealmCreationHostCardinality.oneOrMore;
-    return showSearchModal<List<skir.ResourceId>>(
-      context,
-      (modalRef, modalContext) {
-        final select = SearchCommand.batch<AuthoringSearchResultPayload>(
-          id: _selectAuthoringCreationHostsCommandId,
-          presentation: const SearchCommandPresentation(label: "Select"),
-          matcher: const SearchResultMatcher(authoringResourceSearchResultType),
-          evaluate: (values, target) => !multiple && values.length != 1
-              ? const SearchCommandState.disabled(
-                  "Select exactly one host resource",
-                )
-              : const SearchCommandState.enabled(),
-          execute: (execution, values, target) async =>
-              SearchCommandResult.completed(
-                hostEffects: [
-                  _CompleteAuthoringCreationHosts(
-                    values.map((value) => value.id).toList(growable: false),
-                  ),
-                ],
-              ),
-        );
-        return SearchContribution(
-          session: SearchSession(
-            source: RealmAuthoringSearchSource(
-              ref: modalRef,
-              organizationId: organizationId,
-              realmId: realmId,
-              assignableTo: hostPolicy.filter.assignableTo,
-              definitionFilter: hostPolicy.filter.definitions,
-            ).debounced(100.ms).cached(),
-            interaction: SearchInteraction(
-              activation: SearchActivation.command(
-                resolve: (_) => _selectAuthoringCreationHostsCommandId,
-                dependencies: const [],
-              ),
-              selectionMode: multiple
-                  ? SearchSelectionMode.multiple
-                  : SearchSelectionMode.single,
-              commands: [select],
-            ),
-          ),
-          hostEffectExecutors: [
-            SearchHostEffectExecutor<_CompleteAuthoringCreationHosts>(
-              (effect) => Navigator.of(modalContext).pop(effect.hosts),
-            ),
-          ],
-        );
-      },
-      searchHint: "Search host resources",
-      rowRenderers: {
-        authoringResourceSearchResultType.rowRendererId: (context) =>
-            AuthoringSearchResultItem(
-              payload: context.result.payload as AuthoringSearchResultPayload,
-              focused: context.focused,
-              selected: context.selected,
-              loading: context.loading,
-              onTap: context.onTap,
-              shortcutActivator: context.shortcutActivator,
-            ),
-      },
-    );
-  }
-}
-
-extension RealmAuthoringCreationHostAcceptance on RealmAuthoringCreationSlot {
-  bool acceptsHosts(
-    List<AuthoringCreationHost> hosts,
-    RealmEditorCatalogSnapshot catalog,
-  ) {
-    final context = this.context;
-    if (context is RealmStandaloneCreationContext) return hosts.isEmpty;
-    final (filter, cardinality) = switch (context) {
-      RealmDeclaredRelationCreationContext(:final hosts, :final cardinality) =>
-        (hosts, cardinality),
-      RealmReferencePathCreationContext(:final hosts, :final cardinality) => (
-        hosts,
-        cardinality,
-      ),
-      RealmStandaloneCreationContext() => throw StateError(
-        "Standalone creation was handled before host validation",
-      ),
-    };
-    if (cardinality == RealmCreationHostCardinality.exactlyOne &&
-        hosts.length != 1) {
-      return false;
-    }
-    if (cardinality == RealmCreationHostCardinality.oneOrMore &&
-        hosts.isEmpty) {
-      return false;
-    }
-    final registry = TypeRegistry(catalog.catalog);
-    return hosts.every(
-      (host) =>
-          (filter.definitions.isEmpty ||
-              filter.definitions.contains(host.definition)) &&
-          (filter.assignableTo == null ||
-              NamedType(host.root)
-                  .isStructurallyAssignableTo(filter.assignableTo!, registry)),
-    );
-  }
-}

@@ -1,18 +1,17 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.elements.Cue
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledElementKey
+import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedCompiledContent
-import com.typewritermc.types.ConcreteTypePrototype
-import com.typewritermc.types.TypeDecodingContext
 import com.typewritermc.types.TypePrototypeRegistry
+import com.typewritermc.types.RelationDefinition
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
@@ -62,18 +61,24 @@ data class EngineContentSnapshot(
     @Suppress("UNCHECKED_CAST")
     operator fun <Value : Any> get(facet: EngineContentFacet<Value>): Value? = facets[facet] as? Value
 
-    val elements: Map<CompiledElementKey, Element>
-        get() = get(Elements) ?: emptyMap()
+    val graph: CompiledResourceGraph?
+        get() = get(Resources)
+
+    val elements: Map<CompiledResourceKey, Element>
+        get() = graph?.elements.orEmpty()
+
+    val cues: Map<CompiledResourceKey, Cue>
+        get() = graph?.cues.orEmpty()
 
     companion object {
-        val Elements = EngineContentFacet<Map<CompiledElementKey, Element>>("typewriter.elements")
+        val Resources = EngineContentFacet<CompiledResourceGraph>("typewriter.resources")
     }
 }
 
 /** Decodes and contributes the Page projection without making the generic delivery path Page specific. */
 class PageCompiledArtifactConsumer(
-    private val catalog: ElementCatalog,
     private val prototypes: TypePrototypeRegistry,
+    private val relations: Collection<RelationDefinition>,
 ) : CompiledArtifactConsumer {
     override val projection: CompilationProjectionId = CompilationProjectionId("typewriter.page")
     override val mediaType: String = PAGE_MEDIA_TYPE
@@ -83,7 +88,7 @@ class PageCompiledArtifactConsumer(
         payload: ByteArray,
     ): CompiledPageShard {
         val shard = json.decodeFromString(CompiledPageShard.serializer(), payload.decodeToString())
-        require(shard.page.id == reference.root.resource) {
+        require(shard.root.source == reference.root.resource) {
             "Compiled Page artifact root does not match its payload."
         }
         require(shard.digest == reference.semanticDigest) {
@@ -100,27 +105,13 @@ class PageCompiledArtifactConsumer(
         target: EngineContentBuilder,
     ) {
         val shards = artifacts.map { decode(it.reference, it.payload) }
-        val context =
-            object : TypeDecodingContext {
-                override val prototypes: TypePrototypeRegistry = this@PageCompiledArtifactConsumer.prototypes
-            }
-        val compiledElements = shards.flatMap(CompiledPageShard::elements)
-        require(compiledElements.map { it.key }.distinct().size == compiledElements.size) {
-            "Compiled content contains duplicate element keys."
+        require(shards.all { it.formatRevision == 2 }) {
+            "Unsupported compiled Page graph format."
         }
-        val elements =
-            compiledElements.associate { element ->
-                val descriptor =
-                    catalog.entries.singleOrNull { it.descriptor.id == element.elementType }?.descriptor
-                        ?: error("Element type ${element.elementType.value} is unavailable in the engine catalog.")
-                val prototype =
-                    prototypes.require(descriptor.type) as? ConcreteTypePrototype<*>
-                        ?: error("Element type ${descriptor.type} is not concrete.")
-                val decoded = with(context) { prototype.decode(element.value) }
-                require(decoded is Element) { "Decoded value for ${descriptor.type} is not an Element." }
-                element.key to decoded
-            }
-        target.set(EngineContentSnapshot.Elements, elements)
+        target.set(
+            EngineContentSnapshot.Resources,
+            CompiledResourceGraph.assemble(shards, relations, prototypes),
+        )
     }
 
     companion object {
@@ -137,7 +128,7 @@ class AssemblingEngineContentGateway(
     val snapshot: StateFlow<EngineContentSnapshot?> = mutableSnapshot
 
     override suspend fun apply(content: LoadedCompiledContent) {
-        require(content.manifest.formatRevision == 1) {
+        require(content.manifest.formatRevision == 2) {
             "Unsupported compiled content format ${content.manifest.formatRevision}."
         }
         val target = EngineContentBuilder()

@@ -63,7 +63,7 @@ void main() {
       pageId: skir.ResourceId(value: "test"),
       bookId: book.bookId,
       name: "Remote page",
-      kind: const PageKindRef(id: "kind", revision: 1),
+      rootType: referenceResourceTypes.page,
       chapter: "remote",
       priority: 1,
     );

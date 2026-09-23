@@ -17,12 +17,13 @@ import com.typewritermc.authoring.ResourceIdentity
 import com.typewritermc.authoring.ResourceTypeDescriptor
 import com.typewritermc.authoring.SearchSelectorId
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.elements.ContentCatalog
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.library.BOOK_PAGES_RELATION_ID
 import com.typewritermc.library.Book
 import com.typewritermc.library.PAGE_ELEMENTS_RELATION_ID
+import com.typewritermc.library.PAGE_CONTRACT_TYPE
 import com.typewritermc.library.Page
 import com.typewritermc.library.Tag
 import com.typewritermc.pages.PageCatalog
@@ -55,17 +56,21 @@ import com.typewritermc.realm.search.AuthoringSearchProjection as RealmSearchPro
 internal class CoreAuthoringPolicyProvider(
     private val prototypes: TypePrototypeRegistry,
     private val pageCatalog: PageCatalog,
-    private val elements: ElementCatalog,
+    private val elements: ContentCatalog,
     private val types: TypeCatalog,
+    private val relations: List<com.typewritermc.types.RelationDefinition>,
     private val catalogRevision: () -> String,
 ) : AuthoringPolicyProvider {
+    private val ownershipIds = relations.filter {
+        com.typewritermc.types.RelationFamilyId(com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID) in it.families
+    }.mapTo(linkedSetOf(), com.typewritermc.types.RelationDefinition::id)
+
     override fun contribute(builder: com.typewritermc.authoring.AuthoringPolicyCatalog.Builder) {
         coreDefinitions().forEach(builder::definition)
         coreSearchProjections().forEach(builder::search)
         coreSearchSelectors().forEach(builder::searchSelector)
         coreSearchFacets().forEach(builder::searchFacet)
         corePresentations().forEach(builder::presentation)
-        coreAuthoringCreationSlots(pageCatalog, prototypes, types).forEach(builder::creationSlot)
         builder.compilation(coreCompilationProjection())
     }
 
@@ -99,12 +104,17 @@ internal class CoreAuthoringPolicyProvider(
             ),
             com.typewritermc.authoring.AuthoringResourceDefinition(
                 CoreResourceDefinitionIds.PAGE,
-                TypeExpression.Named(prototypes.require(Page::class).type),
+                TypeExpression.Named(PAGE_CONTRACT_TYPE),
                 navigationHandler = "typewriter.page",
             ),
             com.typewritermc.authoring.AuthoringResourceDefinition(
                 CoreResourceDefinitionIds.ELEMENT,
                 TypeExpression.Named(types.requireQualified(Element::class.qualifiedName!!)),
+                navigationHandler = "typewriter.page-element",
+            ),
+            com.typewritermc.authoring.AuthoringResourceDefinition(
+                CoreResourceDefinitionIds.CUE,
+                TypeExpression.Named(types.requireQualified(com.typewritermc.elements.Cue::class.qualifiedName!!)),
                 navigationHandler = "typewriter.page-element",
             ),
         )
@@ -167,6 +177,26 @@ internal class CoreAuthoringPolicyProvider(
                             put(SearchSelectorId("book"), graph.resources[book]?.identityValues().orEmpty())
                             put(SearchSelectorId("tag"), graph.inheritedTagValues(book))
                         }
+                    }
+                },
+            ),
+            coreSearch(
+                definition = CoreResourceDefinitionIds.CUE,
+                facet = "type",
+                dependencies = setOf(
+                    CoreResourceDefinitionIds.CUE,
+                    CoreResourceDefinitionIds.ELEMENT,
+                    CoreResourceDefinitionIds.PAGE,
+                    CoreResourceDefinitionIds.BOOK,
+                ),
+                relations = ownershipIds,
+                ownerPath = { resource -> ownershipPath(resource.id, ownershipIds) },
+                selectors = { _, graph, ownerPath, _ ->
+                    buildMap {
+                        ownerPath.firstOrNull { graph.resources[it]?.definition == CoreResourceDefinitionIds.PAGE }
+                            ?.let { page -> put(SearchSelectorId("page"), graph.resources[page]?.identityValues().orEmpty()) }
+                        ownerPath.firstOrNull { graph.resources[it]?.definition == CoreResourceDefinitionIds.BOOK }
+                            ?.let { book -> put(SearchSelectorId("book"), graph.resources[book]?.identityValues().orEmpty()) }
                     }
                 },
             ),
@@ -247,8 +277,7 @@ internal class CoreAuthoringPolicyProvider(
                 maximumDepth = 1,
                 ownerPath = { resource -> pageOwnerPath(resource.id) },
             ) { resource ->
-                val page = prototypes.decode(resource.content) as Page
-                val definition = pageCatalog.definition(page.kind)
+                val definition = pageCatalog.definition(resource.rootReference)
                 ResourceTypeDescriptor(
                     resource.rootReference,
                     definition?.name ?: "Page",
@@ -275,6 +304,27 @@ internal class CoreAuthoringPolicyProvider(
                     definition?.name ?: "Element",
                     definition?.description.orEmpty(),
                     definition?.icon ?: Icon.Iconify("material-symbols:extension"),
+                    definition?.color ?: Color(0xff607d8bu),
+                )
+            },
+            corePresentation(
+                definition = CoreResourceDefinitionIds.CUE,
+                dependencies = setOf(
+                    CoreResourceDefinitionIds.CUE,
+                    CoreResourceDefinitionIds.ELEMENT,
+                    CoreResourceDefinitionIds.PAGE,
+                    CoreResourceDefinitionIds.BOOK,
+                ),
+                relations = ownershipIds,
+                maximumDepth = 256,
+                ownerPath = { resource -> ownershipPath(resource.id, ownershipIds) },
+            ) { resource ->
+                val definition = elements.descriptor(resource.rootReference)
+                ResourceTypeDescriptor(
+                    resource.rootReference,
+                    definition?.name ?: "Cue",
+                    definition?.description.orEmpty(),
+                    definition?.icon ?: Icon.Iconify("material-symbols:timeline"),
                     definition?.color ?: Color(0xff607d8bu),
                 )
             },
@@ -316,7 +366,12 @@ internal class CoreAuthoringPolicyProvider(
 
     private fun coreCompilationProjection(): AuthoringCompilationProjection =
         object : AuthoringCompilationProjection {
-            private val delegate = PageCompilationProjection(prototypes, catalogRevision = catalogRevision)
+            private val delegate = PageCompilationProjection(
+                ownershipRelations = relations.filter {
+                    com.typewritermc.types.RelationFamilyId(com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID) in it.families
+                }.mapTo(linkedSetOf(), com.typewritermc.types.RelationDefinition::id),
+                catalogRevision = catalogRevision,
+            )
 
             override val id = com.typewritermc.authoring.AuthoringCompilationProjectionId(delegate.id.value)
             override val root = delegate.root
@@ -325,10 +380,10 @@ internal class CoreAuthoringPolicyProvider(
                     definitions =
                         delegate.graphRequirement.definitions
                             .mapTo(linkedSetOf()) { definition -> ResourceDefinitionId(definition.value) },
-                    declaredRelations = setOf(RelationId(PAGE_ELEMENTS_RELATION_ID)),
-                    outgoingReferences = true,
+                    relationFamilies = setOf(com.typewritermc.types.RelationFamilyId(com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID)),
+                    includeIncidentEdges = true,
                     direction = GraphReadRequirement.Direction.OUTGOING,
-                    maximumDepth = 1,
+                    maximumDepth = 256,
                 )
 
             override fun affectedRoots(
@@ -381,6 +436,22 @@ private fun AuthoringWorkingGraph.pageOwnerPath(page: ResourceId): List<Resource
 private fun AuthoringWorkingGraph.elementOwnerPath(element: ResourceId): List<ResourceId> {
     val page = incoming(element, PAGE_ELEMENTS_RELATION_ID)
     return listOfNotNull(page, page?.let { incoming(it, BOOK_PAGES_RELATION_ID) })
+}
+
+private fun AuthoringWorkingGraph.ownershipPath(resource: ResourceId, ownership: Set<RelationId>): List<ResourceId> {
+    val path = mutableListOf<ResourceId>()
+    val visited = hashSetOf(resource)
+    var child = resource
+    while (true) {
+        val parent = relations.values.singleOrNull { relation ->
+            relation.target == child &&
+                (relation.origin as? com.typewritermc.authoring.AuthoringRelationOrigin.Declared)?.relationId in ownership
+        }?.source ?: break
+        if (!visited.add(parent)) break
+        path += parent
+        child = parent
+    }
+    return path
 }
 
 private fun AuthoringWorkingGraph.incoming(

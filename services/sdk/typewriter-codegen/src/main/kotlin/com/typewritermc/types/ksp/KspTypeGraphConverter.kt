@@ -600,8 +600,7 @@ private val KSPropertyDeclaration.hasConstructorDefault: Boolean
 
 private fun KSType.isSetCollection(): Boolean {
     val qualifiedName = (declaration as? KSClassDeclaration)?.qualifiedName?.asString() ?: return false
-    return qualifiedName == TO_MANY_TYPE ||
-        qualifiedName in
+    return qualifiedName in
         setOf(
             "kotlin.collections.HashSet",
             "kotlin.collections.LinkedHashSet",

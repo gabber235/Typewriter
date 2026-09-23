@@ -1,9 +1,9 @@
 package com.typewritermc.elements.codegen
 
-import com.typewritermc.elements.ElementSearchDefinition
-import com.typewritermc.elements.ElementSearchMode
-import com.typewritermc.elements.ElementSearchPolicy
-import com.typewritermc.elements.ElementSearchPropertyOverride
+import com.typewritermc.elements.ContentSearchDefinition
+import com.typewritermc.elements.ContentSearchMode
+import com.typewritermc.elements.ContentSearchPolicy
+import com.typewritermc.elements.ContentSearchPropertyOverride
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeDefinition
@@ -14,19 +14,19 @@ import com.typewritermc.types.TypeId
 internal object ElementSearchDefinitionGenerator {
     fun generate(
         graph: TypeGraph,
-        overrides: List<ElementSearchPropertyOverride>,
+        overrides: List<ContentSearchPropertyOverride>,
     ): ElementSearchGenerationResult {
         val definitions = graph.definitions.associateBy(TypeDefinition::id)
         val invalid =
             overrides.filter { override ->
-                override.mode != ElementSearchMode.NONE &&
+                override.mode != ContentSearchMode.NONE &&
                     !graph.propertySupportsExplicitText(override, definitions)
             }
         if (invalid.isNotEmpty()) return ElementSearchGenerationResult.InvalidOverrides(invalid)
 
         return ElementSearchGenerationResult.Success(
-            ElementSearchDefinition(
-                policy = ElementSearchPolicy.ORDINARY_TEXT,
+            ContentSearchDefinition(
+                policy = ContentSearchPolicy.ORDINARY_TEXT,
                 propertyOverrides = overrides.sortedWith(searchOverrideComparator),
                 revisionFingerprintInputs =
                     graph.definitions
@@ -40,16 +40,16 @@ internal object ElementSearchDefinitionGenerator {
 
 internal sealed interface ElementSearchGenerationResult {
     data class Success(
-        val definition: ElementSearchDefinition,
+        val definition: ContentSearchDefinition,
     ) : ElementSearchGenerationResult
 
     data class InvalidOverrides(
-        val overrides: List<ElementSearchPropertyOverride>,
+        val overrides: List<ContentSearchPropertyOverride>,
     ) : ElementSearchGenerationResult
 }
 
 private fun TypeGraph.propertySupportsExplicitText(
-    override: ElementSearchPropertyOverride,
+    override: ContentSearchPropertyOverride,
     definitions: Map<ResolvedTypeRef, TypeDefinition>,
 ): Boolean {
     val owner = definitions[override.ownerType] ?: return false
@@ -145,7 +145,7 @@ private fun TypeDefinition.isSubtypeOf(
 }
 
 private val searchOverrideComparator =
-    compareBy<ElementSearchPropertyOverride> { it.ownerType.sortKey }.thenBy(ElementSearchPropertyOverride::field)
+    compareBy<ContentSearchPropertyOverride> { it.ownerType.sortKey }.thenBy(ContentSearchPropertyOverride::field)
 
 private val ResolvedTypeRef.sortKey: String
     get() = "$id:$revision:${arguments.joinToString()}"

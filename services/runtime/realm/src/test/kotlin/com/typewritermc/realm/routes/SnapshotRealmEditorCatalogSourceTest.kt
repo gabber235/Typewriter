@@ -1,9 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.library.PageKindId
-import com.typewritermc.library.PageKindRef
+import com.typewritermc.elements.ContentCatalog
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageCatalog
 import com.typewritermc.pages.PageCatalogEntry
@@ -80,20 +78,13 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                             sourcePart = "main",
                             descriptor =
                                 PageDescriptor(
-                                    kind =
-                                        PageKindRef(
-                                            PageKindId(DeclaredTypeId.parse("019d3a87001070008000000000000010")),
-                                            1,
-                                        ),
+                                    type = fixture.leaf.id,
                                     name = "Test",
                                     description = null,
                                     icon = Icon.parse("material-symbols:test-tube"),
                                     color = Color.parseRgb("#000000"),
                                     editor =
-                                        ResolvedPageEditorDefinition.Graph(
-                                            GraphDirection.LEFT_TO_RIGHT,
-                                            listOf(fixture.leaf.id),
-                                        ),
+                                        ResolvedPageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT),
                                 ),
                         ),
                     ),
@@ -302,7 +293,7 @@ private fun DeploymentDiscoverySnapshot.editorCatalog(
     pages: PageCatalog = PageCatalog(emptyList(), pageDiagnostics),
 ) = RealmDiscoverySnapshot(
     discovery = this,
-    elements = ElementCatalog(emptyList()),
+    elements = ContentCatalog(emptyList()),
     pages = pages,
     presentations = presentations,
     presentationDiagnostics = diagnostics,

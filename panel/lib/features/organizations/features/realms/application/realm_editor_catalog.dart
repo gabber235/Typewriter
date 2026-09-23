@@ -64,8 +64,6 @@ abstract class RealmEditorCatalogSnapshot with _$RealmEditorCatalogSnapshot {
     @Default(RealmPageCatalog()) RealmPageCatalog pageCatalog,
     @Default({})
     Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,
-    @Default({})
-    Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots,
     @Default({}) Map<String, RealmRelationDefinition> relations,
     @Default({})
     Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>
@@ -135,13 +133,12 @@ final class RealmCollectionLiteral extends RealmCollectionProjectionSource {
 
 extension type const ResourceDefinitionId(String value) {}
 
-extension type const AuthoringCreationSlotId(String value) {}
-
 extension type const CoreResourceDefinitionIds._(Object _) {
   static const book = ResourceDefinitionId("typewriter.book");
   static const tag = ResourceDefinitionId("typewriter.tag");
   static const page = ResourceDefinitionId("typewriter.page");
   static const element = ResourceDefinitionId("typewriter.element");
+  static const cue = ResourceDefinitionId("typewriter.cue");
 }
 
 final class RealmResourceDefinition {
@@ -176,93 +173,6 @@ abstract class RealmAuthoringSearchFacetDefinition
   }) = _RealmAuthoringSearchFacetDefinition;
 }
 
-enum RealmCreationHostCardinality { exactlyOne, oneOrMore }
-
-enum RealmCreationRelationDirection { outgoing, incoming, both }
-
-@freezed
-sealed class RealmAuthoringCreationContext
-    with _$RealmAuthoringCreationContext {
-  const factory RealmAuthoringCreationContext.standalone() =
-      RealmStandaloneCreationContext;
-
-  const factory RealmAuthoringCreationContext.declaredRelation({
-    required RealmCreationHostFilter hosts,
-    required RealmCreationHostCardinality cardinality,
-    required String relation,
-    required RealmCreationRelationDirection direction,
-  }) = RealmDeclaredRelationCreationContext;
-
-  const factory RealmAuthoringCreationContext.referencePath({
-    required RealmCreationHostFilter hosts,
-    required RealmCreationHostCardinality cardinality,
-    required DataPath path,
-  }) = RealmReferencePathCreationContext;
-}
-
-@freezed
-abstract class RealmCreationHostFilter with _$RealmCreationHostFilter {
-  const factory RealmCreationHostFilter({
-    @Default({}) Set<ResourceDefinitionId> definitions,
-    TypeExpression? assignableTo,
-  }) = _RealmCreationHostFilter;
-}
-
-@freezed
-abstract class RealmAuthoringCreationSlot with _$RealmAuthoringCreationSlot {
-  const factory RealmAuthoringCreationSlot({
-    required AuthoringCreationSlotId id,
-    required String label,
-    required ResourceDefinitionId creates,
-    required RealmAuthoringCreationContext context,
-    required List<ResolvedTypeRef> concreteRoots,
-  }) = _RealmAuthoringCreationSlot;
-
-  const RealmAuthoringCreationSlot._();
-
-  bool acceptsRoot(ResolvedTypeRef root) => concreteRoots.contains(root);
-}
-
-extension RealmEditorCatalogCreationSlots on RealmEditorCatalogSnapshot {
-  RealmAuthoringCreationSlot? standaloneCreationSlot(
-    ResourceDefinitionId definition,
-  ) => _uniqueCreationSlot(
-    creationSlots.values.where(
-      (slot) =>
-          slot.creates == definition &&
-          slot.context is RealmStandaloneCreationContext,
-    ),
-  );
-
-  RealmAuthoringCreationSlot? hostedCreationSlot({
-    required ResourceDefinitionId definition,
-    required ResourceDefinitionId hostDefinition,
-    ResolvedTypeRef? root,
-  }) => _uniqueCreationSlot(
-    creationSlots.values.where((slot) {
-      if (slot.creates != definition ||
-          (root != null && !slot.acceptsRoot(root))) {
-        return false;
-      }
-      final filter = switch (slot.context) {
-        RealmStandaloneCreationContext() => null,
-        RealmDeclaredRelationCreationContext(:final hosts) => hosts,
-        RealmReferencePathCreationContext(:final hosts) => hosts,
-      };
-      return filter != null &&
-          (filter.definitions.isEmpty ||
-              filter.definitions.contains(hostDefinition));
-    }),
-  );
-
-  RealmAuthoringCreationSlot? _uniqueCreationSlot(
-    Iterable<RealmAuthoringCreationSlot> candidates,
-  ) {
-    final values = candidates.take(2).toList(growable: false);
-    return values.length == 1 ? values.single : null;
-  }
-}
-
 enum RealmRelationDeletePolicy { restrict, cascade, clear }
 
 enum RealmRelationCardinality { one, many }
@@ -292,6 +202,7 @@ final class RealmRelationDefinition {
     required this.onTargetDelete,
     required this.sourceEndpoint,
     required this.targetEndpoint,
+    required this.families,
   });
 
   final String id;
@@ -301,6 +212,7 @@ final class RealmRelationDefinition {
   final RealmRelationDeletePolicy onTargetDelete;
   final RealmRelationEndpointDefinition? sourceEndpoint;
   final RealmRelationEndpointDefinition? targetEndpoint;
+  final Set<String> families;
 }
 
 /// Outcome of fetching the catalog requested by a consumer.

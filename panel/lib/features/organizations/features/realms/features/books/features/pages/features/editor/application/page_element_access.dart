@@ -51,8 +51,13 @@ Future<T> _withReadyPageElements<T>(
   final session = container.read(
     authoringSessionProvider(organizationId, realmId).notifier,
   );
+  final catalog = (await container.read(realmEditorCatalogProvider.future))
+      .snapshot;
+  if (catalog == null) {
+    throw ApiException.badRequest("The editor catalog is unavailable");
+  }
   final lease = session.acquire(
-    skir.ResourceId(value: pageId).pageAuthoringSelection,
+    skir.ResourceId(value: pageId).pageContentSelection(catalog),
   );
   final provider = pageElementsProvider(organizationId, realmId, pageId);
   final pageSubscription = container.listen(provider, (_, _) {});

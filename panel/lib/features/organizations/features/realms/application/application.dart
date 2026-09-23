@@ -32,6 +32,8 @@ export "realm_editor_catalog_provider.dart";
 export "realm_editor_catalog_request.dart";
 export "realm_element_catalog.dart";
 export "realm_page_catalog.dart";
+export "realm_relation_field_provider.dart";
+export "realm_relation_fields.dart";
 export "realm_service_address.dart";
 export "resource_creation.dart";
 export "typed_authoring.dart";

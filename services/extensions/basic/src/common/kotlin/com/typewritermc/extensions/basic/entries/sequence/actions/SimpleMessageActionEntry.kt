@@ -1,12 +1,12 @@
 package com.typewritermc.extensions.basic.entries.sequence.actions
 
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.elements.TypewriterElement
+import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 
-@TypewriterElement(
+@TypewriterContent(
     id = "01a0b1fc-d60f-743f-aef8-5dce1c4ad200",
     revision = 1,
     name = "Simple Message Action Entry",

@@ -86,11 +86,16 @@ class PageElements extends _$PageElements
       throw ApiException.conflict("The selected realm changed");
     }
     _sessionProvider = authoringSessionProvider(organizationId, realmId);
+    final catalog = (await ref.watch(realmEditorCatalogProvider.future))
+        .snapshot;
+    if (catalog == null) {
+      throw ApiException.badRequest("The editor catalog is unavailable");
+    }
     final lease = ref.watch(
       authoringSelectionLeaseProvider(
         organizationId,
         realmId,
-        _pageId.pageAuthoringSelection,
+        _pageId.pageContentSelection(catalog),
       ),
     );
     final documentsProvider = decodedRealmDocumentsProvider(

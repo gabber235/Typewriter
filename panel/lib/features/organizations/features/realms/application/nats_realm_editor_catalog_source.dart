@@ -198,7 +198,7 @@ extension on skir.TypeInitializationRequirement {
   }
 }
 
-extension on Iterable<skir.ElementCatalogEntry> {
+extension on Iterable<skir.ContentCatalogEntry> {
   TypeResult<Map<String, RealmElementCatalogEntry>> _decodeDomain(
     TypeCatalog catalog,
   ) {
@@ -218,11 +218,23 @@ extension on Iterable<skir.ElementCatalogEntry> {
           ),
         ]);
       }
-      final id = entry.descriptor.elementTypeId.value.value;
+      final id = entry.descriptor.contentTypeId.value.value;
       if (type.id != DeclaredTypeId(id)) {
         return TypeResult.failure([
           realmEditorCatalogUnavailableDiagnostic(
             "Element descriptor identity does not match its structural type",
+          ),
+        ]);
+      }
+      final role = switch (entry.descriptor.role) {
+        skir.ContentRole_elementWrapper() => ContentRole.element,
+        skir.ContentRole_cueWrapper() => ContentRole.cue,
+        skir.ContentRole_unknown() => null,
+      };
+      if (role == null) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Unknown content role for '$id'",
           ),
         ]);
       }
@@ -240,6 +252,7 @@ extension on Iterable<skir.ElementCatalogEntry> {
         definition: DiscoveredElementDefinition(
           id: id,
           type: type,
+          role: role,
           name: entry.descriptor.name,
           description: entry.descriptor.description,
           icon: entry.descriptor.icon._decodeDomain(),
@@ -257,12 +270,12 @@ extension on Iterable<skir.ElementCatalogEntry> {
 }
 
 extension on Iterable<skir.PageCatalogEntry> {
-  TypeResult<Map<PageKindRef, RealmPageDefinition>> _decodeDomain(
+  TypeResult<Map<ResolvedTypeRef, RealmPageDefinition>> _decodeDomain(
     TypeCatalog catalog,
   ) {
     final registry = TypeRegistry(catalog);
     final codec = SkirTypeCodec(registry);
-    final definitions = <PageKindRef, RealmPageDefinition>{};
+    final definitions = <ResolvedTypeRef, RealmPageDefinition>{};
     for (final entry in this) {
       final editor = entry.descriptor.editor._decodeDomain(codec);
       if (editor == null) {
@@ -272,32 +285,22 @@ extension on Iterable<skir.PageCatalogEntry> {
           ),
         ]);
       }
-      final kind = PageKindRef.fromSkir(entry.descriptor.kind);
+      final type = codec.decodeReference(entry.descriptor.type);
+      if (type.valueOrNull == null) return TypeResult.failure(type.diagnostics);
       final presentationSubject = entry.presentationSubject._decodeDomain(
         registry,
       );
       if (presentationSubject.valueOrNull == null) {
         return TypeResult.failure(presentationSubject.diagnostics);
       }
-      definitions[kind] = RealmPageDefinition(
-        kind: kind,
+      definitions[type.valueOrNull!] = RealmPageDefinition(
+        type: type.valueOrNull!,
         name: entry.descriptor.name,
         description: entry.descriptor.description,
         icon: entry.descriptor.icon._decodeDomain(),
         color: entry.descriptor.color.toFlutterColor(),
         editor: editor,
-        elementCreationSlot: AuthoringCreationSlotId(
-          entry.descriptor.elementCreationSlot.value,
-        ),
         presentationSubject: presentationSubject.valueOrNull!,
-        authoringRules: [
-          for (final rule in entry.descriptor.authoringRules)
-            RealmPageAuthoringRuleRef(
-              id: rule.id,
-              revision: rule.revision,
-              configuration: rule.configuration,
-            ),
-        ],
         originArtifactId: entry.originArtifactId,
         sourcePart: entry.sourcePart,
       );
@@ -350,8 +353,6 @@ extension on skir.PageEditorDefinition {
   RealmPageEditor? _decodeDomain(SkirTypeCodec codec) {
     switch (this) {
       case skir.PageEditorDefinition_graphWrapper(:final value):
-        final nodes = value.nodeTypes._decodeReferences(codec);
-        if (nodes == null) return null;
         return RealmGraphPageEditor(
           direction: switch (value.direction) {
             skir.GraphDirection.leftToRight => GraphDirection.leftToRight,
@@ -360,42 +361,23 @@ extension on skir.PageEditorDefinition {
             skir.GraphDirection.bottomToTop => GraphDirection.bottomToTop,
             _ => throw StateError("Unknown graph direction"),
           },
-          nodeTypes: nodes,
         );
-      case skir.PageEditorDefinition_timelineWrapper(:final value):
-        final tracks = value.trackTypes._decodeReferences(codec);
-        final segments = value.segmentTypes._decodeReferences(codec);
-        final keyframes = value.keyframeTypes._decodeReferences(codec);
-        if (tracks == null || segments == null || keyframes == null) {
-          return null;
-        }
-        return RealmTimelinePageEditor(
-          trackTypes: tracks,
-          segmentTypes: segments,
-          keyframeTypes: keyframes,
-        );
+      case skir.PageEditorDefinition_timelineWrapper():
+        return const RealmTimelinePageEditor();
       case skir.PageEditorDefinition_unknown():
         return null;
     }
   }
 }
 
-extension on Iterable<skir.ResolvedTypeRef> {
-  List<ResolvedTypeRef>? _decodeReferences(SkirTypeCodec codec) {
-    final decoded = map(codec.decodeReference).toList();
-    if (decoded.any((result) => result.valueOrNull == null)) return null;
-    return decoded.map((result) => result.valueOrNull!).toList();
-  }
-}
-
-extension on skir.ElementEligibility {
+extension on skir.ContentEligibility {
   (bool, List<String>) _decodeDomain() => switch (this) {
-    skir.ElementEligibility_eligibleWrapper() => (true, const []),
-    skir.ElementEligibility_ineligibleWrapper(:final value) => (
+    skir.ContentEligibility_eligibleWrapper() => (true, const []),
+    skir.ContentEligibility_ineligibleWrapper(:final value) => (
       false,
       value.reasons.toList(),
     ),
-    skir.ElementEligibility_unknown() => (false, const ["Unknown eligibility"]),
+    skir.ContentEligibility_unknown() => (false, const ["Unknown eligibility"]),
   };
 }
 
@@ -463,12 +445,6 @@ extension on skir.CatalogFetchSuccess {
     if (collectionProjections case TypeFailure(:final diagnostics)) {
       return RealmEditorCatalogFetchUnavailable(diagnostics);
     }
-    final creationSlots = value.authoringCreationSlots._decodeDomain(
-      catalog.registry,
-    );
-    if (creationSlots case TypeFailure(:final diagnostics)) {
-      return RealmEditorCatalogFetchUnavailable(diagnostics);
-    }
     final authoringSearch = value.authoringSearch?._decodeDomain();
     if (authoringSearch case TypeFailure(:final diagnostics)) {
       return RealmEditorCatalogFetchUnavailable(diagnostics);
@@ -482,7 +458,7 @@ extension on skir.CatalogFetchSuccess {
     if (compilationDiagnostics.isNotEmpty) {
       return RealmEditorCatalogFetchUnavailable(compilationDiagnostics);
     }
-    final decodedElements = value.elementEntries._decodeDomain(catalog.catalog);
+    final decodedElements = value.contentEntries._decodeDomain(catalog.catalog);
 
     final elements = decodedElements.valueOrNull;
     if (elements == null) {
@@ -513,15 +489,16 @@ extension on skir.CatalogFetchSuccess {
                   originArtifactId: diagnostic.originArtifactId,
                   sourcePart: diagnostic.sourcePart,
                   declarationName: diagnostic.declarationName,
-                  kind: diagnostic.kind == null
+                  type: diagnostic.type == null
                       ? null
-                      : PageKindRef.fromSkir(diagnostic.kind!),
+                      : SkirTypeCodec(catalog.registry)
+                            .decodeReference(diagnostic.type)
+                            .valueOrNull,
                 ),
               )
               .toList(growable: false),
         ),
         resourceDefinitions: resourceDefinitions.valueOrNull!,
-        creationSlots: creationSlots.valueOrNull!,
         relations: relations.valueOrNull!,
         collectionProjections: collectionProjections.valueOrNull!,
         compilationProjections: compilationProjections
@@ -635,170 +612,6 @@ extension on skir.AuthoringSearchDefinition {
               facets: facets,
             ),
           )
-        : TypeResult.failure(diagnostics);
-  }
-}
-
-extension on Iterable<skir.AuthoringCreationSlotDefinition> {
-  TypeResult<Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot>>
-  _decodeDomain(TypeRegistry registry) {
-    final codec = SkirEditorCodec(registry);
-    final result = <AuthoringCreationSlotId, RealmAuthoringCreationSlot>{};
-    final diagnostics = <TypeDiagnostic>[];
-    for (final value in this) {
-      final roots = <ResolvedTypeRef>[];
-      for (final root in value.concreteRoots) {
-        final decoded = codec.typeCodec.decodeReference(root);
-        diagnostics.addAll(decoded.diagnostics);
-        if (decoded.valueOrNull case final resolved?) roots.add(resolved);
-      }
-      final context = value.context._decodeDomain(codec);
-      diagnostics.addAll(context.diagnostics);
-      final slotId = AuthoringCreationSlotId(value.id.value);
-      final domain = context.valueOrNull;
-      if (domain == null || roots.length != value.concreteRoots.length) {
-        continue;
-      }
-      result[slotId] = RealmAuthoringCreationSlot(
-        id: slotId,
-        label: value.label,
-        creates: ResourceDefinitionId(value.creates.value),
-        context: domain,
-        concreteRoots: roots,
-      );
-    }
-    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
-    return TypeResult.success(result);
-  }
-}
-
-extension on skir.AuthoringCreationContext {
-  TypeResult<RealmAuthoringCreationContext> _decodeDomain(
-    SkirEditorCodec codec,
-  ) => switch (this) {
-    skir.AuthoringCreationContext_standaloneWrapper() =>
-      const TypeResult.success(RealmAuthoringCreationContext.standalone()),
-    skir.AuthoringCreationContext_declaredRelationWrapper(:final value) =>
-      value._decodeDomain(codec),
-    skir.AuthoringCreationContext_referencePathWrapper(:final value) =>
-      value._decodeDomain(codec),
-    skir.AuthoringCreationContext_unknown() => TypeResult.failure([
-      realmEditorCatalogUnavailableDiagnostic(
-        "Realm returned an unknown authoring creation context",
-      ),
-    ]),
-  };
-}
-
-extension on skir.AuthoringCreationContext_DeclaredRelation {
-  TypeResult<RealmAuthoringCreationContext> _decodeDomain(
-    SkirEditorCodec codec,
-  ) {
-    final hosts = valueHostFilter(codec);
-    final diagnostics = [...hosts.diagnostics];
-    final cardinalityValue = switch (cardinality.kind) {
-      skir.AuthoringCreationHostCardinality_kind.exactlyOneConst =>
-        RealmCreationHostCardinality.exactlyOne,
-      skir.AuthoringCreationHostCardinality_kind.oneOrMoreConst =>
-        RealmCreationHostCardinality.oneOrMore,
-      _ => null,
-    };
-    final directionValue = switch (direction.kind) {
-      skir.RelationDirection_kind.outgoingConst =>
-        RealmCreationRelationDirection.outgoing,
-      skir.RelationDirection_kind.incomingConst =>
-        RealmCreationRelationDirection.incoming,
-      skir.RelationDirection_kind.bothConst =>
-        RealmCreationRelationDirection.both,
-      _ => null,
-    };
-    if (cardinalityValue == null || directionValue == null) {
-      diagnostics.add(
-        realmEditorCatalogUnavailableDiagnostic(
-          "Realm returned an unknown authoring creation cardinality or direction",
-        ),
-      );
-    }
-    if (diagnostics.isNotEmpty ||
-        cardinalityValue == null ||
-        directionValue == null) {
-      return TypeResult.failure(diagnostics);
-    }
-    return TypeResult.success(
-      RealmAuthoringCreationContext.declaredRelation(
-        hosts: hosts.valueOrNull!,
-        cardinality: cardinalityValue,
-        relation: relation.value,
-        direction: directionValue,
-      ),
-    );
-  }
-
-  TypeResult<RealmCreationHostFilter> valueHostFilter(SkirEditorCodec codec) {
-    final assignableWire = hosts.assignableTo;
-    final assignable = assignableWire == null
-        ? null
-        : codec.typeCodec.decodeExpression(assignableWire);
-    final diagnostics = [...?assignable?.diagnostics];
-    final value = RealmCreationHostFilter(
-      definitions: hosts.definitions
-          .map((definition) => ResourceDefinitionId(definition.value))
-          .toSet(),
-      assignableTo: assignable?.valueOrNull,
-    );
-    return diagnostics.isEmpty
-        ? TypeResult.success(value)
-        : TypeResult.failure(diagnostics);
-  }
-}
-
-extension on skir.AuthoringCreationContext_ReferencePath {
-  TypeResult<RealmAuthoringCreationContext> _decodeDomain(
-    SkirEditorCodec codec,
-  ) {
-    final hosts = _decodeHosts(codec);
-    final path = codec.decodePath(this.path);
-    final cardinalityValue = switch (cardinality.kind) {
-      skir.AuthoringCreationHostCardinality_kind.exactlyOneConst =>
-        RealmCreationHostCardinality.exactlyOne,
-      skir.AuthoringCreationHostCardinality_kind.oneOrMoreConst =>
-        RealmCreationHostCardinality.oneOrMore,
-      _ => null,
-    };
-    final diagnostics = [...hosts.diagnostics, ...path.diagnostics];
-    if (cardinalityValue == null) {
-      diagnostics.add(
-        realmEditorCatalogUnavailableDiagnostic(
-          "Realm returned an unknown authoring creation cardinality",
-        ),
-      );
-    }
-    if (diagnostics.isNotEmpty || cardinalityValue == null) {
-      return TypeResult.failure(diagnostics);
-    }
-    return TypeResult.success(
-      RealmAuthoringCreationContext.referencePath(
-        hosts: hosts.valueOrNull!,
-        cardinality: cardinalityValue,
-        path: path.valueOrNull!,
-      ),
-    );
-  }
-
-  TypeResult<RealmCreationHostFilter> _decodeHosts(SkirEditorCodec codec) {
-    final assignableWire = hosts.assignableTo;
-    final assignable = assignableWire == null
-        ? null
-        : codec.typeCodec.decodeExpression(assignableWire);
-    final diagnostics = [...?assignable?.diagnostics];
-    final value = RealmCreationHostFilter(
-      definitions: hosts.definitions
-          .map((definition) => ResourceDefinitionId(definition.value))
-          .toSet(),
-      assignableTo: assignable?.valueOrNull,
-    );
-    return diagnostics.isEmpty
-        ? TypeResult.success(value)
         : TypeResult.failure(diagnostics);
   }
 }
@@ -955,6 +768,7 @@ extension on Iterable<skir.RelationDefinition> {
         onTargetDelete: targetPolicy,
         sourceEndpoint: sourceEndpoint?.valueOrNull,
         targetEndpoint: targetEndpoint?.valueOrNull,
+        families: value.families.map((family) => family.value).toSet(),
       );
     }
     return diagnostics.isEmpty

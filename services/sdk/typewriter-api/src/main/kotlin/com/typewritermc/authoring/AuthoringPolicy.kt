@@ -1,8 +1,5 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataPath
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
 import kotlinx.serialization.Serializable
@@ -45,67 +42,6 @@ data class AuthoringResourceDefinition(
 ) {
     init {
         require(navigationHandler.isNotBlank()) { "Resource navigation handlers must not be blank." }
-    }
-}
-
-/** Stable identity for one editor creation context. */
-@JvmInline
-@Serializable
-value class AuthoringCreationSlotId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Creation slot ids must not be blank." }
-    }
-}
-
-enum class AuthoringCreationHostCardinality {
-    EXACTLY_ONE,
-    ONE_OR_MORE,
-}
-
-enum class AuthoringCreationRelationDirection {
-    OUTGOING,
-    INCOMING,
-    BOTH,
-}
-
-data class AuthoringCreationHostFilter(
-    val definitions: Set<ResourceDefinitionId> = emptySet(),
-    val assignableTo: TypeExpression? = null,
-)
-
-sealed interface AuthoringCreationContext {
-    data object Standalone : AuthoringCreationContext
-
-    data class DeclaredRelation(
-        val hosts: AuthoringCreationHostFilter,
-        val cardinality: AuthoringCreationHostCardinality,
-        val relation: RelationId,
-        val direction: AuthoringCreationRelationDirection,
-    ) : AuthoringCreationContext
-
-    data class ReferencePath(
-        val hosts: AuthoringCreationHostFilter,
-        val cardinality: AuthoringCreationHostCardinality,
-        val path: DataPath,
-    ) : AuthoringCreationContext
-}
-
-/** Describes one generic resource creation entry point. */
-data class AuthoringCreationSlotDefinition(
-    val id: AuthoringCreationSlotId,
-    val label: String,
-    val creates: ResourceDefinitionId,
-    val context: AuthoringCreationContext,
-    val concreteRoots: List<ResolvedTypeRef>,
-) {
-    init {
-        require(label.isNotBlank()) { "Creation slot labels must not be blank." }
-        require(concreteRoots.isNotEmpty()) { "Creation slots must expose at least one concrete root." }
-        require(concreteRoots.distinct().size == concreteRoots.size) {
-            "Creation slot concrete roots must be unique."
-        }
     }
 }
 
@@ -167,7 +103,6 @@ class AuthoringPolicyCatalog private constructor(
     val searchSelectors: List<AuthoringSearchSelector>,
     val searchFacets: List<AuthoringSearchFacet>,
     val presentations: Map<ResourceDefinitionId, AuthoringPresentationProjection>,
-    val creationSlots: Map<AuthoringCreationSlotId, AuthoringCreationSlotDefinition>,
     val compilation: Map<AuthoringCompilationProjectionId, AuthoringCompilationProjection>,
 ) {
     /** Fails when a policy refers to a definition that is not part of this catalog. */
@@ -175,16 +110,6 @@ class AuthoringPolicyCatalog private constructor(
         val known = definitions.keys
         val unknownSearch = search.keys - known
         val unknownPresentations = presentations.keys - known
-        val unknownCreation = creationSlots.values.filterNot { it.creates in known }
-        val unknownCreationHosts =
-            creationSlots.values
-                .flatMap { slot ->
-                    when (val context = slot.context) {
-                        AuthoringCreationContext.Standalone -> emptySet()
-                        is AuthoringCreationContext.DeclaredRelation -> context.hosts.definitions - known
-                        is AuthoringCreationContext.ReferencePath -> context.hosts.definitions - known
-                    }
-                }.toSet()
         val unknownGraphDefinitions =
             (
                 validations.values.map(AuthoringValidationRule::graphRequirement) +
@@ -198,13 +123,6 @@ class AuthoringPolicyCatalog private constructor(
         require(unknownPresentations.isEmpty()) {
             "Presentation policies reference unknown definitions: " +
                 unknownPresentations.sortedBy(ResourceDefinitionId::value) + "."
-        }
-        require(unknownCreation.isEmpty()) {
-            "Creation slots reference unknown definitions: ${unknownCreation.map { it.id.value }}."
-        }
-        require(unknownCreationHosts.isEmpty()) {
-            "Creation slot host filters reference unknown definitions: " +
-                unknownCreationHosts.sortedBy(ResourceDefinitionId::value) + "."
         }
         require(unknownGraphDefinitions.isEmpty()) {
             "Graph requirements reference unknown definitions: " +
@@ -223,7 +141,6 @@ class AuthoringPolicyCatalog private constructor(
         private val searchSelectors = linkedMapOf<SearchSelectorId, AuthoringSearchSelector>()
         private val searchFacets = linkedMapOf<String, AuthoringSearchFacet>()
         private val presentations = linkedMapOf<ResourceDefinitionId, AuthoringPresentationProjection>()
-        private val creationSlots = linkedMapOf<AuthoringCreationSlotId, AuthoringCreationSlotDefinition>()
         private val compilation = linkedMapOf<AuthoringCompilationProjectionId, AuthoringCompilationProjection>()
 
         fun definition(value: AuthoringResourceDefinition) {
@@ -262,12 +179,6 @@ class AuthoringPolicyCatalog private constructor(
             }
         }
 
-        fun creationSlot(value: AuthoringCreationSlotDefinition) {
-            require(creationSlots.put(value.id, value) == null) {
-                "Creation slot is contributed more than once: ${value.id.value}."
-            }
-        }
-
         fun compilation(value: AuthoringCompilationProjection) {
             require(compilation.put(value.id, value) == null) {
                 "Compilation projection is contributed more than once: ${value.id.value}."
@@ -282,7 +193,6 @@ class AuthoringPolicyCatalog private constructor(
                 searchSelectors = searchSelectors.values.sortedBy { it.id.value },
                 searchFacets = searchFacets.values.sortedBy(AuthoringSearchFacet::id),
                 presentations = presentations.toSortedMap(compareBy(ResourceDefinitionId::value)),
-                creationSlots = creationSlots.toSortedMap(compareBy(AuthoringCreationSlotId::value)),
                 compilation = compilation.toSortedMap(compareBy(AuthoringCompilationProjectionId::value)),
             ).also(AuthoringPolicyCatalog::validateOrThrow)
     }

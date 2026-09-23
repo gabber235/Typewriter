@@ -6,48 +6,48 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("destination scope exposes only compatible pages and kinds", () {
+  test("destination scope exposes only compatible pages and types", () {
     final books = ValueNotifier<AsyncValue<List<Book>>>(AsyncData([_book]));
-    final compatibleKinds = ValueNotifier(
-      AsyncValue.data({_compatibleKind: _slot}),
+    final compatibleFields = ValueNotifier(
+      AsyncValue.data({_compatibleType: _field}),
     );
     addTearDown(books.dispose);
-    addTearDown(compatibleKinds.dispose);
+    addTearDown(compatibleFields.dispose);
     final scope = elementDestinationScope(
       books: books,
-      compatibleKinds: compatibleKinds,
+      compatibleFields: compatibleFields,
     );
 
     expect(
-      scope.evaluate(_pageResult(_compatibleKind), SearchQueryContext.empty),
+      scope.evaluate(_pageResult(_compatibleType), SearchQueryContext.empty),
       isA<SearchResultVisible>(),
     );
     expect(
-      scope.evaluate(_pageResult(_incompatibleKind), SearchQueryContext.empty),
+      scope.evaluate(_pageResult(_incompatibleType), SearchQueryContext.empty),
       isA<SearchResultHidden>(),
     );
     expect(
-      scope.evaluate(_kindResult(_compatibleKind), _bookQuery),
+      scope.evaluate(_kindResult(_compatibleType), _bookQuery),
       isA<SearchResultVisible>(),
     );
     expect(
-      scope.evaluate(_kindResult(_compatibleKind), SearchQueryContext.empty),
+      scope.evaluate(_kindResult(_compatibleType), SearchQueryContext.empty),
       isA<SearchResultHidden>(),
     );
   });
 
   test("activation returns the selected existing page", () async {
     final books = ValueNotifier<AsyncValue<List<Book>>>(AsyncData([_book]));
-    final compatibleKinds = ValueNotifier(
-      AsyncValue.data({_compatibleKind: _slot}),
+    final compatibleFields = ValueNotifier(
+      AsyncValue.data({_compatibleType: _field}),
     );
     addTearDown(books.dispose);
-    addTearDown(compatibleKinds.dispose);
+    addTearDown(compatibleFields.dispose);
     final activation = elementDestinationActivation(
       books: books,
-      compatibleKinds: compatibleKinds,
+      compatibleFields: compatibleFields,
     );
-    final result = _pageResult(_compatibleKind);
+    final result = _pageResult(_compatibleType);
 
     final outcome = await activation.activate(
       SearchActivationContext(
@@ -63,7 +63,7 @@ void main() {
         (outcome as SearchActivationComplete<ElementPageSelection>).value;
     expect(selection.pageId, _pageId);
     expect(selection.bookId, _book.bookId);
-    expect(selection.slot, _slot);
+    expect(selection.field, _field);
   });
 }
 
@@ -75,18 +75,35 @@ final _book = Book(
   tagIds: const [],
 );
 final _pageId = skir.ResourceId(value: "compatible");
-const _compatibleKind = PageKindRef(id: "compatible", revision: 1);
-const _incompatibleKind = PageKindRef(id: "incompatible", revision: 1);
+final _compatibleType = ResolvedTypeRef(id: const QualifiedTypeId(namespace: "test", name: "CompatiblePage"), revision: 1);
+final _incompatibleType = ResolvedTypeRef(id: const QualifiedTypeId(namespace: "test", name: "IncompatiblePage"), revision: 1);
 final _elementType = ResolvedTypeRef(
   id: DeclaredTypeId("0123456789abcdef0123456789abcdef"),
   revision: 1,
 );
-final _slot = RealmAuthoringCreationSlot(
-  id: AuthoringCreationSlotId("test/graph"),
-  label: "Test graph",
-  creates: CoreResourceDefinitionIds.element,
-  context: const RealmStandaloneCreationContext(),
-  concreteRoots: [_elementType],
+final _field = RealmRelationField(
+  relation: RealmRelationDefinition(
+    id: "page.elements",
+    source: _compatibleType,
+    target: _elementType,
+    onSourceDelete: RealmRelationDeletePolicy.cascade,
+    onTargetDelete: RealmRelationDeletePolicy.clear,
+    sourceEndpoint: RealmRelationEndpointDefinition(
+      owner: _compatibleType,
+      path: DataPath.root.field("elements"),
+      side: RealmRelationEndpointSide.source,
+      cardinality: RealmRelationCardinality.many,
+    ),
+    targetEndpoint: null,
+    families: const {"resource.ownership"},
+  ),
+  endpoint: RealmRelationEndpointDefinition(
+    owner: _compatibleType,
+    path: DataPath.root.field("elements"),
+    side: RealmRelationEndpointSide.source,
+    cardinality: RealmRelationCardinality.many,
+  ),
+  target: _elementType,
 );
 final _bookQuery = SearchQueryContext(
   normalizedQuery: "",
@@ -96,25 +113,20 @@ final _bookQuery = SearchQueryContext(
   ],
 );
 
-SearchResult _pageResult(PageKindRef kind) => SearchResult(
+SearchResult _pageResult(ResolvedTypeRef kind) => SearchResult(
   id: "page:${kind.id}",
   type: authoringResourceSearchResultType,
   payload: _pagePayload(kind),
 );
 
-AuthoringSearchResultPayload _pagePayload(PageKindRef kind) {
+AuthoringSearchResultPayload _pagePayload(ResolvedTypeRef kind) {
   final content = TypedValueEnvelope(
-    rootType: referenceResourceTypes.page,
-    rootValue: RecordValue({
-      "kind": RecordValue({
-        "id": StringValue(kind.id),
-        "revision": IntegerValue(BigInt.from(kind.revision)),
-      }),
-    }),
+    rootType: kind,
+    rootValue: RecordValue({}),
   );
   final catalog = TypeCatalog([
     TypeDefinition(
-      id: referenceResourceTypes.page,
+      id: kind,
       kind: NominalTypeKind.concrete,
       representation: const RecordType(fields: {}),
     ),
@@ -127,7 +139,7 @@ AuthoringSearchResultPayload _pagePayload(PageKindRef kind) {
       identity: (id: _pageId, owner: _book.bookId),
     ),
     context: TypedValueEnvelope(
-      rootType: referenceResourceTypes.page,
+      rootType: kind,
       rootValue: RecordValue({"book": ReferenceValue(_book.bookId)}),
     ),
     presentation: (
@@ -146,23 +158,19 @@ AuthoringSearchResultPayload _pagePayload(PageKindRef kind) {
   );
 }
 
-SearchResult _kindResult(PageKindRef kind) => SearchResult(
+SearchResult _kindResult(ResolvedTypeRef kind) => SearchResult(
   id: "kind:${kind.id}",
-  type: pageKindSearchResultType,
+  type: pageTypeSearchResultType,
   payload: RealmPageDefinition(
-    kind: kind,
-    name: kind.id,
+    type: kind,
+    name: kind.id.toString(),
     description: null,
     icon: const IconValue.iconify("mdi:test-tube"),
     color: Colors.blue,
-    editor: RealmGraphPageEditor(
-      direction: GraphDirection.leftToRight,
-      nodeTypes: [_elementType],
-    ),
-    elementCreationSlot: const AuthoringCreationSlotId("test:graph"),
+    editor: const RealmGraphPageEditor(direction: GraphDirection.leftToRight),
     originArtifactId: "test",
     sourcePart: "test",
-    presentationSubject: _catalogSubject(referenceResourceTypes.pageKind),
+    presentationSubject: _catalogSubject(referenceResourceTypes.page),
   ),
 );
 

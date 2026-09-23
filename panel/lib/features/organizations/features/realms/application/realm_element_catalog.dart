@@ -8,6 +8,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm_element_catalog.freezed.dart";
 
+enum ContentRole { element, cue }
+
 @freezed
 /// Realm supplied expression describing when an element is available to users.
 /// It is data for consumers to interpret, not a second local availability
@@ -41,6 +43,7 @@ abstract class DiscoveredElementDefinition with _$DiscoveredElementDefinition {
     required IconValue icon,
     required Color color,
     required ElementAvailability availability,
+    @Default(ContentRole.element) ContentRole role,
   }) = _DiscoveredElementDefinition;
 }
 

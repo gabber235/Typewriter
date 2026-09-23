@@ -2,6 +2,7 @@ package com.typewritermc.elements
 
 import com.typewritermc.authoring.Placement
 import com.typewritermc.authoring.TimelineKeyframePlacement
+import com.typewritermc.authoring.TimelineCuePlacement
 import com.typewritermc.authoring.TimelineSegmentPlacement
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.types.Color
@@ -21,7 +22,7 @@ import kotlin.reflect.KClass
 /**
  * Base contract for authored instances that can be referenced by other content.
  *
- * Resource identity lives outside the typed content. [ElementTypeId] identifies the schema. Runtime behavior is
+ * Resource identity lives outside the typed content. [ContentTypeId] identifies the schema. Runtime behavior is
  * supplied through separate facets.
  */
 interface Element : Referenceable {
@@ -37,7 +38,9 @@ interface Entry : Element
 /**
  * Marks an element positioned within a timeline. Use [Segment] for an interval and [Keyframe] for a single frame.
  */
-interface Cue : Element
+interface Cue : Referenceable {
+    val placement: TimelineCuePlacement
+}
 
 /**
  * Describes a timeline interval in frame indices.
@@ -58,12 +61,12 @@ interface Keyframe : Cue {
 /**
  * Identifies an element schema independently of any stored instance.
  *
- * Its declared identity must match the structural type advertised by [ElementDescriptor].
+ * Its declared identity must match the structural type advertised by [ContentDescriptor].
  */
 @JvmInline
 @Serializable
 @com.typewritermc.types.TypewriterType(id = "ef2cd4c6ab4f4c5a9f0850f3d7a0f58f")
-value class ElementTypeId(
+value class ContentTypeId(
     val value: DeclaredTypeId,
 )
 
@@ -78,7 +81,7 @@ value class ElementTypeId(
 @MetaSerializable
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class TypewriterElement(
+annotation class TypewriterContent(
     val id: String,
     val revision: Int = 1,
     val name: String,
@@ -95,13 +98,13 @@ annotation class TypewriterElement(
  */
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.BINARY)
-annotation class ElementSearch(
-    val mode: ElementSearchMode,
+annotation class ContentSearch(
+    val mode: ContentSearchMode,
 )
 
 /** Controls how text leaves in an authored property subtree enter the search document. */
 @Serializable
-enum class ElementSearchMode {
+enum class ContentSearchMode {
     SUMMARY,
     BODY,
     KEYWORD,
@@ -110,7 +113,7 @@ enum class ElementSearchMode {
 
 /** Identifies the automatic projection algorithm understood by a search consumer. */
 @Serializable
-enum class ElementSearchPolicy {
+enum class ContentSearchPolicy {
     ORDINARY_TEXT,
 }
 
@@ -121,10 +124,10 @@ enum class ElementSearchPolicy {
  * specific override.
  */
 @Serializable
-data class ElementSearchPropertyOverride(
+data class ContentSearchPropertyOverride(
     val ownerType: ResolvedTypeRef,
     val field: String,
-    val mode: ElementSearchMode,
+    val mode: ContentSearchMode,
 ) {
     init {
         require(ownerType.arguments.isEmpty()) { "Search override owner types must not contain arguments." }
@@ -135,15 +138,15 @@ data class ElementSearchPropertyOverride(
 /**
  * Generated instructions for projecting dynamic element values into a search document.
  *
- * [ElementSearchPolicy.ORDINARY_TEXT] traverses records, collections, named values, and polymorphic concrete types.
- * Plain string leaves default to [ElementSearchMode.BODY]. Logical strings require an explicit text mode. References
+ * [ContentSearchPolicy.ORDINARY_TEXT] traverses records, collections, named values, and polymorphic concrete types.
+ * Plain string leaves default to [ContentSearchMode.BODY]. Logical strings require an explicit text mode. References
  * remain excluded. [revisionFingerprintInputs] contains every reachable nominal definition so a catalog revision
  * change invalidates projections that depend on its structure or subtype set.
  */
 @Serializable
-data class ElementSearchDefinition(
-    val policy: ElementSearchPolicy,
-    val propertyOverrides: List<ElementSearchPropertyOverride>,
+data class ContentSearchDefinition(
+    val policy: ContentSearchPolicy,
+    val propertyOverrides: List<ContentSearchPropertyOverride>,
     val revisionFingerprintInputs: List<ResolvedTypeRef>,
 ) {
     init {
@@ -230,18 +233,25 @@ sealed interface AvailabilityExpression {
  * Publishes editor metadata and deployment availability for one element schema.
  *
  * The structural reference must use the same declared identity as [id]. Availability describes facts; source part
- * eligibility is recorded separately in [ElementCatalogEntry].
+ * eligibility is recorded separately in [ContentCatalogEntry].
  */
 @Serializable
-data class ElementDescriptor(
-    val id: ElementTypeId,
+enum class ContentRole {
+    ELEMENT,
+    CUE,
+}
+
+@Serializable
+data class ContentDescriptor(
+    val id: ContentTypeId,
     val type: ResolvedTypeRef,
+    val role: ContentRole,
     val name: String,
     val description: String,
     val icon: Icon,
     val color: Color,
     val availability: AvailabilityExpression,
-    val searchDefinition: ElementSearchDefinition? = null,
+    val searchDefinition: ContentSearchDefinition? = null,
 ) {
     init {
         require(type.id == TypeId.Declared(id.value)) { "Element and structural type identities must match." }
@@ -254,20 +264,20 @@ data class ElementDescriptor(
  *
  * Generated implementations let authoring and runtime consumers share the same structural type identity.
  */
-interface ElementPrototype<E : Element> : ConcreteTypePrototype<E> {
+interface ContentPrototype<E : Referenceable> : ConcreteTypePrototype<E> {
     /** Metadata used to expose this prototype in the deployment element catalog. */
-    val descriptor: ElementDescriptor
+    val descriptor: ContentDescriptor
 }
 
 /** Evaluates the descriptor's deployment availability expression against the supplied facts. */
-fun ElementDescriptor.isAvailable(facts: DeploymentFacts): Boolean = availability.evaluate(facts)
+fun ContentDescriptor.isAvailable(facts: DeploymentFacts): Boolean = availability.evaluate(facts)
 
 /**
  * Rejects a polymorphic value whose declared type identity differs from this element.
  *
  * This checks identity only. It does not verify revision compatibility or validate the payload shape.
  */
-fun ElementDescriptor.requireMatchingValue(value: DataValue.Polymorphic) {
+fun ContentDescriptor.requireMatchingValue(value: DataValue.Polymorphic) {
     require(value.concreteType.id == TypeId.Declared(id.value)) {
         "Element value type ${value.concreteType.id} does not match descriptor ${id.value}."
     }

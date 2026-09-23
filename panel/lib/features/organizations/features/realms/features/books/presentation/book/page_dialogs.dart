@@ -3,7 +3,7 @@ part of "route.dart";
 Future<Page?> promptAndCreatePage({
   required BuildContext context,
   required WidgetRef ref,
-  PageKindRef? fixedKind,
+  ResolvedTypeRef? fixedType,
   String chapter = "",
   bool navigate = true,
 }) async {
@@ -11,17 +11,17 @@ Future<Page?> promptAndCreatePage({
   if (bookId == null) throw ApiException.badRequest("No book selected");
   final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
   if (catalog == null) throw StateError("The editor catalog is unavailable");
-  final kind =
-      fixedKind ?? catalog.pageCatalog.definitions.values.firstOrNull?.kind;
-  if (kind == null) {
-    throw ApiException.badRequest("No page kinds are available");
+  final type = fixedType ?? catalog.pageCatalog.definitions.keys.firstOrNull;
+  if (type == null) {
+    throw ApiException.badRequest("No Page types are available");
   }
-  final slot = catalog.hostedCreationSlot(
-    definition: CoreResourceDefinitionIds.page,
-    hostDefinition: CoreResourceDefinitionIds.book,
+  final bookType = catalog.creatableRoots(CoreResourceDefinitionIds.book).singleOrNull;
+  final field = bookType == null ? null : catalog.relationField(
+    bookType,
+    DataPath.root.field("pages"),
   );
-  final root = slot?.concreteRoots.singleOrNull;
-  if (root == null) {
+  if (field == null ||
+      !field.accepts(type, TypeRegistry(catalog.catalog))) {
     throw ApiException.badRequest("Page creation is unavailable");
   }
   final created = await ref
@@ -29,13 +29,16 @@ Future<Page?> promptAndCreatePage({
       .create(
         context: context,
         request: ResourceCreationRequest(
-          slot: slot!.id,
+          definition: CoreResourceDefinitionIds.page,
           title: "Create Page",
-          concreteRoot: root,
-          hosts: [bookId],
+          concreteRoot: type,
+          attachment: skir.CreationAttachment(
+            host: bookId,
+            relation: skir.RelationId(value: field.relation.id),
+            hostSide: skir.RelationEndpointSide.source,
+          ),
           partial: pageCreationPartial(
             bookId: bookId,
-            kind: kind,
             chapter: chapter,
           ),
           referenceOrigins: [bookId],

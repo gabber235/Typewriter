@@ -4,14 +4,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 RecordValue pageCreationPartial({
   required skir.ResourceId bookId,
-  required PageKindRef kind,
   String chapter = "",
 }) => RecordValue({
   "book": ReferenceValue(bookId),
-  "kind": RecordValue({
-    "id": kind.id.asValue,
-    "revision": kind.revision.asValue,
-  }),
   "chapter": chapter.asValue,
   "priority": 0.asValue,
 });

@@ -85,7 +85,7 @@ Widget _authoringSearchResultStory(
   };
   final fixtures = AuthoringSearchStoryFixtures(
     elementType: definition.typeId.uuid,
-    pageKind: pageDefinition.kind.toSkir(),
+    pageType: pageDefinition.type,
   );
   final state = _ResultStoryState(
     selected: context.knobs.boolean(label: "Selected"),
@@ -133,7 +133,7 @@ Widget authoringSearchResultGalleryStory() {
   };
   final fixtures = AuthoringSearchStoryFixtures(
     elementType: definition.typeId.uuid,
-    pageKind: pageDefinition.kind.toSkir(),
+    pageType: pageDefinition.type,
   );
 
   return FakeApp(

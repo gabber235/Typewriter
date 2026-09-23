@@ -39,8 +39,10 @@ internal class SurrealResourceGraphStore {
         }
         delta.relationUpserts
             .toSortedMap()
-            .values
-            .forEach(transaction::createRelation)
+            .forEach { (id, relation) ->
+                if (id in delta.relationUpdates) transaction.updateRelation(relation)
+                else transaction.createRelation(relation)
+            }
     }
 
     private fun createResource(
@@ -98,6 +100,8 @@ private fun Transaction.createRelation(relation: StoredResourceRelation) {
                 mapOf(
                     "kind" to "declared",
                     "relation_id" to value.relationId.value,
+                    "source_index" to value.sourceIndex,
+                    "target_index" to value.targetIndex,
                 )
             }
         }
@@ -125,6 +129,36 @@ private fun Transaction.createRelation(relation: StoredResourceRelation) {
             "edge" to RecordId("resource_relation", relation.id),
             "target" to relation.target.unifiedSurrealId(),
             "content" to mapOf("origin" to origin) + scalarOrigin,
+        ),
+    ).consumeAll()
+}
+
+private fun Transaction.updateRelation(relation: StoredResourceRelation) {
+    val content = when (val origin = relation.origin) {
+        is ResourceRelationOrigin.Declared -> mapOf(
+            "origin" to mapOf(
+                "kind" to "declared",
+                "relation_id" to origin.relationId.value,
+                "source_index" to origin.sourceIndex,
+                "target_index" to origin.targetIndex,
+            ),
+        )
+        is ResourceRelationOrigin.Reference -> mapOf(
+            "origin" to mapOf(
+                "kind" to "reference",
+                "reference_slot" to origin.slot.value,
+                "source_path" to StructuredDatabaseCodec.encode(DataPath.serializer(), origin.sourcePath),
+                "expected_target" to StructuredDatabaseCodec.encode(TypeExpression.serializer(), origin.expectedTarget),
+            ),
+            "source_path_key" to origin.sourcePath.toString(),
+            "expected_target_key" to origin.expectedTarget.toString(),
+        )
+    }
+    query(
+        "UPDATE ONLY \$edge MERGE \$content;",
+        mapOf(
+            "edge" to RecordId("resource_relation", relation.id),
+            "content" to content,
         ),
     ).consumeAll()
 }

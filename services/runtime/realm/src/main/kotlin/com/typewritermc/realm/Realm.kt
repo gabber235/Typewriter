@@ -123,7 +123,6 @@ internal class Realm(
                         requireNotNull(discoverySnapshots.current()).discovery.generation.value
                     },
                     resourceDefinitions = { requireNotNull(discoverySnapshots.current()).resourceDefinitions },
-                    creationSlots = { authoringPolicies.creationSlots },
                     relations = { requireNotNull(discoverySnapshots.current()).relations },
                     typeCatalog = { requireNotNull(discoverySnapshots.current()).discovery.types },
                     validationRules = { authoringPolicies.validations },

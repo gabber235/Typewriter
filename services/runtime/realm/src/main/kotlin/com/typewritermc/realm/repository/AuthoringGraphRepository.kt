@@ -121,7 +121,7 @@ internal interface AuthoringGraphRepository {
 internal data class AuthoringGraphLimits(
     val maxSelections: Int = 32,
     val maxRoots: Int = 10_000,
-    val maxDepth: Int = 16,
+    val maxDepth: Int = 256,
     val maxResources: Int = 100_000,
     val maxEdges: Int = 250_000,
 )

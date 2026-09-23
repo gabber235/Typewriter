@@ -20,24 +20,24 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface ElementTypeId_OrMutable {
+sealed interface ContentTypeId_OrMutable {
     val value: skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable;
 
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementTypeId;
+    fun toFrozen(): skirout.editor.v1.element_catalog.ContentTypeId;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ElementTypeId private constructor(
+class ContentTypeId private constructor(
     override val value: skirout.editor.v1.type_catalog.DeclaredTypeId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementTypeId>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentTypeId>? =
         null,
-): skirout.editor.v1.element_catalog.ElementTypeId_OrMutable {
+): skirout.editor.v1.element_catalog.ContentTypeId_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         value: skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementTypeId>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentTypeId>? =
             null,
     ): this(
         value.toFrozen(),
@@ -58,7 +58,7 @@ class ElementTypeId private constructor(
             _MustNameArguments,
         value: skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable =
             this.value,
-    ) = skirout.editor.v1.element_catalog.ElementTypeId(
+    ) = skirout.editor.v1.element_catalog.ContentTypeId(
         value.toFrozen(),
         this._unrecognizedFields,
     );
@@ -67,7 +67,7 @@ class ElementTypeId private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementTypeId && this.value == other.value);
+        return this === other || (other is skirout.editor.v1.element_catalog.ContentTypeId && this.value == other.value);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -77,21 +77,21 @@ class ElementTypeId private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementTypeId.serializerImpl,
+            skirout.editor.v1.element_catalog.ContentTypeId.serializerImpl,
         )
     }
 
-    /** Mutable version of [ElementTypeId]. */
+    /** Mutable version of [ContentTypeId]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var value: skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable =
             skirout.editor.v1.type_catalog.DeclaredTypeId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementTypeId>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentTypeId>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementTypeId_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentTypeId_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementTypeId(
+        override fun toFrozen() = skirout.editor.v1.element_catalog.ContentTypeId(
             value = this.value,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -115,7 +115,7 @@ class ElementTypeId private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.element_catalog.ElementTypeId(
+            skirout.editor.v1.element_catalog.ContentTypeId(
                 skirout.editor.v1.type_catalog.DeclaredTypeId.partial(),
             );
 
@@ -123,7 +123,7 @@ class ElementTypeId private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ElementTypeId].
+         * Creates a new instance of [ContentTypeId].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -132,13 +132,13 @@ class ElementTypeId private constructor(
                 _MustNameArguments,
             value: skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable =
                 skirout.editor.v1.type_catalog.DeclaredTypeId.partial(),
-        ) = skirout.editor.v1.element_catalog.ElementTypeId(
+        ) = skirout.editor.v1.element_catalog.ContentTypeId(
             value = value,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementTypeId",
+            recordId = "editor/v1/element_catalog.skir:ContentTypeId",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -147,10 +147,10 @@ class ElementTypeId private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [ElementTypeId] instances. */
+        /** Serializer for [ContentTypeId] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [ElementTypeId] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentTypeId] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
@@ -1090,8 +1090,8 @@ sealed class AvailabilityExpression private constructor() {
 }
 
 /** Deeply immutable. */
-sealed class ElementSearchMode private constructor() {
-    /** The kind of variant held by a `ElementSearchMode`. */
+sealed class ContentSearchMode private constructor() {
+    /** The kind of variant held by a `ContentSearchMode`. */
     enum class Kind {
         UNKNOWN,
         SUMMARY_WRAPPER,
@@ -1100,14 +1100,14 @@ sealed class ElementSearchMode private constructor() {
         NONE_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ElementSearchMode.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ContentSearchMode.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ElementSearchMode>?,
-    ) : skirout.editor.v1.element_catalog.ElementSearchMode() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentSearchMode>?,
+    ) : skirout.editor.v1.element_catalog.ContentSearchMode() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchMode && other.kind == kind;
+            return other is skirout.editor.v1.element_catalog.ContentSearchMode && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1116,16 +1116,16 @@ sealed class ElementSearchMode private constructor() {
     }
 
     class SummaryWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementSearchMode.Summary,
-    ) : skirout.editor.v1.element_catalog.ElementSearchMode() {
+        val value: skirout.editor.v1.element_catalog.ContentSearchMode.Summary,
+    ) : skirout.editor.v1.element_catalog.ContentSearchMode() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementSearchMode.Summary_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentSearchMode.Summary_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.SUMMARY_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchMode.SummaryWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentSearchMode.SummaryWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1134,16 +1134,16 @@ sealed class ElementSearchMode private constructor() {
     }
 
     class BodyWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementSearchMode.Body,
-    ) : skirout.editor.v1.element_catalog.ElementSearchMode() {
+        val value: skirout.editor.v1.element_catalog.ContentSearchMode.Body,
+    ) : skirout.editor.v1.element_catalog.ContentSearchMode() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementSearchMode.Body_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentSearchMode.Body_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.BODY_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchMode.BodyWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentSearchMode.BodyWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1152,16 +1152,16 @@ sealed class ElementSearchMode private constructor() {
     }
 
     class KeywordWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementSearchMode.Keyword,
-    ) : skirout.editor.v1.element_catalog.ElementSearchMode() {
+        val value: skirout.editor.v1.element_catalog.ContentSearchMode.Keyword,
+    ) : skirout.editor.v1.element_catalog.ContentSearchMode() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementSearchMode.Keyword_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentSearchMode.Keyword_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.KEYWORD_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchMode.KeywordWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentSearchMode.KeywordWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1170,16 +1170,16 @@ sealed class ElementSearchMode private constructor() {
     }
 
     class NoneWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementSearchMode.None,
-    ) : skirout.editor.v1.element_catalog.ElementSearchMode() {
+        val value: skirout.editor.v1.element_catalog.ContentSearchMode.None,
+    ) : skirout.editor.v1.element_catalog.ContentSearchMode() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementSearchMode.None_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentSearchMode.None_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.NONE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchMode.NoneWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentSearchMode.NoneWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1187,63 +1187,63 @@ sealed class ElementSearchMode private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ElementSearchMode>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentSearchMode>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementSearchMode._serializerImpl,
+            skirout.editor.v1.element_catalog.ContentSearchMode._serializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [ElementSearchMode].
-         * Default value for fields of type [ElementSearchMode].
+         * Constant indicating an unknown [ContentSearchMode].
+         * Default value for fields of type [ContentSearchMode].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `SummaryWrapper(skirout.editor.v1.element_catalog.ElementSearchMode.Summary(...))`. */
+        /** Shortcut for `SummaryWrapper(skirout.editor.v1.element_catalog.ContentSearchMode.Summary(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createSummary(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = SummaryWrapper(
-            skirout.editor.v1.element_catalog.ElementSearchMode.Summary()
+            skirout.editor.v1.element_catalog.ContentSearchMode.Summary()
         );
 
-        /** Shortcut for `BodyWrapper(skirout.editor.v1.element_catalog.ElementSearchMode.Body(...))`. */
+        /** Shortcut for `BodyWrapper(skirout.editor.v1.element_catalog.ContentSearchMode.Body(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createBody(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = BodyWrapper(
-            skirout.editor.v1.element_catalog.ElementSearchMode.Body()
+            skirout.editor.v1.element_catalog.ContentSearchMode.Body()
         );
 
-        /** Shortcut for `KeywordWrapper(skirout.editor.v1.element_catalog.ElementSearchMode.Keyword(...))`. */
+        /** Shortcut for `KeywordWrapper(skirout.editor.v1.element_catalog.ContentSearchMode.Keyword(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createKeyword(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = KeywordWrapper(
-            skirout.editor.v1.element_catalog.ElementSearchMode.Keyword()
+            skirout.editor.v1.element_catalog.ContentSearchMode.Keyword()
         );
 
-        /** Shortcut for `NoneWrapper(skirout.editor.v1.element_catalog.ElementSearchMode.None(...))`. */
+        /** Shortcut for `NoneWrapper(skirout.editor.v1.element_catalog.ContentSearchMode.None(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createNone(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = NoneWrapper(
-            skirout.editor.v1.element_catalog.ElementSearchMode.None()
+            skirout.editor.v1.element_catalog.ContentSearchMode.None()
         );
 
         private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ElementSearchMode, Unknown>(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchMode",
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ContentSearchMode, Unknown>(
+                recordId = "editor/v1/element_catalog.skir:ContentSearchMode",
                 doc = "",
                 getKindOrdinal = { it.kind.ordinal },
                 kindCount = Kind.values().size,
@@ -1252,10 +1252,10 @@ sealed class ElementSearchMode private constructor() {
                 getUnrecognized = { it._unrecognized },
             );
 
-        /** Serializer for [ElementSearchMode] instances. */
+        /** Serializer for [ContentSearchMode] instances. */
         val serializer = build.skir.internal.makeSerializer(_serializerImpl);
 
-        /** Describes the [ElementSearchMode] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentSearchMode] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _serializerImpl.typeDescriptor;
 
         init {
@@ -1271,7 +1271,7 @@ sealed class ElementSearchMode private constructor() {
                     1,
                     "summary",
                     Kind.SUMMARY_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementSearchMode.Summary.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchMode.Summary.serializer,
                     "",
                     { SummaryWrapper(it) },
                     { it.value },
@@ -1280,7 +1280,7 @@ sealed class ElementSearchMode private constructor() {
                     2,
                     "body",
                     Kind.BODY_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementSearchMode.Body.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchMode.Body.serializer,
                     "",
                     { BodyWrapper(it) },
                     { it.value },
@@ -1289,7 +1289,7 @@ sealed class ElementSearchMode private constructor() {
                     3,
                     "keyword",
                     Kind.KEYWORD_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementSearchMode.Keyword.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchMode.Keyword.serializer,
                     "",
                     { KeywordWrapper(it) },
                     { it.value },
@@ -1298,7 +1298,7 @@ sealed class ElementSearchMode private constructor() {
                     4,
                     "none",
                     Kind.NONE_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementSearchMode.None.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchMode.None.serializer,
                     "",
                     { NoneWrapper(it) },
                     { it.value },
@@ -1309,19 +1309,19 @@ sealed class ElementSearchMode private constructor() {
     }
 
     sealed interface Summary_OrMutable {
-        fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchMode.Summary;
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchMode.Summary;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Summary private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Summary>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Summary>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchMode.Summary_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchMode.Summary_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Summary>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Summary>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -1334,7 +1334,7 @@ sealed class ElementSearchMode private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchMode.Summary);
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchMode.Summary);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1344,7 +1344,7 @@ sealed class ElementSearchMode private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.element_catalog.ElementSearchMode.Summary.serializerImpl,
+                skirout.editor.v1.element_catalog.ContentSearchMode.Summary.serializerImpl,
             )
         }
 
@@ -1352,18 +1352,18 @@ sealed class ElementSearchMode private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Summary>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Summary>? =
                 null,
-        ): skirout.editor.v1.element_catalog.ElementSearchMode.Summary_OrMutable {
+        ): skirout.editor.v1.element_catalog.ContentSearchMode.Summary_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchMode.Summary(
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchMode.Summary(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.editor.v1.element_catalog.ElementSearchMode.Summary();
+                skirout.editor.v1.element_catalog.ContentSearchMode.Summary();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -1376,12 +1376,12 @@ sealed class ElementSearchMode private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.editor.v1.element_catalog.ElementSearchMode.Summary(
+            ) = skirout.editor.v1.element_catalog.ContentSearchMode.Summary(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchMode.Summary",
+                recordId = "editor/v1/element_catalog.skir:ContentSearchMode.Summary",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1403,19 +1403,19 @@ sealed class ElementSearchMode private constructor() {
     }
 
     sealed interface Body_OrMutable {
-        fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchMode.Body;
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchMode.Body;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Body private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Body>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Body>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchMode.Body_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchMode.Body_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Body>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Body>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -1428,7 +1428,7 @@ sealed class ElementSearchMode private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchMode.Body);
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchMode.Body);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1438,7 +1438,7 @@ sealed class ElementSearchMode private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.element_catalog.ElementSearchMode.Body.serializerImpl,
+                skirout.editor.v1.element_catalog.ContentSearchMode.Body.serializerImpl,
             )
         }
 
@@ -1446,18 +1446,18 @@ sealed class ElementSearchMode private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Body>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Body>? =
                 null,
-        ): skirout.editor.v1.element_catalog.ElementSearchMode.Body_OrMutable {
+        ): skirout.editor.v1.element_catalog.ContentSearchMode.Body_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchMode.Body(
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchMode.Body(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.editor.v1.element_catalog.ElementSearchMode.Body();
+                skirout.editor.v1.element_catalog.ContentSearchMode.Body();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -1470,12 +1470,12 @@ sealed class ElementSearchMode private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.editor.v1.element_catalog.ElementSearchMode.Body(
+            ) = skirout.editor.v1.element_catalog.ContentSearchMode.Body(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchMode.Body",
+                recordId = "editor/v1/element_catalog.skir:ContentSearchMode.Body",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1497,19 +1497,19 @@ sealed class ElementSearchMode private constructor() {
     }
 
     sealed interface Keyword_OrMutable {
-        fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchMode.Keyword;
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchMode.Keyword;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Keyword private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Keyword>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Keyword>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchMode.Keyword_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchMode.Keyword_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Keyword>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Keyword>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -1522,7 +1522,7 @@ sealed class ElementSearchMode private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchMode.Keyword);
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchMode.Keyword);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1532,7 +1532,7 @@ sealed class ElementSearchMode private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.element_catalog.ElementSearchMode.Keyword.serializerImpl,
+                skirout.editor.v1.element_catalog.ContentSearchMode.Keyword.serializerImpl,
             )
         }
 
@@ -1540,18 +1540,18 @@ sealed class ElementSearchMode private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.Keyword>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.Keyword>? =
                 null,
-        ): skirout.editor.v1.element_catalog.ElementSearchMode.Keyword_OrMutable {
+        ): skirout.editor.v1.element_catalog.ContentSearchMode.Keyword_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchMode.Keyword(
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchMode.Keyword(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.editor.v1.element_catalog.ElementSearchMode.Keyword();
+                skirout.editor.v1.element_catalog.ContentSearchMode.Keyword();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -1564,12 +1564,12 @@ sealed class ElementSearchMode private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.editor.v1.element_catalog.ElementSearchMode.Keyword(
+            ) = skirout.editor.v1.element_catalog.ContentSearchMode.Keyword(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchMode.Keyword",
+                recordId = "editor/v1/element_catalog.skir:ContentSearchMode.Keyword",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1591,19 +1591,19 @@ sealed class ElementSearchMode private constructor() {
     }
 
     sealed interface None_OrMutable {
-        fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchMode.None;
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchMode.None;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class None private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.None>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.None>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchMode.None_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchMode.None_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.None>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.None>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -1616,7 +1616,7 @@ sealed class ElementSearchMode private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchMode.None);
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchMode.None);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1626,7 +1626,7 @@ sealed class ElementSearchMode private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.element_catalog.ElementSearchMode.None.serializerImpl,
+                skirout.editor.v1.element_catalog.ContentSearchMode.None.serializerImpl,
             )
         }
 
@@ -1634,18 +1634,18 @@ sealed class ElementSearchMode private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchMode.None>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchMode.None>? =
                 null,
-        ): skirout.editor.v1.element_catalog.ElementSearchMode.None_OrMutable {
+        ): skirout.editor.v1.element_catalog.ContentSearchMode.None_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchMode.None(
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchMode.None(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.editor.v1.element_catalog.ElementSearchMode.None();
+                skirout.editor.v1.element_catalog.ContentSearchMode.None();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -1658,12 +1658,12 @@ sealed class ElementSearchMode private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.editor.v1.element_catalog.ElementSearchMode.None(
+            ) = skirout.editor.v1.element_catalog.ContentSearchMode.None(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchMode.None",
+                recordId = "editor/v1/element_catalog.skir:ContentSearchMode.None",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1686,21 +1686,21 @@ sealed class ElementSearchMode private constructor() {
 }
 
 /** Deeply immutable. */
-sealed class ElementSearchPolicy private constructor() {
-    /** The kind of variant held by a `ElementSearchPolicy`. */
+sealed class ContentSearchPolicy private constructor() {
+    /** The kind of variant held by a `ContentSearchPolicy`. */
     enum class Kind {
         UNKNOWN,
         ORDINARY_TEXT_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ElementSearchPolicy.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ContentSearchPolicy.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ElementSearchPolicy>?,
-    ) : skirout.editor.v1.element_catalog.ElementSearchPolicy() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentSearchPolicy>?,
+    ) : skirout.editor.v1.element_catalog.ContentSearchPolicy() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchPolicy && other.kind == kind;
+            return other is skirout.editor.v1.element_catalog.ContentSearchPolicy && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1709,16 +1709,16 @@ sealed class ElementSearchPolicy private constructor() {
     }
 
     class OrdinaryTextWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText,
-    ) : skirout.editor.v1.element_catalog.ElementSearchPolicy() {
+        val value: skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText,
+    ) : skirout.editor.v1.element_catalog.ContentSearchPolicy() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.ORDINARY_TEXT_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryTextWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryTextWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1726,36 +1726,36 @@ sealed class ElementSearchPolicy private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ElementSearchPolicy>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentSearchPolicy>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementSearchPolicy._serializerImpl,
+            skirout.editor.v1.element_catalog.ContentSearchPolicy._serializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [ElementSearchPolicy].
-         * Default value for fields of type [ElementSearchPolicy].
+         * Constant indicating an unknown [ContentSearchPolicy].
+         * Default value for fields of type [ContentSearchPolicy].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `OrdinaryTextWrapper(skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText(...))`. */
+        /** Shortcut for `OrdinaryTextWrapper(skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createOrdinaryText(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = OrdinaryTextWrapper(
-            skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText()
+            skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText()
         );
 
         private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ElementSearchPolicy, Unknown>(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchPolicy",
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ContentSearchPolicy, Unknown>(
+                recordId = "editor/v1/element_catalog.skir:ContentSearchPolicy",
                 doc = "",
                 getKindOrdinal = { it.kind.ordinal },
                 kindCount = Kind.values().size,
@@ -1764,10 +1764,10 @@ sealed class ElementSearchPolicy private constructor() {
                 getUnrecognized = { it._unrecognized },
             );
 
-        /** Serializer for [ElementSearchPolicy] instances. */
+        /** Serializer for [ContentSearchPolicy] instances. */
         val serializer = build.skir.internal.makeSerializer(_serializerImpl);
 
-        /** Describes the [ElementSearchPolicy] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentSearchPolicy] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _serializerImpl.typeDescriptor;
 
         init {
@@ -1783,7 +1783,7 @@ sealed class ElementSearchPolicy private constructor() {
                     1,
                     "ordinary_text",
                     Kind.ORDINARY_TEXT_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText.serializer,
                     "",
                     { OrdinaryTextWrapper(it) },
                     { it.value },
@@ -1794,19 +1794,19 @@ sealed class ElementSearchPolicy private constructor() {
     }
 
     sealed interface OrdinaryText_OrMutable {
-        fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText;
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class OrdinaryText private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -1819,7 +1819,7 @@ sealed class ElementSearchPolicy private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText);
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1829,7 +1829,7 @@ sealed class ElementSearchPolicy private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText.serializerImpl,
+                skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText.serializerImpl,
             )
         }
 
@@ -1837,18 +1837,18 @@ sealed class ElementSearchPolicy private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText>? =
                 null,
-        ): skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText_OrMutable {
+        ): skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText(
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText();
+                skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -1861,12 +1861,12 @@ sealed class ElementSearchPolicy private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.editor.v1.element_catalog.ElementSearchPolicy.OrdinaryText(
+            ) = skirout.editor.v1.element_catalog.ContentSearchPolicy.OrdinaryText(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/element_catalog.skir:ElementSearchPolicy.OrdinaryText",
+                recordId = "editor/v1/element_catalog.skir:ContentSearchPolicy.OrdinaryText",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1888,30 +1888,30 @@ sealed class ElementSearchPolicy private constructor() {
     }
 }
 
-sealed interface ElementSearchPropertyOverride_OrMutable {
+sealed interface ContentSearchPropertyOverride_OrMutable {
     val ownerType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
     val field: kotlin.String;
-    val mode: skirout.editor.v1.element_catalog.ElementSearchMode;
+    val mode: skirout.editor.v1.element_catalog.ContentSearchMode;
 
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchPropertyOverride;
+    fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchPropertyOverride;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ElementSearchPropertyOverride private constructor(
+class ContentSearchPropertyOverride private constructor(
     override val ownerType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
     override val field: kotlin.String,
-    override val mode: skirout.editor.v1.element_catalog.ElementSearchMode,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>? =
+    override val mode: skirout.editor.v1.element_catalog.ContentSearchMode,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>? =
         null,
-): skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable {
+): skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         ownerType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
         field: kotlin.String,
-        mode: skirout.editor.v1.element_catalog.ElementSearchMode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>? =
+        mode: skirout.editor.v1.element_catalog.ContentSearchMode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>? =
             null,
     ): this(
         ownerType.toFrozen(),
@@ -1938,9 +1938,9 @@ class ElementSearchPropertyOverride private constructor(
             this.ownerType,
         field: kotlin.String =
             this.field,
-        mode: skirout.editor.v1.element_catalog.ElementSearchMode =
+        mode: skirout.editor.v1.element_catalog.ContentSearchMode =
             this.mode,
-    ) = skirout.editor.v1.element_catalog.ElementSearchPropertyOverride(
+    ) = skirout.editor.v1.element_catalog.ContentSearchPropertyOverride(
         ownerType.toFrozen(),
         field,
         mode,
@@ -1951,7 +1951,7 @@ class ElementSearchPropertyOverride private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchPropertyOverride && this.ownerType == other.ownerType && this.field == other.field && this.mode == other.mode);
+        return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchPropertyOverride && this.ownerType == other.ownerType && this.field == other.field && this.mode == other.mode);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -1961,11 +1961,11 @@ class ElementSearchPropertyOverride private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementSearchPropertyOverride.serializerImpl,
+            skirout.editor.v1.element_catalog.ContentSearchPropertyOverride.serializerImpl,
         )
     }
 
-    /** Mutable version of [ElementSearchPropertyOverride]. */
+    /** Mutable version of [ContentSearchPropertyOverride]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -1973,13 +1973,13 @@ class ElementSearchPropertyOverride private constructor(
             skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
         override var field: kotlin.String =
             "",
-        override var mode: skirout.editor.v1.element_catalog.ElementSearchMode =
-            skirout.editor.v1.element_catalog.ElementSearchMode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>? =
+        override var mode: skirout.editor.v1.element_catalog.ContentSearchMode =
+            skirout.editor.v1.element_catalog.ContentSearchMode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchPropertyOverride(
+        override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchPropertyOverride(
             ownerType = this.ownerType,
             field = this.field,
             mode = this.mode,
@@ -2005,17 +2005,17 @@ class ElementSearchPropertyOverride private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.element_catalog.ElementSearchPropertyOverride(
+            skirout.editor.v1.element_catalog.ContentSearchPropertyOverride(
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
                 "",
-                skirout.editor.v1.element_catalog.ElementSearchMode.UNKNOWN,
+                skirout.editor.v1.element_catalog.ContentSearchMode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ElementSearchPropertyOverride].
+         * Creates a new instance of [ContentSearchPropertyOverride].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -2026,9 +2026,9 @@ class ElementSearchPropertyOverride private constructor(
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
             field: kotlin.String =
                 "",
-            mode: skirout.editor.v1.element_catalog.ElementSearchMode =
-                skirout.editor.v1.element_catalog.ElementSearchMode.UNKNOWN,
-        ) = skirout.editor.v1.element_catalog.ElementSearchPropertyOverride(
+            mode: skirout.editor.v1.element_catalog.ContentSearchMode =
+                skirout.editor.v1.element_catalog.ContentSearchMode.UNKNOWN,
+        ) = skirout.editor.v1.element_catalog.ContentSearchPropertyOverride(
             ownerType = ownerType,
             field = field,
             mode = mode,
@@ -2036,7 +2036,7 @@ class ElementSearchPropertyOverride private constructor(
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementSearchPropertyOverride",
+            recordId = "editor/v1/element_catalog.skir:ContentSearchPropertyOverride",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -2045,10 +2045,10 @@ class ElementSearchPropertyOverride private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [ElementSearchPropertyOverride] instances. */
+        /** Serializer for [ContentSearchPropertyOverride] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [ElementSearchPropertyOverride] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentSearchPropertyOverride] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
@@ -2074,7 +2074,7 @@ class ElementSearchPropertyOverride private constructor(
                 "mode",
                 "mode",
                 2,
-                skirout.editor.v1.element_catalog.ElementSearchMode.serializer,
+                skirout.editor.v1.element_catalog.ContentSearchMode.serializer,
                 "",
                 { it.mode },
                 { mut, v -> mut.mode = v },
@@ -2084,30 +2084,30 @@ class ElementSearchPropertyOverride private constructor(
     }
 }
 
-sealed interface ElementSearchDefinition_OrMutable {
-    val policy: skirout.editor.v1.element_catalog.ElementSearchPolicy;
-    val propertyOverrides: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable>;
+sealed interface ContentSearchDefinition_OrMutable {
+    val policy: skirout.editor.v1.element_catalog.ContentSearchPolicy;
+    val propertyOverrides: kotlin.collections.List<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable>;
     val revisionFingerprintInputs: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
 
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementSearchDefinition;
+    fun toFrozen(): skirout.editor.v1.element_catalog.ContentSearchDefinition;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ElementSearchDefinition private constructor(
-    override val policy: skirout.editor.v1.element_catalog.ElementSearchPolicy,
-    override val propertyOverrides: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>,
+class ContentSearchDefinition private constructor(
+    override val policy: skirout.editor.v1.element_catalog.ContentSearchPolicy,
+    override val propertyOverrides: kotlin.collections.List<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>,
     override val revisionFingerprintInputs: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchDefinition>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchDefinition>? =
         null,
-): skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable {
+): skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        policy: skirout.editor.v1.element_catalog.ElementSearchPolicy,
-        propertyOverrides: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable>,
+        policy: skirout.editor.v1.element_catalog.ContentSearchPolicy,
+        propertyOverrides: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable>,
         revisionFingerprintInputs: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchDefinition>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchDefinition>? =
             null,
     ): this(
         policy,
@@ -2130,13 +2130,13 @@ class ElementSearchDefinition private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        policy: skirout.editor.v1.element_catalog.ElementSearchPolicy =
+        policy: skirout.editor.v1.element_catalog.ContentSearchPolicy =
             this.policy,
-        propertyOverrides: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable> =
+        propertyOverrides: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable> =
             this.propertyOverrides,
         revisionFingerprintInputs: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
             this.revisionFingerprintInputs,
-    ) = skirout.editor.v1.element_catalog.ElementSearchDefinition(
+    ) = skirout.editor.v1.element_catalog.ContentSearchDefinition(
         policy,
         build.skir.internal.toFrozenList(propertyOverrides, { it.toFrozen() }),
         build.skir.internal.toFrozenList(revisionFingerprintInputs, { it.toFrozen() }),
@@ -2147,7 +2147,7 @@ class ElementSearchDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementSearchDefinition && this.policy == other.policy && this.propertyOverrides == other.propertyOverrides && this.revisionFingerprintInputs == other.revisionFingerprintInputs);
+        return this === other || (other is skirout.editor.v1.element_catalog.ContentSearchDefinition && this.policy == other.policy && this.propertyOverrides == other.propertyOverrides && this.revisionFingerprintInputs == other.revisionFingerprintInputs);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -2157,25 +2157,25 @@ class ElementSearchDefinition private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementSearchDefinition.serializerImpl,
+            skirout.editor.v1.element_catalog.ContentSearchDefinition.serializerImpl,
         )
     }
 
-    /** Mutable version of [ElementSearchDefinition]. */
+    /** Mutable version of [ContentSearchDefinition]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var policy: skirout.editor.v1.element_catalog.ElementSearchPolicy =
-            skirout.editor.v1.element_catalog.ElementSearchPolicy.UNKNOWN,
-        override var propertyOverrides: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>(),
+        override var policy: skirout.editor.v1.element_catalog.ContentSearchPolicy =
+            skirout.editor.v1.element_catalog.ContentSearchPolicy.UNKNOWN,
+        override var propertyOverrides: kotlin.collections.List<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>(),
         override var revisionFingerprintInputs: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementSearchDefinition>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentSearchDefinition>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementSearchDefinition(
+        override fun toFrozen() = skirout.editor.v1.element_catalog.ContentSearchDefinition(
             policy = this.policy,
             propertyOverrides = this.propertyOverrides,
             revisionFingerprintInputs = this.revisionFingerprintInputs,
@@ -2186,7 +2186,7 @@ class ElementSearchDefinition private constructor(
          * If the value of [propertyOverrides] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [propertyOverrides] and returns it.
          */
-        val mutablePropertyOverrides: kotlin.collections.MutableList<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable> get() {
+        val mutablePropertyOverrides: kotlin.collections.MutableList<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable> get() {
             var value = this.propertyOverrides;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
@@ -2217,9 +2217,9 @@ class ElementSearchDefinition private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.element_catalog.ElementSearchDefinition(
-                skirout.editor.v1.element_catalog.ElementSearchPolicy.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>(),
+            skirout.editor.v1.element_catalog.ContentSearchDefinition(
+                skirout.editor.v1.element_catalog.ContentSearchPolicy.UNKNOWN,
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
             );
 
@@ -2227,20 +2227,20 @@ class ElementSearchDefinition private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ElementSearchDefinition].
+         * Creates a new instance of [ContentSearchDefinition].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            policy: skirout.editor.v1.element_catalog.ElementSearchPolicy =
-                skirout.editor.v1.element_catalog.ElementSearchPolicy.UNKNOWN,
-            propertyOverrides: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementSearchPropertyOverride>(),
+            policy: skirout.editor.v1.element_catalog.ContentSearchPolicy =
+                skirout.editor.v1.element_catalog.ContentSearchPolicy.UNKNOWN,
+            propertyOverrides: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ContentSearchPropertyOverride>(),
             revisionFingerprintInputs: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-        ) = skirout.editor.v1.element_catalog.ElementSearchDefinition(
+        ) = skirout.editor.v1.element_catalog.ContentSearchDefinition(
             policy = policy,
             propertyOverrides = propertyOverrides,
             revisionFingerprintInputs = revisionFingerprintInputs,
@@ -2248,7 +2248,7 @@ class ElementSearchDefinition private constructor(
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementSearchDefinition",
+            recordId = "editor/v1/element_catalog.skir:ContentSearchDefinition",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -2257,10 +2257,10 @@ class ElementSearchDefinition private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [ElementSearchDefinition] instances. */
+        /** Serializer for [ContentSearchDefinition] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [ElementSearchDefinition] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentSearchDefinition] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
@@ -2268,7 +2268,7 @@ class ElementSearchDefinition private constructor(
                 "policy",
                 "policy",
                 0,
-                skirout.editor.v1.element_catalog.ElementSearchPolicy.serializer,
+                skirout.editor.v1.element_catalog.ContentSearchPolicy.serializer,
                 "",
                 { it.policy },
                 { mut, v -> mut.policy = v },
@@ -2278,7 +2278,7 @@ class ElementSearchDefinition private constructor(
                 "propertyOverrides",
                 1,
                 build.skir.Serializers.list(
-                    skirout.editor.v1.element_catalog.ElementSearchPropertyOverride.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchPropertyOverride.serializer,
                 ),
                 "",
                 { it.propertyOverrides },
@@ -2300,48 +2300,385 @@ class ElementSearchDefinition private constructor(
     }
 }
 
-sealed interface ElementDescriptor_OrMutable {
-    val elementTypeId: skirout.editor.v1.element_catalog.ElementTypeId_OrMutable;
+/** Deeply immutable. */
+sealed class ContentRole private constructor() {
+    /** The kind of variant held by a `ContentRole`. */
+    enum class Kind {
+        UNKNOWN,
+        ELEMENT_WRAPPER,
+        CUE_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ContentRole.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentRole>?,
+    ) : skirout.editor.v1.element_catalog.ContentRole() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.element_catalog.ContentRole && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ElementWrapper private constructor (
+        val value: skirout.editor.v1.element_catalog.ContentRole.Element,
+    ) : skirout.editor.v1.element_catalog.ContentRole() {
+        constructor(
+            value: skirout.editor.v1.element_catalog.ContentRole.Element_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ELEMENT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.element_catalog.ContentRole.ElementWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1662836996;
+        }
+    }
+
+    class CueWrapper private constructor (
+        val value: skirout.editor.v1.element_catalog.ContentRole.Cue,
+    ) : skirout.editor.v1.element_catalog.ContentRole() {
+        constructor(
+            value: skirout.editor.v1.element_catalog.ContentRole.Cue_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CUE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.element_catalog.ContentRole.CueWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 98867;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentRole>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.element_catalog.ContentRole._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ContentRole].
+         * Default value for fields of type [ContentRole].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ElementWrapper(skirout.editor.v1.element_catalog.ContentRole.Element(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createElement(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = ElementWrapper(
+            skirout.editor.v1.element_catalog.ContentRole.Element()
+        );
+
+        /** Shortcut for `CueWrapper(skirout.editor.v1.element_catalog.ContentRole.Cue(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCue(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = CueWrapper(
+            skirout.editor.v1.element_catalog.ContentRole.Cue()
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ContentRole, Unknown>(
+                recordId = "editor/v1/element_catalog.skir:ContentRole",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [ContentRole] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [ContentRole] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "element",
+                    Kind.ELEMENT_WRAPPER.ordinal,
+                    skirout.editor.v1.element_catalog.ContentRole.Element.serializer,
+                    "",
+                    { ElementWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "cue",
+                    Kind.CUE_WRAPPER.ordinal,
+                    skirout.editor.v1.element_catalog.ContentRole.Cue.serializer,
+                    "",
+                    { CueWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface Element_OrMutable {
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentRole.Element;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class Element private constructor(
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentRole.Element>? =
+            null,
+    ): skirout.editor.v1.element_catalog.ContentRole.Element_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentRole.Element>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentRole.Element);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.editor.v1.element_catalog.ContentRole.Element.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [Element]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentRole.Element>? =
+                null,
+        ): skirout.editor.v1.element_catalog.ContentRole.Element_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentRole.Element(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.editor.v1.element_catalog.ContentRole.Element();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [Element].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.editor.v1.element_catalog.ContentRole.Element(
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "editor/v1/element_catalog.skir:ContentRole.Element",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [Element] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [Element] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.finalizeStruct();
+            }
+        }
+    }
+
+    sealed interface Cue_OrMutable {
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentRole.Cue;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class Cue private constructor(
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentRole.Cue>? =
+            null,
+    ): skirout.editor.v1.element_catalog.ContentRole.Cue_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentRole.Cue>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentRole.Cue);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.editor.v1.element_catalog.ContentRole.Cue.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [Cue]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentRole.Cue>? =
+                null,
+        ): skirout.editor.v1.element_catalog.ContentRole.Cue_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentRole.Cue(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.editor.v1.element_catalog.ContentRole.Cue();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [Cue].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.editor.v1.element_catalog.ContentRole.Cue(
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "editor/v1/element_catalog.skir:ContentRole.Cue",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [Cue] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [Cue] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.finalizeStruct();
+            }
+        }
+    }
+}
+
+sealed interface ContentDescriptor_OrMutable {
+    val contentTypeId: skirout.editor.v1.element_catalog.ContentTypeId_OrMutable;
     val type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
     val name: kotlin.String;
     val description: kotlin.String;
     val icon: skirout.kernel.v1.icon.Icon;
     val color: skirout.kernel.v1.color.Color_OrMutable;
     val availability: skirout.editor.v1.element_catalog.AvailabilityExpression;
-    val searchDefinition: skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable?;
+    val searchDefinition: skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable?;
+    val role: skirout.editor.v1.element_catalog.ContentRole;
 
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementDescriptor;
+    fun toFrozen(): skirout.editor.v1.element_catalog.ContentDescriptor;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ElementDescriptor private constructor(
-    override val elementTypeId: skirout.editor.v1.element_catalog.ElementTypeId,
+class ContentDescriptor private constructor(
+    override val contentTypeId: skirout.editor.v1.element_catalog.ContentTypeId,
     override val type: skirout.editor.v1.type_catalog.ResolvedTypeRef,
     override val name: kotlin.String,
     override val description: kotlin.String,
     override val icon: skirout.kernel.v1.icon.Icon,
     override val color: skirout.kernel.v1.color.Color,
     override val availability: skirout.editor.v1.element_catalog.AvailabilityExpression,
-    override val searchDefinition: skirout.editor.v1.element_catalog.ElementSearchDefinition?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementDescriptor>? =
+    override val searchDefinition: skirout.editor.v1.element_catalog.ContentSearchDefinition?,
+    override val role: skirout.editor.v1.element_catalog.ContentRole,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentDescriptor>? =
         null,
-): skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable {
+): skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        elementTypeId: skirout.editor.v1.element_catalog.ElementTypeId_OrMutable,
+        contentTypeId: skirout.editor.v1.element_catalog.ContentTypeId_OrMutable,
         type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
         name: kotlin.String,
         description: kotlin.String,
         icon: skirout.kernel.v1.icon.Icon,
         color: skirout.kernel.v1.color.Color_OrMutable,
         availability: skirout.editor.v1.element_catalog.AvailabilityExpression,
-        searchDefinition: skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementDescriptor>? =
+        searchDefinition: skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable?,
+        role: skirout.editor.v1.element_catalog.ContentRole,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentDescriptor>? =
             null,
     ): this(
-        elementTypeId.toFrozen(),
+        contentTypeId.toFrozen(),
         type.toFrozen(),
         name,
         description,
@@ -2349,6 +2686,7 @@ class ElementDescriptor private constructor(
         color.toFrozen(),
         availability,
         if (searchDefinition != null) searchDefinition.toFrozen() else null,
+        role,
         _unrecognizedFields,
     ) {}
 
@@ -2357,7 +2695,7 @@ class ElementDescriptor private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        elementTypeId = this.elementTypeId,
+        contentTypeId = this.contentTypeId,
         type = this.type,
         name = this.name,
         description = this.description,
@@ -2365,14 +2703,15 @@ class ElementDescriptor private constructor(
         color = this.color,
         availability = this.availability,
         searchDefinition = this.searchDefinition,
+        role = this.role,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        elementTypeId: skirout.editor.v1.element_catalog.ElementTypeId_OrMutable =
-            this.elementTypeId,
+        contentTypeId: skirout.editor.v1.element_catalog.ContentTypeId_OrMutable =
+            this.contentTypeId,
         type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
             this.type,
         name: kotlin.String =
@@ -2385,10 +2724,12 @@ class ElementDescriptor private constructor(
             this.color,
         availability: skirout.editor.v1.element_catalog.AvailabilityExpression =
             this.availability,
-        searchDefinition: skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable? =
+        searchDefinition: skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable? =
             this.searchDefinition,
-    ) = skirout.editor.v1.element_catalog.ElementDescriptor(
-        elementTypeId.toFrozen(),
+        role: skirout.editor.v1.element_catalog.ContentRole =
+            this.role,
+    ) = skirout.editor.v1.element_catalog.ContentDescriptor(
+        contentTypeId.toFrozen(),
         type.toFrozen(),
         name,
         description,
@@ -2396,6 +2737,7 @@ class ElementDescriptor private constructor(
         color.toFrozen(),
         availability,
         if (searchDefinition != null) searchDefinition.toFrozen() else null,
+        role,
         this._unrecognizedFields,
     );
 
@@ -2403,26 +2745,26 @@ class ElementDescriptor private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementDescriptor && this.elementTypeId == other.elementTypeId && this.type == other.type && this.name == other.name && this.description == other.description && this.icon == other.icon && this.color == other.color && this.availability == other.availability && this.searchDefinition == other.searchDefinition);
+        return this === other || (other is skirout.editor.v1.element_catalog.ContentDescriptor && this.contentTypeId == other.contentTypeId && this.type == other.type && this.name == other.name && this.description == other.description && this.icon == other.icon && this.color == other.color && this.availability == other.availability && this.searchDefinition == other.searchDefinition && this.role == other.role);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.elementTypeId, this.type, this.name, this.description, this.icon, this.color, this.availability, this.searchDefinition).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.contentTypeId, this.type, this.name, this.description, this.icon, this.color, this.availability, this.searchDefinition, this.role).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementDescriptor.serializerImpl,
+            skirout.editor.v1.element_catalog.ContentDescriptor.serializerImpl,
         )
     }
 
-    /** Mutable version of [ElementDescriptor]. */
+    /** Mutable version of [ContentDescriptor]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var elementTypeId: skirout.editor.v1.element_catalog.ElementTypeId_OrMutable =
-            skirout.editor.v1.element_catalog.ElementTypeId.partial(),
+        override var contentTypeId: skirout.editor.v1.element_catalog.ContentTypeId_OrMutable =
+            skirout.editor.v1.element_catalog.ContentTypeId.partial(),
         override var type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
             skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
         override var name: kotlin.String =
@@ -2435,14 +2777,16 @@ class ElementDescriptor private constructor(
             skirout.kernel.v1.color.Color.partial(),
         override var availability: skirout.editor.v1.element_catalog.AvailabilityExpression =
             skirout.editor.v1.element_catalog.AvailabilityExpression.UNKNOWN,
-        override var searchDefinition: skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable? =
+        override var searchDefinition: skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable? =
             null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementDescriptor>? =
+        override var role: skirout.editor.v1.element_catalog.ContentRole =
+            skirout.editor.v1.element_catalog.ContentRole.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentDescriptor>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementDescriptor(
-            elementTypeId = this.elementTypeId,
+        override fun toFrozen() = skirout.editor.v1.element_catalog.ContentDescriptor(
+            contentTypeId = this.contentTypeId,
             type = this.type,
             name = this.name,
             description = this.description,
@@ -2450,22 +2794,23 @@ class ElementDescriptor private constructor(
             color = this.color,
             availability = this.availability,
             searchDefinition = this.searchDefinition,
+            role = this.role,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [elementTypeId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [elementTypeId] and returns it.
+         * If the value of [contentTypeId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [contentTypeId] and returns it.
          */
-        val mutableElementTypeId: skirout.editor.v1.element_catalog.ElementTypeId.Mutable get() {
-            var value = this.elementTypeId;
+        val mutableContentTypeId: skirout.editor.v1.element_catalog.ContentTypeId.Mutable get() {
+            var value = this.contentTypeId;
             return when (value) {
-                is skirout.editor.v1.element_catalog.ElementTypeId -> {
+                is skirout.editor.v1.element_catalog.ContentTypeId -> {
                     value = value.toMutable();
-                    this.elementTypeId = value;
+                    this.contentTypeId = value;
                     return value;
                 }
-                is skirout.editor.v1.element_catalog.ElementTypeId.Mutable -> value;
+                is skirout.editor.v1.element_catalog.ContentTypeId.Mutable -> value;
             }
         }
 
@@ -2504,8 +2849,8 @@ class ElementDescriptor private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.element_catalog.ElementDescriptor(
-                skirout.editor.v1.element_catalog.ElementTypeId.partial(),
+            skirout.editor.v1.element_catalog.ContentDescriptor(
+                skirout.editor.v1.element_catalog.ContentTypeId.partial(),
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
                 "",
                 "",
@@ -2513,21 +2858,22 @@ class ElementDescriptor private constructor(
                 skirout.kernel.v1.color.Color.partial(),
                 skirout.editor.v1.element_catalog.AvailabilityExpression.UNKNOWN,
                 null,
+                skirout.editor.v1.element_catalog.ContentRole.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ElementDescriptor].
+         * Creates a new instance of [ContentDescriptor].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            elementTypeId: skirout.editor.v1.element_catalog.ElementTypeId_OrMutable =
-                skirout.editor.v1.element_catalog.ElementTypeId.partial(),
+            contentTypeId: skirout.editor.v1.element_catalog.ContentTypeId_OrMutable =
+                skirout.editor.v1.element_catalog.ContentTypeId.partial(),
             type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
             name: kotlin.String =
@@ -2540,10 +2886,12 @@ class ElementDescriptor private constructor(
                 skirout.kernel.v1.color.Color.partial(),
             availability: skirout.editor.v1.element_catalog.AvailabilityExpression =
                 skirout.editor.v1.element_catalog.AvailabilityExpression.UNKNOWN,
-            searchDefinition: skirout.editor.v1.element_catalog.ElementSearchDefinition_OrMutable? =
+            searchDefinition: skirout.editor.v1.element_catalog.ContentSearchDefinition_OrMutable? =
                 null,
-        ) = skirout.editor.v1.element_catalog.ElementDescriptor(
-            elementTypeId = elementTypeId,
+            role: skirout.editor.v1.element_catalog.ContentRole =
+                skirout.editor.v1.element_catalog.ContentRole.UNKNOWN,
+        ) = skirout.editor.v1.element_catalog.ContentDescriptor(
+            contentTypeId = contentTypeId,
             type = type,
             name = name,
             description = description,
@@ -2551,11 +2899,12 @@ class ElementDescriptor private constructor(
             color = color,
             availability = availability,
             searchDefinition = searchDefinition,
+            role = role,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementDescriptor",
+            recordId = "editor/v1/element_catalog.skir:ContentDescriptor",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -2564,21 +2913,21 @@ class ElementDescriptor private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [ElementDescriptor] instances. */
+        /** Serializer for [ContentDescriptor] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [ElementDescriptor] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentDescriptor] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
             serializerImpl.addField(
-                "element_type_id",
-                "elementTypeId",
+                "content_type_id",
+                "contentTypeId",
                 0,
-                skirout.editor.v1.element_catalog.ElementTypeId.serializer,
+                skirout.editor.v1.element_catalog.ContentTypeId.serializer,
                 "",
-                { it.elementTypeId },
-                { mut, v -> mut.elementTypeId = v },
+                { it.contentTypeId },
+                { mut, v -> mut.contentTypeId = v },
             );
             serializerImpl.addField(
                 "type",
@@ -2639,35 +2988,44 @@ class ElementDescriptor private constructor(
                 "searchDefinition",
                 7,
                 build.skir.Serializers.optional(
-                    skirout.editor.v1.element_catalog.ElementSearchDefinition.serializer,
+                    skirout.editor.v1.element_catalog.ContentSearchDefinition.serializer,
                 ),
                 "",
                 { it.searchDefinition },
                 { mut, v -> mut.searchDefinition = v },
+            );
+            serializerImpl.addField(
+                "role",
+                "role",
+                8,
+                skirout.editor.v1.element_catalog.ContentRole.serializer,
+                "",
+                { it.role },
+                { mut, v -> mut.role = v },
             );
             serializerImpl.finalizeStruct();
         }
     }
 }
 
-sealed interface ElementIneligibility_OrMutable {
+sealed interface ContentIneligibility_OrMutable {
     val reasons: kotlin.collections.List<kotlin.String>;
 
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementIneligibility;
+    fun toFrozen(): skirout.editor.v1.element_catalog.ContentIneligibility;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ElementIneligibility private constructor(
+class ContentIneligibility private constructor(
     override val reasons: kotlin.collections.List<kotlin.String>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementIneligibility>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentIneligibility>? =
         null,
-): skirout.editor.v1.element_catalog.ElementIneligibility_OrMutable {
+): skirout.editor.v1.element_catalog.ContentIneligibility_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         reasons: kotlin.collections.Iterable<kotlin.String>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementIneligibility>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentIneligibility>? =
             null,
     ): this(
         build.skir.internal.toFrozenList(reasons),
@@ -2688,7 +3046,7 @@ class ElementIneligibility private constructor(
             _MustNameArguments,
         reasons: kotlin.collections.Iterable<kotlin.String> =
             this.reasons,
-    ) = skirout.editor.v1.element_catalog.ElementIneligibility(
+    ) = skirout.editor.v1.element_catalog.ContentIneligibility(
         build.skir.internal.toFrozenList(reasons),
         this._unrecognizedFields,
     );
@@ -2697,7 +3055,7 @@ class ElementIneligibility private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementIneligibility && this.reasons == other.reasons);
+        return this === other || (other is skirout.editor.v1.element_catalog.ContentIneligibility && this.reasons == other.reasons);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -2707,21 +3065,21 @@ class ElementIneligibility private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementIneligibility.serializerImpl,
+            skirout.editor.v1.element_catalog.ContentIneligibility.serializerImpl,
         )
     }
 
-    /** Mutable version of [ElementIneligibility]. */
+    /** Mutable version of [ContentIneligibility]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var reasons: kotlin.collections.List<kotlin.String> =
             build.skir.internal.emptyFrozenList<kotlin.String>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementIneligibility>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentIneligibility>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementIneligibility_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentIneligibility_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementIneligibility(
+        override fun toFrozen() = skirout.editor.v1.element_catalog.ContentIneligibility(
             reasons = this.reasons,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2745,7 +3103,7 @@ class ElementIneligibility private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.element_catalog.ElementIneligibility(
+            skirout.editor.v1.element_catalog.ContentIneligibility(
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
             );
 
@@ -2753,7 +3111,7 @@ class ElementIneligibility private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ElementIneligibility].
+         * Creates a new instance of [ContentIneligibility].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -2762,13 +3120,13 @@ class ElementIneligibility private constructor(
                 _MustNameArguments,
             reasons: kotlin.collections.Iterable<kotlin.String> =
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
-        ) = skirout.editor.v1.element_catalog.ElementIneligibility(
+        ) = skirout.editor.v1.element_catalog.ContentIneligibility(
             reasons = reasons,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementIneligibility",
+            recordId = "editor/v1/element_catalog.skir:ContentIneligibility",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -2777,10 +3135,10 @@ class ElementIneligibility private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [ElementIneligibility] instances. */
+        /** Serializer for [ContentIneligibility] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [ElementIneligibility] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentIneligibility] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
@@ -2801,22 +3159,22 @@ class ElementIneligibility private constructor(
 }
 
 /** Deeply immutable. */
-sealed class ElementEligibility private constructor() {
-    /** The kind of variant held by a `ElementEligibility`. */
+sealed class ContentEligibility private constructor() {
+    /** The kind of variant held by a `ContentEligibility`. */
     enum class Kind {
         UNKNOWN,
         ELIGIBLE_WRAPPER,
         INELIGIBLE_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.element_catalog.ContentEligibility.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ElementEligibility>?,
-    ) : skirout.editor.v1.element_catalog.ElementEligibility() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentEligibility>?,
+    ) : skirout.editor.v1.element_catalog.ContentEligibility() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementEligibility && other.kind == kind;
+            return other is skirout.editor.v1.element_catalog.ContentEligibility && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2825,16 +3183,16 @@ sealed class ElementEligibility private constructor() {
     }
 
     class EligibleWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementEligibility.Eligible,
-    ) : skirout.editor.v1.element_catalog.ElementEligibility() {
+        val value: skirout.editor.v1.element_catalog.ContentEligibility.Eligible,
+    ) : skirout.editor.v1.element_catalog.ContentEligibility() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementEligibility.Eligible_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentEligibility.Eligible_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.ELIGIBLE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementEligibility.EligibleWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentEligibility.EligibleWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2843,16 +3201,16 @@ sealed class ElementEligibility private constructor() {
     }
 
     class IneligibleWrapper private constructor (
-        val value: skirout.editor.v1.element_catalog.ElementIneligibility,
-    ) : skirout.editor.v1.element_catalog.ElementEligibility() {
+        val value: skirout.editor.v1.element_catalog.ContentIneligibility,
+    ) : skirout.editor.v1.element_catalog.ContentEligibility() {
         constructor(
-            value: skirout.editor.v1.element_catalog.ElementIneligibility_OrMutable,
+            value: skirout.editor.v1.element_catalog.ContentIneligibility_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.INELIGIBLE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.element_catalog.ElementEligibility.IneligibleWrapper && value == other.value;
+            return other is skirout.editor.v1.element_catalog.ContentEligibility.IneligibleWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2860,48 +3218,48 @@ sealed class ElementEligibility private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ElementEligibility>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.element_catalog.ContentEligibility>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementEligibility._serializerImpl,
+            skirout.editor.v1.element_catalog.ContentEligibility._serializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [ElementEligibility].
-         * Default value for fields of type [ElementEligibility].
+         * Constant indicating an unknown [ContentEligibility].
+         * Default value for fields of type [ContentEligibility].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `EligibleWrapper(skirout.editor.v1.element_catalog.ElementEligibility.Eligible(...))`. */
+        /** Shortcut for `EligibleWrapper(skirout.editor.v1.element_catalog.ContentEligibility.Eligible(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createEligible(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = EligibleWrapper(
-            skirout.editor.v1.element_catalog.ElementEligibility.Eligible()
+            skirout.editor.v1.element_catalog.ContentEligibility.Eligible()
         );
 
-        /** Shortcut for `IneligibleWrapper(skirout.editor.v1.element_catalog.ElementIneligibility(...))`. */
+        /** Shortcut for `IneligibleWrapper(skirout.editor.v1.element_catalog.ContentIneligibility(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createIneligible(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             reasons: kotlin.collections.Iterable<kotlin.String>,
         ) = IneligibleWrapper(
-            skirout.editor.v1.element_catalog.ElementIneligibility(
+            skirout.editor.v1.element_catalog.ContentIneligibility(
                 reasons = reasons,
             )
         );
 
         private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ElementEligibility, Unknown>(
-                recordId = "editor/v1/element_catalog.skir:ElementEligibility",
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.element_catalog.ContentEligibility, Unknown>(
+                recordId = "editor/v1/element_catalog.skir:ContentEligibility",
                 doc = "",
                 getKindOrdinal = { it.kind.ordinal },
                 kindCount = Kind.values().size,
@@ -2910,10 +3268,10 @@ sealed class ElementEligibility private constructor() {
                 getUnrecognized = { it._unrecognized },
             );
 
-        /** Serializer for [ElementEligibility] instances. */
+        /** Serializer for [ContentEligibility] instances. */
         val serializer = build.skir.internal.makeSerializer(_serializerImpl);
 
-        /** Describes the [ElementEligibility] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentEligibility] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _serializerImpl.typeDescriptor;
 
         init {
@@ -2929,7 +3287,7 @@ sealed class ElementEligibility private constructor() {
                     1,
                     "eligible",
                     Kind.ELIGIBLE_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementEligibility.Eligible.serializer,
+                    skirout.editor.v1.element_catalog.ContentEligibility.Eligible.serializer,
                     "",
                     { EligibleWrapper(it) },
                     { it.value },
@@ -2938,7 +3296,7 @@ sealed class ElementEligibility private constructor() {
                     2,
                     "ineligible",
                     Kind.INELIGIBLE_WRAPPER.ordinal,
-                    skirout.editor.v1.element_catalog.ElementIneligibility.serializer,
+                    skirout.editor.v1.element_catalog.ContentIneligibility.serializer,
                     "",
                     { IneligibleWrapper(it) },
                     { it.value },
@@ -2949,19 +3307,19 @@ sealed class ElementEligibility private constructor() {
     }
 
     sealed interface Eligible_OrMutable {
-        fun toFrozen(): skirout.editor.v1.element_catalog.ElementEligibility.Eligible;
+        fun toFrozen(): skirout.editor.v1.element_catalog.ContentEligibility.Eligible;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Eligible private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementEligibility.Eligible>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentEligibility.Eligible>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementEligibility.Eligible_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentEligibility.Eligible_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementEligibility.Eligible>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentEligibility.Eligible>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -2974,7 +3332,7 @@ sealed class ElementEligibility private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.element_catalog.ElementEligibility.Eligible);
+            return this === other || (other is skirout.editor.v1.element_catalog.ContentEligibility.Eligible);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2984,7 +3342,7 @@ sealed class ElementEligibility private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.element_catalog.ElementEligibility.Eligible.serializerImpl,
+                skirout.editor.v1.element_catalog.ContentEligibility.Eligible.serializerImpl,
             )
         }
 
@@ -2992,18 +3350,18 @@ sealed class ElementEligibility private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementEligibility.Eligible>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentEligibility.Eligible>? =
                 null,
-        ): skirout.editor.v1.element_catalog.ElementEligibility.Eligible_OrMutable {
+        ): skirout.editor.v1.element_catalog.ContentEligibility.Eligible_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.editor.v1.element_catalog.ElementEligibility.Eligible(
+            override fun toFrozen() = skirout.editor.v1.element_catalog.ContentEligibility.Eligible(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.editor.v1.element_catalog.ElementEligibility.Eligible();
+                skirout.editor.v1.element_catalog.ContentEligibility.Eligible();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -3016,12 +3374,12 @@ sealed class ElementEligibility private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.editor.v1.element_catalog.ElementEligibility.Eligible(
+            ) = skirout.editor.v1.element_catalog.ContentEligibility.Eligible(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/element_catalog.skir:ElementEligibility.Eligible",
+                recordId = "editor/v1/element_catalog.skir:ContentEligibility.Eligible",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -3043,39 +3401,39 @@ sealed class ElementEligibility private constructor() {
     }
 }
 
-sealed interface ElementCatalogEntry_OrMutable {
+sealed interface ContentCatalogEntry_OrMutable {
     val originArtifactId: kotlin.String;
     val sourcePart: kotlin.String;
-    val descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable;
+    val descriptor: skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable;
     val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable;
-    val eligibility: skirout.editor.v1.element_catalog.ElementEligibility;
+    val eligibility: skirout.editor.v1.element_catalog.ContentEligibility;
     val available: kotlin.Boolean;
 
-    fun toFrozen(): skirout.editor.v1.element_catalog.ElementCatalogEntry;
+    fun toFrozen(): skirout.editor.v1.element_catalog.ContentCatalogEntry;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ElementCatalogEntry private constructor(
+class ContentCatalogEntry private constructor(
     override val originArtifactId: kotlin.String,
     override val sourcePart: kotlin.String,
-    override val descriptor: skirout.editor.v1.element_catalog.ElementDescriptor,
+    override val descriptor: skirout.editor.v1.element_catalog.ContentDescriptor,
     override val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject,
-    override val eligibility: skirout.editor.v1.element_catalog.ElementEligibility,
+    override val eligibility: skirout.editor.v1.element_catalog.ContentEligibility,
     override val available: kotlin.Boolean,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogEntry>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentCatalogEntry>? =
         null,
-): skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable {
+): skirout.editor.v1.element_catalog.ContentCatalogEntry_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         originArtifactId: kotlin.String,
         sourcePart: kotlin.String,
-        descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable,
+        descriptor: skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable,
         presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable,
-        eligibility: skirout.editor.v1.element_catalog.ElementEligibility,
+        eligibility: skirout.editor.v1.element_catalog.ContentEligibility,
         available: kotlin.Boolean,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogEntry>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentCatalogEntry>? =
             null,
     ): this(
         originArtifactId,
@@ -3108,15 +3466,15 @@ class ElementCatalogEntry private constructor(
             this.originArtifactId,
         sourcePart: kotlin.String =
             this.sourcePart,
-        descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable =
+        descriptor: skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable =
             this.descriptor,
         presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
             this.presentationSubject,
-        eligibility: skirout.editor.v1.element_catalog.ElementEligibility =
+        eligibility: skirout.editor.v1.element_catalog.ContentEligibility =
             this.eligibility,
         available: kotlin.Boolean =
             this.available,
-    ) = skirout.editor.v1.element_catalog.ElementCatalogEntry(
+    ) = skirout.editor.v1.element_catalog.ContentCatalogEntry(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
@@ -3130,7 +3488,7 @@ class ElementCatalogEntry private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.element_catalog.ElementCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor && this.presentationSubject == other.presentationSubject && this.eligibility == other.eligibility && this.available == other.available);
+        return this === other || (other is skirout.editor.v1.element_catalog.ContentCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor && this.presentationSubject == other.presentationSubject && this.eligibility == other.eligibility && this.available == other.available);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -3140,11 +3498,11 @@ class ElementCatalogEntry private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.element_catalog.ElementCatalogEntry.serializerImpl,
+            skirout.editor.v1.element_catalog.ContentCatalogEntry.serializerImpl,
         )
     }
 
-    /** Mutable version of [ElementCatalogEntry]. */
+    /** Mutable version of [ContentCatalogEntry]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -3152,19 +3510,19 @@ class ElementCatalogEntry private constructor(
             "",
         override var sourcePart: kotlin.String =
             "",
-        override var descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable =
-            skirout.editor.v1.element_catalog.ElementDescriptor.partial(),
+        override var descriptor: skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable =
+            skirout.editor.v1.element_catalog.ContentDescriptor.partial(),
         override var presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
             skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
-        override var eligibility: skirout.editor.v1.element_catalog.ElementEligibility =
-            skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN,
+        override var eligibility: skirout.editor.v1.element_catalog.ContentEligibility =
+            skirout.editor.v1.element_catalog.ContentEligibility.UNKNOWN,
         override var available: kotlin.Boolean =
             false,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogEntry>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ContentCatalogEntry>? =
             null,
-    ): skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable {
+    ): skirout.editor.v1.element_catalog.ContentCatalogEntry_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.element_catalog.ElementCatalogEntry(
+        override fun toFrozen() = skirout.editor.v1.element_catalog.ContentCatalogEntry(
             originArtifactId = this.originArtifactId,
             sourcePart = this.sourcePart,
             descriptor = this.descriptor,
@@ -3178,15 +3536,15 @@ class ElementCatalogEntry private constructor(
          * If the value of [descriptor] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
          */
-        val mutableDescriptor: skirout.editor.v1.element_catalog.ElementDescriptor.Mutable get() {
+        val mutableDescriptor: skirout.editor.v1.element_catalog.ContentDescriptor.Mutable get() {
             var value = this.descriptor;
             return when (value) {
-                is skirout.editor.v1.element_catalog.ElementDescriptor -> {
+                is skirout.editor.v1.element_catalog.ContentDescriptor -> {
                     value = value.toMutable();
                     this.descriptor = value;
                     return value;
                 }
-                is skirout.editor.v1.element_catalog.ElementDescriptor.Mutable -> value;
+                is skirout.editor.v1.element_catalog.ContentDescriptor.Mutable -> value;
             }
         }
 
@@ -3209,12 +3567,12 @@ class ElementCatalogEntry private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.element_catalog.ElementCatalogEntry(
+            skirout.editor.v1.element_catalog.ContentCatalogEntry(
                 "",
                 "",
-                skirout.editor.v1.element_catalog.ElementDescriptor.partial(),
+                skirout.editor.v1.element_catalog.ContentDescriptor.partial(),
                 skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
-                skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN,
+                skirout.editor.v1.element_catalog.ContentEligibility.UNKNOWN,
                 false,
             );
 
@@ -3222,7 +3580,7 @@ class ElementCatalogEntry private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ElementCatalogEntry].
+         * Creates a new instance of [ContentCatalogEntry].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -3233,15 +3591,15 @@ class ElementCatalogEntry private constructor(
                 "",
             sourcePart: kotlin.String =
                 "",
-            descriptor: skirout.editor.v1.element_catalog.ElementDescriptor_OrMutable =
-                skirout.editor.v1.element_catalog.ElementDescriptor.partial(),
+            descriptor: skirout.editor.v1.element_catalog.ContentDescriptor_OrMutable =
+                skirout.editor.v1.element_catalog.ContentDescriptor.partial(),
             presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
                 skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
-            eligibility: skirout.editor.v1.element_catalog.ElementEligibility =
-                skirout.editor.v1.element_catalog.ElementEligibility.UNKNOWN,
+            eligibility: skirout.editor.v1.element_catalog.ContentEligibility =
+                skirout.editor.v1.element_catalog.ContentEligibility.UNKNOWN,
             available: kotlin.Boolean =
                 false,
-        ) = skirout.editor.v1.element_catalog.ElementCatalogEntry(
+        ) = skirout.editor.v1.element_catalog.ContentCatalogEntry(
             originArtifactId = originArtifactId,
             sourcePart = sourcePart,
             descriptor = descriptor,
@@ -3252,7 +3610,7 @@ class ElementCatalogEntry private constructor(
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/element_catalog.skir:ElementCatalogEntry",
+            recordId = "editor/v1/element_catalog.skir:ContentCatalogEntry",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -3261,10 +3619,10 @@ class ElementCatalogEntry private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [ElementCatalogEntry] instances. */
+        /** Serializer for [ContentCatalogEntry] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [ElementCatalogEntry] type. Provides runtime introspection capabilities. */
+        /** Describes the [ContentCatalogEntry] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
@@ -3290,7 +3648,7 @@ class ElementCatalogEntry private constructor(
                 "descriptor",
                 "descriptor",
                 2,
-                skirout.editor.v1.element_catalog.ElementDescriptor.serializer,
+                skirout.editor.v1.element_catalog.ContentDescriptor.serializer,
                 "",
                 { it.descriptor },
                 { mut, v -> mut.descriptor = v },
@@ -3308,7 +3666,7 @@ class ElementCatalogEntry private constructor(
                 "eligibility",
                 "eligibility",
                 4,
-                skirout.editor.v1.element_catalog.ElementEligibility.serializer,
+                skirout.editor.v1.element_catalog.ContentEligibility.serializer,
                 "",
                 { it.eligibility },
                 { mut, v -> mut.eligibility = v },

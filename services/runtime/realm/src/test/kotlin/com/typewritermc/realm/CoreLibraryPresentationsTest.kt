@@ -6,7 +6,6 @@ import com.typewritermc.elements.Element
 import com.typewritermc.elements.Entry
 import com.typewritermc.library.Book
 import com.typewritermc.library.Page
-import com.typewritermc.library.PageKind
 import com.typewritermc.library.TAG_COLLECTION_SOURCE_ID
 import com.typewritermc.library.Tag
 import com.typewritermc.presentation.PresentationCatalogAssembler
@@ -74,14 +73,14 @@ val CoreLibraryPresentationsTest by testSuite {
                 }
         val element = abstractDefinition(Element::class.qualifiedName!!, fields = listOf("id", "name"))
         val entry = abstractDefinition(Entry::class.qualifiedName!!, parents = listOf(element.id))
-        val pageKind = abstractDefinition(PageKind::class.qualifiedName!!)
+        val pageType = abstractDefinition(Page::class.qualifiedName!!, fields = listOf("book", "name", "chapter", "priority", "elements"))
         val inheritedEntry = qualified("test", "InheritedEntry")
         val entryDefinitions =
             listOf(
                 TypeDefinition(inheritedEntry, NominalTypeKind.CONCRETE, parents = listOf(entry.id)),
             )
         val definitions =
-            (definitionsFromContributions + element + entry + pageKind + entryDefinitions)
+            (definitionsFromContributions + element + entry + pageType + entryDefinitions)
                 .associateBy(TypeDefinition::id)
                 .values
                 .toList()
@@ -91,7 +90,7 @@ val CoreLibraryPresentationsTest by testSuite {
                     listOf(
                         abstractPrototype(Element::class, element, mapOf("id" to "id", "name" to "name")),
                         abstractPrototype(Entry::class, entry, mapOf("id" to "id", "name" to "name")),
-                        abstractPrototype(PageKind::class, pageKind),
+                        abstractPrototype(Page::class, pageType, mapOf("book" to "book", "name" to "name", "chapter" to "chapter", "priority" to "priority", "elements" to "elements")),
                     ),
                 definitions,
             )

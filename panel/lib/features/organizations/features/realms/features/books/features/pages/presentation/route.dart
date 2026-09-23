@@ -42,7 +42,7 @@ class PagePage extends HookConsumerWidget {
                 .value
                 ?.snapshot
                 ?.pageCatalog
-                .definitions[page.kind];
+                .definitions[page.rootType];
             if (definition == null) {
               return const ErrorScreen(
                 title: "Page Kind Unavailable",

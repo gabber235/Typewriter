@@ -1,5 +1,6 @@
 package com.typewritermc.pages.codegen
 
+import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -8,10 +9,11 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -22,10 +24,12 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.typewritermc.codegen.argument
 import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.codegen.rawAnnotation
+import com.typewritermc.codegen.annotation
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
@@ -33,6 +37,7 @@ import com.typewritermc.discovery.TypeDiscoveryContribution
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.GeneratedDiscoveryModule
 import com.typewritermc.types.DeclaredTypeId
+import com.typewritermc.types.TypewriterType
 
 /**
  * KSP entrypoint generating page kind markers, [PageProvider] implementations, and discovery bindings from annotated
@@ -60,11 +65,11 @@ private class TypewriterPageProcessor(
         if (declarations.size != symbols.size) return emptyList()
         val duplicateIds = declarations.groupBy(PageDeclaration::id).filterValues { it.size > 1 }
         duplicateIds.forEach { (id, values) -> values.forEach { logger.error("Duplicate page id $id.", it.function) } }
-        val duplicateMarkers = declarations.groupBy { it.function.packageName.asString() to it.markerName }.filterValues { it.size > 1 }
-        duplicateMarkers.forEach { (marker, values) ->
-            values.forEach { logger.error("Generated page kind ${marker.second} is declared more than once.", it.function) }
+        val duplicateTypes = declarations.groupBy { it.pageType.qualifiedName?.asString() }.filterValues { it.size > 1 }
+        duplicateTypes.forEach { (type, values) ->
+            values.forEach { logger.error("Page type $type has more than one editor specification.", it.function) }
         }
-        if (duplicateIds.isNotEmpty() || duplicateMarkers.isNotEmpty()) return emptyList()
+        if (duplicateIds.isNotEmpty() || duplicateTypes.isNotEmpty()) return emptyList()
         val bindings = declarations.map(::generate)
         writeContribution(bindings, declarations.map(PageDeclaration::function))
         generated = true
@@ -96,42 +101,33 @@ private class TypewriterPageProcessor(
             return null
         }
         val annotation = requireNotNull(function.rawAnnotation(TYPEWRITER_PAGE))
-        val idValue = annotation.argument("id") as? String
-        val id = idValue?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() }
-        if (id == null) {
-            logger.error("Page ids must contain exactly 32 hexadecimal characters.", function)
+        val pageType = (annotation.argument("type") as? KSType)?.declaration as? KSClassDeclaration
+        if (pageType == null || !pageType.implementsPage()) {
+            logger.error("TypewriterPage must name a concrete Page type.", function)
             return null
         }
-        val revision = annotation.argument("revision") as? Int ?: 1
-        if (revision <= 0) {
-            logger.error("Page revisions must be positive.", function)
+        val typeAnnotation = pageType.annotation<TypewriterType>()
+        val id = typeAnnotation?.id?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() }
+        if (id == null || typeAnnotation.revision <= 0) {
+            logger.error("Page type must have a valid TypewriterType identity.", pageType)
             return null
         }
-        val markerName = function.simpleName.asString().replaceFirstChar(Char::uppercase) + "Kind"
-        return PageDeclaration(function, id, revision, markerName)
+        return PageDeclaration(function, pageType, id, typeAnnotation.revision)
     }
+
+    private fun KSClassDeclaration.implementsPage(): Boolean =
+        modifiers.contains(Modifier.DATA) &&
+            getAllSuperTypes().any { it.declaration.qualifiedName?.asString() == "com.typewritermc.library.Page" }
 
     private fun generate(declaration: PageDeclaration): ExecutableBinding {
         val function = declaration.function
         val functionName = function.simpleName.asString()
         val packageName = function.packageName.asString()
-        val markerClass = ClassName(packageName, declaration.markerName)
-        val providerName = "${declaration.markerName}PageProvider"
-        val moduleName = "${declaration.markerName}PageDiscoveryModule"
+        val markerClass = declaration.pageType.toClassName()
+        val providerName = "${functionName.replaceFirstChar(Char::uppercase)}PageProvider"
+        val moduleName = "${functionName.replaceFirstChar(Char::uppercase)}PageDiscoveryModule"
         val providerClass = ClassName(packageName, providerName)
         val moduleClass = ClassName(packageName, moduleName)
-        val marker =
-            TypeSpec
-                .objectBuilder(declaration.markerName)
-                .addModifiers(KModifier.DATA)
-                .addSuperinterface(PAGE_KIND)
-                .addAnnotation(
-                    AnnotationSpec
-                        .builder(GENERATED_PAGE_KIND)
-                        .addMember("id = %S", declaration.id.toString())
-                        .addMember("revision = %L", declaration.revision)
-                        .build(),
-                ).build()
         val provider =
             TypeSpec
                 .classBuilder(providerName)
@@ -144,11 +140,11 @@ private class TypewriterPageProcessor(
                 ).addSuperinterface(PAGE_PROVIDER)
                 .addProperty(
                     PropertySpec
-                        .builder("kind", PAGE_KIND_REF, KModifier.OVERRIDE)
+                        .builder("type", RESOLVED_TYPE_REF, KModifier.OVERRIDE)
                         .initializer(
-                            "%T(%T(%T.parse(%S)), %L)",
-                            PAGE_KIND_REF,
-                            PAGE_KIND_ID,
+                            "%T(%T.Declared(%T.parse(%S)), %L)",
+                            RESOLVED_TYPE_REF,
+                            TYPE_ID,
                             DeclaredTypeId::class,
                             declaration.id.toString(),
                             declaration.revision,
@@ -168,7 +164,7 @@ private class TypewriterPageProcessor(
                     PropertySpec
                         .builder(
                             "marker",
-                            KOTLIN_KCLASS.parameterizedBy(WildcardTypeName.producerOf(PAGE_KIND)),
+                            KOTLIN_KCLASS.parameterizedBy(WildcardTypeName.producerOf(PAGE)),
                             KModifier.OVERRIDE,
                         ).initializer("%T::class", markerClass)
                         .build(),
@@ -209,7 +205,6 @@ private class TypewriterPageProcessor(
             .builder(packageName, moduleName)
             .addImport("org.koin.core.qualifier", "named")
             .addImport("org.koin.dsl", "bind", "module")
-            .addType(marker)
             .addType(provider)
             .addType(module)
             .build()
@@ -239,9 +234,9 @@ private class TypewriterPageProcessor(
 
 private data class PageDeclaration(
     val function: KSFunctionDeclaration,
+    val pageType: KSClassDeclaration,
     val id: DeclaredTypeId,
     val revision: Int,
-    val markerName: String,
 )
 
 private fun stringProperty(
@@ -255,9 +250,8 @@ private fun stringProperty(
 
 private val KOTLIN_KCLASS = ClassName("kotlin.reflect", "KClass")
 private const val TYPEWRITER_PAGE = "com.typewritermc.pages.TypewriterPage"
-private val GENERATED_PAGE_KIND = ClassName("com.typewritermc.pages", "GeneratedPageKind")
-private val PAGE_KIND = ClassName("com.typewritermc.library", "PageKind")
-private val PAGE_KIND_ID = ClassName("com.typewritermc.library", "PageKindId")
-private val PAGE_KIND_REF = ClassName("com.typewritermc.library", "PageKindRef")
+private val PAGE = ClassName("com.typewritermc.library", "Page")
+private val RESOLVED_TYPE_REF = ClassName("com.typewritermc.types", "ResolvedTypeRef")
+private val TYPE_ID = ClassName("com.typewritermc.types", "TypeId")
 private val PAGE_PROVIDER = ClassName("com.typewritermc.pages", "PageProvider")
 private val PAGE_SPEC = ClassName("com.typewritermc.pages", "PageSpec")

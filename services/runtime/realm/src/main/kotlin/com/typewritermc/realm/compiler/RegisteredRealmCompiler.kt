@@ -92,7 +92,7 @@ internal class RegisteredRealmCompiler(
         )
 
     private companion object {
-        const val COMPILER_FORMAT = 1
+        const val COMPILER_FORMAT = 2
 
         fun manifestDigest(
             sourceRevision: String,

@@ -4,7 +4,6 @@ import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.surrealdb.Transaction
 import com.typewritermc.authoring.AuthoringChangeSummary
-import com.typewritermc.authoring.AuthoringCreationSlotDefinition
 import com.typewritermc.realm.AuthoringResourceDefinition
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.compiler.AuthoringCompilationProjectionRegistry
@@ -26,7 +25,6 @@ internal class SurrealAuthoringRepository(
     private val prototypes: TypePrototypeRegistry,
     private val catalogGeneration: () -> String,
     private val resourceDefinitions: () -> List<AuthoringResourceDefinition>,
-    private val creationSlots: () -> List<AuthoringCreationSlotDefinition>,
     private val relations: () -> List<RelationDefinition>,
     private val typeCatalog: () -> TypeCatalog,
     private val validationRules: () -> List<AuthoringGraphRule>,
@@ -131,7 +129,6 @@ internal class SurrealAuthoringRepository(
             AuthoringMutationPlanner(
                 mapper = mapper,
                 resourceDefinitions = resourceDefinitions(),
-                creationSlots = creationSlots(),
                 relations = relations(),
                 catalog = typeCatalog(),
                 rules = rules,
@@ -139,7 +136,7 @@ internal class SurrealAuthoringRepository(
         val roots =
             operations.flatMapTo(linkedSetOf()) { operation ->
                 when (operation) {
-                    is AuthoringOperation.CreateResource -> listOf(operation.id) + operation.hosts
+                    is AuthoringOperation.CreateResource -> listOfNotNull(operation.id, operation.attachment?.host)
                     is AuthoringOperation.CommitResource -> listOf(operation.id)
                     is AuthoringOperation.DeleteResource -> listOf(operation.id)
                     is AuthoringOperation.DeclareRelation -> listOf(operation.source, operation.target)
@@ -215,7 +212,7 @@ private fun mutationGraphRequirement(
     incomingReferences = true,
     outgoingReferences = true,
     direction = GraphReadRequirement.Direction.BOTH,
-    maximumDepth = 16,
+    maximumDepth = 256,
     maximumResources = 100_000,
     maximumEdges = 250_000,
 )

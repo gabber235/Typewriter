@@ -846,6 +846,7 @@ data class RelationDefinition(
     val onTargetDelete: RelationDeletePolicy,
     val sourceEndpoint: RelationEndpointDefinition? = null,
     val targetEndpoint: RelationEndpointDefinition? = null,
+    val families: Set<RelationFamilyId> = emptySet(),
 ) {
     init {
         require(sourceEndpoint == null || sourceEndpoint.side == RelationEndpointSide.SOURCE) {
@@ -855,6 +856,42 @@ data class RelationDefinition(
             "Target relation endpoints must use the target side."
         }
     }
+}
+
+/** The field a concrete resource exposes for a declared relation. */
+data class EffectiveRelationField(
+    val relation: RelationId,
+    val owner: ResolvedTypeRef,
+    val path: DataPath,
+    val side: RelationEndpointSide,
+    val cardinality: RelationCardinality,
+    val oppositeType: ResolvedTypeRef,
+)
+
+fun TypeCatalog.effectiveRelationField(
+    owner: ResolvedTypeRef,
+    relation: RelationDefinition,
+    side: RelationEndpointSide,
+): EffectiveRelationField? {
+    val endpoint = if (side == RelationEndpointSide.SOURCE) relation.sourceEndpoint else relation.targetEndpoint
+    endpoint ?: return null
+    if (!isAssignableExactly(owner, endpoint.owner)) return null
+    val definition = definitions.singleOrNull { it.id == owner.copy(arguments = emptyList()) } ?: return null
+    var expression = definition.representation
+    endpoint.path.segments.forEach { segment ->
+        val field = segment as? DataPathSegment.Field ?: return null
+        expression = (expression as? TypeExpression.Record)?.fields?.singleOrNull { it.name == field.name }?.type
+            ?: return null
+    }
+    val opposite = when (endpoint.cardinality) {
+        RelationCardinality.ONE -> (expression as? TypeExpression.Reference)?.target
+        RelationCardinality.MANY -> ((expression as? TypeExpression.ListType)?.element as? TypeExpression.Reference)?.target
+    } ?: return null
+    val declaredOpposite = if (side == RelationEndpointSide.SOURCE) relation.target else relation.source
+    require(isAssignableExactly(opposite, declaredOpposite)) {
+        "Concrete relation field must keep the marker target type or narrow it."
+    }
+    return EffectiveRelationField(relation.id, owner, endpoint.path, side, endpoint.cardinality, opposite)
 }
 
 private fun validateLengths(

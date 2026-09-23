@@ -1,35 +1,54 @@
 import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("creation option identity includes concrete type arguments", () {
     final first = AuthoringCreationOption(
-      slot: _standalone,
-      root: _root.copyWith(arguments: const [StringType()]),
+      definition: CoreResourceDefinitionIds.book,
+      root: _book.copyWith(arguments: const [StringType()]),
+      label: "Book",
     );
     final second = AuthoringCreationOption(
-      slot: _standalone,
-      root: _root.copyWith(arguments: const [BooleanType()]),
+      definition: CoreResourceDefinitionIds.book,
+      root: _book.copyWith(arguments: const [BooleanType()]),
+      label: "Book",
     );
-
     expect(first.id, isNot(second.id));
   });
 
-  test("all creation slots appear without resource family code", () async {
+  test("standalone search excludes a resource with an ownership parent", () async {
     final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogState>>(
-      AsyncData(
-        RealmEditorCatalogState.ready(
-          RealmEditorCatalogSnapshot(
-            catalog: const TypeCatalog([]),
-            generation: const CatalogGeneration("1"),
-            creationSlots: {_standalone.id: _standalone, _hosted.id: _hosted},
+      AsyncData(RealmEditorCatalogState.ready(RealmEditorCatalogSnapshot(
+        catalog: TypeCatalog([
+          TypeDefinition(id: _book, kind: NominalTypeKind.concrete),
+          TypeDefinition(id: _entry, kind: NominalTypeKind.concrete),
+        ]),
+        generation: const CatalogGeneration("1"),
+        resourceDefinitions: {
+          CoreResourceDefinitionIds.book: RealmResourceDefinition(
+            id: CoreResourceDefinitionIds.book,
+            acceptedRoot: NamedType(_book),
           ),
-        ),
-      ),
+          CoreResourceDefinitionIds.element: RealmResourceDefinition(
+            id: CoreResourceDefinitionIds.element,
+            acceptedRoot: NamedType(_entry),
+          ),
+        },
+        relations: {
+          "book.entries": RealmRelationDefinition(
+            id: "book.entries",
+            source: _book,
+            target: _entry,
+            onSourceDelete: RealmRelationDeletePolicy.cascade,
+            onTargetDelete: RealmRelationDeletePolicy.clear,
+            sourceEndpoint: null,
+            targetEndpoint: null,
+            families: const {"resource.ownership"},
+          ),
+        },
+      ))),
     );
     addTearDown(catalog.dispose);
     final controller = SourceController(
@@ -39,74 +58,82 @@ void main() {
     addTearDown(controller.dispose);
     await pumpEventQueue();
 
-    expect(controller.snapshot.status, SearchSourceStatus.ready);
     final section = controller.snapshot.nodes.single as SearchSectionNode;
-    expect(section.children, hasLength(2));
+    final result = (section.children.single as SearchResultNode).result;
+    final option = result.payload as AuthoringCreationOption;
+    expect(option.definition, CoreResourceDefinitionIds.book);
+    expect(option.root, _book);
 
     controller.updateQuery("missing");
     await pumpEventQueue();
-
     expect(controller.snapshot.nodes, isEmpty);
   });
 
-  test("hosted creation slots appear for compatible catalog hosts", () async {
-    final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogState>>(
-      AsyncData(
-        RealmEditorCatalogState.ready(
-          RealmEditorCatalogSnapshot(
-            catalog: const TypeCatalog([]),
-            generation: const CatalogGeneration("1"),
-            creationSlots: {_standalone.id: _standalone, _hosted.id: _hosted},
-          ),
+  test("relation search offers the concrete type accepted by its field", () async {
+    final snapshot = RealmEditorCatalogSnapshot(
+      catalog: TypeCatalog([
+        TypeDefinition(
+          id: _book,
+          kind: NominalTypeKind.concrete,
+          representation: RecordType(fields: {
+            "entries": TypeField(
+              name: "entries",
+              type: ListType(element: ReferenceType(target: _entry)),
+            ),
+          }),
         ),
-      ),
+        TypeDefinition(id: _entry, kind: NominalTypeKind.concrete),
+      ]),
+      generation: const CatalogGeneration("1"),
+      resourceDefinitions: {
+        CoreResourceDefinitionIds.element: RealmResourceDefinition(
+          id: CoreResourceDefinitionIds.element,
+          acceptedRoot: NamedType(_entry),
+        ),
+      },
+      relations: {
+        "book.entries": RealmRelationDefinition(
+          id: "book.entries",
+          source: _book,
+          target: _entry,
+          onSourceDelete: RealmRelationDeletePolicy.cascade,
+          onTargetDelete: RealmRelationDeletePolicy.clear,
+          sourceEndpoint: RealmRelationEndpointDefinition(
+            owner: _book,
+            path: DataPath.root.field("entries"),
+            side: RealmRelationEndpointSide.source,
+            cardinality: RealmRelationCardinality.many,
+          ),
+          targetEndpoint: null,
+          families: const {"resource.ownership"},
+        ),
+      },
+    );
+    final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogState>>(
+      AsyncData(RealmEditorCatalogState.ready(snapshot)),
+    );
+    final field = ValueNotifier<AsyncValue<RealmRelationField>>(
+      AsyncData(snapshot.relationField(_book, DataPath.root.field("entries"))!),
     );
     addTearDown(catalog.dispose);
+    addTearDown(field.dispose);
     final controller = SourceController(
-      source: AuthoringCreationSearchSource(
-        catalog,
-        hosts: [
-          AuthoringCreationHost(
-            id: skir.ResourceId(value: "host"),
-            definition: _definition,
-            root: _root,
-          ),
-        ],
-      ),
+      source: AuthoringCreationSearchSource(catalog, field: field),
       baseSelectors: const [],
     );
     addTearDown(controller.dispose);
     await pumpEventQueue();
 
     final section = controller.snapshot.nodes.single as SearchSectionNode;
-    final result = (section.children.single as SearchResultNode).result;
-    final option = result.payload as AuthoringCreationOption;
-    expect(option.slot, _hosted);
-    expect(option.hosts, [skir.ResourceId(value: "host")]);
+    final option =
+        (section.children.single as SearchResultNode).result.payload
+            as AuthoringCreationOption;
+    expect(option.root, _entry);
   });
 }
 
-final _root = ResolvedTypeRef(
-  id: DeclaredTypeId("0123456789abcdef0123456789abcdef"),
-  revision: 1,
+ResolvedTypeRef _type(String name) => ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: name), revision: 1,
 );
-const _definition = ResourceDefinitionId("example.document");
-final _standalone = RealmAuthoringCreationSlot(
-  id: const AuthoringCreationSlotId("example.document.create"),
-  label: "Document",
-  creates: _definition,
-  context: const RealmAuthoringCreationContext.standalone(),
-  concreteRoots: [_root],
-);
-final _hosted = RealmAuthoringCreationSlot(
-  id: const AuthoringCreationSlotId("example.document.child.create"),
-  label: "Document Child",
-  creates: _definition,
-  context: const RealmAuthoringCreationContext.declaredRelation(
-    hosts: RealmCreationHostFilter(definitions: {_definition}),
-    cardinality: RealmCreationHostCardinality.exactlyOne,
-    relation: "example.document.children",
-    direction: RealmCreationRelationDirection.outgoing,
-  ),
-  concreteRoots: [_root],
-);
+final _book = _type("Book");
+final _entry = _type("Entry");

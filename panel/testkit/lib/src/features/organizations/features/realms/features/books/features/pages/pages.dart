@@ -11,9 +11,12 @@ import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
 
-const fixturePageKind = PageKindRef(id: "fixture.page", revision: 1);
+const fixturePageType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "fixture", name: "Page"),
+  revision: 1,
+);
 
-Page generateRandomPage([PageKindRef pageKind = fixturePageKind]) {
+Page generateRandomPage([ResolvedTypeRef pageType = fixturePageType]) {
   final pageName = faker.lorem
       .words(faker.randomGenerator.integer(3, min: 1))
       .join("_")
@@ -31,7 +34,7 @@ Page generateRandomPage([PageKindRef pageKind = fixturePageKind]) {
     pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
     bookId: skir.ResourceId(value: "book:${faker.guid.guid()}"),
     name: pageName,
-    kind: pageKind,
+    rootType: pageType,
     chapter: chapters.randomOrNull() ?? "",
     priority: faker.randomGenerator.integer(100, min: -10),
   );
@@ -53,10 +56,10 @@ class BookPagesMock extends CanonicalBookPages {
 }
 
 class PagesMock extends CanonicalPage {
-  PagesMock({this.page, this.pageKind});
+  PagesMock({this.page, this.pageType});
 
   final Page? page;
-  final PageKindRef? pageKind;
+  final ResolvedTypeRef? pageType;
 
   @override
   Future<Page> build(skir.ResourceId pageId) async {
@@ -64,7 +67,7 @@ class PagesMock extends CanonicalPage {
     if (page != null) {
       return page!;
     }
-    final randomPage = generateRandomPage(pageKind ?? fixturePageKind);
+    final randomPage = generateRandomPage(pageType ?? fixturePageType);
     return randomPage.copyWith(pageId: pageId);
   }
 }
@@ -172,9 +175,9 @@ List<Override> bookPagesProviderOverrides({
   ),
 ];
 
-List<Override> pagesProviderOverrides({Page? page, PageKindRef? pageKind}) => [
+List<Override> pagesProviderOverrides({Page? page, ResolvedTypeRef? pageType}) => [
   canonicalPageProvider.overrideWith2(
-    (_) => PagesMock(page: page, pageKind: pageKind),
+    (_) => PagesMock(page: page, pageType: pageType),
   ),
 ];
 

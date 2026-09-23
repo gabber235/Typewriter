@@ -39,18 +39,19 @@ import com.typewritermc.discovery.runtime.GeneratedDiscoveryModule
 import com.typewritermc.elements.AvailabilityExpression
 import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementDescriptor
-import com.typewritermc.elements.ElementDiscoveryContribution
-import com.typewritermc.elements.ElementDiscoveryContributionCodec
-import com.typewritermc.elements.ElementPrototype
+import com.typewritermc.elements.ContentDescriptor
+import com.typewritermc.elements.ContentDiscoveryContribution
+import com.typewritermc.elements.ContentDiscoveryContributionCodec
+import com.typewritermc.elements.ContentPrototype
+import com.typewritermc.elements.ContentRole
 import com.typewritermc.elements.ElementRuntimeFacet
-import com.typewritermc.elements.ElementSearch
-import com.typewritermc.elements.ElementSearchDefinition
-import com.typewritermc.elements.ElementSearchPropertyOverride
-import com.typewritermc.elements.ElementTypeId
+import com.typewritermc.elements.ContentSearch
+import com.typewritermc.elements.ContentSearchDefinition
+import com.typewritermc.elements.ContentSearchPropertyOverride
+import com.typewritermc.elements.ContentTypeId
 import com.typewritermc.elements.Keyframe
 import com.typewritermc.elements.Segment
-import com.typewritermc.elements.TypewriterElement
+import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.elements.TypewriterElementFacet
 import com.typewritermc.types.Color
 import com.typewritermc.types.ConcreteTypePrototype
@@ -97,7 +98,7 @@ private class TypewriterElementProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(TypewriterElement::class).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterContent::class).toList()
         val facetSymbols = resolver.getSymbolsWithAnnotation(TypewriterElementFacet::class).toList()
         val deferred = (symbols + facetSymbols).filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return (symbols + facetSymbols).distinct()
@@ -115,19 +116,13 @@ private class TypewriterElementProcessor(
                     .getSymbolsWithAnnotation(TypewriterType::class)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration -> declaration.declaredTypeReference()?.let { put(declaration.qualifiedName!!.asString(), it) } }
-                resolver
-                    .getSymbolsWithAnnotation(GENERATED_PAGE_KIND_ANNOTATION)
-                    .filterIsInstance<KSClassDeclaration>()
-                    .forEach { declaration ->
-                        declaration.generatedPageKindReference()?.let {
-                            put(declaration.qualifiedName!!.asString(), it)
-                        }
-                    }
                 elements.forEach { element -> put(element.declaration.qualifiedName!!.asString(), element.reference) }
             }
         val identityPolicy =
             KspTypeIdentityPolicy { declaration ->
-                indexedByName[declaration.qualifiedName?.asString()] ?: declaration.qualifiedReference()
+                indexedByName[declaration.qualifiedName?.asString()]
+                    ?: declaration.declaredTypeReference()
+                    ?: declaration.qualifiedReference()
             }
         val displayNames = indexedByName.map { (name, reference) -> reference to name.substringAfterLast('.') }.toMap()
         val generatedElements = elements.mapNotNull { generate(it, identityPolicy, displayNames) }
@@ -161,13 +156,13 @@ private class TypewriterElementProcessor(
                     "element",
                 ) as? com.google.devtools.ksp.symbol.KSType
             )?.declaration as? KSClassDeclaration
-        val elementAnnotation = elementDeclaration?.annotation<TypewriterElement>()
+        val elementAnnotation = elementDeclaration?.annotation<TypewriterContent>()
         val elementId = elementAnnotation?.let { runCatching { DeclaredTypeId.parse(it.id) }.getOrNull() }
         if (elementId == null) {
-            logger.error("Typewriter element facets must target a TypewriterElement declaration.", declaration)
+            logger.error("Typewriter element facets must target a TypewriterContent declaration.", declaration)
             return null
         }
-        return GeneratedFacet(ElementTypeId(elementId), generateFacetProvider(declaration), declaration)
+        return GeneratedFacet(ContentTypeId(elementId), generateFacetProvider(declaration), declaration)
     }
 
     private fun generateFacetProvider(declaration: KSClassDeclaration): ClassName {
@@ -219,26 +214,21 @@ private class TypewriterElementProcessor(
         if (declaration == null || declaration.classKind !in setOf(ClassKind.CLASS, ClassKind.OBJECT) ||
             Modifier.ABSTRACT in declaration.modifiers || Modifier.SEALED in declaration.modifiers
         ) {
-            logger.error("TypewriterElement may only annotate concrete classes and objects.", symbol)
+            logger.error("TypewriterContent may only annotate concrete classes and objects.", symbol)
             return null
         }
         if (declaration.annotation<TypewriterType>() != null) {
-            logger.error("TypewriterElement and TypewriterType cannot annotate the same declaration.", declaration)
+            logger.error("TypewriterContent and TypewriterType cannot annotate the same declaration.", declaration)
             return null
         }
         val superTypes = declaration.getAllSuperTypes().mapNotNull { it.declaration.qualifiedName?.asString() }.toSet()
-        if (Element::class.qualifiedName !in superTypes) {
-            logger.error("Typewriter elements must implement Element.", declaration)
-            return null
-        }
+        val isElement = Element::class.qualifiedName in superTypes
         val isCue = Cue::class.qualifiedName in superTypes
-        val isSegment = Segment::class.qualifiedName in superTypes
-        val isKeyframe = Keyframe::class.qualifiedName in superTypes
-        if (isCue && isSegment == isKeyframe) {
-            logger.error("Cue elements must implement exactly one of Segment or Keyframe.", declaration)
+        if (isElement == isCue) {
+            logger.error("Typewriter content must implement exactly one of Element or Cue.", declaration)
             return null
         }
-        val annotation = requireNotNull(declaration.annotation<TypewriterElement>())
+        val annotation = requireNotNull(declaration.annotation<TypewriterContent>())
         val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull()
         if (id == null) {
             logger.error("Element ids must contain exactly 32 hexadecimal characters.", declaration)
@@ -265,9 +255,10 @@ private class TypewriterElementProcessor(
                 }
         val descriptor =
             runCatching {
-                ElementDescriptor(
-                    id = ElementTypeId(id),
+                ContentDescriptor(
+                    id = ContentTypeId(id),
                     type = ResolvedTypeRef(TypeId.Declared(id), revision),
+                    role = if (isElement) ContentRole.ELEMENT else ContentRole.CUE,
                     name = name,
                     description = description,
                     icon = icon,
@@ -305,18 +296,20 @@ private class TypewriterElementProcessor(
         }
         val rootProperties =
             successfulConversion.serializedProperties.filter { it.ownerType == element.reference }
-        if (!validateRequiredProperty(element, rootProperties, "name", String::class.qualifiedName!!)) return null
+        if (element.descriptor.role == ContentRole.ELEMENT &&
+            !validateRequiredProperty(element, rootProperties, "name", String::class.qualifiedName!!)
+        ) return null
         val overrideDeclarations =
             successfulConversion.serializedProperties.mapNotNull { property ->
-                property.declaration.annotation<ElementSearch>()?.let { annotation ->
-                    ElementSearchPropertyOverride(property.ownerType, property.serializedName, annotation.mode) to
+                property.declaration.annotation<ContentSearch>()?.let { annotation ->
+                    ContentSearchPropertyOverride(property.ownerType, property.serializedName, annotation.mode) to
                         property.declaration
                 }
             }
         val reservedOverrides =
             overrideDeclarations.filter { (override, _) ->
                 override.ownerType == element.reference && override.field == "name"
-            }
+            }.takeIf { element.descriptor.role == ContentRole.ELEMENT } ?: emptyList()
         if (reservedOverrides.isNotEmpty()) {
             reservedOverrides.forEach { (_, declaration) ->
                 logger.error("The Element name field has fixed search behavior.", declaration)
@@ -330,17 +323,14 @@ private class TypewriterElementProcessor(
                         graph,
                         overrideDeclarations.map { it.first } +
                             listOf(
-                                ElementSearchPropertyOverride(
+                                ContentSearchPropertyOverride(
                                     element.reference,
                                     "id",
-                                    com.typewritermc.elements.ElementSearchMode.NONE,
+                                    com.typewritermc.elements.ContentSearchMode.NONE,
                                 ),
-                                ElementSearchPropertyOverride(
-                                    element.reference,
-                                    "name",
-                                    com.typewritermc.elements.ElementSearchMode.NONE,
-                                ),
-                            ),
+                            ) + if (element.descriptor.role == ContentRole.ELEMENT) {
+                                listOf(ContentSearchPropertyOverride(element.reference, "name", com.typewritermc.elements.ContentSearchMode.NONE))
+                            } else emptyList(),
                     )
             ) {
                 is ElementSearchGenerationResult.Success -> {
@@ -392,7 +382,7 @@ private class TypewriterElementProcessor(
     ): ClassName {
         val declaration = element.declaration
         val sourceClass = declaration.toClassName()
-        val objectName = "${declaration.simpleName.asString()}ElementPrototype"
+        val objectName = "${declaration.simpleName.asString()}ContentPrototype"
         val providerName = "${objectName}Provider"
         val packageName = declaration.packageName.asString()
         val encodedGraph = Base64.encode(Cbor.Default.encodeToByteArray(graph))
@@ -400,7 +390,7 @@ private class TypewriterElementProcessor(
             TypeSpec
                 .objectBuilder(objectName)
                 .superclass(SerializationConcreteTypePrototype::class.asClassName().parameterizedBy(sourceClass))
-                .addSuperinterface(ElementPrototype::class.asClassName().parameterizedBy(sourceClass))
+                .addSuperinterface(ContentPrototype::class.asClassName().parameterizedBy(sourceClass))
                 .addSuperclassConstructorParameter("%T::class", sourceClass)
                 .addSuperclassConstructorParameter("graph.root.let { it as %T.Named }.reference", TypeExpression::class)
                 .addSuperclassConstructorParameter("graph.definitions.single { it.id == %L }", element.reference.code())
@@ -408,7 +398,7 @@ private class TypewriterElementProcessor(
                 .addSuperclassConstructorParameter("%L", declaration.serializedFieldNames().stringMapCode())
                 .addProperty(
                     PropertySpec
-                        .builder("descriptor", ElementDescriptor::class)
+                        .builder("descriptor", ContentDescriptor::class)
                         .addModifiers(KModifier.OVERRIDE)
                         .initializer(element.descriptor.code())
                         .build(),
@@ -468,7 +458,7 @@ private class TypewriterElementProcessor(
                 executableBindings = facets.map(GeneratedFacet::executableBinding),
             )
         val elementContribution =
-            ElementDiscoveryContribution(
+            ContentDiscoveryContribution(
                 descriptors = elements.map { it.element.descriptor },
             )
         codeGenerator
@@ -482,7 +472,7 @@ private class TypewriterElementProcessor(
                 Dependencies(aggregating = true, *files),
                 "META-INF/typewriter/contributions/elements/catalog.cbor",
                 "",
-            ).use { it.write(ElementDiscoveryContributionCodec.encode(elementContribution)) }
+            ).use { it.write(ContentDiscoveryContributionCodec.encode(elementContribution)) }
     }
 
     private fun mergeDefinitions(definitions: List<TypeDefinition>): List<TypeDefinition>? {
@@ -501,7 +491,7 @@ private class TypewriterElementProcessor(
 private data class ElementDeclaration(
     val declaration: KSClassDeclaration,
     val id: DeclaredTypeId,
-    val descriptor: ElementDescriptor,
+    val descriptor: ContentDescriptor,
 ) {
     val reference: ResolvedTypeRef = descriptor.type
 }
@@ -513,7 +503,7 @@ private data class GeneratedElement(
 )
 
 private data class GeneratedFacet(
-    val elementType: ElementTypeId,
+    val elementType: ContentTypeId,
     val providerClass: ClassName,
     val declaration: KSClassDeclaration,
 ) {
@@ -531,14 +521,6 @@ private fun KSClassDeclaration.declaredTypeReference(): ResolvedTypeRef? {
     val annotation = annotation<TypewriterType>() ?: return null
     val id = runCatching { DeclaredTypeId.parse(annotation.id) }.getOrNull() ?: return null
     return ResolvedTypeRef(TypeId.Declared(id), annotation.revision)
-}
-
-private fun KSClassDeclaration.generatedPageKindReference(): ResolvedTypeRef? {
-    val annotation = rawAnnotation(GENERATED_PAGE_KIND_ANNOTATION) ?: return null
-    val idValue = annotation.argument("id") as? String ?: return null
-    val id = runCatching { DeclaredTypeId.parse(idValue) }.getOrNull() ?: return null
-    val revision = annotation.argument("revision") as? Int ?: return null
-    return ResolvedTypeRef(TypeId.Declared(id), revision)
 }
 
 private fun TypeGraph.withDisplayNames(displayNames: Map<ResolvedTypeRef, String>): TypeGraph =
@@ -569,12 +551,13 @@ private fun TypeId.code(): String =
         }
     }
 
-private fun ElementDescriptor.code(): String =
-    "com.typewritermc.elements.ElementDescriptor(" +
-        "com.typewritermc.elements.ElementTypeId(" +
+private fun ContentDescriptor.code(): String =
+    "com.typewritermc.elements.ContentDescriptor(" +
+        "com.typewritermc.elements.ContentTypeId(" +
         "com.typewritermc.types.DeclaredTypeId.parse(\"${id.value}\")" +
         "), " +
         "${type.code()}, " +
+        "com.typewritermc.elements.ContentRole.$role, " +
         "\"${name.escape()}\", " +
         "\"${description.escape()}\", " +
         "${icon.code()}, " +
@@ -582,17 +565,17 @@ private fun ElementDescriptor.code(): String =
         "com.typewritermc.elements.AvailabilityExpression.Always, " +
         "${searchDefinition?.code() ?: "null"})"
 
-private fun ElementSearchDefinition.code(): String =
-    "com.typewritermc.elements.ElementSearchDefinition(" +
-        "com.typewritermc.elements.ElementSearchPolicy.$policy, " +
+private fun ContentSearchDefinition.code(): String =
+    "com.typewritermc.elements.ContentSearchDefinition(" +
+        "com.typewritermc.elements.ContentSearchPolicy.$policy, " +
         propertyOverrides.joinToString(", ", "listOf(", "), ") { it.code() } +
         revisionFingerprintInputs.joinToString(", ", "listOf(", ")") { it.code() } +
         ")"
 
-private fun ElementSearchPropertyOverride.code(): String =
-    "com.typewritermc.elements.ElementSearchPropertyOverride(" +
+private fun ContentSearchPropertyOverride.code(): String =
+    "com.typewritermc.elements.ContentSearchPropertyOverride(" +
         "${ownerType.code()}, \"${field.escape()}\", " +
-        "com.typewritermc.elements.ElementSearchMode.$mode)"
+        "com.typewritermc.elements.ContentSearchMode.$mode)"
 
 private fun Icon.code(): String =
     when (this) {
@@ -604,4 +587,3 @@ private fun String.escape(): String = replace("\\", "\\\\").replace("\"", "\\\""
 
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"
-private const val GENERATED_PAGE_KIND_ANNOTATION = "com.typewritermc.pages.GeneratedPageKind"

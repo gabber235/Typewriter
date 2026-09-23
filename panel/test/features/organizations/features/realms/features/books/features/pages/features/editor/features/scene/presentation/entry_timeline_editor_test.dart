@@ -443,7 +443,7 @@ final _testPageElementsProvider = pageElementsProvider(
 );
 
 List<Override> _pageElementOverrides(_TestPageElements notifier) => [
-  ...authoringSessionMockOverrides(),
+  ...authoringSessionMockOverrides(catalog: _timelineFixtureCatalog()),
   natsProvider.overrideWithValue(notifier.nats),
   organizationIdProvider.overrideWithValue(_testOrganization),
   realmIdProvider.overrideWithValue(_testRealm),
@@ -462,6 +462,29 @@ List<Override> _pageElementOverrides(_TestPageElements notifier) => [
     skir.ResourceId(value: "page"),
   ).overrideWithValue(null),
 ];
+
+RealmEditorCatalogSnapshot _timelineFixtureCatalog() {
+  final fixture = authoringFixtureCatalog();
+  return fixture.copyWith(
+    relations: {
+      "test.page.elements": RealmRelationDefinition(
+        id: "test.page.elements",
+        source: referenceResourceTypes.page,
+        target: referenceResourceTypes.element,
+        onSourceDelete: RealmRelationDeletePolicy.cascade,
+        onTargetDelete: RealmRelationDeletePolicy.clear,
+        sourceEndpoint: RealmRelationEndpointDefinition(
+          owner: referenceResourceTypes.page,
+          path: DataPath.root.field("elements"),
+          side: RealmRelationEndpointSide.source,
+          cardinality: RealmRelationCardinality.many,
+        ),
+        targetEndpoint: null,
+        families: const {"resource.ownership"},
+      ),
+    },
+  );
+}
 
 const _snapshotSubject =
     "service.to.test.organization.test.realm.editor.authoring.graph.query";

@@ -66,6 +66,17 @@ internal class SurrealMutationGraphLoader {
             frontier = loadedResources.mapTo(linkedSetOf(), StoredTypedResource::id)
             depth += 1
         }
+        if (requirement.includeIncidentEdges) {
+            transaction.loadRelations(
+                frontier = resources.keys,
+                direction = RelationDirection.BOTH,
+                filter = RelationFilter.Any,
+                limit = requirement.maximumEdges - relations.size + 1,
+            ).forEach { relations[it.id] = it }
+            if (relations.size > requirement.maximumEdges) {
+                return tooLarge("edge", requirement.maximumEdges)
+            }
+        }
         return MutationGraphLoadResult.Success(
             AuthoringWorkingGraph(
                 resources = resources,

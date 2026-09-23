@@ -11,6 +11,8 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ClassName
@@ -31,7 +33,7 @@ import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.PrototypeBinding
 import com.typewritermc.discovery.TypeDiscoveryContribution
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
-import com.typewritermc.elements.TypewriterElement
+import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.ConcreteTypePrototype
 import com.typewritermc.types.DataPath
@@ -43,6 +45,7 @@ import com.typewritermc.types.RelationCardinality
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.RelationEndpointDefinition
 import com.typewritermc.types.RelationEndpointSide
+import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.SerializationConcreteTypePrototype
@@ -53,6 +56,7 @@ import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypePrototype
 import com.typewritermc.types.TypePrototypeProvider
 import com.typewritermc.types.TypewriterRelation
+import com.typewritermc.types.TypewriterRelationFamily
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
@@ -104,11 +108,11 @@ private class TypewriterTypeProcessor(
         val indexedByName =
             buildMap {
                 resolver
-                    .getSymbolsWithAnnotation(TypewriterElement::class)
+                    .getSymbolsWithAnnotation(TypewriterContent::class)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration ->
                         declaration
-                            .annotation<TypewriterElement>()
+                            .annotation<TypewriterContent>()
                             ?.declaredIdentity()
                             ?.let { put(declaration.qualifiedName!!.asString(), it) }
                     }
@@ -124,7 +128,7 @@ private class TypewriterTypeProcessor(
         val generatedTypes = declarations.mapNotNull { generateType(it, indexed.getValue(it), identityPolicy, displayNames) }
         if (generatedTypes.size != declarations.size) return emptyList()
 
-        val relations = discoverRelations(declarations, identityPolicy) ?: return emptyList()
+        val relations = discoverRelations(resolver, identityPolicy) ?: return emptyList()
         writeContribution(generatedTypes, relations)
         generated = true
         return emptyList()
@@ -300,140 +304,112 @@ private class TypewriterTypeProcessor(
     }
 
     private fun discoverRelations(
-        declarations: List<KSClassDeclaration>,
+        resolver: Resolver,
         identityPolicy: KspTypeIdentityPolicy,
     ): List<RelationDefinition>? {
-        data class Partial(
-            val base: RelationDefinition,
-            val source: RelationEndpointDefinition? = null,
-            val target: RelationEndpointDefinition? = null,
-        )
-
-        val partials = linkedMapOf<RelationId, Partial>()
         var valid = true
-        declarations.forEach { owner ->
-            val ownerReference = identityPolicy.identity(owner)
-            val serializedNames = owner.serializedFieldNames()
-            owner.getAllProperties().forEach property@{ property ->
-                val propertyType = property.type.resolve()
-                val cardinality =
-                    when (propertyType.declaration.qualifiedName?.asString()) {
-                        TO_ONE_TYPE -> RelationCardinality.ONE
-                        TO_MANY_TYPE -> RelationCardinality.MANY
-                        else -> return@property
-                    }
-                val marker =
-                    propertyType.arguments
-                        .getOrNull(0)
-                        ?.type
-                        ?.resolve()
-                        ?.declaration as? KSClassDeclaration
-                val target =
-                    propertyType.arguments
-                        .getOrNull(1)
-                        ?.type
-                        ?.resolve()
-                        ?.declaration as? KSClassDeclaration
-                if (marker == null || target == null) {
-                    logger.error("Relation endpoint arguments must be concrete nominal types.", property)
-                    valid = false
-                    return@property
-                }
-                val annotation = marker.annotation<TypewriterRelation>()
-                val relationType =
-                    marker.getAllSuperTypes().singleOrNull {
-                        it.declaration.qualifiedName?.asString() == Relation::class.qualifiedName
-                    }
-                val sourceDeclaration =
-                    relationType
-                        ?.arguments
-                        ?.getOrNull(0)
-                        ?.type
-                        ?.resolve()
-                        ?.declaration as? KSClassDeclaration
-                val targetDeclaration =
-                    relationType
-                        ?.arguments
-                        ?.getOrNull(1)
-                        ?.type
-                        ?.resolve()
-                        ?.declaration as? KSClassDeclaration
-                if (annotation == null || sourceDeclaration == null || targetDeclaration == null) {
-                    logger.error("Relation markers must declare TypewriterRelation and Relation<Source, Target>.", marker)
-                    valid = false
-                    return@property
-                }
-                val id =
-                    runCatching { RelationId(annotation.id) }.getOrElse {
-                        logger.error(it.message ?: "Invalid relation id.", marker)
-                        valid = false
-                        return@property
-                    }
-                val sourceReference = identityPolicy.identity(sourceDeclaration)
-                val targetReference = identityPolicy.identity(targetDeclaration)
-                val endpointTarget = identityPolicy.identity(target)
-                val side =
-                    when {
-                        ownerReference == sourceReference && endpointTarget == targetReference -> {
-                            RelationEndpointSide.SOURCE
-                        }
-
-                        ownerReference == targetReference && endpointTarget == sourceReference -> {
-                            RelationEndpointSide.TARGET
-                        }
-
-                        else -> {
-                            logger.error("Relation endpoint owner and target do not match its marker declaration.", property)
-                            valid = false
-                            return@property
-                        }
-                    }
-                val endpoint =
-                    RelationEndpointDefinition(
-                        owner = ownerReference,
-                        path = DataPath.field(serializedNames[property.simpleName.asString()] ?: property.simpleName.asString()),
-                        side = side,
-                        cardinality = cardinality,
-                    )
-                val base =
-                    RelationDefinition(
-                        id = id,
-                        source = sourceReference,
-                        target = targetReference,
-                        onSourceDelete = annotation.onSourceDelete,
-                        onTargetDelete = annotation.onTargetDelete,
-                    )
-                val current = partials[id]
-                if (current != null && current.base != base) {
-                    logger.error("Conflicting relation marker declaration $id.", marker)
-                    valid = false
-                    return@property
-                }
-                val next = current ?: Partial(base)
-                partials[id] =
-                    when (side) {
-                        RelationEndpointSide.SOURCE -> {
-                            if (next.source != null && next.source != endpoint) {
-                                logger.error("Relation $id has more than one source endpoint.", property)
-                                valid = false
-                            }
-                            next.copy(source = next.source ?: endpoint)
-                        }
-
-                        RelationEndpointSide.TARGET -> {
-                            if (next.target != null && next.target != endpoint) {
-                                logger.error("Relation $id has more than one target endpoint.", property)
-                                valid = false
-                            }
-                            next.copy(target = next.target ?: endpoint)
-                        }
-                    }
+        val definitions = mutableListOf<RelationDefinition>()
+        resolver.getSymbolsWithAnnotation(TypewriterRelation::class).forEach { symbol ->
+            val marker = symbol as? KSClassDeclaration ?: return@forEach
+            val annotation = marker.annotation<TypewriterRelation>() ?: return@forEach
+            val relationTypes = marker.relationTypes()
+            val source = relationTypes?.first?.declaration as? KSClassDeclaration
+            val target = relationTypes?.second?.declaration as? KSClassDeclaration
+            if (source == null || target == null) {
+                logger.error("Relation markers must resolve Relation<Source, Target>.", marker)
+                valid = false
+                return@forEach
             }
+            val id = runCatching { RelationId(annotation.id) }.getOrElse {
+                logger.error(it.message ?: "Invalid relation id.", marker)
+                valid = false
+                return@forEach
+            }
+            val sourceEndpoint = marker.endpointOn(source, target, RelationEndpointSide.SOURCE, identityPolicy)
+            val targetEndpoint = marker.endpointOn(target, source, RelationEndpointSide.TARGET, identityPolicy)
+            if (sourceEndpoint == null) {
+                logger.error("Relation $id requires one source field.", marker)
+                valid = false
+                return@forEach
+            }
+            definitions += RelationDefinition(
+                id = id,
+                source = identityPolicy.identity(source),
+                target = identityPolicy.identity(target),
+                onSourceDelete = annotation.onSourceDelete,
+                onTargetDelete = annotation.onTargetDelete,
+                sourceEndpoint = sourceEndpoint,
+                targetEndpoint = targetEndpoint,
+                families =
+                    (marker.getAllSuperTypes().map { it.declaration } + marker)
+                        .filterIsInstance<KSClassDeclaration>()
+                        .mapNotNull { it.annotation<TypewriterRelationFamily>()?.id }
+                        .map(::RelationFamilyId)
+                        .toSet(),
+            )
         }
-        if (!valid) return null
-        return partials.values
-            .map { it.base.copy(sourceEndpoint = it.source, targetEndpoint = it.target) }
-            .sortedBy { it.id.value }
+        val duplicates = definitions.groupBy(RelationDefinition::id).filterValues { it.size > 1 }
+        duplicates.forEach { (id, _) -> logger.error("Relation id $id is declared more than once."); valid = false }
+        return if (valid) definitions.sortedBy { it.id.value } else null
+    }
+
+    private fun KSClassDeclaration.endpointOn(
+        owner: KSClassDeclaration,
+        opposite: KSClassDeclaration,
+        side: RelationEndpointSide,
+        identityPolicy: KspTypeIdentityPolicy,
+    ): RelationEndpointDefinition? {
+        val markerName = qualifiedName?.asString()
+        val properties = owner.getAllProperties().filter { property ->
+            val type = property.type.resolve()
+            type.declaration.qualifiedName?.asString() in setOf(TO_ONE_TYPE, TO_MANY_TYPE) &&
+                type.arguments.getOrNull(0)?.type?.resolve()?.declaration?.qualifiedName?.asString() == markerName
+        }.toList()
+        if (properties.size > 1) {
+            logger.error("One relation marker may bind only one field on each endpoint.", owner)
+            return null
+        }
+        val property = properties.singleOrNull() ?: return null
+        val type = property.type.resolve()
+        val endpointTarget = type.arguments.getOrNull(1)?.type?.resolve()?.declaration as? KSClassDeclaration
+        if (endpointTarget == null || identityPolicy.identity(endpointTarget) != identityPolicy.identity(opposite)) {
+            logger.error("Relation endpoint target must match the marker declaration.", property)
+            return null
+        }
+        return RelationEndpointDefinition(
+            owner = identityPolicy.identity(owner),
+            path = DataPath.field(owner.serializedFieldNames()[property.simpleName.asString()] ?: property.simpleName.asString()),
+            side = side,
+            cardinality = if (type.declaration.qualifiedName?.asString() == TO_MANY_TYPE)
+                RelationCardinality.MANY else RelationCardinality.ONE,
+        )
+    }
+
+    private fun KSClassDeclaration.relationTypes(): Pair<KSType, KSType>? {
+        fun resolve(type: KSType, bindings: Map<KSTypeParameter, KSType>): KSType =
+            (type.declaration as? KSTypeParameter)?.let(bindings::get) ?: type
+
+        fun visit(
+            declaration: KSClassDeclaration,
+            bindings: Map<KSTypeParameter, KSType>,
+            visited: Set<KSClassDeclaration>,
+        ): Pair<KSType, KSType>? {
+            if (declaration in visited) return null
+            declaration.superTypes.forEach { reference ->
+                val superType = reference.resolve()
+                val superDeclaration = superType.declaration as? KSClassDeclaration ?: return@forEach
+                val arguments = superType.arguments.mapNotNull { it.type?.resolve()?.let { type -> resolve(type, bindings) } }
+                if (superDeclaration.qualifiedName?.asString() == Relation::class.qualifiedName) {
+                    if (arguments.size == 2) return arguments[0] to arguments[1]
+                    return@forEach
+                }
+                val nextBindings = superDeclaration.typeParameters.zip(arguments).toMap()
+                visit(superDeclaration, nextBindings, visited + declaration)?.let { return it }
+            }
+            return null
+        }
+
+        return visit(this, emptyMap(), emptySet())
     }
 
     private fun mergeDefinitions(
@@ -482,7 +458,7 @@ private fun KSClassDeclaration.declaredTypeReference(): ResolvedTypeRef? {
     return annotation.declaredIdentity()?.reference
 }
 
-private fun TypewriterElement.declaredIdentity(): IndexedIdentity? {
+private fun TypewriterContent.declaredIdentity(): IndexedIdentity? {
     val id = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null
     return IndexedIdentity(ResolvedTypeRef(TypeId.Declared(id), revision))
 }

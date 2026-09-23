@@ -46,46 +46,29 @@ RealmPageDefinition graphPageStoryDefinition(
   GraphDirection direction,
   List<PageElement> elements,
 ) => RealmPageDefinition(
-  kind: const PageKindRef(id: "widgetbook.graph", revision: 1),
+  type: referenceResourceTypes.page,
   name: "Graph",
   description: "Widgetbook graph page",
   icon: _storyEntryIcon,
   color: safeColors.first,
-  editor: RealmPageEditor.graph(
-    direction: direction,
-    nodeTypes: _roleTypes<DefinitionPageEntry>(elements),
-  ),
-  elementCreationSlot: const AuthoringCreationSlotId("widgetbook:graph"),
+  editor: RealmPageEditor.graph(direction: direction),
   originArtifactId: "widgetbook",
   sourcePart: "page-story",
-  presentationSubject: _catalogSubject(referenceResourceTypes.pageKind),
+  presentationSubject: _catalogSubject(referenceResourceTypes.page),
 );
 
 RealmPageDefinition timelinePageStoryDefinition(List<PageElement> elements) =>
     RealmPageDefinition(
-      kind: const PageKindRef(id: "widgetbook.timeline", revision: 1),
+      type: referenceResourceTypes.page,
       name: "Timeline",
       description: "Widgetbook timeline page",
       icon: _storyEntryIcon,
       color: safeColors[1],
-      editor: RealmPageEditor.timeline(
-        trackTypes: _roleTypes<DefinitionPageEntry>(elements),
-        segmentTypes: _roleTypes<Segment>(elements),
-        keyframeTypes: _roleTypes<Keyframe>(elements),
-      ),
-      elementCreationSlot: const AuthoringCreationSlotId("widgetbook:timeline"),
+      editor: RealmPageEditor.timeline(),
       originArtifactId: "widgetbook",
       sourcePart: "page-story",
-      presentationSubject: _catalogSubject(referenceResourceTypes.pageKind),
+      presentationSubject: _catalogSubject(referenceResourceTypes.page),
     );
-
-List<ResolvedTypeRef> _roleTypes<T>(List<PageElement> elements) => {
-  for (final element in elements)
-    if (element case PageElementEntry(entry: final entry) when entry is T)
-      (entry as DefinitionPageEntry).definition.elementDefinition.rootType
-    else if (element case PageElementCue(:final cue) when cue is T)
-      cue.elementDefinition.rootType,
-}.toList();
 
 RealmEditorCatalogState pageStoryCatalog(
   ResolvedTypeRef rootType,
@@ -192,7 +175,7 @@ RealmEditorCatalogState pageStoryPageCatalog(
           ),
       },
       pageCatalog: RealmPageCatalog(
-        definitions: {pageDefinition.kind: pageDefinition},
+        definitions: {pageDefinition.type: pageDefinition},
       ),
       resourceDefinitions: {
         CoreResourceDefinitionIds.page: RealmResourceDefinition(
@@ -202,6 +185,23 @@ RealmEditorCatalogState pageStoryPageCatalog(
         CoreResourceDefinitionIds.element: RealmResourceDefinition(
           id: CoreResourceDefinitionIds.element,
           acceptedRoot: NamedType(referenceResourceTypes.element),
+        ),
+      },
+      relations: {
+        "widgetbook.page.elements": RealmRelationDefinition(
+          id: "widgetbook.page.elements",
+          source: referenceResourceTypes.page,
+          target: referenceResourceTypes.element,
+          onSourceDelete: RealmRelationDeletePolicy.cascade,
+          onTargetDelete: RealmRelationDeletePolicy.clear,
+          sourceEndpoint: RealmRelationEndpointDefinition(
+            owner: referenceResourceTypes.page,
+            path: DataPath.root.field("elements"),
+            side: RealmRelationEndpointSide.source,
+            cardinality: RealmRelationCardinality.many,
+          ),
+          targetEndpoint: null,
+          families: const {"resource.ownership"},
         ),
       },
     ),
@@ -281,10 +281,6 @@ Map<ResolvedTypeRef, RecordValue> _rootValues(List<PageElement> elements) {
 RecordValue _pageStoryValue(RealmPageDefinition definition) => RecordValue({
   "book": ReferenceValue(skir.ResourceId(value: "book:example-book-id")),
   "name": const StringValue("Example"),
-  "kind": RecordValue({
-    "id": StringValue(definition.kind.id),
-    "revision": IntegerValue(BigInt.from(definition.kind.revision)),
-  }),
   "chapter": const StringValue(""),
   "priority": IntegerValue(BigInt.zero),
 });

@@ -25,17 +25,14 @@ class TagsPage extends HookConsumerWidget {
     Future<void> handleCreateTag() async {
       final tags = tagsAsync.value ?? const <Tag>[];
       final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-      final slot = catalog?.standaloneCreationSlot(
-        CoreResourceDefinitionIds.tag,
-      );
-      final root = slot?.concreteRoots.singleOrNull;
+      final root = catalog?.creatableRoots(CoreResourceDefinitionIds.tag).singleOrNull;
       if (root == null) throw StateError("Tag creation is unavailable");
       final created = await ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              slot: slot!.id,
+              definition: CoreResourceDefinitionIds.tag,
               title: "Create Tag",
               concreteRoot: root,
               partial: tagCreationPartial(

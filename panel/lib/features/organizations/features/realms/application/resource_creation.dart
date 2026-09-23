@@ -13,41 +13,45 @@ ResourceCreationSession resourceCreation(Ref ref) =>
 
 final class ResourceCreationRequest {
   factory ResourceCreationRequest({
-    required AuthoringCreationSlotId slot,
+    required ResourceDefinitionId definition,
     required String title,
     required ResolvedTypeRef concreteRoot,
+    skir.CreationAttachment? attachment,
+    List<skir.CreationAttachment> links = const [],
     DataValue? partial,
-    List<skir.ResourceId> hosts = const [],
     List<skir.ResourceId> referenceOrigins = const [],
   }) {
     final id = newResourceId();
     return ResourceCreationRequest._(
       id: id,
-      slot: slot,
+      definition: definition,
+      attachment: attachment,
+      links: List.unmodifiable(links),
       title: title,
       concreteRoot: concreteRoot,
       partial: partial,
-      hosts: List.unmodifiable(hosts),
       referenceOrigins: List.unmodifiable(referenceOrigins),
     );
   }
 
   const ResourceCreationRequest._({
     required this.id,
-    required this.slot,
+    required this.definition,
+    required this.attachment,
+    required this.links,
     required this.title,
     required this.concreteRoot,
     required this.partial,
-    required this.hosts,
     required this.referenceOrigins,
   });
 
   final skir.ResourceId id;
-  final AuthoringCreationSlotId slot;
+  final ResourceDefinitionId definition;
+  final skir.CreationAttachment? attachment;
+  final List<skir.CreationAttachment> links;
   final String title;
   final ResolvedTypeRef concreteRoot;
   final DataValue? partial;
-  final List<skir.ResourceId> hosts;
   final List<skir.ResourceId> referenceOrigins;
 }
 
@@ -73,16 +77,14 @@ final class ResourceCreationSession {
     }
     final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
     if (catalog == null) throw StateError("The editor catalog is unavailable");
-    final slot = catalog.creationSlots[request.slot];
-    if (slot == null) {
-      throw ApiException.badRequest("Creation slot is unavailable");
+    final definition = catalog.resourceDefinitions[request.definition];
+    if (definition == null ||
+        !NamedType(request.concreteRoot).isStructurallyAssignableTo(
+          definition.acceptedRoot,
+          TypeRegistry(catalog.catalog),
+        )) {
+      throw ApiException.badRequest("Concrete root is unavailable");
     }
-    if (!slot.acceptsRoot(request.concreteRoot)) {
-      throw ApiException.badRequest(
-        "Concrete root is not accepted by the creation slot",
-      );
-    }
-    _validateHosts(slot, request.hosts);
     final codec = TypedAuthoringCodec(catalog);
     final route = RealmEditorCatalogRoute(
       organizationId: organizationId,
@@ -101,7 +103,7 @@ final class ResourceCreationSession {
       supplied: request.partial,
       registry: codec.registry,
     )).creationDraftValue;
-    final suppliedPartial = slot.bindHostReferences(basePartial, request.hosts);
+    final suppliedPartial = _bindAttachment(catalog, request, basePartial);
     final supplied = (await source.initialize(
       route,
       generation: catalog.generation,
@@ -156,40 +158,69 @@ final class ResourceCreationSession {
       final access = ref.readAuthoringSession();
       final operations = <skir.AuthoringOperation>[
         skir.AuthoringOperation.createCreate(
-          resource: codec.encodeResource(request.id, slot.creates, content),
-          creationSlot: skir.AuthoringCreationSlotId(value: slot.id.value),
-          hosts: request.hosts,
+          resource: codec.encodeResource(
+            request.id,
+            request.definition,
+            content,
+          ),
+          attachment: request.attachment,
         ),
+        for (final link in request.links)
+          skir.AuthoringOperation.createDeclareRelation(
+            relation: link.relation,
+            source: link.hostSide == skir.RelationEndpointSide.source
+                ? link.host
+                : request.id,
+            target: link.hostSide == skir.RelationEndpointSide.source
+                ? request.id
+                : link.host,
+            sourceBefore: null,
+            targetBefore: null,
+          ),
       ];
       final response = await access.notifier.apply(operations);
       response.requireApplied(conflictMessage: "The resource already exists");
-      return (id: request.id, definition: slot.creates, content: content);
+      return (id: request.id, definition: request.definition, content: content);
     } finally {
       draft.dispose();
     }
   }
 
-  void _validateHosts(
-    RealmAuthoringCreationSlot slot,
-    List<skir.ResourceId> hosts,
+  DataValue? _bindAttachment(
+    RealmEditorCatalogSnapshot catalog,
+    ResourceCreationRequest request,
+    DataValue? partial,
   ) {
-    final cardinality = switch (slot.context) {
-      RealmStandaloneCreationContext() => null,
-      RealmDeclaredRelationCreationContext(:final cardinality) => cardinality,
-      RealmReferencePathCreationContext(:final cardinality) => cardinality,
-    };
-    switch (cardinality) {
-      case null when hosts.isNotEmpty:
-        throw ApiException.badRequest(
-          "Standalone creation does not accept hosts",
-        );
-      case RealmCreationHostCardinality.exactlyOne when hosts.length != 1:
-        throw ApiException.badRequest("Creation requires exactly one host");
-      case RealmCreationHostCardinality.oneOrMore when hosts.isEmpty:
-        throw ApiException.badRequest("Creation requires at least one host");
-      default:
-        break;
+    final registry = TypeRegistry(catalog.catalog);
+    var supplied = partial;
+    for (final attachment in [?request.attachment, ...request.links]) {
+      final relation = catalog.relations[attachment.relation.value];
+      if (relation == null) {
+        throw ApiException.badRequest("Relation is unavailable");
+      }
+      final inverse = attachment.hostSide == skir.RelationEndpointSide.source
+          ? relation.targetEndpoint
+          : relation.sourceEndpoint;
+      if (inverse == null ||
+          !NamedType(request.concreteRoot)
+              .isStructurallyAssignableTo(NamedType(inverse.owner), registry)) {
+        continue;
+      }
+      final current = supplied ?? RecordValue({});
+      final value = inverse.cardinality == RealmRelationCardinality.one
+          ? ReferenceValue(attachment.host)
+          : ListValue([
+              if (inverse.path.read(current).valueOrNull case ListValue(
+                :final values,
+              ))
+                ...values,
+              ReferenceValue(attachment.host),
+            ]);
+      supplied =
+          inverse.path.replace(current, value).valueOrNull ??
+          (throw ApiException.badRequest("Creation relation path is invalid"));
     }
+    return supplied;
   }
 }
 
@@ -205,29 +236,6 @@ extension on RealmTypedValueInitializationResult {
         diagnostics.map((item) => item.message).join("; "),
       ),
   };
-}
-
-extension RealmAuthoringCreationReferenceBinding on RealmAuthoringCreationSlot {
-  DataValue? bindHostReferences(
-    DataValue? partial,
-    List<skir.ResourceId> hosts,
-  ) {
-    final context = this.context;
-    if (context case RealmReferencePathCreationContext(
-      :final path,
-      :final cardinality,
-    )) {
-      final value = switch (cardinality) {
-        RealmCreationHostCardinality.exactlyOne => ReferenceValue(hosts.single),
-        RealmCreationHostCardinality.oneOrMore => ListValue([
-          for (final host in hosts) ReferenceValue(host),
-        ]),
-      };
-      return path.replace(partial ?? RecordValue({}), value).valueOrNull ??
-          (throw ApiException.badRequest("Creation host path is invalid"));
-    }
-    return partial;
-  }
 }
 
 Future<DataValue?> promptResourceCreationEditor({

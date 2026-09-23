@@ -34,7 +34,7 @@ SearchCommand createElementOnPageCommand({
   required skir.RecordId organizationId,
   required skir.RecordId realmId,
   required skir.ResourceId pageId,
-  required ValueListenable<AsyncValue<RealmAuthoringCreationSlot>> slot,
+  required ValueListenable<AsyncValue<RealmRelationField>> field,
   Offset? preferredGraphAnchor,
 }) => SearchCommand.single<ElementDefinition>(
   id: createElementOnPageCommandId,
@@ -43,9 +43,9 @@ SearchCommand createElementOnPageCommand({
     icon: MaterialSymbols.add_rounded,
   ),
   matcher: const SearchResultMatcher(elementTypeSearchResultType),
-  dependencies: [slot],
+  dependencies: [field],
   evaluate: (definition, target) {
-    final current = slot.value;
+    final current = field.value;
     if (current.isLoading) {
       return const SearchCommandState.disabled(
         "Page compatibility is still loading",
@@ -56,7 +56,7 @@ SearchCommand createElementOnPageCommand({
         "Page compatibility is unavailable",
       );
     }
-    if (!current.requireValue.acceptsRoot(definition.rootType)) {
+    if (!current.requireValue.accepts(definition.rootType, TypeRegistry(ref.read(realmEditorCatalogProvider).requireValue.snapshot!.catalog))) {
       return const SearchCommandState.hidden();
     }
     return const SearchCommandState.enabled();
@@ -76,13 +76,13 @@ SearchCommand createElementOnPageCommand({
       );
     }
 
-    final livePolicy = ref.read(pageCreationSlotForPageProvider(pageId)).value;
+    final livePolicy = ref.read(pageElementsFieldForPageProvider(pageId)).value;
     if (livePolicy == null) {
       return const SearchCommandResult.failed(
         message: "Page compatibility is unavailable",
       );
     }
-    if (!livePolicy.acceptsRoot(definition.rootType)) {
+    if (!livePolicy.accepts(definition.rootType, TypeRegistry(ref.read(realmEditorCatalogProvider).requireValue.snapshot!.catalog))) {
       return const SearchCommandResult.failed(
         message: "The selected page is no longer compatible",
       );
@@ -93,7 +93,7 @@ SearchCommand createElementOnPageCommand({
       execution: execution,
       pageId: pageId,
       definition: definition,
-      slot: livePolicy,
+      field: livePolicy,
       preferredGraphAnchor: preferredGraphAnchor,
     );
     if (elementId == null) return const SearchCommandResult.cancelled();
@@ -113,7 +113,7 @@ Future<String?> _createElementOnPage({
   required SearchCommandExecutionContext execution,
   required skir.ResourceId pageId,
   required ElementDefinition definition,
-  required RealmAuthoringCreationSlot slot,
+  required RealmRelationField field,
   Offset? preferredGraphAnchor,
 }) async {
   final page = ref.read(projectedPageProvider(pageId)).value;
@@ -123,7 +123,7 @@ Future<String?> _createElementOnPage({
       .value
       ?.snapshot
       ?.pageCatalog
-      .definitions[page.kind]
+      .definitions[page.rootType]
       ?.editor;
   if (pageEditor == null) return null;
   final placement = await ref.withReadyPageElements(
@@ -139,10 +139,16 @@ Future<String?> _createElementOnPage({
         .create(
           context: context,
           request: ResourceCreationRequest(
-            slot: slot.id,
+            definition: CoreResourceDefinitionIds.element,
+            attachment: skir.CreationAttachment(
+              host: pageId,
+              relation: skir.RelationId(value: field.relation.id),
+              hostSide: field.endpoint.side == RealmRelationEndpointSide.source
+                  ? skir.RelationEndpointSide.source
+                  : skir.RelationEndpointSide.target,
+            ),
             title: "Create ${definition.name}",
             concreteRoot: definition.rootType,
-            hosts: [pageId],
             partial: RecordValue({
               "name": StringValue(definition.name),
               "placement": placementValue(placement),

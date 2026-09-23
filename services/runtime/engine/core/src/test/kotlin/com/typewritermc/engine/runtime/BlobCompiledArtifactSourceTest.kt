@@ -8,8 +8,9 @@ import com.typewritermc.engine.CompiledArtifactPointer
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.CompiledPageShard
+import com.typewritermc.engine.CompiledResourceKey
+import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.library.Page
 import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.api.artifact.BlobChunk
 import com.typewritermc.loader.api.artifact.BlobEndpoint
@@ -17,7 +18,6 @@ import com.typewritermc.loader.api.artifact.BlobMetadata
 import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.TransferId
-import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -87,11 +87,12 @@ private fun shard(
     digestCharacter: String,
     pageKey: String,
 ) = CompiledPageShard(
-    formatRevision = 1,
+    formatRevision = 2,
     digest = ContentDigest(digestCharacter.repeat(64)),
     inputFingerprint = ContentDigest("f".repeat(64)),
-    page = Ref<Page>(ResourceId(pageKey)),
-    elements = emptyList(),
+    root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
+    resources = emptyList(),
+    edges = emptyList(),
 )
 
 private fun activation(
@@ -102,7 +103,7 @@ private fun activation(
     val references =
         shards.map { shard ->
             CompiledArtifactReference(
-                root = CompilationRoot(CompilationProjectionId("typewriter.page"), shard.page.id),
+                root = CompilationRoot(CompilationProjectionId("typewriter.page"), shard.root.source),
                 formatRevision = shard.formatRevision,
                 mediaType = PageCompiledArtifactConsumer.PAGE_MEDIA_TYPE,
                 semanticDigest = shard.digest,

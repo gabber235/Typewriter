@@ -2,6 +2,7 @@ package com.typewritermc.authoring
 
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.RelationId
+import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypedValueEnvelope
@@ -12,6 +13,8 @@ data class GraphReadRequirement(
     val incomingReferences: Boolean = false,
     val outgoingReferences: Boolean = false,
     val declaredRelations: Set<RelationId> = emptySet(),
+    val relationFamilies: Set<RelationFamilyId> = emptySet(),
+    val includeIncidentEdges: Boolean = false,
     val direction: Direction = Direction.BOTH,
     val maximumDepth: Int = 1,
     val maximumResources: Int = 10_000,
@@ -55,6 +58,8 @@ sealed interface AuthoringRelationOrigin {
 
     data class Declared(
         val relationId: RelationId,
+        val sourceIndex: Int? = null,
+        val targetIndex: Int? = null,
     ) : AuthoringRelationOrigin
 }
 

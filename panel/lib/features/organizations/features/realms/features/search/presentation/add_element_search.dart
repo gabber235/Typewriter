@@ -22,34 +22,48 @@ Future<void> showAddElementSearch(
     }
 
     final targetPageId = skir.ResourceId(value: pageId);
-    final slot = ref.valued(pageCreationSlotForPageProvider(targetPageId));
+    final field = ref.valued(pageElementsFieldForPageProvider(targetPageId));
 
-    return SearchContribution(
-      session: SearchSession(
-        source: ElementTypeSearchSource(
-          definitions: ref.valued(availableElementDefinitionsFutureProvider),
-        ),
-        scope: pageCreationSlotScope(slot: slot),
-        interaction: SearchInteraction(
-          activation: SearchActivation.command(
-            resolve: (result) => result.type == elementTypeSearchResultType
-                ? createElementOnPageCommandId
-                : null,
-            dependencies: [slot],
-          ),
-          selectionMode: SearchSelectionMode.single,
-          commands: [
-            createElementOnPageCommand(
-              ref: ref,
-              organizationId: organizationId,
-              realmId: realmId,
-              pageId: targetPageId,
-              slot: slot,
-              preferredGraphAnchor: preferredGraphAnchor,
-            ),
-          ],
+    return relationSearchContribution(
+      ref: ref,
+      organizationId: organizationId,
+      realmId: realmId,
+      host: targetPageId,
+      field: field,
+      initialValue: (option) async {
+        final page = ref.read(projectedPageProvider(targetPageId)).value;
+        final editor = page == null
+            ? null
+            : ref
+                  .read(realmEditorCatalogProvider)
+                  .value
+                  ?.snapshot
+                  ?.pageCatalog
+                  .definitions[page.rootType]
+                  ?.editor;
+        if (editor == null) {
+          throw ApiException.badRequest("The Page editor is unavailable");
+        }
+        final placement = await ref.withReadyPageElements(
+          pageId,
+          (elements) => elements.creationPlacement(switch (editor) {
+            RealmGraphPageEditor() => EntryPlacementKind.graph,
+            RealmTimelinePageEditor() => EntryPlacementKind.timelineEntry,
+          }, preferredGraphAnchor: preferredGraphAnchor),
+        );
+        return RecordValue({
+          "name": StringValue(option.label),
+          "placement": placementValue(placement),
+        });
+      },
+      createdEffect: (created) => SelectCreatedElementEffect(
+        pageId: targetPageId,
+        elementIdentifier: EntryIdentifier(
+          created.id.value,
+          pageId: targetPageId.id,
         ),
       ),
+    ).copyWith(
       hostEffectExecutors: [
         SearchHostEffectExecutor<SelectCreatedElementEffect>((effect) {
           if (effect.pageId != targetPageId) {
@@ -61,7 +75,5 @@ Future<void> showAddElementSearch(
     );
   },
   searchHint: "Add element",
-  rowRenderers: {
-    elementTypeSearchResultType.rowRendererId: buildElementTypeSearchResultItem,
-  },
+  rowRenderers: {...relationSearchRowRenderers},
 );

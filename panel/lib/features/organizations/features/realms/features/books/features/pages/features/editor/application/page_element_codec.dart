@@ -22,16 +22,64 @@ List<PageElement> _decodePageElements(
   if (ownershipRelation == null) {
     throw StateError("The Page elements relation is unavailable");
   }
-  final localIds = <skir.ResourceId>{
-    for (final edge in edges)
-      if (edge.source == pageId)
-        if (edge.origin
-            case skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value)
-            when value.relationId.value == ownershipRelation.id &&
-                byId[edge.target]?.definition.toDomain() ==
-                    CoreResourceDefinitionIds.element)
-          edge.target,
+  final owningRelations = {
+    for (final relation in snapshot.relations.values)
+      if (relation.families.contains("resource.ownership")) relation.id,
   };
+  final ownedEdges = [
+    for (final edge in edges)
+      if (edge.origin
+          case skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value)
+          when owningRelations.contains(value.relationId.value))
+        edge,
+  ];
+  int sourceIndex(skir.AuthoringEdge edge) => switch (edge.origin) {
+    skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value) =>
+      value.sourceIndex ?? 0,
+    _ => 0,
+  };
+  final localIds = <skir.ResourceId>{};
+  void visit(skir.ResourceId id) {
+    if (!localIds.add(id)) return;
+    final children =
+        ownedEdges
+            .where(
+              (edge) =>
+                  edge.source == id &&
+                  byId[edge.target]?.definition.toDomain() ==
+                      CoreResourceDefinitionIds.cue,
+            )
+            .toList()
+          ..sort(
+            (left, right) => sourceIndex(left).compareTo(sourceIndex(right)),
+          );
+    for (final child in children) {
+      visit(child.target);
+    }
+  }
+
+  final direct =
+      ownedEdges
+          .where(
+            (edge) =>
+                edge.source == pageId &&
+                switch (edge.origin) {
+                  skir.AuthoringEdgeOrigin_declaredRelationWrapper(
+                    :final value,
+                  ) =>
+                    value.relationId.value == ownershipRelation.id,
+                  _ => false,
+                } &&
+                byId[edge.target]?.definition.toDomain() ==
+                    CoreResourceDefinitionIds.element,
+          )
+          .toList()
+        ..sort(
+          (left, right) => sourceIndex(left).compareTo(sourceIndex(right)),
+        );
+  for (final edge in direct) {
+    visit(edge.target);
+  }
   final ordinaryEdges = [
     for (final edge in edges)
       if (edge.origin is skir.AuthoringEdgeOrigin_ordinaryReferenceWrapper)
@@ -51,6 +99,8 @@ List<PageElement> _decodePageElements(
         .firstOrNull
         ?.definition
         .toElementDefinition();
+    final isCue =
+        resource.definition.toDomain() == CoreResourceDefinitionIds.cue;
     final outgoing = [
       for (final edge in ordinaryEdges)
         if (edge.source == id) _elementLink(edge, edge.target, codec.registry),
@@ -60,10 +110,8 @@ List<PageElement> _decodePageElements(
         if (edge.target == id) _elementLink(edge, edge.source, codec.registry),
     ];
 
-    if (placement case TimelineSegmentPlacement(
-      :final startFrame,
-      :final endFrame,
-    )) {
+    if (isCue && placement is TimelineSegmentPlacement) {
+      final TimelineSegmentPlacement(:startFrame, :endFrame) = placement;
       if (definition != null && data is RecordValue) {
         local.add(
           PageElement.cue(
@@ -81,7 +129,8 @@ List<PageElement> _decodePageElements(
       }
       continue;
     }
-    if (placement case TimelineKeyframePlacement(:final frame)) {
+    if (isCue && placement is TimelineKeyframePlacement) {
+      final TimelineKeyframePlacement(:frame) = placement;
       if (definition != null && data is RecordValue) {
         local.add(
           PageElement.cue(

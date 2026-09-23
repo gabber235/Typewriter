@@ -152,138 +152,6 @@ class ResourceDefinitionId private constructor(
     }
 }
 
-sealed interface AuthoringCreationSlotId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.authoring.AuthoringCreationSlotId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class AuthoringCreationSlotId private constructor(
-    override val value: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringCreationSlotId>? =
-        null,
-): skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringCreationSlotId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.authoring.AuthoringCreationSlotId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.AuthoringCreationSlotId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.authoring.AuthoringCreationSlotId.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [AuthoringCreationSlotId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringCreationSlotId>? =
-            null,
-    ): skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.authoring.AuthoringCreationSlotId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.authoring.AuthoringCreationSlotId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [AuthoringCreationSlotId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.authoring.AuthoringCreationSlotId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/authoring.skir:AuthoringCreationSlotId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [AuthoringCreationSlotId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [AuthoringCreationSlotId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "value",
-                "value",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
 sealed interface ResourceDefinition_OrMutable {
     val id: skirout.editor.v1.authoring.ResourceDefinitionId_OrMutable;
     val acceptedRoot: skirout.editor.v1.type_catalog.TypeExpression;
@@ -1247,6 +1115,7 @@ sealed interface RelationDefinition_OrMutable {
     val onTargetDelete: skirout.editor.v1.authoring.RelationDeletePolicy;
     val sourceEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable?;
     val targetEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable?;
+    val families: kotlin.collections.List<skirout.editor.v1.authoring.RelationId_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.authoring.RelationDefinition;
 }
@@ -1261,6 +1130,7 @@ class RelationDefinition private constructor(
     override val onTargetDelete: skirout.editor.v1.authoring.RelationDeletePolicy,
     override val sourceEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition?,
     override val targetEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition?,
+    override val families: kotlin.collections.List<skirout.editor.v1.authoring.RelationId>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.RelationDefinition>? =
         null,
 ): skirout.editor.v1.authoring.RelationDefinition_OrMutable {
@@ -1274,6 +1144,7 @@ class RelationDefinition private constructor(
         onTargetDelete: skirout.editor.v1.authoring.RelationDeletePolicy,
         sourceEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable?,
         targetEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable?,
+        families: kotlin.collections.Iterable<skirout.editor.v1.authoring.RelationId_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.RelationDefinition>? =
             null,
     ): this(
@@ -1284,6 +1155,7 @@ class RelationDefinition private constructor(
         onTargetDelete,
         if (sourceEndpoint != null) sourceEndpoint.toFrozen() else null,
         if (targetEndpoint != null) targetEndpoint.toFrozen() else null,
+        build.skir.internal.toFrozenList(families, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -1299,6 +1171,7 @@ class RelationDefinition private constructor(
         onTargetDelete = this.onTargetDelete,
         sourceEndpoint = this.sourceEndpoint,
         targetEndpoint = this.targetEndpoint,
+        families = this.families,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1319,6 +1192,8 @@ class RelationDefinition private constructor(
             this.sourceEndpoint,
         targetEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable? =
             this.targetEndpoint,
+        families: kotlin.collections.Iterable<skirout.editor.v1.authoring.RelationId_OrMutable> =
+            this.families,
     ) = skirout.editor.v1.authoring.RelationDefinition(
         id.toFrozen(),
         source.toFrozen(),
@@ -1327,6 +1202,7 @@ class RelationDefinition private constructor(
         onTargetDelete,
         if (sourceEndpoint != null) sourceEndpoint.toFrozen() else null,
         if (targetEndpoint != null) targetEndpoint.toFrozen() else null,
+        build.skir.internal.toFrozenList(families, { it.toFrozen() }),
         this._unrecognizedFields,
     );
 
@@ -1334,11 +1210,11 @@ class RelationDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.RelationDefinition && this.id == other.id && this.source == other.source && this.target == other.target && this.onSourceDelete == other.onSourceDelete && this.onTargetDelete == other.onTargetDelete && this.sourceEndpoint == other.sourceEndpoint && this.targetEndpoint == other.targetEndpoint);
+        return this === other || (other is skirout.editor.v1.authoring.RelationDefinition && this.id == other.id && this.source == other.source && this.target == other.target && this.onSourceDelete == other.onSourceDelete && this.onTargetDelete == other.onTargetDelete && this.sourceEndpoint == other.sourceEndpoint && this.targetEndpoint == other.targetEndpoint && this.families == other.families);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.source, this.target, this.onSourceDelete, this.onTargetDelete, this.sourceEndpoint, this.targetEndpoint).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.source, this.target, this.onSourceDelete, this.onTargetDelete, this.sourceEndpoint, this.targetEndpoint, this.families).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1366,6 +1242,8 @@ class RelationDefinition private constructor(
             null,
         override var targetEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable? =
             null,
+        override var families: kotlin.collections.List<skirout.editor.v1.authoring.RelationId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.RelationId>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.RelationDefinition>? =
             null,
     ): skirout.editor.v1.authoring.RelationDefinition_OrMutable {
@@ -1378,6 +1256,7 @@ class RelationDefinition private constructor(
             onTargetDelete = this.onTargetDelete,
             sourceEndpoint = this.sourceEndpoint,
             targetEndpoint = this.targetEndpoint,
+            families = this.families,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1428,6 +1307,22 @@ class RelationDefinition private constructor(
                 is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [families] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [families] and returns it.
+         */
+        val mutableFamilies: kotlin.collections.MutableList<skirout.editor.v1.authoring.RelationId_OrMutable> get() {
+            var value = this.families;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.families = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
@@ -1440,6 +1335,7 @@ class RelationDefinition private constructor(
                 skirout.editor.v1.authoring.RelationDeletePolicy.UNKNOWN,
                 null,
                 null,
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.RelationId>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1467,6 +1363,8 @@ class RelationDefinition private constructor(
                 null,
             targetEndpoint: skirout.editor.v1.authoring.RelationEndpointDefinition_OrMutable? =
                 null,
+            families: kotlin.collections.Iterable<skirout.editor.v1.authoring.RelationId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.RelationId>(),
         ) = skirout.editor.v1.authoring.RelationDefinition(
             id = id,
             source = source,
@@ -1475,6 +1373,7 @@ class RelationDefinition private constructor(
             onTargetDelete = onTargetDelete,
             sourceEndpoint = sourceEndpoint,
             targetEndpoint = targetEndpoint,
+            families = families,
             _unrecognizedFields = null,
         );
 
@@ -1561,6 +1460,17 @@ class RelationDefinition private constructor(
                 "",
                 { it.targetEndpoint },
                 { mut, v -> mut.targetEndpoint = v },
+            );
+            serializerImpl.addField(
+                "families",
+                "families",
+                7,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.authoring.RelationId.serializer,
+                ),
+                "",
+                { it.families },
+                { mut, v -> mut.families = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -2027,9 +1937,13 @@ sealed class AuthoringEdgeOrigin private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             relationId: skirout.editor.v1.authoring.RelationId_OrMutable,
+            sourceIndex: kotlin.Int?,
+            targetIndex: kotlin.Int?,
         ) = DeclaredRelationWrapper(
             skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation(
                 relationId = relationId,
+                sourceIndex = sourceIndex,
+                targetIndex = targetIndex,
             )
         );
 
@@ -2280,6 +2194,8 @@ sealed class AuthoringEdgeOrigin private constructor() {
 
     sealed interface DeclaredRelation_OrMutable {
         val relationId: skirout.editor.v1.authoring.RelationId_OrMutable;
+        val sourceIndex: kotlin.Int?;
+        val targetIndex: kotlin.Int?;
 
         fun toFrozen(): skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation;
     }
@@ -2288,6 +2204,8 @@ sealed class AuthoringEdgeOrigin private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class DeclaredRelation private constructor(
         override val relationId: skirout.editor.v1.authoring.RelationId,
+        override val sourceIndex: kotlin.Int?,
+        override val targetIndex: kotlin.Int?,
         private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation>? =
             null,
     ): skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation_OrMutable {
@@ -2295,10 +2213,14 @@ sealed class AuthoringEdgeOrigin private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             relationId: skirout.editor.v1.authoring.RelationId_OrMutable,
+            sourceIndex: kotlin.Int?,
+            targetIndex: kotlin.Int?,
             _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation>? =
                 null,
         ): this(
             relationId.toFrozen(),
+            sourceIndex,
+            targetIndex,
             _unrecognizedFields,
         ) {}
 
@@ -2308,6 +2230,8 @@ sealed class AuthoringEdgeOrigin private constructor() {
         /** Returns a mutable shallow copy of this instance */
         fun toMutable() = Mutable(
             relationId = this.relationId,
+            sourceIndex = this.sourceIndex,
+            targetIndex = this.targetIndex,
         );
 
         /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -2316,8 +2240,14 @@ sealed class AuthoringEdgeOrigin private constructor() {
                 _MustNameArguments,
             relationId: skirout.editor.v1.authoring.RelationId_OrMutable =
                 this.relationId,
+            sourceIndex: kotlin.Int? =
+                this.sourceIndex,
+            targetIndex: kotlin.Int? =
+                this.targetIndex,
         ) = skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation(
             relationId.toFrozen(),
+            sourceIndex,
+            targetIndex,
             this._unrecognizedFields,
         );
 
@@ -2325,11 +2255,11 @@ sealed class AuthoringEdgeOrigin private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation && this.relationId == other.relationId);
+            return this === other || (other is skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation && this.relationId == other.relationId && this.sourceIndex == other.sourceIndex && this.targetIndex == other.targetIndex);
         }
 
         override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.relationId).hashCode();
+            return kotlin.collections.listOf<kotlin.Any?>(this.relationId, this.sourceIndex, this.targetIndex).hashCode();
         }
 
         override fun toString(): kotlin.String {
@@ -2345,12 +2275,18 @@ sealed class AuthoringEdgeOrigin private constructor() {
                 _MustNameArguments,
             override var relationId: skirout.editor.v1.authoring.RelationId_OrMutable =
                 skirout.editor.v1.authoring.RelationId.partial(),
+            override var sourceIndex: kotlin.Int? =
+                null,
+            override var targetIndex: kotlin.Int? =
+                null,
             internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation>? =
                 null,
         ): skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation_OrMutable {
             /** Returns a deeply immutable copy of this instance */
             override fun toFrozen() = skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation(
                 relationId = this.relationId,
+                sourceIndex = this.sourceIndex,
+                targetIndex = this.targetIndex,
                 _unrecognizedFields = this._unrecognizedFields,
             );
 
@@ -2375,6 +2311,8 @@ sealed class AuthoringEdgeOrigin private constructor() {
             private val default =
                 skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation(
                     skirout.editor.v1.authoring.RelationId.partial(),
+                    null,
+                    null,
                 );
 
             /** Returns an instance with all fields set to their default values. */
@@ -2390,8 +2328,14 @@ sealed class AuthoringEdgeOrigin private constructor() {
                     _MustNameArguments,
                 relationId: skirout.editor.v1.authoring.RelationId_OrMutable =
                     skirout.editor.v1.authoring.RelationId.partial(),
+                sourceIndex: kotlin.Int? =
+                    null,
+                targetIndex: kotlin.Int? =
+                    null,
             ) = skirout.editor.v1.authoring.AuthoringEdgeOrigin.DeclaredRelation(
                 relationId = relationId,
+                sourceIndex = sourceIndex,
+                targetIndex = targetIndex,
                 _unrecognizedFields = null,
             );
 
@@ -2420,6 +2364,28 @@ sealed class AuthoringEdgeOrigin private constructor() {
                     "",
                     { it.relationId },
                     { mut, v -> mut.relationId = v },
+                );
+                serializerImpl.addField(
+                    "source_index",
+                    "sourceIndex",
+                    1,
+                    build.skir.Serializers.optional(
+                        build.skir.Serializers.int32,
+                    ),
+                    "",
+                    { it.sourceIndex },
+                    { mut, v -> mut.sourceIndex = v },
+                );
+                serializerImpl.addField(
+                    "target_index",
+                    "targetIndex",
+                    2,
+                    build.skir.Serializers.optional(
+                        build.skir.Serializers.int32,
+                    ),
+                    "",
+                    { it.targetIndex },
+                    { mut, v -> mut.targetIndex = v },
                 );
                 serializerImpl.finalizeStruct();
             }
@@ -5603,8 +5569,7 @@ class AuthoringGraphSnapshot private constructor(
 
 sealed interface CreateResource_OrMutable {
     val resource: skirout.editor.v1.authoring.AuthoringResource_OrMutable;
-    val creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable;
-    val hosts: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable>;
+    val attachment: skirout.editor.v1.authoring.CreationAttachment_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.authoring.CreateResource;
 }
@@ -5613,8 +5578,7 @@ sealed interface CreateResource_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CreateResource private constructor(
     override val resource: skirout.editor.v1.authoring.AuthoringResource,
-    override val creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId,
-    override val hosts: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+    override val attachment: skirout.editor.v1.authoring.CreationAttachment?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreateResource>? =
         null,
 ): skirout.editor.v1.authoring.CreateResource_OrMutable {
@@ -5622,14 +5586,12 @@ class CreateResource private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         resource: skirout.editor.v1.authoring.AuthoringResource_OrMutable,
-        creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable,
-        hosts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+        attachment: skirout.editor.v1.authoring.CreationAttachment_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreateResource>? =
             null,
     ): this(
         resource.toFrozen(),
-        creationSlot.toFrozen(),
-        build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
+        if (attachment != null) attachment.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -5639,8 +5601,7 @@ class CreateResource private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         resource = this.resource,
-        creationSlot = this.creationSlot,
-        hosts = this.hosts,
+        attachment = this.attachment,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -5649,14 +5610,11 @@ class CreateResource private constructor(
             _MustNameArguments,
         resource: skirout.editor.v1.authoring.AuthoringResource_OrMutable =
             this.resource,
-        creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
-            this.creationSlot,
-        hosts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-            this.hosts,
+        attachment: skirout.editor.v1.authoring.CreationAttachment_OrMutable? =
+            this.attachment,
     ) = skirout.editor.v1.authoring.CreateResource(
         resource.toFrozen(),
-        creationSlot.toFrozen(),
-        build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
+        if (attachment != null) attachment.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -5664,11 +5622,11 @@ class CreateResource private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.CreateResource && this.resource == other.resource && this.creationSlot == other.creationSlot && this.hosts == other.hosts);
+        return this === other || (other is skirout.editor.v1.authoring.CreateResource && this.resource == other.resource && this.attachment == other.attachment);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.resource, this.creationSlot, this.hosts).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.resource, this.attachment).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -5684,18 +5642,15 @@ class CreateResource private constructor(
             _MustNameArguments,
         override var resource: skirout.editor.v1.authoring.AuthoringResource_OrMutable =
             skirout.editor.v1.authoring.AuthoringResource.partial(),
-        override var creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
-            skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
-        override var hosts: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+        override var attachment: skirout.editor.v1.authoring.CreationAttachment_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreateResource>? =
             null,
     ): skirout.editor.v1.authoring.CreateResource_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.authoring.CreateResource(
             resource = this.resource,
-            creationSlot = this.creationSlot,
-            hosts = this.hosts,
+            attachment = this.attachment,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -5714,46 +5669,13 @@ class CreateResource private constructor(
                 is skirout.editor.v1.authoring.AuthoringResource.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [creationSlot] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [creationSlot] and returns it.
-         */
-        val mutableCreationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId.Mutable get() {
-            var value = this.creationSlot;
-            return when (value) {
-                is skirout.editor.v1.authoring.AuthoringCreationSlotId -> {
-                    value = value.toMutable();
-                    this.creationSlot = value;
-                    return value;
-                }
-                is skirout.editor.v1.authoring.AuthoringCreationSlotId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [hosts] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
-         */
-        val mutableHosts: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
-            var value = this.hosts;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.hosts = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.authoring.CreateResource(
                 skirout.editor.v1.authoring.AuthoringResource.partial(),
-                skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -5769,14 +5691,11 @@ class CreateResource private constructor(
                 _MustNameArguments,
             resource: skirout.editor.v1.authoring.AuthoringResource_OrMutable =
                 skirout.editor.v1.authoring.AuthoringResource.partial(),
-            creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable =
-                skirout.editor.v1.authoring.AuthoringCreationSlotId.partial(),
-            hosts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+            attachment: skirout.editor.v1.authoring.CreationAttachment_OrMutable? =
+                null,
         ) = skirout.editor.v1.authoring.CreateResource(
             resource = resource,
-            creationSlot = creationSlot,
-            hosts = hosts,
+            attachment = attachment,
             _unrecognizedFields = null,
         );
 
@@ -5807,24 +5726,227 @@ class CreateResource private constructor(
                 { mut, v -> mut.resource = v },
             );
             serializerImpl.addField(
-                "creation_slot",
-                "creationSlot",
+                "attachment",
+                "attachment",
                 1,
-                skirout.editor.v1.authoring.AuthoringCreationSlotId.serializer,
-                "",
-                { it.creationSlot },
-                { mut, v -> mut.creationSlot = v },
-            );
-            serializerImpl.addField(
-                "hosts",
-                "hosts",
-                2,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.type_catalog.ResourceId.serializer,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.authoring.CreationAttachment.serializer,
                 ),
                 "",
-                { it.hosts },
-                { mut, v -> mut.hosts = v },
+                { it.attachment },
+                { mut, v -> mut.attachment = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface CreationAttachment_OrMutable {
+    val host: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val relation: skirout.editor.v1.authoring.RelationId_OrMutable;
+    val hostSide: skirout.editor.v1.authoring.RelationEndpointSide;
+
+    fun toFrozen(): skirout.editor.v1.authoring.CreationAttachment;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CreationAttachment private constructor(
+    override val host: skirout.editor.v1.type_catalog.ResourceId,
+    override val relation: skirout.editor.v1.authoring.RelationId,
+    override val hostSide: skirout.editor.v1.authoring.RelationEndpointSide,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreationAttachment>? =
+        null,
+): skirout.editor.v1.authoring.CreationAttachment_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        host: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        relation: skirout.editor.v1.authoring.RelationId_OrMutable,
+        hostSide: skirout.editor.v1.authoring.RelationEndpointSide,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreationAttachment>? =
+            null,
+    ): this(
+        host.toFrozen(),
+        relation.toFrozen(),
+        hostSide,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        host = this.host,
+        relation = this.relation,
+        hostSide = this.hostSide,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        host: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            this.host,
+        relation: skirout.editor.v1.authoring.RelationId_OrMutable =
+            this.relation,
+        hostSide: skirout.editor.v1.authoring.RelationEndpointSide =
+            this.hostSide,
+    ) = skirout.editor.v1.authoring.CreationAttachment(
+        host.toFrozen(),
+        relation.toFrozen(),
+        hostSide,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.authoring.CreationAttachment && this.host == other.host && this.relation == other.relation && this.hostSide == other.hostSide);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.host, this.relation, this.hostSide).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.authoring.CreationAttachment.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [CreationAttachment]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var host: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var relation: skirout.editor.v1.authoring.RelationId_OrMutable =
+            skirout.editor.v1.authoring.RelationId.partial(),
+        override var hostSide: skirout.editor.v1.authoring.RelationEndpointSide =
+            skirout.editor.v1.authoring.RelationEndpointSide.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreationAttachment>? =
+            null,
+    ): skirout.editor.v1.authoring.CreationAttachment_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.authoring.CreationAttachment(
+            host = this.host,
+            relation = this.relation,
+            hostSide = this.hostSide,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [host] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
+         */
+        val mutableHost: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+            var value = this.host;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ResourceId -> {
+                    value = value.toMutable();
+                    this.host = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [relation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [relation] and returns it.
+         */
+        val mutableRelation: skirout.editor.v1.authoring.RelationId.Mutable get() {
+            var value = this.relation;
+            return when (value) {
+                is skirout.editor.v1.authoring.RelationId -> {
+                    value = value.toMutable();
+                    this.relation = value;
+                    return value;
+                }
+                is skirout.editor.v1.authoring.RelationId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.authoring.CreationAttachment(
+                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.editor.v1.authoring.RelationId.partial(),
+                skirout.editor.v1.authoring.RelationEndpointSide.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CreationAttachment].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            host: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            relation: skirout.editor.v1.authoring.RelationId_OrMutable =
+                skirout.editor.v1.authoring.RelationId.partial(),
+            hostSide: skirout.editor.v1.authoring.RelationEndpointSide =
+                skirout.editor.v1.authoring.RelationEndpointSide.UNKNOWN,
+        ) = skirout.editor.v1.authoring.CreationAttachment(
+            host = host,
+            relation = relation,
+            hostSide = hostSide,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/authoring.skir:CreationAttachment",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [CreationAttachment] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [CreationAttachment] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "host",
+                "host",
+                0,
+                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                "",
+                { it.host },
+                { mut, v -> mut.host = v },
+            );
+            serializerImpl.addField(
+                "relation",
+                "relation",
+                1,
+                skirout.editor.v1.authoring.RelationId.serializer,
+                "",
+                { it.relation },
+                { mut, v -> mut.relation = v },
+            );
+            serializerImpl.addField(
+                "host_side",
+                "hostSide",
+                2,
+                skirout.editor.v1.authoring.RelationEndpointSide.serializer,
+                "",
+                { it.hostSide },
+                { mut, v -> mut.hostSide = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -6293,6 +6415,8 @@ sealed interface DeclareRelation_OrMutable {
     val relation: skirout.editor.v1.authoring.RelationId_OrMutable;
     val source: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
     val target: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val sourceBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable?;
+    val targetBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.authoring.DeclareRelation;
 }
@@ -6303,6 +6427,8 @@ class DeclareRelation private constructor(
     override val relation: skirout.editor.v1.authoring.RelationId,
     override val source: skirout.editor.v1.type_catalog.ResourceId,
     override val target: skirout.editor.v1.type_catalog.ResourceId,
+    override val sourceBefore: skirout.editor.v1.type_catalog.ResourceId?,
+    override val targetBefore: skirout.editor.v1.type_catalog.ResourceId?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.DeclareRelation>? =
         null,
 ): skirout.editor.v1.authoring.DeclareRelation_OrMutable {
@@ -6312,12 +6438,16 @@ class DeclareRelation private constructor(
         relation: skirout.editor.v1.authoring.RelationId_OrMutable,
         source: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
         target: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        sourceBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable?,
+        targetBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.DeclareRelation>? =
             null,
     ): this(
         relation.toFrozen(),
         source.toFrozen(),
         target.toFrozen(),
+        if (sourceBefore != null) sourceBefore.toFrozen() else null,
+        if (targetBefore != null) targetBefore.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -6329,6 +6459,8 @@ class DeclareRelation private constructor(
         relation = this.relation,
         source = this.source,
         target = this.target,
+        sourceBefore = this.sourceBefore,
+        targetBefore = this.targetBefore,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -6341,10 +6473,16 @@ class DeclareRelation private constructor(
             this.source,
         target: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
             this.target,
+        sourceBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+            this.sourceBefore,
+        targetBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+            this.targetBefore,
     ) = skirout.editor.v1.authoring.DeclareRelation(
         relation.toFrozen(),
         source.toFrozen(),
         target.toFrozen(),
+        if (sourceBefore != null) sourceBefore.toFrozen() else null,
+        if (targetBefore != null) targetBefore.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -6352,11 +6490,11 @@ class DeclareRelation private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.DeclareRelation && this.relation == other.relation && this.source == other.source && this.target == other.target);
+        return this === other || (other is skirout.editor.v1.authoring.DeclareRelation && this.relation == other.relation && this.source == other.source && this.target == other.target && this.sourceBefore == other.sourceBefore && this.targetBefore == other.targetBefore);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.relation, this.source, this.target).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.relation, this.source, this.target, this.sourceBefore, this.targetBefore).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -6376,6 +6514,10 @@ class DeclareRelation private constructor(
             skirout.editor.v1.type_catalog.ResourceId.partial(),
         override var target: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
             skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var sourceBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+            null,
+        override var targetBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.DeclareRelation>? =
             null,
     ): skirout.editor.v1.authoring.DeclareRelation_OrMutable {
@@ -6384,6 +6526,8 @@ class DeclareRelation private constructor(
             relation = this.relation,
             source = this.source,
             target = this.target,
+            sourceBefore = this.sourceBefore,
+            targetBefore = this.targetBefore,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -6442,6 +6586,8 @@ class DeclareRelation private constructor(
                 skirout.editor.v1.authoring.RelationId.partial(),
                 skirout.editor.v1.type_catalog.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.ResourceId.partial(),
+                null,
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -6461,10 +6607,16 @@ class DeclareRelation private constructor(
                 skirout.editor.v1.type_catalog.ResourceId.partial(),
             target: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
                 skirout.editor.v1.type_catalog.ResourceId.partial(),
+            sourceBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+                null,
+            targetBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+                null,
         ) = skirout.editor.v1.authoring.DeclareRelation(
             relation = relation,
             source = source,
             target = target,
+            sourceBefore = sourceBefore,
+            targetBefore = targetBefore,
             _unrecognizedFields = null,
         );
 
@@ -6511,6 +6663,28 @@ class DeclareRelation private constructor(
                 "",
                 { it.target },
                 { mut, v -> mut.target = v },
+            );
+            serializerImpl.addField(
+                "source_before",
+                "sourceBefore",
+                3,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.type_catalog.ResourceId.serializer,
+                ),
+                "",
+                { it.sourceBefore },
+                { mut, v -> mut.sourceBefore = v },
+            );
+            serializerImpl.addField(
+                "target_before",
+                "targetBefore",
+                4,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.type_catalog.ResourceId.serializer,
+                ),
+                "",
+                { it.targetBefore },
+                { mut, v -> mut.targetBefore = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -6886,13 +7060,11 @@ sealed class AuthoringOperation private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             resource: skirout.editor.v1.authoring.AuthoringResource_OrMutable,
-            creationSlot: skirout.editor.v1.authoring.AuthoringCreationSlotId_OrMutable,
-            hosts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+            attachment: skirout.editor.v1.authoring.CreationAttachment_OrMutable?,
         ) = CreateWrapper(
             skirout.editor.v1.authoring.CreateResource(
                 resource = resource,
-                creationSlot = creationSlot,
-                hosts = hosts,
+                attachment = attachment,
             )
         );
 
@@ -6936,11 +7108,15 @@ sealed class AuthoringOperation private constructor() {
             relation: skirout.editor.v1.authoring.RelationId_OrMutable,
             source: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
             target: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            sourceBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable?,
+            targetBefore: skirout.editor.v1.type_catalog.ResourceId_OrMutable?,
         ) = DeclareRelationWrapper(
             skirout.editor.v1.authoring.DeclareRelation(
                 relation = relation,
                 source = source,
                 target = target,
+                sourceBefore = sourceBefore,
+                targetBefore = targetBefore,
             )
         );
 

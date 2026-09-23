@@ -66,9 +66,19 @@ object TypeContributionAssembler {
         val extensionEligibility = sourceParts.associateBy { it.artifact to it.sourcePart }
         ordered.forEach { keyed ->
             keyed.contribution.definitions.forEach { definition ->
-                val previous = definitions.putIfAbsent(definition.id, definition)
-                require(previous == null || previous == definition) {
+                val previous = definitions[definition.id]
+                require(previous == null || previous.copy(displayName = definition.displayName) == definition) {
                     "Conflicting type definition ${definition.id} from ${keyed.key}."
+                }
+                val defaultName = TypeDefinition(id = definition.id, kind = definition.kind).displayName
+                require(previous == null || previous.displayName == definition.displayName ||
+                    previous.displayName == defaultName || definition.displayName == defaultName) {
+                    "Conflicting type display name ${definition.id} from ${keyed.key}."
+                }
+                definitions[definition.id] = when {
+                    previous == null -> definition
+                    previous.displayName == defaultName -> previous.copy(displayName = definition.displayName)
+                    else -> previous
                 }
             }
             keyed.contribution.relations.forEach { definition ->
@@ -107,6 +117,7 @@ object TypeContributionAssembler {
 
 private fun RelationDefinition.merge(other: RelationDefinition): RelationDefinition {
     require(source == other.source && target == other.target) { "Conflicting relation endpoints for $id." }
+    require(families == other.families) { "Conflicting relation families for $id." }
     require(onSourceDelete == other.onSourceDelete && onTargetDelete == other.onTargetDelete) {
         "Conflicting relation deletion policy for $id."
     }

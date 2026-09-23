@@ -1,13 +1,14 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringCreationSlotId
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.repository.AuthoringBatch
 import com.typewritermc.realm.repository.AuthoringOperation
+import com.typewritermc.realm.repository.CreationAttachment
 import com.typewritermc.realm.repository.BatchId
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataPathSegment
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.RelationEndpointSide
 import com.typewritermc.types.TypedValueEnvelope
 import com.typewritermc.types.expression
 import com.typewritermc.types.skir.SkirDataValueCodec
@@ -37,8 +38,17 @@ private fun WireOperation.toDomain(): AuthoringOperation =
                 id = value.resource.id.toDomain(),
                 definition = value.resource.definition.toDomain(),
                 content = value.resource.content.toDomain(),
-                creationSlot = AuthoringCreationSlotId(value.creationSlot.value),
-                hosts = value.hosts.map { it.toDomain() },
+                attachment = value.attachment?.let { attachment ->
+                    CreationAttachment(
+                        host = attachment.host.toDomain(),
+                        relation = com.typewritermc.types.RelationId(attachment.relation.value),
+                        hostSide = when (attachment.hostSide) {
+                            skirout.editor.v1.authoring.RelationEndpointSide.SOURCE -> RelationEndpointSide.SOURCE
+                            skirout.editor.v1.authoring.RelationEndpointSide.TARGET -> RelationEndpointSide.TARGET
+                            else -> error("Unknown relation endpoint side")
+                        },
+                    )
+                },
             )
         }
 
@@ -66,6 +76,8 @@ private fun WireOperation.toDomain(): AuthoringOperation =
                 relation = com.typewritermc.types.RelationId(value.relation.value),
                 source = value.source.toDomain(),
                 target = value.target.toDomain(),
+                sourceBefore = value.sourceBefore?.toDomain(),
+                targetBefore = value.targetBefore?.toDomain(),
             )
         }
 

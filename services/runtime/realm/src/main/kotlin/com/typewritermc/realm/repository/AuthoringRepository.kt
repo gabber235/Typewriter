@@ -1,7 +1,8 @@
 package com.typewritermc.realm.repository
 
 import com.typewritermc.authoring.AuthoringChangeSummary
-import com.typewritermc.authoring.AuthoringCreationSlotId
+import com.typewritermc.types.RelationEndpointSide
+import com.typewritermc.types.RelationId
 import com.typewritermc.authoring.AuthoringPresentationSubject
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.ResourceDefinitionId
@@ -64,8 +65,7 @@ sealed interface AuthoringOperation {
         val id: ResourceId,
         val definition: ResourceDefinitionId,
         val content: TypedValueEnvelope,
-        val creationSlot: AuthoringCreationSlotId,
-        val hosts: List<ResourceId>,
+        val attachment: CreationAttachment? = null,
     ) : AuthoringOperation
 
     @Serializable
@@ -90,6 +90,8 @@ sealed interface AuthoringOperation {
         val relation: com.typewritermc.types.RelationId,
         val source: ResourceId,
         val target: ResourceId,
+        val sourceBefore: ResourceId? = null,
+        val targetBefore: ResourceId? = null,
     ) : AuthoringOperation
 
     @Serializable
@@ -110,6 +112,13 @@ sealed interface AuthoringOperation {
                 is RemoveRelation -> null
             }
 }
+
+@Serializable
+data class CreationAttachment(
+    val host: ResourceId,
+    val relation: RelationId,
+    val hostSide: RelationEndpointSide,
+)
 
 @Serializable
 data class AuthoringChanged(

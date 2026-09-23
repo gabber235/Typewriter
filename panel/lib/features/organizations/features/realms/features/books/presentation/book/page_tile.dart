@@ -126,7 +126,8 @@ class _PageTile extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
 
-    final creationSlot = ref.watch(pageCreationSlotProvider(page.kind)).value;
+    final field = ref.watch(pageElementsFieldProvider(page.rootType)).value;
+    final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
 
     final backgroundColor = isSelected
         ? context.theme.colorScheme.primaryContainer
@@ -154,11 +155,11 @@ class _PageTile extends HookConsumerWidget {
       builder: (context, constraints) {
         return DragTarget<EntryDragPayload>(
           onWillAcceptWithDetails: (details) {
-            return creationSlot != null &&
+            return field != null && catalog != null &&
                 details.data.entries.every((entry) {
                   final elementType = entry.elementType;
                   return elementType != null &&
-                      creationSlot.acceptsRoot(elementType);
+                      field.accepts(elementType, TypeRegistry(catalog.catalog));
                 });
           },
           onAcceptWithDetails: (details) async {

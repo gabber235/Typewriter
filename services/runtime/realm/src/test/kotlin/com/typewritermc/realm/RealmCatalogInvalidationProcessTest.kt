@@ -1,7 +1,7 @@
 package com.typewritermc.realm
 
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.elements.ContentCatalog
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -129,5 +129,5 @@ private fun snapshot(generation: String): RealmDiscoverySnapshot =
                 types = TypeCatalog(emptyList()),
                 diagnostics = emptyList(),
             ),
-        elements = ElementCatalog(emptyList()),
+        elements = ContentCatalog(emptyList()),
     )

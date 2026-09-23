@@ -180,7 +180,12 @@ class CueSelection extends EditableSelectable<CueIdentifier> {
 
   @override
   Widget? buildInspectorHeader(EditOwner owner) {
-    return CueHeader(id: id.id, name: name, color: cue.elementDefinition.color);
+    return CueHeader(
+      id: id.id,
+      name: name,
+      color: cue.elementDefinition.color,
+      rootType: rootType,
+    );
   }
 
   @override
@@ -198,12 +203,14 @@ class CueHeader extends StatelessWidget {
     required this.id,
     required this.name,
     required this.color,
+    required this.rootType,
     super.key,
   });
 
   final String id;
   final String name;
   final Color color;
+  final ResolvedTypeRef rootType;
 
   @override
   Widget build(BuildContext context) {
@@ -220,6 +227,10 @@ class CueHeader extends StatelessWidget {
               Text(id, style: textTheme.bodyMedium),
             ],
           ),
+        ),
+        RelationAddMenu(
+          host: skir.ResourceId(value: id),
+          rootType: rootType,
         ),
         CircleAvatar(backgroundColor: color, radius: 12),
       ],

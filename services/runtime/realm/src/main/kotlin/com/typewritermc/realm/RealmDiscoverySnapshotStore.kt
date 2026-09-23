@@ -2,7 +2,7 @@ package com.typewritermc.realm
 
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.elements.ContentCatalog
 import com.typewritermc.pages.PageCatalog
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -59,10 +59,9 @@ data class RealmDiscoverySnapshot(
     val resourceDefinitions: List<AuthoringResourceDefinition> = emptyList(),
     val relations: List<com.typewritermc.types.RelationDefinition> = emptyList(),
     val collectionProjections: List<skirout.editor.v1.authoring.CollectionProjectionDefinition> = emptyList(),
-    val creationSlots: List<AuthoringCreationSlotDefinition> = emptyList(),
     val authoringSearch: AuthoringSearchDefinition? = null,
     val compilationProjections: List<skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition> = emptyList(),
-    val elements: ElementCatalog,
+    val elements: ContentCatalog,
     val pages: PageCatalog = PageCatalog(emptyList(), emptyList()),
     val presentations: List<skirout.editor.v1.presentation.PresentationDefinition> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
@@ -82,12 +81,6 @@ data class AuthoringSearchFacetDefinition(
     val selectorId: String,
 )
 
-/** Stable identity for one Realm supplied creation context. */
-typealias AuthoringCreationHostCardinality = com.typewritermc.authoring.AuthoringCreationHostCardinality
-typealias AuthoringCreationHostFilter = com.typewritermc.authoring.AuthoringCreationHostFilter
-typealias AuthoringCreationRelationDirection = com.typewritermc.authoring.AuthoringCreationRelationDirection
-typealias AuthoringCreationSlotDefinition = com.typewritermc.authoring.AuthoringCreationSlotDefinition
-typealias AuthoringCreationSlotId = com.typewritermc.authoring.AuthoringCreationSlotId
 typealias AuthoringResourceDefinition = com.typewritermc.authoring.AuthoringResourceDefinition
 typealias ResourceDefinitionId = com.typewritermc.authoring.ResourceDefinitionId
 
@@ -97,4 +90,5 @@ object CoreResourceDefinitionIds {
     val TAG = ResourceDefinitionId("typewriter.tag")
     val PAGE = ResourceDefinitionId("typewriter.page")
     val ELEMENT = ResourceDefinitionId("typewriter.element")
+    val CUE = ResourceDefinitionId("typewriter.cue")
 }

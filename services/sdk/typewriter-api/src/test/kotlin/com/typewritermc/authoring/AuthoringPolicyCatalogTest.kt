@@ -21,7 +21,6 @@ val AuthoringPolicyCatalogTest by testSuite {
         catalog.validations shouldBe emptyMap()
         catalog.search shouldBe emptyMap()
         catalog.presentations shouldBe emptyMap()
-        catalog.creationSlots shouldBe emptyMap()
         catalog.compilation shouldBe emptyMap()
     }
 

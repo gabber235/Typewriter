@@ -12,16 +12,12 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
-
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "./authoring.dart" as _lib_editor_v1_authoring;
 import "./catalog_presentation.dart" as _lib_editor_v1_catalog_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
-import "./typed_value.dart" as _lib_editor_v1_typed_value;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
-import "../../kernel/v1/page_kind.dart" as _lib_kernel_v1_page_kind;
 
 // -----------------------------------------------------------------------------
 // enum GraphDirection
@@ -88,16 +84,15 @@ sealed class GraphDirection {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/page_catalog.skir:GraphDirection",
-        doc: "",
-        unknownInstance: GraphDirection_unknown._instance,
-        enumInstance: GraphDirection.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: GraphDirection_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/page_catalog.skir:GraphDirection",
+    doc: "",
+    unknownInstance: GraphDirection_unknown._instance,
+    enumInstance: GraphDirection.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: GraphDirection_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `GraphDirection`.
@@ -128,8 +123,7 @@ final class GraphDirection_unknown implements GraphDirection {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, GraphDirection.serializer);
+  _core.String toString() => _skir.internal__stringify(this, GraphDirection.serializer);
 }
 
 enum _GraphDirection_consts implements GraphDirection {
@@ -144,8 +138,7 @@ enum _GraphDirection_consts implements GraphDirection {
   const _GraphDirection_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, GraphDirection.serializer);
+  _core.String toString() => _skir.internal__stringify(this, GraphDirection.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -154,47 +147,36 @@ enum _GraphDirection_consts implements GraphDirection {
 
 sealed class GraphPageEditorDefinition_orMutable {
   GraphDirection get direction;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get nodeTypes;
 
   GraphPageEditorDefinition toFrozen();
 }
 
 /// Deeply immutable.
-final class GraphPageEditorDefinition
-    implements GraphPageEditorDefinition_orMutable {
+final class GraphPageEditorDefinition implements GraphPageEditorDefinition_orMutable {
   @_core.override
   final GraphDirection direction;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> nodeTypes;
   _skir.internal__UnrecognizedFields? _u;
 
   factory GraphPageEditorDefinition({
     required GraphDirection direction,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    nodeTypes,
   }) => GraphPageEditorDefinition._(
     direction,
-    _skir.internal__frozenMappedCopy(nodeTypes, (it) => it.toFrozen()),
   );
 
-  GraphPageEditorDefinition._(this.direction, this.nodeTypes);
+  GraphPageEditorDefinition._(
+    this.direction,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = GraphPageEditorDefinition._(
     GraphDirection.unknown,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static GraphPageEditorDefinition_mutable mutable() =>
-      GraphPageEditorDefinition_mutable._(
-        GraphDirection.unknown,
-        _skir.KeyedIterable.empty,
-      );
+  static GraphPageEditorDefinition_mutable mutable() => GraphPageEditorDefinition_mutable._(
+    GraphDirection.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -202,33 +184,29 @@ final class GraphPageEditorDefinition
   GraphPageEditorDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  GraphPageEditorDefinition_mutable toMutable() =>
-      GraphPageEditorDefinition_mutable._(this.direction, this.nodeTypes);
+  GraphPageEditorDefinition_mutable toMutable() => GraphPageEditorDefinition_mutable._(
+    this.direction,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! GraphPageEditorDefinition) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.direction, this.nodeTypes];
+  _core.List get _equality_proxy => [
+    this.direction,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `GraphPageEditorDefinition` instances.
-  static _skir.StructSerializer<
-    GraphPageEditorDefinition,
-    GraphPageEditorDefinition_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<GraphPageEditorDefinition, GraphPageEditorDefinition_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "direction",
@@ -238,17 +216,6 @@ final class GraphPageEditorDefinition
         "",
         (it) => it.direction,
         (it, v) => it.direction = v,
-      );
-      _serializerBuilder.addField(
-        "node_types",
-        "nodeTypes",
-        1,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
-        ),
-        "",
-        (it) => it.nodeTypes,
-        (it, v) => it.nodeTypes = v,
       );
       _serializerBuilder.finalize();
     }
@@ -267,35 +234,18 @@ final class GraphPageEditorDefinition
 }
 
 /// Mutable version of [GraphPageEditorDefinition].
-final class GraphPageEditorDefinition_mutable
-    implements GraphPageEditorDefinition_orMutable {
+final class GraphPageEditorDefinition_mutable implements GraphPageEditorDefinition_orMutable {
   GraphDirection direction;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  nodeTypes;
   _skir.internal__UnrecognizedFields? _u;
 
-  GraphPageEditorDefinition_mutable._(this.direction, this.nodeTypes);
-
-  /// If the value of [nodeTypes] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [nodeTypes] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get mutableNodeTypes {
-    final value = this.nodeTypes;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-        >) {
-      return value;
-    } else {
-      return this.nodeTypes = _skir.internal__MutableList([...value]);
-    }
-  }
+  GraphPageEditorDefinition_mutable._(
+    this.direction,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   GraphPageEditorDefinition toFrozen() => GraphPageEditorDefinition(
     direction: this.direction,
-    nodeTypes: this.nodeTypes,
   ).._u = this._u;
 }
 
@@ -304,69 +254,23 @@ final class GraphPageEditorDefinition_mutable
 // -----------------------------------------------------------------------------
 
 sealed class TimelinePageEditorDefinition_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get trackTypes;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get segmentTypes;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get keyframeTypes;
-
   TimelinePageEditorDefinition toFrozen();
 }
 
 /// Deeply immutable.
-final class TimelinePageEditorDefinition
-    implements TimelinePageEditorDefinition_orMutable {
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> trackTypes;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef>
-  segmentTypes;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef>
-  keyframeTypes;
+final class TimelinePageEditorDefinition implements TimelinePageEditorDefinition_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory TimelinePageEditorDefinition({
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    trackTypes,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    segmentTypes,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    keyframeTypes,
-  }) => TimelinePageEditorDefinition._(
-    _skir.internal__frozenMappedCopy(trackTypes, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(segmentTypes, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(keyframeTypes, (it) => it.toFrozen()),
-  );
+  factory TimelinePageEditorDefinition() => TimelinePageEditorDefinition._();
 
-  TimelinePageEditorDefinition._(
-    this.trackTypes,
-    this.segmentTypes,
-    this.keyframeTypes,
-  );
+  TimelinePageEditorDefinition._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = TimelinePageEditorDefinition._(
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
+  static final defaultInstance = TimelinePageEditorDefinition._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static TimelinePageEditorDefinition_mutable mutable() =>
-      TimelinePageEditorDefinition_mutable._(
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-      );
+  static TimelinePageEditorDefinition_mutable mutable() => TimelinePageEditorDefinition_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -374,75 +278,26 @@ final class TimelinePageEditorDefinition
   TimelinePageEditorDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TimelinePageEditorDefinition_mutable toMutable() =>
-      TimelinePageEditorDefinition_mutable._(
-        this.trackTypes,
-        this.segmentTypes,
-        this.keyframeTypes,
-      );
+  TimelinePageEditorDefinition_mutable toMutable() => TimelinePageEditorDefinition_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TimelinePageEditorDefinition) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.trackTypes,
-    this.segmentTypes,
-    this.keyframeTypes,
-  ];
+  _core.List get _equality_proxy => [];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TimelinePageEditorDefinition` instances.
-  static _skir.StructSerializer<
-    TimelinePageEditorDefinition,
-    TimelinePageEditorDefinition_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<TimelinePageEditorDefinition, TimelinePageEditorDefinition_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "track_types",
-        "trackTypes",
-        0,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
-        ),
-        "",
-        (it) => it.trackTypes,
-        (it, v) => it.trackTypes = v,
-      );
-      _serializerBuilder.addField(
-        "segment_types",
-        "segmentTypes",
-        1,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
-        ),
-        "",
-        (it) => it.segmentTypes,
-        (it, v) => it.segmentTypes = v,
-      );
-      _serializerBuilder.addField(
-        "keyframe_types",
-        "keyframeTypes",
-        2,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
-        ),
-        "",
-        (it) => it.keyframeTypes,
-        (it, v) => it.keyframeTypes = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -460,74 +315,14 @@ final class TimelinePageEditorDefinition
 }
 
 /// Mutable version of [TimelinePageEditorDefinition].
-final class TimelinePageEditorDefinition_mutable
-    implements TimelinePageEditorDefinition_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  trackTypes;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  segmentTypes;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  keyframeTypes;
+final class TimelinePageEditorDefinition_mutable implements TimelinePageEditorDefinition_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  TimelinePageEditorDefinition_mutable._(
-    this.trackTypes,
-    this.segmentTypes,
-    this.keyframeTypes,
-  );
-
-  /// If the value of [trackTypes] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [trackTypes] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get mutableTrackTypes {
-    final value = this.trackTypes;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-        >) {
-      return value;
-    } else {
-      return this.trackTypes = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [segmentTypes] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [segmentTypes] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get mutableSegmentTypes {
-    final value = this.segmentTypes;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-        >) {
-      return value;
-    } else {
-      return this.segmentTypes = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [keyframeTypes] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [keyframeTypes] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get mutableKeyframeTypes {
-    final value = this.keyframeTypes;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-        >) {
-      return value;
-    } else {
-      return this.keyframeTypes = _skir.internal__MutableList([...value]);
-    }
-  }
+  TimelinePageEditorDefinition_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TimelinePageEditorDefinition toFrozen() => TimelinePageEditorDefinition(
-    trackTypes: this.trackTypes,
-    segmentTypes: this.segmentTypes,
-    keyframeTypes: this.keyframeTypes,
-  ).._u = this._u;
+  TimelinePageEditorDefinition toFrozen() => TimelinePageEditorDefinition().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -547,49 +342,30 @@ final class TimelinePageEditorDefinition_mutable
 sealed class PageEditorDefinition {
   /// Constant indicating an unknown `PageEditorDefinition`.
   /// Default value for fields of type `PageEditorDefinition`.
-  static const PageEditorDefinition unknown =
-      PageEditorDefinition_unknown._instance;
+  static const PageEditorDefinition unknown = PageEditorDefinition_unknown._instance;
 
   /// Create a 'graph' variant wrapping around the given value.
-  factory PageEditorDefinition.wrapGraph(GraphPageEditorDefinition value) =>
-      PageEditorDefinition_graphWrapper._(value);
+  factory PageEditorDefinition.wrapGraph(
+    GraphPageEditorDefinition value
+  ) => PageEditorDefinition_graphWrapper._(value);
 
   /// Same as `wrapGraph(GraphPageEditorDefinition(...))`.
   factory PageEditorDefinition.createGraph({
     required GraphDirection direction,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    nodeTypes,
   }) => PageEditorDefinition.wrapGraph(
-    GraphPageEditorDefinition(direction: direction, nodeTypes: nodeTypes),
+    GraphPageEditorDefinition(
+      direction: direction,
+    )
   );
 
   /// Create a 'timeline' variant wrapping around the given value.
   factory PageEditorDefinition.wrapTimeline(
-    TimelinePageEditorDefinition value,
+    TimelinePageEditorDefinition value
   ) => PageEditorDefinition_timelineWrapper._(value);
 
   /// Same as `wrapTimeline(TimelinePageEditorDefinition(...))`.
-  factory PageEditorDefinition.createTimeline({
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    trackTypes,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    segmentTypes,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    keyframeTypes,
-  }) => PageEditorDefinition.wrapTimeline(
-    TimelinePageEditorDefinition(
-      trackTypes: trackTypes,
-      segmentTypes: segmentTypes,
-      keyframeTypes: keyframeTypes,
-    ),
+  factory PageEditorDefinition.createTimeline() => PageEditorDefinition.wrapTimeline(
+    TimelinePageEditorDefinition()
   );
 
   /// Returns the kind of variant held by this PageEditorDefinition.
@@ -623,16 +399,15 @@ sealed class PageEditorDefinition {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/page_catalog.skir:PageEditorDefinition",
-        doc: "",
-        unknownInstance: PageEditorDefinition_unknown._instance,
-        enumInstance: PageEditorDefinition.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PageEditorDefinition_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/page_catalog.skir:PageEditorDefinition",
+    doc: "",
+    unknownInstance: PageEditorDefinition_unknown._instance,
+    enumInstance: PageEditorDefinition.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: PageEditorDefinition_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `PageEditorDefinition`.
@@ -661,8 +436,7 @@ final class PageEditorDefinition_unknown implements PageEditorDefinition {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PageEditorDefinition.serializer);
+  _core.String toString() => _skir.internal__stringify(this, PageEditorDefinition.serializer);
 }
 
 sealed class _PageEditorDefinition_wrapper implements PageEditorDefinition {
@@ -678,12 +452,10 @@ sealed class _PageEditorDefinition_wrapper implements PageEditorDefinition {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PageEditorDefinition.serializer);
+  _core.String toString() => _skir.internal__stringify(this, PageEditorDefinition.serializer);
 }
 
-final class PageEditorDefinition_graphWrapper
-    extends _PageEditorDefinition_wrapper {
+final class PageEditorDefinition_graphWrapper extends _PageEditorDefinition_wrapper {
   final GraphPageEditorDefinition value;
 
   PageEditorDefinition_graphWrapper._(this.value);
@@ -692,15 +464,13 @@ final class PageEditorDefinition_graphWrapper
   PageEditorDefinition_kind get kind => PageEditorDefinition_kind.graphWrapper;
 }
 
-final class PageEditorDefinition_timelineWrapper
-    extends _PageEditorDefinition_wrapper {
+final class PageEditorDefinition_timelineWrapper extends _PageEditorDefinition_wrapper {
   final TimelinePageEditorDefinition value;
 
   PageEditorDefinition_timelineWrapper._(this.value);
 
   @_core.override
-  PageEditorDefinition_kind get kind =>
-      PageEditorDefinition_kind.timelineWrapper;
+  PageEditorDefinition_kind get kind => PageEditorDefinition_kind.timelineWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -708,15 +478,12 @@ final class PageEditorDefinition_timelineWrapper
 // -----------------------------------------------------------------------------
 
 sealed class PageDescriptor_orMutable {
-  _lib_kernel_v1_page_kind.PageKindRef_orMutable get kind;
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get type;
   _core.String get name;
   _core.String? get description;
   _lib_kernel_v1_icon.Icon get icon;
   _lib_kernel_v1_color.Color_orMutable get color;
   PageEditorDefinition get editor;
-  _core.Iterable<PageAuthoringRuleRef_orMutable> get authoringRules;
-  _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable
-  get elementCreationSlot;
 
   PageDescriptor toFrozen();
 }
@@ -724,7 +491,7 @@ sealed class PageDescriptor_orMutable {
 /// Deeply immutable.
 final class PageDescriptor implements PageDescriptor_orMutable {
   @_core.override
-  final _lib_kernel_v1_page_kind.PageKindRef kind;
+  final _lib_editor_v1_type_catalog.ResolvedTypeRef type;
   @_core.override
   final _core.String name;
   @_core.override
@@ -735,67 +502,52 @@ final class PageDescriptor implements PageDescriptor_orMutable {
   final _lib_kernel_v1_color.Color color;
   @_core.override
   final PageEditorDefinition editor;
-  @_core.override
-  final _core.Iterable<PageAuthoringRuleRef> authoringRules;
-  @_core.override
-  final _lib_editor_v1_authoring.AuthoringCreationSlotId elementCreationSlot;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PageDescriptor({
-    required _lib_kernel_v1_page_kind.PageKindRef_orMutable kind,
+    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable type,
     required _core.String name,
     required _core.String? description,
     required _lib_kernel_v1_icon.Icon icon,
     required _lib_kernel_v1_color.Color_orMutable color,
     required PageEditorDefinition editor,
-    required _core.Iterable<PageAuthoringRuleRef_orMutable> authoringRules,
-    required _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable
-    elementCreationSlot,
   }) => PageDescriptor._(
-    kind.toFrozen(),
+    type.toFrozen(),
     name,
     description,
     icon,
     color.toFrozen(),
     editor,
-    _skir.internal__frozenMappedCopy(authoringRules, (it) => it.toFrozen()),
-    elementCreationSlot.toFrozen(),
   );
 
   PageDescriptor._(
-    this.kind,
+    this.type,
     this.name,
     this.description,
     this.icon,
     this.color,
     this.editor,
-    this.authoringRules,
-    this.elementCreationSlot,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PageDescriptor._(
-    _lib_kernel_v1_page_kind.PageKindRef.defaultInstance,
+    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
     "",
     null,
     _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
     PageEditorDefinition.unknown,
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_authoring.AuthoringCreationSlotId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PageDescriptor_mutable mutable() => PageDescriptor_mutable._(
-    _lib_kernel_v1_page_kind.PageKindRef.defaultInstance,
+    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
     "",
     null,
     _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
     PageEditorDefinition.unknown,
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_authoring.AuthoringCreationSlotId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -805,55 +557,47 @@ final class PageDescriptor implements PageDescriptor_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   PageDescriptor_mutable toMutable() => PageDescriptor_mutable._(
-    this.kind,
+    this.type,
     this.name,
     this.description,
     this.icon,
     this.color,
     this.editor,
-    this.authoringRules,
-    this.elementCreationSlot,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PageDescriptor) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.kind,
+    this.type,
     this.name,
     this.description,
     this.icon,
     this.color,
     this.editor,
-    this.authoringRules,
-    this.elementCreationSlot,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PageDescriptor` instances.
-  static _skir.StructSerializer<PageDescriptor, PageDescriptor_mutable>
-  get serializer {
+  static _skir.StructSerializer<PageDescriptor, PageDescriptor_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "kind",
-        "kind",
+        "type",
+        "type",
         0,
-        _lib_kernel_v1_page_kind.PageKindRef.serializer,
+        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
         "",
-        (it) => it.kind,
-        (it, v) => it.kind = v,
+        (it) => it.type,
+        (it, v) => it.type = v,
       );
       _serializerBuilder.addField(
         "name",
@@ -868,7 +612,9 @@ final class PageDescriptor implements PageDescriptor_orMutable {
         "description",
         "description",
         2,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.description,
         (it, v) => it.description = v,
@@ -900,24 +646,6 @@ final class PageDescriptor implements PageDescriptor_orMutable {
         (it) => it.editor,
         (it, v) => it.editor = v,
       );
-      _serializerBuilder.addField(
-        "authoring_rules",
-        "authoringRules",
-        6,
-        _skir.Serializers.iterable(PageAuthoringRuleRef.serializer),
-        "",
-        (it) => it.authoringRules,
-        (it, v) => it.authoringRules = v,
-      );
-      _serializerBuilder.addField(
-        "element_creation_slot",
-        "elementCreationSlot",
-        7,
-        _lib_editor_v1_authoring.AuthoringCreationSlotId.serializer,
-        "",
-        (it) => it.elementCreationSlot,
-        (it, v) => it.elementCreationSlot = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -936,37 +664,31 @@ final class PageDescriptor implements PageDescriptor_orMutable {
 
 /// Mutable version of [PageDescriptor].
 final class PageDescriptor_mutable implements PageDescriptor_orMutable {
-  _lib_kernel_v1_page_kind.PageKindRef_orMutable kind;
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable type;
   _core.String name;
   _core.String? description;
   _lib_kernel_v1_icon.Icon icon;
   _lib_kernel_v1_color.Color_orMutable color;
   PageEditorDefinition editor;
-  _core.Iterable<PageAuthoringRuleRef_orMutable> authoringRules;
-  _lib_editor_v1_authoring.AuthoringCreationSlotId_orMutable
-  elementCreationSlot;
   _skir.internal__UnrecognizedFields? _u;
 
   PageDescriptor_mutable._(
-    this.kind,
+    this.type,
     this.name,
     this.description,
     this.icon,
     this.color,
     this.editor,
-    this.authoringRules,
-    this.elementCreationSlot,
   );
 
-  /// If the value of [kind] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [kind] and returns it.
-  _lib_kernel_v1_page_kind.PageKindRef_mutable get mutableKind {
-    final value = this.kind;
-    if (value is _lib_kernel_v1_page_kind.PageKindRef_mutable) {
+  /// If the value of [type] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [type] and returns it.
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableType {
+    final value = this.type;
+    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.kind = (value as _lib_kernel_v1_page_kind.PageKindRef)
-          .toMutable();
+      return this.type = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
@@ -981,42 +703,15 @@ final class PageDescriptor_mutable implements PageDescriptor_orMutable {
     }
   }
 
-  /// If the value of [authoringRules] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [authoringRules] and returns it.
-  _core.List<PageAuthoringRuleRef_orMutable> get mutableAuthoringRules {
-    final value = this.authoringRules;
-    if (value is _skir.internal__MutableList<PageAuthoringRuleRef_orMutable>) {
-      return value;
-    } else {
-      return this.authoringRules = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [elementCreationSlot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [elementCreationSlot] and returns it.
-  _lib_editor_v1_authoring.AuthoringCreationSlotId_mutable
-  get mutableElementCreationSlot {
-    final value = this.elementCreationSlot;
-    if (value is _lib_editor_v1_authoring.AuthoringCreationSlotId_mutable) {
-      return value;
-    } else {
-      return this.elementCreationSlot =
-          (value as _lib_editor_v1_authoring.AuthoringCreationSlotId)
-              .toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PageDescriptor toFrozen() => PageDescriptor(
-    kind: this.kind,
+    type: this.type,
     name: this.name,
     description: this.description,
     icon: this.icon,
     color: this.color,
     editor: this.editor,
-    authoringRules: this.authoringRules,
-    elementCreationSlot: this.elementCreationSlot,
   ).._u = this._u;
 }
 
@@ -1028,8 +723,7 @@ sealed class PageCatalogEntry_orMutable {
   _core.String get originArtifactId;
   _core.String get sourcePart;
   PageDescriptor_orMutable get descriptor;
-  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable
-  get presentationSubject;
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable get presentationSubject;
 
   PageCatalogEntry toFrozen();
 }
@@ -1043,16 +737,14 @@ final class PageCatalogEntry implements PageCatalogEntry_orMutable {
   @_core.override
   final PageDescriptor descriptor;
   @_core.override
-  final _lib_editor_v1_catalog_presentation.CatalogPresentationSubject
-  presentationSubject;
+  final _lib_editor_v1_catalog_presentation.CatalogPresentationSubject presentationSubject;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PageCatalogEntry({
     required _core.String originArtifactId,
     required _core.String sourcePart,
     required PageDescriptor_orMutable descriptor,
-    required _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable
-    presentationSubject,
+    required _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable presentationSubject,
   }) => PageCatalogEntry._(
     originArtifactId,
     sourcePart,
@@ -1072,9 +764,7 @@ final class PageCatalogEntry implements PageCatalogEntry_orMutable {
     "",
     "",
     PageDescriptor.defaultInstance,
-    _lib_editor_v1_catalog_presentation
-        .CatalogPresentationSubject
-        .defaultInstance,
+    _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -1083,9 +773,7 @@ final class PageCatalogEntry implements PageCatalogEntry_orMutable {
     "",
     "",
     PageDescriptor.defaultInstance,
-    _lib_editor_v1_catalog_presentation
-        .CatalogPresentationSubject
-        .defaultInstance,
+    _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -1105,10 +793,7 @@ final class PageCatalogEntry implements PageCatalogEntry_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PageCatalogEntry) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1125,8 +810,7 @@ final class PageCatalogEntry implements PageCatalogEntry_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PageCatalogEntry` instances.
-  static _skir.StructSerializer<PageCatalogEntry, PageCatalogEntry_mutable>
-  get serializer {
+  static _skir.StructSerializer<PageCatalogEntry, PageCatalogEntry_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "origin_artifact_id",
@@ -1159,9 +843,7 @@ final class PageCatalogEntry implements PageCatalogEntry_orMutable {
         "presentation_subject",
         "presentationSubject",
         3,
-        _lib_editor_v1_catalog_presentation
-            .CatalogPresentationSubject
-            .serializer,
+        _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.serializer,
         "",
         (it) => it.presentationSubject,
         (it, v) => it.presentationSubject = v,
@@ -1187,8 +869,7 @@ final class PageCatalogEntry_mutable implements PageCatalogEntry_orMutable {
   _core.String originArtifactId;
   _core.String sourcePart;
   PageDescriptor_orMutable descriptor;
-  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable
-  presentationSubject;
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable presentationSubject;
   _skir.internal__UnrecognizedFields? _u;
 
   PageCatalogEntry_mutable._(
@@ -1211,16 +892,12 @@ final class PageCatalogEntry_mutable implements PageCatalogEntry_orMutable {
 
   /// If the value of [presentationSubject] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentationSubject] and returns it.
-  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable
-  get mutablePresentationSubject {
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable get mutablePresentationSubject {
     final value = this.presentationSubject;
-    if (value
-        is _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable) {
+    if (value is _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable) {
       return value;
     } else {
-      return this.presentationSubject =
-          (value as _lib_editor_v1_catalog_presentation.CatalogPresentationSubject)
-              .toMutable();
+      return this.presentationSubject = (value as _lib_editor_v1_catalog_presentation.CatalogPresentationSubject).toMutable();
     }
   }
 
@@ -1244,7 +921,7 @@ sealed class PageDiagnostic_orMutable {
   _core.String? get originArtifactId;
   _core.String? get sourcePart;
   _core.String? get declarationName;
-  _lib_kernel_v1_page_kind.PageKindRef_orMutable? get kind;
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable? get type;
 
   PageDiagnostic toFrozen();
 }
@@ -1262,7 +939,7 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
   @_core.override
   final _core.String? declarationName;
   @_core.override
-  final _lib_kernel_v1_page_kind.PageKindRef? kind;
+  final _lib_editor_v1_type_catalog.ResolvedTypeRef? type;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PageDiagnostic({
@@ -1271,14 +948,14 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
     required _core.String? originArtifactId,
     required _core.String? sourcePart,
     required _core.String? declarationName,
-    required _lib_kernel_v1_page_kind.PageKindRef_orMutable? kind,
+    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable? type,
   }) => PageDiagnostic._(
     code,
     message,
     originArtifactId,
     sourcePart,
     declarationName,
-    (kind != null) ? kind.toFrozen() : null,
+    (type != null) ? type.toFrozen() : null,
   );
 
   PageDiagnostic._(
@@ -1287,7 +964,7 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
     this.originArtifactId,
     this.sourcePart,
     this.declarationName,
-    this.kind,
+    this.type,
   );
 
   /// Default instance with all fields set to their default values.
@@ -1302,8 +979,14 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PageDiagnostic_mutable mutable() =>
-      PageDiagnostic_mutable._("", "", null, null, null, null);
+  static PageDiagnostic_mutable mutable() => PageDiagnostic_mutable._(
+    "",
+    "",
+    null,
+    null,
+    null,
+    null,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1317,17 +1000,14 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
     this.originArtifactId,
     this.sourcePart,
     this.declarationName,
-    this.kind,
+    this.type,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PageDiagnostic) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1339,15 +1019,14 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
     this.originArtifactId,
     this.sourcePart,
     this.declarationName,
-    this.kind,
+    this.type,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PageDiagnostic` instances.
-  static _skir.StructSerializer<PageDiagnostic, PageDiagnostic_mutable>
-  get serializer {
+  static _skir.StructSerializer<PageDiagnostic, PageDiagnostic_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "code",
@@ -1371,7 +1050,9 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
         "origin_artifact_id",
         "originArtifactId",
         2,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.originArtifactId,
         (it, v) => it.originArtifactId = v,
@@ -1380,7 +1061,9 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
         "source_part",
         "sourcePart",
         3,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.sourcePart,
         (it, v) => it.sourcePart = v,
@@ -1389,21 +1072,23 @@ final class PageDiagnostic implements PageDiagnostic_orMutable {
         "declaration_name",
         "declarationName",
         4,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.declarationName,
         (it, v) => it.declarationName = v,
       );
       _serializerBuilder.addField(
-        "kind",
-        "kind",
+        "type",
+        "type",
         5,
         _skir.Serializers.optional(
-          _lib_kernel_v1_page_kind.PageKindRef.serializer,
+          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
         ),
         "",
-        (it) => it.kind,
-        (it, v) => it.kind = v,
+        (it) => it.type,
+        (it, v) => it.type = v,
       );
       _serializerBuilder.finalize();
     }
@@ -1428,7 +1113,7 @@ final class PageDiagnostic_mutable implements PageDiagnostic_orMutable {
   _core.String? originArtifactId;
   _core.String? sourcePart;
   _core.String? declarationName;
-  _lib_kernel_v1_page_kind.PageKindRef_orMutable? kind;
+  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable? type;
   _skir.internal__UnrecognizedFields? _u;
 
   PageDiagnostic_mutable._(
@@ -1437,7 +1122,7 @@ final class PageDiagnostic_mutable implements PageDiagnostic_orMutable {
     this.originArtifactId,
     this.sourcePart,
     this.declarationName,
-    this.kind,
+    this.type,
   );
 
   /// Returns a deeply immutable copy of this instance.
@@ -1448,154 +1133,6 @@ final class PageDiagnostic_mutable implements PageDiagnostic_orMutable {
     originArtifactId: this.originArtifactId,
     sourcePart: this.sourcePart,
     declarationName: this.declarationName,
-    kind: this.kind,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct PageAuthoringRuleRef
-// -----------------------------------------------------------------------------
-
-sealed class PageAuthoringRuleRef_orMutable {
-  _core.String get id;
-  _core.int get revision;
-  _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable? get configuration;
-
-  PageAuthoringRuleRef toFrozen();
-}
-
-/// Deeply immutable.
-final class PageAuthoringRuleRef implements PageAuthoringRuleRef_orMutable {
-  @_core.override
-  final _core.String id;
-  @_core.override
-  final _core.int revision;
-  @_core.override
-  final _lib_editor_v1_typed_value.TypedValueEnvelope? configuration;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PageAuthoringRuleRef({
-    required _core.String id,
-    required _core.int revision,
-    required _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable?
-    configuration,
-  }) => PageAuthoringRuleRef._(
-    id,
-    revision,
-    (configuration != null) ? configuration.toFrozen() : null,
-  );
-
-  PageAuthoringRuleRef._(this.id, this.revision, this.configuration);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageAuthoringRuleRef._("", 0, null);
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PageAuthoringRuleRef_mutable mutable() =>
-      PageAuthoringRuleRef_mutable._("", 0, null);
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PageAuthoringRuleRef toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PageAuthoringRuleRef_mutable toMutable() => PageAuthoringRuleRef_mutable._(
-    this.id,
-    this.revision,
-    this.configuration,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PageAuthoringRuleRef) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.id,
-    this.revision,
-    this.configuration,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PageAuthoringRuleRef` instances.
-  static _skir.StructSerializer<
-    PageAuthoringRuleRef,
-    PageAuthoringRuleRef_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "id",
-        "id",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.id,
-        (it, v) => it.id = v,
-      );
-      _serializerBuilder.addField(
-        "revision",
-        "revision",
-        1,
-        _skir.Serializers.int32,
-        "",
-        (it) => it.revision,
-        (it, v) => it.revision = v,
-      );
-      _serializerBuilder.addField(
-        "configuration",
-        "configuration",
-        2,
-        _skir.Serializers.optional(
-          _lib_editor_v1_typed_value.TypedValueEnvelope.serializer,
-        ),
-        "",
-        (it) => it.configuration,
-        (it, v) => it.configuration = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/page_catalog.skir:PageAuthoringRuleRef",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PageAuthoringRuleRef_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PageAuthoringRuleRef].
-final class PageAuthoringRuleRef_mutable
-    implements PageAuthoringRuleRef_orMutable {
-  _core.String id;
-  _core.int revision;
-  _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable? configuration;
-  _skir.internal__UnrecognizedFields? _u;
-
-  PageAuthoringRuleRef_mutable._(this.id, this.revision, this.configuration);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PageAuthoringRuleRef toFrozen() => PageAuthoringRuleRef(
-    id: this.id,
-    revision: this.revision,
-    configuration: this.configuration,
+    type: this.type,
   ).._u = this._u;
 }

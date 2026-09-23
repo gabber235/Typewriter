@@ -5,9 +5,6 @@ import com.typewritermc.authoring.AuthoringCompilationProjection
 import com.typewritermc.authoring.AuthoringCompilationProjectionId
 import com.typewritermc.authoring.AuthoringCompilationResult
 import com.typewritermc.authoring.AuthoringCompilationRoot
-import com.typewritermc.authoring.AuthoringCreationContext
-import com.typewritermc.authoring.AuthoringCreationSlotDefinition
-import com.typewritermc.authoring.AuthoringCreationSlotId
 import com.typewritermc.authoring.AuthoringPolicyProvider
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.AuthoringWorkingGraph
@@ -99,36 +96,6 @@ val AuthoringPolicyTypeRootValidationTest by testSuite {
 
         shouldThrow<IllegalArgumentException> {
             RealmAuthoringPolicyAssembler.assemble(listOf(provider), TypeCatalog(emptyList()))
-        }
-    }
-
-    test("rejects an abstract creation root") {
-        val root = ResolvedTypeRef(TypeId.Qualified("fixture", "Abstract"), 1)
-        val provider =
-            AuthoringPolicyProvider { builder ->
-                builder.definition(
-                    AuthoringResourceDefinition(
-                        ResourceDefinitionId("fixture.resource"),
-                        TypeExpression.Named(root),
-                    ),
-                )
-                builder.creationSlot(
-                    AuthoringCreationSlotDefinition(
-                        id = AuthoringCreationSlotId("fixture.create"),
-                        label = "Fixture",
-                        creates = ResourceDefinitionId("fixture.resource"),
-                        context = AuthoringCreationContext.Standalone,
-                        concreteRoots = listOf(root),
-                    ),
-                )
-            }
-        val types =
-            TypeCatalog(
-                listOf(TypeDefinition(root, NominalTypeKind.OPEN_ABSTRACT, TypeExpression.Any)),
-            )
-
-        shouldThrow<IllegalArgumentException> {
-            RealmAuthoringPolicyAssembler.assemble(listOf(provider), types)
         }
     }
 

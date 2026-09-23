@@ -57,6 +57,17 @@ internal fun AuthoringWorkingGraph.sliceForPolicy(
     ) {
         return PolicyGraphSliceResult.LimitExceeded("depth", requirement.maximumDepth)
     }
+    if (requirement.includeIncidentEdges) {
+        val selected = selectedResources.keys
+        relations.values.forEach { relation ->
+            if (relation.source in selected || relation.target in selected) {
+                selectedRelations[relation.id] = relation
+            }
+        }
+        if (selectedRelations.size > requirement.maximumEdges) {
+            return PolicyGraphSliceResult.LimitExceeded("edge", requirement.maximumEdges)
+        }
+    }
     return PolicyGraphSliceResult.Success(AuthoringWorkingGraph(selectedResources, selectedRelations))
 }
 

@@ -30,6 +30,26 @@ data class Resource<I, C>(
  */
 interface Relation<S : Referenceable, T : Referenceable>
 
+/** Groups independently declared relation markers for graph queries and domain rules. */
+@JvmInline
+@Serializable
+value class RelationFamilyId(val value: String) {
+    init {
+        require(value.isNotBlank()) { "Relation family ids must not be blank." }
+    }
+}
+
+/** Publishes a family implemented by concrete relation markers. */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class TypewriterRelationFamily(val id: String)
+
+/** Ownership has one immediate parent and no cycles across all implementing markers. */
+@TypewriterRelationFamily(RESOURCE_OWNERSHIP_FAMILY_ID)
+interface OwnsResource<S : Referenceable, T : Referenceable> : Relation<S, T>
+
+const val RESOURCE_OWNERSHIP_FAMILY_ID = "resource.ownership"
+
 /** Declares the stable identity and deletion policy of one synchronized relationship. */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -73,17 +93,23 @@ value class ToOne<R : Relation<*, *>, out T : Referenceable>(
 }
 
 /**
- * Declares a synchronized relation endpoint with set cardinality.
+ * Declares a synchronized relation endpoint with ordered, unique targets.
  *
- * Serialization is exactly the wrapped reference set. Ordering is deliberately absent.
+ * Serialization is exactly the wrapped reference list. Each target may occur once in the field.
  */
 @JvmInline
 @Serializable
 value class ToMany<R : Relation<*, *>, out T : Referenceable>(
-    val references: Set<Ref<T>>,
-) : Set<Ref<T>> by references {
+    val references: List<Ref<T>>,
+) : List<Ref<T>> by references {
+    init {
+        require(references.map(Ref<T>::id).distinct().size == references.size) {
+            "A ToMany field cannot repeat a target resource."
+        }
+    }
+
     companion object {
-        fun <R : Relation<*, *>, T : Referenceable> empty(): ToMany<R, T> = ToMany(emptySet())
+        fun <R : Relation<*, *>, T : Referenceable> empty(): ToMany<R, T> = ToMany(emptyList())
     }
 }
 

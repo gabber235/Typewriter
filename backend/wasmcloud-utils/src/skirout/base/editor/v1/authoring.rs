@@ -52,44 +52,6 @@ impl ResourceDefinitionId {
 }
 
 // ==============================================================================
-// struct AuthoringCreationSlotId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct AuthoringCreationSlotId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringCreationSlotId>>,
-}
-
-impl AuthoringCreationSlotId {
-    pub fn default_ref() -> &'static AuthoringCreationSlotId {
-        static D: std::sync::LazyLock<AuthoringCreationSlotId> = std::sync::LazyLock::new(AuthoringCreationSlotId::default);
-        &D
-    }
-}
-
-impl AuthoringCreationSlotId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring.skir",
-                    "AuthoringCreationSlotId",
-                    "",
-                    |x: &AuthoringCreationSlotId| &x._unrecognized,
-                    |x: &mut AuthoringCreationSlotId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AuthoringCreationSlotId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(AuthoringCreationSlotId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct ResourceDefinition
 // ==============================================================================
 
@@ -349,6 +311,7 @@ pub struct RelationDefinition {
     pub on_target_delete: RelationDeletePolicy,
     pub source_endpoint: Option<RelationEndpointDefinition>,
     pub target_endpoint: Option<RelationEndpointDefinition>,
+    pub families: Vec<RelationId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RelationDefinition>>,
 }
@@ -505,6 +468,8 @@ impl AuthoringEdgeOrigin_OrdinaryReference {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringEdgeOrigin_DeclaredRelation {
     pub relation_id: RelationId,
+    pub source_index: Option<i32>,
+    pub target_index: Option<i32>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringEdgeOrigin_DeclaredRelation>>,
 }
@@ -1234,8 +1199,7 @@ impl AuthoringGraphSnapshot {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CreateResource {
     pub resource: AuthoringResource,
-    pub creation_slot: AuthoringCreationSlotId,
-    pub hosts: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub attachment: Option<CreationAttachment>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreateResource>>,
 }
@@ -1264,6 +1228,46 @@ impl CreateResource {
     pub fn serializer() -> crate::skir_client::Serializer<CreateResource> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(CreateResource::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CreationAttachment
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CreationAttachment {
+    pub host: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub relation: RelationId,
+    pub host_side: RelationEndpointSide,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreationAttachment>>,
+}
+
+impl CreationAttachment {
+    pub fn default_ref() -> &'static CreationAttachment {
+        static D: std::sync::LazyLock<CreationAttachment> = std::sync::LazyLock::new(CreationAttachment::default);
+        &D
+    }
+}
+
+impl CreationAttachment {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CreationAttachment> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CreationAttachment>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/authoring.skir",
+                    "CreationAttachment",
+                    "",
+                    |x: &CreationAttachment| &x._unrecognized,
+                    |x: &mut CreationAttachment, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CreationAttachment> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CreationAttachment::_adapter())
     }
 }
 
@@ -1356,6 +1360,8 @@ pub struct DeclareRelation {
     pub relation: RelationId,
     pub source: crate::skirout::base::editor::v1::type_catalog::ResourceId,
     pub target: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub source_before: Option<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub target_before: Option<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeclareRelation>>,
 }
@@ -2573,11 +2579,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<AuthoringCreationSlotId> = AuthoringCreationSlotId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &AuthoringCreationSlotId| &x.value, |x: &mut AuthoringCreationSlotId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ResourceDefinition> = ResourceDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("id", 0, crate::skir_client::internal::struct_serializer_from_static(ResourceDefinitionId::_adapter()), "", |x: &ResourceDefinition| &x.id, |x: &mut ResourceDefinition, v| x.id = v);
                 (*a).add_field("accepted_root", 1, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &ResourceDefinition| &x.accepted_root, |x: &mut ResourceDefinition, v| x.accepted_root = v);
@@ -2625,6 +2626,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("on_target_delete", 4, crate::skir_client::internal::enum_serializer_from_static(RelationDeletePolicy::_adapter()), "", |x: &RelationDefinition| &x.on_target_delete, |x: &mut RelationDefinition, v| x.on_target_delete = v);
                 (*a).add_field("source_endpoint", 5, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(RelationEndpointDefinition::_adapter())), "", |x: &RelationDefinition| &x.source_endpoint, |x: &mut RelationDefinition, v| x.source_endpoint = v);
                 (*a).add_field("target_endpoint", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(RelationEndpointDefinition::_adapter())), "", |x: &RelationDefinition| &x.target_endpoint, |x: &mut RelationDefinition, v| x.target_endpoint = v);
+                (*a).add_field("families", 7, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RelationId::_adapter())), "", |x: &RelationDefinition| &x.families, |x: &mut RelationDefinition, v| x.families = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2649,6 +2651,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<AuthoringEdgeOrigin_DeclaredRelation> = AuthoringEdgeOrigin_DeclaredRelation::_adapter() as *const _ as *mut _;
                 (*a).add_field("relation_id", 0, crate::skir_client::internal::struct_serializer_from_static(RelationId::_adapter()), "", |x: &AuthoringEdgeOrigin_DeclaredRelation| &x.relation_id, |x: &mut AuthoringEdgeOrigin_DeclaredRelation, v| x.relation_id = v);
+                (*a).add_field("source_index", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &AuthoringEdgeOrigin_DeclaredRelation| &x.source_index, |x: &mut AuthoringEdgeOrigin_DeclaredRelation, v| x.source_index = v);
+                (*a).add_field("target_index", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &AuthoringEdgeOrigin_DeclaredRelation| &x.target_index, |x: &mut AuthoringEdgeOrigin_DeclaredRelation, v| x.target_index = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2770,8 +2774,14 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CreateResource> = CreateResource::_adapter() as *const _ as *mut _;
                 (*a).add_field("resource", 0, crate::skir_client::internal::struct_serializer_from_static(AuthoringResource::_adapter()), "", |x: &CreateResource| &x.resource, |x: &mut CreateResource, v| x.resource = v);
-                (*a).add_field("creation_slot", 1, crate::skir_client::internal::struct_serializer_from_static(AuthoringCreationSlotId::_adapter()), "", |x: &CreateResource| &x.creation_slot, |x: &mut CreateResource, v| x.creation_slot = v);
-                (*a).add_field("hosts", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer()), "", |x: &CreateResource| &x.hosts, |x: &mut CreateResource, v| x.hosts = v);
+                (*a).add_field("attachment", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(CreationAttachment::_adapter())), "", |x: &CreateResource| &x.attachment, |x: &mut CreateResource, v| x.attachment = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<CreationAttachment> = CreationAttachment::_adapter() as *const _ as *mut _;
+                (*a).add_field("host", 0, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &CreationAttachment| &x.host, |x: &mut CreationAttachment, v| x.host = v);
+                (*a).add_field("relation", 1, crate::skir_client::internal::struct_serializer_from_static(RelationId::_adapter()), "", |x: &CreationAttachment| &x.relation, |x: &mut CreationAttachment, v| x.relation = v);
+                (*a).add_field("host_side", 2, crate::skir_client::internal::enum_serializer_from_static(RelationEndpointSide::_adapter()), "", |x: &CreationAttachment| &x.host_side, |x: &mut CreationAttachment, v| x.host_side = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2793,6 +2803,8 @@ fn initialize_module_serializers() {
                 (*a).add_field("relation", 0, crate::skir_client::internal::struct_serializer_from_static(RelationId::_adapter()), "", |x: &DeclareRelation| &x.relation, |x: &mut DeclareRelation, v| x.relation = v);
                 (*a).add_field("source", 1, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &DeclareRelation| &x.source, |x: &mut DeclareRelation, v| x.source = v);
                 (*a).add_field("target", 2, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &DeclareRelation| &x.target, |x: &mut DeclareRelation, v| x.target = v);
+                (*a).add_field("source_before", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer()), "", |x: &DeclareRelation| &x.source_before, |x: &mut DeclareRelation, v| x.source_before = v);
+                (*a).add_field("target_before", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer()), "", |x: &DeclareRelation| &x.target_before, |x: &mut DeclareRelation, v| x.target_before = v);
                 (*a).finalize();
             }
             unsafe {

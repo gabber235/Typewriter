@@ -26,6 +26,7 @@ typedef RelationshipGroupBuilder = Widget Function(
 class EntryInspectorHeader extends ConsumerWidget {
   const EntryInspectorHeader({
     required this.id,
+    required this.rootType,
     required this.name,
     required this.color,
     required this.owner,
@@ -33,6 +34,7 @@ class EntryInspectorHeader extends ConsumerWidget {
   });
 
   final EntryIdentifier id;
+  final ResolvedTypeRef rootType;
   final String name;
   final Color color;
   final EditOwner owner;
@@ -116,6 +118,10 @@ class EntryInspectorHeader extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _EntryRoleHeader(id: id, subjects: subjects),
+        RelationAddMenu(
+          host: skir.ResourceId(value: id.id),
+          rootType: rootType,
+        ),
         if (relationships.incoming.isNotEmpty ||
             relationships.outgoing.isNotEmpty) ...[
           const Divider(),

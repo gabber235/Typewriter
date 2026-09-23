@@ -12,7 +12,6 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
-
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./catalog_presentation.dart" as _lib_editor_v1_catalog_presentation;
@@ -21,67 +20,71 @@ import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
 
 // -----------------------------------------------------------------------------
-// struct ElementTypeId
+// struct ContentTypeId
 // -----------------------------------------------------------------------------
 
-sealed class ElementTypeId_orMutable {
+sealed class ContentTypeId_orMutable {
   _lib_editor_v1_type_catalog.DeclaredTypeId_orMutable get value;
 
-  ElementTypeId toFrozen();
+  ContentTypeId toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementTypeId implements ElementTypeId_orMutable {
+final class ContentTypeId implements ContentTypeId_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.DeclaredTypeId value;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementTypeId({
+  factory ContentTypeId({
     required _lib_editor_v1_type_catalog.DeclaredTypeId_orMutable value,
-  }) => ElementTypeId._(value.toFrozen());
+  }) => ContentTypeId._(
+    value.toFrozen(),
+  );
 
-  ElementTypeId._(this.value);
+  ContentTypeId._(
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementTypeId._(
+  static final defaultInstance = ContentTypeId._(
     _lib_editor_v1_type_catalog.DeclaredTypeId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementTypeId_mutable mutable() => ElementTypeId_mutable._(
+  static ContentTypeId_mutable mutable() => ContentTypeId_mutable._(
     _lib_editor_v1_type_catalog.DeclaredTypeId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementTypeId toFrozen() => this;
+  ContentTypeId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementTypeId_mutable toMutable() => ElementTypeId_mutable._(this.value);
+  ContentTypeId_mutable toMutable() => ContentTypeId_mutable._(
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementTypeId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentTypeId) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.value];
+  _core.List get _equality_proxy => [
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementTypeId` instances.
-  static _skir.StructSerializer<ElementTypeId, ElementTypeId_mutable>
-  get serializer {
+  /// Serializer for `ContentTypeId` instances.
+  static _skir.StructSerializer<ContentTypeId, ContentTypeId_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -98,22 +101,24 @@ final class ElementTypeId implements ElementTypeId_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementTypeId",
+    recordId: "editor/v1/element_catalog.skir:ContentTypeId",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementTypeId_mutable it) => it.toFrozen(),
+    toFrozen: (ContentTypeId_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementTypeId].
-final class ElementTypeId_mutable implements ElementTypeId_orMutable {
+/// Mutable version of [ContentTypeId].
+final class ContentTypeId_mutable implements ContentTypeId_orMutable {
   _lib_editor_v1_type_catalog.DeclaredTypeId_orMutable value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementTypeId_mutable._(this.value);
+  ContentTypeId_mutable._(
+    this.value,
+  );
 
   /// If the value of [value] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
@@ -122,14 +127,15 @@ final class ElementTypeId_mutable implements ElementTypeId_orMutable {
     if (value is _lib_editor_v1_type_catalog.DeclaredTypeId_mutable) {
       return value;
     } else {
-      return this.value = (value as _lib_editor_v1_type_catalog.DeclaredTypeId)
-          .toMutable();
+      return this.value = (value as _lib_editor_v1_type_catalog.DeclaredTypeId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementTypeId toFrozen() => ElementTypeId(value: this.value).._u = this._u;
+  ContentTypeId toFrozen() => ContentTypeId(
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -154,17 +160,28 @@ final class AvailabilityFact implements AvailabilityFact_orMutable {
   factory AvailabilityFact({
     required _core.String key,
     required _core.String expected,
-  }) => AvailabilityFact._(key, expected);
+  }) => AvailabilityFact._(
+    key,
+    expected,
+  );
 
-  AvailabilityFact._(this.key, this.expected);
+  AvailabilityFact._(
+    this.key,
+    this.expected,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AvailabilityFact._("", "");
+  static final defaultInstance = AvailabilityFact._(
+    "",
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AvailabilityFact_mutable mutable() =>
-      AvailabilityFact_mutable._("", "");
+  static AvailabilityFact_mutable mutable() => AvailabilityFact_mutable._(
+    "",
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -172,30 +189,31 @@ final class AvailabilityFact implements AvailabilityFact_orMutable {
   AvailabilityFact toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AvailabilityFact_mutable toMutable() =>
-      AvailabilityFact_mutable._(this.key, this.expected);
+  AvailabilityFact_mutable toMutable() => AvailabilityFact_mutable._(
+    this.key,
+    this.expected,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AvailabilityFact) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.key, this.expected];
+  _core.List get _equality_proxy => [
+    this.key,
+    this.expected,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AvailabilityFact` instances.
-  static _skir.StructSerializer<AvailabilityFact, AvailabilityFact_mutable>
-  get serializer {
+  static _skir.StructSerializer<AvailabilityFact, AvailabilityFact_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "key",
@@ -237,12 +255,17 @@ final class AvailabilityFact_mutable implements AvailabilityFact_orMutable {
   _core.String expected;
   _skir.internal__UnrecognizedFields? _u;
 
-  AvailabilityFact_mutable._(this.key, this.expected);
+  AvailabilityFact_mutable._(
+    this.key,
+    this.expected,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AvailabilityFact toFrozen() =>
-      AvailabilityFact(key: this.key, expected: this.expected).._u = this._u;
+  AvailabilityFact toFrozen() => AvailabilityFact(
+    key: this.key,
+    expected: this.expected,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -263,17 +286,24 @@ final class AvailabilityAll implements AvailabilityAll_orMutable {
 
   factory AvailabilityAll({
     required _core.Iterable<AvailabilityExpression> expressions,
-  }) => AvailabilityAll._(_skir.internal__frozenCopy(expressions));
+  }) => AvailabilityAll._(
+    _skir.internal__frozenCopy(expressions),
+  );
 
-  AvailabilityAll._(this.expressions);
+  AvailabilityAll._(
+    this.expressions,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AvailabilityAll._(_skir.KeyedIterable.empty);
+  static final defaultInstance = AvailabilityAll._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AvailabilityAll_mutable mutable() =>
-      AvailabilityAll_mutable._(_skir.KeyedIterable.empty);
+  static AvailabilityAll_mutable mutable() => AvailabilityAll_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -281,36 +311,37 @@ final class AvailabilityAll implements AvailabilityAll_orMutable {
   AvailabilityAll toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AvailabilityAll_mutable toMutable() =>
-      AvailabilityAll_mutable._(this.expressions);
+  AvailabilityAll_mutable toMutable() => AvailabilityAll_mutable._(
+    this.expressions,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AvailabilityAll) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expressions];
+  _core.List get _equality_proxy => [
+    this.expressions,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AvailabilityAll` instances.
-  static _skir.StructSerializer<AvailabilityAll, AvailabilityAll_mutable>
-  get serializer {
+  static _skir.StructSerializer<AvailabilityAll, AvailabilityAll_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expressions",
         "expressions",
         0,
-        _skir.Serializers.iterable(AvailabilityExpression.serializer),
+        _skir.Serializers.iterable(
+          AvailabilityExpression.serializer,
+        ),
         "",
         (it) => it.expressions,
         (it, v) => it.expressions = v,
@@ -336,12 +367,15 @@ final class AvailabilityAll_mutable implements AvailabilityAll_orMutable {
   _core.Iterable<AvailabilityExpression> expressions;
   _skir.internal__UnrecognizedFields? _u;
 
-  AvailabilityAll_mutable._(this.expressions);
+  AvailabilityAll_mutable._(
+    this.expressions,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AvailabilityAll toFrozen() =>
-      AvailabilityAll(expressions: this.expressions).._u = this._u;
+  AvailabilityAll toFrozen() => AvailabilityAll(
+    expressions: this.expressions,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -362,17 +396,24 @@ final class AvailabilityAny implements AvailabilityAny_orMutable {
 
   factory AvailabilityAny({
     required _core.Iterable<AvailabilityExpression> expressions,
-  }) => AvailabilityAny._(_skir.internal__frozenCopy(expressions));
+  }) => AvailabilityAny._(
+    _skir.internal__frozenCopy(expressions),
+  );
 
-  AvailabilityAny._(this.expressions);
+  AvailabilityAny._(
+    this.expressions,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AvailabilityAny._(_skir.KeyedIterable.empty);
+  static final defaultInstance = AvailabilityAny._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AvailabilityAny_mutable mutable() =>
-      AvailabilityAny_mutable._(_skir.KeyedIterable.empty);
+  static AvailabilityAny_mutable mutable() => AvailabilityAny_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -380,36 +421,37 @@ final class AvailabilityAny implements AvailabilityAny_orMutable {
   AvailabilityAny toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AvailabilityAny_mutable toMutable() =>
-      AvailabilityAny_mutable._(this.expressions);
+  AvailabilityAny_mutable toMutable() => AvailabilityAny_mutable._(
+    this.expressions,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AvailabilityAny) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expressions];
+  _core.List get _equality_proxy => [
+    this.expressions,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AvailabilityAny` instances.
-  static _skir.StructSerializer<AvailabilityAny, AvailabilityAny_mutable>
-  get serializer {
+  static _skir.StructSerializer<AvailabilityAny, AvailabilityAny_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expressions",
         "expressions",
         0,
-        _skir.Serializers.iterable(AvailabilityExpression.serializer),
+        _skir.Serializers.iterable(
+          AvailabilityExpression.serializer,
+        ),
         "",
         (it) => it.expressions,
         (it, v) => it.expressions = v,
@@ -435,12 +477,15 @@ final class AvailabilityAny_mutable implements AvailabilityAny_orMutable {
   _core.Iterable<AvailabilityExpression> expressions;
   _skir.internal__UnrecognizedFields? _u;
 
-  AvailabilityAny_mutable._(this.expressions);
+  AvailabilityAny_mutable._(
+    this.expressions,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AvailabilityAny toFrozen() =>
-      AvailabilityAny(expressions: this.expressions).._u = this._u;
+  AvailabilityAny toFrozen() => AvailabilityAny(
+    expressions: this.expressions,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -459,10 +504,15 @@ final class AvailabilityNot implements AvailabilityNot_orMutable {
   final AvailabilityExpression expression;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory AvailabilityNot({required AvailabilityExpression expression}) =>
-      AvailabilityNot._(expression);
+  factory AvailabilityNot({
+    required AvailabilityExpression expression,
+  }) => AvailabilityNot._(
+    expression,
+  );
 
-  AvailabilityNot._(this.expression);
+  AvailabilityNot._(
+    this.expression,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AvailabilityNot._(
@@ -471,8 +521,9 @@ final class AvailabilityNot implements AvailabilityNot_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AvailabilityNot_mutable mutable() =>
-      AvailabilityNot_mutable._(AvailabilityExpression.unknown);
+  static AvailabilityNot_mutable mutable() => AvailabilityNot_mutable._(
+    AvailabilityExpression.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -480,30 +531,29 @@ final class AvailabilityNot implements AvailabilityNot_orMutable {
   AvailabilityNot toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AvailabilityNot_mutable toMutable() =>
-      AvailabilityNot_mutable._(this.expression);
+  AvailabilityNot_mutable toMutable() => AvailabilityNot_mutable._(
+    this.expression,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AvailabilityNot) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expression];
+  _core.List get _equality_proxy => [
+    this.expression,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AvailabilityNot` instances.
-  static _skir.StructSerializer<AvailabilityNot, AvailabilityNot_mutable>
-  get serializer {
+  static _skir.StructSerializer<AvailabilityNot, AvailabilityNot_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expression",
@@ -535,12 +585,15 @@ final class AvailabilityNot_mutable implements AvailabilityNot_orMutable {
   AvailabilityExpression expression;
   _skir.internal__UnrecognizedFields? _u;
 
-  AvailabilityNot_mutable._(this.expression);
+  AvailabilityNot_mutable._(
+    this.expression,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AvailabilityNot toFrozen() =>
-      AvailabilityNot(expression: this.expression).._u = this._u;
+  AvailabilityNot toFrozen() => AvailabilityNot(
+    expression: this.expression,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -552,8 +605,7 @@ sealed class AvailabilityExpression_Always_orMutable {
 }
 
 /// Deeply immutable.
-final class AvailabilityExpression_Always
-    implements AvailabilityExpression_Always_orMutable {
+final class AvailabilityExpression_Always implements AvailabilityExpression_Always_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory AvailabilityExpression_Always() => AvailabilityExpression_Always._();
@@ -565,8 +617,7 @@ final class AvailabilityExpression_Always
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AvailabilityExpression_Always_mutable mutable() =>
-      AvailabilityExpression_Always_mutable._();
+  static AvailabilityExpression_Always_mutable mutable() => AvailabilityExpression_Always_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -574,17 +625,13 @@ final class AvailabilityExpression_Always
   AvailabilityExpression_Always toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AvailabilityExpression_Always_mutable toMutable() =>
-      AvailabilityExpression_Always_mutable._();
+  AvailabilityExpression_Always_mutable toMutable() => AvailabilityExpression_Always_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AvailabilityExpression_Always) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -596,11 +643,7 @@ final class AvailabilityExpression_Always
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AvailabilityExpression_Always` instances.
-  static _skir.StructSerializer<
-    AvailabilityExpression_Always,
-    AvailabilityExpression_Always_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<AvailabilityExpression_Always, AvailabilityExpression_Always_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -619,16 +662,14 @@ final class AvailabilityExpression_Always
 }
 
 /// Mutable version of [AvailabilityExpression_Always].
-final class AvailabilityExpression_Always_mutable
-    implements AvailabilityExpression_Always_orMutable {
+final class AvailabilityExpression_Always_mutable implements AvailabilityExpression_Always_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   AvailabilityExpression_Always_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AvailabilityExpression_Always toFrozen() =>
-      AvailabilityExpression_Always().._u = this._u;
+  AvailabilityExpression_Always toFrozen() => AvailabilityExpression_Always().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -651,58 +692,75 @@ final class AvailabilityExpression_Always_mutable
 sealed class AvailabilityExpression {
   /// Constant indicating an unknown `AvailabilityExpression`.
   /// Default value for fields of type `AvailabilityExpression`.
-  static const AvailabilityExpression unknown =
-      AvailabilityExpression_unknown._instance;
+  static const AvailabilityExpression unknown = AvailabilityExpression_unknown._instance;
 
   /// Create a 'always' variant wrapping around the given value.
   factory AvailabilityExpression.wrapAlways(
-    AvailabilityExpression_Always value,
+    AvailabilityExpression_Always value
   ) => AvailabilityExpression_alwaysWrapper._(value);
 
   /// Same as `wrapAlways(AvailabilityExpression_Always(...))`.
-  factory AvailabilityExpression.createAlways() =>
-      AvailabilityExpression.wrapAlways(AvailabilityExpression_Always());
+  factory AvailabilityExpression.createAlways() => AvailabilityExpression.wrapAlways(
+    AvailabilityExpression_Always()
+  );
 
   /// Create a 'fact' variant wrapping around the given value.
-  factory AvailabilityExpression.wrapFact(AvailabilityFact value) =>
-      AvailabilityExpression_factWrapper._(value);
+  factory AvailabilityExpression.wrapFact(
+    AvailabilityFact value
+  ) => AvailabilityExpression_factWrapper._(value);
 
   /// Same as `wrapFact(AvailabilityFact(...))`.
   factory AvailabilityExpression.createFact({
     required _core.String key,
     required _core.String expected,
   }) => AvailabilityExpression.wrapFact(
-    AvailabilityFact(key: key, expected: expected),
+    AvailabilityFact(
+      key: key,
+      expected: expected,
+    )
   );
 
   /// Create a 'all' variant wrapping around the given value.
-  factory AvailabilityExpression.wrapAll(AvailabilityAll value) =>
-      AvailabilityExpression_allWrapper._(value);
+  factory AvailabilityExpression.wrapAll(
+    AvailabilityAll value
+  ) => AvailabilityExpression_allWrapper._(value);
 
   /// Same as `wrapAll(AvailabilityAll(...))`.
   factory AvailabilityExpression.createAll({
     required _core.Iterable<AvailabilityExpression> expressions,
-  }) =>
-      AvailabilityExpression.wrapAll(AvailabilityAll(expressions: expressions));
+  }) => AvailabilityExpression.wrapAll(
+    AvailabilityAll(
+      expressions: expressions,
+    )
+  );
 
   /// Create a 'any' variant wrapping around the given value.
-  factory AvailabilityExpression.wrapAny(AvailabilityAny value) =>
-      AvailabilityExpression_anyWrapper._(value);
+  factory AvailabilityExpression.wrapAny(
+    AvailabilityAny value
+  ) => AvailabilityExpression_anyWrapper._(value);
 
   /// Same as `wrapAny(AvailabilityAny(...))`.
   factory AvailabilityExpression.createAny({
     required _core.Iterable<AvailabilityExpression> expressions,
-  }) =>
-      AvailabilityExpression.wrapAny(AvailabilityAny(expressions: expressions));
+  }) => AvailabilityExpression.wrapAny(
+    AvailabilityAny(
+      expressions: expressions,
+    )
+  );
 
   /// Create a 'not' variant wrapping around the given value.
-  factory AvailabilityExpression.wrapNot(AvailabilityNot value) =>
-      AvailabilityExpression_notWrapper._(value);
+  factory AvailabilityExpression.wrapNot(
+    AvailabilityNot value
+  ) => AvailabilityExpression_notWrapper._(value);
 
   /// Same as `wrapNot(AvailabilityNot(...))`.
   factory AvailabilityExpression.createNot({
     required AvailabilityExpression expression,
-  }) => AvailabilityExpression.wrapNot(AvailabilityNot(expression: expression));
+  }) => AvailabilityExpression.wrapNot(
+    AvailabilityNot(
+      expression: expression,
+    )
+  );
 
   /// Returns the kind of variant held by this AvailabilityExpression.
   AvailabilityExpression_kind get kind;
@@ -765,16 +823,15 @@ sealed class AvailabilityExpression {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/element_catalog.skir:AvailabilityExpression",
-        doc: "",
-        unknownInstance: AvailabilityExpression_unknown._instance,
-        enumInstance: AvailabilityExpression.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: AvailabilityExpression_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:AvailabilityExpression",
+    doc: "",
+    unknownInstance: AvailabilityExpression_unknown._instance,
+    enumInstance: AvailabilityExpression.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: AvailabilityExpression_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `AvailabilityExpression`.
@@ -806,8 +863,7 @@ final class AvailabilityExpression_unknown implements AvailabilityExpression {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, AvailabilityExpression.serializer);
+  _core.String toString() => _skir.internal__stringify(this, AvailabilityExpression.serializer);
 }
 
 sealed class _AvailabilityExpression_wrapper implements AvailabilityExpression {
@@ -823,107 +879,90 @@ sealed class _AvailabilityExpression_wrapper implements AvailabilityExpression {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, AvailabilityExpression.serializer);
+  _core.String toString() => _skir.internal__stringify(this, AvailabilityExpression.serializer);
 }
 
-final class AvailabilityExpression_alwaysWrapper
-    extends _AvailabilityExpression_wrapper {
+final class AvailabilityExpression_alwaysWrapper extends _AvailabilityExpression_wrapper {
   final AvailabilityExpression_Always value;
 
   AvailabilityExpression_alwaysWrapper._(this.value);
 
   @_core.override
-  AvailabilityExpression_kind get kind =>
-      AvailabilityExpression_kind.alwaysWrapper;
+  AvailabilityExpression_kind get kind => AvailabilityExpression_kind.alwaysWrapper;
 }
 
-final class AvailabilityExpression_factWrapper
-    extends _AvailabilityExpression_wrapper {
+final class AvailabilityExpression_factWrapper extends _AvailabilityExpression_wrapper {
   final AvailabilityFact value;
 
   AvailabilityExpression_factWrapper._(this.value);
 
   @_core.override
-  AvailabilityExpression_kind get kind =>
-      AvailabilityExpression_kind.factWrapper;
+  AvailabilityExpression_kind get kind => AvailabilityExpression_kind.factWrapper;
 }
 
-final class AvailabilityExpression_allWrapper
-    extends _AvailabilityExpression_wrapper {
+final class AvailabilityExpression_allWrapper extends _AvailabilityExpression_wrapper {
   final AvailabilityAll value;
 
   AvailabilityExpression_allWrapper._(this.value);
 
   @_core.override
-  AvailabilityExpression_kind get kind =>
-      AvailabilityExpression_kind.allWrapper;
+  AvailabilityExpression_kind get kind => AvailabilityExpression_kind.allWrapper;
 }
 
-final class AvailabilityExpression_anyWrapper
-    extends _AvailabilityExpression_wrapper {
+final class AvailabilityExpression_anyWrapper extends _AvailabilityExpression_wrapper {
   final AvailabilityAny value;
 
   AvailabilityExpression_anyWrapper._(this.value);
 
   @_core.override
-  AvailabilityExpression_kind get kind =>
-      AvailabilityExpression_kind.anyWrapper;
+  AvailabilityExpression_kind get kind => AvailabilityExpression_kind.anyWrapper;
 }
 
-final class AvailabilityExpression_notWrapper
-    extends _AvailabilityExpression_wrapper {
+final class AvailabilityExpression_notWrapper extends _AvailabilityExpression_wrapper {
   final AvailabilityNot value;
 
   AvailabilityExpression_notWrapper._(this.value);
 
   @_core.override
-  AvailabilityExpression_kind get kind =>
-      AvailabilityExpression_kind.notWrapper;
+  AvailabilityExpression_kind get kind => AvailabilityExpression_kind.notWrapper;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchMode.Summary
+// struct ContentSearchMode.Summary
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchMode_Summary_orMutable {
-  ElementSearchMode_Summary toFrozen();
+sealed class ContentSearchMode_Summary_orMutable {
+  ContentSearchMode_Summary toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchMode_Summary
-    implements ElementSearchMode_Summary_orMutable {
+final class ContentSearchMode_Summary implements ContentSearchMode_Summary_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchMode_Summary() => ElementSearchMode_Summary._();
+  factory ContentSearchMode_Summary() => ContentSearchMode_Summary._();
 
-  ElementSearchMode_Summary._();
+  ContentSearchMode_Summary._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchMode_Summary._();
+  static final defaultInstance = ContentSearchMode_Summary._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchMode_Summary_mutable mutable() =>
-      ElementSearchMode_Summary_mutable._();
+  static ContentSearchMode_Summary_mutable mutable() => ContentSearchMode_Summary_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchMode_Summary toFrozen() => this;
+  ContentSearchMode_Summary toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchMode_Summary_mutable toMutable() =>
-      ElementSearchMode_Summary_mutable._();
+  ContentSearchMode_Summary_mutable toMutable() => ContentSearchMode_Summary_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchMode_Summary) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchMode_Summary) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -934,12 +973,8 @@ final class ElementSearchMode_Summary
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchMode_Summary` instances.
-  static _skir.StructSerializer<
-    ElementSearchMode_Summary,
-    ElementSearchMode_Summary_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchMode_Summary` instances.
+  static _skir.StructSerializer<ContentSearchMode_Summary, ContentSearchMode_Summary_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -947,70 +982,63 @@ final class ElementSearchMode_Summary
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.Summary",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchMode.Summary",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchMode_Summary_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchMode_Summary_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchMode_Summary].
-final class ElementSearchMode_Summary_mutable
-    implements ElementSearchMode_Summary_orMutable {
+/// Mutable version of [ContentSearchMode_Summary].
+final class ContentSearchMode_Summary_mutable implements ContentSearchMode_Summary_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchMode_Summary_mutable._();
+  ContentSearchMode_Summary_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchMode_Summary toFrozen() =>
-      ElementSearchMode_Summary().._u = this._u;
+  ContentSearchMode_Summary toFrozen() => ContentSearchMode_Summary().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchMode.Body
+// struct ContentSearchMode.Body
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchMode_Body_orMutable {
-  ElementSearchMode_Body toFrozen();
+sealed class ContentSearchMode_Body_orMutable {
+  ContentSearchMode_Body toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchMode_Body implements ElementSearchMode_Body_orMutable {
+final class ContentSearchMode_Body implements ContentSearchMode_Body_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchMode_Body() => ElementSearchMode_Body._();
+  factory ContentSearchMode_Body() => ContentSearchMode_Body._();
 
-  ElementSearchMode_Body._();
+  ContentSearchMode_Body._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchMode_Body._();
+  static final defaultInstance = ContentSearchMode_Body._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchMode_Body_mutable mutable() =>
-      ElementSearchMode_Body_mutable._();
+  static ContentSearchMode_Body_mutable mutable() => ContentSearchMode_Body_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchMode_Body toFrozen() => this;
+  ContentSearchMode_Body toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchMode_Body_mutable toMutable() =>
-      ElementSearchMode_Body_mutable._();
+  ContentSearchMode_Body_mutable toMutable() => ContentSearchMode_Body_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchMode_Body) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchMode_Body) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1021,12 +1049,8 @@ final class ElementSearchMode_Body implements ElementSearchMode_Body_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchMode_Body` instances.
-  static _skir.StructSerializer<
-    ElementSearchMode_Body,
-    ElementSearchMode_Body_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchMode_Body` instances.
+  static _skir.StructSerializer<ContentSearchMode_Body, ContentSearchMode_Body_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1034,70 +1058,63 @@ final class ElementSearchMode_Body implements ElementSearchMode_Body_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.Body",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchMode.Body",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchMode_Body_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchMode_Body_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchMode_Body].
-final class ElementSearchMode_Body_mutable
-    implements ElementSearchMode_Body_orMutable {
+/// Mutable version of [ContentSearchMode_Body].
+final class ContentSearchMode_Body_mutable implements ContentSearchMode_Body_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchMode_Body_mutable._();
+  ContentSearchMode_Body_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchMode_Body toFrozen() => ElementSearchMode_Body().._u = this._u;
+  ContentSearchMode_Body toFrozen() => ContentSearchMode_Body().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchMode.Keyword
+// struct ContentSearchMode.Keyword
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchMode_Keyword_orMutable {
-  ElementSearchMode_Keyword toFrozen();
+sealed class ContentSearchMode_Keyword_orMutable {
+  ContentSearchMode_Keyword toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchMode_Keyword
-    implements ElementSearchMode_Keyword_orMutable {
+final class ContentSearchMode_Keyword implements ContentSearchMode_Keyword_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchMode_Keyword() => ElementSearchMode_Keyword._();
+  factory ContentSearchMode_Keyword() => ContentSearchMode_Keyword._();
 
-  ElementSearchMode_Keyword._();
+  ContentSearchMode_Keyword._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchMode_Keyword._();
+  static final defaultInstance = ContentSearchMode_Keyword._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchMode_Keyword_mutable mutable() =>
-      ElementSearchMode_Keyword_mutable._();
+  static ContentSearchMode_Keyword_mutable mutable() => ContentSearchMode_Keyword_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchMode_Keyword toFrozen() => this;
+  ContentSearchMode_Keyword toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchMode_Keyword_mutable toMutable() =>
-      ElementSearchMode_Keyword_mutable._();
+  ContentSearchMode_Keyword_mutable toMutable() => ContentSearchMode_Keyword_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchMode_Keyword) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchMode_Keyword) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1108,12 +1125,8 @@ final class ElementSearchMode_Keyword
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchMode_Keyword` instances.
-  static _skir.StructSerializer<
-    ElementSearchMode_Keyword,
-    ElementSearchMode_Keyword_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchMode_Keyword` instances.
+  static _skir.StructSerializer<ContentSearchMode_Keyword, ContentSearchMode_Keyword_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1121,70 +1134,63 @@ final class ElementSearchMode_Keyword
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.Keyword",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchMode.Keyword",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchMode_Keyword_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchMode_Keyword_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchMode_Keyword].
-final class ElementSearchMode_Keyword_mutable
-    implements ElementSearchMode_Keyword_orMutable {
+/// Mutable version of [ContentSearchMode_Keyword].
+final class ContentSearchMode_Keyword_mutable implements ContentSearchMode_Keyword_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchMode_Keyword_mutable._();
+  ContentSearchMode_Keyword_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchMode_Keyword toFrozen() =>
-      ElementSearchMode_Keyword().._u = this._u;
+  ContentSearchMode_Keyword toFrozen() => ContentSearchMode_Keyword().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchMode.None
+// struct ContentSearchMode.None
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchMode_None_orMutable {
-  ElementSearchMode_None toFrozen();
+sealed class ContentSearchMode_None_orMutable {
+  ContentSearchMode_None toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchMode_None implements ElementSearchMode_None_orMutable {
+final class ContentSearchMode_None implements ContentSearchMode_None_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchMode_None() => ElementSearchMode_None._();
+  factory ContentSearchMode_None() => ContentSearchMode_None._();
 
-  ElementSearchMode_None._();
+  ContentSearchMode_None._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchMode_None._();
+  static final defaultInstance = ContentSearchMode_None._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchMode_None_mutable mutable() =>
-      ElementSearchMode_None_mutable._();
+  static ContentSearchMode_None_mutable mutable() => ContentSearchMode_None_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchMode_None toFrozen() => this;
+  ContentSearchMode_None toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchMode_None_mutable toMutable() =>
-      ElementSearchMode_None_mutable._();
+  ContentSearchMode_None_mutable toMutable() => ContentSearchMode_None_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchMode_None) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchMode_None) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1195,12 +1201,8 @@ final class ElementSearchMode_None implements ElementSearchMode_None_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchMode_None` instances.
-  static _skir.StructSerializer<
-    ElementSearchMode_None,
-    ElementSearchMode_None_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchMode_None` instances.
+  static _skir.StructSerializer<ContentSearchMode_None, ContentSearchMode_None_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1208,146 +1210,152 @@ final class ElementSearchMode_None implements ElementSearchMode_None_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchMode.None",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchMode.None",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchMode_None_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchMode_None_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchMode_None].
-final class ElementSearchMode_None_mutable
-    implements ElementSearchMode_None_orMutable {
+/// Mutable version of [ContentSearchMode_None].
+final class ContentSearchMode_None_mutable implements ContentSearchMode_None_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchMode_None_mutable._();
+  ContentSearchMode_None_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchMode_None toFrozen() => ElementSearchMode_None().._u = this._u;
+  ContentSearchMode_None toFrozen() => ContentSearchMode_None().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum ElementSearchMode
+// enum ContentSearchMode
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case ElementSearchMode_unknown(): { ... }
-///     case ElementSearchMode_summary(:var value): { ... }
-///     case ElementSearchMode_body(:var value): { ... }
-///     case ElementSearchMode_keyword(:var value): { ... }
-///     case ElementSearchMode_none(:var value): { ... }
+///     case ContentSearchMode_unknown(): { ... }
+///     case ContentSearchMode_summary(:var value): { ... }
+///     case ContentSearchMode_body(:var value): { ... }
+///     case ContentSearchMode_keyword(:var value): { ... }
+///     case ContentSearchMode_none(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class ElementSearchMode {
-  /// Constant indicating an unknown `ElementSearchMode`.
-  /// Default value for fields of type `ElementSearchMode`.
-  static const ElementSearchMode unknown = ElementSearchMode_unknown._instance;
+sealed class ContentSearchMode {
+  /// Constant indicating an unknown `ContentSearchMode`.
+  /// Default value for fields of type `ContentSearchMode`.
+  static const ContentSearchMode unknown = ContentSearchMode_unknown._instance;
 
   /// Create a 'summary' variant wrapping around the given value.
-  factory ElementSearchMode.wrapSummary(ElementSearchMode_Summary value) =>
-      ElementSearchMode_summaryWrapper._(value);
+  factory ContentSearchMode.wrapSummary(
+    ContentSearchMode_Summary value
+  ) => ContentSearchMode_summaryWrapper._(value);
 
-  /// Same as `wrapSummary(ElementSearchMode_Summary(...))`.
-  factory ElementSearchMode.createSummary() =>
-      ElementSearchMode.wrapSummary(ElementSearchMode_Summary());
+  /// Same as `wrapSummary(ContentSearchMode_Summary(...))`.
+  factory ContentSearchMode.createSummary() => ContentSearchMode.wrapSummary(
+    ContentSearchMode_Summary()
+  );
 
   /// Create a 'body' variant wrapping around the given value.
-  factory ElementSearchMode.wrapBody(ElementSearchMode_Body value) =>
-      ElementSearchMode_bodyWrapper._(value);
+  factory ContentSearchMode.wrapBody(
+    ContentSearchMode_Body value
+  ) => ContentSearchMode_bodyWrapper._(value);
 
-  /// Same as `wrapBody(ElementSearchMode_Body(...))`.
-  factory ElementSearchMode.createBody() =>
-      ElementSearchMode.wrapBody(ElementSearchMode_Body());
+  /// Same as `wrapBody(ContentSearchMode_Body(...))`.
+  factory ContentSearchMode.createBody() => ContentSearchMode.wrapBody(
+    ContentSearchMode_Body()
+  );
 
   /// Create a 'keyword' variant wrapping around the given value.
-  factory ElementSearchMode.wrapKeyword(ElementSearchMode_Keyword value) =>
-      ElementSearchMode_keywordWrapper._(value);
+  factory ContentSearchMode.wrapKeyword(
+    ContentSearchMode_Keyword value
+  ) => ContentSearchMode_keywordWrapper._(value);
 
-  /// Same as `wrapKeyword(ElementSearchMode_Keyword(...))`.
-  factory ElementSearchMode.createKeyword() =>
-      ElementSearchMode.wrapKeyword(ElementSearchMode_Keyword());
+  /// Same as `wrapKeyword(ContentSearchMode_Keyword(...))`.
+  factory ContentSearchMode.createKeyword() => ContentSearchMode.wrapKeyword(
+    ContentSearchMode_Keyword()
+  );
 
   /// Create a 'none' variant wrapping around the given value.
-  factory ElementSearchMode.wrapNone(ElementSearchMode_None value) =>
-      ElementSearchMode_noneWrapper._(value);
+  factory ContentSearchMode.wrapNone(
+    ContentSearchMode_None value
+  ) => ContentSearchMode_noneWrapper._(value);
 
-  /// Same as `wrapNone(ElementSearchMode_None(...))`.
-  factory ElementSearchMode.createNone() =>
-      ElementSearchMode.wrapNone(ElementSearchMode_None());
+  /// Same as `wrapNone(ContentSearchMode_None(...))`.
+  factory ContentSearchMode.createNone() => ContentSearchMode.wrapNone(
+    ContentSearchMode_None()
+  );
 
-  /// Returns the kind of variant held by this ElementSearchMode.
-  ElementSearchMode_kind get kind;
+  /// Returns the kind of variant held by this ContentSearchMode.
+  ContentSearchMode_kind get kind;
 
-  /// Serializer for `ElementSearchMode` instances.
-  static _skir.EnumSerializer<ElementSearchMode> get serializer {
+  /// Serializer for `ContentSearchMode` instances.
+  static _skir.EnumSerializer<ContentSearchMode> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
         "summary",
         "wrapSummary",
-        ElementSearchMode_Summary.serializer,
+        ContentSearchMode_Summary.serializer,
         "",
-        ElementSearchMode_summaryWrapper._,
+        ContentSearchMode_summaryWrapper._,
         (it) => it.value,
-        ordinal: ElementSearchMode_kind.summaryWrapper._ordinal,
+        ordinal: ContentSearchMode_kind.summaryWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
         "body",
         "wrapBody",
-        ElementSearchMode_Body.serializer,
+        ContentSearchMode_Body.serializer,
         "",
-        ElementSearchMode_bodyWrapper._,
+        ContentSearchMode_bodyWrapper._,
         (it) => it.value,
-        ordinal: ElementSearchMode_kind.bodyWrapper._ordinal,
+        ordinal: ContentSearchMode_kind.bodyWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
         "keyword",
         "wrapKeyword",
-        ElementSearchMode_Keyword.serializer,
+        ContentSearchMode_Keyword.serializer,
         "",
-        ElementSearchMode_keywordWrapper._,
+        ContentSearchMode_keywordWrapper._,
         (it) => it.value,
-        ordinal: ElementSearchMode_kind.keywordWrapper._ordinal,
+        ordinal: ContentSearchMode_kind.keywordWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
         "none",
         "wrapNone",
-        ElementSearchMode_None.serializer,
+        ContentSearchMode_None.serializer,
         "",
-        ElementSearchMode_noneWrapper._,
+        ContentSearchMode_noneWrapper._,
         (it) => it.value,
-        ordinal: ElementSearchMode_kind.noneWrapper._ordinal,
+        ordinal: ContentSearchMode_kind.noneWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/element_catalog.skir:ElementSearchMode",
-        doc: "",
-        unknownInstance: ElementSearchMode_unknown._instance,
-        enumInstance: ElementSearchMode.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ElementSearchMode_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:ContentSearchMode",
+    doc: "",
+    unknownInstance: ContentSearchMode_unknown._instance,
+    enumInstance: ContentSearchMode.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ContentSearchMode_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
-/// The kind of variant held by a `ElementSearchMode`.
-enum ElementSearchMode_kind {
+/// The kind of variant held by a `ContentSearchMode`.
+enum ContentSearchMode_kind {
   unknown(0),
   summaryWrapper(1),
   bodyWrapper(2),
@@ -1356,34 +1364,33 @@ enum ElementSearchMode_kind {
 
   final _core.int _ordinal;
 
-  const ElementSearchMode_kind(this._ordinal);
+  const ContentSearchMode_kind(this._ordinal);
 }
 
-final class ElementSearchMode_unknown implements ElementSearchMode {
-  static const _instance = ElementSearchMode_unknown._();
+final class ContentSearchMode_unknown implements ContentSearchMode {
+  static const _instance = ContentSearchMode_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const ElementSearchMode_unknown._() : _u = null;
-  ElementSearchMode_unknown._unrecognized(this._u);
+  const ContentSearchMode_unknown._() : _u = null;
+  ContentSearchMode_unknown._unrecognized(this._u);
 
   @_core.override
-  ElementSearchMode_kind get kind => ElementSearchMode_kind.unknown;
+  ContentSearchMode_kind get kind => ContentSearchMode_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is ElementSearchMode_unknown;
+  _core.bool operator ==(other) => other is ContentSearchMode_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ElementSearchMode.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ContentSearchMode.serializer);
 }
 
-sealed class _ElementSearchMode_wrapper implements ElementSearchMode {
+sealed class _ContentSearchMode_wrapper implements ContentSearchMode {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _ElementSearchMode_wrapper) return false;
+    if (other is! _ContentSearchMode_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -1391,91 +1398,81 @@ sealed class _ElementSearchMode_wrapper implements ElementSearchMode {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ElementSearchMode.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ContentSearchMode.serializer);
 }
 
-final class ElementSearchMode_summaryWrapper
-    extends _ElementSearchMode_wrapper {
-  final ElementSearchMode_Summary value;
+final class ContentSearchMode_summaryWrapper extends _ContentSearchMode_wrapper {
+  final ContentSearchMode_Summary value;
 
-  ElementSearchMode_summaryWrapper._(this.value);
+  ContentSearchMode_summaryWrapper._(this.value);
 
   @_core.override
-  ElementSearchMode_kind get kind => ElementSearchMode_kind.summaryWrapper;
+  ContentSearchMode_kind get kind => ContentSearchMode_kind.summaryWrapper;
 }
 
-final class ElementSearchMode_bodyWrapper extends _ElementSearchMode_wrapper {
-  final ElementSearchMode_Body value;
+final class ContentSearchMode_bodyWrapper extends _ContentSearchMode_wrapper {
+  final ContentSearchMode_Body value;
 
-  ElementSearchMode_bodyWrapper._(this.value);
+  ContentSearchMode_bodyWrapper._(this.value);
 
   @_core.override
-  ElementSearchMode_kind get kind => ElementSearchMode_kind.bodyWrapper;
+  ContentSearchMode_kind get kind => ContentSearchMode_kind.bodyWrapper;
 }
 
-final class ElementSearchMode_keywordWrapper
-    extends _ElementSearchMode_wrapper {
-  final ElementSearchMode_Keyword value;
+final class ContentSearchMode_keywordWrapper extends _ContentSearchMode_wrapper {
+  final ContentSearchMode_Keyword value;
 
-  ElementSearchMode_keywordWrapper._(this.value);
+  ContentSearchMode_keywordWrapper._(this.value);
 
   @_core.override
-  ElementSearchMode_kind get kind => ElementSearchMode_kind.keywordWrapper;
+  ContentSearchMode_kind get kind => ContentSearchMode_kind.keywordWrapper;
 }
 
-final class ElementSearchMode_noneWrapper extends _ElementSearchMode_wrapper {
-  final ElementSearchMode_None value;
+final class ContentSearchMode_noneWrapper extends _ContentSearchMode_wrapper {
+  final ContentSearchMode_None value;
 
-  ElementSearchMode_noneWrapper._(this.value);
+  ContentSearchMode_noneWrapper._(this.value);
 
   @_core.override
-  ElementSearchMode_kind get kind => ElementSearchMode_kind.noneWrapper;
+  ContentSearchMode_kind get kind => ContentSearchMode_kind.noneWrapper;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchPolicy.OrdinaryText
+// struct ContentSearchPolicy.OrdinaryText
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchPolicy_OrdinaryText_orMutable {
-  ElementSearchPolicy_OrdinaryText toFrozen();
+sealed class ContentSearchPolicy_OrdinaryText_orMutable {
+  ContentSearchPolicy_OrdinaryText toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchPolicy_OrdinaryText
-    implements ElementSearchPolicy_OrdinaryText_orMutable {
+final class ContentSearchPolicy_OrdinaryText implements ContentSearchPolicy_OrdinaryText_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchPolicy_OrdinaryText() =>
-      ElementSearchPolicy_OrdinaryText._();
+  factory ContentSearchPolicy_OrdinaryText() => ContentSearchPolicy_OrdinaryText._();
 
-  ElementSearchPolicy_OrdinaryText._();
+  ContentSearchPolicy_OrdinaryText._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchPolicy_OrdinaryText._();
+  static final defaultInstance = ContentSearchPolicy_OrdinaryText._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchPolicy_OrdinaryText_mutable mutable() =>
-      ElementSearchPolicy_OrdinaryText_mutable._();
+  static ContentSearchPolicy_OrdinaryText_mutable mutable() => ContentSearchPolicy_OrdinaryText_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchPolicy_OrdinaryText toFrozen() => this;
+  ContentSearchPolicy_OrdinaryText toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchPolicy_OrdinaryText_mutable toMutable() =>
-      ElementSearchPolicy_OrdinaryText_mutable._();
+  ContentSearchPolicy_OrdinaryText_mutable toMutable() => ContentSearchPolicy_OrdinaryText_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchPolicy_OrdinaryText) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchPolicy_OrdinaryText) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1486,12 +1483,8 @@ final class ElementSearchPolicy_OrdinaryText
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchPolicy_OrdinaryText` instances.
-  static _skir.StructSerializer<
-    ElementSearchPolicy_OrdinaryText,
-    ElementSearchPolicy_OrdinaryText_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchPolicy_OrdinaryText` instances.
+  static _skir.StructSerializer<ContentSearchPolicy_OrdinaryText, ContentSearchPolicy_OrdinaryText_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1499,125 +1492,121 @@ final class ElementSearchPolicy_OrdinaryText
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchPolicy.OrdinaryText",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchPolicy.OrdinaryText",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchPolicy_OrdinaryText_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchPolicy_OrdinaryText_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchPolicy_OrdinaryText].
-final class ElementSearchPolicy_OrdinaryText_mutable
-    implements ElementSearchPolicy_OrdinaryText_orMutable {
+/// Mutable version of [ContentSearchPolicy_OrdinaryText].
+final class ContentSearchPolicy_OrdinaryText_mutable implements ContentSearchPolicy_OrdinaryText_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchPolicy_OrdinaryText_mutable._();
+  ContentSearchPolicy_OrdinaryText_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchPolicy_OrdinaryText toFrozen() =>
-      ElementSearchPolicy_OrdinaryText().._u = this._u;
+  ContentSearchPolicy_OrdinaryText toFrozen() => ContentSearchPolicy_OrdinaryText().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum ElementSearchPolicy
+// enum ContentSearchPolicy
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case ElementSearchPolicy_unknown(): { ... }
-///     case ElementSearchPolicy_ordinaryText(:var value): { ... }
+///     case ContentSearchPolicy_unknown(): { ... }
+///     case ContentSearchPolicy_ordinaryText(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class ElementSearchPolicy {
-  /// Constant indicating an unknown `ElementSearchPolicy`.
-  /// Default value for fields of type `ElementSearchPolicy`.
-  static const ElementSearchPolicy unknown =
-      ElementSearchPolicy_unknown._instance;
+sealed class ContentSearchPolicy {
+  /// Constant indicating an unknown `ContentSearchPolicy`.
+  /// Default value for fields of type `ContentSearchPolicy`.
+  static const ContentSearchPolicy unknown = ContentSearchPolicy_unknown._instance;
 
   /// Create a 'ordinary_text' variant wrapping around the given value.
-  factory ElementSearchPolicy.wrapOrdinaryText(
-    ElementSearchPolicy_OrdinaryText value,
-  ) => ElementSearchPolicy_ordinaryTextWrapper._(value);
+  factory ContentSearchPolicy.wrapOrdinaryText(
+    ContentSearchPolicy_OrdinaryText value
+  ) => ContentSearchPolicy_ordinaryTextWrapper._(value);
 
-  /// Same as `wrapOrdinaryText(ElementSearchPolicy_OrdinaryText(...))`.
-  factory ElementSearchPolicy.createOrdinaryText() =>
-      ElementSearchPolicy.wrapOrdinaryText(ElementSearchPolicy_OrdinaryText());
+  /// Same as `wrapOrdinaryText(ContentSearchPolicy_OrdinaryText(...))`.
+  factory ContentSearchPolicy.createOrdinaryText() => ContentSearchPolicy.wrapOrdinaryText(
+    ContentSearchPolicy_OrdinaryText()
+  );
 
-  /// Returns the kind of variant held by this ElementSearchPolicy.
-  ElementSearchPolicy_kind get kind;
+  /// Returns the kind of variant held by this ContentSearchPolicy.
+  ContentSearchPolicy_kind get kind;
 
-  /// Serializer for `ElementSearchPolicy` instances.
-  static _skir.EnumSerializer<ElementSearchPolicy> get serializer {
+  /// Serializer for `ContentSearchPolicy` instances.
+  static _skir.EnumSerializer<ContentSearchPolicy> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
         "ordinary_text",
         "wrapOrdinaryText",
-        ElementSearchPolicy_OrdinaryText.serializer,
+        ContentSearchPolicy_OrdinaryText.serializer,
         "",
-        ElementSearchPolicy_ordinaryTextWrapper._,
+        ContentSearchPolicy_ordinaryTextWrapper._,
         (it) => it.value,
-        ordinal: ElementSearchPolicy_kind.ordinaryTextWrapper._ordinal,
+        ordinal: ContentSearchPolicy_kind.ordinaryTextWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/element_catalog.skir:ElementSearchPolicy",
-        doc: "",
-        unknownInstance: ElementSearchPolicy_unknown._instance,
-        enumInstance: ElementSearchPolicy.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ElementSearchPolicy_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:ContentSearchPolicy",
+    doc: "",
+    unknownInstance: ContentSearchPolicy_unknown._instance,
+    enumInstance: ContentSearchPolicy.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ContentSearchPolicy_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
-/// The kind of variant held by a `ElementSearchPolicy`.
-enum ElementSearchPolicy_kind {
+/// The kind of variant held by a `ContentSearchPolicy`.
+enum ContentSearchPolicy_kind {
   unknown(0),
   ordinaryTextWrapper(1);
 
   final _core.int _ordinal;
 
-  const ElementSearchPolicy_kind(this._ordinal);
+  const ContentSearchPolicy_kind(this._ordinal);
 }
 
-final class ElementSearchPolicy_unknown implements ElementSearchPolicy {
-  static const _instance = ElementSearchPolicy_unknown._();
+final class ContentSearchPolicy_unknown implements ContentSearchPolicy {
+  static const _instance = ContentSearchPolicy_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const ElementSearchPolicy_unknown._() : _u = null;
-  ElementSearchPolicy_unknown._unrecognized(this._u);
+  const ContentSearchPolicy_unknown._() : _u = null;
+  ContentSearchPolicy_unknown._unrecognized(this._u);
 
   @_core.override
-  ElementSearchPolicy_kind get kind => ElementSearchPolicy_kind.unknown;
+  ContentSearchPolicy_kind get kind => ContentSearchPolicy_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is ElementSearchPolicy_unknown;
+  _core.bool operator ==(other) => other is ContentSearchPolicy_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ElementSearchPolicy.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ContentSearchPolicy.serializer);
 }
 
-sealed class _ElementSearchPolicy_wrapper implements ElementSearchPolicy {
+sealed class _ContentSearchPolicy_wrapper implements ContentSearchPolicy {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _ElementSearchPolicy_wrapper) return false;
+    if (other is! _ContentSearchPolicy_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -1625,105 +1614,104 @@ sealed class _ElementSearchPolicy_wrapper implements ElementSearchPolicy {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ElementSearchPolicy.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ContentSearchPolicy.serializer);
 }
 
-final class ElementSearchPolicy_ordinaryTextWrapper
-    extends _ElementSearchPolicy_wrapper {
-  final ElementSearchPolicy_OrdinaryText value;
+final class ContentSearchPolicy_ordinaryTextWrapper extends _ContentSearchPolicy_wrapper {
+  final ContentSearchPolicy_OrdinaryText value;
 
-  ElementSearchPolicy_ordinaryTextWrapper._(this.value);
+  ContentSearchPolicy_ordinaryTextWrapper._(this.value);
 
   @_core.override
-  ElementSearchPolicy_kind get kind =>
-      ElementSearchPolicy_kind.ordinaryTextWrapper;
+  ContentSearchPolicy_kind get kind => ContentSearchPolicy_kind.ordinaryTextWrapper;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchPropertyOverride
+// struct ContentSearchPropertyOverride
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchPropertyOverride_orMutable {
+sealed class ContentSearchPropertyOverride_orMutable {
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get ownerType;
   _core.String get field;
-  ElementSearchMode get mode;
+  ContentSearchMode get mode;
 
-  ElementSearchPropertyOverride toFrozen();
+  ContentSearchPropertyOverride toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchPropertyOverride
-    implements ElementSearchPropertyOverride_orMutable {
+final class ContentSearchPropertyOverride implements ContentSearchPropertyOverride_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResolvedTypeRef ownerType;
   @_core.override
   final _core.String field;
   @_core.override
-  final ElementSearchMode mode;
+  final ContentSearchMode mode;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchPropertyOverride({
+  factory ContentSearchPropertyOverride({
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable ownerType,
     required _core.String field,
-    required ElementSearchMode mode,
-  }) => ElementSearchPropertyOverride._(ownerType.toFrozen(), field, mode);
+    required ContentSearchMode mode,
+  }) => ContentSearchPropertyOverride._(
+    ownerType.toFrozen(),
+    field,
+    mode,
+  );
 
-  ElementSearchPropertyOverride._(this.ownerType, this.field, this.mode);
+  ContentSearchPropertyOverride._(
+    this.ownerType,
+    this.field,
+    this.mode,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchPropertyOverride._(
+  static final defaultInstance = ContentSearchPropertyOverride._(
     _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
     "",
-    ElementSearchMode.unknown,
+    ContentSearchMode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchPropertyOverride_mutable mutable() =>
-      ElementSearchPropertyOverride_mutable._(
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-        "",
-        ElementSearchMode.unknown,
-      );
+  static ContentSearchPropertyOverride_mutable mutable() => ContentSearchPropertyOverride_mutable._(
+    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    "",
+    ContentSearchMode.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchPropertyOverride toFrozen() => this;
+  ContentSearchPropertyOverride toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchPropertyOverride_mutable toMutable() =>
-      ElementSearchPropertyOverride_mutable._(
-        this.ownerType,
-        this.field,
-        this.mode,
-      );
+  ContentSearchPropertyOverride_mutable toMutable() => ContentSearchPropertyOverride_mutable._(
+    this.ownerType,
+    this.field,
+    this.mode,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchPropertyOverride) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchPropertyOverride) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.ownerType, this.field, this.mode];
+  _core.List get _equality_proxy => [
+    this.ownerType,
+    this.field,
+    this.mode,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchPropertyOverride` instances.
-  static _skir.StructSerializer<
-    ElementSearchPropertyOverride,
-    ElementSearchPropertyOverride_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchPropertyOverride` instances.
+  static _skir.StructSerializer<ContentSearchPropertyOverride, ContentSearchPropertyOverride_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "owner_type",
@@ -1747,7 +1735,7 @@ final class ElementSearchPropertyOverride
         "mode",
         "mode",
         2,
-        ElementSearchMode.serializer,
+        ContentSearchMode.serializer,
         "",
         (it) => it.mode,
         (it, v) => it.mode = v,
@@ -1758,25 +1746,24 @@ final class ElementSearchPropertyOverride
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchPropertyOverride",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchPropertyOverride",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchPropertyOverride_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchPropertyOverride_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchPropertyOverride].
-final class ElementSearchPropertyOverride_mutable
-    implements ElementSearchPropertyOverride_orMutable {
+/// Mutable version of [ContentSearchPropertyOverride].
+final class ContentSearchPropertyOverride_mutable implements ContentSearchPropertyOverride_orMutable {
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable ownerType;
   _core.String field;
-  ElementSearchMode mode;
+  ContentSearchMode mode;
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchPropertyOverride_mutable._(
+  ContentSearchPropertyOverride_mutable._(
     this.ownerType,
     this.field,
     this.mode,
@@ -1789,14 +1776,13 @@ final class ElementSearchPropertyOverride_mutable
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.ownerType =
-          (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.ownerType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchPropertyOverride toFrozen() => ElementSearchPropertyOverride(
+  ContentSearchPropertyOverride toFrozen() => ContentSearchPropertyOverride(
     ownerType: this.ownerType,
     field: this.field,
     mode: this.mode,
@@ -1804,90 +1790,75 @@ final class ElementSearchPropertyOverride_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementSearchDefinition
+// struct ContentSearchDefinition
 // -----------------------------------------------------------------------------
 
-sealed class ElementSearchDefinition_orMutable {
-  ElementSearchPolicy get policy;
-  _core.Iterable<ElementSearchPropertyOverride_orMutable> get propertyOverrides;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get revisionFingerprintInputs;
+sealed class ContentSearchDefinition_orMutable {
+  ContentSearchPolicy get policy;
+  _core.Iterable<ContentSearchPropertyOverride_orMutable> get propertyOverrides;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get revisionFingerprintInputs;
 
-  ElementSearchDefinition toFrozen();
+  ContentSearchDefinition toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementSearchDefinition
-    implements ElementSearchDefinition_orMutable {
+final class ContentSearchDefinition implements ContentSearchDefinition_orMutable {
   @_core.override
-  final ElementSearchPolicy policy;
+  final ContentSearchPolicy policy;
   @_core.override
-  final _core.Iterable<ElementSearchPropertyOverride> propertyOverrides;
+  final _core.Iterable<ContentSearchPropertyOverride> propertyOverrides;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef>
-  revisionFingerprintInputs;
+  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> revisionFingerprintInputs;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementSearchDefinition({
-    required ElementSearchPolicy policy,
-    required _core.Iterable<ElementSearchPropertyOverride_orMutable>
-    propertyOverrides,
-    required _core.Iterable<
-      _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-    >
-    revisionFingerprintInputs,
-  }) => ElementSearchDefinition._(
+  factory ContentSearchDefinition({
+    required ContentSearchPolicy policy,
+    required _core.Iterable<ContentSearchPropertyOverride_orMutable> propertyOverrides,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> revisionFingerprintInputs,
+  }) => ContentSearchDefinition._(
     policy,
     _skir.internal__frozenMappedCopy(propertyOverrides, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(
-      revisionFingerprintInputs,
-      (it) => it.toFrozen(),
-    ),
+    _skir.internal__frozenMappedCopy(revisionFingerprintInputs, (it) => it.toFrozen()),
   );
 
-  ElementSearchDefinition._(
+  ContentSearchDefinition._(
     this.policy,
     this.propertyOverrides,
     this.revisionFingerprintInputs,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementSearchDefinition._(
-    ElementSearchPolicy.unknown,
+  static final defaultInstance = ContentSearchDefinition._(
+    ContentSearchPolicy.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementSearchDefinition_mutable mutable() =>
-      ElementSearchDefinition_mutable._(
-        ElementSearchPolicy.unknown,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-      );
+  static ContentSearchDefinition_mutable mutable() => ContentSearchDefinition_mutable._(
+    ContentSearchPolicy.unknown,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementSearchDefinition toFrozen() => this;
+  ContentSearchDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementSearchDefinition_mutable toMutable() =>
-      ElementSearchDefinition_mutable._(
-        this.policy,
-        this.propertyOverrides,
-        this.revisionFingerprintInputs,
-      );
+  ContentSearchDefinition_mutable toMutable() => ContentSearchDefinition_mutable._(
+    this.policy,
+    this.propertyOverrides,
+    this.revisionFingerprintInputs,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementSearchDefinition) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentSearchDefinition) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1902,18 +1873,14 @@ final class ElementSearchDefinition
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementSearchDefinition` instances.
-  static _skir.StructSerializer<
-    ElementSearchDefinition,
-    ElementSearchDefinition_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentSearchDefinition` instances.
+  static _skir.StructSerializer<ContentSearchDefinition, ContentSearchDefinition_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "policy",
         "policy",
         0,
-        ElementSearchPolicy.serializer,
+        ContentSearchPolicy.serializer,
         "",
         (it) => it.policy,
         (it, v) => it.policy = v,
@@ -1922,7 +1889,9 @@ final class ElementSearchDefinition
         "property_overrides",
         "propertyOverrides",
         1,
-        _skir.Serializers.iterable(ElementSearchPropertyOverride.serializer),
+        _skir.Serializers.iterable(
+          ContentSearchPropertyOverride.serializer,
+        ),
         "",
         (it) => it.propertyOverrides,
         (it, v) => it.propertyOverrides = v,
@@ -1944,26 +1913,24 @@ final class ElementSearchDefinition
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementSearchDefinition",
+    recordId: "editor/v1/element_catalog.skir:ContentSearchDefinition",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementSearchDefinition_mutable it) => it.toFrozen(),
+    toFrozen: (ContentSearchDefinition_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementSearchDefinition].
-final class ElementSearchDefinition_mutable
-    implements ElementSearchDefinition_orMutable {
-  ElementSearchPolicy policy;
-  _core.Iterable<ElementSearchPropertyOverride_orMutable> propertyOverrides;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  revisionFingerprintInputs;
+/// Mutable version of [ContentSearchDefinition].
+final class ContentSearchDefinition_mutable implements ContentSearchDefinition_orMutable {
+  ContentSearchPolicy policy;
+  _core.Iterable<ContentSearchPropertyOverride_orMutable> propertyOverrides;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> revisionFingerprintInputs;
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementSearchDefinition_mutable._(
+  ContentSearchDefinition_mutable._(
     this.policy,
     this.propertyOverrides,
     this.revisionFingerprintInputs,
@@ -1971,13 +1938,9 @@ final class ElementSearchDefinition_mutable
 
   /// If the value of [propertyOverrides] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [propertyOverrides] and returns it.
-  _core.List<ElementSearchPropertyOverride_orMutable>
-  get mutablePropertyOverrides {
+  _core.List<ContentSearchPropertyOverride_orMutable> get mutablePropertyOverrides {
     final value = this.propertyOverrides;
-    if (value
-        is _skir.internal__MutableList<
-          ElementSearchPropertyOverride_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<ContentSearchPropertyOverride_orMutable>) {
       return value;
     } else {
       return this.propertyOverrides = _skir.internal__MutableList([...value]);
@@ -1986,24 +1949,18 @@ final class ElementSearchDefinition_mutable
 
   /// If the value of [revisionFingerprintInputs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [revisionFingerprintInputs] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>
-  get mutableRevisionFingerprintInputs {
+  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get mutableRevisionFingerprintInputs {
     final value = this.revisionFingerprintInputs;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>) {
       return value;
     } else {
-      return this.revisionFingerprintInputs = _skir.internal__MutableList([
-        ...value,
-      ]);
+      return this.revisionFingerprintInputs = _skir.internal__MutableList([...value]);
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementSearchDefinition toFrozen() => ElementSearchDefinition(
+  ContentSearchDefinition toFrozen() => ContentSearchDefinition(
     policy: this.policy,
     propertyOverrides: this.propertyOverrides,
     revisionFingerprintInputs: this.revisionFingerprintInputs,
@@ -2011,26 +1968,323 @@ final class ElementSearchDefinition_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementDescriptor
+// struct ContentRole.Element
 // -----------------------------------------------------------------------------
 
-sealed class ElementDescriptor_orMutable {
-  ElementTypeId_orMutable get elementTypeId;
+sealed class ContentRole_Element_orMutable {
+  ContentRole_Element toFrozen();
+}
+
+/// Deeply immutable.
+final class ContentRole_Element implements ContentRole_Element_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ContentRole_Element() => ContentRole_Element._();
+
+  ContentRole_Element._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ContentRole_Element._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ContentRole_Element_mutable mutable() => ContentRole_Element_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ContentRole_Element toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ContentRole_Element_mutable toMutable() => ContentRole_Element_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ContentRole_Element) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ContentRole_Element` instances.
+  static _skir.StructSerializer<ContentRole_Element, ContentRole_Element_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ContentRole.Element",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ContentRole_Element_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ContentRole_Element].
+final class ContentRole_Element_mutable implements ContentRole_Element_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ContentRole_Element_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ContentRole_Element toFrozen() => ContentRole_Element().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct ContentRole.Cue
+// -----------------------------------------------------------------------------
+
+sealed class ContentRole_Cue_orMutable {
+  ContentRole_Cue toFrozen();
+}
+
+/// Deeply immutable.
+final class ContentRole_Cue implements ContentRole_Cue_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ContentRole_Cue() => ContentRole_Cue._();
+
+  ContentRole_Cue._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ContentRole_Cue._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ContentRole_Cue_mutable mutable() => ContentRole_Cue_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ContentRole_Cue toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ContentRole_Cue_mutable toMutable() => ContentRole_Cue_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ContentRole_Cue) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ContentRole_Cue` instances.
+  static _skir.StructSerializer<ContentRole_Cue, ContentRole_Cue_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/element_catalog.skir:ContentRole.Cue",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ContentRole_Cue_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ContentRole_Cue].
+final class ContentRole_Cue_mutable implements ContentRole_Cue_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  ContentRole_Cue_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ContentRole_Cue toFrozen() => ContentRole_Cue().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum ContentRole
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ContentRole_unknown(): { ... }
+///     case ContentRole_element(:var value): { ... }
+///     case ContentRole_cue(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ContentRole {
+  /// Constant indicating an unknown `ContentRole`.
+  /// Default value for fields of type `ContentRole`.
+  static const ContentRole unknown = ContentRole_unknown._instance;
+
+  /// Create a 'element' variant wrapping around the given value.
+  factory ContentRole.wrapElement(
+    ContentRole_Element value
+  ) => ContentRole_elementWrapper._(value);
+
+  /// Same as `wrapElement(ContentRole_Element(...))`.
+  factory ContentRole.createElement() => ContentRole.wrapElement(
+    ContentRole_Element()
+  );
+
+  /// Create a 'cue' variant wrapping around the given value.
+  factory ContentRole.wrapCue(
+    ContentRole_Cue value
+  ) => ContentRole_cueWrapper._(value);
+
+  /// Same as `wrapCue(ContentRole_Cue(...))`.
+  factory ContentRole.createCue() => ContentRole.wrapCue(
+    ContentRole_Cue()
+  );
+
+  /// Returns the kind of variant held by this ContentRole.
+  ContentRole_kind get kind;
+
+  /// Serializer for `ContentRole` instances.
+  static _skir.EnumSerializer<ContentRole> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "element",
+        "wrapElement",
+        ContentRole_Element.serializer,
+        "",
+        ContentRole_elementWrapper._,
+        (it) => it.value,
+        ordinal: ContentRole_kind.elementWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "cue",
+        "wrapCue",
+        ContentRole_Cue.serializer,
+        "",
+        ContentRole_cueWrapper._,
+        (it) => it.value,
+        ordinal: ContentRole_kind.cueWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:ContentRole",
+    doc: "",
+    unknownInstance: ContentRole_unknown._instance,
+    enumInstance: ContentRole.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ContentRole_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `ContentRole`.
+enum ContentRole_kind {
+  unknown(0),
+  elementWrapper(1),
+  cueWrapper(2);
+
+  final _core.int _ordinal;
+
+  const ContentRole_kind(this._ordinal);
+}
+
+final class ContentRole_unknown implements ContentRole {
+  static const _instance = ContentRole_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ContentRole_unknown._() : _u = null;
+  ContentRole_unknown._unrecognized(this._u);
+
+  @_core.override
+  ContentRole_kind get kind => ContentRole_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ContentRole_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, ContentRole.serializer);
+}
+
+sealed class _ContentRole_wrapper implements ContentRole {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _ContentRole_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, ContentRole.serializer);
+}
+
+final class ContentRole_elementWrapper extends _ContentRole_wrapper {
+  final ContentRole_Element value;
+
+  ContentRole_elementWrapper._(this.value);
+
+  @_core.override
+  ContentRole_kind get kind => ContentRole_kind.elementWrapper;
+}
+
+final class ContentRole_cueWrapper extends _ContentRole_wrapper {
+  final ContentRole_Cue value;
+
+  ContentRole_cueWrapper._(this.value);
+
+  @_core.override
+  ContentRole_kind get kind => ContentRole_kind.cueWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct ContentDescriptor
+// -----------------------------------------------------------------------------
+
+sealed class ContentDescriptor_orMutable {
+  ContentTypeId_orMutable get contentTypeId;
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get type;
   _core.String get name;
   _core.String get description;
   _lib_kernel_v1_icon.Icon get icon;
   _lib_kernel_v1_color.Color_orMutable get color;
   AvailabilityExpression get availability;
-  ElementSearchDefinition_orMutable? get searchDefinition;
+  ContentSearchDefinition_orMutable? get searchDefinition;
+  ContentRole get role;
 
-  ElementDescriptor toFrozen();
+  ContentDescriptor toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementDescriptor implements ElementDescriptor_orMutable {
+final class ContentDescriptor implements ContentDescriptor_orMutable {
   @_core.override
-  final ElementTypeId elementTypeId;
+  final ContentTypeId contentTypeId;
   @_core.override
   final _lib_editor_v1_type_catalog.ResolvedTypeRef type;
   @_core.override
@@ -2044,20 +2298,23 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
   @_core.override
   final AvailabilityExpression availability;
   @_core.override
-  final ElementSearchDefinition? searchDefinition;
+  final ContentSearchDefinition? searchDefinition;
+  @_core.override
+  final ContentRole role;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementDescriptor({
-    required ElementTypeId_orMutable elementTypeId,
+  factory ContentDescriptor({
+    required ContentTypeId_orMutable contentTypeId,
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable type,
     required _core.String name,
     required _core.String description,
     required _lib_kernel_v1_icon.Icon icon,
     required _lib_kernel_v1_color.Color_orMutable color,
     required AvailabilityExpression availability,
-    required ElementSearchDefinition_orMutable? searchDefinition,
-  }) => ElementDescriptor._(
-    elementTypeId.toFrozen(),
+    required ContentSearchDefinition_orMutable? searchDefinition,
+    required ContentRole role,
+  }) => ContentDescriptor._(
+    contentTypeId.toFrozen(),
     type.toFrozen(),
     name,
     description,
@@ -2065,10 +2322,11 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     color.toFrozen(),
     availability,
     (searchDefinition != null) ? searchDefinition.toFrozen() : null,
+    role,
   );
 
-  ElementDescriptor._(
-    this.elementTypeId,
+  ContentDescriptor._(
+    this.contentTypeId,
     this.type,
     this.name,
     this.description,
@@ -2076,11 +2334,12 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     this.color,
     this.availability,
     this.searchDefinition,
+    this.role,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementDescriptor._(
-    ElementTypeId.defaultInstance,
+  static final defaultInstance = ContentDescriptor._(
+    ContentTypeId.defaultInstance,
     _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
     "",
     "",
@@ -2088,12 +2347,13 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     _lib_kernel_v1_color.Color.defaultInstance,
     AvailabilityExpression.unknown,
     null,
+    ContentRole.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementDescriptor_mutable mutable() => ElementDescriptor_mutable._(
-    ElementTypeId.defaultInstance,
+  static ContentDescriptor_mutable mutable() => ContentDescriptor_mutable._(
+    ContentTypeId.defaultInstance,
     _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
     "",
     "",
@@ -2101,16 +2361,17 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     _lib_kernel_v1_color.Color.defaultInstance,
     AvailabilityExpression.unknown,
     null,
+    ContentRole.unknown,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementDescriptor toFrozen() => this;
+  ContentDescriptor toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementDescriptor_mutable toMutable() => ElementDescriptor_mutable._(
-    this.elementTypeId,
+  ContentDescriptor_mutable toMutable() => ContentDescriptor_mutable._(
+    this.contentTypeId,
     this.type,
     this.name,
     this.description,
@@ -2118,23 +2379,21 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     this.color,
     this.availability,
     this.searchDefinition,
+    this.role,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementDescriptor) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentDescriptor) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.elementTypeId,
+    this.contentTypeId,
     this.type,
     this.name,
     this.description,
@@ -2142,23 +2401,23 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
     this.color,
     this.availability,
     this.searchDefinition,
+    this.role,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementDescriptor` instances.
-  static _skir.StructSerializer<ElementDescriptor, ElementDescriptor_mutable>
-  get serializer {
+  /// Serializer for `ContentDescriptor` instances.
+  static _skir.StructSerializer<ContentDescriptor, ContentDescriptor_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "element_type_id",
-        "elementTypeId",
+        "content_type_id",
+        "contentTypeId",
         0,
-        ElementTypeId.serializer,
+        ContentTypeId.serializer,
         "",
-        (it) => it.elementTypeId,
-        (it, v) => it.elementTypeId = v,
+        (it) => it.contentTypeId,
+        (it, v) => it.contentTypeId = v,
       );
       _serializerBuilder.addField(
         "type",
@@ -2218,10 +2477,21 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
         "search_definition",
         "searchDefinition",
         7,
-        _skir.Serializers.optional(ElementSearchDefinition.serializer),
+        _skir.Serializers.optional(
+          ContentSearchDefinition.serializer,
+        ),
         "",
         (it) => it.searchDefinition,
         (it, v) => it.searchDefinition = v,
+      );
+      _serializerBuilder.addField(
+        "role",
+        "role",
+        8,
+        ContentRole.serializer,
+        "",
+        (it) => it.role,
+        (it, v) => it.role = v,
       );
       _serializerBuilder.finalize();
     }
@@ -2229,30 +2499,31 @@ final class ElementDescriptor implements ElementDescriptor_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementDescriptor",
+    recordId: "editor/v1/element_catalog.skir:ContentDescriptor",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementDescriptor_mutable it) => it.toFrozen(),
+    toFrozen: (ContentDescriptor_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementDescriptor].
-final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
-  ElementTypeId_orMutable elementTypeId;
+/// Mutable version of [ContentDescriptor].
+final class ContentDescriptor_mutable implements ContentDescriptor_orMutable {
+  ContentTypeId_orMutable contentTypeId;
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable type;
   _core.String name;
   _core.String description;
   _lib_kernel_v1_icon.Icon icon;
   _lib_kernel_v1_color.Color_orMutable color;
   AvailabilityExpression availability;
-  ElementSearchDefinition_orMutable? searchDefinition;
+  ContentSearchDefinition_orMutable? searchDefinition;
+  ContentRole role;
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementDescriptor_mutable._(
-    this.elementTypeId,
+  ContentDescriptor_mutable._(
+    this.contentTypeId,
     this.type,
     this.name,
     this.description,
@@ -2260,16 +2531,17 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
     this.color,
     this.availability,
     this.searchDefinition,
+    this.role,
   );
 
-  /// If the value of [elementTypeId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [elementTypeId] and returns it.
-  ElementTypeId_mutable get mutableElementTypeId {
-    final value = this.elementTypeId;
-    if (value is ElementTypeId_mutable) {
+  /// If the value of [contentTypeId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [contentTypeId] and returns it.
+  ContentTypeId_mutable get mutableContentTypeId {
+    final value = this.contentTypeId;
+    if (value is ContentTypeId_mutable) {
       return value;
     } else {
-      return this.elementTypeId = (value as ElementTypeId).toMutable();
+      return this.contentTypeId = (value as ContentTypeId).toMutable();
     }
   }
 
@@ -2280,8 +2552,7 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.type = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef)
-          .toMutable();
+      return this.type = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
@@ -2298,8 +2569,8 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementDescriptor toFrozen() => ElementDescriptor(
-    elementTypeId: this.elementTypeId,
+  ContentDescriptor toFrozen() => ContentDescriptor(
+    contentTypeId: this.contentTypeId,
     type: this.type,
     name: this.name,
     description: this.description,
@@ -2307,80 +2578,84 @@ final class ElementDescriptor_mutable implements ElementDescriptor_orMutable {
     color: this.color,
     availability: this.availability,
     searchDefinition: this.searchDefinition,
+    role: this.role,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementIneligibility
+// struct ContentIneligibility
 // -----------------------------------------------------------------------------
 
-sealed class ElementIneligibility_orMutable {
+sealed class ContentIneligibility_orMutable {
   _core.Iterable<_core.String> get reasons;
 
-  ElementIneligibility toFrozen();
+  ContentIneligibility toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementIneligibility implements ElementIneligibility_orMutable {
+final class ContentIneligibility implements ContentIneligibility_orMutable {
   @_core.override
   final _core.Iterable<_core.String> reasons;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementIneligibility({
+  factory ContentIneligibility({
     required _core.Iterable<_core.String> reasons,
-  }) => ElementIneligibility._(_skir.internal__frozenCopy(reasons));
+  }) => ContentIneligibility._(
+    _skir.internal__frozenCopy(reasons),
+  );
 
-  ElementIneligibility._(this.reasons);
+  ContentIneligibility._(
+    this.reasons,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementIneligibility._(
+  static final defaultInstance = ContentIneligibility._(
     _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementIneligibility_mutable mutable() =>
-      ElementIneligibility_mutable._(_skir.KeyedIterable.empty);
+  static ContentIneligibility_mutable mutable() => ContentIneligibility_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementIneligibility toFrozen() => this;
+  ContentIneligibility toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementIneligibility_mutable toMutable() =>
-      ElementIneligibility_mutable._(this.reasons);
+  ContentIneligibility_mutable toMutable() => ContentIneligibility_mutable._(
+    this.reasons,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementIneligibility) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentIneligibility) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reasons];
+  _core.List get _equality_proxy => [
+    this.reasons,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementIneligibility` instances.
-  static _skir.StructSerializer<
-    ElementIneligibility,
-    ElementIneligibility_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentIneligibility` instances.
+  static _skir.StructSerializer<ContentIneligibility, ContentIneligibility_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reasons",
         "reasons",
         0,
-        _skir.Serializers.iterable(_skir.Serializers.string),
+        _skir.Serializers.iterable(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.reasons,
         (it, v) => it.reasons = v,
@@ -2391,23 +2666,24 @@ final class ElementIneligibility implements ElementIneligibility_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementIneligibility",
+    recordId: "editor/v1/element_catalog.skir:ContentIneligibility",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementIneligibility_mutable it) => it.toFrozen(),
+    toFrozen: (ContentIneligibility_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementIneligibility].
-final class ElementIneligibility_mutable
-    implements ElementIneligibility_orMutable {
+/// Mutable version of [ContentIneligibility].
+final class ContentIneligibility_mutable implements ContentIneligibility_orMutable {
   _core.Iterable<_core.String> reasons;
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementIneligibility_mutable._(this.reasons);
+  ContentIneligibility_mutable._(
+    this.reasons,
+  );
 
   /// If the value of [reasons] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [reasons] and returns it.
@@ -2422,52 +2698,47 @@ final class ElementIneligibility_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementIneligibility toFrozen() =>
-      ElementIneligibility(reasons: this.reasons).._u = this._u;
+  ContentIneligibility toFrozen() => ContentIneligibility(
+    reasons: this.reasons,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementEligibility.Eligible
+// struct ContentEligibility.Eligible
 // -----------------------------------------------------------------------------
 
-sealed class ElementEligibility_Eligible_orMutable {
-  ElementEligibility_Eligible toFrozen();
+sealed class ContentEligibility_Eligible_orMutable {
+  ContentEligibility_Eligible toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementEligibility_Eligible
-    implements ElementEligibility_Eligible_orMutable {
+final class ContentEligibility_Eligible implements ContentEligibility_Eligible_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementEligibility_Eligible() => ElementEligibility_Eligible._();
+  factory ContentEligibility_Eligible() => ContentEligibility_Eligible._();
 
-  ElementEligibility_Eligible._();
+  ContentEligibility_Eligible._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementEligibility_Eligible._();
+  static final defaultInstance = ContentEligibility_Eligible._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementEligibility_Eligible_mutable mutable() =>
-      ElementEligibility_Eligible_mutable._();
+  static ContentEligibility_Eligible_mutable mutable() => ContentEligibility_Eligible_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementEligibility_Eligible toFrozen() => this;
+  ContentEligibility_Eligible toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementEligibility_Eligible_mutable toMutable() =>
-      ElementEligibility_Eligible_mutable._();
+  ContentEligibility_Eligible_mutable toMutable() => ContentEligibility_Eligible_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementEligibility_Eligible) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentEligibility_Eligible) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2478,12 +2749,8 @@ final class ElementEligibility_Eligible
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementEligibility_Eligible` instances.
-  static _skir.StructSerializer<
-    ElementEligibility_Eligible,
-    ElementEligibility_Eligible_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentEligibility_Eligible` instances.
+  static _skir.StructSerializer<ContentEligibility_Eligible, ContentEligibility_Eligible_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -2491,146 +2758,147 @@ final class ElementEligibility_Eligible
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementEligibility.Eligible",
+    recordId: "editor/v1/element_catalog.skir:ContentEligibility.Eligible",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementEligibility_Eligible_mutable it) => it.toFrozen(),
+    toFrozen: (ContentEligibility_Eligible_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementEligibility_Eligible].
-final class ElementEligibility_Eligible_mutable
-    implements ElementEligibility_Eligible_orMutable {
+/// Mutable version of [ContentEligibility_Eligible].
+final class ContentEligibility_Eligible_mutable implements ContentEligibility_Eligible_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementEligibility_Eligible_mutable._();
+  ContentEligibility_Eligible_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementEligibility_Eligible toFrozen() =>
-      ElementEligibility_Eligible().._u = this._u;
+  ContentEligibility_Eligible toFrozen() => ContentEligibility_Eligible().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum ElementEligibility
+// enum ContentEligibility
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case ElementEligibility_unknown(): { ... }
-///     case ElementEligibility_eligible(:var value): { ... }
-///     case ElementEligibility_ineligible(:var value): { ... }
+///     case ContentEligibility_unknown(): { ... }
+///     case ContentEligibility_eligible(:var value): { ... }
+///     case ContentEligibility_ineligible(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class ElementEligibility {
-  /// Constant indicating an unknown `ElementEligibility`.
-  /// Default value for fields of type `ElementEligibility`.
-  static const ElementEligibility unknown =
-      ElementEligibility_unknown._instance;
+sealed class ContentEligibility {
+  /// Constant indicating an unknown `ContentEligibility`.
+  /// Default value for fields of type `ContentEligibility`.
+  static const ContentEligibility unknown = ContentEligibility_unknown._instance;
 
   /// Create a 'eligible' variant wrapping around the given value.
-  factory ElementEligibility.wrapEligible(ElementEligibility_Eligible value) =>
-      ElementEligibility_eligibleWrapper._(value);
+  factory ContentEligibility.wrapEligible(
+    ContentEligibility_Eligible value
+  ) => ContentEligibility_eligibleWrapper._(value);
 
-  /// Same as `wrapEligible(ElementEligibility_Eligible(...))`.
-  factory ElementEligibility.createEligible() =>
-      ElementEligibility.wrapEligible(ElementEligibility_Eligible());
+  /// Same as `wrapEligible(ContentEligibility_Eligible(...))`.
+  factory ContentEligibility.createEligible() => ContentEligibility.wrapEligible(
+    ContentEligibility_Eligible()
+  );
 
   /// Create a 'ineligible' variant wrapping around the given value.
-  factory ElementEligibility.wrapIneligible(ElementIneligibility value) =>
-      ElementEligibility_ineligibleWrapper._(value);
+  factory ContentEligibility.wrapIneligible(
+    ContentIneligibility value
+  ) => ContentEligibility_ineligibleWrapper._(value);
 
-  /// Same as `wrapIneligible(ElementIneligibility(...))`.
-  factory ElementEligibility.createIneligible({
+  /// Same as `wrapIneligible(ContentIneligibility(...))`.
+  factory ContentEligibility.createIneligible({
     required _core.Iterable<_core.String> reasons,
-  }) =>
-      ElementEligibility.wrapIneligible(ElementIneligibility(reasons: reasons));
+  }) => ContentEligibility.wrapIneligible(
+    ContentIneligibility(
+      reasons: reasons,
+    )
+  );
 
-  /// Returns the kind of variant held by this ElementEligibility.
-  ElementEligibility_kind get kind;
+  /// Returns the kind of variant held by this ContentEligibility.
+  ContentEligibility_kind get kind;
 
-  /// Serializer for `ElementEligibility` instances.
-  static _skir.EnumSerializer<ElementEligibility> get serializer {
+  /// Serializer for `ContentEligibility` instances.
+  static _skir.EnumSerializer<ContentEligibility> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
         "eligible",
         "wrapEligible",
-        ElementEligibility_Eligible.serializer,
+        ContentEligibility_Eligible.serializer,
         "",
-        ElementEligibility_eligibleWrapper._,
+        ContentEligibility_eligibleWrapper._,
         (it) => it.value,
-        ordinal: ElementEligibility_kind.eligibleWrapper._ordinal,
+        ordinal: ContentEligibility_kind.eligibleWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
         "ineligible",
         "wrapIneligible",
-        ElementIneligibility.serializer,
+        ContentIneligibility.serializer,
         "",
-        ElementEligibility_ineligibleWrapper._,
+        ContentEligibility_ineligibleWrapper._,
         (it) => it.value,
-        ordinal: ElementEligibility_kind.ineligibleWrapper._ordinal,
+        ordinal: ContentEligibility_kind.ineligibleWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/element_catalog.skir:ElementEligibility",
-        doc: "",
-        unknownInstance: ElementEligibility_unknown._instance,
-        enumInstance: ElementEligibility.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ElementEligibility_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/element_catalog.skir:ContentEligibility",
+    doc: "",
+    unknownInstance: ContentEligibility_unknown._instance,
+    enumInstance: ContentEligibility.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ContentEligibility_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
-/// The kind of variant held by a `ElementEligibility`.
-enum ElementEligibility_kind {
+/// The kind of variant held by a `ContentEligibility`.
+enum ContentEligibility_kind {
   unknown(0),
   eligibleWrapper(1),
   ineligibleWrapper(2);
 
   final _core.int _ordinal;
 
-  const ElementEligibility_kind(this._ordinal);
+  const ContentEligibility_kind(this._ordinal);
 }
 
-final class ElementEligibility_unknown implements ElementEligibility {
-  static const _instance = ElementEligibility_unknown._();
+final class ContentEligibility_unknown implements ContentEligibility {
+  static const _instance = ContentEligibility_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const ElementEligibility_unknown._() : _u = null;
-  ElementEligibility_unknown._unrecognized(this._u);
+  const ContentEligibility_unknown._() : _u = null;
+  ContentEligibility_unknown._unrecognized(this._u);
 
   @_core.override
-  ElementEligibility_kind get kind => ElementEligibility_kind.unknown;
+  ContentEligibility_kind get kind => ContentEligibility_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is ElementEligibility_unknown;
+  _core.bool operator ==(other) => other is ContentEligibility_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ElementEligibility.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ContentEligibility.serializer);
 }
 
-sealed class _ElementEligibility_wrapper implements ElementEligibility {
+sealed class _ContentEligibility_wrapper implements ContentEligibility {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _ElementEligibility_wrapper) return false;
+    if (other is! _ContentEligibility_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -2638,72 +2906,66 @@ sealed class _ElementEligibility_wrapper implements ElementEligibility {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ElementEligibility.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ContentEligibility.serializer);
 }
 
-final class ElementEligibility_eligibleWrapper
-    extends _ElementEligibility_wrapper {
-  final ElementEligibility_Eligible value;
+final class ContentEligibility_eligibleWrapper extends _ContentEligibility_wrapper {
+  final ContentEligibility_Eligible value;
 
-  ElementEligibility_eligibleWrapper._(this.value);
+  ContentEligibility_eligibleWrapper._(this.value);
 
   @_core.override
-  ElementEligibility_kind get kind => ElementEligibility_kind.eligibleWrapper;
+  ContentEligibility_kind get kind => ContentEligibility_kind.eligibleWrapper;
 }
 
-final class ElementEligibility_ineligibleWrapper
-    extends _ElementEligibility_wrapper {
-  final ElementIneligibility value;
+final class ContentEligibility_ineligibleWrapper extends _ContentEligibility_wrapper {
+  final ContentIneligibility value;
 
-  ElementEligibility_ineligibleWrapper._(this.value);
+  ContentEligibility_ineligibleWrapper._(this.value);
 
   @_core.override
-  ElementEligibility_kind get kind => ElementEligibility_kind.ineligibleWrapper;
+  ContentEligibility_kind get kind => ContentEligibility_kind.ineligibleWrapper;
 }
 
 // -----------------------------------------------------------------------------
-// struct ElementCatalogEntry
+// struct ContentCatalogEntry
 // -----------------------------------------------------------------------------
 
-sealed class ElementCatalogEntry_orMutable {
+sealed class ContentCatalogEntry_orMutable {
   _core.String get originArtifactId;
   _core.String get sourcePart;
-  ElementDescriptor_orMutable get descriptor;
-  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable
-  get presentationSubject;
-  ElementEligibility get eligibility;
+  ContentDescriptor_orMutable get descriptor;
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable get presentationSubject;
+  ContentEligibility get eligibility;
   _core.bool get available;
 
-  ElementCatalogEntry toFrozen();
+  ContentCatalogEntry toFrozen();
 }
 
 /// Deeply immutable.
-final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
+final class ContentCatalogEntry implements ContentCatalogEntry_orMutable {
   @_core.override
   final _core.String originArtifactId;
   @_core.override
   final _core.String sourcePart;
   @_core.override
-  final ElementDescriptor descriptor;
+  final ContentDescriptor descriptor;
   @_core.override
-  final _lib_editor_v1_catalog_presentation.CatalogPresentationSubject
-  presentationSubject;
+  final _lib_editor_v1_catalog_presentation.CatalogPresentationSubject presentationSubject;
   @_core.override
-  final ElementEligibility eligibility;
+  final ContentEligibility eligibility;
   @_core.override
   final _core.bool available;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ElementCatalogEntry({
+  factory ContentCatalogEntry({
     required _core.String originArtifactId,
     required _core.String sourcePart,
-    required ElementDescriptor_orMutable descriptor,
-    required _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable
-    presentationSubject,
-    required ElementEligibility eligibility,
+    required ContentDescriptor_orMutable descriptor,
+    required _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable presentationSubject,
+    required ContentEligibility eligibility,
     required _core.bool available,
-  }) => ElementCatalogEntry._(
+  }) => ContentCatalogEntry._(
     originArtifactId,
     sourcePart,
     descriptor.toFrozen(),
@@ -2712,7 +2974,7 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
     available,
   );
 
-  ElementCatalogEntry._(
+  ContentCatalogEntry._(
     this.originArtifactId,
     this.sourcePart,
     this.descriptor,
@@ -2722,37 +2984,33 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ElementCatalogEntry._(
+  static final defaultInstance = ContentCatalogEntry._(
     "",
     "",
-    ElementDescriptor.defaultInstance,
-    _lib_editor_v1_catalog_presentation
-        .CatalogPresentationSubject
-        .defaultInstance,
-    ElementEligibility.unknown,
+    ContentDescriptor.defaultInstance,
+    _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.defaultInstance,
+    ContentEligibility.unknown,
     false,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ElementCatalogEntry_mutable mutable() => ElementCatalogEntry_mutable._(
+  static ContentCatalogEntry_mutable mutable() => ContentCatalogEntry_mutable._(
     "",
     "",
-    ElementDescriptor.defaultInstance,
-    _lib_editor_v1_catalog_presentation
-        .CatalogPresentationSubject
-        .defaultInstance,
-    ElementEligibility.unknown,
+    ContentDescriptor.defaultInstance,
+    _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.defaultInstance,
+    ContentEligibility.unknown,
     false,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ElementCatalogEntry toFrozen() => this;
+  ContentCatalogEntry toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ElementCatalogEntry_mutable toMutable() => ElementCatalogEntry_mutable._(
+  ContentCatalogEntry_mutable toMutable() => ContentCatalogEntry_mutable._(
     this.originArtifactId,
     this.sourcePart,
     this.descriptor,
@@ -2764,11 +3022,8 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ElementCatalogEntry) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! ContentCatalogEntry) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2786,12 +3041,8 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ElementCatalogEntry` instances.
-  static _skir.StructSerializer<
-    ElementCatalogEntry,
-    ElementCatalogEntry_mutable
-  >
-  get serializer {
+  /// Serializer for `ContentCatalogEntry` instances.
+  static _skir.StructSerializer<ContentCatalogEntry, ContentCatalogEntry_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "origin_artifact_id",
@@ -2815,7 +3066,7 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
         "descriptor",
         "descriptor",
         2,
-        ElementDescriptor.serializer,
+        ContentDescriptor.serializer,
         "",
         (it) => it.descriptor,
         (it, v) => it.descriptor = v,
@@ -2824,9 +3075,7 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
         "presentation_subject",
         "presentationSubject",
         3,
-        _lib_editor_v1_catalog_presentation
-            .CatalogPresentationSubject
-            .serializer,
+        _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.serializer,
         "",
         (it) => it.presentationSubject,
         (it, v) => it.presentationSubject = v,
@@ -2835,7 +3084,7 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
         "eligibility",
         "eligibility",
         4,
-        ElementEligibility.serializer,
+        ContentEligibility.serializer,
         "",
         (it) => it.eligibility,
         (it, v) => it.eligibility = v,
@@ -2855,29 +3104,27 @@ final class ElementCatalogEntry implements ElementCatalogEntry_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/element_catalog.skir:ElementCatalogEntry",
+    recordId: "editor/v1/element_catalog.skir:ContentCatalogEntry",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ElementCatalogEntry_mutable it) => it.toFrozen(),
+    toFrozen: (ContentCatalogEntry_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ElementCatalogEntry].
-final class ElementCatalogEntry_mutable
-    implements ElementCatalogEntry_orMutable {
+/// Mutable version of [ContentCatalogEntry].
+final class ContentCatalogEntry_mutable implements ContentCatalogEntry_orMutable {
   _core.String originArtifactId;
   _core.String sourcePart;
-  ElementDescriptor_orMutable descriptor;
-  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable
-  presentationSubject;
-  ElementEligibility eligibility;
+  ContentDescriptor_orMutable descriptor;
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable presentationSubject;
+  ContentEligibility eligibility;
   _core.bool available;
   _skir.internal__UnrecognizedFields? _u;
 
-  ElementCatalogEntry_mutable._(
+  ContentCatalogEntry_mutable._(
     this.originArtifactId,
     this.sourcePart,
     this.descriptor,
@@ -2888,33 +3135,29 @@ final class ElementCatalogEntry_mutable
 
   /// If the value of [descriptor] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
-  ElementDescriptor_mutable get mutableDescriptor {
+  ContentDescriptor_mutable get mutableDescriptor {
     final value = this.descriptor;
-    if (value is ElementDescriptor_mutable) {
+    if (value is ContentDescriptor_mutable) {
       return value;
     } else {
-      return this.descriptor = (value as ElementDescriptor).toMutable();
+      return this.descriptor = (value as ContentDescriptor).toMutable();
     }
   }
 
   /// If the value of [presentationSubject] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentationSubject] and returns it.
-  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable
-  get mutablePresentationSubject {
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable get mutablePresentationSubject {
     final value = this.presentationSubject;
-    if (value
-        is _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable) {
+    if (value is _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_mutable) {
       return value;
     } else {
-      return this.presentationSubject =
-          (value as _lib_editor_v1_catalog_presentation.CatalogPresentationSubject)
-              .toMutable();
+      return this.presentationSubject = (value as _lib_editor_v1_catalog_presentation.CatalogPresentationSubject).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ElementCatalogEntry toFrozen() => ElementCatalogEntry(
+  ContentCatalogEntry toFrozen() => ContentCatalogEntry(
     originArtifactId: this.originArtifactId,
     sourcePart: this.sourcePart,
     descriptor: this.descriptor,

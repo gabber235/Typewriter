@@ -282,7 +282,7 @@ as skir.RecordId,
 /// @nodoc
 mixin _$RealmEditorCatalogSnapshot {
 
- TypeCatalog get catalog; CatalogGeneration get generation; Map<PresentationId, PresentationDefinition> get presentations; Map<ConversionId, ConversionDefinition> get conversions; Map<CapabilityId, CapabilityDefinition> get capabilities; Map<String, RealmEditorSubtypeResult> get subtypeResults; List<TypeDiagnostic> get diagnostics; Map<String, RealmElementCatalogEntry> get elements; RealmPageCatalog get pageCatalog; Map<ResourceDefinitionId, RealmResourceDefinition> get resourceDefinitions; Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> get creationSlots; Map<String, RealmRelationDefinition> get relations; Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> get collectionProjections; List<RealmAuthoringCompilationProjection> get compilationProjections; RealmAuthoringSearchDefinition? get authoringSearch;
+ TypeCatalog get catalog; CatalogGeneration get generation; Map<PresentationId, PresentationDefinition> get presentations; Map<ConversionId, ConversionDefinition> get conversions; Map<CapabilityId, CapabilityDefinition> get capabilities; Map<String, RealmEditorSubtypeResult> get subtypeResults; List<TypeDiagnostic> get diagnostics; Map<String, RealmElementCatalogEntry> get elements; RealmPageCatalog get pageCatalog; Map<ResourceDefinitionId, RealmResourceDefinition> get resourceDefinitions; Map<String, RealmRelationDefinition> get relations; Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> get collectionProjections; List<RealmAuthoringCompilationProjection> get compilationProjections; RealmAuthoringSearchDefinition? get authoringSearch;
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -294,20 +294,20 @@ $RealmEditorCatalogSnapshotCopyWith<RealmEditorCatalogSnapshot> get copyWith => 
 @override
 bool operator ==(Object other) {
   final _this = this as RealmEditorCatalogSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmEditorCatalogSnapshot&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.generation, _this.generation) || other.generation == _this.generation)&&const DeepCollectionEquality().equals(other.presentations, _this.presentations)&&const DeepCollectionEquality().equals(other.conversions, _this.conversions)&&const DeepCollectionEquality().equals(other.capabilities, _this.capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _this.subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&const DeepCollectionEquality().equals(other.elements, _this.elements)&&(identical(other.pageCatalog, _this.pageCatalog) || other.pageCatalog == _this.pageCatalog)&&const DeepCollectionEquality().equals(other.resourceDefinitions, _this.resourceDefinitions)&&const DeepCollectionEquality().equals(other.creationSlots, _this.creationSlots)&&const DeepCollectionEquality().equals(other.relations, _this.relations)&&const DeepCollectionEquality().equals(other.collectionProjections, _this.collectionProjections)&&const DeepCollectionEquality().equals(other.compilationProjections, _this.compilationProjections)&&(identical(other.authoringSearch, _this.authoringSearch) || other.authoringSearch == _this.authoringSearch));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmEditorCatalogSnapshot&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.generation, _this.generation) || other.generation == _this.generation)&&const DeepCollectionEquality().equals(other.presentations, _this.presentations)&&const DeepCollectionEquality().equals(other.conversions, _this.conversions)&&const DeepCollectionEquality().equals(other.capabilities, _this.capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _this.subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&const DeepCollectionEquality().equals(other.elements, _this.elements)&&(identical(other.pageCatalog, _this.pageCatalog) || other.pageCatalog == _this.pageCatalog)&&const DeepCollectionEquality().equals(other.resourceDefinitions, _this.resourceDefinitions)&&const DeepCollectionEquality().equals(other.relations, _this.relations)&&const DeepCollectionEquality().equals(other.collectionProjections, _this.collectionProjections)&&const DeepCollectionEquality().equals(other.compilationProjections, _this.compilationProjections)&&(identical(other.authoringSearch, _this.authoringSearch) || other.authoringSearch == _this.authoringSearch));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RealmEditorCatalogSnapshot;
-  return Object.hash(runtimeType,_this.catalog,_this.generation,const DeepCollectionEquality().hash(_this.presentations),const DeepCollectionEquality().hash(_this.conversions),const DeepCollectionEquality().hash(_this.capabilities),const DeepCollectionEquality().hash(_this.subtypeResults),const DeepCollectionEquality().hash(_this.diagnostics),const DeepCollectionEquality().hash(_this.elements),_this.pageCatalog,const DeepCollectionEquality().hash(_this.resourceDefinitions),const DeepCollectionEquality().hash(_this.creationSlots),const DeepCollectionEquality().hash(_this.relations),const DeepCollectionEquality().hash(_this.collectionProjections),const DeepCollectionEquality().hash(_this.compilationProjections),_this.authoringSearch);
+  return Object.hash(runtimeType,_this.catalog,_this.generation,const DeepCollectionEquality().hash(_this.presentations),const DeepCollectionEquality().hash(_this.conversions),const DeepCollectionEquality().hash(_this.capabilities),const DeepCollectionEquality().hash(_this.subtypeResults),const DeepCollectionEquality().hash(_this.diagnostics),const DeepCollectionEquality().hash(_this.elements),_this.pageCatalog,const DeepCollectionEquality().hash(_this.resourceDefinitions),const DeepCollectionEquality().hash(_this.relations),const DeepCollectionEquality().hash(_this.collectionProjections),const DeepCollectionEquality().hash(_this.compilationProjections),_this.authoringSearch);
 }
 
 @override
 String toString() {
   final _this = this as RealmEditorCatalogSnapshot;
-  return 'RealmEditorCatalogSnapshot(catalog: ${_this.catalog}, generation: ${_this.generation}, presentations: ${_this.presentations}, conversions: ${_this.conversions}, capabilities: ${_this.capabilities}, subtypeResults: ${_this.subtypeResults}, diagnostics: ${_this.diagnostics}, elements: ${_this.elements}, pageCatalog: ${_this.pageCatalog}, resourceDefinitions: ${_this.resourceDefinitions}, creationSlots: ${_this.creationSlots}, relations: ${_this.relations}, collectionProjections: ${_this.collectionProjections}, compilationProjections: ${_this.compilationProjections}, authoringSearch: ${_this.authoringSearch})';
+  return 'RealmEditorCatalogSnapshot(catalog: ${_this.catalog}, generation: ${_this.generation}, presentations: ${_this.presentations}, conversions: ${_this.conversions}, capabilities: ${_this.capabilities}, subtypeResults: ${_this.subtypeResults}, diagnostics: ${_this.diagnostics}, elements: ${_this.elements}, pageCatalog: ${_this.pageCatalog}, resourceDefinitions: ${_this.resourceDefinitions}, relations: ${_this.relations}, collectionProjections: ${_this.collectionProjections}, compilationProjections: ${_this.compilationProjections}, authoringSearch: ${_this.authoringSearch})';
 }
 
 
@@ -318,7 +318,7 @@ abstract mixin class $RealmEditorCatalogSnapshotCopyWith<$Res>  {
   factory $RealmEditorCatalogSnapshotCopyWith(RealmEditorCatalogSnapshot value, $Res Function(RealmEditorCatalogSnapshot) _then) = _$RealmEditorCatalogSnapshotCopyWithImpl;
 @useResult
 $Res call({
- TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog, Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions, Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots, Map<String, RealmRelationDefinition> relations, Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections, List<RealmAuthoringCompilationProjection> compilationProjections, RealmAuthoringSearchDefinition? authoringSearch
+ TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog, Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions, Map<String, RealmRelationDefinition> relations, Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections, List<RealmAuthoringCompilationProjection> compilationProjections, RealmAuthoringSearchDefinition? authoringSearch
 });
 
 
@@ -335,7 +335,7 @@ class _$RealmEditorCatalogSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,Object? resourceDefinitions = null,Object? creationSlots = null,Object? relations = null,Object? collectionProjections = null,Object? compilationProjections = null,Object? authoringSearch = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,Object? resourceDefinitions = null,Object? relations = null,Object? collectionProjections = null,Object? compilationProjections = null,Object? authoringSearch = freezed,}) {
   return _then(RealmEditorCatalogSnapshot(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as TypeCatalog,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
@@ -347,8 +347,7 @@ as Map<String, RealmEditorSubtypeResult>,diagnostics: null == diagnostics ? _sel
 as List<TypeDiagnostic>,elements: null == elements ? _self.elements : elements // ignore: cast_nullable_to_non_nullable
 as Map<String, RealmElementCatalogEntry>,pageCatalog: null == pageCatalog ? _self.pageCatalog : pageCatalog // ignore: cast_nullable_to_non_nullable
 as RealmPageCatalog,resourceDefinitions: null == resourceDefinitions ? _self.resourceDefinitions : resourceDefinitions // ignore: cast_nullable_to_non_nullable
-as Map<ResourceDefinitionId, RealmResourceDefinition>,creationSlots: null == creationSlots ? _self.creationSlots : creationSlots // ignore: cast_nullable_to_non_nullable
-as Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot>,relations: null == relations ? _self.relations : relations // ignore: cast_nullable_to_non_nullable
+as Map<ResourceDefinitionId, RealmResourceDefinition>,relations: null == relations ? _self.relations : relations // ignore: cast_nullable_to_non_nullable
 as Map<String, RealmRelationDefinition>,collectionProjections: null == collectionProjections ? _self.collectionProjections : collectionProjections // ignore: cast_nullable_to_non_nullable
 as Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>,compilationProjections: null == compilationProjections ? _self.compilationProjections : compilationProjections // ignore: cast_nullable_to_non_nullable
 as List<RealmAuthoringCompilationProjection>,authoringSearch: freezed == authoringSearch ? _self.authoringSearch : authoringSearch // ignore: cast_nullable_to_non_nullable
@@ -476,10 +475,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,  Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections,  List<RealmAuthoringCompilationProjection> compilationProjections,  RealmAuthoringSearchDefinition? authoringSearch)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections,  List<RealmAuthoringCompilationProjection> compilationProjections,  RealmAuthoringSearchDefinition? authoringSearch)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogSnapshot() when $default != null:
-return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceDefinitions,_that.creationSlots,_that.relations,_that.collectionProjections,_that.compilationProjections,_that.authoringSearch);case _:
+return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceDefinitions,_that.relations,_that.collectionProjections,_that.compilationProjections,_that.authoringSearch);case _:
   return orElse();
 
 }
@@ -497,10 +496,10 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,  Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections,  List<RealmAuthoringCompilationProjection> compilationProjections,  RealmAuthoringSearchDefinition? authoringSearch)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections,  List<RealmAuthoringCompilationProjection> compilationProjections,  RealmAuthoringSearchDefinition? authoringSearch)  $default,) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogSnapshot():
-return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceDefinitions,_that.creationSlots,_that.relations,_that.collectionProjections,_that.compilationProjections,_that.authoringSearch);case _:
+return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceDefinitions,_that.relations,_that.collectionProjections,_that.compilationProjections,_that.authoringSearch);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -517,10 +516,10 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,  Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections,  List<RealmAuthoringCompilationProjection> compilationProjections,  RealmAuthoringSearchDefinition? authoringSearch)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypeCatalog catalog,  CatalogGeneration generation,  Map<PresentationId, PresentationDefinition> presentations,  Map<ConversionId, ConversionDefinition> conversions,  Map<CapabilityId, CapabilityDefinition> capabilities,  Map<String, RealmEditorSubtypeResult> subtypeResults,  List<TypeDiagnostic> diagnostics,  Map<String, RealmElementCatalogEntry> elements,  RealmPageCatalog pageCatalog,  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,  Map<String, RealmRelationDefinition> relations,  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections,  List<RealmAuthoringCompilationProjection> compilationProjections,  RealmAuthoringSearchDefinition? authoringSearch)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogSnapshot() when $default != null:
-return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceDefinitions,_that.creationSlots,_that.relations,_that.collectionProjections,_that.compilationProjections,_that.authoringSearch);case _:
+return $default(_that.catalog,_that.generation,_that.presentations,_that.conversions,_that.capabilities,_that.subtypeResults,_that.diagnostics,_that.elements,_that.pageCatalog,_that.resourceDefinitions,_that.relations,_that.collectionProjections,_that.compilationProjections,_that.authoringSearch);case _:
   return null;
 
 }
@@ -532,7 +531,7 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 
 
 class _RealmEditorCatalogSnapshot implements RealmEditorCatalogSnapshot {
-  const _RealmEditorCatalogSnapshot({required this.catalog, required this.generation,  Map<PresentationId, PresentationDefinition> presentations = const {},  Map<ConversionId, ConversionDefinition> conversions = const {},  Map<CapabilityId, CapabilityDefinition> capabilities = const {},  Map<String, RealmEditorSubtypeResult> subtypeResults = const {},  List<TypeDiagnostic> diagnostics = const [],  Map<String, RealmElementCatalogEntry> elements = const {}, this.pageCatalog = const RealmPageCatalog(),  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions = const {},  Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots = const {},  Map<String, RealmRelationDefinition> relations = const {},  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections = const {},  List<RealmAuthoringCompilationProjection> compilationProjections = const [], this.authoringSearch}): _presentations = presentations,_conversions = conversions,_capabilities = capabilities,_subtypeResults = subtypeResults,_diagnostics = diagnostics,_elements = elements,_resourceDefinitions = resourceDefinitions,_creationSlots = creationSlots,_relations = relations,_collectionProjections = collectionProjections,_compilationProjections = compilationProjections;
+  const _RealmEditorCatalogSnapshot({required this.catalog, required this.generation,  Map<PresentationId, PresentationDefinition> presentations = const {},  Map<ConversionId, ConversionDefinition> conversions = const {},  Map<CapabilityId, CapabilityDefinition> capabilities = const {},  Map<String, RealmEditorSubtypeResult> subtypeResults = const {},  List<TypeDiagnostic> diagnostics = const [],  Map<String, RealmElementCatalogEntry> elements = const {}, this.pageCatalog = const RealmPageCatalog(),  Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions = const {},  Map<String, RealmRelationDefinition> relations = const {},  Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections = const {},  List<RealmAuthoringCompilationProjection> compilationProjections = const [], this.authoringSearch}): _presentations = presentations,_conversions = conversions,_capabilities = capabilities,_subtypeResults = subtypeResults,_diagnostics = diagnostics,_elements = elements,_resourceDefinitions = resourceDefinitions,_relations = relations,_collectionProjections = collectionProjections,_compilationProjections = compilationProjections;
 
 
 @override final  TypeCatalog catalog;
@@ -587,13 +586,6 @@ class _RealmEditorCatalogSnapshot implements RealmEditorCatalogSnapshot {
   return EqualUnmodifiableMapView(_resourceDefinitions);
 }
 
- final  Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> _creationSlots;
-@override@JsonKey() Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> get creationSlots {
-  if (_creationSlots is EqualUnmodifiableMapView) return _creationSlots;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_creationSlots);
-}
-
  final  Map<String, RealmRelationDefinition> _relations;
 @override@JsonKey() Map<String, RealmRelationDefinition> get relations {
   if (_relations is EqualUnmodifiableMapView) return _relations;
@@ -627,18 +619,18 @@ _$RealmEditorCatalogSnapshotCopyWith<_RealmEditorCatalogSnapshot> get copyWith =
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmEditorCatalogSnapshot&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.generation, generation) || other.generation == generation)&&const DeepCollectionEquality().equals(other.presentations, _presentations)&&const DeepCollectionEquality().equals(other.conversions, _conversions)&&const DeepCollectionEquality().equals(other.capabilities, _capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&const DeepCollectionEquality().equals(other.elements, _elements)&&(identical(other.pageCatalog, pageCatalog) || other.pageCatalog == pageCatalog)&&const DeepCollectionEquality().equals(other.resourceDefinitions, _resourceDefinitions)&&const DeepCollectionEquality().equals(other.creationSlots, _creationSlots)&&const DeepCollectionEquality().equals(other.relations, _relations)&&const DeepCollectionEquality().equals(other.collectionProjections, _collectionProjections)&&const DeepCollectionEquality().equals(other.compilationProjections, _compilationProjections)&&(identical(other.authoringSearch, authoringSearch) || other.authoringSearch == authoringSearch));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmEditorCatalogSnapshot&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.generation, generation) || other.generation == generation)&&const DeepCollectionEquality().equals(other.presentations, _presentations)&&const DeepCollectionEquality().equals(other.conversions, _conversions)&&const DeepCollectionEquality().equals(other.capabilities, _capabilities)&&const DeepCollectionEquality().equals(other.subtypeResults, _subtypeResults)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&const DeepCollectionEquality().equals(other.elements, _elements)&&(identical(other.pageCatalog, pageCatalog) || other.pageCatalog == pageCatalog)&&const DeepCollectionEquality().equals(other.resourceDefinitions, _resourceDefinitions)&&const DeepCollectionEquality().equals(other.relations, _relations)&&const DeepCollectionEquality().equals(other.collectionProjections, _collectionProjections)&&const DeepCollectionEquality().equals(other.compilationProjections, _compilationProjections)&&(identical(other.authoringSearch, authoringSearch) || other.authoringSearch == authoringSearch));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,catalog,generation,const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_conversions),const DeepCollectionEquality().hash(_capabilities),const DeepCollectionEquality().hash(_subtypeResults),const DeepCollectionEquality().hash(_diagnostics),const DeepCollectionEquality().hash(_elements),pageCatalog,const DeepCollectionEquality().hash(_resourceDefinitions),const DeepCollectionEquality().hash(_creationSlots),const DeepCollectionEquality().hash(_relations),const DeepCollectionEquality().hash(_collectionProjections),const DeepCollectionEquality().hash(_compilationProjections),authoringSearch);
+    return Object.hash(runtimeType,catalog,generation,const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_conversions),const DeepCollectionEquality().hash(_capabilities),const DeepCollectionEquality().hash(_subtypeResults),const DeepCollectionEquality().hash(_diagnostics),const DeepCollectionEquality().hash(_elements),pageCatalog,const DeepCollectionEquality().hash(_resourceDefinitions),const DeepCollectionEquality().hash(_relations),const DeepCollectionEquality().hash(_collectionProjections),const DeepCollectionEquality().hash(_compilationProjections),authoringSearch);
 }
 
 @override
 String toString() {
-    return 'RealmEditorCatalogSnapshot(catalog: $catalog, generation: $generation, presentations: $presentations, conversions: $conversions, capabilities: $capabilities, subtypeResults: $subtypeResults, diagnostics: $diagnostics, elements: $elements, pageCatalog: $pageCatalog, resourceDefinitions: $resourceDefinitions, creationSlots: $creationSlots, relations: $relations, collectionProjections: $collectionProjections, compilationProjections: $compilationProjections, authoringSearch: $authoringSearch)';
+    return 'RealmEditorCatalogSnapshot(catalog: $catalog, generation: $generation, presentations: $presentations, conversions: $conversions, capabilities: $capabilities, subtypeResults: $subtypeResults, diagnostics: $diagnostics, elements: $elements, pageCatalog: $pageCatalog, resourceDefinitions: $resourceDefinitions, relations: $relations, collectionProjections: $collectionProjections, compilationProjections: $compilationProjections, authoringSearch: $authoringSearch)';
 }
 
 
@@ -649,7 +641,7 @@ abstract mixin class _$RealmEditorCatalogSnapshotCopyWith<$Res> implements $Real
   factory _$RealmEditorCatalogSnapshotCopyWith(_RealmEditorCatalogSnapshot value, $Res Function(_RealmEditorCatalogSnapshot) _then) = __$RealmEditorCatalogSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog, Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions, Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot> creationSlots, Map<String, RealmRelationDefinition> relations, Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections, List<RealmAuthoringCompilationProjection> compilationProjections, RealmAuthoringSearchDefinition? authoringSearch
+ TypeCatalog catalog, CatalogGeneration generation, Map<PresentationId, PresentationDefinition> presentations, Map<ConversionId, ConversionDefinition> conversions, Map<CapabilityId, CapabilityDefinition> capabilities, Map<String, RealmEditorSubtypeResult> subtypeResults, List<TypeDiagnostic> diagnostics, Map<String, RealmElementCatalogEntry> elements, RealmPageCatalog pageCatalog, Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions, Map<String, RealmRelationDefinition> relations, Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition> collectionProjections, List<RealmAuthoringCompilationProjection> compilationProjections, RealmAuthoringSearchDefinition? authoringSearch
 });
 
 
@@ -666,7 +658,7 @@ class __$RealmEditorCatalogSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of RealmEditorCatalogSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,Object? resourceDefinitions = null,Object? creationSlots = null,Object? relations = null,Object? collectionProjections = null,Object? compilationProjections = null,Object? authoringSearch = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? generation = null,Object? presentations = null,Object? conversions = null,Object? capabilities = null,Object? subtypeResults = null,Object? diagnostics = null,Object? elements = null,Object? pageCatalog = null,Object? resourceDefinitions = null,Object? relations = null,Object? collectionProjections = null,Object? compilationProjections = null,Object? authoringSearch = freezed,}) {
   return _then(_RealmEditorCatalogSnapshot(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as TypeCatalog,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
@@ -678,8 +670,7 @@ as Map<String, RealmEditorSubtypeResult>,diagnostics: null == diagnostics ? _sel
 as List<TypeDiagnostic>,elements: null == elements ? _self._elements : elements // ignore: cast_nullable_to_non_nullable
 as Map<String, RealmElementCatalogEntry>,pageCatalog: null == pageCatalog ? _self.pageCatalog : pageCatalog // ignore: cast_nullable_to_non_nullable
 as RealmPageCatalog,resourceDefinitions: null == resourceDefinitions ? _self._resourceDefinitions : resourceDefinitions // ignore: cast_nullable_to_non_nullable
-as Map<ResourceDefinitionId, RealmResourceDefinition>,creationSlots: null == creationSlots ? _self._creationSlots : creationSlots // ignore: cast_nullable_to_non_nullable
-as Map<AuthoringCreationSlotId, RealmAuthoringCreationSlot>,relations: null == relations ? _self._relations : relations // ignore: cast_nullable_to_non_nullable
+as Map<ResourceDefinitionId, RealmResourceDefinition>,relations: null == relations ? _self._relations : relations // ignore: cast_nullable_to_non_nullable
 as Map<String, RealmRelationDefinition>,collectionProjections: null == collectionProjections ? _self._collectionProjections : collectionProjections // ignore: cast_nullable_to_non_nullable
 as Map<PresentationCollectionSourceId, RealmCollectionProjectionDefinition>,compilationProjections: null == compilationProjections ? _self._compilationProjections : compilationProjections // ignore: cast_nullable_to_non_nullable
 as List<RealmAuthoringCompilationProjection>,authoringSearch: freezed == authoringSearch ? _self.authoringSearch : authoringSearch // ignore: cast_nullable_to_non_nullable
@@ -1285,974 +1276,6 @@ as String,
 }
 
 
-}
-
-/// @nodoc
-mixin _$RealmAuthoringCreationContext {
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmAuthoringCreationContext);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'RealmAuthoringCreationContext()';
-}
-
-
-}
-
-/// @nodoc
-class $RealmAuthoringCreationContextCopyWith<$Res>  {
-$RealmAuthoringCreationContextCopyWith(RealmAuthoringCreationContext _, $Res Function(RealmAuthoringCreationContext) __);
-}
-
-
-/// Adds pattern-matching-related methods to [RealmAuthoringCreationContext].
-extension RealmAuthoringCreationContextPatterns on RealmAuthoringCreationContext {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RealmStandaloneCreationContext value)?  standalone,TResult Function( RealmDeclaredRelationCreationContext value)?  declaredRelation,TResult Function( RealmReferencePathCreationContext value)?  referencePath,required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case RealmStandaloneCreationContext() when standalone != null:
-return standalone(_that);case RealmDeclaredRelationCreationContext() when declaredRelation != null:
-return declaredRelation(_that);case RealmReferencePathCreationContext() when referencePath != null:
-return referencePath(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RealmStandaloneCreationContext value)  standalone,required TResult Function( RealmDeclaredRelationCreationContext value)  declaredRelation,required TResult Function( RealmReferencePathCreationContext value)  referencePath,}){
-final _that = this;
-switch (_that) {
-case RealmStandaloneCreationContext():
-return standalone(_that);case RealmDeclaredRelationCreationContext():
-return declaredRelation(_that);case RealmReferencePathCreationContext():
-return referencePath(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RealmStandaloneCreationContext value)?  standalone,TResult? Function( RealmDeclaredRelationCreationContext value)?  declaredRelation,TResult? Function( RealmReferencePathCreationContext value)?  referencePath,}){
-final _that = this;
-switch (_that) {
-case RealmStandaloneCreationContext() when standalone != null:
-return standalone(_that);case RealmDeclaredRelationCreationContext() when declaredRelation != null:
-return declaredRelation(_that);case RealmReferencePathCreationContext() when referencePath != null:
-return referencePath(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  standalone,TResult Function( RealmCreationHostFilter hosts,  RealmCreationHostCardinality cardinality,  String relation,  RealmCreationRelationDirection direction)?  declaredRelation,TResult Function( RealmCreationHostFilter hosts,  RealmCreationHostCardinality cardinality,  DataPath path)?  referencePath,required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case RealmStandaloneCreationContext() when standalone != null:
-return standalone();case RealmDeclaredRelationCreationContext() when declaredRelation != null:
-return declaredRelation(_that.hosts,_that.cardinality,_that.relation,_that.direction);case RealmReferencePathCreationContext() when referencePath != null:
-return referencePath(_that.hosts,_that.cardinality,_that.path);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  standalone,required TResult Function( RealmCreationHostFilter hosts,  RealmCreationHostCardinality cardinality,  String relation,  RealmCreationRelationDirection direction)  declaredRelation,required TResult Function( RealmCreationHostFilter hosts,  RealmCreationHostCardinality cardinality,  DataPath path)  referencePath,}) {final _that = this;
-switch (_that) {
-case RealmStandaloneCreationContext():
-return standalone();case RealmDeclaredRelationCreationContext():
-return declaredRelation(_that.hosts,_that.cardinality,_that.relation,_that.direction);case RealmReferencePathCreationContext():
-return referencePath(_that.hosts,_that.cardinality,_that.path);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  standalone,TResult? Function( RealmCreationHostFilter hosts,  RealmCreationHostCardinality cardinality,  String relation,  RealmCreationRelationDirection direction)?  declaredRelation,TResult? Function( RealmCreationHostFilter hosts,  RealmCreationHostCardinality cardinality,  DataPath path)?  referencePath,}) {final _that = this;
-switch (_that) {
-case RealmStandaloneCreationContext() when standalone != null:
-return standalone();case RealmDeclaredRelationCreationContext() when declaredRelation != null:
-return declaredRelation(_that.hosts,_that.cardinality,_that.relation,_that.direction);case RealmReferencePathCreationContext() when referencePath != null:
-return referencePath(_that.hosts,_that.cardinality,_that.path);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class RealmStandaloneCreationContext implements RealmAuthoringCreationContext {
-  const RealmStandaloneCreationContext();
-
-
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmStandaloneCreationContext);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'RealmAuthoringCreationContext.standalone()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class RealmDeclaredRelationCreationContext implements RealmAuthoringCreationContext {
-  const RealmDeclaredRelationCreationContext({required this.hosts, required this.cardinality, required this.relation, required this.direction});
-
-
- final  RealmCreationHostFilter hosts;
- final  RealmCreationHostCardinality cardinality;
- final  String relation;
- final  RealmCreationRelationDirection direction;
-
-/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmDeclaredRelationCreationContextCopyWith<RealmDeclaredRelationCreationContext> get copyWith => _$RealmDeclaredRelationCreationContextCopyWithImpl<RealmDeclaredRelationCreationContext>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmDeclaredRelationCreationContext&&(identical(other.hosts, hosts) || other.hosts == hosts)&&(identical(other.cardinality, cardinality) || other.cardinality == cardinality)&&(identical(other.relation, relation) || other.relation == relation)&&(identical(other.direction, direction) || other.direction == direction));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,hosts,cardinality,relation,direction);
-}
-
-@override
-String toString() {
-    return 'RealmAuthoringCreationContext.declaredRelation(hosts: $hosts, cardinality: $cardinality, relation: $relation, direction: $direction)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmDeclaredRelationCreationContextCopyWith<$Res> implements $RealmAuthoringCreationContextCopyWith<$Res> {
-  factory $RealmDeclaredRelationCreationContextCopyWith(RealmDeclaredRelationCreationContext value, $Res Function(RealmDeclaredRelationCreationContext) _then) = _$RealmDeclaredRelationCreationContextCopyWithImpl;
-@useResult
-$Res call({
- RealmCreationHostFilter hosts, RealmCreationHostCardinality cardinality, String relation, RealmCreationRelationDirection direction
-});
-
-
-$RealmCreationHostFilterCopyWith<$Res> get hosts;
-
-}
-/// @nodoc
-class _$RealmDeclaredRelationCreationContextCopyWithImpl<$Res>
-    implements $RealmDeclaredRelationCreationContextCopyWith<$Res> {
-  _$RealmDeclaredRelationCreationContextCopyWithImpl(this._self, this._then);
-
-  final RealmDeclaredRelationCreationContext _self;
-  final $Res Function(RealmDeclaredRelationCreationContext) _then;
-
-/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? hosts = null,Object? cardinality = null,Object? relation = null,Object? direction = null,}) {
-  return _then(RealmDeclaredRelationCreationContext(
-hosts: null == hosts ? _self.hosts : hosts // ignore: cast_nullable_to_non_nullable
-as RealmCreationHostFilter,cardinality: null == cardinality ? _self.cardinality : cardinality // ignore: cast_nullable_to_non_nullable
-as RealmCreationHostCardinality,relation: null == relation ? _self.relation : relation // ignore: cast_nullable_to_non_nullable
-as String,direction: null == direction ? _self.direction : direction // ignore: cast_nullable_to_non_nullable
-as RealmCreationRelationDirection,
-  ));
-}
-
-/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RealmCreationHostFilterCopyWith<$Res> get hosts {
-
-  return $RealmCreationHostFilterCopyWith<$Res>(_self.hosts, (value) {
-    return _then(_self.copyWith(hosts: value));
-  });
-}
-}
-
-/// @nodoc
-
-
-class RealmReferencePathCreationContext implements RealmAuthoringCreationContext {
-  const RealmReferencePathCreationContext({required this.hosts, required this.cardinality, required this.path});
-
-
- final  RealmCreationHostFilter hosts;
- final  RealmCreationHostCardinality cardinality;
- final  DataPath path;
-
-/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmReferencePathCreationContextCopyWith<RealmReferencePathCreationContext> get copyWith => _$RealmReferencePathCreationContextCopyWithImpl<RealmReferencePathCreationContext>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmReferencePathCreationContext&&(identical(other.hosts, hosts) || other.hosts == hosts)&&(identical(other.cardinality, cardinality) || other.cardinality == cardinality)&&(identical(other.path, path) || other.path == path));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,hosts,cardinality,path);
-}
-
-@override
-String toString() {
-    return 'RealmAuthoringCreationContext.referencePath(hosts: $hosts, cardinality: $cardinality, path: $path)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmReferencePathCreationContextCopyWith<$Res> implements $RealmAuthoringCreationContextCopyWith<$Res> {
-  factory $RealmReferencePathCreationContextCopyWith(RealmReferencePathCreationContext value, $Res Function(RealmReferencePathCreationContext) _then) = _$RealmReferencePathCreationContextCopyWithImpl;
-@useResult
-$Res call({
- RealmCreationHostFilter hosts, RealmCreationHostCardinality cardinality, DataPath path
-});
-
-
-$RealmCreationHostFilterCopyWith<$Res> get hosts;$DataPathCopyWith<$Res> get path;
-
-}
-/// @nodoc
-class _$RealmReferencePathCreationContextCopyWithImpl<$Res>
-    implements $RealmReferencePathCreationContextCopyWith<$Res> {
-  _$RealmReferencePathCreationContextCopyWithImpl(this._self, this._then);
-
-  final RealmReferencePathCreationContext _self;
-  final $Res Function(RealmReferencePathCreationContext) _then;
-
-/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? hosts = null,Object? cardinality = null,Object? path = null,}) {
-  return _then(RealmReferencePathCreationContext(
-hosts: null == hosts ? _self.hosts : hosts // ignore: cast_nullable_to_non_nullable
-as RealmCreationHostFilter,cardinality: null == cardinality ? _self.cardinality : cardinality // ignore: cast_nullable_to_non_nullable
-as RealmCreationHostCardinality,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
-as DataPath,
-  ));
-}
-
-/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RealmCreationHostFilterCopyWith<$Res> get hosts {
-
-  return $RealmCreationHostFilterCopyWith<$Res>(_self.hosts, (value) {
-    return _then(_self.copyWith(hosts: value));
-  });
-}/// Create a copy of RealmAuthoringCreationContext
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataPathCopyWith<$Res> get path {
-
-  return $DataPathCopyWith<$Res>(_self.path, (value) {
-    return _then(_self.copyWith(path: value));
-  });
-}
-}
-
-/// @nodoc
-mixin _$RealmCreationHostFilter {
-
- Set<ResourceDefinitionId> get definitions; TypeExpression? get assignableTo;
-/// Create a copy of RealmCreationHostFilter
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmCreationHostFilterCopyWith<RealmCreationHostFilter> get copyWith => _$RealmCreationHostFilterCopyWithImpl<RealmCreationHostFilter>(this as RealmCreationHostFilter, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  final _this = this as RealmCreationHostFilter;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmCreationHostFilter&&const DeepCollectionEquality().equals(other.definitions, _this.definitions)&&(identical(other.assignableTo, _this.assignableTo) || other.assignableTo == _this.assignableTo));
-}
-
-
-@override
-int get hashCode {
-  final _this = this as RealmCreationHostFilter;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.definitions),_this.assignableTo);
-}
-
-@override
-String toString() {
-  final _this = this as RealmCreationHostFilter;
-  return 'RealmCreationHostFilter(definitions: ${_this.definitions}, assignableTo: ${_this.assignableTo})';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmCreationHostFilterCopyWith<$Res>  {
-  factory $RealmCreationHostFilterCopyWith(RealmCreationHostFilter value, $Res Function(RealmCreationHostFilter) _then) = _$RealmCreationHostFilterCopyWithImpl;
-@useResult
-$Res call({
- Set<ResourceDefinitionId> definitions, TypeExpression? assignableTo
-});
-
-
-$TypeExpressionCopyWith<$Res>? get assignableTo;
-
-}
-/// @nodoc
-class _$RealmCreationHostFilterCopyWithImpl<$Res>
-    implements $RealmCreationHostFilterCopyWith<$Res> {
-  _$RealmCreationHostFilterCopyWithImpl(this._self, this._then);
-
-  final RealmCreationHostFilter _self;
-  final $Res Function(RealmCreationHostFilter) _then;
-
-/// Create a copy of RealmCreationHostFilter
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? definitions = null,Object? assignableTo = freezed,}) {
-  return _then(RealmCreationHostFilter(
-definitions: null == definitions ? _self.definitions : definitions // ignore: cast_nullable_to_non_nullable
-as Set<ResourceDefinitionId>,assignableTo: freezed == assignableTo ? _self.assignableTo : assignableTo // ignore: cast_nullable_to_non_nullable
-as TypeExpression?,
-  ));
-}
-/// Create a copy of RealmCreationHostFilter
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TypeExpressionCopyWith<$Res>? get assignableTo {
-    if (_self.assignableTo == null) {
-    return null;
-  }
-
-  return $TypeExpressionCopyWith<$Res>(_self.assignableTo!, (value) {
-    return _then(_self.copyWith(assignableTo: value));
-  });
-}
-}
-
-
-/// Adds pattern-matching-related methods to [RealmCreationHostFilter].
-extension RealmCreationHostFilterPatterns on RealmCreationHostFilter {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RealmCreationHostFilter value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _RealmCreationHostFilter() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RealmCreationHostFilter value)  $default,){
-final _that = this;
-switch (_that) {
-case _RealmCreationHostFilter():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RealmCreationHostFilter value)?  $default,){
-final _that = this;
-switch (_that) {
-case _RealmCreationHostFilter() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<ResourceDefinitionId> definitions,  TypeExpression? assignableTo)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _RealmCreationHostFilter() when $default != null:
-return $default(_that.definitions,_that.assignableTo);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<ResourceDefinitionId> definitions,  TypeExpression? assignableTo)  $default,) {final _that = this;
-switch (_that) {
-case _RealmCreationHostFilter():
-return $default(_that.definitions,_that.assignableTo);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<ResourceDefinitionId> definitions,  TypeExpression? assignableTo)?  $default,) {final _that = this;
-switch (_that) {
-case _RealmCreationHostFilter() when $default != null:
-return $default(_that.definitions,_that.assignableTo);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class _RealmCreationHostFilter implements RealmCreationHostFilter {
-  const _RealmCreationHostFilter({ Set<ResourceDefinitionId> definitions = const {}, this.assignableTo}): _definitions = definitions;
-
-
- final  Set<ResourceDefinitionId> _definitions;
-@override@JsonKey() Set<ResourceDefinitionId> get definitions {
-  if (_definitions is EqualUnmodifiableSetView) return _definitions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_definitions);
-}
-
-@override final  TypeExpression? assignableTo;
-
-/// Create a copy of RealmCreationHostFilter
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$RealmCreationHostFilterCopyWith<_RealmCreationHostFilter> get copyWith => __$RealmCreationHostFilterCopyWithImpl<_RealmCreationHostFilter>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmCreationHostFilter&&const DeepCollectionEquality().equals(other.definitions, _definitions)&&(identical(other.assignableTo, assignableTo) || other.assignableTo == assignableTo));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_definitions),assignableTo);
-}
-
-@override
-String toString() {
-    return 'RealmCreationHostFilter(definitions: $definitions, assignableTo: $assignableTo)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$RealmCreationHostFilterCopyWith<$Res> implements $RealmCreationHostFilterCopyWith<$Res> {
-  factory _$RealmCreationHostFilterCopyWith(_RealmCreationHostFilter value, $Res Function(_RealmCreationHostFilter) _then) = __$RealmCreationHostFilterCopyWithImpl;
-@override @useResult
-$Res call({
- Set<ResourceDefinitionId> definitions, TypeExpression? assignableTo
-});
-
-
-@override $TypeExpressionCopyWith<$Res>? get assignableTo;
-
-}
-/// @nodoc
-class __$RealmCreationHostFilterCopyWithImpl<$Res>
-    implements _$RealmCreationHostFilterCopyWith<$Res> {
-  __$RealmCreationHostFilterCopyWithImpl(this._self, this._then);
-
-  final _RealmCreationHostFilter _self;
-  final $Res Function(_RealmCreationHostFilter) _then;
-
-/// Create a copy of RealmCreationHostFilter
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? definitions = null,Object? assignableTo = freezed,}) {
-  return _then(_RealmCreationHostFilter(
-definitions: null == definitions ? _self._definitions : definitions // ignore: cast_nullable_to_non_nullable
-as Set<ResourceDefinitionId>,assignableTo: freezed == assignableTo ? _self.assignableTo : assignableTo // ignore: cast_nullable_to_non_nullable
-as TypeExpression?,
-  ));
-}
-
-/// Create a copy of RealmCreationHostFilter
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TypeExpressionCopyWith<$Res>? get assignableTo {
-    if (_self.assignableTo == null) {
-    return null;
-  }
-
-  return $TypeExpressionCopyWith<$Res>(_self.assignableTo!, (value) {
-    return _then(_self.copyWith(assignableTo: value));
-  });
-}
-}
-
-/// @nodoc
-mixin _$RealmAuthoringCreationSlot {
-
- AuthoringCreationSlotId get id; String get label; ResourceDefinitionId get creates; RealmAuthoringCreationContext get context; List<ResolvedTypeRef> get concreteRoots;
-/// Create a copy of RealmAuthoringCreationSlot
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmAuthoringCreationSlotCopyWith<RealmAuthoringCreationSlot> get copyWith => _$RealmAuthoringCreationSlotCopyWithImpl<RealmAuthoringCreationSlot>(this as RealmAuthoringCreationSlot, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  final _this = this as RealmAuthoringCreationSlot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmAuthoringCreationSlot&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.creates, _this.creates) || other.creates == _this.creates)&&(identical(other.context, _this.context) || other.context == _this.context)&&const DeepCollectionEquality().equals(other.concreteRoots, _this.concreteRoots));
-}
-
-
-@override
-int get hashCode {
-  final _this = this as RealmAuthoringCreationSlot;
-  return Object.hash(runtimeType,_this.id,_this.label,_this.creates,_this.context,const DeepCollectionEquality().hash(_this.concreteRoots));
-}
-
-@override
-String toString() {
-  final _this = this as RealmAuthoringCreationSlot;
-  return 'RealmAuthoringCreationSlot(id: ${_this.id}, label: ${_this.label}, creates: ${_this.creates}, context: ${_this.context}, concreteRoots: ${_this.concreteRoots})';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmAuthoringCreationSlotCopyWith<$Res>  {
-  factory $RealmAuthoringCreationSlotCopyWith(RealmAuthoringCreationSlot value, $Res Function(RealmAuthoringCreationSlot) _then) = _$RealmAuthoringCreationSlotCopyWithImpl;
-@useResult
-$Res call({
- AuthoringCreationSlotId id, String label, ResourceDefinitionId creates, RealmAuthoringCreationContext context, List<ResolvedTypeRef> concreteRoots
-});
-
-
-$RealmAuthoringCreationContextCopyWith<$Res> get context;
-
-}
-/// @nodoc
-class _$RealmAuthoringCreationSlotCopyWithImpl<$Res>
-    implements $RealmAuthoringCreationSlotCopyWith<$Res> {
-  _$RealmAuthoringCreationSlotCopyWithImpl(this._self, this._then);
-
-  final RealmAuthoringCreationSlot _self;
-  final $Res Function(RealmAuthoringCreationSlot) _then;
-
-/// Create a copy of RealmAuthoringCreationSlot
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? creates = null,Object? context = null,Object? concreteRoots = null,}) {
-  return _then(RealmAuthoringCreationSlot(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as AuthoringCreationSlotId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,creates: null == creates ? _self.creates : creates // ignore: cast_nullable_to_non_nullable
-as ResourceDefinitionId,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
-as RealmAuthoringCreationContext,concreteRoots: null == concreteRoots ? _self.concreteRoots : concreteRoots // ignore: cast_nullable_to_non_nullable
-as List<ResolvedTypeRef>,
-  ));
-}
-/// Create a copy of RealmAuthoringCreationSlot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RealmAuthoringCreationContextCopyWith<$Res> get context {
-
-  return $RealmAuthoringCreationContextCopyWith<$Res>(_self.context, (value) {
-    return _then(_self.copyWith(context: value));
-  });
-}
-}
-
-
-/// Adds pattern-matching-related methods to [RealmAuthoringCreationSlot].
-extension RealmAuthoringCreationSlotPatterns on RealmAuthoringCreationSlot {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RealmAuthoringCreationSlot value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _RealmAuthoringCreationSlot() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RealmAuthoringCreationSlot value)  $default,){
-final _that = this;
-switch (_that) {
-case _RealmAuthoringCreationSlot():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RealmAuthoringCreationSlot value)?  $default,){
-final _that = this;
-switch (_that) {
-case _RealmAuthoringCreationSlot() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthoringCreationSlotId id,  String label,  ResourceDefinitionId creates,  RealmAuthoringCreationContext context,  List<ResolvedTypeRef> concreteRoots)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _RealmAuthoringCreationSlot() when $default != null:
-return $default(_that.id,_that.label,_that.creates,_that.context,_that.concreteRoots);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthoringCreationSlotId id,  String label,  ResourceDefinitionId creates,  RealmAuthoringCreationContext context,  List<ResolvedTypeRef> concreteRoots)  $default,) {final _that = this;
-switch (_that) {
-case _RealmAuthoringCreationSlot():
-return $default(_that.id,_that.label,_that.creates,_that.context,_that.concreteRoots);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthoringCreationSlotId id,  String label,  ResourceDefinitionId creates,  RealmAuthoringCreationContext context,  List<ResolvedTypeRef> concreteRoots)?  $default,) {final _that = this;
-switch (_that) {
-case _RealmAuthoringCreationSlot() when $default != null:
-return $default(_that.id,_that.label,_that.creates,_that.context,_that.concreteRoots);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class _RealmAuthoringCreationSlot extends RealmAuthoringCreationSlot {
-  const _RealmAuthoringCreationSlot({required this.id, required this.label, required this.creates, required this.context, required  List<ResolvedTypeRef> concreteRoots}): _concreteRoots = concreteRoots,super._();
-
-
-@override final  AuthoringCreationSlotId id;
-@override final  String label;
-@override final  ResourceDefinitionId creates;
-@override final  RealmAuthoringCreationContext context;
- final  List<ResolvedTypeRef> _concreteRoots;
-@override List<ResolvedTypeRef> get concreteRoots {
-  if (_concreteRoots is EqualUnmodifiableListView) return _concreteRoots;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_concreteRoots);
-}
-
-
-/// Create a copy of RealmAuthoringCreationSlot
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$RealmAuthoringCreationSlotCopyWith<_RealmAuthoringCreationSlot> get copyWith => __$RealmAuthoringCreationSlotCopyWithImpl<_RealmAuthoringCreationSlot>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmAuthoringCreationSlot&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.creates, creates) || other.creates == creates)&&(identical(other.context, context) || other.context == context)&&const DeepCollectionEquality().equals(other.concreteRoots, _concreteRoots));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,id,label,creates,context,const DeepCollectionEquality().hash(_concreteRoots));
-}
-
-@override
-String toString() {
-    return 'RealmAuthoringCreationSlot(id: $id, label: $label, creates: $creates, context: $context, concreteRoots: $concreteRoots)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$RealmAuthoringCreationSlotCopyWith<$Res> implements $RealmAuthoringCreationSlotCopyWith<$Res> {
-  factory _$RealmAuthoringCreationSlotCopyWith(_RealmAuthoringCreationSlot value, $Res Function(_RealmAuthoringCreationSlot) _then) = __$RealmAuthoringCreationSlotCopyWithImpl;
-@override @useResult
-$Res call({
- AuthoringCreationSlotId id, String label, ResourceDefinitionId creates, RealmAuthoringCreationContext context, List<ResolvedTypeRef> concreteRoots
-});
-
-
-@override $RealmAuthoringCreationContextCopyWith<$Res> get context;
-
-}
-/// @nodoc
-class __$RealmAuthoringCreationSlotCopyWithImpl<$Res>
-    implements _$RealmAuthoringCreationSlotCopyWith<$Res> {
-  __$RealmAuthoringCreationSlotCopyWithImpl(this._self, this._then);
-
-  final _RealmAuthoringCreationSlot _self;
-  final $Res Function(_RealmAuthoringCreationSlot) _then;
-
-/// Create a copy of RealmAuthoringCreationSlot
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? creates = null,Object? context = null,Object? concreteRoots = null,}) {
-  return _then(_RealmAuthoringCreationSlot(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as AuthoringCreationSlotId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,creates: null == creates ? _self.creates : creates // ignore: cast_nullable_to_non_nullable
-as ResourceDefinitionId,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
-as RealmAuthoringCreationContext,concreteRoots: null == concreteRoots ? _self._concreteRoots : concreteRoots // ignore: cast_nullable_to_non_nullable
-as List<ResolvedTypeRef>,
-  ));
-}
-
-/// Create a copy of RealmAuthoringCreationSlot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RealmAuthoringCreationContextCopyWith<$Res> get context {
-
-  return $RealmAuthoringCreationContextCopyWith<$Res>(_self.context, (value) {
-    return _then(_self.copyWith(context: value));
-  });
-}
 }
 
 /// @nodoc

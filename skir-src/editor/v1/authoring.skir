@@ -15,10 +15,6 @@ struct ResourceDefinitionId(812200001) {
   value: string = 0;
 }
 
-struct AuthoringCreationSlotId(810900016) {
-  value: string = 0;
-}
-
 struct ResourceDefinition(812200002) {
   id: ResourceDefinitionId = 0;
   accepted_root: TypeExpression = 1;
@@ -60,6 +56,7 @@ struct RelationDefinition(812200008) {
   on_target_delete: RelationDeletePolicy = 4;
   source_endpoint: RelationEndpointDefinition? = 5;
   target_endpoint: RelationEndpointDefinition? = 6;
+  families: [RelationId] = 7;
 }
 
 struct AuthoringResource(812200009) {
@@ -80,6 +77,8 @@ enum AuthoringEdgeOrigin(812200011) {
   } = 1;
   declared_relation: struct {
     relation_id: RelationId = 0;
+    source_index: int32? = 1;
+    target_index: int32? = 2;
   } = 2;
 }
 
@@ -171,8 +170,13 @@ struct AuthoringGraphSnapshot(812200023) {
 
 struct CreateResource(812200024) {
   resource: AuthoringResource = 0;
-  creation_slot: AuthoringCreationSlotId = 1;
-  hosts: [ResourceId] = 2;
+  attachment: CreationAttachment? = 1;
+}
+
+struct CreationAttachment(812200061) {
+  host: ResourceId = 0;
+  relation: RelationId = 1;
+  host_side: RelationEndpointSide = 2;
 }
 
 struct CommitResource(812200025) {
@@ -191,6 +195,8 @@ struct DeclareRelation(812200059) {
   relation: RelationId = 0;
   source: ResourceId = 1;
   target: ResourceId = 2;
+  source_before: ResourceId? = 3;
+  target_before: ResourceId? = 4;
 }
 
 struct RemoveRelation(812200060) {

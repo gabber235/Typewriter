@@ -77,12 +77,12 @@ final _otherBook = Book(
   color: Colors.green,
   tagIds: const [],
 );
-const _pageKind = PageKindRef(id: "static", revision: 1);
+final _pageType = referenceResourceTypes.page;
 final _currentPage = Page(
   pageId: skir.ResourceId(value: "current"),
   bookId: _currentBook.bookId,
   name: "Intro",
-  kind: _pageKind,
+  rootType: _pageType,
   chapter: "",
   priority: 0,
 );
@@ -90,7 +90,7 @@ final _otherPage = Page(
   pageId: skir.ResourceId(value: "other"),
   bookId: _otherBook.bookId,
   name: "Intro",
-  kind: _pageKind,
+  rootType: _pageType,
   chapter: "",
   priority: 0,
 );

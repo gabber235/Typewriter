@@ -82,21 +82,19 @@ class TagGraph extends HookConsumerWidget {
       name: "tags",
       builder: (tagList) {
         if (tagList.isEmpty) {
-          final slot = ref
+          final root = ref
               .read(realmEditorCatalogProvider)
               .value
               ?.snapshot
-              ?.standaloneCreationSlot(CoreResourceDefinitionIds.tag);
-          final root = slot?.concreteRoots.singleOrNull;
+              ?.creatableRoots(CoreResourceDefinitionIds.tag)
+              .singleOrNull;
           return EmptyTagsPage(
             onCreateTag: () => ref
                 .read(resourceCreationProvider)
                 .create(
                   context: context,
                   request: ResourceCreationRequest(
-                    slot:
-                        slot?.id ??
-                        (throw StateError("Tag creation is unavailable")),
+                    definition: CoreResourceDefinitionIds.tag,
                     title: "Create Tag",
                     concreteRoot:
                         root ??

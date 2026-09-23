@@ -51,7 +51,7 @@ Widget primarySearchButtonStory({
       storyEntryIndex.values.first.definition.elementDefinition.typeId.uuid;
   final fixtures = AuthoringSearchStoryFixtures(
     elementType: elementType,
-    pageKind: pageDefinition.kind.toSkir(),
+    pageType: pageDefinition.type,
   );
 
   return FakeApp(
@@ -113,7 +113,7 @@ Widget primarySearchButtonStory({
         elements: storyElements,
       ),
       ...bookPagesProviderOverrides(state: pagesState),
-      ...pagesProviderOverrides(pageKind: pageDefinition.kind),
+      ...pagesProviderOverrides(pageType: pageDefinition.type),
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: booksState),

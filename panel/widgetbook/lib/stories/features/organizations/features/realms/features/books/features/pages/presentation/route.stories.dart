@@ -116,7 +116,7 @@ Widget pagePageStory({
     pageId: skir.ResourceId(value: "page:example-page-id"),
     bookId: skir.ResourceId(value: "book:example-book-id"),
     name: "Example",
-    kind: definition.kind,
+    rootType: definition.type,
     chapter: "",
     priority: 0,
   );

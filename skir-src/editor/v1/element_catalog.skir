@@ -6,7 +6,7 @@ import {
 import { Color } from "kernel/v1/color.skir";
 import { Icon } from "kernel/v1/icon.skir";
 
-struct ElementTypeId(811100001) {
+struct ContentTypeId(811100001) {
   value: DeclaredTypeId = 0;
 }
 
@@ -35,54 +35,60 @@ enum AvailabilityExpression(811100006) {
   not: AvailabilityNot = 5;
 }
 
-enum ElementSearchMode(811100007) {
+enum ContentSearchMode(811100007) {
   summary: struct {} = 1;
   body: struct {} = 2;
   keyword: struct {} = 3;
   none: struct {} = 4;
 }
 
-enum ElementSearchPolicy(811100008) {
+enum ContentSearchPolicy(811100008) {
   ordinary_text: struct {} = 1;
 }
 
-struct ElementSearchPropertyOverride(811100009) {
+struct ContentSearchPropertyOverride(811100009) {
   owner_type: ResolvedTypeRef = 0;
   field: string = 1;
-  mode: ElementSearchMode = 2;
+  mode: ContentSearchMode = 2;
 }
 
-struct ElementSearchDefinition(811100010) {
-  policy: ElementSearchPolicy = 0;
-  property_overrides: [ElementSearchPropertyOverride] = 1;
+struct ContentSearchDefinition(811100010) {
+  policy: ContentSearchPolicy = 0;
+  property_overrides: [ContentSearchPropertyOverride] = 1;
   revision_fingerprint_inputs: [ResolvedTypeRef] = 2;
 }
 
-struct ElementDescriptor(811100011) {
-  element_type_id: ElementTypeId = 0;
+enum ContentRole(811100015) {
+  element: struct {} = 1;
+  cue: struct {} = 2;
+}
+
+struct ContentDescriptor(811100011) {
+  content_type_id: ContentTypeId = 0;
   type: ResolvedTypeRef = 1;
   name: string = 2;
   description: string = 3;
   icon: Icon = 4;
   color: Color = 5;
   availability: AvailabilityExpression = 6;
-  search_definition: ElementSearchDefinition? = 7;
+  search_definition: ContentSearchDefinition? = 7;
+  role: ContentRole = 8;
 }
 
-struct ElementIneligibility(811100012) {
+struct ContentIneligibility(811100012) {
   reasons: [string] = 0;
 }
 
-enum ElementEligibility(811100013) {
+enum ContentEligibility(811100013) {
   eligible: struct {} = 1;
-  ineligible: ElementIneligibility = 2;
+  ineligible: ContentIneligibility = 2;
 }
 
-struct ElementCatalogEntry(811100014) {
+struct ContentCatalogEntry(811100014) {
   origin_artifact_id: string = 0;
   source_part: string = 1;
-  descriptor: ElementDescriptor = 2;
+  descriptor: ContentDescriptor = 2;
   presentation_subject: CatalogPresentationSubject = 3;
-  eligibility: ElementEligibility = 4;
+  eligibility: ContentEligibility = 4;
   available: bool = 5;
 }

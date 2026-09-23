@@ -1,22 +1,16 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringCreationContext
 import com.typewritermc.authoring.ResourceTypeDescriptor
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementCatalogEntry
+import com.typewritermc.elements.ContentCatalogEntry
 import com.typewritermc.library.Book
 import com.typewritermc.library.Page
 import com.typewritermc.library.Tag
 import com.typewritermc.pages.PageCatalogEntry
 import com.typewritermc.pages.PageDiagnostic
-import com.typewritermc.pages.ResolvedPageEditorDefinition
 import com.typewritermc.presentation.PresentationDiagnostic
-import com.typewritermc.realm.AuthoringCreationHostCardinality
-import com.typewritermc.realm.AuthoringCreationHostFilter
-import com.typewritermc.realm.AuthoringCreationRelationDirection
-import com.typewritermc.realm.AuthoringCreationSlotDefinition
 import com.typewritermc.realm.RealmDiscoverySnapshot
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataPathSegment
@@ -55,7 +49,6 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.TypeDiagnostic
 import skirout.editor.v1.presentation.PresentationDefinition
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.authoring.AuthoringCreationSlotId as WireAuthoringCreationSlotId
 import skirout.editor.v1.authoring.RelationCardinality as SkirRelationCardinality
 import skirout.editor.v1.authoring.RelationDefinition as SkirRelationDefinition
 import skirout.editor.v1.authoring.RelationDeletePolicy as SkirRelationDeletePolicy
@@ -63,9 +56,6 @@ import skirout.editor.v1.authoring.RelationEndpointDefinition as SkirRelationEnd
 import skirout.editor.v1.authoring.RelationEndpointSide as SkirRelationEndpointSide
 import skirout.editor.v1.authoring.RelationId as SkirRelationId
 import skirout.editor.v1.authoring.ResourceDefinitionId as WireResourceDefinitionId
-import skirout.editor.v1.catalog.AuthoringCreationContext as WireAuthoringCreationContext
-import skirout.editor.v1.catalog.AuthoringCreationHostCardinality as WireAuthoringCreationHostCardinality
-import skirout.editor.v1.catalog.AuthoringCreationSlotDefinition as WireAuthoringCreationSlotDefinition
 import skirout.editor.v1.catalog.AuthoringSearchDefinition as WireAuthoringSearchDefinition
 import skirout.editor.v1.catalog.AuthoringSearchFacetDefinition as WireAuthoringSearchFacetDefinition
 import skirout.editor.v1.catalog.TypeInitializationRequirement as WireTypeInitializationRequirement
@@ -152,13 +142,12 @@ class SnapshotRealmEditorCatalogSource(
             capabilityDefinitions = closure.capabilities.map(RealmCapabilityDescriptor::toWire),
             subtypeResults = subtypeResults,
             diagnostics = snapshot.presentationDiagnostics.map(PresentationDiagnostic::toWire) + closure.diagnostics,
-            elementEntries = snapshot.elements.entries.map { it.toSkir(prototypes) },
+            contentEntries = snapshot.elements.entries.map { it.toSkir(prototypes) },
             pageEntries = snapshot.pages.entries.map { it.toSkir(prototypes) },
             pageDiagnostics = snapshot.pages.diagnostics.map(PageDiagnostic::toSkir),
             resourceDefinitions = resourceDefinitions,
             relationDefinitions = snapshot.relations.map(RelationDefinition::toWire),
             collectionProjectionDefinitions = snapshot.collectionProjections,
-            authoringCreationSlots = snapshot.creationSlots.map { it.toWire() },
             authoringSearch = snapshot.authoringSearch?.toWire(),
             authoringCompilationProjections = snapshot.compilationProjections,
         )
@@ -254,58 +243,6 @@ private fun com.typewritermc.realm.AuthoringSearchFacetDefinition.toWire(): Wire
         selectorId = selectorId,
     )
 
-private fun AuthoringCreationSlotDefinition.toWire(): WireAuthoringCreationSlotDefinition =
-    WireAuthoringCreationSlotDefinition(
-        id = WireAuthoringCreationSlotId(value = id.value),
-        label = label,
-        creates = WireResourceDefinitionId(value = creates.value),
-        context = context.toWire(),
-        concreteRoots = concreteRoots.map { SkirTypeCodec.encode(it).getOrThrow() },
-    )
-
-private fun AuthoringCreationContext.toWire(): WireAuthoringCreationContext =
-    when (this) {
-        AuthoringCreationContext.Standalone -> {
-            WireAuthoringCreationContext.createStandalone()
-        }
-
-        is AuthoringCreationContext.DeclaredRelation -> {
-            WireAuthoringCreationContext.createDeclaredRelation(
-                hosts = hosts.toWire(),
-                cardinality = cardinality.toWire(),
-                relation = SkirRelationId(value = relation.value),
-                direction = direction.toWire(),
-            )
-        }
-
-        is AuthoringCreationContext.ReferencePath -> {
-            WireAuthoringCreationContext.createReferencePath(
-                hosts = hosts.toWire(),
-                cardinality = cardinality.toWire(),
-                path = path.toWirePath(),
-            )
-        }
-    }
-
-private fun AuthoringCreationHostFilter.toWire(): skirout.editor.v1.authoring.ResourceFilter =
-    skirout.editor.v1.authoring.ResourceFilter(
-        definitions = definitions.map { WireResourceDefinitionId(value = it.value) },
-        assignableTo = assignableTo?.let { SkirTypeCodec.encode(it).getOrThrow() },
-    )
-
-private fun AuthoringCreationHostCardinality.toWire(): WireAuthoringCreationHostCardinality =
-    when (this) {
-        AuthoringCreationHostCardinality.EXACTLY_ONE -> WireAuthoringCreationHostCardinality.EXACTLY_ONE
-        AuthoringCreationHostCardinality.ONE_OR_MORE -> WireAuthoringCreationHostCardinality.ONE_OR_MORE
-    }
-
-private fun AuthoringCreationRelationDirection.toWire(): skirout.editor.v1.authoring.RelationDirection =
-    when (this) {
-        AuthoringCreationRelationDirection.OUTGOING -> skirout.editor.v1.authoring.RelationDirection.OUTGOING
-        AuthoringCreationRelationDirection.INCOMING -> skirout.editor.v1.authoring.RelationDirection.INCOMING
-        AuthoringCreationRelationDirection.BOTH -> skirout.editor.v1.authoring.RelationDirection.BOTH
-    }
-
 private fun RelationDefinition.toWire(): SkirRelationDefinition =
     SkirRelationDefinition(
         id = SkirRelationId(value = id.value),
@@ -315,6 +252,7 @@ private fun RelationDefinition.toWire(): SkirRelationDefinition =
         onTargetDelete = onTargetDelete.toWire(),
         sourceEndpoint = sourceEndpoint?.toWire(),
         targetEndpoint = targetEndpoint?.toWire(),
+        families = families.sortedBy { it.value }.map { SkirRelationId(value = it.value) },
     )
 
 private fun RelationEndpointDefinition.toWire(): SkirRelationEndpointDefinition =
@@ -346,13 +284,7 @@ private fun RealmDiscoverySnapshot.catalogTypes(prototypes: TypePrototypeRegistr
             prototypes.require(ResourceTypeDescriptor::class).type,
             prototypes.require(ResolvedTypeRef::class).type,
         ) +
-        pages.entries.flatMap { entry ->
-            listOf(entry.presentationTarget) +
-                when (val editor = entry.descriptor.editor) {
-                    is ResolvedPageEditorDefinition.Graph -> editor.nodes
-                    is ResolvedPageEditorDefinition.Timeline -> editor.tracks + editor.segments + editor.keyframes
-                }
-        }
+        pages.entries.map { it.presentationTarget }
 
 private data class RealmEditorCatalogClosure(
     val types: TypeCatalog,

@@ -40,8 +40,7 @@ decodedRealmDocumentValues(
         AuthoringValue(
           value: {
             for (final selection in session.selections.entries)
-              if (PageAuthoringSelectionKey.parse(selection.key)
-                  case final key?)
+              if (PageContentSelectionKey.parse(selection.key) case final key?)
                 key.page.value: _decodePageElements(
                   key.page,
                   selection.value.resourceIds

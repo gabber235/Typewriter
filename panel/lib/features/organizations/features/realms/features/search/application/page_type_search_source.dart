@@ -6,15 +6,15 @@ import "package:rxdart/rxdart.dart";
 import "package:searchlight/searchlight.dart" hide SearchResult;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-const pageKindSearchResultType = SearchResultType(
+const pageTypeSearchResultType = SearchResultType(
   id: "authoring.page_kind",
   rowRendererId: "authoring.page_kind",
   label: "Page Kind",
 );
 
-/// Lists page kinds available in the active realm catalog.
-final class PageKindSearchSource implements SearchSource {
-  PageKindSearchSource({
+/// Lists page types available in the active realm catalog.
+final class PageTypeSearchSource implements SearchSource {
+  PageTypeSearchSource({
     required this.definitions,
     this.querySelectors = const [],
   });
@@ -34,7 +34,7 @@ final class PageKindSearchSource implements SearchSource {
     schema: Schema({
       "name": TypedField(.string),
       "description": TypedField(.string),
-      "kind": TypedField(.string),
+      "type": TypedField(.string),
     }),
   );
 
@@ -73,7 +73,7 @@ final class PageKindSearchSource implements SearchSource {
               "id": entry.key,
               "name": entry.value.name,
               "description": entry.value.description ?? "",
-              "kind": entry.value.kind.id,
+              "type": entry.value.type.toString(),
             },
           )
           .toList(),
@@ -93,7 +93,7 @@ final class PageKindSearchSource implements SearchSource {
       if (definitionMap[hit.id] case final definition?) {
         return SearchResult(
           id: hit.id,
-          type: pageKindSearchResultType,
+          type: pageTypeSearchResultType,
           payload: definition,
           title: definition.name,
           subtitle: definition.description,
@@ -113,7 +113,7 @@ final class PageKindSearchSource implements SearchSource {
     final errors = [
       if (definitions.value case AsyncError(:final error))
         SearchErrorSummary(
-          id: "page_kinds_search_error",
+          id: "page_types_search_error",
           message: error.toString(),
           severity: SearchErrorSeverity.error,
           sourceLabel: "Page Kinds",
@@ -123,7 +123,7 @@ final class PageKindSearchSource implements SearchSource {
     final nodes = [
       if (hits.isNotEmpty)
         SearchNode.section(
-          id: "page_kinds",
+          id: "page_types",
           title: "Create Page",
           children: hits,
         ),
@@ -145,7 +145,7 @@ final class PageKindSearchSource implements SearchSource {
     SearchPreviewRequest request,
   ) async {
     return const SearchPreviewRequestResult.error(
-      message: "Page kinds do not provide a preview yet",
+      message: "Page types do not provide a preview yet",
     );
   }
 

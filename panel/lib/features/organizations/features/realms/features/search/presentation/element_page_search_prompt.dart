@@ -18,8 +18,8 @@ Future<ElementPageSelection?> promptElementPageSelection({
         throw ApiException.badRequest("No realm selected");
       }
       final books = ref.valued(projectedBooksProvider);
-      final compatibleKinds = ref.valued(
-        compatiblePageCreationSlotsProvider(elementDefinition.rootType),
+      final compatibleFields = ref.valued(
+        compatiblePageElementsFieldsProvider(elementDefinition.rootType),
       );
       final initialBook = initialBookId == null
           ? null
@@ -33,19 +33,19 @@ Future<ElementPageSelection?> promptElementPageSelection({
         session: SearchSession(
           source: [
             realmSource.inSection(id: "compatible_pages", title: "Choose Page"),
-            PageKindSearchSource(
+            PageTypeSearchSource(
               definitions: ref.valued(realmPageDefinitionsProvider),
             ),
           ].merged(),
           scope: elementDestinationScope(
             books: books,
-            compatibleKinds: compatibleKinds,
+            compatibleFields: compatibleFields,
           ),
           interaction: SearchInteraction(
             activation: elementDestinationActivation(
               ref: ref,
               books: books,
-              compatibleKinds: compatibleKinds,
+              compatibleFields: compatibleFields,
             ),
             selectionMode: SearchSelectionMode.single,
           ),
@@ -67,8 +67,8 @@ Future<ElementPageSelection?> promptElementPageSelection({
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      pageKindSearchResultType.rowRendererId: (context) =>
-          PageKindSearchResultItem(
+      pageTypeSearchResultType.rowRendererId: (context) =>
+          PageTypeSearchResultItem(
             definition: context.result.payload as RealmPageDefinition,
             focused: context.focused,
             selected: context.selected,

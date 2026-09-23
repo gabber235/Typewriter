@@ -60,8 +60,8 @@ class AuthoringCreationSearchResultItem extends StatelessWidget {
   }
 }
 
-class PageKindSearchResultItem extends ConsumerWidget {
-  const PageKindSearchResultItem({
+class PageTypeSearchResultItem extends ConsumerWidget {
+  const PageTypeSearchResultItem({
     required this.definition,
     required this.selected,
     required this.focused,
@@ -103,11 +103,11 @@ class PageKindSearchResultItem extends ConsumerWidget {
         child: ComposedEditor(
           model: presentation,
           readOnly: true,
-          historyNamespace: "catalog.page.${definition.kind.id}",
+          historyNamespace: "catalog.page.${definition.type}",
         ),
       ),
       suffix: SearchResultSuffix(
-        label: "page kind",
+        label: "page type",
         shortcutActivator: shortcutActivator,
         selected: selected,
       ),

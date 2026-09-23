@@ -19,6 +19,8 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypePrototypeRegistry
 import com.typewritermc.types.TypedValueEnvelope
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.effectiveRelationField
 import java.security.MessageDigest
 
 /** Canonical scalar state stored on one resource row. */
@@ -51,6 +53,8 @@ sealed interface ResourceRelationOrigin {
     @kotlinx.serialization.Serializable
     data class Declared(
         val relationId: RelationId,
+        val sourceIndex: Int? = null,
+        val targetIndex: Int? = null,
     ) : ResourceRelationOrigin
 }
 
@@ -152,14 +156,20 @@ internal class ResourceValueMapper(
         return TypedValueEnvelope(TypeExpression.Named(resource.root), assembled.value)
     }
 
-    private fun endpoints(root: ResolvedTypeRef): List<Pair<RelationDefinition, RelationEndpointDefinition>> =
-        relations.values
+    private fun endpoints(root: ResolvedTypeRef): List<Pair<RelationDefinition, RelationEndpointDefinition>> {
+        val catalog = TypeCatalog(prototypes.graph(TypeExpression.Named(root)).definitions)
+        return relations.values
             .flatMap { definition ->
                 listOfNotNull(
-                    definition.sourceEndpoint?.takeIf { it.owner == root }?.let { definition to it },
-                    definition.targetEndpoint?.takeIf { it.owner == root }?.let { definition to it },
+                    definition.sourceEndpoint?.takeIf {
+                        catalog.effectiveRelationField(root, definition, RelationEndpointSide.SOURCE) != null
+                    }?.let { definition to it },
+                    definition.targetEndpoint?.takeIf {
+                        catalog.effectiveRelationField(root, definition, RelationEndpointSide.TARGET) != null
+                    }?.let { definition to it },
                 )
             }.sortedBy { (_, endpoint) -> endpoint.path.toString() }
+    }
 
     private fun declaredEdges(
         owner: ResourceId,
@@ -168,14 +178,19 @@ internal class ResourceValueMapper(
         endpoint: RelationEndpointDefinition,
     ): List<StoredResourceRelation> {
         val references = value.at(endpoint.path).references(endpoint.cardinality)
-        return references.map { target ->
+        return references.mapIndexed { index, target ->
             val sourceId = if (endpoint.side == RelationEndpointSide.SOURCE) owner else target
             val targetId = if (endpoint.side == RelationEndpointSide.SOURCE) target else owner
             StoredResourceRelation(
                 id = edgeId(sourceId, targetId, "declared:${definition.id.value}"),
                 source = sourceId,
                 target = targetId,
-                origin = ResourceRelationOrigin.Declared(definition.id),
+                origin =
+                    ResourceRelationOrigin.Declared(
+                        definition.id,
+                        sourceIndex = index.takeIf { endpoint.side == RelationEndpointSide.SOURCE && endpoint.cardinality == RelationCardinality.MANY },
+                        targetIndex = index.takeIf { endpoint.side == RelationEndpointSide.TARGET && endpoint.cardinality == RelationCardinality.MANY },
+                    ),
             )
         }
     }
@@ -191,12 +206,20 @@ internal class ResourceValueMapper(
                 .asSequence()
                 .filter { (it.origin as? ResourceRelationOrigin.Declared)?.relationId == definition.id }
                 .mapNotNull { relation ->
-                    when (endpoint.side) {
-                        RelationEndpointSide.SOURCE -> relation.target.takeIf { relation.source == owner }
-                        RelationEndpointSide.TARGET -> relation.source.takeIf { relation.target == owner }
+                    val target =
+                        when (endpoint.side) {
+                            RelationEndpointSide.SOURCE -> relation.target.takeIf { relation.source == owner }
+                            RelationEndpointSide.TARGET -> relation.source.takeIf { relation.target == owner }
+                        } ?: return@mapNotNull null
+                    val origin = relation.origin as ResourceRelationOrigin.Declared
+                    val index = when (endpoint.side) {
+                        RelationEndpointSide.SOURCE -> origin.sourceIndex
+                        RelationEndpointSide.TARGET -> origin.targetIndex
                     }
-                }.distinct()
-                .sortedBy(ResourceId::value)
+                    target to index
+                }.distinctBy { it.first }
+                .sortedWith(compareBy<Pair<ResourceId, Int?>>({ it.second ?: Int.MAX_VALUE }, { it.first.value }))
+                .map { it.first }
                 .toList()
         return when (endpoint.cardinality) {
             RelationCardinality.ONE -> {
@@ -224,7 +247,11 @@ private fun RelationEndpointDefinition.placeholder(): DataValue =
 private fun DataValue.references(cardinality: RelationCardinality): List<ResourceId> =
     when (cardinality) {
         RelationCardinality.ONE -> listOf((this as DataValue.Reference).id)
-        RelationCardinality.MANY -> (this as DataValue.ListValue).values.map { (it as DataValue.Reference).id }.distinct()
+        RelationCardinality.MANY -> {
+            val ids = (this as DataValue.ListValue).values.map { (it as DataValue.Reference).id }
+            require(ids.distinct().size == ids.size) { "A ToMany field cannot repeat a target resource." }
+            ids
+        }
     }
 
 private fun DataValue.at(path: DataPath): DataValue =

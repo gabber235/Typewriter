@@ -1,9 +1,6 @@
 package com.typewritermc.pages
 
-import com.typewritermc.elements.Element
-import com.typewritermc.elements.Entry
-import com.typewritermc.elements.Keyframe
-import com.typewritermc.elements.Segment
+import com.typewritermc.library.Page
 import kotlin.reflect.KClass
 
 /**
@@ -15,21 +12,7 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterPage(
-    val id: String,
-    val revision: Int = 1,
-)
-
-/**
- * Marks a generated page kind so other processors can recover its stable identity.
- *
- * Generated code copies the source [TypewriterPage] id and revision here. This annotation is processor metadata,
- * not the runtime page catalog entry.
- */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class GeneratedPageKind(
-    val id: String,
-    val revision: Int,
+    val type: KClass<out Page>,
 )
 
 /**
@@ -58,26 +41,9 @@ enum class GraphDirection {
 sealed interface PageEditorDefinition {
     data class Graph(
         val direction: GraphDirection,
-        val nodes: List<KClass<out Element>>,
-    ) : PageEditorDefinition {
-        init {
-            require(nodes.isNotEmpty()) { "Graph page definitions require at least one node type." }
-            require(nodes.distinct().size == nodes.size) { "Graph node types must be unique." }
-        }
-    }
+    ) : PageEditorDefinition
 
-    data class Timeline(
-        val tracks: List<KClass<out Entry>>,
-        val segments: List<KClass<out Segment>>,
-        val keyframes: List<KClass<out Keyframe>>,
-    ) : PageEditorDefinition {
-        init {
-            require(tracks.isNotEmpty()) { "Timeline page definitions require at least one track type." }
-            require(tracks.distinct().size == tracks.size) { "Timeline track types must be unique." }
-            require(segments.distinct().size == segments.size) { "Timeline segment types must be unique." }
-            require(keyframes.distinct().size == keyframes.size) { "Timeline keyframe types must be unique." }
-        }
-    }
+    data object Timeline : PageEditorDefinition
 }
 
 /**
@@ -92,16 +58,12 @@ data class PageSpec(
     val color: String,
     val name: String? = null,
     val description: String? = null,
-    val authoringRules: List<PageAuthoringRule> = emptyList(),
 ) {
     init {
         require(name == null || name.isNotBlank()) { "Explicit page names must not be blank." }
         require(description == null || description.isNotBlank()) { "Explicit page descriptions must not be blank." }
         require(icon.isNotBlank()) { "Page icons must not be blank." }
         require(color.isNotBlank()) { "Page colors must not be blank." }
-        require(authoringRules.map { it.reference.id }.distinct().size == authoringRules.size) {
-            "Page authoring rule ids must be unique within a page specification."
-        }
     }
 }
 
@@ -116,5 +78,4 @@ fun page(
     color: String,
     name: String? = null,
     description: String? = null,
-    authoringRules: List<PageAuthoringRule> = emptyList(),
-): PageSpec = PageSpec(editor, icon, color, name, description, authoringRules)
+): PageSpec = PageSpec(editor, icon, color, name, description)

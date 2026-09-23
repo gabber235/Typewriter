@@ -1,8 +1,6 @@
 package com.typewritermc.realm
 
 import com.typewritermc.authoring.AuthoringChangeSummary
-import com.typewritermc.authoring.AuthoringCreationContext
-import com.typewritermc.authoring.AuthoringCreationRelationDirection
 import com.typewritermc.authoring.AuthoringGraphRelation
 import com.typewritermc.authoring.AuthoringGraphResource
 import com.typewritermc.authoring.AuthoringPolicyCatalog
@@ -35,7 +33,6 @@ import com.typewritermc.realm.repository.sliceForPolicy
 import com.typewritermc.realm.routes.AuthoringPresentationRegistry
 import com.typewritermc.realm.search.AuthoringSearchGraph
 import com.typewritermc.realm.search.AuthoringSearchProjectionRegistry
-import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeCatalog
@@ -59,7 +56,6 @@ internal data class RealmAuthoringPolicyCatalog(
     val searchSelectors: List<AuthoringSearchSelector>,
     val searchFacets: List<AuthoringSearchFacet>,
     val presentations: AuthoringPresentationRegistry,
-    val creationSlots: List<AuthoringCreationSlotDefinition>,
     val compilation: AuthoringCompilationProjectionRegistry,
 )
 
@@ -74,13 +70,14 @@ internal object RealmAuthoringPolicyAssembler {
         policies.validateTypeRoots(catalog, relations)
         return RealmAuthoringPolicyCatalog(
             definitions = policies.definitions.values.map { it.toRealm() },
-            validations = policies.validations.values.map { it.toRealm(catalog) },
+            validations = policies.validations.values.map { it.toRealm(catalog, relations) },
             search =
                 AuthoringSearchProjectionRegistry(
                     policies.search.values.map { projection ->
                         toRealmSearch(
                             projection,
                             policies.searchSelectors.mapTo(linkedSetOf(), AuthoringSearchSelector::id),
+                            relations,
                         )
                     },
                 ),
@@ -88,15 +85,15 @@ internal object RealmAuthoringPolicyAssembler {
             searchFacets = policies.searchFacets,
             presentations =
                 AuthoringPresentationRegistry(
-                    policies.presentations.values.associate { it.resourceDefinition to toRealmPresentation(it) },
+                    policies.presentations.values.associate { it.resourceDefinition to toRealmPresentation(it, relations) },
                 ),
-            creationSlots = policies.creationSlots.values.map { it.toRealm() },
             compilation =
                 AuthoringCompilationProjectionRegistry(
                     policies.compilation.values.map { projection ->
                         projection.toRealmCompilation(
                             definitions = policies.definitions.values,
                             catalog = catalog,
+                            relations = relations,
                         )
                     },
                 ),
@@ -110,39 +107,6 @@ internal object RealmAuthoringPolicyAssembler {
         val relationIds = relations.mapTo(linkedSetOf(), RelationDefinition::id)
         definitions.values.forEach { definition ->
             catalog.requireKnownRoot(definition.acceptedRoot, "resource definition ${definition.id.value}")
-        }
-        creationSlots.values.forEach { slot ->
-            val definition = definitions.getValue(slot.creates)
-            slot.concreteRoots.forEach { root ->
-                val type = catalog.requireKnownRoot(root, "creation slot ${slot.id.value}")
-                require(type.kind == NominalTypeKind.CONCRETE) {
-                    "Creation slot ${slot.id.value} must reference concrete type root $root."
-                }
-                require(catalog.isAssignable(TypeExpression.Named(root), definition.acceptedRoot)) {
-                    "Creation slot ${slot.id.value} root $root is not accepted by ${slot.creates.value}."
-                }
-            }
-            when (val context = slot.context) {
-                AuthoringCreationContext.Standalone -> {}
-
-                is AuthoringCreationContext.DeclaredRelation -> {
-                    require(context.relation in relationIds) {
-                        "Creation slot ${slot.id.value} references unknown relation ${context.relation.value}."
-                    }
-                    require(context.direction != AuthoringCreationRelationDirection.BOTH) {
-                        "Creation slot ${slot.id.value} must declare one relation direction."
-                    }
-                    context.hosts.assignableTo?.let {
-                        catalog.requireKnownRoot(it, "creation slot ${slot.id.value} host filter")
-                    }
-                }
-
-                is AuthoringCreationContext.ReferencePath -> {
-                    context.hosts.assignableTo?.let {
-                        catalog.requireKnownRoot(it, "creation slot ${slot.id.value} host filter")
-                    }
-                }
-            }
         }
         val graphRelations =
             (
@@ -220,19 +184,13 @@ internal fun RealmAuthoringPolicyCatalog.searchDefinition(): AuthoringSearchDefi
 private fun com.typewritermc.authoring.AuthoringResourceDefinition.toRealm(): AuthoringResourceDefinition =
     AuthoringResourceDefinition(id, acceptedRoot, navigationHandler)
 
-private fun com.typewritermc.authoring.AuthoringCreationSlotDefinition.toRealm(): AuthoringCreationSlotDefinition =
-    AuthoringCreationSlotDefinition(
-        id = id,
-        label = label,
-        creates = creates,
-        context = context,
-        concreteRoots = concreteRoots,
-    )
-
-private fun com.typewritermc.authoring.AuthoringValidationRule.toRealm(catalog: TypeCatalog): AuthoringGraphRule =
+private fun com.typewritermc.authoring.AuthoringValidationRule.toRealm(
+    catalog: TypeCatalog,
+    relations: Collection<RelationDefinition>,
+): AuthoringGraphRule =
     object : AuthoringGraphRule {
         override val id: String = this@toRealm.id.value
-        override val graphRequirement: RealmGraphReadRequirement = this@toRealm.graphRequirement.toRealm()
+        override val graphRequirement: RealmGraphReadRequirement = this@toRealm.graphRequirement.toRealm(relations)
 
         override fun validate(context: AuthoringGraphValidationContext): List<com.typewritermc.realm.repository.AuthoringDiagnostic> {
             val change =
@@ -262,10 +220,11 @@ private fun com.typewritermc.authoring.AuthoringValidationRule.toRealm(catalog: 
 private fun toRealmSearch(
     projection: com.typewritermc.authoring.AuthoringSearchProjection,
     selectors: Set<SearchSelectorId>,
+    relations: Collection<RelationDefinition>,
 ): RealmSearchProjection =
     object : RealmSearchProjection {
         override val definition: ResourceDefinitionId = projection.resourceDefinition
-        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm()
+        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm(relations)
 
         override fun project(
             resource: RealmGraphResource,
@@ -305,9 +264,12 @@ private fun toRealmSearch(
             }
     }
 
-private fun toRealmPresentation(projection: com.typewritermc.authoring.AuthoringPresentationProjection): RealmPresentationProjection =
+private fun toRealmPresentation(
+    projection: com.typewritermc.authoring.AuthoringPresentationProjection,
+    relations: Collection<RelationDefinition>,
+): RealmPresentationProjection =
     object : RealmPresentationProjection {
-        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm()
+        override val graphRequirement: RealmGraphReadRequirement = projection.graphRequirement.toRealm(relations)
 
         override fun project(
             resource: RealmGraphResource,
@@ -338,6 +300,7 @@ private fun toRealmPresentation(projection: com.typewritermc.authoring.Authoring
 private fun com.typewritermc.authoring.AuthoringCompilationProjection.toRealmCompilation(
     definitions: Collection<com.typewritermc.authoring.AuthoringResourceDefinition>,
     catalog: TypeCatalog,
+    relations: Collection<RelationDefinition>,
 ): AuthoringCompilationProjection {
     val rootDefinitions =
         definitions
@@ -347,7 +310,7 @@ private fun com.typewritermc.authoring.AuthoringCompilationProjection.toRealmCom
         override val id: CompilationProjectionId = CompilationProjectionId(this@toRealmCompilation.id.value)
         override val root: TypeExpression = this@toRealmCompilation.root
         override val graphRequirement: RealmGraphReadRequirement =
-            this@toRealmCompilation.graphRequirement.toRealm().copy(
+            this@toRealmCompilation.graphRequirement.toRealm(relations).copy(
                 definitions = this@toRealmCompilation.graphRequirement.definitions + rootDefinitions,
             )
 
@@ -380,12 +343,13 @@ private fun com.typewritermc.authoring.AuthoringCompilationProjection.toRealmCom
     }
 }
 
-private fun GraphReadRequirement.toRealm(): RealmGraphReadRequirement =
+private fun GraphReadRequirement.toRealm(relations: Collection<RelationDefinition>): RealmGraphReadRequirement =
     RealmGraphReadRequirement(
         definitions = definitions,
-        relations = declaredRelations,
+        relations = declaredRelations + relations.filter { it.families.any(relationFamilies::contains) }.map(RelationDefinition::id),
         incomingReferences = incomingReferences,
         outgoingReferences = outgoingReferences,
+        includeIncidentEdges = includeIncidentEdges,
         direction =
             when (direction) {
                 GraphReadRequirement.Direction.OUTGOING -> RealmGraphReadRequirement.Direction.OUTGOING
@@ -437,7 +401,11 @@ private fun StoredResourceRelation.toPublic(): AuthoringGraphRelation =
                 }
 
                 is ResourceRelationOrigin.Declared -> {
-                    AuthoringRelationOrigin.Declared(relationOrigin.relationId)
+                    AuthoringRelationOrigin.Declared(
+                        relationOrigin.relationId,
+                        relationOrigin.sourceIndex,
+                        relationOrigin.targetIndex,
+                    )
                 }
             },
     )
@@ -458,7 +426,11 @@ private fun AuthoringGraphRelation.toRealm(): StoredResourceRelation =
                 }
 
                 is AuthoringRelationOrigin.Declared -> {
-                    ResourceRelationOrigin.Declared(relationOrigin.relationId)
+                    ResourceRelationOrigin.Declared(
+                        relationOrigin.relationId,
+                        relationOrigin.sourceIndex,
+                        relationOrigin.targetIndex,
+                    )
                 }
             },
     )

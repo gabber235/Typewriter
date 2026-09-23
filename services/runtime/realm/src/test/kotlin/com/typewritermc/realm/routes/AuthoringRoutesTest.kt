@@ -69,6 +69,8 @@ val AuthoringRoutesTest by testSuite {
                                         relation = RelationId(value = "11111111111111111111111111111111"),
                                         source = WireResourceId(value = "source"),
                                         target = WireResourceId(value = "target"),
+                                        sourceBefore = null,
+                                        targetBefore = null,
                                     ),
                                 ),
                         ),

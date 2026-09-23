@@ -209,6 +209,7 @@ class EntrySelection extends EditableSelectable<EntryIdentifier> {
   @override
   Widget? buildInspectorHeader(EditOwner owner) => EntryInspectorHeader(
     id: id,
+    rootType: rootType,
     name: name,
     color: definition.elementDefinition.color,
     owner: ProjectedEditOwner(owner, elementValuePath),
