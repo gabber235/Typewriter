@@ -29,6 +29,8 @@ final class _MaterializationStoryState extends State<_MaterializationStory> {
     draft = CreationDraft(
       rootType: _creationType,
       registry: _materializationRegistry,
+      concreteTypeInitializer: ({required type, required supplied}) async =>
+          const ConcreteTypeNeedsInput(),
       fixedValues: {
         const MaterializationLocation(["field:name"]): const StringValue(
           "Quest objective",
