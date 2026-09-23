@@ -23,7 +23,7 @@ import com.typewritermc.types.TypePrototypeRegistry
 internal class RealmRouteFactory(
     private val authoring: AuthoringRepository,
     private val authoringGraph: AuthoringGraphRepository,
-    private val authoringSearch: AuthoringSearchRepository = AuthoringSearchRepository { _, _, _, _, _ -> emptyList() },
+    private val authoringSearch: AuthoringSearchRepository = AuthoringSearchRepository { _, _, _, _, _, _ -> emptyList() },
     private val compiledContent: RegisteredCompiledContentRepository,
     private val editorCatalog: RealmEditorCatalogSource,
     private val presentationSearch: RealmPresentationSearchSource,
