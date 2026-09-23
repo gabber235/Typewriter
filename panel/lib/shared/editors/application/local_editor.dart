@@ -26,6 +26,8 @@ final class LocalEditor extends ChangeNotifier
   DataValue _value;
   bool _disposed = false;
   final Set<_LocalInteraction> _interactions = {};
+  final Map<DataPath, int> _selectionRequests = {};
+  int _nextSelectionRequest = 0;
 
   @override
   bool get readOnly => _disposed;
@@ -84,18 +86,40 @@ final class LocalEditor extends ChangeNotifier
         ),
       ]);
     }
+    final captured = value(path).valueOrNull;
+    final request = ++_nextSelectionRequest;
+    _selectionRequests[path] = request;
+    if (captured is PolymorphicValue && captured.concreteType == type) {
+      return EditorMutationResult.applied(captured);
+    }
     final initializer = concreteTypeInitializer;
-    final initialized = initializer == null
-        ? resolved.representation is UnitType
-              ? ConcreteTypeInitialized(
-                  TypedValueEnvelope(
-                    rootType: type,
-                    rootValue: const UnitValue(),
-                  ),
-                )
-              : const ConcreteTypeInitializationRejected([])
-        : await initializer(type: type, supplied: null);
-    final value = switch (initialized) {
+    final ConcreteTypeInitializationResult initialized;
+    try {
+      initialized = initializer == null
+          ? resolved.representation is UnitType
+                ? ConcreteTypeInitialized(
+                    TypedValueEnvelope(
+                      rootType: type,
+                      rootValue: const UnitValue(),
+                    ),
+                  )
+                : const ConcreteTypeInitializationRejected([])
+          : await initializer(type: type, supplied: null);
+    } on Object catch (error) {
+      return EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Concrete type initialization failed: $error",
+          path: path,
+        ),
+      ]);
+    }
+    if (_disposed ||
+        _selectionRequests[path] != request ||
+        value(path).valueOrNull != captured) {
+      return const EditorMutationResult.conflict();
+    }
+    final selectedValue = switch (initialized) {
       ConcreteTypeInitialized(:final value)
           when value.rootType == type &&
               value.rootValue
@@ -106,7 +130,7 @@ final class LocalEditor extends ChangeNotifier
       ConcreteTypeInitializationRejected() => null,
       ConcreteTypeInitialized() => null,
     };
-    if (value == null) {
+    if (selectedValue == null) {
       return switch (initialized) {
         ConcreteTypeInitializationRejected(:final diagnostics) =>
           EditorMutationResult.invalid(diagnostics),
@@ -126,7 +150,7 @@ final class LocalEditor extends ChangeNotifier
         ]),
       };
     }
-    return update(path, value);
+    return update(path, selectedValue);
   }
 
   void refreshSchema(TypeExpression type, TypeCatalog catalog) {

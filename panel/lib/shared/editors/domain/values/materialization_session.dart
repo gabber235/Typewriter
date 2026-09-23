@@ -44,6 +44,8 @@ final class CreationDraft extends ChangeNotifier
   late int _nextId;
   bool _disposed = false;
   final Set<_CreationDraftInteraction> _interactions = {};
+  final Map<DataPath, int> _selectionRequests = {};
+  int _nextSelectionRequest = 0;
 
   DraftValue get root => _root;
   TypeRegistry get registry => _registry;
@@ -319,6 +321,11 @@ final class CreationDraft extends ChangeNotifier
       }
       final resolved = _registry.resolveExact(type).valueOrNull;
       if (resolved == null || !resolved.isConcrete) return _invalidPath(path);
+      final request = ++_nextSelectionRequest;
+      _selectionRequests[path] = request;
+      if (draft.concreteType == type) {
+        return EditorMutationResult.applied(const UnitValue());
+      }
       final initializer = concreteTypeInitializer;
       if (initializer == null) {
         return EditorMutationResult.invalid([
@@ -330,10 +337,9 @@ final class CreationDraft extends ChangeNotifier
         ]);
       }
 
-      final supplied = _materializedPayload(draft);
       final ConcreteTypeInitializationResult initialized;
       try {
-        initialized = await initializer(type: type, supplied: supplied);
+        initialized = await initializer(type: type, supplied: null);
       } on Object catch (error) {
         return EditorMutationResult.invalid([
           TypeDiagnostic(
@@ -344,6 +350,9 @@ final class CreationDraft extends ChangeNotifier
         ]);
       }
       EditorMutationResult replaceIfCurrent(PolymorphicDraftValue next) {
+        if (_disposed || _selectionRequests[path] != request) {
+          return const EditorMutationResult.conflict();
+        }
         final current = _locate(_root, rootType, path.segments, 0, _registry);
         if (current case (final PolymorphicDraftValue latest, NamedType())
             when identical(latest, draft)) {
@@ -394,20 +403,6 @@ final class CreationDraft extends ChangeNotifier
       };
     }
     return _invalidPath(path);
-  }
-
-  DataValue? _materializedPayload(PolymorphicDraftValue draft) {
-    final concrete = draft.concreteType;
-    final payload = draft.payload;
-    if (concrete == null || payload == null) return null;
-    final representation = _registry.resolveExact(concrete).valueOrNull;
-    if (representation == null) return null;
-    return _projectDraft(
-      payload,
-      representation.representation,
-      DataPath.root,
-      _registry,
-    ).valueOrNull;
   }
 
   @override
