@@ -26,6 +26,11 @@ import com.typewritermc.types.TypePrototypeRegistry
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.Expression
+import skirout.editor.v1.presentation.AxisChild
+import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.SearchProvider
 
 val CoreLibraryPresentationsTest by testSuite {
     test("core providers assemble defaults and inherited resource roles for entry types") {
@@ -103,6 +108,21 @@ val CoreLibraryPresentationsTest by testSuite {
             )
 
         catalog.diagnostics shouldBe emptyList()
+        val iconify = catalog.definitions.single { it.presentationId.name == "icon.iconify.default" }
+        val iconifyChildren = (iconify.root.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
+        val iconifyNode = (iconifyChildren.value.children.single() as AxisChild.FixedWrapper).value
+        val iconifySearch = (iconifyNode.element as PresentationElement.SearchInputWrapper).value
+        val merged = (iconifySearch.provider as SearchProvider.DistinctWrapper).value.child as SearchProvider.MergeWrapper
+        val leaves = merged.value.children.map(::searchLeaf)
+        val http = (leaves[0] as SearchProvider.HttpJsonWrapper).value
+        val suggested = (leaves[1] as SearchProvider.StaticValuesWrapper).value
+        http.resultPath shouldBe "$.icons[*]"
+        http.parameters.map { it.name } shouldBe listOf("query", "prefix", "limit")
+        (http.result.selectedValue.expression is Expression.RecordWrapper) shouldBe true
+        (suggested.result.selectedValue.expression is Expression.RecordWrapper) shouldBe true
+        (iconifySearch.customValue?.expression is Expression.RecordWrapper) shouldBe true
+        (iconifySearch.summary != null) shouldBe true
+        (http.result.presentation.nodeId != suggested.result.presentation.nodeId) shouldBe true
         definition(catalog.types, prototypes.require(Book::class).type).defaultPresentationId shouldBe
             PresentationId(CORE_NAMESPACE, "book.default")
         definition(catalog.types, prototypes.require(Tag::class).type).defaultPresentationId shouldBe
@@ -132,6 +152,18 @@ val CoreLibraryPresentationsTest by testSuite {
             .sourceId shouldBe TAG_COLLECTION_SOURCE_ID
     }
 }
+
+private fun searchLeaf(provider: SearchProvider): SearchProvider =
+    when (provider) {
+        is SearchProvider.GateWrapper -> searchLeaf(provider.value.child)
+        is SearchProvider.DebounceWrapper -> searchLeaf(provider.value.child)
+        is SearchProvider.RankWrapper -> searchLeaf(provider.value.child)
+        is SearchProvider.LimitWrapper -> searchLeaf(provider.value.child)
+        is SearchProvider.CacheWrapper -> searchLeaf(provider.value.child)
+        is SearchProvider.HistoryWrapper -> searchLeaf(provider.value.child)
+        is SearchProvider.SectionWrapper -> searchLeaf(provider.value.child)
+        else -> provider
+    }
 
 private const val CORE_NAMESPACE = "typewriter.core"
 

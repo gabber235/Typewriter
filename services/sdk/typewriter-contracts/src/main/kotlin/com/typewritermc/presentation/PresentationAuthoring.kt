@@ -355,6 +355,24 @@ class PresentationBuilder<T : Any>
                 )
         }
 
+        /** Declares a typed search control; the panel executes its compiled provider tree. */
+        fun <Value : Any, Result : Any> searchInput(
+            value: PresentationValue<Value>,
+            resultType: KClass<Result>,
+            placeholder: String? = null,
+            label: String? = null,
+            maximumExtent: Int = 320,
+            block: SearchInputBuilder<Value, Result>.() -> Unit,
+        ) {
+            require(inputs.any { it === value.input }) { "Search input belongs to another presentation." }
+            children +=
+                AuthoredPresentationNode.SearchInput(
+                    SearchInputBuilder(context, resultType, value.type)
+                        .apply(block)
+                        .build(value, placeholder, label, maximumExtent),
+                )
+        }
+
         /** Adds a realm backed search control bound to a property of the primary input. */
         fun <Result : Any> realmSearchInput(
             property: KProperty1<T, Result>,
@@ -617,6 +635,10 @@ internal sealed interface AuthoredPresentationNode {
         val resultLabel: FieldReference,
         val label: String?,
         val payload: PresentationValue<*>? = null,
+    ) : AuthoredPresentationNode
+
+    data class SearchInput(
+        val specification: AuthoredSearchInput<*, *>,
     ) : AuthoredPresentationNode
 
     data class PolymorphicInput(

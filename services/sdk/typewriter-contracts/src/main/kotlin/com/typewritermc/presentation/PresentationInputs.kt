@@ -90,6 +90,26 @@ class PresentationExpression<T : Any> internal constructor(
     internal val authored: AuthoredExpression,
 )
 
+/** Captures a regular expression group; a missing match fails evaluation. */
+fun PresentationExpression<String>.capture(
+    pattern: String,
+    group: Int,
+): PresentationExpression<String> = PresentationExpression(String::class, AuthoredExpression.RegexCapture(authored, pattern, group))
+
+fun PresentationExpression<String>.matches(pattern: String): PresentationExpression<Boolean> =
+    PresentationExpression(Boolean::class, AuthoredExpression.RegexMatches(authored, pattern))
+
+fun PresentationExpression<String>.replace(
+    before: String,
+    after: String,
+): PresentationExpression<String> = PresentationExpression(String::class, AuthoredExpression.StringReplace(authored, before, after))
+
+fun PresentationExpression<String>.titleCase(): PresentationExpression<String> =
+    PresentationExpression(String::class, AuthoredExpression.TitleCase(authored))
+
+fun <T : Any> PresentationExpression<T>.orElse(fallback: PresentationExpression<T>): PresentationExpression<T> =
+    PresentationExpression(type, AuthoredExpression.Coalesce(authored, fallback.authored))
+
 /** Slices this text with UTF16 code unit offsets supplied by typed expressions. */
 fun PresentationExpression<String>.substring(
     start: PresentationExpression<Int>,
@@ -108,6 +128,45 @@ fun <T : Any> PresentationValue<T>.asStringExpression(): PresentationExpression<
     PresentationExpression(String::class, AuthoredExpression.StringProjection(this))
 
 internal sealed interface AuthoredExpression {
+    enum class SearchBinding { QUERY, CANDIDATE, SUMMARY }
+
+    data class ScopedBinding(
+        val binding: SearchBinding,
+        val type: KClass<*>,
+    ) : AuthoredExpression
+
+    data class Field(
+        val target: AuthoredExpression,
+        val name: String,
+        val type: KClass<*>,
+    ) : AuthoredExpression
+
+    data class Record(
+        val type: KClass<*>,
+        val fields: Map<String, AuthoredExpression>,
+    ) : AuthoredExpression
+
+    data class RegexCapture(
+        val source: AuthoredExpression,
+        val pattern: String,
+        val group: Int,
+    ) : AuthoredExpression
+
+    data class RegexMatches(
+        val source: AuthoredExpression,
+        val pattern: String,
+    ) : AuthoredExpression
+
+    data class StringReplace(
+        val source: AuthoredExpression,
+        val before: String,
+        val after: String,
+    ) : AuthoredExpression
+
+    data class TitleCase(
+        val source: AuthoredExpression,
+    ) : AuthoredExpression
+
     data class Binding(
         val value: PresentationValue<*>,
     ) : AuthoredExpression

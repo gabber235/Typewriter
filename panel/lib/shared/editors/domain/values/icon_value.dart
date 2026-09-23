@@ -76,6 +76,25 @@ extension DataValueIcon on DataValue {
       IconValue.svg(value),
     _ => null,
   };
+
+  /// Resolves a concrete icon representation when its expression carries the
+  /// nominal concrete type, as in a search result or selected-value preview.
+  IconValue? iconValueFor(TypeExpression type) => switch ((type, this)) {
+    (
+      NamedType(reference: final reference),
+      RecordValue(fields: {"value": StringValue(:final value)}),
+    )
+        when reference == standardTypeRefs.iconifyIcon &&
+            value.isValidIconifyValue =>
+      IconValue.iconify(value),
+    (
+      NamedType(reference: final reference),
+      RecordValue(fields: {"source": StringValue(:final value)}),
+    )
+        when reference == standardTypeRefs.svgIcon && value.isSanitizedSvg =>
+      IconValue.svg(value),
+    _ => iconValueOrNull,
+  };
 }
 
 /// Syntax and safety checks shared by icon constructors and validation.

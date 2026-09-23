@@ -11,6 +11,21 @@ void main() {
     expect(icon.typedValue.iconValueOrNull, icon);
   });
 
+  testWidgets("renders a concrete typed Iconify search preview", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        icon: RecordValue({"value": const StringValue("mdi:book")}),
+        resultType: NamedType(standardTypeRefs.iconifyIcon),
+        semanticLabel: "Book icon",
+      ),
+    );
+
+    expect(find.bySemanticsLabel("Book icon"), findsOneWidget);
+    expect(find.textContaining("Icon content must"), findsNothing);
+  });
+
   testWidgets("renders a sanitized SVG with accessible semantics", (
     tester,
   ) async {

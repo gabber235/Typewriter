@@ -1,6 +1,7 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.capability.RealmCapabilityDescriptor
+import com.typewritermc.types.DataValue
 import com.typewritermc.types.PresentationId
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
@@ -20,6 +21,8 @@ import skirout.editor.v1.expression.CollectionOperationExpression
 import skirout.editor.v1.expression.ComparisonExpression
 import skirout.editor.v1.expression.ComparisonOperator
 import skirout.editor.v1.expression.Expression
+import skirout.editor.v1.expression.RecordExpressionField
+import skirout.editor.v1.expression.RegexOperation
 import skirout.editor.v1.expression.StringOperation
 import skirout.editor.v1.expression.StringOperationExpression
 import skirout.editor.v1.expression.TypedExpression
@@ -43,6 +46,7 @@ import skirout.editor.v1.presentation.ConnectorStroke
 import skirout.editor.v1.presentation.ConnectorStyle
 import skirout.editor.v1.presentation.CrossAxisAlignment
 import skirout.editor.v1.presentation.HierarchySequenceLayout
+import skirout.editor.v1.presentation.HttpQueryParameter
 import skirout.editor.v1.presentation.IconContent
 import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PolymorphicControl
@@ -60,6 +64,7 @@ import skirout.editor.v1.presentation.PresentationTextTone
 import skirout.editor.v1.presentation.RichTextContent
 import skirout.editor.v1.presentation.SearchControl
 import skirout.editor.v1.presentation.SearchProvider
+import skirout.editor.v1.presentation.SearchRankingField
 import skirout.editor.v1.presentation.SearchResultMapping
 import skirout.editor.v1.presentation.SearchSelectionMode
 import skirout.editor.v1.presentation.SectionLayout
@@ -447,6 +452,10 @@ private class NodeCompiler(
 
             is AuthoredPresentationNode.RealmSearchInput -> {
                 realmSearchInput(node, path, bindingPath, bindingId)
+            }
+
+            is AuthoredPresentationNode.SearchInput -> {
+                searchInput(node.specification, path)
             }
 
             is AuthoredPresentationNode.PolymorphicInput -> {
@@ -1148,6 +1157,283 @@ private class NodeCompiler(
         )
     }
 
+    private data class SearchScope(
+        val query: Long,
+        val candidate: Long,
+        val summary: Long,
+    ) {
+        fun binding(slot: AuthoredExpression.SearchBinding): Long =
+            when (slot) {
+                AuthoredExpression.SearchBinding.QUERY -> query
+                AuthoredExpression.SearchBinding.CANDIDATE -> candidate
+                AuthoredExpression.SearchBinding.SUMMARY -> summary
+            }
+    }
+
+    private fun searchInput(
+        specification: AuthoredSearchInput<*, *>,
+        path: String,
+    ): PresentationNode {
+        val value = specification.value
+        return searchControl(
+            path = path,
+            control = boundControl(value.fields, specification.label, inputId(value.input)),
+            maximumExtent = specification.maximumExtent,
+            placeholder = specification.placeholder,
+            provider = { scope ->
+                searchProvider(specification.provider, specification.resultType, specification.result, scope, "$path.provider")
+            },
+            summary = { scope -> specification.summary?.let { searchLayout(it, "$path.summary", scope) } },
+            customValue = { scope -> specification.customValue?.let { authoredExpression(it.authored, scope) } },
+        )
+    }
+
+    private fun searchControl(
+        path: String,
+        nodeId: String = "search:$path",
+        control: BoundControl,
+        maximumExtent: Int,
+        placeholder: String?,
+        provider: (SearchScope) -> SearchProvider,
+        summary: (SearchScope) -> PresentationNode?,
+        customValue: (SearchScope) -> TypedExpression?,
+    ): PresentationNode {
+        val scope = SearchScope(allocateBindingId(), allocateBindingId(), allocateBindingId())
+        return presentationNode(
+            nodeId,
+            PresentationElement.SearchInputWrapper(
+                SearchControl(
+                    control = control,
+                    selectionMode = SearchSelectionMode.SINGLE,
+                    queryBindingId = BindingId(value = scope.query),
+                    summaryBindingId = BindingId(value = scope.summary),
+                    maximumExtent = integerExpression(maximumExtent),
+                    provider = provider(scope),
+                    summary = summary(scope),
+                    placeholder = placeholder?.let(::stringExpression),
+                    customValue = customValue(scope),
+                    initialQuery = null,
+                ),
+            ),
+        )
+    }
+
+    private fun searchProvider(
+        source: SearchProviderSpec<*>,
+        resultType: kotlin.reflect.KClass<*>,
+        result: SearchResultSpec<*>,
+        scope: SearchScope,
+        path: String,
+    ): SearchProvider =
+        when (source) {
+            is SearchProviderSpec.HttpJson -> {
+                SearchProvider.createHttpJson(
+                    uri = stringExpression(source.uri),
+                    parameters =
+                        source.parameters.map {
+                            HttpQueryParameter(
+                                name = it.name,
+                                value = authoredExpression(it.value.authored, scope),
+                                omitIfEmpty = it.omitIfEmpty,
+                            )
+                        },
+                    resultPath = source.resultPath,
+                    resultType = authoredType(resultType),
+                    result = searchResult(result, scope, "$path.result"),
+                    contextBindings = emptyList(),
+                    selectors = emptyList(),
+                    timeoutMilliseconds = source.timeoutMillis,
+                )
+            }
+
+            is SearchProviderSpec.StaticValues -> {
+                require(source.values.all { it is String }) { "Static search values currently require strings." }
+                val values = source.values.map { DataValue.StringValue(it as String) }
+                SearchProvider.createStaticValues(
+                    values =
+                        TypedExpression(
+                            resultType = SkirTypeCodec.encode(TypeExpression.ListType(TypeExpression.StringType())).getOrThrow(),
+                            expression = Expression.LiteralWrapper(SkirDataValueCodec.encode(DataValue.ListValue(values)).getOrThrow()),
+                        ),
+                    result = searchResult(result, scope, "$path.result"),
+                    selectors = emptyList(),
+                )
+            }
+
+            is SearchProviderSpec.RealmCallback -> {
+                SearchProvider.createRealmCallback(
+                    capabilityId = CapabilityId(value = source.capability.id.value),
+                    payload = authoredExpression(source.payload.authored, scope),
+                    result = searchResult(result, scope, "$path.result"),
+                    selectors = emptyList(),
+                )
+            }
+
+            is SearchProviderSpec.Decorated -> {
+                val child = searchProvider(source.child, resultType, result, scope, "$path.child")
+                when (val operation = source.operation) {
+                    is SearchDecoration.Gate -> {
+                        SearchProvider.createGate(
+                            condition = authoredExpression(operation.condition.authored, scope),
+                            guidance = operation.guidance?.let(::stringExpression),
+                            child = child,
+                        )
+                    }
+
+                    is SearchDecoration.Debounce -> {
+                        SearchProvider.createDebounce(durationMilliseconds = operation.milliseconds, child = child)
+                    }
+
+                    is SearchDecoration.Rank -> {
+                        SearchProvider.createRank(
+                            fields =
+                                operation.fields.map {
+                                    SearchRankingField(
+                                        expression = authoredExpression(it.first.authored, scope),
+                                        weight = it.second,
+                                    )
+                                },
+                            child = child,
+                        )
+                    }
+
+                    is SearchDecoration.Limit -> {
+                        SearchProvider.createLimit(maximum = integerExpression(operation.maximum), child = child)
+                    }
+
+                    is SearchDecoration.Cache -> {
+                        SearchProvider.createCache(
+                            capacity = operation.capacity,
+                            retainStaleResults = operation.retainStaleResults,
+                            child = child,
+                        )
+                    }
+
+                    is SearchDecoration.History -> {
+                        SearchProvider.createHistory(
+                            historyKey = operation.key,
+                            label = stringExpression(operation.label),
+                            capacity = operation.capacity,
+                            child = child,
+                        )
+                    }
+
+                    is SearchDecoration.Section -> {
+                        SearchProvider.createSection(
+                            sectionId = operation.id,
+                            label = stringExpression(operation.label),
+                            child = child,
+                        )
+                    }
+
+                    SearchDecoration.Distinct -> {
+                        SearchProvider.createDistinct(child = child)
+                    }
+                }
+            }
+
+            is SearchProviderSpec.Merged -> {
+                SearchProvider.createMerge(
+                    children =
+                        source.children.mapIndexed {
+                            index,
+                            item,
+                            ->
+                            searchProvider(item, resultType, result, scope, "$path.branch.$index")
+                        },
+                )
+            }
+        }
+
+    private fun authoredType(type: kotlin.reflect.KClass<*>): SkirTypeExpression =
+        SkirTypeCodec.encode(PresentationBuildContext(prototypes).type(type)).getOrThrow()
+
+    private fun searchResult(
+        result: SearchResultSpec<*>,
+        scope: SearchScope,
+        path: String,
+    ): SearchResultMapping =
+        SearchResultMapping(
+            bindingId = BindingId(value = scope.candidate),
+            key = authoredExpression(result.key.authored, scope),
+            selectedValue = authoredExpression(result.selectedValue.authored, scope),
+            presentation = searchLayout(result.presentation, path, scope),
+            label = authoredExpression(result.label.authored, scope),
+        )
+
+    private fun searchLayout(
+        layout: SearchLayout,
+        path: String,
+        scope: SearchScope,
+    ): PresentationNode =
+        when (layout) {
+            is SearchLayout.Text -> {
+                presentationNode(
+                    path,
+                    PresentationElement.TextWrapper(TextContent.partial(value = authoredExpression(layout.value.authored, scope))),
+                )
+            }
+
+            is SearchLayout.Icon -> {
+                presentationNode(
+                    path,
+                    PresentationElement.IconWrapper(
+                        IconContent(
+                            name = authoredExpression(layout.value.authored, scope),
+                            semanticLabel = authoredExpression(layout.value.authored, scope),
+                            color = null,
+                            size = null,
+                        ),
+                    ),
+                )
+            }
+
+            is SearchLayout.Axis -> {
+                val children =
+                    layout.children.mapIndexed { index, child ->
+                        val compiled = searchLayout(child.layout, "$path.$index", scope)
+                        child.flex?.let {
+                            AxisChild.FlexibleWrapper(
+                                skirout.editor.v1.presentation
+                                    .FlexibleAxisChild(child = compiled, flex = it, fit = WireFlexFit.LOOSE),
+                            )
+                        } ?: AxisChild.FixedWrapper(compiled)
+                    }
+                presentationNode(
+                    path,
+                    PresentationElement.ChildrenWrapper(
+                        (
+                            if (layout.row) {
+                                ChildrenElement.RowWrapper(
+                                    AxisChildrenElement(
+                                        children = children,
+                                        layout =
+                                            AxisChildrenLayout(
+                                                spacing = layout.spacing,
+                                                mainAxisAlignment = MainAxisAlignment.START,
+                                                crossAxisAlignment = CrossAxisAlignment.START,
+                                            ),
+                                    ),
+                                )
+                            } else {
+                                ChildrenElement.ColumnWrapper(
+                                    AxisChildrenElement(
+                                        children = children,
+                                        layout =
+                                            AxisChildrenLayout(
+                                                spacing = layout.spacing,
+                                                mainAxisAlignment = MainAxisAlignment.START,
+                                                crossAxisAlignment = CrossAxisAlignment.START,
+                                            ),
+                                    ),
+                                )
+                            }
+                        ),
+                    ),
+                )
+            }
+        }
+
     private fun realmSearchInput(
         node: AuthoredPresentationNode.RealmSearchInput,
         path: String,
@@ -1156,50 +1442,39 @@ private class NodeCompiler(
     ): PresentationNode {
         val field = field(node.field)
         val fields = ((if (node.field.input == null) bindingPath else node.field.prefix) + field).filter(String::isNotEmpty)
-        val queryBindingId = allocateBindingId()
-        val summaryBindingId = allocateBindingId()
-        val resultBindingId = allocateBindingId()
-        val resultValue = bindingExpression(node.capability.resultType, resultBindingId, emptyList())
-        val resultKey = stringBindingExpression(resultBindingId, listOf(field(node.resultKey)))
-        val resultLabel = stringBindingExpression(resultBindingId, listOf(field(node.resultLabel)))
-        val resultPresentation =
-            presentationNode(
-                "search-result:${node.capability.id.value}:$path",
-                PresentationElement.TextWrapper(TextContent.partial(value = resultLabel)),
-            )
-        val result =
-            SearchResultMapping(
-                bindingId = BindingId(value = resultBindingId),
-                key = resultKey,
-                selectedValue = resultValue,
-                presentation = resultPresentation,
-                label = resultLabel,
-            )
-        val provider =
-            SearchProvider.createRealmCallback(
-                capabilityId = CapabilityId(value = node.capability.id.value),
-                payload =
-                    node.payload?.let { bindingExpression(it.type, inputId(it.input), it.fields) }
-                        ?: bindingExpression(node.capability.requestType, bindingId, bindingPath),
-                result = result,
-                selectors = emptyList(),
-            )
-        return presentationNode(
-            "field:${fields.joinToString(".")}:$path",
-            PresentationElement.SearchInputWrapper(
-                SearchControl(
-                    control = boundControl(fields, node.label, node.field.input?.let(::inputId) ?: bindingId),
-                    selectionMode = SearchSelectionMode.SINGLE,
-                    queryBindingId = BindingId(value = queryBindingId),
-                    summaryBindingId = BindingId(value = summaryBindingId),
-                    maximumExtent = integerExpression(320),
-                    provider = provider,
-                    summary = null,
-                    placeholder = null,
-                    customValue = null,
-                    initialQuery = null,
-                ),
-            ),
+        return searchControl(
+            path = path,
+            nodeId = "field:${fields.joinToString(".")}:$path",
+            control = boundControl(fields, node.label, node.field.input?.let(::inputId) ?: bindingId),
+            maximumExtent = 320,
+            placeholder = null,
+            summary = { null },
+            customValue = { null },
+            provider = { scope ->
+                val resultValue = bindingExpression(node.capability.resultType, scope.candidate, emptyList())
+                val resultKey = stringBindingExpression(scope.candidate, listOf(field(node.resultKey)))
+                val resultLabel = stringBindingExpression(scope.candidate, listOf(field(node.resultLabel)))
+                val result =
+                    SearchResultMapping(
+                        bindingId = BindingId(value = scope.candidate),
+                        key = resultKey,
+                        selectedValue = resultValue,
+                        presentation =
+                            presentationNode(
+                                "search-result:${node.capability.id.value}:$path",
+                                PresentationElement.TextWrapper(TextContent.partial(value = resultLabel)),
+                            ),
+                        label = resultLabel,
+                    )
+                SearchProvider.createRealmCallback(
+                    capabilityId = CapabilityId(value = node.capability.id.value),
+                    payload =
+                        node.payload?.let { bindingExpression(it.type, inputId(it.input), it.fields) }
+                            ?: bindingExpression(node.capability.requestType, bindingId, bindingPath),
+                    result = result,
+                    selectors = emptyList(),
+                )
+            },
         )
     }
 
@@ -1245,8 +1520,95 @@ private class NodeCompiler(
             fields,
         )
 
-    private fun authoredExpression(expression: AuthoredExpression): TypedExpression =
+    private fun authoredExpression(
+        expression: AuthoredExpression,
+        scope: SearchScope? = null,
+    ): TypedExpression =
         when (expression) {
+            is AuthoredExpression.ScopedBinding -> {
+                val searchScope = checkNotNull(scope) { "Search expression used outside search input." }
+                bindingExpression(expression.type, searchScope.binding(expression.binding), emptyList())
+            }
+
+            is AuthoredExpression.Field -> {
+                TypedExpression(
+                    resultType = authoredType(expression.type),
+                    expression =
+                        Expression.createFieldAccess(
+                            target = authoredExpression(expression.target, scope),
+                            fieldName = expression.name,
+                        ),
+                )
+            }
+
+            is AuthoredExpression.Record -> {
+                TypedExpression(
+                    resultType = authoredType(expression.type),
+                    expression =
+                        Expression.createRecord(
+                            fields =
+                                expression.fields.map { (name, value) ->
+                                    RecordExpressionField(name = name, value = authoredExpression(value, scope))
+                                },
+                        ),
+                )
+            }
+
+            is AuthoredExpression.RegexCapture -> {
+                TypedExpression(
+                    resultType = authoredType(String::class),
+                    expression =
+                        Expression.createRegex(
+                            operation = RegexOperation.CAPTURE,
+                            source = authoredExpression(expression.source, scope),
+                            pattern = expression.pattern,
+                            group = expression.group,
+                            replacement = null,
+                        ),
+                )
+            }
+
+            is AuthoredExpression.RegexMatches -> {
+                TypedExpression(
+                    resultType = authoredType(Boolean::class),
+                    expression =
+                        Expression.createRegex(
+                            operation = RegexOperation.MATCHES,
+                            source = authoredExpression(expression.source, scope),
+                            pattern = expression.pattern,
+                            group = null,
+                            replacement = null,
+                        ),
+                )
+            }
+
+            is AuthoredExpression.StringReplace -> {
+                TypedExpression(
+                    resultType = authoredType(String::class),
+                    expression =
+                        Expression.createStringOperation(
+                            operation = StringOperation.REPLACE,
+                            operands =
+                                listOf(
+                                    authoredExpression(expression.source, scope),
+                                    stringExpression(expression.before),
+                                    stringExpression(expression.after),
+                                ),
+                        ),
+                )
+            }
+
+            is AuthoredExpression.TitleCase -> {
+                TypedExpression(
+                    resultType = authoredType(String::class),
+                    expression =
+                        Expression.createStringOperation(
+                            operation = StringOperation.TITLE_CASE,
+                            operands = listOf(authoredExpression(expression.source, scope)),
+                        ),
+                )
+            }
+
             is AuthoredExpression.Binding -> {
                 bindingExpression(
                     expression.value.type,
@@ -1279,20 +1641,20 @@ private class NodeCompiler(
             }
 
             is AuthoredExpression.Coalesce -> {
-                val value = authoredExpression(expression.value)
+                val value = authoredExpression(expression.value, scope)
                 TypedExpression(
                     resultType = value.resultType,
                     expression =
                         Expression.CoalesceWrapper(
                             CoalesceExpression(
-                                operands = listOf(value, authoredExpression(expression.fallback)),
+                                operands = listOf(value, authoredExpression(expression.fallback, scope)),
                             ),
                         ),
                 )
             }
 
             is AuthoredExpression.Substring -> {
-                val value = authoredExpression(expression.value)
+                val value = authoredExpression(expression.value, scope)
                 TypedExpression(
                     resultType = SkirTypeExpression.StringWrapper(StringConstraints.partial()),
                     expression =
@@ -1302,8 +1664,8 @@ private class NodeCompiler(
                                 operands =
                                     listOfNotNull(
                                         value,
-                                        authoredExpression(expression.start),
-                                        expression.end?.let(::authoredExpression),
+                                        authoredExpression(expression.start, scope),
+                                        expression.end?.let { authoredExpression(it, scope) },
                                     ),
                             ),
                         ),

@@ -10,7 +10,7 @@ extension IconElementRendering on IconElement {
     if (result case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
     }
-    final icon = result.valueOrNull?.iconValueOrNull;
+    final icon = result.valueOrNull?.iconValueFor(name.resultType);
     if (icon == null) {
       return presentationDiagnostic(context, [
         const TypeDiagnostic(
