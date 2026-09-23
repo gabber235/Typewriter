@@ -321,6 +321,8 @@ private class ConversionContext(
                 TypeDefinition(
                     id = identity,
                     kind = NominalTypeKind.CONCRETE,
+                    displayName = declaration.simpleName.asString(),
+                    qualifiedName = declaration.qualifiedName?.asString(),
                     declarationOwner = declaration.packageName.asString(),
                     representation = TypeExpression.StringType(),
                     parameters = declaration.typeParameters.map { parameter(it, path + identity.sortKey) },
@@ -367,6 +369,8 @@ private class ConversionContext(
             TypeDefinition(
                 id = identity,
                 kind = declaration.nominalKind,
+                displayName = declaration.simpleName.asString(),
+                qualifiedName = declaration.qualifiedName?.asString(),
                 declarationOwner = declaration.packageName.asString(),
                 representation = representation,
                 parameters = parameters,

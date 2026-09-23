@@ -6825,6 +6825,7 @@ sealed class PresentationRole private constructor() {
         PAGE_TILE_CONST,
         GRAPH_NODE_CONST,
         INSPECTOR_HEADER_CONST,
+        CREATION_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN")) internal constructor(
@@ -6954,6 +6955,22 @@ sealed class PresentationRole private constructor() {
         }
     }
 
+    object CREATION : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.CREATION_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.CREATION_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.CREATION_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.PresentationRole>? get() = null;
 
     abstract val kind: Kind;
@@ -6997,6 +7014,7 @@ sealed class PresentationRole private constructor() {
             PAGE_TILE;
             GRAPH_NODE;
             INSPECTOR_HEADER;
+            CREATION;
             _maybeFinalizeSerializer();
         }
 
@@ -7004,7 +7022,7 @@ sealed class PresentationRole private constructor() {
 
         private fun _maybeFinalizeSerializer() {
             _finalizationCounter += 1;
-            if (_finalizationCounter == 8) {
+            if (_finalizationCounter == 9) {
                 _serializerImpl.addConstantVariant(
                     1,
                     "reference_summary",
@@ -7053,6 +7071,13 @@ sealed class PresentationRole private constructor() {
                     Kind.INSPECTOR_HEADER_CONST.ordinal,
                     "",
                     INSPECTOR_HEADER,
+                );
+                _serializerImpl.addConstantVariant(
+                    8,
+                    "creation",
+                    Kind.CREATION_CONST.ordinal,
+                    "",
+                    CREATION,
                 );
                 _serializerImpl.finalizeEnum();
             }
@@ -7518,6 +7543,7 @@ sealed interface TypeDefinition_OrMutable {
     val fieldMergePolicies: kotlin.collections.List<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable>;
     val declarationOwner: kotlin.String;
     val initializer: skirout.editor.v1.type_catalog.TypedValue?;
+    val qualifiedName: kotlin.String?;
 
     fun toFrozen(): skirout.editor.v1.type_catalog.TypeDefinition;
 }
@@ -7539,6 +7565,7 @@ class TypeDefinition private constructor(
     override val fieldMergePolicies: kotlin.collections.List<skirout.editor.v1.type_catalog.FieldMergePolicy>,
     override val declarationOwner: kotlin.String,
     override val initializer: skirout.editor.v1.type_catalog.TypedValue?,
+    override val qualifiedName: kotlin.String?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeDefinition>? =
         null,
 ): skirout.editor.v1.type_catalog.TypeDefinition_OrMutable {
@@ -7559,6 +7586,7 @@ class TypeDefinition private constructor(
         fieldMergePolicies: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.FieldMergePolicy_OrMutable>,
         declarationOwner: kotlin.String,
         initializer: skirout.editor.v1.type_catalog.TypedValue?,
+        qualifiedName: kotlin.String?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeDefinition>? =
             null,
     ): this(
@@ -7576,6 +7604,7 @@ class TypeDefinition private constructor(
         build.skir.internal.toFrozenList(fieldMergePolicies, { it.toFrozen() }),
         declarationOwner,
         initializer,
+        qualifiedName,
         _unrecognizedFields,
     ) {}
 
@@ -7598,6 +7627,7 @@ class TypeDefinition private constructor(
         fieldMergePolicies = this.fieldMergePolicies,
         declarationOwner = this.declarationOwner,
         initializer = this.initializer,
+        qualifiedName = this.qualifiedName,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -7632,6 +7662,8 @@ class TypeDefinition private constructor(
             this.declarationOwner,
         initializer: skirout.editor.v1.type_catalog.TypedValue? =
             this.initializer,
+        qualifiedName: kotlin.String? =
+            this.qualifiedName,
     ) = skirout.editor.v1.type_catalog.TypeDefinition(
         displayName,
         build.skir.internal.toKeyedList(parameters, "name", { it.name }, { it.toFrozen() }),
@@ -7647,6 +7679,7 @@ class TypeDefinition private constructor(
         build.skir.internal.toFrozenList(fieldMergePolicies, { it.toFrozen() }),
         declarationOwner,
         initializer,
+        qualifiedName,
         this._unrecognizedFields,
     );
 
@@ -7654,11 +7687,11 @@ class TypeDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.TypeDefinition && this.displayName == other.displayName && this.parameters == other.parameters && this.directParents == other.directParents && this.representation == other.representation && this.typeId == other.typeId && this.revision == other.revision && this.kind == other.kind && this.defaultPresentationId == other.defaultPresentationId && this.namedPresentations == other.namedPresentations && this.outgoingConversionIds == other.outgoingConversionIds && this.rolePresentations == other.rolePresentations && this.fieldMergePolicies == other.fieldMergePolicies && this.declarationOwner == other.declarationOwner && this.initializer == other.initializer);
+        return this === other || (other is skirout.editor.v1.type_catalog.TypeDefinition && this.displayName == other.displayName && this.parameters == other.parameters && this.directParents == other.directParents && this.representation == other.representation && this.typeId == other.typeId && this.revision == other.revision && this.kind == other.kind && this.defaultPresentationId == other.defaultPresentationId && this.namedPresentations == other.namedPresentations && this.outgoingConversionIds == other.outgoingConversionIds && this.rolePresentations == other.rolePresentations && this.fieldMergePolicies == other.fieldMergePolicies && this.declarationOwner == other.declarationOwner && this.initializer == other.initializer && this.qualifiedName == other.qualifiedName);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.displayName, this.parameters, this.directParents, this.representation, this.typeId, this.revision, this.kind, this.defaultPresentationId, this.namedPresentations, this.outgoingConversionIds, this.rolePresentations, this.fieldMergePolicies, this.declarationOwner, this.initializer).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.displayName, this.parameters, this.directParents, this.representation, this.typeId, this.revision, this.kind, this.defaultPresentationId, this.namedPresentations, this.outgoingConversionIds, this.rolePresentations, this.fieldMergePolicies, this.declarationOwner, this.initializer, this.qualifiedName).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -7700,6 +7733,8 @@ class TypeDefinition private constructor(
             "",
         override var initializer: skirout.editor.v1.type_catalog.TypedValue? =
             null,
+        override var qualifiedName: kotlin.String? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.TypeDefinition>? =
             null,
     ): skirout.editor.v1.type_catalog.TypeDefinition_OrMutable {
@@ -7719,6 +7754,7 @@ class TypeDefinition private constructor(
             fieldMergePolicies = this.fieldMergePolicies,
             declarationOwner = this.declarationOwner,
             initializer = this.initializer,
+            qualifiedName = this.qualifiedName,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -7836,6 +7872,7 @@ class TypeDefinition private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.FieldMergePolicy>(),
                 "",
                 null,
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -7877,6 +7914,8 @@ class TypeDefinition private constructor(
                 "",
             initializer: skirout.editor.v1.type_catalog.TypedValue? =
                 null,
+            qualifiedName: kotlin.String? =
+                null,
         ) = skirout.editor.v1.type_catalog.TypeDefinition(
             displayName = displayName,
             parameters = parameters,
@@ -7892,6 +7931,7 @@ class TypeDefinition private constructor(
             fieldMergePolicies = fieldMergePolicies,
             declarationOwner = declarationOwner,
             initializer = initializer,
+            qualifiedName = qualifiedName,
             _unrecognizedFields = null,
         );
 
@@ -8057,6 +8097,17 @@ class TypeDefinition private constructor(
                 "",
                 { it.initializer },
                 { mut, v -> mut.initializer = v },
+            );
+            serializerImpl.addField(
+                "qualified_name",
+                "qualifiedName",
+                14,
+                build.skir.Serializers.optional(
+                    build.skir.Serializers.string,
+                ),
+                "",
+                { it.qualifiedName },
+                { mut, v -> mut.qualifiedName = v },
             );
             serializerImpl.finalizeStruct();
         }

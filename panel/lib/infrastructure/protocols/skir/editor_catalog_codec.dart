@@ -73,7 +73,8 @@ extension TypeCatalogWireEncoding on TypeCatalog {
       if (encodedId == null || encodedRepresentation == null) continue;
       definitions.add(
         wire.TypeDefinition(
-          displayName: definition.id.id.displayName,
+          displayName: definition.displayName ?? definition.id.id.displayName,
+          qualifiedName: definition.qualifiedName,
           parameters: parameters,
           directParents: parents,
           representation: encodedRepresentation,
@@ -273,6 +274,8 @@ extension on wire.TypeDefinition {
       TypeDefinition(
         id: id,
         kind: kind.valueOrNull!,
+        displayName: value.displayName,
+        qualifiedName: value.qualifiedName,
         declarationOwner: value.declarationOwner,
         representation: representation.valueOrNull!,
         parameters: parameters,
@@ -300,6 +303,7 @@ extension on wire.TypeDefinition {
 
 extension on PresentationRole {
   wire.PresentationRole get _encodeWire => switch (this) {
+    PresentationRole.creation => wire.PresentationRole.creation,
     PresentationRole.referenceSummary => wire.PresentationRole.referenceSummary,
     PresentationRole.referenceOption => wire.PresentationRole.referenceOption,
     PresentationRole.catalogOption => wire.PresentationRole.catalogOption,
@@ -312,6 +316,9 @@ extension on PresentationRole {
 
 extension on wire.PresentationRole {
   TypeResult<PresentationRole> _decodeDomain() => switch (this) {
+    wire.PresentationRole.creation => const TypeResult.success(
+      PresentationRole.creation,
+    ),
     wire.PresentationRole.referenceSummary => const TypeResult.success(
       PresentationRole.referenceSummary,
     ),

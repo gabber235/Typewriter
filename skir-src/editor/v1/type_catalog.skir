@@ -236,6 +236,7 @@ enum PresentationRole(810100030) {
   page_tile = 5;
   graph_node = 6;
   inspector_header = 7;
+  creation = 8;
 }
 
 struct RolePresentation(810100031) {
@@ -271,6 +272,7 @@ struct TypeDefinition(810100026) {
   field_merge_policies: [FieldMergePolicy] = 11;
   declaration_owner: string = 12;
   initializer: TypedValue? = 13;
+  qualified_name: string? = 14;
 }
 
 struct TypeCatalog(810100027) {

@@ -11,6 +11,7 @@ enum NominalTypeKind { concrete, openAbstract, sealedAbstract }
 
 /// Semantic surface for which a nominal type can supply a presentation.
 enum PresentationRole {
+  creation,
   referenceSummary,
   referenceOption,
   catalogOption,
@@ -54,6 +55,8 @@ abstract class TypeDefinition with _$TypeDefinition {
   const factory TypeDefinition({
     required ResolvedTypeRef id,
     required NominalTypeKind kind,
+    String? displayName,
+    String? qualifiedName,
     String? declarationOwner,
     @Default(AnyType()) TypeExpression representation,
     @Default([]) List<TypeParameter> parameters,

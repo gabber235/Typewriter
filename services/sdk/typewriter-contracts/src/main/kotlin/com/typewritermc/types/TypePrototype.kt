@@ -152,7 +152,7 @@ class TypePrototypeRegistry(
         }
         require(definitionsByReference.size == definitions.size) { "Type definitions must be unique." }
         all.forEach { prototype ->
-            require(definitionsByReference[prototype.type]?.copy(displayName = prototype.definition.displayName) == prototype.definition) {
+            require(definitionsByReference[prototype.type]?.copy(displayName = prototype.definition.displayName, qualifiedName = prototype.definition.qualifiedName) == prototype.definition) {
                 "Type prototype ${prototype.type} must match its catalog definition."
             }
         }

@@ -5361,6 +5361,7 @@ final class NamedPresentation_mutable implements NamedPresentation_orMutable {
 ///     case PresentationRole.pageTile: { ... }
 ///     case PresentationRole.graphNode: { ... }
 ///     case PresentationRole.inspectorHeader: { ... }
+///     case PresentationRole.creation: { ... }
 ///   }
 ///   ```
 ///
@@ -5378,6 +5379,7 @@ sealed class PresentationRole {
   static const pageTile = _PresentationRole_consts.pageTileConst;
   static const graphNode = _PresentationRole_consts.graphNodeConst;
   static const inspectorHeader = _PresentationRole_consts.inspectorHeaderConst;
+  static const creation = _PresentationRole_consts.creationConst;
 
   /// Returns the kind of variant held by this PresentationRole.
   PresentationRole_kind get kind;
@@ -5434,6 +5436,13 @@ sealed class PresentationRole {
         "",
         inspectorHeader,
       );
+      _serializerBuilder.addConstantVariant(
+        8,
+        "creation",
+        "creation",
+        "",
+        creation,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -5460,7 +5469,8 @@ enum PresentationRole_kind {
   authoringResultConst(4),
   pageTileConst(5),
   graphNodeConst(6),
-  inspectorHeaderConst(7);
+  inspectorHeaderConst(7),
+  creationConst(8);
 
   final _core.int _ordinal;
 
@@ -5493,7 +5503,8 @@ enum _PresentationRole_consts implements PresentationRole {
   authoringResultConst(PresentationRole_kind.authoringResultConst),
   pageTileConst(PresentationRole_kind.pageTileConst),
   graphNodeConst(PresentationRole_kind.graphNodeConst),
-  inspectorHeaderConst(PresentationRole_kind.inspectorHeaderConst);
+  inspectorHeaderConst(PresentationRole_kind.inspectorHeaderConst),
+  creationConst(PresentationRole_kind.creationConst);
 
   @_core.override
   final PresentationRole_kind kind;
@@ -5877,6 +5888,7 @@ sealed class TypeDefinition_orMutable {
   _core.Iterable<FieldMergePolicy_orMutable> get fieldMergePolicies;
   _core.String get declarationOwner;
   TypedValue? get initializer;
+  _core.String? get qualifiedName;
 
   TypeDefinition toFrozen();
 }
@@ -5911,6 +5923,8 @@ final class TypeDefinition implements TypeDefinition_orMutable {
   final _core.String declarationOwner;
   @_core.override
   final TypedValue? initializer;
+  @_core.override
+  final _core.String? qualifiedName;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TypeDefinition({
@@ -5928,6 +5942,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     required _core.Iterable<FieldMergePolicy_orMutable> fieldMergePolicies,
     required _core.String declarationOwner,
     required TypedValue? initializer,
+    required _core.String? qualifiedName,
   }) => TypeDefinition._(
     displayName,
     _skir.internal__keyedMappedCopy(
@@ -5956,6 +5971,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.internal__frozenMappedCopy(fieldMergePolicies, (it) => it.toFrozen()),
     declarationOwner,
     initializer,
+    qualifiedName,
   );
 
   TypeDefinition._(
@@ -5973,6 +5989,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.fieldMergePolicies,
     this.declarationOwner,
     this.initializer,
+    this.qualifiedName,
   );
 
   /// Default instance with all fields set to their default values.
@@ -5990,6 +6007,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     "",
+    null,
     null,
   );
 
@@ -6009,6 +6027,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     "",
+    null,
     null,
   );
 
@@ -6033,6 +6052,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.fieldMergePolicies,
     this.declarationOwner,
     this.initializer,
+    this.qualifiedName,
   );
 
   @_core.override
@@ -6063,6 +6083,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.fieldMergePolicies,
     this.declarationOwner,
     this.initializer,
+    this.qualifiedName,
   ];
 
   @_core.override
@@ -6206,6 +6227,15 @@ final class TypeDefinition implements TypeDefinition_orMutable {
         (it) => it.initializer,
         (it, v) => it.initializer = v,
       );
+      _serializerBuilder.addField(
+        "qualified_name",
+        "qualifiedName",
+        14,
+        _skir.Serializers.optional(_skir.Serializers.string),
+        "",
+        (it) => it.qualifiedName,
+        (it, v) => it.qualifiedName = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -6238,6 +6268,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
   _core.Iterable<FieldMergePolicy_orMutable> fieldMergePolicies;
   _core.String declarationOwner;
   TypedValue? initializer;
+  _core.String? qualifiedName;
   _skir.internal__UnrecognizedFields? _u;
 
   TypeDefinition_mutable._(
@@ -6255,6 +6286,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     this.fieldMergePolicies,
     this.declarationOwner,
     this.initializer,
+    this.qualifiedName,
   );
 
   /// If the value of [parameters] is already mutable, returns it as-is.
@@ -6342,6 +6374,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     fieldMergePolicies: this.fieldMergePolicies,
     declarationOwner: this.declarationOwner,
     initializer: this.initializer,
+    qualifiedName: this.qualifiedName,
   ).._u = this._u;
 }
 

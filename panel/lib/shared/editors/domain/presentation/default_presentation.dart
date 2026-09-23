@@ -96,7 +96,10 @@ final class _DefaultPresentationGenerator {
         .map(
           (reference) => ConcreteTypePresentation(
             type: reference,
-            label: _typeLabel(reference.id).asStringLiteral,
+            label:
+                (registry!.definition(reference)?.displayName ??
+                        _typeLabel(reference.id))
+                    .asStringLiteral,
           ),
         )
         .toList();

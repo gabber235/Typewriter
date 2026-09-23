@@ -67,7 +67,7 @@ object TypeContributionAssembler {
         ordered.forEach { keyed ->
             keyed.contribution.definitions.forEach { definition ->
                 val previous = definitions[definition.id]
-                require(previous == null || previous.copy(displayName = definition.displayName) == definition) {
+                require(previous == null || previous.copy(displayName = definition.displayName, qualifiedName = definition.qualifiedName) == definition) {
                     "Conflicting type definition ${definition.id} from ${keyed.key}."
                 }
                 val defaultName = TypeDefinition(id = definition.id, kind = definition.kind).displayName
@@ -75,10 +75,16 @@ object TypeContributionAssembler {
                     previous.displayName == defaultName || definition.displayName == defaultName) {
                     "Conflicting type display name ${definition.id} from ${keyed.key}."
                 }
+                require(previous == null || previous.qualifiedName == null || definition.qualifiedName == null ||
+                    previous.qualifiedName == definition.qualifiedName) {
+                    "Conflicting qualified type name ${definition.id} from ${keyed.key}."
+                }
                 definitions[definition.id] = when {
                     previous == null -> definition
-                    previous.displayName == defaultName -> previous.copy(displayName = definition.displayName)
-                    else -> previous
+                    else -> previous.copy(
+                        displayName = if (previous.displayName == defaultName) definition.displayName else previous.displayName,
+                        qualifiedName = previous.qualifiedName ?: definition.qualifiedName,
+                    )
                 }
             }
             keyed.contribution.relations.forEach { definition ->

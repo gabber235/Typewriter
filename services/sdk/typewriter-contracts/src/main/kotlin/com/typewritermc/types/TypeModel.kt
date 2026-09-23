@@ -452,6 +452,7 @@ data class PresentationId(
 /** Identifies the semantic surface for which a presentation is selected. */
 @Serializable
 enum class PresentationRole {
+    CREATION,
     REFERENCE_SUMMARY,
     REFERENCE_OPTION,
     CATALOG_OPTION,
@@ -539,6 +540,8 @@ data class ConversionId(
  * codecs live in prototypes. [initialValue] supplies the portable value used when authoring initializes this type
  * without an explicit value. Abstract type initial values must retain their selected concrete subtype through
  * [DataValue.Polymorphic].
+ * [displayName] is the short label for selection controls. [qualifiedName] identifies the source declaration
+ * for diagnostics and disambiguation. Neither changes [id].
  */
 @Serializable
 data class TypeDefinition(
@@ -550,6 +553,7 @@ data class TypeDefinition(
     val defaultPresentationId: PresentationId? = null,
     val namedPresentations: Map<String, PresentationId> = emptyMap(),
     val displayName: String = id.displayName,
+    val qualifiedName: String? = null,
     val outgoingConversionIds: List<ConversionId> = emptyList(),
     val rolePresentations: Map<PresentationRole, PresentationId> = emptyMap(),
     val fieldMergePolicies: List<FieldMergePolicy> = emptyList(),

@@ -12,6 +12,8 @@ void main() {
     TypeDefinition(
       id: reference,
       kind: NominalTypeKind.concrete,
+      displayName: "Entry",
+      qualifiedName: "example.Entry",
       declarationOwner: "example",
       representation: RecordType(
         fields: const {"name": TypeField(name: "name", type: StringType())},
@@ -52,6 +54,8 @@ void main() {
     expect(encodedType.revision, 1);
     expect(encodedType.kind.kind, skir.TypeDefinitionKind_kind.concreteConst);
     expect(encodedType.declarationOwner, "example");
+    expect(encodedType.displayName, "Entry");
+    expect(encodedType.qualifiedName, "example.Entry");
     expect(
       encodedType.representation.kind,
       skir.TypeExpression_kind.recordWrapper,

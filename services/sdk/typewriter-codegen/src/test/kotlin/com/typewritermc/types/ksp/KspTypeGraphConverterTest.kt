@@ -57,6 +57,8 @@ val KspTypeGraphConverterTest by testSuite {
         val nodeDefinition = result.graph.definitions.single { it.id.id == TypeId.Qualified("example", "Node") }
 
         result.graph.root shouldBe TypeExpression.Named(nodeDefinition.id)
+        nodeDefinition.displayName shouldBe "Node"
+        nodeDefinition.qualifiedName shouldBe "example.Node"
         (nodeDefinition.representation as TypeExpression.Record).fields.map { it.name } shouldBe listOf("name", "next")
     }
 

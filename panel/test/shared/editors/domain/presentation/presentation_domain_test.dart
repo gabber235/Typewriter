@@ -62,6 +62,39 @@ void main() {
         isA<DiagnosticElement>(),
       );
     });
+
+    test("labels polymorphic choices from catalog short names", () {
+      final abstractType = ResolvedTypeRef(
+        id: DeclaredTypeId("11111111111111111111111111111111"),
+        revision: 1,
+      );
+      final concreteType = ResolvedTypeRef(
+        id: DeclaredTypeId("22222222222222222222222222222222"),
+        revision: 1,
+      );
+      final registry = TypeRegistry(
+        TypeCatalog([
+          TypeDefinition(id: abstractType, kind: NominalTypeKind.openAbstract),
+          TypeDefinition(
+            id: concreteType,
+            kind: NominalTypeKind.concrete,
+            parents: [abstractType],
+            displayName: "MaterialIcon",
+            qualifiedName: "com.typewritermc.icon.MaterialIcon",
+          ),
+        ]),
+      );
+
+      final element = NamedType(abstractType)
+          .generateDefaultPresentation(registry: registry)
+          .element;
+
+      expect(element, isA<PolymorphicInputElement>());
+      expect(
+        (element as PolymorphicInputElement).concreteTypes.single.label,
+        "MaterialIcon".asStringLiteral,
+      );
+    });
   });
 
   group("expressions", () {

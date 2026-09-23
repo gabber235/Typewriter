@@ -1572,6 +1572,7 @@ pub enum PresentationRole {
     PageTile,
     GraphNode,
     InspectorHeader,
+    Creation,
 }
 
 impl Default for PresentationRole {
@@ -1594,6 +1595,7 @@ impl PresentationRole {
                         PresentationRole::PageTile => 5,
                         PresentationRole::GraphNode => 6,
                         PresentationRole::InspectorHeader => 7,
+                        PresentationRole::Creation => 8,
                     },
                     |u| PresentationRole::Unknown(Some(u)),
                     |x: &PresentationRole| match x { PresentationRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1748,6 +1750,7 @@ pub struct TypeDefinition {
     pub field_merge_policies: Vec<FieldMergePolicy>,
     pub declaration_owner: String,
     pub initializer: Option<TypedValue>,
+    pub qualified_name: Option<String>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypeDefinition>>,
 }
@@ -2088,6 +2091,7 @@ fn initialize_module_serializers() {
                 (*a).add_constant_variant("page_tile", 5, 5, "", PresentationRole::PageTile);
                 (*a).add_constant_variant("graph_node", 6, 6, "", PresentationRole::GraphNode);
                 (*a).add_constant_variant("inspector_header", 7, 7, "", PresentationRole::InspectorHeader);
+                (*a).add_constant_variant("creation", 8, 8, "", PresentationRole::Creation);
                 (*a).finalize();
             }
             unsafe {
@@ -2123,6 +2127,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("field_merge_policies", 11, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(FieldMergePolicy::_adapter())), "", |x: &TypeDefinition| &x.field_merge_policies, |x: &mut TypeDefinition, v| x.field_merge_policies = v);
                 (*a).add_field("declaration_owner", 12, crate::skir_client::Serializer::string(), "", |x: &TypeDefinition| &x.declaration_owner, |x: &mut TypeDefinition, v| x.declaration_owner = v);
                 (*a).add_field("initializer", 13, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TypedValue::_adapter())), "", |x: &TypeDefinition| &x.initializer, |x: &mut TypeDefinition, v| x.initializer = v);
+                (*a).add_field("qualified_name", 14, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &TypeDefinition| &x.qualified_name, |x: &mut TypeDefinition, v| x.qualified_name = v);
                 (*a).finalize();
             }
             unsafe {

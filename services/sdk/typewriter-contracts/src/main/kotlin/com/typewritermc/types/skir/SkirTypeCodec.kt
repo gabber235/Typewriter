@@ -80,6 +80,7 @@ object SkirTypeCodec {
 private fun ConversionScope.encode(definition: TypeDefinition): SkirTypeDefinition =
     SkirTypeDefinition(
         displayName = definition.displayName,
+        qualifiedName = definition.qualifiedName,
         parameters = definition.parameters.mapIndexed { index, value -> at("parameter $index") { encode(value) } },
         directParents = definition.parents.mapIndexed { index, value -> at("parent $index") { encode(value) } },
         representation = at("representation") { encode(definition.representation) },
@@ -125,6 +126,7 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
         namedPresentations =
             definition.namedPresentations.associate { value -> value.name to decode(value.presentationId) },
         displayName = definition.displayName,
+        qualifiedName = definition.qualifiedName,
         outgoingConversionIds = definition.outgoingConversionIds.map(::decode),
         rolePresentations =
             definition.rolePresentations
@@ -141,6 +143,7 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
 
 private fun ConversionScope.encode(role: PresentationRole): SkirPresentationRole =
     when (role) {
+        PresentationRole.CREATION -> SkirPresentationRole.CREATION
         PresentationRole.REFERENCE_SUMMARY -> SkirPresentationRole.REFERENCE_SUMMARY
         PresentationRole.REFERENCE_OPTION -> SkirPresentationRole.REFERENCE_OPTION
         PresentationRole.CATALOG_OPTION -> SkirPresentationRole.CATALOG_OPTION
@@ -152,6 +155,7 @@ private fun ConversionScope.encode(role: PresentationRole): SkirPresentationRole
 
 private fun ConversionScope.decode(role: SkirPresentationRole): PresentationRole =
     when (role) {
+        SkirPresentationRole.CREATION -> PresentationRole.CREATION
         SkirPresentationRole.REFERENCE_SUMMARY -> PresentationRole.REFERENCE_SUMMARY
         SkirPresentationRole.REFERENCE_OPTION -> PresentationRole.REFERENCE_OPTION
         SkirPresentationRole.CATALOG_OPTION -> PresentationRole.CATALOG_OPTION
