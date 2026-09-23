@@ -134,10 +134,20 @@ AuthoringSessionState _fixtureState({
         tag.authoringFixtureContent(tagType),
       ),
   };
+  final tagSelectionKey = "collection:${authoringTagCollectionSourceId.value}";
   return AuthoringSessionState(
     generation: generation,
     sequence: 1,
     resources: resources,
+    selections: {
+      tagSelectionKey: skir.GraphSelectionResult(
+        key: tagSelectionKey,
+        resourceIds: tags.map((tag) => tag.tagId),
+        edgeIds: const [],
+        missingIds: const [],
+        incompatibleIds: const [],
+      ),
+    },
   );
 }
 
