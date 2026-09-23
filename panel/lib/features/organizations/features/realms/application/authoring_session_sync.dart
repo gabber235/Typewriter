@@ -1,98 +1,98 @@
 part of "authoring_session.dart";
 
-/// Maintains the session's ordered live projection and lifecycle recovery.
-///
-/// Authoring events are applied only when their sequence immediately follows
-/// the canonical sequence. Events received during refresh or ahead of a gap
-/// stay buffered until a snapshot makes the sequence continuous. Compiled
-/// content events refresh only retained page scopes because compilation can
-/// change page related state without changing the authoring event stream.
 mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
-  final Map<_AuthoringScope, int> _scopeCounts = {};
-  final Map<_AuthoringScope, Future<void>> _scopeReadiness = {};
+  @override
+  late AuthoringResourceRepository _repository;
+  final Map<String, AuthoringSelectionLeaseState> _leases = {};
+  final Map<String, Future<void>> _selectionReadiness = {};
   final List<skir.AuthoringChanged> _buffer = [];
 
-  NatsSubscription? _subscription;
-  StreamSubscription<NatsMessage>? _messages;
-  NatsSubscription? _compiledSubscription;
-  StreamSubscription<NatsMessage>? _compiledMessages;
-  StreamSubscription<NatsConnectionState>? _lifecycle;
   Future<void>? _refreshOperation;
-  var _refreshRequested = false;
   late Future<void> _startOperation;
-  var _needsReconnectRefresh = false;
-  var _disposed = false;
+  final Set<String> _refreshSelections = {};
+  final Set<String> _seenBatchIds = {};
 
-  late NatsClient _client;
   @override
-  late RealmServiceAddress _address;
+  bool _isSelectionActive(String key) => _leases.containsKey(key);
 
-  Future<void> _start() async {
-    try {
-      _lifecycle = _client.connectionStateChanges.listen(_onLifecycle);
-      _onLifecycle(_client.connectionState);
-
-      _subscription = await _client.subscribe(
-        _address.event("library.authoring.changed"),
+  @override
+  Set<String> get _activeSelectionKeys => _leases.keys.toSet();
+  _AuthoringSelectionLease _acquire(skir.GraphSelection selection) {
+    final key = selection.key;
+    final existing = _leases[key];
+    if (existing != null && existing.selection != selection) {
+      throw StateError(
+        "Authoring selection key '$key' is already leased for a different selection",
       );
-      _compiledSubscription = await _client.subscribe(
-        _address.event("compiled.content.watch"),
-      );
-      if (_disposed) {
-        await _subscription?.unsubscribe();
-        await _compiledSubscription?.unsubscribe();
-        return;
-      }
-
-      _messages = _subscription?.messages.listen(
-        _onMessage,
-        onError: (Object _, StackTrace _) => _scheduleRefresh(),
-      );
-      _compiledMessages = _compiledSubscription?.messages.listen(
-        _onCompiledMessage,
-        onError: (Object _, StackTrace _) => _scheduleRefresh(),
-      );
-    } on Object catch (error, stackTrace) {
-      if (!_disposed) Error.throwWithStackTrace(error, stackTrace);
     }
-  }
-
-  void _onMessage(NatsMessage message) {
-    final change = skir.AuthoringChanged.serializer.fromBytes(message.payload);
-    _accept(change);
-  }
-
-  void _onCompiledMessage(NatsMessage message) {
-    final event = skir.WatchCompiledContentResponse.serializer.fromBytes(
-      message.payload,
+    final added = existing == null;
+    _leases[key] = AuthoringSelectionLeaseState(
+      selection: selection,
+      retainCount: (existing?.retainCount ?? 0) + 1,
+      result: state.selections[key],
     );
-    switch (event) {
-      case skir.WatchCompiledContentResponse_activatedWrapper() ||
-          skir.WatchCompiledContentResponse_blockedWrapper():
-        _schedulePageRefresh();
-      case skir.WatchCompiledContentResponse_initialWrapper() ||
-          skir.WatchCompiledContentResponse_internalErrorWrapper() ||
-          skir.WatchCompiledContentResponse_unknown():
+    final ready = added
+        ? _selectionReadiness[key] = _startOperation.then((_) {
+            _refreshSelections.add(key);
+            return _refresh();
+          })
+        : _selectionReadiness[key] ?? _startOperation;
+    final retention = ref.keepAlive();
+    return _AuthoringSelectionLease(ready, () {
+      _release(key);
+      retention.close();
+    });
+  }
+
+  void _release(String key) {
+    final lease = _leases[key];
+    if (lease == null) return;
+    if (lease.retainCount == 1) {
+      _leases.remove(key);
+      _selectionReadiness.remove(key);
+      _refreshSelections.remove(key);
+      _pruneReleasedSelection(key);
+    } else {
+      _leases[key] = lease.copyWith(retainCount: lease.retainCount - 1);
     }
   }
 
-  /// Marks the canonical model stale across a reconnect boundary.
-  void _onLifecycle(NatsConnectionState connection) {
-    switch (connection) {
-      case NatsReconnecting() || NatsFailed():
-        _needsReconnectRefresh = true;
-      case NatsConnected() when _needsReconnectRefresh:
-        _needsReconnectRefresh = false;
-        _scheduleRefresh();
-      case NatsConnecting() || NatsConnected() || NatsClosed():
-    }
+  void _pruneReleasedSelection(String key) {
+    final selections = Map<String, skir.GraphSelectionResult>.of(
+      state.selections,
+    )..remove(key);
+    final resourceIds = selections.values
+        .expand((selection) => selection.resourceIds)
+        .toSet();
+    final edgeIds = selections.values
+        .expand((selection) => selection.edgeIds)
+        .toSet();
+    state = state.copyWith(
+      resources: Map.unmodifiable({
+        for (final entry in state.resources.entries)
+          if (resourceIds.contains(entry.key)) entry.key: entry.value,
+      }),
+      edges: Map.unmodifiable({
+        for (final entry in state.edges.entries)
+          if (edgeIds.contains(entry.key)) entry.key: entry.value,
+      }),
+      presentations: Map.unmodifiable({
+        for (final entry in state.presentations.entries)
+          if (resourceIds.contains(entry.key)) entry.key: entry.value,
+      }),
+      compiledStatuses: Map.unmodifiable({
+        for (final entry in state.compiledStatuses.entries)
+          if (resourceIds.contains(entry.key.resource)) entry.key: entry.value,
+      }),
+      selections: Map.unmodifiable(selections),
+    );
   }
 
-  /// Accepts an event only when it preserves sequence continuity.
-  ///
-  /// Duplicate and older events are harmless. A future event is buffered and
-  /// causes a snapshot refresh rather than being applied out of order.
   void _accept(skir.AuthoringChanged change) {
+    if (!_seenBatchIds.add(change.batchId)) return;
+    if (_seenBatchIds.length > 512) {
+      _seenBatchIds.remove(_seenBatchIds.first);
+    }
     if (_refreshOperation != null || state.sequence == null) {
       _buffer.add(change);
       return;
@@ -107,56 +107,274 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     _applyEvent(change);
   }
 
-  void _scheduleRefresh() {
+  void _acceptCompiled(skir.CompiledContentChanged change) {
+    final currentGeneration = state.generation;
+    if (currentGeneration != null && currentGeneration != change.generation) {
+      _scheduleRefresh();
+      return;
+    }
+    final currentSequence = state.sequence;
+    if (currentSequence == null || change.sourceSequence > currentSequence) {
+      _scheduleRefresh();
+      return;
+    }
+    if (change.sourceSequence < currentSequence) {
+      final affected = change.states
+          .map(
+            (state) => switch (state) {
+              skir.CompiledResourceStateChange_upsertWrapper(:final value) =>
+                value.root.resource,
+              skir.CompiledResourceStateChange_removeWrapper(:final value) =>
+                value.resource,
+              skir.CompiledResourceStateChange_unknown() => null,
+            },
+          )
+          .nonNulls
+          .toSet();
+      final selections = state.selections.entries
+          .where((entry) => entry.value.resourceIds.any(affected.contains))
+          .map((entry) => entry.key)
+          .toSet();
+      if (selections.isNotEmpty) _scheduleRefresh(selections);
+      return;
+    }
+    final statuses = Map<skir.CompilationRoot, skir.CompiledResourceState>.of(
+      state.compiledStatuses,
+    );
+    final activeResources = _activeResourceIds;
+    for (final stateChange in change.states) {
+      switch (stateChange) {
+        case skir.CompiledResourceStateChange_upsertWrapper(:final value):
+          if (activeResources.contains(value.root.resource)) {
+            statuses[value.root] = value.state;
+          }
+        case skir.CompiledResourceStateChange_removeWrapper(:final value):
+          if (activeResources.contains(value.resource)) statuses.remove(value);
+        case skir.CompiledResourceStateChange_unknown():
+          _scheduleRefresh();
+          return;
+      }
+    }
+    state = state.copyWith(compiledStatuses: Map.unmodifiable(statuses));
+  }
+
+  void _applyEvent(skir.AuthoringChanged event) {
+    if (state.generation != null && event.generation != state.generation) {
+      _scheduleRefresh();
+      return;
+    }
+    final resources = Map<skir.ResourceId, skir.AuthoringResource>.of(
+      state.resources,
+    );
+    final edges = Map<skir.AuthoringEdgeId, skir.AuthoringEdge>.of(state.edges);
+    final presentations = Map<skir.ResourceId, skir.PresentationSubject>.of(
+      state.presentations,
+    );
+    final compiledStatuses =
+        Map<skir.CompilationRoot, skir.CompiledResourceState>.of(
+          state.compiledStatuses,
+        );
+    for (final change in event.resources) {
+      switch (change) {
+        case skir.AuthoringResourceChange_upsertWrapper(:final value):
+          resources[value.id] = value;
+        case skir.AuthoringResourceChange_removeWrapper(:final value):
+          resources.remove(value);
+          presentations.remove(value);
+          compiledStatuses.removeWhere((root, _) => root.resource == value);
+        case skir.AuthoringResourceChange_unknown():
+          _scheduleRefresh();
+          return;
+      }
+    }
+    for (final change in event.edges) {
+      switch (change) {
+        case skir.AuthoringEdgeChange_upsertWrapper(:final value):
+          edges[value.id] = value;
+        case skir.AuthoringEdgeChange_removeWrapper(:final value):
+          edges.remove(value);
+        case skir.AuthoringEdgeChange_unknown():
+          _scheduleRefresh();
+          return;
+      }
+    }
+    for (final change in event.presentations) {
+      switch (change) {
+        case skir.PresentationSubjectChange_upsertWrapper(:final value):
+          presentations[value.resource] = value.subject;
+        case skir.PresentationSubjectChange_removeWrapper(:final value):
+          presentations.remove(value);
+        case skir.PresentationSubjectChange_unknown():
+          _scheduleRefresh();
+          return;
+      }
+    }
+    final selections = _applySelectionChanges(state.selections, event);
+    final activeResources = selections.values
+        .expand((selection) => selection.resourceIds)
+        .toSet();
+    if (activeResources.isEmpty && _activeSelectionKeys.isNotEmpty) {
+      activeResources.addAll(resources.keys);
+    }
+    for (final root in event.compilationImpact) {
+      if (activeResources.contains(root.resource)) {
+        compiledStatuses[root] = skir.CompiledResourceState.notCompiled;
+      }
+    }
+    state = state.copyWith(
+      generation: event.generation,
+      sequence: event.sequence,
+      resources: Map.unmodifiable(resources),
+      edges: Map.unmodifiable(edges),
+      presentations: Map.unmodifiable(presentations),
+      compiledStatuses: Map.unmodifiable(compiledStatuses),
+      selections: Map.unmodifiable(selections),
+    );
+    final incomplete = _leases.keys.where((key) => !_canApplyEvent(key, event));
+    for (final key in incomplete) {
+      _refreshSelections.add(key);
+    }
+    if (incomplete.isNotEmpty) _scheduleRefresh();
+  }
+
+  bool _canApplyEvent(String key, skir.AuthoringChanged event) {
+    final selection = state.selections[key];
+    if (selection == null || selection.missingIds.isNotEmpty) return false;
+    final requested = _leases[key]?.selection;
+    if (requested == null) return false;
+    final resources = selection.resourceIds.toSet();
+    final edges = selection.edgeIds.toSet();
+    final hasTraversal = requested.steps.isNotEmpty;
+    final scans = requested.seed is skir.ResourceSeed_scanWrapper;
+    return event.resources.every(
+          (change) => switch (change) {
+            skir.AuthoringResourceChange_upsertWrapper(:final value) =>
+              resources.contains(value.id) || !scans,
+            skir.AuthoringResourceChange_removeWrapper(:final value) =>
+              !resources.contains(value) || !hasTraversal,
+            skir.AuthoringResourceChange_unknown() => false,
+          },
+        ) &&
+        event.edges.every(
+          (change) => switch (change) {
+            skir.AuthoringEdgeChange_upsertWrapper(:final value) =>
+              !hasTraversal ||
+                  (!resources.contains(value.source) &&
+                      !resources.contains(value.target)),
+            skir.AuthoringEdgeChange_removeWrapper(:final value) =>
+              !hasTraversal || !edges.contains(value),
+            skir.AuthoringEdgeChange_unknown() => false,
+          },
+        ) &&
+        event.presentations.every(
+          (change) => switch (change) {
+            skir.PresentationSubjectChange_upsertWrapper(:final value) =>
+              resources.contains(value.resource) || !scans,
+            skir.PresentationSubjectChange_removeWrapper(:final value) =>
+              !resources.contains(value) || !hasTraversal,
+            skir.PresentationSubjectChange_unknown() => false,
+          },
+        );
+  }
+
+  Map<String, skir.GraphSelectionResult> _applySelectionChanges(
+    Map<String, skir.GraphSelectionResult> current,
+    skir.AuthoringChanged event,
+  ) {
+    final selections = Map<String, skir.GraphSelectionResult>.of(current);
+    for (final entry in current.entries) {
+      final resources = <skir.ResourceId>{...entry.value.resourceIds};
+      final edges = <skir.AuthoringEdgeId>{...entry.value.edgeIds};
+      final missingIds = <skir.ResourceId>{...entry.value.missingIds};
+      for (final change in event.resources) {
+        if (change case skir.AuthoringResourceChange_removeWrapper(
+          :final value,
+        )) {
+          resources.remove(value);
+          if (_exactSeedIds(entry.key).contains(value)) missingIds.add(value);
+        }
+      }
+      for (final change in event.edges) {
+        if (change case skir.AuthoringEdgeChange_removeWrapper(:final value)) {
+          edges.remove(value);
+        }
+      }
+      selections[entry.key] = skir.GraphSelectionResult(
+        key: entry.value.key,
+        resourceIds: resources,
+        edgeIds: edges,
+        missingIds: missingIds,
+        incompatibleIds: entry.value.incompatibleIds,
+      );
+    }
+    return selections;
+  }
+
+  void _scheduleRefresh([Set<String>? selectionKeys]) {
+    if (selectionKeys == null) {
+      _refreshSelections.addAll(_leases.keys);
+    } else {
+      _refreshSelections.addAll(selectionKeys);
+    }
     unawaited(_refresh().catchError((Object _) {}));
   }
 
   Future<void> _refresh() {
-    _refreshRequested = true;
     final active = _refreshOperation;
     if (active != null) return active;
-    return _refreshOperation = _runRefresh().whenComplete(
-      () => _refreshOperation = null,
-    );
+    return _refreshOperation = _runRefresh()
+        .onError((error, stackTrace) {
+          state = state.copyWith(
+            diagnostics: [
+              skir.AuthoringDiagnostic(
+                code: "authoring-refresh-failed",
+                message: "Could not refresh authoring state: $error",
+                resource: null,
+                path: null,
+              ),
+            ],
+          );
+          Error.throwWithStackTrace(
+            error ?? StateError("Authoring refresh failed without an error"),
+            stackTrace,
+          );
+        })
+        .whenComplete(() {
+          _refreshOperation = null;
+        });
   }
 
-  void _schedulePageRefresh() {
-    if (!_scopeCounts.keys.any((scope) => scope is _PageScope)) return;
-    _scheduleRefresh();
-  }
-
-  /// Reconciles all held scopes through serialized authoritative snapshots.
-  ///
-  /// Refresh requests coalesce, and a request raised during a fetch causes one
-  /// more pass. A snapshot older than the current sequence cannot replace the
-  /// read model.
   Future<void> _runRefresh() async {
-    if (_disposed || _scopeCounts.isEmpty) return;
+    if (_leases.isEmpty) return;
     state = state.copyWith(refreshing: true);
     try {
-      while (_refreshRequested && !_disposed && _scopeCounts.isNotEmpty) {
-        _refreshRequested = false;
-        final scopes = _scopeCounts.keys.toList();
-        final snapshot = await _fetchSnapshot(scopes);
-        if (_disposed) return;
-        if (snapshot.sequence >= (state.sequence ?? 0)) {
-          _applySnapshot(snapshot);
+      while (_refreshSelections.isNotEmpty && _leases.isNotEmpty) {
+        final keys = _refreshSelections
+            .where(_leases.containsKey)
+            .toList(growable: false);
+        _refreshSelections.removeAll(keys);
+        if (keys.isEmpty) continue;
+        final selections = keys
+            .map((key) => _leases[key]?.selection)
+            .whereType<skir.GraphSelection>()
+            .toList(growable: false);
+        final snapshot = await _fetchSnapshot(selections);
+        if (snapshot.graph.sequence >= (state.sequence ?? 0)) {
+          _applySnapshot(snapshot.graph, snapshot.compiledStatuses);
+          _synchronizeLeaseResults();
           _drainBuffer();
         }
       }
     } finally {
-      if (!_disposed) state = state.copyWith(refreshing: false);
+      state = state.copyWith(refreshing: false);
     }
   }
 
-  /// Applies buffered events after a snapshot restored sequence continuity.
   void _drainBuffer() {
     if (state.sequence == null) return;
-
     _buffer.sort((left, right) => left.sequence.compareTo(right.sequence));
     final buffered = List<skir.AuthoringChanged>.of(_buffer);
     _buffer.clear();
-
     for (var index = 0; index < buffered.length; index++) {
       final change = buffered[index];
       if (change.sequence <= state.sequence!) continue;
@@ -169,101 +387,30 @@ mixin _AuthoringSessionSync on _$AuthoringSession, _AuthoringSessionSnapshots {
     }
   }
 
-  /// Applies a contiguous event and refreshes retained pages it affects
-  /// indirectly.
-  void _applyEvent(skir.AuthoringChanged event) {
-    _applyChanges(event.changes, sequence: event.sequence);
-    final pages = event.indirectlyAffectedResources
-        .whereType<skir.AuthoringResourceRef_pageWrapper>()
-        .map((resource) => resource.value)
-        .where((pageId) => _scopeCounts.containsKey(_PageScope(pageId)))
-        .toSet();
-
-    if (pages.isNotEmpty) _scheduleRefresh();
-  }
-
-  void _applyChanges(
-    Iterable<skir.AuthoringResourceChange> changes, {
-    int? sequence,
-  }) {
-    final books = Map<skir.RecordId, skir.Book>.of(state.books);
-    final tags = Map<skir.RecordId, skir.Tag>.of(state.tags);
-    final pages = Map<skir.RecordId, skir.Page>.of(state.pages);
-    final documents = Map<skir.RecordId, skir.PageDocument>.of(state.documents);
-
-    for (final change in changes) {
-      switch (change) {
-        case skir.AuthoringResourceChange_upsertBookWrapper(:final value):
-          books[value.id] = value;
-        case skir.AuthoringResourceChange_removeBookWrapper(:final value):
-          books.remove(value);
-        case skir.AuthoringResourceChange_upsertTagWrapper(:final value):
-          tags[value.id] = value;
-        case skir.AuthoringResourceChange_removeTagWrapper(:final value):
-          tags.remove(value);
-        case skir.AuthoringResourceChange_upsertPageWrapper(:final value):
-          pages[value.id] = value;
-          final document = documents[value.id];
-          if (document != null) {
-            documents[value.id] = (document.toMutable()..page = value)
-                .toFrozen();
-          }
-        case skir.AuthoringResourceChange_removePageWrapper(:final value):
-          pages.remove(value);
-          documents.remove(value);
-        case skir.AuthoringResourceChange_upsertElementWrapper(:final value):
-          documents.updateAll(
-            (_, document) => _removeElement(document, value.id),
-          );
-          final document = documents[value.page];
-          if (document != null) {
-            documents[value.page] = _upsertElement(document, value);
-          }
-        case skir.AuthoringResourceChange_removeElementWrapper(:final value):
-          documents.updateAll((_, document) => _removeElement(document, value));
-        case skir.AuthoringResourceChange_unknown():
-          throw ApiException.unknownResponseMessage();
-      }
+  void _synchronizeLeaseResults() {
+    for (final key in _leases.keys.toList(growable: false)) {
+      final lease = _leases[key]!;
+      _leases[key] = lease.copyWith(result: state.selections[key]);
     }
-
-    state = AuthoringSessionState(
-      sequence: sequence ?? state.sequence,
-      books: Map.unmodifiable(books),
-      tags: Map.unmodifiable(tags),
-      pages: Map.unmodifiable(pages),
-      documents: Map.unmodifiable(documents),
-      refreshing: state.refreshing,
-    );
   }
 
-  skir.PageDocument _upsertElement(
-    skir.PageDocument document,
-    skir.PageElement element,
-  ) =>
-      (document.toMutable()
-            ..elements = [
-              for (final current in document.elements)
-                if (current.id != element.id) current,
-              element,
-            ])
-          .toFrozen();
+  Set<skir.ResourceId> get _activeResourceIds {
+    final ids = {
+      for (final key in _leases.keys) ...?state.selections[key]?.resourceIds,
+    };
+    if (ids.isEmpty && _leases.isNotEmpty) ids.addAll(state.resources.keys);
+    return ids;
+  }
 
-  skir.PageDocument _removeElement(
-    skir.PageDocument document,
-    skir.RecordId elementId,
-  ) =>
-      (document.toMutable()
-            ..elements = document.elements.where(
-              (element) => element.id != elementId,
-            ))
-          .toFrozen();
+  Set<skir.ResourceId> _exactSeedIds(String key) {
+    final seed = _leases[key]?.selection.seed;
+    return switch (seed) {
+      skir.ResourceSeed_idsWrapper(:final value) => value.values.toSet(),
+      _ => const {},
+    };
+  }
 
   Future<void> _dispose() async {
-    _disposed = true;
-    await _messages?.cancel();
-    await _compiledMessages?.cancel();
-    await _lifecycle?.cancel();
-    await _subscription?.unsubscribe();
-    await _compiledSubscription?.unsubscribe();
+    _refreshSelections.clear();
   }
 }

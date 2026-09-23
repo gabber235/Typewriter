@@ -39,6 +39,7 @@ extension TypeExpressionSubstitution on TypeExpression {
               name: name,
               type: field.type.substitute(substitutions),
               initialValue: field.initialValue,
+              defaulted: field.defaulted,
             ),
           ),
         ),
@@ -53,4 +54,30 @@ extension TypeExpressionSubstitution on TypeExpression {
       _ => type,
     };
   }
+}
+
+/// Applies nominal type arguments carried inside portable polymorphic values.
+extension DataValueTypeSubstitution on DataValue {
+  DataValue substituteTypes(Map<String, TypeExpression> substitutions) =>
+      switch (this) {
+        ListValue(:final values) => ListValue([
+          for (final value in values) value.substituteTypes(substitutions),
+        ]),
+        MapValue(:final entries) => MapValue([
+          for (final entry in entries)
+            DataMapEntry(
+              key: entry.key.substituteTypes(substitutions),
+              value: entry.value.substituteTypes(substitutions),
+            ),
+        ]),
+        RecordValue(:final fields) => RecordValue({
+          for (final entry in fields.entries)
+            entry.key: entry.value.substituteTypes(substitutions),
+        }),
+        PolymorphicValue(:final concreteType, :final value) => PolymorphicValue(
+          concreteType: concreteType.substitute(substitutions),
+          value: value.substituteTypes(substitutions),
+        ),
+        _ => this,
+      };
 }

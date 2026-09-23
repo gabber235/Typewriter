@@ -13,6 +13,291 @@ part of 'type_definition.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$FieldMergePolicy {
+
+ DataPath get path; FieldMergeStrategy get strategy;
+/// Create a copy of FieldMergePolicy
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FieldMergePolicyCopyWith<FieldMergePolicy> get copyWith => _$FieldMergePolicyCopyWithImpl<FieldMergePolicy>(this as FieldMergePolicy, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as FieldMergePolicy;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FieldMergePolicy&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.strategy, _this.strategy) || other.strategy == _this.strategy));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as FieldMergePolicy;
+  return Object.hash(runtimeType,_this.path,_this.strategy);
+}
+
+@override
+String toString() {
+  final _this = this as FieldMergePolicy;
+  return 'FieldMergePolicy(path: ${_this.path}, strategy: ${_this.strategy})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FieldMergePolicyCopyWith<$Res>  {
+  factory $FieldMergePolicyCopyWith(FieldMergePolicy value, $Res Function(FieldMergePolicy) _then) = _$FieldMergePolicyCopyWithImpl;
+@useResult
+$Res call({
+ DataPath path, FieldMergeStrategy strategy
+});
+
+
+$DataPathCopyWith<$Res> get path;
+
+}
+/// @nodoc
+class _$FieldMergePolicyCopyWithImpl<$Res>
+    implements $FieldMergePolicyCopyWith<$Res> {
+  _$FieldMergePolicyCopyWithImpl(this._self, this._then);
+
+  final FieldMergePolicy _self;
+  final $Res Function(FieldMergePolicy) _then;
+
+/// Create a copy of FieldMergePolicy
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? path = null,Object? strategy = null,}) {
+  return _then(FieldMergePolicy(
+path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as DataPath,strategy: null == strategy ? _self.strategy : strategy // ignore: cast_nullable_to_non_nullable
+as FieldMergeStrategy,
+  ));
+}
+/// Create a copy of FieldMergePolicy
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataPathCopyWith<$Res> get path {
+
+  return $DataPathCopyWith<$Res>(_self.path, (value) {
+    return _then(_self.copyWith(path: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [FieldMergePolicy].
+extension FieldMergePolicyPatterns on FieldMergePolicy {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FieldMergePolicy value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FieldMergePolicy() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FieldMergePolicy value)  $default,){
+final _that = this;
+switch (_that) {
+case _FieldMergePolicy():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FieldMergePolicy value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FieldMergePolicy() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DataPath path,  FieldMergeStrategy strategy)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FieldMergePolicy() when $default != null:
+return $default(_that.path,_that.strategy);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DataPath path,  FieldMergeStrategy strategy)  $default,) {final _that = this;
+switch (_that) {
+case _FieldMergePolicy():
+return $default(_that.path,_that.strategy);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DataPath path,  FieldMergeStrategy strategy)?  $default,) {final _that = this;
+switch (_that) {
+case _FieldMergePolicy() when $default != null:
+return $default(_that.path,_that.strategy);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _FieldMergePolicy implements FieldMergePolicy {
+  const _FieldMergePolicy({required this.path, required this.strategy});
+
+
+@override final  DataPath path;
+@override final  FieldMergeStrategy strategy;
+
+/// Create a copy of FieldMergePolicy
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FieldMergePolicyCopyWith<_FieldMergePolicy> get copyWith => __$FieldMergePolicyCopyWithImpl<_FieldMergePolicy>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FieldMergePolicy&&(identical(other.path, path) || other.path == path)&&(identical(other.strategy, strategy) || other.strategy == strategy));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,path,strategy);
+}
+
+@override
+String toString() {
+    return 'FieldMergePolicy(path: $path, strategy: $strategy)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FieldMergePolicyCopyWith<$Res> implements $FieldMergePolicyCopyWith<$Res> {
+  factory _$FieldMergePolicyCopyWith(_FieldMergePolicy value, $Res Function(_FieldMergePolicy) _then) = __$FieldMergePolicyCopyWithImpl;
+@override @useResult
+$Res call({
+ DataPath path, FieldMergeStrategy strategy
+});
+
+
+@override $DataPathCopyWith<$Res> get path;
+
+}
+/// @nodoc
+class __$FieldMergePolicyCopyWithImpl<$Res>
+    implements _$FieldMergePolicyCopyWith<$Res> {
+  __$FieldMergePolicyCopyWithImpl(this._self, this._then);
+
+  final _FieldMergePolicy _self;
+  final $Res Function(_FieldMergePolicy) _then;
+
+/// Create a copy of FieldMergePolicy
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? path = null,Object? strategy = null,}) {
+  return _then(_FieldMergePolicy(
+path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as DataPath,strategy: null == strategy ? _self.strategy : strategy // ignore: cast_nullable_to_non_nullable
+as FieldMergeStrategy,
+  ));
+}
+
+/// Create a copy of FieldMergePolicy
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataPathCopyWith<$Res> get path {
+
+  return $DataPathCopyWith<$Res>(_self.path, (value) {
+    return _then(_self.copyWith(path: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$TypeParameter {
 
  String get name; TypeExpression get bound; TypeVariance get variance;
@@ -81,7 +366,7 @@ as TypeVariance,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get bound {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.bound, (value) {
     return _then(_self.copyWith(bound: value));
   });
@@ -224,7 +509,7 @@ return $default(_that.name,_that.bound,_that.variance);case _:
 
 class _TypeParameter implements TypeParameter {
   const _TypeParameter({required this.name, this.bound = const AnyType(), this.variance = TypeVariance.invariant}): assert(name != "", 'Parameter name must not be empty.');
-  
+
 
 @override final  String name;
 @override@JsonKey() final  TypeExpression bound;
@@ -293,7 +578,7 @@ as TypeVariance,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get bound {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.bound, (value) {
     return _then(_self.copyWith(bound: value));
   });
@@ -303,7 +588,7 @@ $TypeExpressionCopyWith<$Res> get bound {
 /// @nodoc
 mixin _$TypeDefinition {
 
- ResolvedTypeRef get id; NominalTypeKind get kind; TypeExpression get representation; List<TypeParameter> get parameters; List<ResolvedTypeRef> get parents; PresentationId? get defaultPresentationId; Map<String, PresentationId> get namedPresentations;
+ ResolvedTypeRef get id; NominalTypeKind get kind; String? get displayName; String? get qualifiedName; String? get declarationOwner; TypeExpression get representation; List<TypeParameter> get parameters; List<ResolvedTypeRef> get parents; PresentationId? get defaultPresentationId; Map<String, PresentationId> get namedPresentations; Map<PresentationRole, PresentationId> get rolePresentations; List<FieldMergePolicy> get fieldMergePolicies; DataValue? get initialValue;
 /// Create a copy of TypeDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -315,20 +600,20 @@ $TypeDefinitionCopyWith<TypeDefinition> get copyWith => _$TypeDefinitionCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as TypeDefinition;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeDefinition&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.representation, _this.representation) || other.representation == _this.representation)&&const DeepCollectionEquality().equals(other.parameters, _this.parameters)&&const DeepCollectionEquality().equals(other.parents, _this.parents)&&(identical(other.defaultPresentationId, _this.defaultPresentationId) || other.defaultPresentationId == _this.defaultPresentationId)&&const DeepCollectionEquality().equals(other.namedPresentations, _this.namedPresentations));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeDefinition&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.qualifiedName, _this.qualifiedName) || other.qualifiedName == _this.qualifiedName)&&(identical(other.declarationOwner, _this.declarationOwner) || other.declarationOwner == _this.declarationOwner)&&(identical(other.representation, _this.representation) || other.representation == _this.representation)&&const DeepCollectionEquality().equals(other.parameters, _this.parameters)&&const DeepCollectionEquality().equals(other.parents, _this.parents)&&(identical(other.defaultPresentationId, _this.defaultPresentationId) || other.defaultPresentationId == _this.defaultPresentationId)&&const DeepCollectionEquality().equals(other.namedPresentations, _this.namedPresentations)&&const DeepCollectionEquality().equals(other.rolePresentations, _this.rolePresentations)&&const DeepCollectionEquality().equals(other.fieldMergePolicies, _this.fieldMergePolicies)&&(identical(other.initialValue, _this.initialValue) || other.initialValue == _this.initialValue));
 }
 
 
 @override
 int get hashCode {
   final _this = this as TypeDefinition;
-  return Object.hash(runtimeType,_this.id,_this.kind,_this.representation,const DeepCollectionEquality().hash(_this.parameters),const DeepCollectionEquality().hash(_this.parents),_this.defaultPresentationId,const DeepCollectionEquality().hash(_this.namedPresentations));
+  return Object.hash(runtimeType,_this.id,_this.kind,_this.displayName,_this.qualifiedName,_this.declarationOwner,_this.representation,const DeepCollectionEquality().hash(_this.parameters),const DeepCollectionEquality().hash(_this.parents),_this.defaultPresentationId,const DeepCollectionEquality().hash(_this.namedPresentations),const DeepCollectionEquality().hash(_this.rolePresentations),const DeepCollectionEquality().hash(_this.fieldMergePolicies),_this.initialValue);
 }
 
 @override
 String toString() {
   final _this = this as TypeDefinition;
-  return 'TypeDefinition(id: ${_this.id}, kind: ${_this.kind}, representation: ${_this.representation}, parameters: ${_this.parameters}, parents: ${_this.parents}, defaultPresentationId: ${_this.defaultPresentationId}, namedPresentations: ${_this.namedPresentations})';
+  return 'TypeDefinition(id: ${_this.id}, kind: ${_this.kind}, displayName: ${_this.displayName}, qualifiedName: ${_this.qualifiedName}, declarationOwner: ${_this.declarationOwner}, representation: ${_this.representation}, parameters: ${_this.parameters}, parents: ${_this.parents}, defaultPresentationId: ${_this.defaultPresentationId}, namedPresentations: ${_this.namedPresentations}, rolePresentations: ${_this.rolePresentations}, fieldMergePolicies: ${_this.fieldMergePolicies}, initialValue: ${_this.initialValue})';
 }
 
 
@@ -339,11 +624,11 @@ abstract mixin class $TypeDefinitionCopyWith<$Res>  {
   factory $TypeDefinitionCopyWith(TypeDefinition value, $Res Function(TypeDefinition) _then) = _$TypeDefinitionCopyWithImpl;
 @useResult
 $Res call({
- ResolvedTypeRef id, NominalTypeKind kind, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, PresentationId? defaultPresentationId, Map<String, PresentationId> namedPresentations
+ ResolvedTypeRef id, NominalTypeKind kind, String? displayName, String? qualifiedName, String? declarationOwner, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, PresentationId? defaultPresentationId, Map<String, PresentationId> namedPresentations, Map<PresentationRole, PresentationId> rolePresentations, List<FieldMergePolicy> fieldMergePolicies, DataValue? initialValue
 });
 
 
-$ResolvedTypeRefCopyWith<$Res> get id;$TypeExpressionCopyWith<$Res> get representation;$PresentationIdCopyWith<$Res>? get defaultPresentationId;
+$ResolvedTypeRefCopyWith<$Res> get id;$TypeExpressionCopyWith<$Res> get representation;$PresentationIdCopyWith<$Res>? get defaultPresentationId;$DataValueCopyWith<$Res>? get initialValue;
 
 }
 /// @nodoc
@@ -356,16 +641,22 @@ class _$TypeDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of TypeDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? representation = null,Object? parameters = null,Object? parents = null,Object? defaultPresentationId = freezed,Object? namedPresentations = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? displayName = freezed,Object? qualifiedName = freezed,Object? declarationOwner = freezed,Object? representation = null,Object? parameters = null,Object? parents = null,Object? defaultPresentationId = freezed,Object? namedPresentations = null,Object? rolePresentations = null,Object? fieldMergePolicies = null,Object? initialValue = freezed,}) {
   return _then(TypeDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as ResolvedTypeRef,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
-as NominalTypeKind,representation: null == representation ? _self.representation : representation // ignore: cast_nullable_to_non_nullable
+as NominalTypeKind,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String?,qualifiedName: freezed == qualifiedName ? _self.qualifiedName : qualifiedName // ignore: cast_nullable_to_non_nullable
+as String?,declarationOwner: freezed == declarationOwner ? _self.declarationOwner : declarationOwner // ignore: cast_nullable_to_non_nullable
+as String?,representation: null == representation ? _self.representation : representation // ignore: cast_nullable_to_non_nullable
 as TypeExpression,parameters: null == parameters ? _self.parameters : parameters // ignore: cast_nullable_to_non_nullable
 as List<TypeParameter>,parents: null == parents ? _self.parents : parents // ignore: cast_nullable_to_non_nullable
 as List<ResolvedTypeRef>,defaultPresentationId: freezed == defaultPresentationId ? _self.defaultPresentationId : defaultPresentationId // ignore: cast_nullable_to_non_nullable
 as PresentationId?,namedPresentations: null == namedPresentations ? _self.namedPresentations : namedPresentations // ignore: cast_nullable_to_non_nullable
-as Map<String, PresentationId>,
+as Map<String, PresentationId>,rolePresentations: null == rolePresentations ? _self.rolePresentations : rolePresentations // ignore: cast_nullable_to_non_nullable
+as Map<PresentationRole, PresentationId>,fieldMergePolicies: null == fieldMergePolicies ? _self.fieldMergePolicies : fieldMergePolicies // ignore: cast_nullable_to_non_nullable
+as List<FieldMergePolicy>,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
+as DataValue?,
   ));
 }
 /// Create a copy of TypeDefinition
@@ -373,7 +664,7 @@ as Map<String, PresentationId>,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get id {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -382,7 +673,7 @@ $ResolvedTypeRefCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
   });
@@ -397,6 +688,18 @@ $PresentationIdCopyWith<$Res>? get defaultPresentationId {
 
   return $PresentationIdCopyWith<$Res>(_self.defaultPresentationId!, (value) {
     return _then(_self.copyWith(defaultPresentationId: value));
+  });
+}/// Create a copy of TypeDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataValueCopyWith<$Res>? get initialValue {
+    if (_self.initialValue == null) {
+    return null;
+  }
+
+  return $DataValueCopyWith<$Res>(_self.initialValue!, (value) {
+    return _then(_self.copyWith(initialValue: value));
   });
 }
 }
@@ -480,10 +783,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  PresentationId? defaultPresentationId,  Map<String, PresentationId> namedPresentations)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  PresentationId? defaultPresentationId,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, PresentationId> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TypeDefinition() when $default != null:
-return $default(_that.id,_that.kind,_that.representation,_that.parameters,_that.parents,_that.defaultPresentationId,_that.namedPresentations);case _:
+return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.declarationOwner,_that.representation,_that.parameters,_that.parents,_that.defaultPresentationId,_that.namedPresentations,_that.rolePresentations,_that.fieldMergePolicies,_that.initialValue);case _:
   return orElse();
 
 }
@@ -501,10 +804,10 @@ return $default(_that.id,_that.kind,_that.representation,_that.parameters,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  PresentationId? defaultPresentationId,  Map<String, PresentationId> namedPresentations)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  PresentationId? defaultPresentationId,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, PresentationId> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)  $default,) {final _that = this;
 switch (_that) {
 case _TypeDefinition():
-return $default(_that.id,_that.kind,_that.representation,_that.parameters,_that.parents,_that.defaultPresentationId,_that.namedPresentations);case _:
+return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.declarationOwner,_that.representation,_that.parameters,_that.parents,_that.defaultPresentationId,_that.namedPresentations,_that.rolePresentations,_that.fieldMergePolicies,_that.initialValue);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -521,10 +824,10 @@ return $default(_that.id,_that.kind,_that.representation,_that.parameters,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResolvedTypeRef id,  NominalTypeKind kind,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  PresentationId? defaultPresentationId,  Map<String, PresentationId> namedPresentations)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  PresentationId? defaultPresentationId,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, PresentationId> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)?  $default,) {final _that = this;
 switch (_that) {
 case _TypeDefinition() when $default != null:
-return $default(_that.id,_that.kind,_that.representation,_that.parameters,_that.parents,_that.defaultPresentationId,_that.namedPresentations);case _:
+return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.declarationOwner,_that.representation,_that.parameters,_that.parents,_that.defaultPresentationId,_that.namedPresentations,_that.rolePresentations,_that.fieldMergePolicies,_that.initialValue);case _:
   return null;
 
 }
@@ -536,11 +839,14 @@ return $default(_that.id,_that.kind,_that.representation,_that.parameters,_that.
 
 
 class _TypeDefinition implements TypeDefinition {
-  const _TypeDefinition({required this.id, required this.kind, this.representation = const AnyType(),  List<TypeParameter> parameters = const [],  List<ResolvedTypeRef> parents = const [], this.defaultPresentationId,  Map<String, PresentationId> namedPresentations = const {}}): _parameters = parameters,_parents = parents,_namedPresentations = namedPresentations;
-  
+  const _TypeDefinition({required this.id, required this.kind, this.displayName, this.qualifiedName, this.declarationOwner, this.representation = const AnyType(),  List<TypeParameter> parameters = const [],  List<ResolvedTypeRef> parents = const [], this.defaultPresentationId,  Map<String, PresentationId> namedPresentations = const {},  Map<PresentationRole, PresentationId> rolePresentations = const {},  List<FieldMergePolicy> fieldMergePolicies = const [], this.initialValue}): _parameters = parameters,_parents = parents,_namedPresentations = namedPresentations,_rolePresentations = rolePresentations,_fieldMergePolicies = fieldMergePolicies;
+
 
 @override final  ResolvedTypeRef id;
 @override final  NominalTypeKind kind;
+@override final  String? displayName;
+@override final  String? qualifiedName;
+@override final  String? declarationOwner;
 @override@JsonKey() final  TypeExpression representation;
  final  List<TypeParameter> _parameters;
 @override@JsonKey() List<TypeParameter> get parameters {
@@ -564,6 +870,21 @@ class _TypeDefinition implements TypeDefinition {
   return EqualUnmodifiableMapView(_namedPresentations);
 }
 
+ final  Map<PresentationRole, PresentationId> _rolePresentations;
+@override@JsonKey() Map<PresentationRole, PresentationId> get rolePresentations {
+  if (_rolePresentations is EqualUnmodifiableMapView) return _rolePresentations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_rolePresentations);
+}
+
+ final  List<FieldMergePolicy> _fieldMergePolicies;
+@override@JsonKey() List<FieldMergePolicy> get fieldMergePolicies {
+  if (_fieldMergePolicies is EqualUnmodifiableListView) return _fieldMergePolicies;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_fieldMergePolicies);
+}
+
+@override final  DataValue? initialValue;
 
 /// Create a copy of TypeDefinition
 /// with the given fields replaced by the non-null parameter values.
@@ -575,18 +896,18 @@ _$TypeDefinitionCopyWith<_TypeDefinition> get copyWith => __$TypeDefinitionCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.representation, representation) || other.representation == representation)&&const DeepCollectionEquality().equals(other.parameters, _parameters)&&const DeepCollectionEquality().equals(other.parents, _parents)&&(identical(other.defaultPresentationId, defaultPresentationId) || other.defaultPresentationId == defaultPresentationId)&&const DeepCollectionEquality().equals(other.namedPresentations, _namedPresentations));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.qualifiedName, qualifiedName) || other.qualifiedName == qualifiedName)&&(identical(other.declarationOwner, declarationOwner) || other.declarationOwner == declarationOwner)&&(identical(other.representation, representation) || other.representation == representation)&&const DeepCollectionEquality().equals(other.parameters, _parameters)&&const DeepCollectionEquality().equals(other.parents, _parents)&&(identical(other.defaultPresentationId, defaultPresentationId) || other.defaultPresentationId == defaultPresentationId)&&const DeepCollectionEquality().equals(other.namedPresentations, _namedPresentations)&&const DeepCollectionEquality().equals(other.rolePresentations, _rolePresentations)&&const DeepCollectionEquality().equals(other.fieldMergePolicies, _fieldMergePolicies)&&(identical(other.initialValue, initialValue) || other.initialValue == initialValue));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,kind,representation,const DeepCollectionEquality().hash(_parameters),const DeepCollectionEquality().hash(_parents),defaultPresentationId,const DeepCollectionEquality().hash(_namedPresentations));
+    return Object.hash(runtimeType,id,kind,displayName,qualifiedName,declarationOwner,representation,const DeepCollectionEquality().hash(_parameters),const DeepCollectionEquality().hash(_parents),defaultPresentationId,const DeepCollectionEquality().hash(_namedPresentations),const DeepCollectionEquality().hash(_rolePresentations),const DeepCollectionEquality().hash(_fieldMergePolicies),initialValue);
 }
 
 @override
 String toString() {
-    return 'TypeDefinition(id: $id, kind: $kind, representation: $representation, parameters: $parameters, parents: $parents, defaultPresentationId: $defaultPresentationId, namedPresentations: $namedPresentations)';
+    return 'TypeDefinition(id: $id, kind: $kind, displayName: $displayName, qualifiedName: $qualifiedName, declarationOwner: $declarationOwner, representation: $representation, parameters: $parameters, parents: $parents, defaultPresentationId: $defaultPresentationId, namedPresentations: $namedPresentations, rolePresentations: $rolePresentations, fieldMergePolicies: $fieldMergePolicies, initialValue: $initialValue)';
 }
 
 
@@ -597,11 +918,11 @@ abstract mixin class _$TypeDefinitionCopyWith<$Res> implements $TypeDefinitionCo
   factory _$TypeDefinitionCopyWith(_TypeDefinition value, $Res Function(_TypeDefinition) _then) = __$TypeDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- ResolvedTypeRef id, NominalTypeKind kind, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, PresentationId? defaultPresentationId, Map<String, PresentationId> namedPresentations
+ ResolvedTypeRef id, NominalTypeKind kind, String? displayName, String? qualifiedName, String? declarationOwner, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, PresentationId? defaultPresentationId, Map<String, PresentationId> namedPresentations, Map<PresentationRole, PresentationId> rolePresentations, List<FieldMergePolicy> fieldMergePolicies, DataValue? initialValue
 });
 
 
-@override $ResolvedTypeRefCopyWith<$Res> get id;@override $TypeExpressionCopyWith<$Res> get representation;@override $PresentationIdCopyWith<$Res>? get defaultPresentationId;
+@override $ResolvedTypeRefCopyWith<$Res> get id;@override $TypeExpressionCopyWith<$Res> get representation;@override $PresentationIdCopyWith<$Res>? get defaultPresentationId;@override $DataValueCopyWith<$Res>? get initialValue;
 
 }
 /// @nodoc
@@ -614,16 +935,22 @@ class __$TypeDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of TypeDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? kind = null,Object? representation = null,Object? parameters = null,Object? parents = null,Object? defaultPresentationId = freezed,Object? namedPresentations = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? kind = null,Object? displayName = freezed,Object? qualifiedName = freezed,Object? declarationOwner = freezed,Object? representation = null,Object? parameters = null,Object? parents = null,Object? defaultPresentationId = freezed,Object? namedPresentations = null,Object? rolePresentations = null,Object? fieldMergePolicies = null,Object? initialValue = freezed,}) {
   return _then(_TypeDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as ResolvedTypeRef,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
-as NominalTypeKind,representation: null == representation ? _self.representation : representation // ignore: cast_nullable_to_non_nullable
+as NominalTypeKind,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String?,qualifiedName: freezed == qualifiedName ? _self.qualifiedName : qualifiedName // ignore: cast_nullable_to_non_nullable
+as String?,declarationOwner: freezed == declarationOwner ? _self.declarationOwner : declarationOwner // ignore: cast_nullable_to_non_nullable
+as String?,representation: null == representation ? _self.representation : representation // ignore: cast_nullable_to_non_nullable
 as TypeExpression,parameters: null == parameters ? _self._parameters : parameters // ignore: cast_nullable_to_non_nullable
 as List<TypeParameter>,parents: null == parents ? _self._parents : parents // ignore: cast_nullable_to_non_nullable
 as List<ResolvedTypeRef>,defaultPresentationId: freezed == defaultPresentationId ? _self.defaultPresentationId : defaultPresentationId // ignore: cast_nullable_to_non_nullable
 as PresentationId?,namedPresentations: null == namedPresentations ? _self._namedPresentations : namedPresentations // ignore: cast_nullable_to_non_nullable
-as Map<String, PresentationId>,
+as Map<String, PresentationId>,rolePresentations: null == rolePresentations ? _self._rolePresentations : rolePresentations // ignore: cast_nullable_to_non_nullable
+as Map<PresentationRole, PresentationId>,fieldMergePolicies: null == fieldMergePolicies ? _self._fieldMergePolicies : fieldMergePolicies // ignore: cast_nullable_to_non_nullable
+as List<FieldMergePolicy>,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
+as DataValue?,
   ));
 }
 
@@ -632,7 +959,7 @@ as Map<String, PresentationId>,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get id {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -641,7 +968,7 @@ $ResolvedTypeRefCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
   });
@@ -656,6 +983,18 @@ $PresentationIdCopyWith<$Res>? get defaultPresentationId {
 
   return $PresentationIdCopyWith<$Res>(_self.defaultPresentationId!, (value) {
     return _then(_self.copyWith(defaultPresentationId: value));
+  });
+}/// Create a copy of TypeDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataValueCopyWith<$Res>? get initialValue {
+    if (_self.initialValue == null) {
+    return null;
+  }
+
+  return $DataValueCopyWith<$Res>(_self.initialValue!, (value) {
+    return _then(_self.copyWith(initialValue: value));
   });
 }
 }
@@ -861,7 +1200,7 @@ return $default(_that.definitions);case _:
 
 class _TypeCatalog implements TypeCatalog {
   const _TypeCatalog( List<TypeDefinition> definitions): _definitions = definitions;
-  
+
 
  final  List<TypeDefinition> _definitions;
 @override List<TypeDefinition> get definitions {
@@ -933,7 +1272,7 @@ as List<TypeDefinition>,
 /// @nodoc
 mixin _$ResolvedType {
 
- ResolvedTypeRef get reference; NominalTypeKind get kind; TypeExpression get representation; Set<ResolvedTypeRef> get ancestors; Set<ResolvedTypeRef> get directParents;
+ ResolvedTypeRef get reference; NominalTypeKind get kind; TypeExpression get representation; Set<ResolvedTypeRef> get ancestors; Set<ResolvedTypeRef> get directParents; DataValue? get initialValue;
 /// Create a copy of ResolvedType
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -945,20 +1284,20 @@ $ResolvedTypeCopyWith<ResolvedType> get copyWith => _$ResolvedTypeCopyWithImpl<R
 @override
 bool operator ==(Object other) {
   final _this = this as ResolvedType;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResolvedType&&(identical(other.reference, _this.reference) || other.reference == _this.reference)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.representation, _this.representation) || other.representation == _this.representation)&&const DeepCollectionEquality().equals(other.ancestors, _this.ancestors)&&const DeepCollectionEquality().equals(other.directParents, _this.directParents));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResolvedType&&(identical(other.reference, _this.reference) || other.reference == _this.reference)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.representation, _this.representation) || other.representation == _this.representation)&&const DeepCollectionEquality().equals(other.ancestors, _this.ancestors)&&const DeepCollectionEquality().equals(other.directParents, _this.directParents)&&(identical(other.initialValue, _this.initialValue) || other.initialValue == _this.initialValue));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ResolvedType;
-  return Object.hash(runtimeType,_this.reference,_this.kind,_this.representation,const DeepCollectionEquality().hash(_this.ancestors),const DeepCollectionEquality().hash(_this.directParents));
+  return Object.hash(runtimeType,_this.reference,_this.kind,_this.representation,const DeepCollectionEquality().hash(_this.ancestors),const DeepCollectionEquality().hash(_this.directParents),_this.initialValue);
 }
 
 @override
 String toString() {
   final _this = this as ResolvedType;
-  return 'ResolvedType(reference: ${_this.reference}, kind: ${_this.kind}, representation: ${_this.representation}, ancestors: ${_this.ancestors}, directParents: ${_this.directParents})';
+  return 'ResolvedType(reference: ${_this.reference}, kind: ${_this.kind}, representation: ${_this.representation}, ancestors: ${_this.ancestors}, directParents: ${_this.directParents}, initialValue: ${_this.initialValue})';
 }
 
 
@@ -969,11 +1308,11 @@ abstract mixin class $ResolvedTypeCopyWith<$Res>  {
   factory $ResolvedTypeCopyWith(ResolvedType value, $Res Function(ResolvedType) _then) = _$ResolvedTypeCopyWithImpl;
 @useResult
 $Res call({
- ResolvedTypeRef reference, NominalTypeKind kind, TypeExpression representation, Set<ResolvedTypeRef> ancestors, Set<ResolvedTypeRef> directParents
+ ResolvedTypeRef reference, NominalTypeKind kind, TypeExpression representation, Set<ResolvedTypeRef> ancestors, Set<ResolvedTypeRef> directParents, DataValue? initialValue
 });
 
 
-$ResolvedTypeRefCopyWith<$Res> get reference;$TypeExpressionCopyWith<$Res> get representation;
+$ResolvedTypeRefCopyWith<$Res> get reference;$TypeExpressionCopyWith<$Res> get representation;$DataValueCopyWith<$Res>? get initialValue;
 
 }
 /// @nodoc
@@ -986,14 +1325,15 @@ class _$ResolvedTypeCopyWithImpl<$Res>
 
 /// Create a copy of ResolvedType
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? reference = null,Object? kind = null,Object? representation = null,Object? ancestors = null,Object? directParents = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? reference = null,Object? kind = null,Object? representation = null,Object? ancestors = null,Object? directParents = null,Object? initialValue = freezed,}) {
   return _then(ResolvedType(
 reference: null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
 as ResolvedTypeRef,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as NominalTypeKind,representation: null == representation ? _self.representation : representation // ignore: cast_nullable_to_non_nullable
 as TypeExpression,ancestors: null == ancestors ? _self.ancestors : ancestors // ignore: cast_nullable_to_non_nullable
 as Set<ResolvedTypeRef>,directParents: null == directParents ? _self.directParents : directParents // ignore: cast_nullable_to_non_nullable
-as Set<ResolvedTypeRef>,
+as Set<ResolvedTypeRef>,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
+as DataValue?,
   ));
 }
 /// Create a copy of ResolvedType
@@ -1001,7 +1341,7 @@ as Set<ResolvedTypeRef>,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get reference {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1010,9 +1350,21 @@ $ResolvedTypeRefCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
+  });
+}/// Create a copy of ResolvedType
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataValueCopyWith<$Res>? get initialValue {
+    if (_self.initialValue == null) {
+    return null;
+  }
+
+  return $DataValueCopyWith<$Res>(_self.initialValue!, (value) {
+    return _then(_self.copyWith(initialValue: value));
   });
 }
 }
@@ -1096,10 +1448,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResolvedTypeRef reference,  NominalTypeKind kind,  TypeExpression representation,  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResolvedTypeRef reference,  NominalTypeKind kind,  TypeExpression representation,  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents,  DataValue? initialValue)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ResolvedType() when $default != null:
-return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,_that.directParents);case _:
+return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,_that.directParents,_that.initialValue);case _:
   return orElse();
 
 }
@@ -1117,10 +1469,10 @@ return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResolvedTypeRef reference,  NominalTypeKind kind,  TypeExpression representation,  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResolvedTypeRef reference,  NominalTypeKind kind,  TypeExpression representation,  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents,  DataValue? initialValue)  $default,) {final _that = this;
 switch (_that) {
 case _ResolvedType():
-return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,_that.directParents);case _:
+return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,_that.directParents,_that.initialValue);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1137,10 +1489,10 @@ return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResolvedTypeRef reference,  NominalTypeKind kind,  TypeExpression representation,  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResolvedTypeRef reference,  NominalTypeKind kind,  TypeExpression representation,  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents,  DataValue? initialValue)?  $default,) {final _that = this;
 switch (_that) {
 case _ResolvedType() when $default != null:
-return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,_that.directParents);case _:
+return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,_that.directParents,_that.initialValue);case _:
   return null;
 
 }
@@ -1152,8 +1504,8 @@ return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,
 
 
 class _ResolvedType extends ResolvedType {
-  const _ResolvedType({required this.reference, required this.kind, required this.representation, required  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents = const {}}): _ancestors = ancestors,_directParents = directParents,super._();
-  
+  const _ResolvedType({required this.reference, required this.kind, required this.representation, required  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents = const {}, this.initialValue}): _ancestors = ancestors,_directParents = directParents,super._();
+
 
 @override final  ResolvedTypeRef reference;
 @override final  NominalTypeKind kind;
@@ -1172,6 +1524,7 @@ class _ResolvedType extends ResolvedType {
   return EqualUnmodifiableSetView(_directParents);
 }
 
+@override final  DataValue? initialValue;
 
 /// Create a copy of ResolvedType
 /// with the given fields replaced by the non-null parameter values.
@@ -1183,18 +1536,18 @@ _$ResolvedTypeCopyWith<_ResolvedType> get copyWith => __$ResolvedTypeCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResolvedType&&(identical(other.reference, reference) || other.reference == reference)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.representation, representation) || other.representation == representation)&&const DeepCollectionEquality().equals(other.ancestors, _ancestors)&&const DeepCollectionEquality().equals(other.directParents, _directParents));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResolvedType&&(identical(other.reference, reference) || other.reference == reference)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.representation, representation) || other.representation == representation)&&const DeepCollectionEquality().equals(other.ancestors, _ancestors)&&const DeepCollectionEquality().equals(other.directParents, _directParents)&&(identical(other.initialValue, initialValue) || other.initialValue == initialValue));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,reference,kind,representation,const DeepCollectionEquality().hash(_ancestors),const DeepCollectionEquality().hash(_directParents));
+    return Object.hash(runtimeType,reference,kind,representation,const DeepCollectionEquality().hash(_ancestors),const DeepCollectionEquality().hash(_directParents),initialValue);
 }
 
 @override
 String toString() {
-    return 'ResolvedType(reference: $reference, kind: $kind, representation: $representation, ancestors: $ancestors, directParents: $directParents)';
+    return 'ResolvedType(reference: $reference, kind: $kind, representation: $representation, ancestors: $ancestors, directParents: $directParents, initialValue: $initialValue)';
 }
 
 
@@ -1205,11 +1558,11 @@ abstract mixin class _$ResolvedTypeCopyWith<$Res> implements $ResolvedTypeCopyWi
   factory _$ResolvedTypeCopyWith(_ResolvedType value, $Res Function(_ResolvedType) _then) = __$ResolvedTypeCopyWithImpl;
 @override @useResult
 $Res call({
- ResolvedTypeRef reference, NominalTypeKind kind, TypeExpression representation, Set<ResolvedTypeRef> ancestors, Set<ResolvedTypeRef> directParents
+ ResolvedTypeRef reference, NominalTypeKind kind, TypeExpression representation, Set<ResolvedTypeRef> ancestors, Set<ResolvedTypeRef> directParents, DataValue? initialValue
 });
 
 
-@override $ResolvedTypeRefCopyWith<$Res> get reference;@override $TypeExpressionCopyWith<$Res> get representation;
+@override $ResolvedTypeRefCopyWith<$Res> get reference;@override $TypeExpressionCopyWith<$Res> get representation;@override $DataValueCopyWith<$Res>? get initialValue;
 
 }
 /// @nodoc
@@ -1222,14 +1575,15 @@ class __$ResolvedTypeCopyWithImpl<$Res>
 
 /// Create a copy of ResolvedType
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? reference = null,Object? kind = null,Object? representation = null,Object? ancestors = null,Object? directParents = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? reference = null,Object? kind = null,Object? representation = null,Object? ancestors = null,Object? directParents = null,Object? initialValue = freezed,}) {
   return _then(_ResolvedType(
 reference: null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
 as ResolvedTypeRef,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as NominalTypeKind,representation: null == representation ? _self.representation : representation // ignore: cast_nullable_to_non_nullable
 as TypeExpression,ancestors: null == ancestors ? _self._ancestors : ancestors // ignore: cast_nullable_to_non_nullable
 as Set<ResolvedTypeRef>,directParents: null == directParents ? _self._directParents : directParents // ignore: cast_nullable_to_non_nullable
-as Set<ResolvedTypeRef>,
+as Set<ResolvedTypeRef>,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
+as DataValue?,
   ));
 }
 
@@ -1238,7 +1592,7 @@ as Set<ResolvedTypeRef>,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get reference {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1247,9 +1601,21 @@ $ResolvedTypeRefCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
+  });
+}/// Create a copy of ResolvedType
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$DataValueCopyWith<$Res>? get initialValue {
+    if (_self.initialValue == null) {
+    return null;
+  }
+
+  return $DataValueCopyWith<$Res>(_self.initialValue!, (value) {
+    return _then(_self.copyWith(initialValue: value));
   });
 }
 }

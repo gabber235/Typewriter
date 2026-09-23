@@ -10,7 +10,7 @@ part of 'tags.dart';
 // ignore_for_file: type=lint, type=warning
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as
@@ -21,7 +21,7 @@ final canonicalTagsProvider = CanonicalTagsProvider._();
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as
@@ -30,7 +30,7 @@ final class CanonicalTagsProvider
     extends $AsyncNotifierProvider<CanonicalTags, List<Tag>> {
   /// Owns the current Realm tag projection and its authoring mutations.
   ///
-  /// The provider waits for the library scope before reading the session, then
+  /// The provider waits for its graph selection before reading the session, then
   /// follows session revisions through [ref.listen]. Creation and deletion use
   /// direct guarded operations. Editing is delegated to the shared editor owner
   /// so drafts, validation, and response reconciliation follow the same path as
@@ -54,11 +54,11 @@ final class CanonicalTagsProvider
   CanonicalTags create() => CanonicalTags();
 }
 
-String _$canonicalTagsHash() => r'3ada2203bc148a9e8d4228f1b3a2250451b5069b';
+String _$canonicalTagsHash() => r'afbf68b1d1404cdfe94344e72758df8660f082d1';
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
-/// The provider waits for the library scope before reading the session, then
+/// The provider waits for its graph selection before reading the session, then
 /// follows session revisions through [ref.listen]. Creation and deletion use
 /// direct guarded operations. Editing is delegated to the shared editor owner
 /// so drafts, validation, and response reconciliation follow the same path as
@@ -95,7 +95,7 @@ final class CanonicalTagProvider
   /// Reads one tag from the canonical Realm projection.
   CanonicalTagProvider._({
     required CanonicalTagFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'canonicalTagProvider',
@@ -121,7 +121,7 @@ final class CanonicalTagProvider
 
   @override
   FutureOr<Tag?> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
+    final argument = this.argument as skir.ResourceId;
     return canonicalTag(ref, argument);
   }
 
@@ -136,12 +136,12 @@ final class CanonicalTagProvider
   }
 }
 
-String _$canonicalTagHash() => r'251f8d7c86935b1b7a105035ae211efe5aa7dea3';
+String _$canonicalTagHash() => r'fd7b645707b870e3bdcb847e04da6071ce38e867';
 
 /// Reads one tag from the canonical Realm projection.
 
 final class CanonicalTagFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Tag?>, skir.RecordId> {
+    with $FunctionalFamilyOverride<FutureOr<Tag?>, skir.ResourceId> {
   CanonicalTagFamily._()
     : super(
         retry: null,
@@ -153,7 +153,7 @@ final class CanonicalTagFamily extends $Family
 
   /// Reads one tag from the canonical Realm projection.
 
-  CanonicalTagProvider call(skir.RecordId tagId) =>
+  CanonicalTagProvider call(skir.ResourceId tagId) =>
       CanonicalTagProvider._(argument: tagId, from: this);
 
   @override
@@ -242,7 +242,7 @@ final class ProjectedTagProvider
   /// Projects one tag for graph nodes that rebuild independently.
   ProjectedTagProvider._({
     required ProjectedTagFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'projectedTagProvider',
@@ -268,7 +268,7 @@ final class ProjectedTagProvider
 
   @override
   AsyncValue<Tag?> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
+    final argument = this.argument as skir.ResourceId;
     return projectedTag(ref, argument);
   }
 
@@ -291,12 +291,12 @@ final class ProjectedTagProvider
   }
 }
 
-String _$projectedTagHash() => r'ca2bfc58e82b7ac33d57319167c3f17d3d6ac200';
+String _$projectedTagHash() => r'49e6666eff5dcd958fddcc2d1107dcd42d4c7a21';
 
 /// Projects one tag for graph nodes that rebuild independently.
 
 final class ProjectedTagFamily extends $Family
-    with $FunctionalFamilyOverride<AsyncValue<Tag?>, skir.RecordId> {
+    with $FunctionalFamilyOverride<AsyncValue<Tag?>, skir.ResourceId> {
   ProjectedTagFamily._()
     : super(
         retry: null,
@@ -308,7 +308,7 @@ final class ProjectedTagFamily extends $Family
 
   /// Projects one tag for graph nodes that rebuild independently.
 
-  ProjectedTagProvider call(skir.RecordId tagId) =>
+  ProjectedTagProvider call(skir.ResourceId tagId) =>
       ProjectedTagProvider._(argument: tagId, from: this);
 
   @override

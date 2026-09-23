@@ -11,11 +11,15 @@ const elementTypeSearchResultType = SearchResultType(
   label: "Element Type",
 );
 
-/// Lists element definitions that can be added through primary search.
+/// Lists element definitions for contextual Page authoring workflows.
 final class ElementTypeSearchSource implements SearchSource {
-  ElementTypeSearchSource({required this.definitions});
+  ElementTypeSearchSource({
+    required this.definitions,
+    this.querySelectors = const [],
+  });
 
   final ValueListenable<AsyncValue<List<ElementDefinition>>> definitions;
+  final List<QuerySelectorDefinition> querySelectors;
 
   final _snapshots = BehaviorSubject<SearchSourceSnapshot>.seeded(
     SearchSourceSnapshot.loading(),
@@ -28,11 +32,7 @@ final class ElementTypeSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  List<QuerySelectorDefinition> get selectors => const [
-    authoringBookSearchSelector,
-    authoringPageSearchSelector,
-    authoringTypeSearchSelector,
-  ];
+  List<QuerySelectorDefinition> get selectors => querySelectors;
 
   @override
   void initialize(SearchQueryContext context) {

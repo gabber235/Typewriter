@@ -37,8 +37,15 @@ void registerConnectionMarkerScenarios() {
                 element: ColumnElement(
                   spacing: 48,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomCenter),
-                    _anchor("target", PresentationAnchorAlignment.topCenter),
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomCenter,
+                      ),
+                    ),
+                    PresentationAxisChild.fixed(
+                      _anchor("target", PresentationAnchorAlignment.topCenter),
+                    ),
                   ],
                 ),
               ),
@@ -99,8 +106,15 @@ void registerConnectionMarkerScenarios() {
                 element: ColumnElement(
                   spacing: 48,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomStart),
-                    _anchor("target", PresentationAnchorAlignment.topEnd),
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomStart,
+                      ),
+                    ),
+                    PresentationAxisChild.fixed(
+                      _anchor("target", PresentationAnchorAlignment.topEnd),
+                    ),
                   ],
                 ),
               ),
@@ -150,8 +164,15 @@ void registerConnectionMarkerScenarios() {
                 element: ColumnElement(
                   spacing: 48,
                   children: [
-                    _anchor("source", PresentationAnchorAlignment.bottomCenter),
-                    _anchor("target", PresentationAnchorAlignment.topCenter),
+                    PresentationAxisChild.fixed(
+                      _anchor(
+                        "source",
+                        PresentationAnchorAlignment.bottomCenter,
+                      ),
+                    ),
+                    PresentationAxisChild.fixed(
+                      _anchor("target", PresentationAnchorAlignment.topCenter),
+                    ),
                   ],
                 ),
               ),

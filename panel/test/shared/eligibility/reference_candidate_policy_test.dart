@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -10,8 +12,8 @@ void main() {
     owner: null,
     path: DataPath.root.field("target"),
     transition: transition,
-    currentSelection: {recordId("tag:current")},
-    candidate: ReferenceCandidate(id: recordId("tag:candidate")),
+    currentSelection: {skir.ResourceId(value: "current")},
+    candidate: ReferenceCandidate(id: skir.ResourceId(value: "candidate")),
   );
 
   test("remove bypasses a missing policy", () {

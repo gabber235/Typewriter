@@ -1,10 +1,10 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.engine.ActivatedCompiledContent
+import com.typewritermc.engine.CompiledArtifactActivation
+import com.typewritermc.engine.CompiledArtifactPointer
 import com.typewritermc.engine.CompiledBlobPointer
-import com.typewritermc.engine.CompiledContentActivation
-import com.typewritermc.engine.CompiledShardPointer
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.LoadedCompiledContent
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.RealmServiceAddress
 import com.typewritermc.loader.api.realmEventAddress
@@ -30,9 +30,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import skirout.library.v1.compiled_content.WatchCompiledContent
-import skirout.library.v1.compiled_content.WatchCompiledContentRequest
-import skirout.library.v1.compiled_content.WatchCompiledContentResponse
+import skirout.editor.v1.compiled_content.WatchCompiledContent
+import skirout.editor.v1.compiled_content.WatchCompiledContentRequest
+import skirout.editor.v1.compiled_content.WatchCompiledContentResponse
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -46,7 +46,7 @@ interface EngineContentDelivery {
     val health: StateFlow<EngineContentDeliveryHealth>
 
     /** Starts one delivery worker that invokes [apply] for each accepted activation. */
-    fun start(apply: suspend (ActivatedCompiledContent) -> Unit)
+    fun start(apply: suspend (LoadedCompiledContent) -> Unit)
 
     /** Stops delivery and waits until no callback can still use activation resources. */
     suspend fun stop()
@@ -88,12 +88,12 @@ class MessagingEngineContentDelivery(
     private val realmId: String,
     private val scope: CoroutineScope,
 ) : EngineContentDelivery {
-    private val source = BlobCompiledContentSource(host.sharedArtifacts)
+    private val source = BlobCompiledArtifactSource(host.sharedArtifacts)
     private val mutableHealth = MutableStateFlow<EngineContentDeliveryHealth>(EngineContentDeliveryHealth.Idle)
     override val health: StateFlow<EngineContentDeliveryHealth> = mutableHealth
     private var worker: Job? = null
 
-    override fun start(apply: suspend (ActivatedCompiledContent) -> Unit) {
+    override fun start(apply: suspend (LoadedCompiledContent) -> Unit) {
         check(worker == null) { "Compiled content delivery is already active." }
         worker =
             scope.launch {
@@ -197,12 +197,12 @@ private val compiledContentResponseClassifier =
         ResponseClassification(outcome, ResponseVariant.of(response.kind.name.lowercase()))
     }
 
-private fun skirout.library.v1.compiled_content.CompiledContentActivation.toDomain() =
-    CompiledContentActivation(
+private fun skirout.editor.v1.compiled_content.CompiledContentActivation.toDomain() =
+    CompiledArtifactActivation(
         activationRevision = activationRevision,
         manifestDigest = ContentDigest(manifestDigest),
         manifest = manifest.toDomain(),
-        shards = shards.map { CompiledShardPointer(ContentDigest(it.shardDigest), it.blob.toDomain()) },
+        artifacts = artifacts.map { CompiledArtifactPointer(ContentDigest(it.semanticDigest), it.blob.toDomain()) },
     )
 
-private fun skirout.library.v1.compiled_content.CompiledBlobPointer.toDomain() = CompiledBlobPointer(ContentDigest(digest), size)
+private fun skirout.editor.v1.compiled_content.CompiledBlobPointer.toDomain() = CompiledBlobPointer(ContentDigest(digest), size)

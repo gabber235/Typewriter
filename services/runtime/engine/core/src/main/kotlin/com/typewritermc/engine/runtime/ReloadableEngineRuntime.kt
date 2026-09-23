@@ -2,7 +2,7 @@ package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
-import com.typewritermc.engine.ActivatedCompiledContent
+import com.typewritermc.engine.LoadedCompiledContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
@@ -27,7 +27,7 @@ class ReloadableEngineRuntime(
     override val health: StateFlow<RuntimeHealth> = mutableHealth
     private var deployment: DiscoveryDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
-    private var lastContent: ActivatedCompiledContent? = null
+    private var lastContent: LoadedCompiledContent? = null
 
     override suspend fun activate() {
         val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
@@ -54,16 +54,16 @@ class ReloadableEngineRuntime(
      * The remembered revision advances after the gateway succeeds. Missing gateways return Unsupported; older or
      * equal revisions return the current activation without reapplying.
      */
-    suspend fun applyContent(content: ActivatedCompiledContent): ContentApplicationResult {
+    suspend fun applyContent(content: LoadedCompiledContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
         val current = lastContent
         if (current != null && content.activationRevision <= current.activationRevision) {
-            return ContentApplicationResult.Ignored(current.activationRevision, current.content.manifest.digest)
+            return ContentApplicationResult.Ignored(current.activationRevision, current.manifest.digest)
         }
         val gateway = contentGateway ?: return ContentApplicationResult.Unsupported
         gateway.apply(content)
         lastContent = content
-        return ContentApplicationResult.Applied(content.activationRevision, content.content.manifest.digest)
+        return ContentApplicationResult.Applied(content.activationRevision, content.manifest.digest)
     }
 
     override suspend fun quiesce() {

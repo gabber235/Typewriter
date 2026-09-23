@@ -8,12 +8,12 @@ import "package:widgetbook_workspace/stories/features/organizations/features/rea
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_story_catalog.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_story_fixtures.dart";
 
-@widgetbook.UseCase(name: "Book result", type: AuthoringBookSearchResultItem)
+@widgetbook.UseCase(name: "Book result", type: AuthoringSearchResultItem)
 Widget authoringBookSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringBookSearchResultItem(
-        book: fixtures.mainQuest,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.mainQuest,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -22,12 +22,12 @@ Widget authoringBookSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Tag result", type: AuthoringTagSearchResultItem)
+@widgetbook.UseCase(name: "Tag result", type: AuthoringSearchResultItem)
 Widget authoringTagSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringTagSearchResultItem(
-        tag: fixtures.mainQuestTag,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.mainQuestTag,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -36,12 +36,12 @@ Widget authoringTagSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Page result", type: AuthoringPageSearchResultItem)
+@widgetbook.UseCase(name: "Page result", type: AuthoringSearchResultItem)
 Widget authoringPageSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringPageSearchResultItem(
-        page: fixtures.meetTheMayor,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.meetTheMayor,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -50,15 +50,12 @@ Widget authoringPageSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(
-  name: "Element result",
-  type: AuthoringElementSearchResultItem,
-)
+@widgetbook.UseCase(name: "Element result", type: AuthoringSearchResultItem)
 Widget authoringElementSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringElementSearchResultItem(
-        element: fixtures.mayorGreeting,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.mayorGreeting,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -88,7 +85,7 @@ Widget _authoringSearchResultStory(
   };
   final fixtures = AuthoringSearchStoryFixtures(
     elementType: definition.typeId.uuid,
-    pageKind: pageDefinition.kind.toSkir(),
+    pageType: pageDefinition.type,
   );
   final state = _ResultStoryState(
     selected: context.knobs.boolean(label: "Selected"),
@@ -136,7 +133,7 @@ Widget authoringSearchResultGalleryStory() {
   };
   final fixtures = AuthoringSearchStoryFixtures(
     elementType: definition.typeId.uuid,
-    pageKind: pageDefinition.kind.toSkir(),
+    pageType: pageDefinition.type,
   );
 
   return FakeApp(
@@ -157,32 +154,32 @@ Widget authoringSearchResultGalleryStory() {
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          AuthoringBookSearchResultItem(
-            book: fixtures.mainQuest,
+          AuthoringSearchResultItem(
+            payload: fixtures.mainQuest,
             selected: false,
             focused: true,
             loading: false,
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringTagSearchResultItem(
-            tag: fixtures.mainQuestTag,
+          AuthoringSearchResultItem(
+            payload: fixtures.mainQuestTag,
             selected: false,
             focused: false,
             loading: false,
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringPageSearchResultItem(
-            page: fixtures.meetTheMayor,
+          AuthoringSearchResultItem(
+            payload: fixtures.meetTheMayor,
             selected: false,
             focused: false,
             loading: false,
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringElementSearchResultItem(
-            element: fixtures.mayorGreeting,
+          AuthoringSearchResultItem(
+            payload: fixtures.mayorGreeting,
             selected: false,
             focused: false,
             loading: false,

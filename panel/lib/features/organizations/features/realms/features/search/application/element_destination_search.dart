@@ -1,44 +1,39 @@
 import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "element_destination_search.freezed.dart";
+final class ElementPageSelection {
+  const ElementPageSelection({
+    required this.pageId,
+    required this.bookId,
+    required this.field,
+  });
 
-@freezed
-sealed class ElementPageSelection with _$ElementPageSelection {
-  const factory ElementPageSelection.existing({
-    required skir.RecordId pageId,
-    required skir.RecordId bookId,
-    required PageEntryCreationPolicy policy,
-  }) = ExistingElementPageSelection;
-
-  const factory ElementPageSelection.create({
-    required skir.RecordId bookId,
-    required PageCreationInput input,
-    required PageEntryCreationPolicy policy,
-  }) = NewElementPageSelection;
+  final skir.ResourceId pageId;
+  final skir.ResourceId bookId;
+  final RealmRelationField field;
 }
 
 SearchActivation<ElementPageSelection> elementDestinationActivation({
   required ValueListenable<AsyncValue<List<Book>>> books,
   required ValueListenable<
-    AsyncValue<Map<PageKindRef, PageEntryCreationPolicy>>
+    AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>
   >
-  compatibleKinds,
+  compatibleFields,
+  Ref? ref,
 }) => SearchActivation.custom(
-  dependencies: [books, compatibleKinds],
+  dependencies: [books, compatibleFields],
   evaluate: (context, result) {
-    final policies = compatibleKinds.value.value;
-    if (policies == null) return const SearchActivationState.hidden();
+    final fields = compatibleFields.value.value;
+    if (fields == null) return const SearchActivationState.hidden();
     return switch (result.payload) {
-      skir.AuthoringSearchPage(:final kind)
-          when policies.containsKey(PageKindRef.fromSkir(kind)) =>
+      AuthoringSearchResultPayload(:final pageType)
+          when pageType != null && fields.containsKey(pageType) =>
         const SearchActivationState.enabled(),
-      RealmPageDefinition(:final kind)
-          when policies.containsKey(kind) &&
+      RealmPageDefinition(:final type)
+          when fields.containsKey(type) &&
               books.value.value != null &&
               resolveSearchBook(context.query, books.value.requireValue) !=
                   null =>
@@ -47,38 +42,62 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
     };
   },
   activate: (context, result) async {
-    final policies = compatibleKinds.value.value;
-    if (policies == null) return const SearchActivationResult.cancelled();
+    final fields = compatibleFields.value.value;
+    if (fields == null) return const SearchActivationResult.cancelled();
     switch (result.payload) {
-      case skir.AuthoringSearchPage(:final id, :final kind, :final book):
-        final policy = policies[PageKindRef.fromSkir(kind)];
-        if (policy == null) return const SearchActivationResult.cancelled();
+      case AuthoringSearchResultPayload(
+        :final id,
+        :final owner,
+        :final pageType,
+      ):
+        final field = pageType == null ? null : fields[pageType];
+        if (field == null || owner == null) {
+          return const SearchActivationResult.cancelled();
+        }
         return SearchActivationResult.complete(
-          ElementPageSelection.existing(
-            pageId: id,
-            bookId: book.id,
-            policy: policy,
-          ),
+          ElementPageSelection(pageId: id, bookId: owner, field: field),
         );
-      case RealmPageDefinition(:final kind):
-        final policy = policies[kind];
+      case RealmPageDefinition(:final type):
+        if (ref == null) return const SearchActivationResult.cancelled();
+        final field = fields[type];
         final bookValues = books.value.value;
         final book = bookValues == null
             ? null
             : resolveSearchBook(context.query, bookValues);
-        if (policy == null || book == null) {
+        if (field == null || book == null) {
           return const SearchActivationResult.cancelled();
         }
-        final input = await context.prompts.show(
-          (promptContext) =>
-              promptPageCreation(context: promptContext, fixedKind: kind),
+        final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+        final bookType = catalog?.creatableRoots(CoreResourceDefinitionIds.book).singleOrNull;
+        final bookField = bookType == null ? null : catalog?.relationField(
+          bookType, DataPath.root.field("pages"),
         );
-        if (input == null) return const SearchActivationResult.cancelled();
+        if (bookField == null) return const SearchActivationResult.cancelled();
+        final created = await context.prompts.show(
+          (promptContext) => ref
+              .read(resourceCreationProvider)
+              .create(
+                context: promptContext,
+                request: ResourceCreationRequest(
+                  definition: CoreResourceDefinitionIds.page,
+                  attachment: skir.CreationAttachment(
+                    host: book.bookId,
+                    relation: skir.RelationId(value: bookField.relation.id),
+                    hostSide: skir.RelationEndpointSide.source,
+                  ),
+                  title: "Create Page",
+                  concreteRoot: type,
+                  partial: pageCreationPartial(bookId: book.bookId),
+                  referenceOrigins: [book.bookId],
+                ),
+              ),
+        );
+        if (created == null) return const SearchActivationResult.cancelled();
         return SearchActivationResult.complete(
-          ElementPageSelection.create(
+          ElementPageSelection(
+            pageId: created.id,
             bookId: book.bookId,
-            input: input,
-            policy: policy,
+            field: field,
           ),
         );
       default:

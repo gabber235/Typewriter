@@ -57,15 +57,18 @@ void _testHostTargetSelection() {
 
         final model = harness.selectable.buildPresentation(owners);
         final owner =
-            ((model.inputs[const BindingId(1)]! as PresentationEditInput).owner
-                  as EditorSource)
-              ..update(
-                DataPath.root.field("engine"),
-                _mode("EngineEnabled", {
-                  "target": const StringValue("paper@*"),
-                  "realm": const StringValue(""),
-                }),
-              );
+            (model.inputs[const BindingId(1)]! as PresentationEditInput).owner
+                as EditorSource;
+        expect(
+          owner.update(
+            DataPath.root.field("engine"),
+            _mode("EngineEnabled", {
+              "target": const StringValue("paper@*"),
+              "realm": const StringValue(""),
+            }),
+          ),
+          isA<AppliedEditorMutation>(),
+        );
         await tester.pumpTestApp(
           child: SingleChildScrollView(child: ComposedEditor(model: model)),
         );

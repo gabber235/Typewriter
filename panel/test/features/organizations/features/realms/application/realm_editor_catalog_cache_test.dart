@@ -98,6 +98,47 @@ void main() {
       },
     );
 
+    test(
+      "exact generation fetch reuses covered snapshots and exposes mismatch",
+      () async {
+        final firstType = _type("first");
+        final secondType = _type("second");
+        final firstRequest = RealmEditorCatalogRequest(types: {firstType});
+        final source = _FakeSource()
+          ..responses.addAll([
+            Future.value(_fetched("7")),
+            Future.value(
+              const RealmEditorCatalogGenerationMismatch(
+                CatalogGeneration("8"),
+              ),
+            ),
+          ]);
+        final cache = _cache(source);
+        addTearDown(cache.dispose);
+        final lease = cache.acquire(firstRequest);
+        addTearDown(lease.close);
+        cache.start();
+        await cache.states.firstWhere(
+          (state) => state.snapshot?.generation.value == "7",
+        );
+
+        final retained = await cache.fetchExact(
+          const CatalogGeneration("7"),
+          firstRequest,
+        );
+        expect(retained, isA<RealmEditorCatalogFetched>());
+        expect(source.requests, hasLength(1));
+
+        final mismatch = await cache.fetchExact(
+          const CatalogGeneration("7"),
+          RealmEditorCatalogRequest(types: {firstType, secondType}),
+        );
+        expect(mismatch, isA<RealmEditorCatalogGenerationMismatch>());
+        expect(source.requests, hasLength(2));
+        expect(source.requestedGenerations.last, const CatalogGeneration("7"));
+      },
+    );
+
     test("refreshes with the invalidated generation", () async {
       final source = _FakeSource()
         ..responses.addAll([
@@ -181,7 +222,7 @@ void main() {
         TypeDiagnosticCode.invalidRevision,
       );
     });
-    test("clears the previous snapshot before retrying a mismatch", () async {
+    test("retains the previous snapshot after a retry mismatch", () async {
       final source = _FakeSource()
         ..responses.addAll([
           Future.value(_fetched("1")),
@@ -211,7 +252,7 @@ void main() {
       addTearDown(lease.close);
       expect(
         (await unavailable as RealmEditorCatalogUnavailable).previous,
-        isNull,
+        isNotNull,
       );
     });
     test("rejects a stale fetch response with a local epoch", () async {
@@ -284,6 +325,61 @@ void main() {
         );
       },
     );
+
+    test("pin adopts visual changes and pauses for schema changes", () async {
+      final type = _type("resource");
+      final presentation = PresentationId(namespace: "test", name: "summary");
+      final request = RealmEditorCatalogRequest(types: {type});
+      final source = _FakeSource()
+        ..responses.addAll([
+          Future.value(
+            _catalogFetched(
+              "1",
+              type: type,
+              presentation: presentation,
+              label: "Before",
+            ),
+          ),
+          Future.value(
+            _catalogFetched(
+              "2",
+              type: type,
+              presentation: presentation,
+              label: "After",
+            ),
+          ),
+          Future.value(
+            _catalogFetched(
+              "3",
+              type: type,
+              presentation: presentation,
+              label: "After",
+              representation: const IntegerType(width: IntegerWidth.signed64),
+            ),
+          ),
+        ]);
+      final cache = _cache(source);
+      addTearDown(cache.dispose);
+      final firstReady = cache.states.firstWhere(
+        (state) => state.snapshot?.generation.value == "1",
+      );
+      cache.start();
+      await firstReady;
+      final pin = cache.pin(request);
+      addTearDown(pin.dispose);
+
+      await _waitFor(() => pin.state.snapshot.generation.value == "2");
+      expect(pin.state.paused, isFalse);
+
+      await cache.refresh();
+      await _waitFor(() => pin.state.paused);
+      expect(pin.state.snapshot.generation.value, "2");
+      expect(pin.state.pending?.generation.value, "3");
+      expect(await pin.reconcile((_, _) async => false), isFalse);
+      expect(pin.state.paused, isTrue);
+      expect(await pin.reconcile((_, _) async => true), isTrue);
+      expect(pin.state.snapshot.generation.value, "3");
+    });
   });
 }
 
@@ -302,6 +398,36 @@ RealmEditorCatalogFetched _fetched(String generation) =>
         generation: CatalogGeneration(generation),
       ),
     );
+
+RealmEditorCatalogFetched _catalogFetched(
+  String generation, {
+  required ResolvedTypeRef type,
+  required PresentationId presentation,
+  required String label,
+  TypeExpression representation = const StringType(),
+}) => RealmEditorCatalogFetched(
+  RealmEditorCatalogSnapshot(
+    catalog: TypeCatalog([
+      TypeDefinition(
+        id: type,
+        kind: NominalTypeKind.concrete,
+        representation: representation,
+        rolePresentations: {PresentationRole.referenceSummary: presentation},
+      ),
+    ]),
+    generation: CatalogGeneration(generation),
+    presentations: {
+      presentation: PresentationDefinition.single(
+        id: presentation,
+        target: NamedType(type),
+        root: PresentationNode(
+          id: "root",
+          element: TextElement(label.asStringLiteral),
+        ),
+      ),
+    },
+  ),
+);
 
 TypeDiagnostic _diagnostic(String message) => TypeDiagnostic(
   code: TypeDiagnosticCode.invalidConstraint,
@@ -327,6 +453,15 @@ final class _FakeSource implements RealmEditorCatalogSource {
   final requestedGenerations = <CatalogGeneration?>[];
   final requests = <RealmEditorCatalogRequest>[];
   final events = StreamController<RealmEditorCatalogWatchEvent>();
+
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
 
   @override
   Future<RealmEditorCatalogFetchResult> fetch(

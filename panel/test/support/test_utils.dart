@@ -9,6 +9,8 @@ import "package:test_screenshot/test_screenshot.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+export "realm_catalog_fixture.dart";
+
 /// Build a reusable test app with ProviderScope, ResponsiveBreakpoints, and MaterialApp.
 ///
 /// - Wraps [child] with ResponsiveFramework breakpoints used throughout the app.

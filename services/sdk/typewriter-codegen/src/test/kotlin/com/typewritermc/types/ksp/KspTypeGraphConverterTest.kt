@@ -57,6 +57,8 @@ val KspTypeGraphConverterTest by testSuite {
         val nodeDefinition = result.graph.definitions.single { it.id.id == TypeId.Qualified("example", "Node") }
 
         result.graph.root shouldBe TypeExpression.Named(nodeDefinition.id)
+        nodeDefinition.displayName shouldBe "Node"
+        nodeDefinition.qualifiedName shouldBe "example.Node"
         (nodeDefinition.representation as TypeExpression.Record).fields.map { it.name } shouldBe listOf("name", "next")
     }
 
@@ -192,6 +194,29 @@ val KspTypeGraphConverterTest by testSuite {
             .representation shouldBe TypeExpression.StringType()
     }
 
+    test("value classes use their inline serialized representation") {
+        val declaration =
+            classDeclaration(
+                "example.LibraryName",
+                listOf(annotation("kotlin.jvm.JvmInline")),
+            )
+        val parameter =
+            mockk<KSValueParameter> {
+                every { name } returns name("value")
+                every { type } returns mockk { every { resolve() } returns classType("kotlin.String") }
+                every { isVal } returns true
+                every { isVar } returns false
+            }
+        every { declaration.primaryConstructor } returns mockk { every { parameters } returns listOf(parameter) }
+
+        val result = KspTypeGraphConverter().convert(type(declaration)) as KspTypeConversionResult.Success
+
+        result.graph.definitions
+            .single()
+            .representation shouldBe TypeExpression.StringType()
+        result.serializedProperties shouldBe emptyList()
+    }
+
     test("Ref preserves its single Referenceable target as a reference expression") {
         val referenceable = classDeclaration("com.typewritermc.types.Referenceable")
         val target = classDeclaration("example.Target")
@@ -297,6 +322,7 @@ private fun property(
     val reference = mockk<KSTypeReference> { every { resolve() } returns propertyType }
     return mockk {
         every { simpleName } returns name(propertyName)
+        every { parentDeclaration } returns null
         every { type } returns reference
         every { extensionReceiver } returns null
         every { this@mockk.hasBackingField } returns hasBackingField

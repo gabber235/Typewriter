@@ -3,6 +3,7 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
+import com.typewritermc.authoring.Placement
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.discovery.CatalogGeneration
@@ -13,8 +14,12 @@ import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
+import com.typewritermc.elements.Element
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.library.Book
+import com.typewritermc.library.Page
+import com.typewritermc.library.Tag
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
@@ -43,6 +48,9 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +60,8 @@ import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition
+import skirout.editor.v1.compiled_content.CompilationProjectionId
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
@@ -139,7 +149,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 )
             val presentationCatalog =
                 PresentationCatalogAssembler.assemble(
-                    providers = loadedDiscovery.application.koin.getAll<PresentationProvider>(),
+                    providers =
+                        coreLibraryPresentationProviders() +
+                            loadedDiscovery.application.koin.getAll<PresentationProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                     types = assembled.discovery.types,
                     capabilities = capabilityRegistry.descriptors,
@@ -148,6 +160,22 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 PageCatalogAssembler.assemble(
                     providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
                     prototypes = loadedDiscovery.prototypes,
+                )
+            val authoringPolicies =
+                RealmAuthoringPolicyAssembler.assemble(
+                    providers =
+                        listOf(
+                            CoreAuthoringPolicyProvider(
+                                prototypes = loadedDiscovery.prototypes,
+                                pageCatalog = pageCatalog,
+                                elements = assembled.elements,
+                                types = assembled.discovery.types,
+                                relations = assembled.runtimeDiscovery.relations,
+                                catalogRevision = { assembled.discovery.generation.value },
+                            ),
+                        ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
+                    catalog = assembled.discovery.types,
+                    relations = assembled.runtimeDiscovery.relations,
                 )
             val realmModule =
                 module {
@@ -161,8 +189,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { loadedDiscovery.prototypes }
                     single { capabilityRegistry }
                     single { pageCatalog }
+                    single { authoringPolicies }
                     single<RealmEditorCatalogSource> {
-                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().current() }
+                        SnapshotRealmEditorCatalogSource(get()) { get<RealmDiscoverySnapshotStore>().current() }
                     }
                     single<RealmPresentationSearchSource> {
                         CapabilityRealmPresentationSearchSource(get(), get(), get(), get())
@@ -181,7 +210,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             get(),
                             get(),
                             get(),
+                            get(),
                             capabilityInvocations = get(),
+                            authoringPolicies = get(),
                         )
                     }
                 }
@@ -197,6 +228,17 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
                 RealmDiscoverySnapshot(
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
+                    resourceDefinitions = authoringPolicies.definitions,
+                    relations = assembled.runtimeDiscovery.relations,
+                    collectionProjections = coreLibraryCollectionProjections(loadedDiscovery.prototypes),
+                    authoringSearch = authoringPolicies.searchDefinition(),
+                    compilationProjections =
+                        authoringPolicies.compilation.projections.map { projection ->
+                            AuthoringCompilationProjectionDefinition(
+                                projection = CompilationProjectionId(value = projection.id.value),
+                                root = SkirTypeCodec.encode(projection.root).getOrThrow(),
+                            )
+                        },
                     elements = assembled.elements,
                     pages = pageCatalog,
                     presentations = presentationCatalog.definitions,

@@ -17,4 +17,3 @@ pub mod record_id;
 pub mod color;
 pub mod duration;
 pub mod icon;
-pub mod page_kind;

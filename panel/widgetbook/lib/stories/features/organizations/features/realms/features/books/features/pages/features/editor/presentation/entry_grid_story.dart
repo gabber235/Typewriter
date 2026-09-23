@@ -63,6 +63,7 @@ Widget entryNodeMultipleEntriesStory(BuildContext context) {
                   entry: PageEntry.reference(
                     id: "external-entry",
                     name: "External Entry",
+                    subject: _storySubject("external-entry"),
                     elementDefinition: _elementDefinition(
                       id: "external-elementDefinition",
                       name: "External",
@@ -99,10 +100,7 @@ EntryDefinition _storyEntry(
     deprecated: deprecated,
   ),
   placement: EntryPlacement(x: 0, y: 0, width: width, height: height),
-  data: RecordValue({
-    "id": StringValue("$id-entry"),
-    "name": StringValue(name),
-  }),
+  data: RecordValue({"name": StringValue(name)}),
   inwardEdges: const [],
   outwardEdges: const [],
 );

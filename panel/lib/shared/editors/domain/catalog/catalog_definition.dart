@@ -17,6 +17,9 @@ abstract class PresentationDefinition with _$PresentationDefinition {
     required List<PresentationInputParameter> inputs,
     required PresentationNode root,
     BindingId? primaryInput,
+    @Default(<PresentationCollectionSourceId, PresentationCollectionSchema>{})
+    Map<PresentationCollectionSourceId, PresentationCollectionSchema>
+    collections,
   }) = _PresentationDefinition;
 
   const PresentationDefinition._();

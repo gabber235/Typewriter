@@ -202,12 +202,18 @@ val ImprintPluginTest by testSuite {
         jar.entries().contains("fixture/core/CoreType.class") shouldBe false
     }
 
-    test("Realm manifest receives the generated runtime entrypoint") {
-        val fixture = fixture("realm")
+    test("Realm manifest receives platform contributions and the generated runtime entrypoint") {
+        val fixture = fixture("platform", "realm")
+        fixture.writeBuild("platform", javaLibraryBuild())
+        fixture.write(
+            "platform/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/book.cbor",
+            "platform book",
+        )
         fixture.writeBuild(
             "realm",
             """
             plugins { id("com.typewritermc.imprint") }
+            dependencies { imprintPlatformApi(project(":platform")) }
             typewriter {
                 realm {
                     id = "typewritermc:realm"
@@ -224,6 +230,12 @@ val ImprintPluginTest by testSuite {
         val manifest = jar.readManifest() as RealmManifest
 
         manifest.runtimeEntrypointClass shouldBe "fixture.RealmEntrypoint"
+        val platformContribution = manifest.contributions.single()
+        platformContribution.origin.value shouldBe "typewritermc:realm"
+        platformContribution.sourcePart shouldBe "main"
+        platformContribution.producer shouldBe "types"
+        platformContribution.name shouldBe "platform/book.cbor"
+        platformContribution.payload.decodeToString() shouldBe "platform book"
         jar.entries().contains(IMPRINT_RUNTIME_ENTRYPOINTS_PATH) shouldBe false
     }
 
@@ -266,7 +278,12 @@ val ImprintPluginTest by testSuite {
     }
 
     test("engine Shadow JAR bundles core capabilities and one merged manifest") {
-        val fixture = fixture("engineCore", "base", "capability", "engine")
+        val fixture = fixture("platform", "engineCore", "base", "capability", "engine")
+        fixture.writeBuild("platform", javaLibraryBuild())
+        fixture.write(
+            "platform/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/book.cbor",
+            "platform book",
+        )
         fixture.writeBuild(
             "engineCore",
             """
@@ -297,7 +314,10 @@ val ImprintPluginTest by testSuite {
             "engine",
             """
             plugins { id("com.typewritermc.imprint") }
-            dependencies { imprintEngineCore(project(":engineCore")) }
+            dependencies {
+                imprintEngineCore(project(":engineCore"))
+                imprintPlatformApi(project(":platform"))
+            }
             typewriter {
                 engine {
                     id = "paper"
@@ -335,6 +355,10 @@ val ImprintPluginTest by testSuite {
         coreContribution.sourcePart shouldBe "main"
         coreContribution.producer shouldBe "types"
         coreContribution.payload.decodeToString() shouldBe "core pages"
+        manifest.contributions
+            .single { it.name == "platform/book.cbor" }
+            .payload
+            .decodeToString() shouldBe "platform book"
         manifest.contributions
             .single { it.name == "items.cbor" }
             .payload
@@ -668,6 +692,46 @@ val ImprintPluginTest by testSuite {
             .version.expression shouldBe "^1.0"
     }
 
+    test("platform archive changes invalidate hosted manifest content") {
+        val fixture = fixture("platform", "realm")
+        fixture.writeBuild("platform", javaLibraryBuild())
+        fixture.write(
+            "platform/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/book.cbor",
+            "first",
+        )
+        fixture.writeBuild(
+            "realm",
+            """
+            plugins { id("com.typewritermc.imprint") }
+            dependencies { imprintPlatformApi(project(":platform")) }
+            typewriter {
+                realm {
+                    id = "typewritermc:realm"
+                    version = "1.0.0"
+                    hostApi = "^1"
+                }
+            }
+            """.trimIndent(),
+        )
+        fixture.writeRuntimeEntrypoints("realm", "fixture.RealmEntrypoint")
+
+        fixture.run(":realm:generateImprintManifest")
+        fixture.run(":realm:generateImprintManifest").task(":realm:generateImprintManifest")?.outcome shouldBe
+            TaskOutcome.UP_TO_DATE
+
+        fixture.write(
+            "platform/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/book.cbor",
+            "second",
+        )
+        fixture.run(":realm:generateImprintManifest").task(":realm:generateImprintManifest")?.outcome shouldBe
+            TaskOutcome.SUCCESS
+        val manifest = ImprintManifestCodec.decode(fixture.manifestBytes("realm")) as RealmManifest
+        manifest.contributions
+            .single()
+            .payload
+            .decodeToString() shouldBe "second"
+    }
+
     test("equivalent relationship inputs produce identical manifests in different directories") {
         val manifests =
             List(2) {
@@ -812,7 +876,11 @@ private class FunctionalFixture(
         return if (expectFailure) runner.buildAndFail() else runner.build()
     }
 
-    fun manifestBytes(): ByteArray = directory.resolve("build/generated/imprint/artifact.cbor").readBytes()
+    fun manifestBytes(project: String = ""): ByteArray =
+        directory
+            .resolve(if (project.isBlank()) "build" else "$project/build")
+            .resolve("generated/imprint/artifact.cbor")
+            .readBytes()
 
     fun singleJar(path: String): File =
         directory.resolve(path).listFiles { file -> file.extension == "jar" }?.single()

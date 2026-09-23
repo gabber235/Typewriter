@@ -82,7 +82,7 @@ as BindingId?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-  
+
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -91,7 +91,7 @@ $PresentationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -246,7 +246,7 @@ return $default(_that.id,_that.root,_that.inputs,_that.primaryInput);case _:
 
 class _ResolvedPresentationDefinition implements ResolvedPresentationDefinition {
   const _ResolvedPresentationDefinition({required this.id, required this.root,  List<PresentationInputParameter> inputs = const [], this.primaryInput}): _inputs = inputs;
-  
+
 
 @override final  PresentationId id;
 @override final  PresentationNode root;
@@ -323,7 +323,7 @@ as BindingId?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-  
+
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -332,7 +332,7 @@ $PresentationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -516,7 +516,7 @@ return instance(_that.identity);case _:
 
 class NodeHeaderExpansionKey implements HeaderExpansionKey {
   const NodeHeaderExpansionKey({required this.nodeId, required this.binding});
-  
+
 
  final  String nodeId;
  final  BindingReference? binding;
@@ -598,7 +598,7 @@ $BindingReferenceCopyWith<$Res>? get binding {
 
 class InstanceHeaderExpansionKey implements HeaderExpansionKey {
   const InstanceHeaderExpansionKey(this.identity);
-  
+
 
  final  Object identity;
 
@@ -663,7 +663,7 @@ null == identity ? _self.identity : identity ,
 /// @nodoc
 mixin _$PresentationRenderScope {
 
- ExpressionContext get expressions; TypeRegistry get registry; ExpressionBudget get budget; BindingSetter get setBinding; ActionExecutor get executeAction; PresentationResolver get resolvePresentation; HeaderExpansionStore get expansionStore; EditorInteractionStarter? get startInteraction; RealmPresentationSearchSourceBuilder? get realmSearchSourceBuilder; ReferenceSearchSourceBuilder? get referenceSearchSourceBuilder; ReferenceResourceResolver? get resolveReferences; List<RecordId> get referenceOrigins; ReferenceCandidatePolicyRegistry get referencePolicies; EditOwner? Function(BindingReference reference)? get editOwnerFor; Map<PresentationCollectionSourceId, PresentationCollectionSource> get collections; Map<BindingId, BindingReference> get aliases; Map<BindingId, PresentationInputAccess> get inputAccess; Map<BindingId, BindingReference?> get ownerBindings; Map<HeaderItemCommandId, List<ShortcutActivator>> get headerShortcuts; Set<(String, BindingReference?,)> get suppressedHeaders; Map<String, Widget> get presentationSlots; Object? get expansionIdentity; bool get enabled; bool get readOnly; String get historyNamespace; Set<PresentationId> get activePresentations;
+ ExpressionContext get expressions; TypeRegistry get registry; ExpressionBudget get budget; BindingSetter get setBinding; ActionExecutor get executeAction; PresentationResolver get resolvePresentation; HeaderExpansionStore get expansionStore; EditorInteractionStarter? get startInteraction; RealmPresentationSearchSourceBuilder? get realmSearchSourceBuilder; ReferenceSearchSourceBuilder? get referenceSearchSourceBuilder; ReferenceResourceResolver? get resolveReferences; ReferenceEligibilityEvaluator? get referenceEligibility; List<ResourceId> get referenceOrigins; ReferenceCandidatePolicyRegistry get referencePolicies; EditOwner? Function(BindingReference reference)? get editOwnerFor; RenderedBindingFocusController? get bindingFocusController; Map<PresentationCollectionSourceId, PresentationCollectionSource> get collections; Map<BindingId, BindingReference> get aliases; Map<BindingId, PresentationInputAccess> get inputAccess; Map<BindingId, BindingReference?> get ownerBindings; Map<HeaderItemCommandId, List<ShortcutActivator>> get headerShortcuts; Set<(String, BindingReference?,)> get suppressedHeaders; Map<String, Widget> get presentationSlots; Object? get expansionIdentity; bool get enabled; bool get readOnly; String get historyNamespace; Set<PresentationId> get activePresentations;
 /// Create a copy of PresentationRenderScope
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -675,20 +675,20 @@ $PresentationRenderScopeCopyWith<PresentationRenderScope> get copyWith => _$Pres
 @override
 bool operator ==(Object other) {
   final _this = this as PresentationRenderScope;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationRenderScope&&(identical(other.expressions, _this.expressions) || other.expressions == _this.expressions)&&(identical(other.registry, _this.registry) || other.registry == _this.registry)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.setBinding, _this.setBinding) || other.setBinding == _this.setBinding)&&(identical(other.executeAction, _this.executeAction) || other.executeAction == _this.executeAction)&&(identical(other.resolvePresentation, _this.resolvePresentation) || other.resolvePresentation == _this.resolvePresentation)&&(identical(other.expansionStore, _this.expansionStore) || other.expansionStore == _this.expansionStore)&&(identical(other.startInteraction, _this.startInteraction) || other.startInteraction == _this.startInteraction)&&(identical(other.realmSearchSourceBuilder, _this.realmSearchSourceBuilder) || other.realmSearchSourceBuilder == _this.realmSearchSourceBuilder)&&(identical(other.referenceSearchSourceBuilder, _this.referenceSearchSourceBuilder) || other.referenceSearchSourceBuilder == _this.referenceSearchSourceBuilder)&&(identical(other.resolveReferences, _this.resolveReferences) || other.resolveReferences == _this.resolveReferences)&&const DeepCollectionEquality().equals(other.referenceOrigins, _this.referenceOrigins)&&(identical(other.referencePolicies, _this.referencePolicies) || other.referencePolicies == _this.referencePolicies)&&(identical(other.editOwnerFor, _this.editOwnerFor) || other.editOwnerFor == _this.editOwnerFor)&&const DeepCollectionEquality().equals(other.collections, _this.collections)&&const DeepCollectionEquality().equals(other.aliases, _this.aliases)&&const DeepCollectionEquality().equals(other.inputAccess, _this.inputAccess)&&const DeepCollectionEquality().equals(other.ownerBindings, _this.ownerBindings)&&const DeepCollectionEquality().equals(other.headerShortcuts, _this.headerShortcuts)&&const DeepCollectionEquality().equals(other.suppressedHeaders, _this.suppressedHeaders)&&const DeepCollectionEquality().equals(other.presentationSlots, _this.presentationSlots)&&const DeepCollectionEquality().equals(other.expansionIdentity, _this.expansionIdentity)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.historyNamespace, _this.historyNamespace) || other.historyNamespace == _this.historyNamespace)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationRenderScope&&(identical(other.expressions, _this.expressions) || other.expressions == _this.expressions)&&(identical(other.registry, _this.registry) || other.registry == _this.registry)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.setBinding, _this.setBinding) || other.setBinding == _this.setBinding)&&(identical(other.executeAction, _this.executeAction) || other.executeAction == _this.executeAction)&&(identical(other.resolvePresentation, _this.resolvePresentation) || other.resolvePresentation == _this.resolvePresentation)&&(identical(other.expansionStore, _this.expansionStore) || other.expansionStore == _this.expansionStore)&&(identical(other.startInteraction, _this.startInteraction) || other.startInteraction == _this.startInteraction)&&(identical(other.realmSearchSourceBuilder, _this.realmSearchSourceBuilder) || other.realmSearchSourceBuilder == _this.realmSearchSourceBuilder)&&(identical(other.referenceSearchSourceBuilder, _this.referenceSearchSourceBuilder) || other.referenceSearchSourceBuilder == _this.referenceSearchSourceBuilder)&&(identical(other.resolveReferences, _this.resolveReferences) || other.resolveReferences == _this.resolveReferences)&&(identical(other.referenceEligibility, _this.referenceEligibility) || other.referenceEligibility == _this.referenceEligibility)&&const DeepCollectionEquality().equals(other.referenceOrigins, _this.referenceOrigins)&&(identical(other.referencePolicies, _this.referencePolicies) || other.referencePolicies == _this.referencePolicies)&&(identical(other.editOwnerFor, _this.editOwnerFor) || other.editOwnerFor == _this.editOwnerFor)&&(identical(other.bindingFocusController, _this.bindingFocusController) || other.bindingFocusController == _this.bindingFocusController)&&const DeepCollectionEquality().equals(other.collections, _this.collections)&&const DeepCollectionEquality().equals(other.aliases, _this.aliases)&&const DeepCollectionEquality().equals(other.inputAccess, _this.inputAccess)&&const DeepCollectionEquality().equals(other.ownerBindings, _this.ownerBindings)&&const DeepCollectionEquality().equals(other.headerShortcuts, _this.headerShortcuts)&&const DeepCollectionEquality().equals(other.suppressedHeaders, _this.suppressedHeaders)&&const DeepCollectionEquality().equals(other.presentationSlots, _this.presentationSlots)&&const DeepCollectionEquality().equals(other.expansionIdentity, _this.expansionIdentity)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.historyNamespace, _this.historyNamespace) || other.historyNamespace == _this.historyNamespace)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PresentationRenderScope;
-  return Object.hashAll([runtimeType,_this.expressions,_this.registry,_this.budget,_this.setBinding,_this.executeAction,_this.resolvePresentation,_this.expansionStore,_this.startInteraction,_this.realmSearchSourceBuilder,_this.referenceSearchSourceBuilder,_this.resolveReferences,const DeepCollectionEquality().hash(_this.referenceOrigins),_this.referencePolicies,_this.editOwnerFor,const DeepCollectionEquality().hash(_this.collections),const DeepCollectionEquality().hash(_this.aliases),const DeepCollectionEquality().hash(_this.inputAccess),const DeepCollectionEquality().hash(_this.ownerBindings),const DeepCollectionEquality().hash(_this.headerShortcuts),const DeepCollectionEquality().hash(_this.suppressedHeaders),const DeepCollectionEquality().hash(_this.presentationSlots),const DeepCollectionEquality().hash(_this.expansionIdentity),_this.enabled,_this.readOnly,_this.historyNamespace,const DeepCollectionEquality().hash(_this.activePresentations)]);
+  return Object.hashAll([runtimeType,_this.expressions,_this.registry,_this.budget,_this.setBinding,_this.executeAction,_this.resolvePresentation,_this.expansionStore,_this.startInteraction,_this.realmSearchSourceBuilder,_this.referenceSearchSourceBuilder,_this.resolveReferences,_this.referenceEligibility,const DeepCollectionEquality().hash(_this.referenceOrigins),_this.referencePolicies,_this.editOwnerFor,_this.bindingFocusController,const DeepCollectionEquality().hash(_this.collections),const DeepCollectionEquality().hash(_this.aliases),const DeepCollectionEquality().hash(_this.inputAccess),const DeepCollectionEquality().hash(_this.ownerBindings),const DeepCollectionEquality().hash(_this.headerShortcuts),const DeepCollectionEquality().hash(_this.suppressedHeaders),const DeepCollectionEquality().hash(_this.presentationSlots),const DeepCollectionEquality().hash(_this.expansionIdentity),_this.enabled,_this.readOnly,_this.historyNamespace,const DeepCollectionEquality().hash(_this.activePresentations)]);
 }
 
 @override
 String toString() {
   final _this = this as PresentationRenderScope;
-  return 'PresentationRenderScope(expressions: ${_this.expressions}, registry: ${_this.registry}, budget: ${_this.budget}, setBinding: ${_this.setBinding}, executeAction: ${_this.executeAction}, resolvePresentation: ${_this.resolvePresentation}, expansionStore: ${_this.expansionStore}, startInteraction: ${_this.startInteraction}, realmSearchSourceBuilder: ${_this.realmSearchSourceBuilder}, referenceSearchSourceBuilder: ${_this.referenceSearchSourceBuilder}, resolveReferences: ${_this.resolveReferences}, referenceOrigins: ${_this.referenceOrigins}, referencePolicies: ${_this.referencePolicies}, editOwnerFor: ${_this.editOwnerFor}, collections: ${_this.collections}, aliases: ${_this.aliases}, inputAccess: ${_this.inputAccess}, ownerBindings: ${_this.ownerBindings}, headerShortcuts: ${_this.headerShortcuts}, suppressedHeaders: ${_this.suppressedHeaders}, presentationSlots: ${_this.presentationSlots}, expansionIdentity: ${_this.expansionIdentity}, enabled: ${_this.enabled}, readOnly: ${_this.readOnly}, historyNamespace: ${_this.historyNamespace}, activePresentations: ${_this.activePresentations})';
+  return 'PresentationRenderScope(expressions: ${_this.expressions}, registry: ${_this.registry}, budget: ${_this.budget}, setBinding: ${_this.setBinding}, executeAction: ${_this.executeAction}, resolvePresentation: ${_this.resolvePresentation}, expansionStore: ${_this.expansionStore}, startInteraction: ${_this.startInteraction}, realmSearchSourceBuilder: ${_this.realmSearchSourceBuilder}, referenceSearchSourceBuilder: ${_this.referenceSearchSourceBuilder}, resolveReferences: ${_this.resolveReferences}, referenceEligibility: ${_this.referenceEligibility}, referenceOrigins: ${_this.referenceOrigins}, referencePolicies: ${_this.referencePolicies}, editOwnerFor: ${_this.editOwnerFor}, bindingFocusController: ${_this.bindingFocusController}, collections: ${_this.collections}, aliases: ${_this.aliases}, inputAccess: ${_this.inputAccess}, ownerBindings: ${_this.ownerBindings}, headerShortcuts: ${_this.headerShortcuts}, suppressedHeaders: ${_this.suppressedHeaders}, presentationSlots: ${_this.presentationSlots}, expansionIdentity: ${_this.expansionIdentity}, enabled: ${_this.enabled}, readOnly: ${_this.readOnly}, historyNamespace: ${_this.historyNamespace}, activePresentations: ${_this.activePresentations})';
 }
 
 
@@ -699,7 +699,7 @@ abstract mixin class $PresentationRenderScopeCopyWith<$Res>  {
   factory $PresentationRenderScopeCopyWith(PresentationRenderScope value, $Res Function(PresentationRenderScope) _then) = _$PresentationRenderScopeCopyWithImpl;
 @useResult
 $Res call({
- ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, EditorInteractionStarter? startInteraction, RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder, ReferenceSearchSourceBuilder? referenceSearchSourceBuilder, ReferenceResourceResolver? resolveReferences, List<RecordId> referenceOrigins, ReferenceCandidatePolicyRegistry referencePolicies, EditOwner? Function(BindingReference reference)? editOwnerFor, Map<PresentationCollectionSourceId, PresentationCollectionSource> collections, Map<BindingId, BindingReference> aliases, Map<BindingId, PresentationInputAccess> inputAccess, Map<BindingId, BindingReference?> ownerBindings, Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?,)> suppressedHeaders, Map<String, Widget> presentationSlots, Object? expansionIdentity, bool enabled, bool readOnly, String historyNamespace, Set<PresentationId> activePresentations
+ ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, EditorInteractionStarter? startInteraction, RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder, ReferenceSearchSourceBuilder? referenceSearchSourceBuilder, ReferenceResourceResolver? resolveReferences, ReferenceEligibilityEvaluator? referenceEligibility, List<ResourceId> referenceOrigins, ReferenceCandidatePolicyRegistry referencePolicies, EditOwner? Function(BindingReference reference)? editOwnerFor, RenderedBindingFocusController? bindingFocusController, Map<PresentationCollectionSourceId, PresentationCollectionSource> collections, Map<BindingId, BindingReference> aliases, Map<BindingId, PresentationInputAccess> inputAccess, Map<BindingId, BindingReference?> ownerBindings, Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?,)> suppressedHeaders, Map<String, Widget> presentationSlots, Object? expansionIdentity, bool enabled, bool readOnly, String historyNamespace, Set<PresentationId> activePresentations
 });
 
 
@@ -716,7 +716,7 @@ class _$PresentationRenderScopeCopyWithImpl<$Res>
 
 /// Create a copy of PresentationRenderScope
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? expressions = null,Object? registry = null,Object? budget = null,Object? setBinding = null,Object? executeAction = null,Object? resolvePresentation = null,Object? expansionStore = null,Object? startInteraction = freezed,Object? realmSearchSourceBuilder = freezed,Object? referenceSearchSourceBuilder = freezed,Object? resolveReferences = freezed,Object? referenceOrigins = null,Object? referencePolicies = null,Object? editOwnerFor = freezed,Object? collections = null,Object? aliases = null,Object? inputAccess = null,Object? ownerBindings = null,Object? headerShortcuts = null,Object? suppressedHeaders = null,Object? presentationSlots = null,Object? expansionIdentity = freezed,Object? enabled = null,Object? readOnly = null,Object? historyNamespace = null,Object? activePresentations = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? expressions = null,Object? registry = null,Object? budget = null,Object? setBinding = null,Object? executeAction = null,Object? resolvePresentation = null,Object? expansionStore = null,Object? startInteraction = freezed,Object? realmSearchSourceBuilder = freezed,Object? referenceSearchSourceBuilder = freezed,Object? resolveReferences = freezed,Object? referenceEligibility = freezed,Object? referenceOrigins = null,Object? referencePolicies = null,Object? editOwnerFor = freezed,Object? bindingFocusController = freezed,Object? collections = null,Object? aliases = null,Object? inputAccess = null,Object? ownerBindings = null,Object? headerShortcuts = null,Object? suppressedHeaders = null,Object? presentationSlots = null,Object? expansionIdentity = freezed,Object? enabled = null,Object? readOnly = null,Object? historyNamespace = null,Object? activePresentations = null,}) {
   return _then(PresentationRenderScope(
 expressions: null == expressions ? _self.expressions : expressions // ignore: cast_nullable_to_non_nullable
 as ExpressionContext,registry: null == registry ? _self.registry : registry // ignore: cast_nullable_to_non_nullable
@@ -729,10 +729,12 @@ as HeaderExpansionStore,startInteraction: freezed == startInteraction ? _self.st
 as EditorInteractionStarter?,realmSearchSourceBuilder: freezed == realmSearchSourceBuilder ? _self.realmSearchSourceBuilder : realmSearchSourceBuilder // ignore: cast_nullable_to_non_nullable
 as RealmPresentationSearchSourceBuilder?,referenceSearchSourceBuilder: freezed == referenceSearchSourceBuilder ? _self.referenceSearchSourceBuilder : referenceSearchSourceBuilder // ignore: cast_nullable_to_non_nullable
 as ReferenceSearchSourceBuilder?,resolveReferences: freezed == resolveReferences ? _self.resolveReferences : resolveReferences // ignore: cast_nullable_to_non_nullable
-as ReferenceResourceResolver?,referenceOrigins: null == referenceOrigins ? _self.referenceOrigins : referenceOrigins // ignore: cast_nullable_to_non_nullable
-as List<RecordId>,referencePolicies: null == referencePolicies ? _self.referencePolicies : referencePolicies // ignore: cast_nullable_to_non_nullable
+as ReferenceResourceResolver?,referenceEligibility: freezed == referenceEligibility ? _self.referenceEligibility : referenceEligibility // ignore: cast_nullable_to_non_nullable
+as ReferenceEligibilityEvaluator?,referenceOrigins: null == referenceOrigins ? _self.referenceOrigins : referenceOrigins // ignore: cast_nullable_to_non_nullable
+as List<ResourceId>,referencePolicies: null == referencePolicies ? _self.referencePolicies : referencePolicies // ignore: cast_nullable_to_non_nullable
 as ReferenceCandidatePolicyRegistry,editOwnerFor: freezed == editOwnerFor ? _self.editOwnerFor : editOwnerFor // ignore: cast_nullable_to_non_nullable
-as EditOwner? Function(BindingReference reference)?,collections: null == collections ? _self.collections : collections // ignore: cast_nullable_to_non_nullable
+as EditOwner? Function(BindingReference reference)?,bindingFocusController: freezed == bindingFocusController ? _self.bindingFocusController : bindingFocusController // ignore: cast_nullable_to_non_nullable
+as RenderedBindingFocusController?,collections: null == collections ? _self.collections : collections // ignore: cast_nullable_to_non_nullable
 as Map<PresentationCollectionSourceId, PresentationCollectionSource>,aliases: null == aliases ? _self.aliases : aliases // ignore: cast_nullable_to_non_nullable
 as Map<BindingId, BindingReference>,inputAccess: null == inputAccess ? _self.inputAccess : inputAccess // ignore: cast_nullable_to_non_nullable
 as Map<BindingId, PresentationInputAccess>,ownerBindings: null == ownerBindings ? _self.ownerBindings : ownerBindings // ignore: cast_nullable_to_non_nullable
@@ -751,7 +753,7 @@ as Set<PresentationId>,
 @override
 @pragma('vm:prefer-inline')
 $ExpressionContextCopyWith<$Res> get expressions {
-  
+
   return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
     return _then(_self.copyWith(expressions: value));
   });
@@ -760,7 +762,7 @@ $ExpressionContextCopyWith<$Res> get expressions {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionBudgetCopyWith<$Res> get budget {
-  
+
   return $ExpressionBudgetCopyWith<$Res>(_self.budget, (value) {
     return _then(_self.copyWith(budget: value));
   });
@@ -846,10 +848,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  EditorInteractionStarter? startInteraction,  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,  ReferenceResourceResolver? resolveReferences,  List<RecordId> referenceOrigins,  ReferenceCandidatePolicyRegistry referencePolicies,  EditOwner? Function(BindingReference reference)? editOwnerFor,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections,  Map<BindingId, BindingReference> aliases,  Map<BindingId, PresentationInputAccess> inputAccess,  Map<BindingId, BindingReference?> ownerBindings,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?,)> suppressedHeaders,  Map<String, Widget> presentationSlots,  Object? expansionIdentity,  bool enabled,  bool readOnly,  String historyNamespace,  Set<PresentationId> activePresentations)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  EditorInteractionStarter? startInteraction,  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,  ReferenceResourceResolver? resolveReferences,  ReferenceEligibilityEvaluator? referenceEligibility,  List<ResourceId> referenceOrigins,  ReferenceCandidatePolicyRegistry referencePolicies,  EditOwner? Function(BindingReference reference)? editOwnerFor,  RenderedBindingFocusController? bindingFocusController,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections,  Map<BindingId, BindingReference> aliases,  Map<BindingId, PresentationInputAccess> inputAccess,  Map<BindingId, BindingReference?> ownerBindings,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?,)> suppressedHeaders,  Map<String, Widget> presentationSlots,  Object? expansionIdentity,  bool enabled,  bool readOnly,  String historyNamespace,  Set<PresentationId> activePresentations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationRenderScope() when $default != null:
-return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.startInteraction,_that.realmSearchSourceBuilder,_that.referenceSearchSourceBuilder,_that.resolveReferences,_that.referenceOrigins,_that.referencePolicies,_that.editOwnerFor,_that.collections,_that.aliases,_that.inputAccess,_that.ownerBindings,_that.headerShortcuts,_that.suppressedHeaders,_that.presentationSlots,_that.expansionIdentity,_that.enabled,_that.readOnly,_that.historyNamespace,_that.activePresentations);case _:
+return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.startInteraction,_that.realmSearchSourceBuilder,_that.referenceSearchSourceBuilder,_that.resolveReferences,_that.referenceEligibility,_that.referenceOrigins,_that.referencePolicies,_that.editOwnerFor,_that.bindingFocusController,_that.collections,_that.aliases,_that.inputAccess,_that.ownerBindings,_that.headerShortcuts,_that.suppressedHeaders,_that.presentationSlots,_that.expansionIdentity,_that.enabled,_that.readOnly,_that.historyNamespace,_that.activePresentations);case _:
   return orElse();
 
 }
@@ -867,10 +869,10 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  EditorInteractionStarter? startInteraction,  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,  ReferenceResourceResolver? resolveReferences,  List<RecordId> referenceOrigins,  ReferenceCandidatePolicyRegistry referencePolicies,  EditOwner? Function(BindingReference reference)? editOwnerFor,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections,  Map<BindingId, BindingReference> aliases,  Map<BindingId, PresentationInputAccess> inputAccess,  Map<BindingId, BindingReference?> ownerBindings,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?,)> suppressedHeaders,  Map<String, Widget> presentationSlots,  Object? expansionIdentity,  bool enabled,  bool readOnly,  String historyNamespace,  Set<PresentationId> activePresentations)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  EditorInteractionStarter? startInteraction,  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,  ReferenceResourceResolver? resolveReferences,  ReferenceEligibilityEvaluator? referenceEligibility,  List<ResourceId> referenceOrigins,  ReferenceCandidatePolicyRegistry referencePolicies,  EditOwner? Function(BindingReference reference)? editOwnerFor,  RenderedBindingFocusController? bindingFocusController,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections,  Map<BindingId, BindingReference> aliases,  Map<BindingId, PresentationInputAccess> inputAccess,  Map<BindingId, BindingReference?> ownerBindings,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?,)> suppressedHeaders,  Map<String, Widget> presentationSlots,  Object? expansionIdentity,  bool enabled,  bool readOnly,  String historyNamespace,  Set<PresentationId> activePresentations)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationRenderScope():
-return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.startInteraction,_that.realmSearchSourceBuilder,_that.referenceSearchSourceBuilder,_that.resolveReferences,_that.referenceOrigins,_that.referencePolicies,_that.editOwnerFor,_that.collections,_that.aliases,_that.inputAccess,_that.ownerBindings,_that.headerShortcuts,_that.suppressedHeaders,_that.presentationSlots,_that.expansionIdentity,_that.enabled,_that.readOnly,_that.historyNamespace,_that.activePresentations);case _:
+return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.startInteraction,_that.realmSearchSourceBuilder,_that.referenceSearchSourceBuilder,_that.resolveReferences,_that.referenceEligibility,_that.referenceOrigins,_that.referencePolicies,_that.editOwnerFor,_that.bindingFocusController,_that.collections,_that.aliases,_that.inputAccess,_that.ownerBindings,_that.headerShortcuts,_that.suppressedHeaders,_that.presentationSlots,_that.expansionIdentity,_that.enabled,_that.readOnly,_that.historyNamespace,_that.activePresentations);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -887,10 +889,10 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  EditorInteractionStarter? startInteraction,  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,  ReferenceResourceResolver? resolveReferences,  List<RecordId> referenceOrigins,  ReferenceCandidatePolicyRegistry referencePolicies,  EditOwner? Function(BindingReference reference)? editOwnerFor,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections,  Map<BindingId, BindingReference> aliases,  Map<BindingId, PresentationInputAccess> inputAccess,  Map<BindingId, BindingReference?> ownerBindings,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?,)> suppressedHeaders,  Map<String, Widget> presentationSlots,  Object? expansionIdentity,  bool enabled,  bool readOnly,  String historyNamespace,  Set<PresentationId> activePresentations)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  EditorInteractionStarter? startInteraction,  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,  ReferenceResourceResolver? resolveReferences,  ReferenceEligibilityEvaluator? referenceEligibility,  List<ResourceId> referenceOrigins,  ReferenceCandidatePolicyRegistry referencePolicies,  EditOwner? Function(BindingReference reference)? editOwnerFor,  RenderedBindingFocusController? bindingFocusController,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections,  Map<BindingId, BindingReference> aliases,  Map<BindingId, PresentationInputAccess> inputAccess,  Map<BindingId, BindingReference?> ownerBindings,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?,)> suppressedHeaders,  Map<String, Widget> presentationSlots,  Object? expansionIdentity,  bool enabled,  bool readOnly,  String historyNamespace,  Set<PresentationId> activePresentations)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationRenderScope() when $default != null:
-return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.startInteraction,_that.realmSearchSourceBuilder,_that.referenceSearchSourceBuilder,_that.resolveReferences,_that.referenceOrigins,_that.referencePolicies,_that.editOwnerFor,_that.collections,_that.aliases,_that.inputAccess,_that.ownerBindings,_that.headerShortcuts,_that.suppressedHeaders,_that.presentationSlots,_that.expansionIdentity,_that.enabled,_that.readOnly,_that.historyNamespace,_that.activePresentations);case _:
+return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.startInteraction,_that.realmSearchSourceBuilder,_that.referenceSearchSourceBuilder,_that.resolveReferences,_that.referenceEligibility,_that.referenceOrigins,_that.referencePolicies,_that.editOwnerFor,_that.bindingFocusController,_that.collections,_that.aliases,_that.inputAccess,_that.ownerBindings,_that.headerShortcuts,_that.suppressedHeaders,_that.presentationSlots,_that.expansionIdentity,_that.enabled,_that.readOnly,_that.historyNamespace,_that.activePresentations);case _:
   return null;
 
 }
@@ -902,8 +904,8 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 
 
 class _PresentationRenderScope extends PresentationRenderScope {
-  const _PresentationRenderScope({required this.expressions, required this.registry, required this.budget, required this.setBinding, required this.executeAction, required this.resolvePresentation, required this.expansionStore, this.startInteraction, this.realmSearchSourceBuilder, this.referenceSearchSourceBuilder, this.resolveReferences,  List<RecordId> referenceOrigins = const [], this.referencePolicies = const ReferenceCandidatePolicyRegistry(), this.editOwnerFor,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections = const {},  Map<BindingId, BindingReference> aliases = const {},  Map<BindingId, PresentationInputAccess> inputAccess = const {},  Map<BindingId, BindingReference?> ownerBindings = const {},  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts = const {},  Set<(String, BindingReference?,)> suppressedHeaders = const {},  Map<String, Widget> presentationSlots = const {}, this.expansionIdentity, this.enabled = true, this.readOnly = false, this.historyNamespace = "local",  Set<PresentationId> activePresentations = const {}}): _referenceOrigins = referenceOrigins,_collections = collections,_aliases = aliases,_inputAccess = inputAccess,_ownerBindings = ownerBindings,_headerShortcuts = headerShortcuts,_suppressedHeaders = suppressedHeaders,_presentationSlots = presentationSlots,_activePresentations = activePresentations,super._();
-  
+  const _PresentationRenderScope({required this.expressions, required this.registry, required this.budget, required this.setBinding, required this.executeAction, required this.resolvePresentation, required this.expansionStore, this.startInteraction, this.realmSearchSourceBuilder, this.referenceSearchSourceBuilder, this.resolveReferences, this.referenceEligibility,  List<ResourceId> referenceOrigins = const [], this.referencePolicies = const ReferenceCandidatePolicyRegistry(), this.editOwnerFor, this.bindingFocusController,  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections = const {},  Map<BindingId, BindingReference> aliases = const {},  Map<BindingId, PresentationInputAccess> inputAccess = const {},  Map<BindingId, BindingReference?> ownerBindings = const {},  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts = const {},  Set<(String, BindingReference?,)> suppressedHeaders = const {},  Map<String, Widget> presentationSlots = const {}, this.expansionIdentity, this.enabled = true, this.readOnly = false, this.historyNamespace = "local",  Set<PresentationId> activePresentations = const {}}): _referenceOrigins = referenceOrigins,_collections = collections,_aliases = aliases,_inputAccess = inputAccess,_ownerBindings = ownerBindings,_headerShortcuts = headerShortcuts,_suppressedHeaders = suppressedHeaders,_presentationSlots = presentationSlots,_activePresentations = activePresentations,super._();
+
 
 @override final  ExpressionContext expressions;
 @override final  TypeRegistry registry;
@@ -916,8 +918,9 @@ class _PresentationRenderScope extends PresentationRenderScope {
 @override final  RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
 @override final  ReferenceSearchSourceBuilder? referenceSearchSourceBuilder;
 @override final  ReferenceResourceResolver? resolveReferences;
- final  List<RecordId> _referenceOrigins;
-@override@JsonKey() List<RecordId> get referenceOrigins {
+@override final  ReferenceEligibilityEvaluator? referenceEligibility;
+ final  List<ResourceId> _referenceOrigins;
+@override@JsonKey() List<ResourceId> get referenceOrigins {
   if (_referenceOrigins is EqualUnmodifiableListView) return _referenceOrigins;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_referenceOrigins);
@@ -925,6 +928,7 @@ class _PresentationRenderScope extends PresentationRenderScope {
 
 @override@JsonKey() final  ReferenceCandidatePolicyRegistry referencePolicies;
 @override final  EditOwner? Function(BindingReference reference)? editOwnerFor;
+@override final  RenderedBindingFocusController? bindingFocusController;
  final  Map<PresentationCollectionSourceId, PresentationCollectionSource> _collections;
 @override@JsonKey() Map<PresentationCollectionSourceId, PresentationCollectionSource> get collections {
   if (_collections is EqualUnmodifiableMapView) return _collections;
@@ -996,18 +1000,18 @@ _$PresentationRenderScopeCopyWith<_PresentationRenderScope> get copyWith => __$P
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationRenderScope&&(identical(other.expressions, expressions) || other.expressions == expressions)&&(identical(other.registry, registry) || other.registry == registry)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.setBinding, setBinding) || other.setBinding == setBinding)&&(identical(other.executeAction, executeAction) || other.executeAction == executeAction)&&(identical(other.resolvePresentation, resolvePresentation) || other.resolvePresentation == resolvePresentation)&&(identical(other.expansionStore, expansionStore) || other.expansionStore == expansionStore)&&(identical(other.startInteraction, startInteraction) || other.startInteraction == startInteraction)&&(identical(other.realmSearchSourceBuilder, realmSearchSourceBuilder) || other.realmSearchSourceBuilder == realmSearchSourceBuilder)&&(identical(other.referenceSearchSourceBuilder, referenceSearchSourceBuilder) || other.referenceSearchSourceBuilder == referenceSearchSourceBuilder)&&(identical(other.resolveReferences, resolveReferences) || other.resolveReferences == resolveReferences)&&const DeepCollectionEquality().equals(other.referenceOrigins, _referenceOrigins)&&(identical(other.referencePolicies, referencePolicies) || other.referencePolicies == referencePolicies)&&(identical(other.editOwnerFor, editOwnerFor) || other.editOwnerFor == editOwnerFor)&&const DeepCollectionEquality().equals(other.collections, _collections)&&const DeepCollectionEquality().equals(other.aliases, _aliases)&&const DeepCollectionEquality().equals(other.inputAccess, _inputAccess)&&const DeepCollectionEquality().equals(other.ownerBindings, _ownerBindings)&&const DeepCollectionEquality().equals(other.headerShortcuts, _headerShortcuts)&&const DeepCollectionEquality().equals(other.suppressedHeaders, _suppressedHeaders)&&const DeepCollectionEquality().equals(other.presentationSlots, _presentationSlots)&&const DeepCollectionEquality().equals(other.expansionIdentity, expansionIdentity)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.historyNamespace, historyNamespace) || other.historyNamespace == historyNamespace)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationRenderScope&&(identical(other.expressions, expressions) || other.expressions == expressions)&&(identical(other.registry, registry) || other.registry == registry)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.setBinding, setBinding) || other.setBinding == setBinding)&&(identical(other.executeAction, executeAction) || other.executeAction == executeAction)&&(identical(other.resolvePresentation, resolvePresentation) || other.resolvePresentation == resolvePresentation)&&(identical(other.expansionStore, expansionStore) || other.expansionStore == expansionStore)&&(identical(other.startInteraction, startInteraction) || other.startInteraction == startInteraction)&&(identical(other.realmSearchSourceBuilder, realmSearchSourceBuilder) || other.realmSearchSourceBuilder == realmSearchSourceBuilder)&&(identical(other.referenceSearchSourceBuilder, referenceSearchSourceBuilder) || other.referenceSearchSourceBuilder == referenceSearchSourceBuilder)&&(identical(other.resolveReferences, resolveReferences) || other.resolveReferences == resolveReferences)&&(identical(other.referenceEligibility, referenceEligibility) || other.referenceEligibility == referenceEligibility)&&const DeepCollectionEquality().equals(other.referenceOrigins, _referenceOrigins)&&(identical(other.referencePolicies, referencePolicies) || other.referencePolicies == referencePolicies)&&(identical(other.editOwnerFor, editOwnerFor) || other.editOwnerFor == editOwnerFor)&&(identical(other.bindingFocusController, bindingFocusController) || other.bindingFocusController == bindingFocusController)&&const DeepCollectionEquality().equals(other.collections, _collections)&&const DeepCollectionEquality().equals(other.aliases, _aliases)&&const DeepCollectionEquality().equals(other.inputAccess, _inputAccess)&&const DeepCollectionEquality().equals(other.ownerBindings, _ownerBindings)&&const DeepCollectionEquality().equals(other.headerShortcuts, _headerShortcuts)&&const DeepCollectionEquality().equals(other.suppressedHeaders, _suppressedHeaders)&&const DeepCollectionEquality().equals(other.presentationSlots, _presentationSlots)&&const DeepCollectionEquality().equals(other.expansionIdentity, expansionIdentity)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.historyNamespace, historyNamespace) || other.historyNamespace == historyNamespace)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations));
 }
 
 
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,expressions,registry,budget,setBinding,executeAction,resolvePresentation,expansionStore,startInteraction,realmSearchSourceBuilder,referenceSearchSourceBuilder,resolveReferences,const DeepCollectionEquality().hash(_referenceOrigins),referencePolicies,editOwnerFor,const DeepCollectionEquality().hash(_collections),const DeepCollectionEquality().hash(_aliases),const DeepCollectionEquality().hash(_inputAccess),const DeepCollectionEquality().hash(_ownerBindings),const DeepCollectionEquality().hash(_headerShortcuts),const DeepCollectionEquality().hash(_suppressedHeaders),const DeepCollectionEquality().hash(_presentationSlots),const DeepCollectionEquality().hash(expansionIdentity),enabled,readOnly,historyNamespace,const DeepCollectionEquality().hash(_activePresentations)]);
+    return Object.hashAll([runtimeType,expressions,registry,budget,setBinding,executeAction,resolvePresentation,expansionStore,startInteraction,realmSearchSourceBuilder,referenceSearchSourceBuilder,resolveReferences,referenceEligibility,const DeepCollectionEquality().hash(_referenceOrigins),referencePolicies,editOwnerFor,bindingFocusController,const DeepCollectionEquality().hash(_collections),const DeepCollectionEquality().hash(_aliases),const DeepCollectionEquality().hash(_inputAccess),const DeepCollectionEquality().hash(_ownerBindings),const DeepCollectionEquality().hash(_headerShortcuts),const DeepCollectionEquality().hash(_suppressedHeaders),const DeepCollectionEquality().hash(_presentationSlots),const DeepCollectionEquality().hash(expansionIdentity),enabled,readOnly,historyNamespace,const DeepCollectionEquality().hash(_activePresentations)]);
 }
 
 @override
 String toString() {
-    return 'PresentationRenderScope(expressions: $expressions, registry: $registry, budget: $budget, setBinding: $setBinding, executeAction: $executeAction, resolvePresentation: $resolvePresentation, expansionStore: $expansionStore, startInteraction: $startInteraction, realmSearchSourceBuilder: $realmSearchSourceBuilder, referenceSearchSourceBuilder: $referenceSearchSourceBuilder, resolveReferences: $resolveReferences, referenceOrigins: $referenceOrigins, referencePolicies: $referencePolicies, editOwnerFor: $editOwnerFor, collections: $collections, aliases: $aliases, inputAccess: $inputAccess, ownerBindings: $ownerBindings, headerShortcuts: $headerShortcuts, suppressedHeaders: $suppressedHeaders, presentationSlots: $presentationSlots, expansionIdentity: $expansionIdentity, enabled: $enabled, readOnly: $readOnly, historyNamespace: $historyNamespace, activePresentations: $activePresentations)';
+    return 'PresentationRenderScope(expressions: $expressions, registry: $registry, budget: $budget, setBinding: $setBinding, executeAction: $executeAction, resolvePresentation: $resolvePresentation, expansionStore: $expansionStore, startInteraction: $startInteraction, realmSearchSourceBuilder: $realmSearchSourceBuilder, referenceSearchSourceBuilder: $referenceSearchSourceBuilder, resolveReferences: $resolveReferences, referenceEligibility: $referenceEligibility, referenceOrigins: $referenceOrigins, referencePolicies: $referencePolicies, editOwnerFor: $editOwnerFor, bindingFocusController: $bindingFocusController, collections: $collections, aliases: $aliases, inputAccess: $inputAccess, ownerBindings: $ownerBindings, headerShortcuts: $headerShortcuts, suppressedHeaders: $suppressedHeaders, presentationSlots: $presentationSlots, expansionIdentity: $expansionIdentity, enabled: $enabled, readOnly: $readOnly, historyNamespace: $historyNamespace, activePresentations: $activePresentations)';
 }
 
 
@@ -1018,7 +1022,7 @@ abstract mixin class _$PresentationRenderScopeCopyWith<$Res> implements $Present
   factory _$PresentationRenderScopeCopyWith(_PresentationRenderScope value, $Res Function(_PresentationRenderScope) _then) = __$PresentationRenderScopeCopyWithImpl;
 @override @useResult
 $Res call({
- ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, EditorInteractionStarter? startInteraction, RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder, ReferenceSearchSourceBuilder? referenceSearchSourceBuilder, ReferenceResourceResolver? resolveReferences, List<RecordId> referenceOrigins, ReferenceCandidatePolicyRegistry referencePolicies, EditOwner? Function(BindingReference reference)? editOwnerFor, Map<PresentationCollectionSourceId, PresentationCollectionSource> collections, Map<BindingId, BindingReference> aliases, Map<BindingId, PresentationInputAccess> inputAccess, Map<BindingId, BindingReference?> ownerBindings, Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?,)> suppressedHeaders, Map<String, Widget> presentationSlots, Object? expansionIdentity, bool enabled, bool readOnly, String historyNamespace, Set<PresentationId> activePresentations
+ ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, EditorInteractionStarter? startInteraction, RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder, ReferenceSearchSourceBuilder? referenceSearchSourceBuilder, ReferenceResourceResolver? resolveReferences, ReferenceEligibilityEvaluator? referenceEligibility, List<ResourceId> referenceOrigins, ReferenceCandidatePolicyRegistry referencePolicies, EditOwner? Function(BindingReference reference)? editOwnerFor, RenderedBindingFocusController? bindingFocusController, Map<PresentationCollectionSourceId, PresentationCollectionSource> collections, Map<BindingId, BindingReference> aliases, Map<BindingId, PresentationInputAccess> inputAccess, Map<BindingId, BindingReference?> ownerBindings, Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?,)> suppressedHeaders, Map<String, Widget> presentationSlots, Object? expansionIdentity, bool enabled, bool readOnly, String historyNamespace, Set<PresentationId> activePresentations
 });
 
 
@@ -1035,7 +1039,7 @@ class __$PresentationRenderScopeCopyWithImpl<$Res>
 
 /// Create a copy of PresentationRenderScope
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? expressions = null,Object? registry = null,Object? budget = null,Object? setBinding = null,Object? executeAction = null,Object? resolvePresentation = null,Object? expansionStore = null,Object? startInteraction = freezed,Object? realmSearchSourceBuilder = freezed,Object? referenceSearchSourceBuilder = freezed,Object? resolveReferences = freezed,Object? referenceOrigins = null,Object? referencePolicies = null,Object? editOwnerFor = freezed,Object? collections = null,Object? aliases = null,Object? inputAccess = null,Object? ownerBindings = null,Object? headerShortcuts = null,Object? suppressedHeaders = null,Object? presentationSlots = null,Object? expansionIdentity = freezed,Object? enabled = null,Object? readOnly = null,Object? historyNamespace = null,Object? activePresentations = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? expressions = null,Object? registry = null,Object? budget = null,Object? setBinding = null,Object? executeAction = null,Object? resolvePresentation = null,Object? expansionStore = null,Object? startInteraction = freezed,Object? realmSearchSourceBuilder = freezed,Object? referenceSearchSourceBuilder = freezed,Object? resolveReferences = freezed,Object? referenceEligibility = freezed,Object? referenceOrigins = null,Object? referencePolicies = null,Object? editOwnerFor = freezed,Object? bindingFocusController = freezed,Object? collections = null,Object? aliases = null,Object? inputAccess = null,Object? ownerBindings = null,Object? headerShortcuts = null,Object? suppressedHeaders = null,Object? presentationSlots = null,Object? expansionIdentity = freezed,Object? enabled = null,Object? readOnly = null,Object? historyNamespace = null,Object? activePresentations = null,}) {
   return _then(_PresentationRenderScope(
 expressions: null == expressions ? _self.expressions : expressions // ignore: cast_nullable_to_non_nullable
 as ExpressionContext,registry: null == registry ? _self.registry : registry // ignore: cast_nullable_to_non_nullable
@@ -1048,10 +1052,12 @@ as HeaderExpansionStore,startInteraction: freezed == startInteraction ? _self.st
 as EditorInteractionStarter?,realmSearchSourceBuilder: freezed == realmSearchSourceBuilder ? _self.realmSearchSourceBuilder : realmSearchSourceBuilder // ignore: cast_nullable_to_non_nullable
 as RealmPresentationSearchSourceBuilder?,referenceSearchSourceBuilder: freezed == referenceSearchSourceBuilder ? _self.referenceSearchSourceBuilder : referenceSearchSourceBuilder // ignore: cast_nullable_to_non_nullable
 as ReferenceSearchSourceBuilder?,resolveReferences: freezed == resolveReferences ? _self.resolveReferences : resolveReferences // ignore: cast_nullable_to_non_nullable
-as ReferenceResourceResolver?,referenceOrigins: null == referenceOrigins ? _self._referenceOrigins : referenceOrigins // ignore: cast_nullable_to_non_nullable
-as List<RecordId>,referencePolicies: null == referencePolicies ? _self.referencePolicies : referencePolicies // ignore: cast_nullable_to_non_nullable
+as ReferenceResourceResolver?,referenceEligibility: freezed == referenceEligibility ? _self.referenceEligibility : referenceEligibility // ignore: cast_nullable_to_non_nullable
+as ReferenceEligibilityEvaluator?,referenceOrigins: null == referenceOrigins ? _self._referenceOrigins : referenceOrigins // ignore: cast_nullable_to_non_nullable
+as List<ResourceId>,referencePolicies: null == referencePolicies ? _self.referencePolicies : referencePolicies // ignore: cast_nullable_to_non_nullable
 as ReferenceCandidatePolicyRegistry,editOwnerFor: freezed == editOwnerFor ? _self.editOwnerFor : editOwnerFor // ignore: cast_nullable_to_non_nullable
-as EditOwner? Function(BindingReference reference)?,collections: null == collections ? _self._collections : collections // ignore: cast_nullable_to_non_nullable
+as EditOwner? Function(BindingReference reference)?,bindingFocusController: freezed == bindingFocusController ? _self.bindingFocusController : bindingFocusController // ignore: cast_nullable_to_non_nullable
+as RenderedBindingFocusController?,collections: null == collections ? _self._collections : collections // ignore: cast_nullable_to_non_nullable
 as Map<PresentationCollectionSourceId, PresentationCollectionSource>,aliases: null == aliases ? _self._aliases : aliases // ignore: cast_nullable_to_non_nullable
 as Map<BindingId, BindingReference>,inputAccess: null == inputAccess ? _self._inputAccess : inputAccess // ignore: cast_nullable_to_non_nullable
 as Map<BindingId, PresentationInputAccess>,ownerBindings: null == ownerBindings ? _self._ownerBindings : ownerBindings // ignore: cast_nullable_to_non_nullable
@@ -1071,7 +1077,7 @@ as Set<PresentationId>,
 @override
 @pragma('vm:prefer-inline')
 $ExpressionContextCopyWith<$Res> get expressions {
-  
+
   return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
     return _then(_self.copyWith(expressions: value));
   });
@@ -1080,7 +1086,7 @@ $ExpressionContextCopyWith<$Res> get expressions {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionBudgetCopyWith<$Res> get budget {
-  
+
   return $ExpressionBudgetCopyWith<$Res>(_self.budget, (value) {
     return _then(_self.copyWith(budget: value));
   });

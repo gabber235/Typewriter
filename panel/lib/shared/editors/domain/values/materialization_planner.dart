@@ -11,11 +11,25 @@ DraftValue planCreationDraft({
   fixedValues,
 ).build(type, const MaterializationLocation.root());
 
+DraftValue planCreationDraftWithoutDefaults({
+  required TypeExpression type,
+  required TypeRegistry registry,
+}) => _DraftPlanner(
+  registry,
+  const {},
+  includeInitialValues: false,
+).build(type, const MaterializationLocation.root());
+
 final class _DraftPlanner {
-  _DraftPlanner(this.registry, this.fixedValues);
+  _DraftPlanner(
+    this.registry,
+    this.fixedValues, {
+    this.includeInitialValues = true,
+  });
 
   final TypeRegistry registry;
   final Map<MaterializationLocation, DataValue> fixedValues;
+  final bool includeInitialValues;
   int _nextId = 0;
 
   DraftNodeId _id() => DraftNodeId(_nextId++);
@@ -29,29 +43,29 @@ final class _DraftPlanner {
       ParameterType() ||
       ReferenceType() => MissingDraftValue(_id()),
       UnitType() => ScalarDraftValue(_id(), const UnitValue()),
-      BooleanType() => ScalarDraftValue(_id(), const BooleanValue(false)),
-      StringType() => _scalarOrMissing(type, const StringValue("")),
-      BytesType() => _scalarOrMissing(type, BytesValue(Uint8List(0))),
-      IntegerType() => _scalarOrMissing(type, IntegerValue(BigInt.zero)),
-      FloatType() => _scalarOrMissing(type, const FloatValue(0)),
-      DecimalType() => _scalarOrMissing(type, DecimalValue("0")),
-      TimestampType() => _scalarOrMissing(
+      BooleanType() => _defaultedScalar(type, const BooleanValue(false)),
+      StringType() => _defaultedScalar(type, const StringValue("")),
+      BytesType() => _defaultedScalar(type, BytesValue(Uint8List(0))),
+      IntegerType() => _defaultedScalar(type, IntegerValue(BigInt.zero)),
+      FloatType() => _defaultedScalar(type, const FloatValue(0)),
+      DecimalType() => _defaultedScalar(type, DecimalValue("0")),
+      TimestampType() => _defaultedScalar(
         type,
         TimestampValue(DateTime.fromMillisecondsSinceEpoch(0, isUtc: true)),
       ),
-      DurationType() => _scalarOrMissing(
+      DurationType() => _defaultedScalar(
         type,
         const DurationValue(Duration.zero),
       ),
       EnumType(:final values) =>
-        values.length == 1
+        includeInitialValues && values.length == 1
             ? ScalarDraftValue(_id(), values.single)
             : MissingDraftValue(_id()),
       ListType() => ListDraftValue(_id(), const []),
       MapType() => MapDraftValue(_id(), const []),
       RecordType(:final fields) => RecordDraftValue(_id(), {
         for (final field in fields.values)
-          field.name: field.initialValue != null
+          field.name: field.initialValue != null && includeInitialValues
               ? _fromValue(
                   field.type,
                   field.initialValue!,
@@ -63,13 +77,14 @@ final class _DraftPlanner {
     };
   }
 
-  DraftValue _scalarOrMissing(TypeExpression type, DataValue value) =>
-      value.validateAgainst(type, registry: registry).isEmpty
+  DraftValue _defaultedScalar(TypeExpression type, DataValue value) =>
+      includeInitialValues &&
+          value.validateAgainst(type, registry: registry).isEmpty
       ? ScalarDraftValue(_id(), value)
       : MissingDraftValue(_id());
 
   DraftValue _named(NamedType type, MaterializationLocation location) {
-    if (type.reference.id == const TypeId.option()) {
+    if (includeInitialValues && type.reference.id == const TypeId.option()) {
       return _fromValue(
         type,
         PolymorphicValue(
@@ -83,9 +98,15 @@ final class _DraftPlanner {
     }
     final resolved = registry.resolve(type).valueOrNull;
     if (resolved == null) return MissingDraftValue(_id());
+    if (includeInitialValues) {
+      final initial = resolved.initialValue;
+      if (initial != null) return _fromValue(type, initial, location);
+    }
     if (resolved.isConcrete) return build(resolved.representation, location);
     final options = registry.concreteDescendantsOf(type.reference).toList();
-    if (options.length == 1) return _polymorphic(options.single, location);
+    if (includeInitialValues && options.length == 1) {
+      return _polymorphic(options.single, location);
+    }
     return PolymorphicDraftValue(_id(), concreteType: null, payload: null);
   }
 

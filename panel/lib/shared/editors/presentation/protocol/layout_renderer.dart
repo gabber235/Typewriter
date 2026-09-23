@@ -6,6 +6,7 @@ import "package:flutter/rendering.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "renderers/layout/column_renderer.dart";
+part "renderers/layout/adaptive_leading_renderer.dart";
 part "renderers/layout/connection_geometry.dart";
 part "renderers/layout/connection_layer_surface.dart";
 part "renderers/layout/connection_models.dart";

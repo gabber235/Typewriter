@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -151,6 +153,7 @@ Widget entryNodeReferenceUseCase(BuildContext context) {
           entry: PageEntry.reference(
             id: "reference-entry-id",
             name: "Referenced Entry",
+            subject: _storySubject("reference-entry-id"),
             elementDefinition: elementDefinition,
             pageId: "other-page-id",
             metadata: const [],
@@ -158,6 +161,22 @@ Widget entryNodeReferenceUseCase(BuildContext context) {
         ),
       ),
     ),
+  );
+}
+
+TypedPresentationSubject _storySubject(String id) {
+  const type = ResolvedTypeRef(
+    id: QualifiedTypeId(namespace: "widgetbook", name: "ReferenceEntry"),
+    revision: 1,
+  );
+  return (
+    content: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+    descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+    identityEnvelope: TypedValueEnvelope(
+      rootType: ResolvedTypeRef(id: resourceIdentityTypeId, revision: 1),
+      rootValue: RecordValue({"id": StringValue(id)}),
+    ),
+    identity: (id: skir.ResourceId(value: id), owner: null),
   );
 }
 

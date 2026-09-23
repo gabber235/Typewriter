@@ -1,0 +1,378 @@
+import { CompilationRoot } from "editor/v1/compiled_content.skir";
+import { DataPath } from "editor/v1/path.skir";
+import { RealmSearchQuery } from "editor/v1/search.skir";
+import {
+  CatalogGeneration,
+  ResolvedTypeRef,
+  ResourceId,
+  TypeExpression,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+
+struct ResourceDefinitionId(812200001) {
+  value: string = 0;
+}
+
+struct ResourceDefinition(812200002) {
+  id: ResourceDefinitionId = 0;
+  accepted_root: TypeExpression = 1;
+  navigation_handler: string = 2;
+}
+
+struct RelationId(812200003) {
+  value: string = 0;
+}
+
+enum RelationDeletePolicy(812200004) {
+  restrict = 1;
+  cascade = 2;
+  clear = 3;
+}
+
+enum RelationCardinality(812200005) {
+  one = 1;
+  many = 2;
+}
+
+enum RelationEndpointSide(812200006) {
+  source = 1;
+  target = 2;
+}
+
+struct RelationEndpointDefinition(812200007) {
+  owner: ResolvedTypeRef = 0;
+  path: DataPath = 1;
+  side: RelationEndpointSide = 2;
+  cardinality: RelationCardinality = 3;
+}
+
+struct RelationDefinition(812200008) {
+  id: RelationId = 0;
+  source: ResolvedTypeRef = 1;
+  target: ResolvedTypeRef = 2;
+  on_source_delete: RelationDeletePolicy = 3;
+  on_target_delete: RelationDeletePolicy = 4;
+  source_endpoint: RelationEndpointDefinition? = 5;
+  target_endpoint: RelationEndpointDefinition? = 6;
+  families: [RelationId] = 7;
+}
+
+struct AuthoringResource(812200009) {
+  id: ResourceId = 0;
+  definition: ResourceDefinitionId = 1;
+  content: TypedValueEnvelope = 2;
+}
+
+struct AuthoringEdgeId(812200010) {
+  value: string = 0;
+}
+
+enum AuthoringEdgeOrigin(812200011) {
+  ordinary_reference: struct {
+    path: DataPath = 0;
+    slot: string = 1;
+    expected_target: TypeExpression = 2;
+  } = 1;
+  declared_relation: struct {
+    relation_id: RelationId = 0;
+    source_index: int32? = 1;
+    target_index: int32? = 2;
+  } = 2;
+}
+
+struct AuthoringEdge(812200012) {
+  id: AuthoringEdgeId = 0;
+  source: ResourceId = 1;
+  target: ResourceId = 2;
+  origin: AuthoringEdgeOrigin = 3;
+}
+
+enum RelationDirection(812200013) {
+  outgoing = 1;
+  incoming = 2;
+  both = 3;
+}
+
+struct ResourceFilter(812200014) {
+  definitions: [ResourceDefinitionId] = 0;
+  assignable_to: TypeExpression? = 1;
+}
+
+enum ResourceSeed(812200015) {
+  ids: struct {
+    values: [ResourceId] = 0;
+    require_assignable_to: TypeExpression? = 1;
+  } = 1;
+  scan: struct {
+    filter: ResourceFilter = 0;
+  } = 2;
+}
+
+enum RelationFilter(812200016) {
+  any = 1;
+  ordinary_references: struct {
+    source_path_prefixes: [DataPath] = 0;
+    expected_target: TypeExpression? = 1;
+  } = 2;
+  declared: struct {
+    relation_ids: [RelationId] = 0;
+  } = 3;
+}
+
+struct RelationStep(812200017) {
+  relations: RelationFilter = 0;
+  direction: RelationDirection = 1;
+  min_depth: int32 = 2;
+  max_depth: int32 = 3;
+  target: ResourceFilter? = 4;
+}
+
+struct GraphSelection(812200018) {
+  key: string = 0;
+  seed: ResourceSeed = 1;
+  steps: [RelationStep] = 2;
+}
+
+struct GraphSelectionResult(812200019) {
+  key: string = 0;
+  resource_ids: [ResourceId] = 1;
+  edge_ids: [AuthoringEdgeId] = 2;
+  missing_ids: [ResourceId] = 3;
+  incompatible_ids: [ResourceId] = 4;
+}
+
+struct AuthoringDiagnostic(812200020) {
+  code: string = 0;
+  message: string = 1;
+  resource: ResourceId? = 2;
+  path: DataPath? = 3;
+}
+
+struct AuthoringInvalid(812200021) {
+  diagnostics: [AuthoringDiagnostic] = 0;
+}
+
+struct CatalogChanged(812200022) {
+  actual_generation: CatalogGeneration = 0;
+}
+
+struct AuthoringGraphSnapshot(812200023) {
+  generation: CatalogGeneration = 0;
+  sequence: int64 = 1;
+  resources: [AuthoringResource] = 2;
+  edges: [AuthoringEdge] = 3;
+  selections: [GraphSelectionResult] = 4;
+  diagnostics: [AuthoringDiagnostic] = 5;
+  presentations: [AuthoringResourcePresentation] = 6;
+}
+
+struct CreateResource(812200024) {
+  resource: AuthoringResource = 0;
+  attachment: CreationAttachment? = 1;
+}
+
+struct CreationAttachment(812200061) {
+  host: ResourceId = 0;
+  relation: RelationId = 1;
+  host_side: RelationEndpointSide = 2;
+}
+
+struct CommitResource(812200025) {
+  id: ResourceId = 0;
+  base: AuthoringResource = 1;
+  proposed: AuthoringResource = 2;
+  changed_paths: [DataPath] = 3;
+}
+
+struct DeleteResource(812200026) {
+  id: ResourceId = 0;
+  base: AuthoringResource = 1;
+}
+
+struct DeclareRelation(812200059) {
+  relation: RelationId = 0;
+  source: ResourceId = 1;
+  target: ResourceId = 2;
+  source_before: ResourceId? = 3;
+  target_before: ResourceId? = 4;
+}
+
+struct RemoveRelation(812200060) {
+  relation: RelationId = 0;
+  source: ResourceId = 1;
+  target: ResourceId = 2;
+}
+
+enum AuthoringOperation(812200027) {
+  create: CreateResource = 1;
+  commit: CommitResource = 2;
+  delete: DeleteResource = 3;
+  declare_relation: DeclareRelation = 4;
+  remove_relation: RemoveRelation = 5;
+}
+
+enum AuthoringResourceChange(812200028) {
+  upsert: AuthoringResource = 1;
+  remove: ResourceId = 2;
+}
+
+enum AuthoringEdgeChange(812200029) {
+  upsert: AuthoringEdge = 1;
+  remove: AuthoringEdgeId = 2;
+}
+
+struct AuthoringChanged(812200030) {
+  generation: CatalogGeneration = 0;
+  sequence: int64 = 1;
+  batch_id: string = 2;
+  resources: [AuthoringResourceChange] = 3;
+  edges: [AuthoringEdgeChange] = 4;
+  presentations: [PresentationSubjectChange] = 5;
+  compilation_impact: [CompilationRoot] = 6;
+}
+
+struct PropertyConflict(812200031) {
+  resource: ResourceId = 0;
+  path: DataPath = 1;
+  expected: TypedValue? = 2;
+  actual: TypedValue? = 3;
+}
+
+struct AuthoringConflict(812200032) {
+  conflicts: [PropertyConflict] = 0;
+}
+
+struct AuthoringPreview(812200033) {
+  affected_resources: [ResourceId] = 0;
+  affected_edges: [AuthoringEdgeId] = 1;
+}
+
+struct PresentationSubject(812200034) {
+  content: TypedValueEnvelope = 0;
+  descriptor: TypedValueEnvelope = 1;
+  identity: TypedValueEnvelope = 2;
+  resource: ResourceId = 3;
+  definition: ResourceDefinitionId = 4;
+  owner_path: [ResourceId] = 5;
+}
+
+enum PresentationSubjectChange(812200046) {
+  upsert: struct {
+    resource: ResourceId = 0;
+    subject: PresentationSubject = 1;
+  } = 1;
+  remove: ResourceId = 2;
+}
+
+struct SearchFacetId(812200035) {
+  value: string = 0;
+}
+
+struct SearchFacetRequest(812200036) {
+  facet_id: SearchFacetId = 0;
+  partial: string? = 1;
+  validate: [string] = 2;
+}
+
+struct SearchFacetResult(812200037) {
+  facet_id: SearchFacetId = 0;
+  suggestions: [string] = 1;
+  accepted: [string] = 2;
+  rejected: [string] = 3;
+}
+
+struct AuthoringSearchHit(812200038) {
+  resource: ResourceId = 0;
+  definition: ResourceDefinitionId = 1;
+  subject: PresentationSubject = 2;
+  context: TypedValueEnvelope = 3;
+  owner_path: [ResourceId] = 4;
+}
+
+struct AuthoringSearchSnapshot(812200039) {
+  generation: CatalogGeneration = 0;
+  sequence: int64 = 1;
+  hits: [AuthoringSearchHit] = 2;
+  facets: [SearchFacetResult] = 3;
+  diagnostics: [AuthoringDiagnostic] = 4;
+}
+
+enum CollectionProjectionSource(812200042) {
+  resource_id = 1;
+  content: DataPath = 2;
+  literal: TypedValue = 3;
+}
+
+struct CollectionProjectionField(812200043) {
+  target: DataPath = 0;
+  source: CollectionProjectionSource = 1;
+}
+
+struct CollectionProjectionDefinition(812200044) {
+  source_id: string = 0;
+  resources: ResourceFilter = 1;
+  row_type: ResolvedTypeRef = 2;
+  fields: [CollectionProjectionField] = 3;
+}
+
+struct AuthoringResourcePresentation(812200045) {
+  resource: ResourceId = 0;
+  subject: PresentationSubject = 1;
+}
+
+method QueryAuthoringGraph(
+  struct {
+    generation: CatalogGeneration = 0;
+    selections: [GraphSelection] = 1;
+  }
+): enum {
+  success: AuthoringGraphSnapshot = 1;
+  invalid: AuthoringInvalid = 2;
+  catalog_changed: CatalogChanged = 3;
+  internal_error: InternalError = 4;
+} = 920010;
+
+method SearchAuthoringGraph(
+  struct {
+    generation: CatalogGeneration = 0;
+    query: RealmSearchQuery = 1;
+    resources: ResourceFilter = 2;
+    contexts: [ResourceId] = 3;
+    reference_target: TypeExpression? = 4;
+    facets: [SearchFacetRequest] = 5;
+  }
+): enum {
+  success: AuthoringSearchSnapshot = 1;
+  invalid: AuthoringInvalid = 2;
+  catalog_changed: CatalogChanged = 3;
+  internal_error: InternalError = 4;
+} = 920011;
+
+method ApplyAuthoringBatch(
+  struct {
+    batch_id: string = 0;
+    generation: CatalogGeneration = 1;
+    operations: [AuthoringOperation] = 2;
+  }
+): enum {
+  applied: AuthoringChanged = 1;
+  conflict: AuthoringConflict = 2;
+  invalid: AuthoringInvalid = 3;
+  catalog_changed: CatalogChanged = 4;
+  internal_error: InternalError = 5;
+} = 920012;
+
+method PreviewAuthoringBatch(
+  struct {
+    generation: CatalogGeneration = 0;
+    operations: [AuthoringOperation] = 1;
+  }
+): enum {
+  valid: AuthoringPreview = 1;
+  conflict: AuthoringConflict = 2;
+  invalid: AuthoringInvalid = 3;
+  catalog_changed: CatalogChanged = 4;
+  internal_error: InternalError = 5;
+} = 920013;

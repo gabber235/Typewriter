@@ -1,188 +1,107 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.realm.repository.AuthoringBatch
+import com.typewritermc.realm.repository.AuthoringBatchResult
+import com.typewritermc.realm.repository.AuthoringChanged
+import com.typewritermc.realm.repository.AuthoringGraphSnapshot
+import com.typewritermc.realm.repository.AuthoringOperation
+import com.typewritermc.realm.repository.AuthoringPreviewResult
+import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.repository.BatchId
+import com.typewritermc.realm.repository.GraphSelectionResult
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
-import skirout.kernel.v1.color.Color
-import skirout.kernel.v1.record_id.RecordId
-import skirout.kernel.v1.record_id.RecordIdKey
-import skirout.library.v1.authoring.ApplyAuthoringBatchRequest
-import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
-import skirout.library.v1.authoring.AuthoringChanged
-import skirout.library.v1.authoring.AuthoringOperation
-import skirout.library.v1.authoring.AuthoringSnapshotScope
-import skirout.library.v1.authoring.AuthoringSnapshotSlice
-import skirout.library.v1.authoring.Book
-import skirout.library.v1.authoring.GetAuthoringSnapshotRequest
-import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
-import skirout.library.v1.authoring.StringChange
+import skirout.editor.v1.authoring.ApplyAuthoringBatchRequest
+import skirout.editor.v1.authoring.ApplyAuthoringBatchResponse
+import skirout.editor.v1.authoring.RelationId
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.authoring.AuthoringOperation as WireAuthoringOperation
+import skirout.editor.v1.type_catalog.ResourceId as WireResourceId
 
 val AuthoringRoutesTest by testSuite {
-    test("applied batches publish the canonical response event") {
+    test("search compatibility is taken only from the constrained selection") {
+        val compatible = ResourceId("compatible")
+        val reintroduced = ResourceId("reintroduced")
+        val snapshot =
+            AuthoringGraphSnapshot(
+                generation = "generation",
+                sequence = 1,
+                resources = emptyList(),
+                edges = emptyList(),
+                selections =
+                    listOf(
+                        GraphSelectionResult("search", listOf(compatible), emptyList(), emptyList()),
+                        GraphSelectionResult("search-presentation", listOf(reintroduced), emptyList(), emptyList()),
+                    ),
+            )
+
+        snapshot.compatibleSearchCandidateIds().shouldContainExactly(compatible)
+    }
+
+    test("committed changes invalidate compilation after publication failure") {
         runTest {
-            RouteFixture().use { fixture ->
-                val request = createBookRequest("published-batch")
+            val root = CompilationRoot(CompilationProjectionId("test.projection"), ResourceId("root"))
+            val invalidations = mutableListOf<List<CompilationRoot>>()
+            val repository = AppliedAuthoringRepository(root)
+
+            RouteFixture(
+                authoring = repository,
+                onCompilationInvalidated = invalidations::add,
+            ).use { fixture ->
+                fixture.transport.failNextPublish(TransportError.Unavailable())
 
                 val response =
                     fixture.request(
-                        "library.authoring.batch.apply",
-                        request,
-                        ApplyAuthoringBatchRequest.serializer,
-                        ApplyAuthoringBatchResponse.serializer,
-                    ) as ApplyAuthoringBatchResponse.AppliedWrapper
-
-                fixture.publishedTo("library.authoring.changed", AuthoringChanged.serializer) shouldContainExactly
-                    listOf(response.value)
-            }
-        }
-    }
-
-    test("idempotent replays may republish the same canonical event") {
-        runTest {
-            RouteFixture().use { fixture ->
-                val request = createBookRequest("replayed-batch")
-
-                repeat(2) {
-                    fixture
-                        .request(
-                            "library.authoring.batch.apply",
-                            request,
-                            ApplyAuthoringBatchRequest.serializer,
-                            ApplyAuthoringBatchResponse.serializer,
-                        ).shouldBeInstanceOf<ApplyAuthoringBatchResponse.AppliedWrapper>()
-                }
-
-                val events = fixture.publishedTo("library.authoring.changed", AuthoringChanged.serializer)
-                events.size shouldBe 2
-                events[1] shouldBe events[0]
-            }
-        }
-    }
-
-    test("conflicts return property details without publishing") {
-        runTest {
-            RouteFixture().use { fixture ->
-                fixture.request(
-                    "library.authoring.batch.apply",
-                    createBookRequest("conflict-create"),
-                    ApplyAuthoringBatchRequest.serializer,
-                    ApplyAuthoringBatchResponse.serializer,
-                )
-                val publicationsBefore = fixture.publishedTo("library.authoring.changed").size
-
-                val response =
-                    fixture.request(
-                        "library.authoring.batch.apply",
+                        "editor.authoring.batch.apply",
                         ApplyAuthoringBatchRequest(
-                            batchId = "conflict-patch",
+                            batchId = "batch",
+                            generation = CatalogGeneration(value = "generation"),
                             operations =
                                 listOf(
-                                    AuthoringOperation.createPatchBook(
-                                        id = recordId("book", "route-book"),
-                                        title = StringChange(expected = "stale", value = "changed"),
-                                        icon = null,
-                                        color = null,
-                                        tags = null,
+                                    WireAuthoringOperation.createDeclareRelation(
+                                        relation = RelationId(value = "11111111111111111111111111111111"),
+                                        source = WireResourceId(value = "source"),
+                                        target = WireResourceId(value = "target"),
+                                        sourceBefore = null,
+                                        targetBefore = null,
                                     ),
                                 ),
                         ),
                         ApplyAuthoringBatchRequest.serializer,
                         ApplyAuthoringBatchResponse.serializer,
-                    ) as ApplyAuthoringBatchResponse.ConflictWrapper
-
-                response.value.conflicts.size shouldBe 1
-                fixture.publishedTo("library.authoring.changed").size shouldBe publicationsBefore
-            }
-        }
-    }
-
-    test("snapshots expose canonical data and its sequence") {
-        runTest {
-            RouteFixture().use { fixture ->
-                val applied =
-                    fixture.request(
-                        "library.authoring.batch.apply",
-                        createBookRequest("snapshot-create"),
-                        ApplyAuthoringBatchRequest.serializer,
-                        ApplyAuthoringBatchResponse.serializer,
-                    ) as ApplyAuthoringBatchResponse.AppliedWrapper
-
-                val response =
-                    fixture.request(
-                        "library.authoring.snapshot.get",
-                        GetAuthoringSnapshotRequest(scopes = listOf(AuthoringSnapshotScope.LIBRARY)),
-                        GetAuthoringSnapshotRequest.serializer,
-                        GetAuthoringSnapshotResponse.serializer,
-                    ) as GetAuthoringSnapshotResponse.SuccessWrapper
-
-                response.value.sequence shouldBe applied.value.sequence
-                val library = response.value.slices.single() as AuthoringSnapshotSlice.LibraryWrapper
-                library.value.books
-                    .single()
-                    .title shouldBe "route_book"
-            }
-        }
-    }
-
-    test("invalid persisted names return typed diagnostics") {
-        runTest {
-            RouteFixture().use { fixture ->
-                val invalid =
-                    ApplyAuthoringBatchRequest(
-                        batchId = "invalid-name",
-                        operations =
-                            listOf(
-                                AuthoringOperation.createCreateBook(
-                                    book =
-                                        Book(
-                                            id = recordId("book", "invalid-name"),
-                                            title = "Invalid name",
-                                            icon = "mdi:book",
-                                            color = Color(argb = 0),
-                                            tags = emptyList(),
-                                        ),
-                                ),
-                            ),
                     )
 
-                val response =
-                    fixture.request(
-                        "library.authoring.batch.apply",
-                        invalid,
-                        ApplyAuthoringBatchRequest.serializer,
-                        ApplyAuthoringBatchResponse.serializer,
-                    ) as ApplyAuthoringBatchResponse.InvalidWrapper
-
-                response.value.diagnostics
-                    .single()
-                    .code shouldBe "invalid-request"
-                fixture.publishedTo("library.authoring.changed") shouldBe emptyList()
+                response.shouldBeInstanceOf<ApplyAuthoringBatchResponse.AppliedWrapper>()
+                invalidations shouldBe listOf(listOf(root))
             }
         }
     }
 }
 
-private fun createBookRequest(batchId: String) =
-    ApplyAuthoringBatchRequest(
-        batchId = batchId,
-        operations =
-            listOf(
-                AuthoringOperation.createCreateBook(
-                    book =
-                        Book(
-                            id = recordId("book", "route-book"),
-                            title = "route_book",
-                            icon = "mdi:book",
-                            color = Color(argb = 0),
-                            tags = emptyList(),
-                        ),
-                ),
+private class AppliedAuthoringRepository(
+    private val root: CompilationRoot,
+) : AuthoringRepository {
+    override suspend fun apply(batch: AuthoringBatch): AuthoringBatchResult =
+        AuthoringBatchResult.Applied(
+            AuthoringChanged(
+                generation = batch.generation,
+                sequence = 1,
+                batchId = BatchId(batch.id.value),
+                resources = emptyList(),
+                edges = emptyList(),
+                compilationImpact = listOf(root),
             ),
-    )
+        )
 
-private fun recordId(
-    table: String,
-    key: String,
-) = RecordId(table = table, key = RecordIdKey.StringWrapper(key))
+    override suspend fun preview(
+        generation: String,
+        operations: List<AuthoringOperation>,
+    ): AuthoringPreviewResult = AuthoringPreviewResult.Invalid(emptyList())
+}

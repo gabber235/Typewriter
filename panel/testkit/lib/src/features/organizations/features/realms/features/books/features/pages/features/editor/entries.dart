@@ -29,7 +29,6 @@ EntryDefinition generateRandomEntryDefinition() {
   final id = faker.guid.guid();
   final name = faker.lorem.words(2).join(" ").formatted;
   final data = generateRandomRecordData(maxDepth: 2).value
-      .withField("id", StringValue(id))
       .withField("name", StringValue(name));
 
   return EntryDefinition(

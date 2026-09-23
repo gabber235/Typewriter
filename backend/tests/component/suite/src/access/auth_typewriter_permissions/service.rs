@@ -172,9 +172,46 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
 
     let publish = &response.permissions.publish.allow;
     let subscribe = &response.permissions.subscribe.allow;
-    assert!(subscribe.contains(&"service.to.quests.organization.writers.realm.>".into()));
+    for suffix in [
+        "compiled.content.watch",
+        "editor.capability.command.invoke",
+        "editor.capability.computation.invoke",
+        "editor.catalog.fetch",
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
+        "editor.presentation.search.cancel",
+        "editor.typed.value.initialize",
+        "editor.authoring.batch.apply",
+        "editor.authoring.batch.preview",
+        "editor.authoring.compiled.status.query",
+        "editor.authoring.compiled.watch",
+        "editor.authoring.graph.query",
+        "editor.authoring.graph.search",
+        "shared.blob.begin",
+        "shared.blob.complete",
+        "shared.blob.metadata",
+        "shared.blob.read",
+        "shared.blob.write",
+        "shared.catalog.fetch",
+        "shared.publish",
+    ] {
+        assert!(subscribe.contains(&format!(
+            "service.to.quests.organization.writers.realm.{suffix}"
+        )));
+    }
     assert!(subscribe.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
-    assert!(publish.contains(&"service.from.quests.organization.writers.realm.>".into()));
+    for suffix in [
+        "compiled.content.watch",
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
+        "editor.authoring.changed",
+        "editor.authoring.compiled.activated",
+        "editor.authoring.compiled.changed",
+    ] {
+        assert!(publish.contains(&format!(
+            "service.from.quests.organization.writers.realm.{suffix}"
+        )));
+    }
     for suffix in ["probe", "command", "status"] {
         assert!(subscribe.contains(&format!(
             "typewriter.organization.writers.realm.quests.hosts.{suffix}"
@@ -205,6 +242,8 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     }
     assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
     assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
+    assert!(publish.iter().all(|subject| !subject.ends_with(".realm.>")));
+    assert!(subscribe.iter().all(|subject| !subject.ends_with(".realm.>")));
     Ok(())
 }
 

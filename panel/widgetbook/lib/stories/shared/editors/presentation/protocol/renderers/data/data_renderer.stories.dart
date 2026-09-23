@@ -204,94 +204,104 @@ final conditionalRendererScenario = RendererStoryScenario(
             PresentationElement.column(
               spacing: 16,
               children: [
-                storyInput(
-                  "conditionInput",
-                  label: "Timed dialogue fields",
-                  binding: _conditionBinding,
-                  description: "This local Boolean is the conditional input.",
-                  showHeader: true,
-                  build: PresentationElement.toggleInput,
+                PresentationAxisChild.fixed(
+                  storyInput(
+                    "conditionInput",
+                    label: "Timed dialogue fields",
+                    binding: _conditionBinding,
+                    description: "This local Boolean is the conditional input.",
+                    showHeader: true,
+                    build: PresentationElement.toggleInput,
+                  ),
                 ),
-                storyNode(
-                  "conditionResult",
-                  PresentationElement.conditional(
-                    condition: bindingExpression(
-                      _conditionBinding,
-                      const BooleanType(),
-                    ),
-                    whenTrue: storyNode(
-                      "timedDialogueEditor",
-                      PresentationElement.section(
-                        child: storyNode(
-                          "timedDialogueFields",
-                          PresentationElement.column(
-                            spacing: 12,
-                            children: [
-                              storyInput(
-                                "dialogueText",
-                                label: "Text",
-                                binding: _dialogueTextBinding,
-                                description: "The message shown to the player.",
-                                build: (control) =>
-                                    PresentationElement.textInput(
-                                      control: control,
-                                      multiline: true,
-                                      placeholder:
-                                          "What should the speaker say?"
-                                              .asStringLiteral,
-                                    ),
-                              ),
-                              storyInput(
-                                "dialogueTypingDuration",
-                                label: "Typing duration",
-                                binding: _typingDurationBinding,
-                                description:
-                                    "Time used to animate the full message.",
-                                build: PresentationElement.durationInput,
-                              ),
-                              storyInput(
-                                "dialogueWaitDuration",
-                                label: "Wait duration",
-                                binding: _waitDurationBinding,
-                                description:
-                                    "Pause before the dialogue continues.",
-                                build: PresentationElement.durationInput,
-                              ),
-                              storyInput(
-                                "dialogueAllowSkip",
-                                label: "Allow skip",
-                                binding: _allowSkipBinding,
-                                description:
-                                    "Let the confirmation key complete or skip the dialogue.",
-                                showHeader: true,
-                                build: PresentationElement.toggleInput,
-                              ),
-                            ],
+                PresentationAxisChild.fixed(
+                  storyNode(
+                    "conditionResult",
+                    PresentationElement.conditional(
+                      condition: bindingExpression(
+                        _conditionBinding,
+                        const BooleanType(),
+                      ),
+                      whenTrue: storyNode(
+                        "timedDialogueEditor",
+                        PresentationElement.section(
+                          child: storyNode(
+                            "timedDialogueFields",
+                            PresentationElement.column(
+                              spacing: 12,
+                              children: [
+                                PresentationAxisChild.fixed(
+                                  storyInput(
+                                    "dialogueText",
+                                    label: "Text",
+                                    binding: _dialogueTextBinding,
+                                    description:
+                                        "The message shown to the player.",
+                                    build: (control) =>
+                                        PresentationElement.textInput(
+                                          control: control,
+                                          multiline: true,
+                                          placeholder:
+                                              "What should the speaker say?"
+                                                  .asStringLiteral,
+                                        ),
+                                  ),
+                                ),
+                                PresentationAxisChild.fixed(
+                                  storyInput(
+                                    "dialogueTypingDuration",
+                                    label: "Typing duration",
+                                    binding: _typingDurationBinding,
+                                    description: "Time used to animate the full message.",
+                                    build: PresentationElement.durationInput,
+                                  ),
+                                ),
+                                PresentationAxisChild.fixed(
+                                  storyInput(
+                                    "dialogueWaitDuration",
+                                    label: "Wait duration",
+                                    binding: _waitDurationBinding,
+                                    description:
+                                        "Pause before the dialogue continues.",
+                                    build: PresentationElement.durationInput,
+                                  ),
+                                ),
+                                PresentationAxisChild.fixed(
+                                  storyInput(
+                                    "dialogueAllowSkip",
+                                    label: "Allow skip",
+                                    binding: _allowSkipBinding,
+                                    description: "Let the confirmation key complete or skip the dialogue.",
+                                    showHeader: true,
+                                    build: PresentationElement.toggleInput,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      header: PresentationHeader(
-                        title: "Timed dialogue".asStringLiteral.asHeaderTitle,
-                      ),
-                    ),
-                    whenFalse: storyNode(
-                      "timedDialogueHidden",
-                      PresentationElement.section(
-                        child: storyNode(
-                          "timedDialogueHiddenText",
-                          PresentationElement.text(
-                            "Enable the condition to continue editing the same dialogue."
-                                .asStringLiteral,
-                          ),
+                        header: PresentationHeader(
+                          title: "Timed dialogue".asStringLiteral.asHeaderTitle,
                         ),
                       ),
-                      header: PresentationHeader(
-                        title: "Timed dialogue hidden"
-                            .asStringLiteral
-                            .asHeaderTitle,
-                        description:
-                            "The false branch replaces the field editor while preserving its bound values."
-                                .asStringLiteral,
+                      whenFalse: storyNode(
+                        "timedDialogueHidden",
+                        PresentationElement.section(
+                          child: storyNode(
+                            "timedDialogueHiddenText",
+                            PresentationElement.text(
+                              "Enable the condition to continue editing the same dialogue."
+                                  .asStringLiteral,
+                            ),
+                          ),
+                        ),
+                        header: PresentationHeader(
+                          title: "Timed dialogue hidden"
+                              .asStringLiteral
+                              .asHeaderTitle,
+                          description: "The false branch replaces the field editor while preserving its bound values."
+                              .asStringLiteral,
+                        ),
                       ),
                     ),
                   ),
@@ -360,40 +370,44 @@ RendererStoryScenario _repeatedScenario(
     "repeated",
     PresentationElement.column(
       children: [
-        storyNode(
-          "repeatedHint",
-          PresentationElement.text(
-            "Change Item count or an item value in the knobs panel. Each "
-                    "list value is bound to the template alias, so the card "
-                    "is rendered once per item."
-                .asStringLiteral,
+        PresentationAxisChild.fixed(
+          storyNode(
+            "repeatedHint",
+            PresentationElement.text(
+              "Change Item count or an item value in the knobs panel. Each "
+                      "list value is bound to the template alias, so the card "
+                      "is rendered once per item."
+                  .asStringLiteral,
+            ),
           ),
         ),
-        storyNode(
-          "repeatedItems",
-          PresentationElement.repeated(
-            source: bindingExpression(
-              rootBinding,
-              const ListType(element: StringType()),
-            ),
-            itemBindingId: const BindingId(1),
-            presentation: SequencePresentation(
-              item: storyNode(
-                "repeatedItem",
-                PresentationElement.section(
-                  child: storyNode(
-                    "repeatedText",
-                    PresentationElement.text(
-                      bindingExpression(_itemBinding, const StringType()),
+        PresentationAxisChild.fixed(
+          storyNode(
+            "repeatedItems",
+            PresentationElement.repeated(
+              source: bindingExpression(
+                rootBinding,
+                const ListType(element: StringType()),
+              ),
+              itemBindingId: const BindingId(1),
+              presentation: SequencePresentation(
+                item: storyNode(
+                  "repeatedItem",
+                  PresentationElement.section(
+                    child: storyNode(
+                      "repeatedText",
+                      PresentationElement.text(
+                        bindingExpression(_itemBinding, const StringType()),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              empty: storyNode(
-                "repeatedEmpty",
-                PresentationElement.text(
-                  "No items means the empty presentation is rendered."
-                      .asStringLiteral,
+                empty: storyNode(
+                  "repeatedEmpty",
+                  PresentationElement.text(
+                    "No items means the empty presentation is rendered."
+                        .asStringLiteral,
+                  ),
                 ),
               ),
             ),
@@ -445,9 +459,8 @@ final customRepeatedEmptyScenario = RendererStoryScenario(
                   ),
                   header: PresentationHeader(
                     title: "No objectives yet".asStringLiteral.asHeaderTitle,
-                    description:
-                        "The empty presentation replaces the objective template."
-                            .asStringLiteral,
+                    description: "The empty presentation replaces the objective template."
+                        .asStringLiteral,
                   ),
                 ),
               ),
@@ -508,27 +521,31 @@ RendererStoryScenario _scopedBindingScenario(
     "scopedBinding",
     PresentationElement.column(
       children: [
-        storyNode(
-          "scopedBindingHint",
-          PresentationElement.text(
-            "Change Root value in the knobs panel. The scoped binding maps "
-                    "the root value to its alias, and the child resolves that "
-                    "alias instead of reading the root directly."
-                .asStringLiteral,
+        PresentationAxisChild.fixed(
+          storyNode(
+            "scopedBindingHint",
+            PresentationElement.text(
+              "Change Root value in the knobs panel. The scoped binding maps "
+                      "the root value to its alias, and the child resolves that "
+                      "alias instead of reading the root directly."
+                  .asStringLiteral,
+            ),
           ),
         ),
-        storyNode(
-          "scopedBindingResult",
-          PresentationElement.scopedBinding(
-            binding: rootBinding,
-            scopeBindingId: const BindingId(1),
-            child: storyNode(
-              "scopedText",
-              PresentationElement.section(
-                child: storyNode(
-                  "scopedValue",
-                  PresentationElement.text(
-                    bindingExpression(_itemBinding, const StringType()),
+        PresentationAxisChild.fixed(
+          storyNode(
+            "scopedBindingResult",
+            PresentationElement.scopedBinding(
+              binding: rootBinding,
+              scopeBindingId: const BindingId(1),
+              child: storyNode(
+                "scopedText",
+                PresentationElement.section(
+                  child: storyNode(
+                    "scopedValue",
+                    PresentationElement.text(
+                      bindingExpression(_itemBinding, const StringType()),
+                    ),
                   ),
                 ),
               ),

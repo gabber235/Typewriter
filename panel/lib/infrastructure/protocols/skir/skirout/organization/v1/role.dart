@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
@@ -114,7 +115,10 @@ final class OrganizationRole implements OrganizationRole_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OrganizationRole) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -133,7 +137,8 @@ final class OrganizationRole implements OrganizationRole_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OrganizationRole` instances.
-  static _skir.StructSerializer<OrganizationRole, OrganizationRole_mutable> get serializer {
+  static _skir.StructSerializer<OrganizationRole, OrganizationRole_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "role_id",
@@ -231,7 +236,8 @@ final class OrganizationRole_mutable implements OrganizationRole_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.roleId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.roleId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -267,7 +273,8 @@ sealed class WatchOrganizationRolesRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchOrganizationRolesRequest implements WatchOrganizationRolesRequest_orMutable {
+final class WatchOrganizationRolesRequest
+    implements WatchOrganizationRolesRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchOrganizationRolesRequest() => WatchOrganizationRolesRequest._();
@@ -279,7 +286,8 @@ final class WatchOrganizationRolesRequest implements WatchOrganizationRolesReque
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchOrganizationRolesRequest_mutable mutable() => WatchOrganizationRolesRequest_mutable._();
+  static WatchOrganizationRolesRequest_mutable mutable() =>
+      WatchOrganizationRolesRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -287,13 +295,17 @@ final class WatchOrganizationRolesRequest implements WatchOrganizationRolesReque
   WatchOrganizationRolesRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchOrganizationRolesRequest_mutable toMutable() => WatchOrganizationRolesRequest_mutable._();
+  WatchOrganizationRolesRequest_mutable toMutable() =>
+      WatchOrganizationRolesRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchOrganizationRolesRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -305,7 +317,11 @@ final class WatchOrganizationRolesRequest implements WatchOrganizationRolesReque
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchOrganizationRolesRequest` instances.
-  static _skir.StructSerializer<WatchOrganizationRolesRequest, WatchOrganizationRolesRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchOrganizationRolesRequest,
+    WatchOrganizationRolesRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -324,14 +340,16 @@ final class WatchOrganizationRolesRequest implements WatchOrganizationRolesReque
 }
 
 /// Mutable version of [WatchOrganizationRolesRequest].
-final class WatchOrganizationRolesRequest_mutable implements WatchOrganizationRolesRequest_orMutable {
+final class WatchOrganizationRolesRequest_mutable
+    implements WatchOrganizationRolesRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchOrganizationRolesRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchOrganizationRolesRequest toFrozen() => WatchOrganizationRolesRequest().._u = this._u;
+  WatchOrganizationRolesRequest toFrozen() =>
+      WatchOrganizationRolesRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -354,27 +372,28 @@ final class WatchOrganizationRolesRequest_mutable implements WatchOrganizationRo
 sealed class WatchOrganizationRolesResponse {
   /// Constant indicating an unknown `WatchOrganizationRolesResponse`.
   /// Default value for fields of type `WatchOrganizationRolesResponse`.
-  static const WatchOrganizationRolesResponse unknown = WatchOrganizationRolesResponse_unknown._instance;
+  static const WatchOrganizationRolesResponse unknown =
+      WatchOrganizationRolesResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchOrganizationRolesResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchOrganizationRolesResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchOrganizationRolesResponse.createInternalError() => WatchOrganizationRolesResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory WatchOrganizationRolesResponse.createInternalError() =>
+      WatchOrganizationRolesResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'list' variant wrapping around the given value.
   factory WatchOrganizationRolesResponse.wrapList(
-    _core.Iterable<OrganizationRole> value
+    _core.Iterable<OrganizationRole> value,
   ) => WatchOrganizationRolesResponse_listWrapper._(value);
 
   /// Create a 'add' variant wrapping around the given value.
-  factory WatchOrganizationRolesResponse.wrapAdd(
-    OrganizationRole value
-  ) => WatchOrganizationRolesResponse_addWrapper._(value);
+  factory WatchOrganizationRolesResponse.wrapAdd(OrganizationRole value) =>
+      WatchOrganizationRolesResponse_addWrapper._(value);
 
   /// Same as `wrapAdd(OrganizationRole(...))`.
   factory WatchOrganizationRolesResponse.createAdd({
@@ -392,13 +411,12 @@ sealed class WatchOrganizationRolesResponse {
       defaultRole: defaultRole,
       assignable: assignable,
       deletable: deletable,
-    )
+    ),
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchOrganizationRolesResponse.wrapUpdate(
-    OrganizationRole value
-  ) => WatchOrganizationRolesResponse_updateWrapper._(value);
+  factory WatchOrganizationRolesResponse.wrapUpdate(OrganizationRole value) =>
+      WatchOrganizationRolesResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(OrganizationRole(...))`.
   factory WatchOrganizationRolesResponse.createUpdate({
@@ -416,12 +434,12 @@ sealed class WatchOrganizationRolesResponse {
       defaultRole: defaultRole,
       assignable: assignable,
       deletable: deletable,
-    )
+    ),
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchOrganizationRolesResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value
+    _lib_kernel_v1_record_id.RecordId value,
   ) => WatchOrganizationRolesResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -429,10 +447,7 @@ sealed class WatchOrganizationRolesResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchOrganizationRolesResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(
-      table: table,
-      key: key,
-    )
+    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
   );
 
   /// Returns the kind of variant held by this WatchOrganizationRolesResponse.
@@ -449,15 +464,14 @@ sealed class WatchOrganizationRolesResponse {
         "",
         WatchOrganizationRolesResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationRolesResponse_kind.internalErrorWrapper._ordinal,
+        ordinal:
+            WatchOrganizationRolesResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
         "list",
         "wrapList",
-        _skir.Serializers.iterable(
-          OrganizationRole.serializer,
-        ),
+        _skir.Serializers.iterable(OrganizationRole.serializer),
         "",
         WatchOrganizationRolesResponse_listWrapper._,
         (it) => it.value,
@@ -498,15 +512,16 @@ sealed class WatchOrganizationRolesResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "organization/v1/role.skir:WatchOrganizationRolesResponse",
-    doc: "",
-    unknownInstance: WatchOrganizationRolesResponse_unknown._instance,
-    enumInstance: WatchOrganizationRolesResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchOrganizationRolesResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "organization/v1/role.skir:WatchOrganizationRolesResponse",
+        doc: "",
+        unknownInstance: WatchOrganizationRolesResponse_unknown._instance,
+        enumInstance: WatchOrganizationRolesResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchOrganizationRolesResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `WatchOrganizationRolesResponse`.
@@ -523,7 +538,8 @@ enum WatchOrganizationRolesResponse_kind {
   const WatchOrganizationRolesResponse_kind(this._ordinal);
 }
 
-final class WatchOrganizationRolesResponse_unknown implements WatchOrganizationRolesResponse {
+final class WatchOrganizationRolesResponse_unknown
+    implements WatchOrganizationRolesResponse {
   static const _instance = WatchOrganizationRolesResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -532,16 +548,22 @@ final class WatchOrganizationRolesResponse_unknown implements WatchOrganizationR
   WatchOrganizationRolesResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WatchOrganizationRolesResponse_kind get kind => WatchOrganizationRolesResponse_kind.unknown;
+  WatchOrganizationRolesResponse_kind get kind =>
+      WatchOrganizationRolesResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is WatchOrganizationRolesResponse_unknown;
+  _core.bool operator ==(other) =>
+      other is WatchOrganizationRolesResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchOrganizationRolesResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    WatchOrganizationRolesResponse.serializer,
+  );
 }
 
-sealed class _WatchOrganizationRolesResponse_wrapper implements WatchOrganizationRolesResponse {
+sealed class _WatchOrganizationRolesResponse_wrapper
+    implements WatchOrganizationRolesResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -554,62 +576,75 @@ sealed class _WatchOrganizationRolesResponse_wrapper implements WatchOrganizatio
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchOrganizationRolesResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    WatchOrganizationRolesResponse.serializer,
+  );
 }
 
-final class WatchOrganizationRolesResponse_internalErrorWrapper extends _WatchOrganizationRolesResponse_wrapper {
+final class WatchOrganizationRolesResponse_internalErrorWrapper
+    extends _WatchOrganizationRolesResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchOrganizationRolesResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationRolesResponse_kind get kind => WatchOrganizationRolesResponse_kind.internalErrorWrapper;
+  WatchOrganizationRolesResponse_kind get kind =>
+      WatchOrganizationRolesResponse_kind.internalErrorWrapper;
 }
 
-final class WatchOrganizationRolesResponse_listWrapper extends _WatchOrganizationRolesResponse_wrapper {
+final class WatchOrganizationRolesResponse_listWrapper
+    extends _WatchOrganizationRolesResponse_wrapper {
   final _core.Iterable<OrganizationRole> value;
 
   WatchOrganizationRolesResponse_listWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationRolesResponse_kind get kind => WatchOrganizationRolesResponse_kind.listWrapper;
+  WatchOrganizationRolesResponse_kind get kind =>
+      WatchOrganizationRolesResponse_kind.listWrapper;
 }
 
-final class WatchOrganizationRolesResponse_addWrapper extends _WatchOrganizationRolesResponse_wrapper {
+final class WatchOrganizationRolesResponse_addWrapper
+    extends _WatchOrganizationRolesResponse_wrapper {
   final OrganizationRole value;
 
   WatchOrganizationRolesResponse_addWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationRolesResponse_kind get kind => WatchOrganizationRolesResponse_kind.addWrapper;
+  WatchOrganizationRolesResponse_kind get kind =>
+      WatchOrganizationRolesResponse_kind.addWrapper;
 }
 
-final class WatchOrganizationRolesResponse_updateWrapper extends _WatchOrganizationRolesResponse_wrapper {
+final class WatchOrganizationRolesResponse_updateWrapper
+    extends _WatchOrganizationRolesResponse_wrapper {
   final OrganizationRole value;
 
   WatchOrganizationRolesResponse_updateWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationRolesResponse_kind get kind => WatchOrganizationRolesResponse_kind.updateWrapper;
+  WatchOrganizationRolesResponse_kind get kind =>
+      WatchOrganizationRolesResponse_kind.updateWrapper;
 }
 
-final class WatchOrganizationRolesResponse_removeWrapper extends _WatchOrganizationRolesResponse_wrapper {
+final class WatchOrganizationRolesResponse_removeWrapper
+    extends _WatchOrganizationRolesResponse_wrapper {
   final _lib_kernel_v1_record_id.RecordId value;
 
   WatchOrganizationRolesResponse_removeWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationRolesResponse_kind get kind => WatchOrganizationRolesResponse_kind.removeWrapper;
+  WatchOrganizationRolesResponse_kind get kind =>
+      WatchOrganizationRolesResponse_kind.removeWrapper;
 }
 
 final _skir.Method<
   WatchOrganizationRolesRequest,
   WatchOrganizationRolesResponse
-> watchOrganizationRolesMethod =
-  _skir.Method(
-    "WatchOrganizationRoles",
-    49267,
-    WatchOrganizationRolesRequest.serializer,
-    WatchOrganizationRolesResponse.serializer,
-    "",
-  );
+>
+watchOrganizationRolesMethod = _skir.Method(
+  "WatchOrganizationRoles",
+  49267,
+  WatchOrganizationRolesRequest.serializer,
+  WatchOrganizationRolesResponse.serializer,
+  "",
+);

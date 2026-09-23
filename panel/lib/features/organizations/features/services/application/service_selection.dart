@@ -20,7 +20,9 @@ final _serviceInspectorType = TypeDefinition(
   ),
 );
 
-final _serviceInspectorCatalog = TypeCatalog([_serviceInspectorType]);
+final _serviceInspectorCatalog = panelPresentationTypeCatalog([
+  _serviceInspectorType,
+]);
 
 /// Stable selection identity for a canonical organization service.
 ///

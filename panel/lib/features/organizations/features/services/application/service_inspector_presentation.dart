@@ -77,7 +77,7 @@ PresentationDefinition serviceInspectorPresentation(Service service) =>
                 ),
               ],
             ),
-          ],
+          ].map(PresentationAxisChild.fixed).toList(),
         ),
       ),
     );

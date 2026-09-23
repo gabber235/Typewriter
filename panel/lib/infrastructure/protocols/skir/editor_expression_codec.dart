@@ -101,8 +101,30 @@ final class SkirExpressionDecoder {
     wire.Expression_colorOperationWrapper(:final value) => _colorOperation(
       value,
     ),
+    wire.Expression_recordWrapper(:final value) => _record(value),
     wire.Expression_unknown() => invalidWire("Unknown expression variant"),
   };
+
+  TypeResult<Expression> _record(wire.RecordExpression value) {
+    final fields = <String, TypedExpression>{};
+    final diagnostics = <TypeDiagnostic>[];
+    for (final field in value.fields) {
+      if (field.name.isEmpty || fields.containsKey(field.name)) {
+        diagnostics.add(
+          wireDiagnostic("Record expression field is empty or repeated"),
+        );
+        continue;
+      }
+      final decoded = decode(field.value);
+      diagnostics.addAll(decoded.diagnostics);
+      if (decoded.valueOrNull case final expression?) {
+        fields[field.name] = expression;
+      }
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(RecordExpression(fields))
+        : TypeResult.failure(diagnostics);
+  }
 
   TypeResult<Expression> _colorOperation(wire.ColorOperationExpression value) {
     final operation = switch (value.operation) {

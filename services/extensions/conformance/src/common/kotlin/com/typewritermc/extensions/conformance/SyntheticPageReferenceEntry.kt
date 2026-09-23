@@ -1,24 +1,23 @@
 package com.typewritermc.extensions.conformance
 
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.Entry
-import com.typewritermc.elements.TypewriterElement
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.types.Ref
 
 /**
- * Conformance fixture proving that an element can reference the marker type generated for a page declaration. Its
- * payload exercises page kind resolution and reference projection.
+ * Conformance fixture proving that an element can reference the marker type declared by a concrete Page. Its
+ * payload exercises typed Page resolution and reference projection.
  */
-@TypewriterElement(
+@TypewriterContent(
     id = "019d3a87000270008000000000000002",
-    revision = 2,
+    revision = 1,
     name = "Synthetic Page Reference",
-    description = "Verifies generated page kind references",
+    description = "Verifies concrete Page references",
     icon = "material-symbols:link",
     color = "#536DFE",
 )
 data class SyntheticPageReferenceEntry(
-    override val id: ElementInstanceId,
     override val name: String,
-    val page: Ref<SyntheticPageKind>,
-) : Entry
+    override val placement: GraphPlacement,
+    val page: Ref<SyntheticPage>,
+) : ConformanceEntry

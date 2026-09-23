@@ -1,7 +1,7 @@
 package com.typewritermc.extensions.basic.entries.sequence.events
 
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.TypewriterElement
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.TypewriterPresentation
@@ -9,7 +9,7 @@ import com.typewritermc.presentation.presentation
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 
-@TypewriterElement(
+@TypewriterContent(
     id = "01a0b180-cac6-770c-bbe8-101a740011ac",
     revision = 1,
     name = "Player Message Contains Text Event Entry",
@@ -18,8 +18,8 @@ import com.typewritermc.types.Ref
     color = Color.Hex.YELLOW,
 )
 class PlayerMessageContainsTextEventEntry(
-    override val id: ElementInstanceId,
     override val name: String,
+    override val placement: GraphPlacement,
     val triggers: Set<Ref<SequenceEntry>>,
     val text: String,
     val exactSame: Boolean,

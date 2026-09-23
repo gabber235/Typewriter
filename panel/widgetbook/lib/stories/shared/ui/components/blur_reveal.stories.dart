@@ -67,10 +67,8 @@ Widget blurRevealCardUseCase(BuildContext context) {
                 const SizedBox(height: 8),
                 Text(
                   "4242 4242 4242 4242",
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: "JetBrainsMono",
-                    letterSpacing: 2,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontFamily: "JetBrainsMono", letterSpacing: 2),
                 ),
                 const SizedBox(height: 4),
                 Text(

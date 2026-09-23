@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -22,18 +24,18 @@ Widget sharedBookAndTagColorUseCase(BuildContext context) =>
 
 Widget bookAndTagSelectionStory({required bool sharedColor}) {
   final book = Book(
-    bookId: recordId("book:earth"),
+    bookId: skir.ResourceId(value: "book:earth"),
     title: "earth",
     icon: "mdi:earth",
     color: Colors.teal,
     tagIds: const [],
   );
   final tag = Tag(
-    tagId: recordId("tag:earth"),
+    tagId: skir.ResourceId(value: "tag:earth"),
     name: "earth",
     color: sharedColor ? Colors.teal : Colors.orange,
     parentIds: const [],
-    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
 
   return FakeApp(

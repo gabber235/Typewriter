@@ -61,7 +61,6 @@ extension LocalEditorActionCanonicalization on LocalEditorAction {
       ReplaceConcreteTypeAction() => ReplaceConcreteTypeAction(
         target: local.target.canonicalizedWith(aliases),
         concreteType: local.concreteType,
-        initialValue: local.initialValue,
       ),
     });
   }

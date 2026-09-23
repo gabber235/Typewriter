@@ -1,7 +1,6 @@
 import "dart:math" as math;
 
 import "package:faker/faker.dart" hide Color;
-import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -36,7 +35,7 @@ List<Tag> _generateRawTags(int count) {
   final tags = <Tag>[];
 
   for (int i = 0; i < count; i++) {
-    final parentIds = <skir.RecordId>[];
+    final parentIds = <skir.ResourceId>[];
 
     if (i > 0 && tags.isNotEmpty) {
       final prob = random.decimal();
@@ -58,14 +57,14 @@ List<Tag> _generateRawTags(int count) {
 
     tags.add(
       Tag(
-        tagId: recordId("tag:${faker.guid.guid()}"),
+        tagId: skir.ResourceId(value: "tag:${faker.guid.guid()}"),
         name: faker.lorem
             .words(random.integer(3, min: 1))
             .join(" ")
             .snakeCase(),
         color: safeColors.randomElement(),
         parentIds: parentIds,
-        placement: const Placement(x: 0, y: 0, width: 0, height: 0),
+        placement: GraphPlacement(x: 0, y: 0, width: 0, height: 0),
       ),
     );
   }
@@ -76,11 +75,11 @@ List<Tag> _generateRawTags(int count) {
 /// Generates a random standalone tag with no parent relationships.
 Tag generateRandomTag() {
   return Tag(
-    tagId: recordId("tag:${faker.guid.guid()}"),
+    tagId: skir.ResourceId(value: "tag:${faker.guid.guid()}"),
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
     color: safeColors.randomElement(),
     parentIds: const [],
-    placement: Placement(
+    placement: GraphPlacement(
       x: random.integer(20),
       y: random.integer(10),
       width: random.integer(6, min: 2),
@@ -105,52 +104,6 @@ class TagsMock extends CanonicalTags {
   }
 
   @override
-  Future<Tag> createTag({
-    required String name,
-    Color? color,
-    List<skir.RecordId> parentIds = const [],
-    Offset? preferredGraphAnchor,
-  }) async {
-    final tags = await future;
-
-    final obstacles = [
-      for (final tag in tags)
-        GraphGridRect(
-          x: tag.placement.x,
-          y: tag.placement.y,
-          width: tag.placement.width,
-          height: tag.placement.height,
-        ),
-    ];
-    final placement = const GraphIncrementalPlacer()
-        .placeGroup(
-          obstacles: obstacles,
-          group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
-          anchor:
-              preferredGraphAnchor ??
-              graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
-              Offset.zero,
-        )
-        .single;
-
-    final newTag = Tag(
-      tagId: recordId("tag:${faker.guid.guid()}"),
-      name: name,
-      color: color ?? safeColors.randomElement(),
-      parentIds: parentIds,
-      placement: Placement(
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-      ),
-    );
-
-    state = AsyncData([...tags, newTag]);
-    return newTag;
-  }
-
-  @override
   Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
     final tags = await future;
     final canonical = tag;
@@ -163,12 +116,6 @@ class TagsMock extends CanonicalTags {
       revision: 1,
       value: canonical.inspectorValue,
     );
-  }
-
-  @override
-  Future<void> deleteTag(skir.RecordId tagId) async {
-    final tags = await future;
-    state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
   }
 }
 

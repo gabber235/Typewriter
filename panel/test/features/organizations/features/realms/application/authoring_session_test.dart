@@ -1,7 +1,5 @@
-import "dart:async";
 import "dart:typed_data";
 
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
@@ -11,21 +9,45 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/provider_test_utils.dart";
 
-const _snapshotSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.snapshot.get";
+const _graphSubject =
+    "service.to.realm1.organization.org1.realm.editor.authoring.graph.query";
+const _statusSubject =
+    "service.to.realm1.organization.org1.realm.editor.authoring.compiled.status.query";
 const _batchSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.batch.apply";
+    "service.to.realm1.organization.org1.realm.editor.authoring.batch.apply";
 const _eventSubject =
-    "service.from.realm1.organization.org1.realm.library.authoring.changed";
+    "service.from.realm1.organization.org1.realm.editor.authoring.changed";
+
+final _librarySelection = authoringDefinitionSelection(
+  key: "library",
+  definitions: const [
+    CoreResourceDefinitionIds.book,
+    CoreResourceDefinitionIds.tag,
+  ],
+);
+
+final _exactSelection = skir.GraphSelection(
+  key: "exact-book",
+  seed: skir.ResourceSeed.createIds(values: [_book], requireAssignableTo: null),
+  steps: const [],
+);
 
 void main() {
-  test("buffers startup events and recovers gaps and reconnects", () async {
+  test("derives catalog demand from every graph resource root", () {
+    final request = authoringGraphCatalogRequest([
+      _resource("Book"),
+      _resourceWithType("Other", _otherType),
+    ], const []).valueOrNull;
+
+    expect(request?.types, containsAll([_bookType, _otherType]));
+  });
+
+  test("buffers startup events and recovers sequence gaps", () async {
     final harness = _Harness();
     var sequence = 1;
     var title = "Initial";
     var emitDuringFirstSnapshot = true;
-    harness.nats.registerHandler(_snapshotSubject, (payload) {
-      expect(harness.nats.subscriptionSubjects, contains(_eventSubject));
+    harness.nats.registerHandler(_graphSubject, (_) {
       if (emitDuringFirstSnapshot) {
         emitDuringFirstSnapshot = false;
         harness.emit(_change(2, title: "Buffered"));
@@ -35,61 +57,37 @@ void main() {
 
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    final lease = harness.container.read(provider.notifier).acquireLibrary();
+    final lease = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
     await lease.ready;
     await waitForProvider(
       harness.container,
       provider,
       (state) => state.sequence == 2,
-      description: "startup event sequence 2",
+      description: "buffered startup event",
     );
-    expect(harness.container.read(provider).books[_book]?.title, "Buffered");
-
-    harness.emit(_change(2, title: "Duplicate"));
-    await Future<void>.delayed(Duration.zero);
-    expect(harness.container.read(provider).books[_book]?.title, "Buffered");
+    expect(
+      _name(harness.container.read(provider).resources[_book]),
+      "Buffered",
+    );
 
     sequence = 3;
-    title = "Recovered gap";
-    harness.emit(_change(4, title: "Must not apply"));
+    title = "Recovered";
+    harness.emit(_change(4, title: "After gap"));
     await waitForProvider(
       harness.container,
       provider,
       (state) => state.sequence == 4,
-      description: "gap recovery sequence 4",
+      description: "gap recovery",
     );
     expect(
-      harness.container.read(provider).books[_book]?.title,
-      "Must not apply",
-    );
-
-    sequence = 4;
-    title = "Recovered reconnect";
-    harness.nats
-      ..setConnectionState(
-        const NatsReconnecting(
-          NatsClientException(
-            kind: NatsFailureKind.unavailable,
-            message: "offline",
-          ),
-        ),
-      )
-      ..setConnectionState(const NatsConnected());
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.books[_book]?.title == "Recovered reconnect",
-      description: "reconnected book snapshot",
-    );
-    expect(
-      harness.container.read(provider).books[_book]?.title,
-      "Recovered reconnect",
+      _name(harness.container.read(provider).resources[_book]),
+      "After gap",
     );
 
     lease.release();
     subscription.close();
-    await Future<void>.delayed(Duration.zero);
-    expect(harness.nats.subscriptionSubjects, isEmpty);
     await harness.dispose();
   });
 
@@ -98,7 +96,7 @@ void main() {
     var sequence = 1;
     var title = "Initial";
     harness.nats.registerHandler(
-      _snapshotSubject,
+      _graphSubject,
       (_) => _snapshot(sequence, title: title),
     );
     harness.nats.registerHandler(_batchSubject, (_) {
@@ -112,215 +110,178 @@ void main() {
 
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    final lease = harness.container.read(provider.notifier).acquireLibrary();
+    final lease = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
     await lease.ready;
     final response = await harness.container.read(provider.notifier).apply([
-      skir.AuthoringOperation.createPatchBook(
+      skir.AuthoringOperation.createDelete(
         id: _book,
-        title: skir.StringChange(expected: "Initial", value: "Local"),
-        icon: null,
-        color: null,
-        tags: null,
+        base: _resource("Initial"),
       ),
     ]);
 
     expect(response, isA<skir.ApplyAuthoringBatchResponse_conflictWrapper>());
     expect(harness.container.read(provider).sequence, 2);
-    expect(harness.container.read(provider).books[_book]?.title, "Newer event");
+    expect(
+      _name(harness.container.read(provider).resources[_book]),
+      "Newer event",
+    );
+
     lease.release();
     subscription.close();
     await harness.dispose();
   });
 
-  test("ambiguous batch failure refreshes committed state", () async {
-    final harness = _Harness();
-    var sequence = 1;
-    var title = "Initial";
-    harness.nats.registerHandler(
-      _snapshotSubject,
-      (_) => _snapshot(sequence, title: title),
-    );
-    harness.nats.registerHandler(_batchSubject, (_) {
-      sequence = 2;
-      title = "Committed";
-      throw const NatsClientException(
-        kind: NatsFailureKind.timeout,
-        message: "response lost",
+  test(
+    "applies a covered event without refreshing the leased selection",
+    () async {
+      final harness = _Harness();
+      harness.nats.registerHandler(
+        _graphSubject,
+        (_) => _snapshot(1, title: "Initial", completeLibrary: true),
       );
-    });
 
-    final provider = authoringSessionProvider(_org, _realm);
-    final subscription = harness.container.listen(provider, (_, _) {});
-    final lease = harness.container.read(provider.notifier).acquireLibrary();
-    await lease.ready;
+      final provider = authoringSessionProvider(_org, _realm);
+      final subscription = harness.container.listen(provider, (_, _) {});
+      final lease = harness.container
+          .read(provider.notifier)
+          .acquire(_librarySelection);
+      await lease.ready;
+      final graphRequests = harness.nats.requests
+          .where((request) => request.subject == _graphSubject)
+          .length;
 
-    await expectLater(
-      harness.container.read(provider.notifier).apply([
-        skir.AuthoringOperation.createPatchBook(
-          id: _book,
-          title: skir.StringChange(expected: "Initial", value: "Local"),
-          icon: null,
-          color: null,
-          tags: null,
-        ),
-      ]),
-      throwsA(isA<SubmissionException>()),
-    );
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.books[_book]?.title == "Committed",
-      description: "committed snapshot after ambiguous failure",
-    );
-    expect(harness.container.read(provider).sequence, 2);
+      harness.emit(_change(2, title: "Changed"));
+      await waitForProvider(
+        harness.container,
+        provider,
+        (state) => state.sequence == 2,
+        description: "covered authoring event",
+      );
+      await Future<void>.delayed(Duration.zero);
 
-    lease.release();
-    subscription.close();
-    await harness.dispose();
-  });
+      expect(
+        harness.nats.requests
+            .where((request) => request.subject == _graphSubject)
+            .length,
+        graphRequests,
+      );
 
-  test("invalid updates restore books and tags from the session", () async {
+      lease.release();
+      subscription.close();
+      await harness.dispose();
+    },
+  );
+
+  test("rejects selection key collisions", () async {
     final harness = _Harness();
     harness.nats.registerHandler(
-      _snapshotSubject,
+      _graphSubject,
       (_) => _snapshot(1, title: "Initial"),
     );
-    harness.nats.registerHandler(
-      _batchSubject,
-      (_) => skir.ApplyAuthoringBatchResponse.serializer.toBytes(
-        skir.ApplyAuthoringBatchResponse.createInvalid(
-          diagnostics: [
-            skir.AuthoringDiagnostic(
-              code: "invalid",
-              message: "Rejected",
-              resource: null,
-              path: null,
+    final provider = authoringSessionProvider(_org, _realm);
+    final subscription = harness.container.listen(provider, (_, _) {});
+    final first = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
+    await first.ready;
+    expect(
+      () => harness.container
+          .read(provider.notifier)
+          .acquire(
+            skir.GraphSelection(
+              key: _librarySelection.key,
+              seed: skir.ResourceSeed.createScan(
+                filter: skir.ResourceFilter(
+                  definitions: [CoreResourceDefinitionIds.page.toWire()],
+                  assignableTo: null,
+                ),
+              ),
+              steps: const [],
             ),
-          ],
-        ),
-      ),
+          ),
+      throwsStateError,
     );
-
-    final booksSubscription = harness.container.listen(
-      canonicalBooksProvider,
-      (_, _) {},
-    );
-    final tagsSubscription = harness.container.listen(
-      canonicalTagsProvider,
-      (_, _) {},
-    );
-    final book = (await harness.container.read(canonicalBooksProvider.future))
-        .single;
-    final tag = (await harness.container.read(canonicalTagsProvider.future))
-        .single;
-
-    final bookResult = await harness.container
-        .read(canonicalBooksProvider.notifier)
-        .updateBook(book.copyWith(title: "Rejected book"), expected: book);
-    final tagResult = await harness.container
-        .read(canonicalTagsProvider.notifier)
-        .updateTag(tag.copyWith(name: "Rejected tag"), expected: tag);
-
-    expect(bookResult, isA<MutationInvalid>());
-    expect(tagResult, isA<MutationInvalid>());
-    expect(
-      harness.container.read(canonicalBooksProvider).requireValue.single.title,
-      "Initial",
-    );
-    expect(
-      harness.container.read(canonicalTagsProvider).requireValue.single.name,
-      "Initial tag",
-    );
-
-    booksSubscription.close();
-    tagsSubscription.close();
-    await harness.dispose();
-  });
-
-  test("resource projection does not loop snapshot acquisition", () async {
-    final harness = _Harness();
-    var snapshots = 0;
-    harness.nats.registerHandler(_snapshotSubject, (_) {
-      snapshots++;
-      return _snapshot(1, title: "Initial");
-    });
-
-    final subscription = harness.container.listen(
-      canonicalBooksProvider,
-      (_, _) {},
-    );
-    await harness.container.read(canonicalBooksProvider.future);
-    harness.emit(_change(2, title: "Updated"));
-    await waitForProvider(
-      harness.container,
-      canonicalBooksProvider,
-      (state) => state.value?.single.title == "Updated",
-      description: "updated book projection",
-    );
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-
-    expect(snapshots, 1);
+    first.release();
     subscription.close();
     await harness.dispose();
   });
 
-  test("scope acquired during refresh waits for a complete snapshot", () async {
+  test("marks a deleted exact seed as missing", () async {
     final harness = _Harness();
-    final firstSnapshot = Completer<Uint8List>();
-    final requests = <skir.GetAuthoringSnapshotRequest>[];
-    harness.nats.registerHandler(_snapshotSubject, (payload) {
-      final request = skir.GetAuthoringSnapshotRequest.serializer.fromBytes(
-        payload,
-      );
-      requests.add(request);
-      if (requests.length == 1) return firstSnapshot.future;
-      return skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-        skir.GetAuthoringSnapshotResponse.createSuccess(
-          sequence: 1,
-          slices: [
-            skir.AuthoringSnapshotSlice.createLibrary(
-              books: const [],
-              tags: const [],
-            ),
-            skir.AuthoringSnapshotSlice.createPage(
-              pageId: _page,
-              document: null,
-            ),
-          ],
-        ),
-      );
-    });
-
+    var deleted = false;
+    harness.nats.registerHandler(
+      _graphSubject,
+      (_) => _snapshot(
+        deleted ? 2 : 1,
+        title: "Initial",
+        exactSelection: true,
+        deleted: deleted,
+      ),
+    );
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    final libraryLease = harness.container
+    final lease = harness.container
         .read(provider.notifier)
-        .acquireLibrary();
+        .acquire(_exactSelection);
+    await lease.ready;
+
+    deleted = true;
+    harness.emit(_deleteChange(2));
     await waitForProvider(
       harness.container,
       provider,
-      (state) => state.refreshing,
-      description: "first snapshot refresh",
+      (state) =>
+          state.selections[_exactSelection.key]?.missingIds.contains(_book) ==
+          true,
+      description: "deleted exact seed becomes missing",
     );
 
-    final pageLease = harness.container
+    expect(harness.container.read(provider).resources, isEmpty);
+    lease.release();
+    subscription.close();
+    await harness.dispose();
+  });
+
+  test("releasing the final lease prunes retained canonical state", () async {
+    final harness = _Harness();
+    harness.nats.registerHandler(
+      _graphSubject,
+      (_) => _snapshot(1, title: "Initial", completeLibrary: true),
+    );
+    final provider = authoringSessionProvider(_org, _realm);
+    final subscription = harness.container.listen(provider, (_, _) {});
+    final lease = harness.container
         .read(provider.notifier)
-        .acquirePage(_page);
-    var pageReady = false;
-    unawaited(pageLease.ready.then((_) => pageReady = true));
-    firstSnapshot.complete(_snapshot(1, title: "Initial"));
-    await libraryLease.ready;
-    await pageLease.ready;
+        .acquire(_librarySelection);
+    await lease.ready;
+    final secondLease = harness.container
+        .read(provider.notifier)
+        .acquire(_librarySelection);
+    await secondLease.ready;
 
-    expect(requests, hasLength(2));
-    expect(requests.last.scopes.map((scope) => scope.kind), [
-      skir.AuthoringSnapshotScope_kind.libraryConst,
-      skir.AuthoringSnapshotScope_kind.pageWrapper,
-    ]);
-    expect(pageReady, isTrue);
+    harness.emit(_change(2, title: "Changed", compilationImpact: [_bookRoot]));
+    await waitForProvider(
+      harness.container,
+      provider,
+      (state) => state.sequence == 2,
+      description: "compilation impact",
+    );
+    expect(
+      harness.container.read(provider).compiledStatuses[_bookRoot],
+      skir.CompiledResourceState.notCompiled,
+    );
 
-    pageLease.release();
-    libraryLease.release();
+    lease.release();
+    expect(harness.container.read(provider).resources, isNotEmpty);
+    secondLease.release();
+    final state = harness.container.read(provider);
+    expect(state.resources, isEmpty);
+    expect(state.presentations, isEmpty);
+    expect(state.selections, isEmpty);
+    expect(state.compiledStatuses, isEmpty);
+
     subscription.close();
     await harness.dispose();
   });
@@ -328,62 +289,150 @@ void main() {
 
 final _org = recordId("organization:org1");
 final _realm = recordId("service:realm1");
-final _book = recordId("book:book1");
-final _tag = recordId("tag:tag1");
-final _page = recordId("page:page1");
+final _book = skir.ResourceId(value: "book1");
+final _bookRoot = skir.CompilationRoot(
+  projection: skir.CompilationProjectionId(value: "typewriter.book"),
+  resource: _book,
+);
+final _wireCodec = SkirEditorCodec(TypeRegistry(const TypeCatalog([])));
+final _bookType = ResolvedTypeRef(
+  id: DeclaredTypeId("11111111111111111111111111111111"),
+  revision: 1,
+);
+final _otherType = ResolvedTypeRef(
+  id: DeclaredTypeId("22222222222222222222222222222222"),
+  revision: 1,
+);
+final _catalog = TypeCatalog([
+  TypeDefinition(
+    id: _bookType,
+    kind: NominalTypeKind.concrete,
+    representation: const StringType(),
+  ),
+]);
 
-Uint8List _snapshot(int sequence, {required String title}) =>
-    skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-      skir.GetAuthoringSnapshotResponse.createSuccess(
-        sequence: sequence,
-        slices: [
-          skir.AuthoringSnapshotSlice.createLibrary(
-            books: [
-              skir.Book(
-                id: _book,
-                title: title,
-                icon: "mdi:book",
-                color: Colors.blue.toSkirColor(),
-                tags: const [],
+Uint8List _snapshot(
+  int sequence, {
+  required String title,
+  bool completeLibrary = false,
+  bool exactSelection = false,
+  bool deleted = false,
+}) => skir.QueryAuthoringGraphResponse.serializer.toBytes(
+  skir.QueryAuthoringGraphResponse.createSuccess(
+    generation: skir.CatalogGeneration(value: "1"),
+    sequence: sequence,
+    resources: deleted ? const [] : [_resource(title)],
+    edges: const [],
+    selections: completeLibrary
+        ? [
+            skir.GraphSelectionResult(
+              key: _librarySelection.key,
+              resourceIds: [_book],
+              edgeIds: const [],
+              missingIds: const [],
+              incompatibleIds: const [],
+            ),
+          ]
+        : [
+            if (exactSelection)
+              skir.GraphSelectionResult(
+                key: _exactSelection.key,
+                resourceIds: deleted ? const [] : [_book],
+                edgeIds: const [],
+                missingIds: deleted ? [_book] : const [],
+                incompatibleIds: const [],
               ),
-            ],
-            tags: [
-              skir.Tag(
-                id: _tag,
-                name: "Initial tag",
-                color: Colors.blue.toSkirColor(),
-                parents: const [],
-                placement: skir.GraphPlacement(x: 0, y: 0, width: 4, height: 1),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+          ],
+    diagnostics: const [],
+    presentations: deleted ? const [] : [_presentation(_resource(title))],
+  ),
+);
 
-skir.AuthoringChanged _change(int sequence, {required String title}) =>
-    skir.AuthoringChanged(
-      sequence: sequence,
-      batchId: "batch-$sequence",
-      changes: [
-        skir.AuthoringResourceChange.createUpsertBook(
-          id: _book,
-          title: title,
-          icon: "mdi:book",
-          color: Colors.blue.toSkirColor(),
-          tags: const [],
-        ),
-      ],
-      indirectlyAffectedResources: const [],
-    );
+skir.AuthoringChanged _change(
+  int sequence, {
+  required String title,
+  Iterable<skir.CompilationRoot> compilationImpact = const [],
+}) => skir.AuthoringChanged(
+  generation: skir.CatalogGeneration(value: "1"),
+  sequence: sequence,
+  batchId: "batch:$sequence",
+  resources: [skir.AuthoringResourceChange.wrapUpsert(_resource(title))],
+  edges: const [],
+  presentations: const [],
+  compilationImpact: compilationImpact,
+);
+
+skir.AuthoringChanged _deleteChange(int sequence) => skir.AuthoringChanged(
+  generation: skir.CatalogGeneration(value: "1"),
+  sequence: sequence,
+  batchId: "batch:$sequence",
+  resources: [skir.AuthoringResourceChange.createRemove(value: _book.value)],
+  edges: const [],
+  presentations: const [],
+  compilationImpact: const [],
+);
+
+skir.AuthoringResource _resource(String title) =>
+    _resourceWithType(title, _bookType);
+
+skir.AuthoringResource _resourceWithType(
+  String title,
+  ResolvedTypeRef rootType,
+) => skir.AuthoringResource(
+  id: _book,
+  definition: CoreResourceDefinitionIds.book.toWire(),
+  content: skir.TypedValueEnvelope(
+    rootType: _wireCodec.encodeType(rootType).valueOrNull!,
+    rootValue: _wireCodec.encodeValue(StringValue(title)).valueOrNull!,
+  ),
+);
+
+skir.AuthoringResourcePresentation _presentation(
+  skir.AuthoringResource resource,
+) => skir.AuthoringResourcePresentation(
+  resource: resource.id,
+  subject: skir.PresentationSubject(
+    content: resource.content,
+    descriptor: resource.content,
+    identity: resource.content,
+    resource: resource.id,
+    definition: resource.definition,
+    ownerPath: const [],
+  ),
+);
+
+String? _name(skir.AuthoringResource? resource) => resource == null
+    ? null
+    : _wireCodec
+          .decodeValue(resource.content.rootValue)
+          .valueOrNull
+          ?.asStringOrNull;
 
 final class _Harness {
   _Harness() {
+    nats.registerHandler(
+      _statusSubject,
+      (_) => skir.QueryCompiledResourceStatusResponse.serializer.toBytes(
+        skir.QueryCompiledResourceStatusResponse.createSuccess(
+          statuses: const [],
+        ),
+      ),
+    );
     container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWithValue(nats),
         organizationIdProvider.overrideWithValue(_org),
         realmIdProvider.overrideWithValue(_realm),
+        realmEditorCatalogProvider.overrideWithValue(
+          AsyncData(
+            RealmEditorCatalogState.ready(
+              RealmEditorCatalogSnapshot(
+                catalog: _catalog,
+                generation: const CatalogGeneration("1"),
+              ),
+            ),
+          ),
+        ),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),

@@ -182,7 +182,7 @@ return realm(_that.action);case _:
 
 class LocalEditorAction implements EditorAction {
   const LocalEditorAction(this.action);
-  
+
 
 @override final  LocalAction action;
 
@@ -247,7 +247,7 @@ as LocalAction,
 @override
 @pragma('vm:prefer-inline')
 $LocalActionCopyWith<$Res> get action {
-  
+
   return $LocalActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -259,7 +259,7 @@ $LocalActionCopyWith<$Res> get action {
 
 class RealmEditorAction implements EditorAction {
   const RealmEditorAction(this.action);
-  
+
 
 @override final  RealmAction action;
 
@@ -324,7 +324,7 @@ as RealmAction,
 @override
 @pragma('vm:prefer-inline')
 $RealmActionCopyWith<$Res> get action {
-  
+
   return $RealmActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -460,7 +460,7 @@ return replaceConcreteType(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( BindingReference target,  TypedExpression value)?  setValue,TResult Function( BindingReference target,  TypedExpression index,  TypedExpression value)?  insertListItem,TResult Function( BindingReference target,  TypedExpression index)?  removeListItem,TResult Function( BindingReference target,  TypedExpression value)?  appendListItem,TResult Function( BindingReference source)?  duplicateListItem,TResult Function( BindingReference source,  TypedExpression newIndex)?  reorderListItem,TResult Function( BindingReference target,  TypedExpression key,  TypedExpression value)?  putMapEntry,TResult Function( BindingReference target,  TypedExpression key)?  removeMapEntry,TResult Function( BindingReference target,  ResolvedTypeRef concreteType,  TypedExpression initialValue)?  replaceConcreteType,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( BindingReference target,  TypedExpression value)?  setValue,TResult Function( BindingReference target,  TypedExpression index,  TypedExpression value)?  insertListItem,TResult Function( BindingReference target,  TypedExpression index)?  removeListItem,TResult Function( BindingReference target,  TypedExpression value)?  appendListItem,TResult Function( BindingReference source)?  duplicateListItem,TResult Function( BindingReference source,  TypedExpression newIndex)?  reorderListItem,TResult Function( BindingReference target,  TypedExpression key,  TypedExpression value)?  putMapEntry,TResult Function( BindingReference target,  TypedExpression key)?  removeMapEntry,TResult Function( BindingReference target,  ResolvedTypeRef concreteType)?  replaceConcreteType,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SetValueAction() when setValue != null:
 return setValue(_that.target,_that.value);case InsertListItemAction() when insertListItem != null:
@@ -471,7 +471,7 @@ return duplicateListItem(_that.source);case ReorderListItemAction() when reorder
 return reorderListItem(_that.source,_that.newIndex);case PutMapEntryAction() when putMapEntry != null:
 return putMapEntry(_that.target,_that.key,_that.value);case RemoveMapEntryAction() when removeMapEntry != null:
 return removeMapEntry(_that.target,_that.key);case ReplaceConcreteTypeAction() when replaceConcreteType != null:
-return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);case _:
+return replaceConcreteType(_that.target,_that.concreteType);case _:
   return orElse();
 
 }
@@ -489,7 +489,7 @@ return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( BindingReference target,  TypedExpression value)  setValue,required TResult Function( BindingReference target,  TypedExpression index,  TypedExpression value)  insertListItem,required TResult Function( BindingReference target,  TypedExpression index)  removeListItem,required TResult Function( BindingReference target,  TypedExpression value)  appendListItem,required TResult Function( BindingReference source)  duplicateListItem,required TResult Function( BindingReference source,  TypedExpression newIndex)  reorderListItem,required TResult Function( BindingReference target,  TypedExpression key,  TypedExpression value)  putMapEntry,required TResult Function( BindingReference target,  TypedExpression key)  removeMapEntry,required TResult Function( BindingReference target,  ResolvedTypeRef concreteType,  TypedExpression initialValue)  replaceConcreteType,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( BindingReference target,  TypedExpression value)  setValue,required TResult Function( BindingReference target,  TypedExpression index,  TypedExpression value)  insertListItem,required TResult Function( BindingReference target,  TypedExpression index)  removeListItem,required TResult Function( BindingReference target,  TypedExpression value)  appendListItem,required TResult Function( BindingReference source)  duplicateListItem,required TResult Function( BindingReference source,  TypedExpression newIndex)  reorderListItem,required TResult Function( BindingReference target,  TypedExpression key,  TypedExpression value)  putMapEntry,required TResult Function( BindingReference target,  TypedExpression key)  removeMapEntry,required TResult Function( BindingReference target,  ResolvedTypeRef concreteType)  replaceConcreteType,}) {final _that = this;
 switch (_that) {
 case SetValueAction():
 return setValue(_that.target,_that.value);case InsertListItemAction():
@@ -500,7 +500,7 @@ return duplicateListItem(_that.source);case ReorderListItemAction():
 return reorderListItem(_that.source,_that.newIndex);case PutMapEntryAction():
 return putMapEntry(_that.target,_that.key,_that.value);case RemoveMapEntryAction():
 return removeMapEntry(_that.target,_that.key);case ReplaceConcreteTypeAction():
-return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);}
+return replaceConcreteType(_that.target,_that.concreteType);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -514,7 +514,7 @@ return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( BindingReference target,  TypedExpression value)?  setValue,TResult? Function( BindingReference target,  TypedExpression index,  TypedExpression value)?  insertListItem,TResult? Function( BindingReference target,  TypedExpression index)?  removeListItem,TResult? Function( BindingReference target,  TypedExpression value)?  appendListItem,TResult? Function( BindingReference source)?  duplicateListItem,TResult? Function( BindingReference source,  TypedExpression newIndex)?  reorderListItem,TResult? Function( BindingReference target,  TypedExpression key,  TypedExpression value)?  putMapEntry,TResult? Function( BindingReference target,  TypedExpression key)?  removeMapEntry,TResult? Function( BindingReference target,  ResolvedTypeRef concreteType,  TypedExpression initialValue)?  replaceConcreteType,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( BindingReference target,  TypedExpression value)?  setValue,TResult? Function( BindingReference target,  TypedExpression index,  TypedExpression value)?  insertListItem,TResult? Function( BindingReference target,  TypedExpression index)?  removeListItem,TResult? Function( BindingReference target,  TypedExpression value)?  appendListItem,TResult? Function( BindingReference source)?  duplicateListItem,TResult? Function( BindingReference source,  TypedExpression newIndex)?  reorderListItem,TResult? Function( BindingReference target,  TypedExpression key,  TypedExpression value)?  putMapEntry,TResult? Function( BindingReference target,  TypedExpression key)?  removeMapEntry,TResult? Function( BindingReference target,  ResolvedTypeRef concreteType)?  replaceConcreteType,}) {final _that = this;
 switch (_that) {
 case SetValueAction() when setValue != null:
 return setValue(_that.target,_that.value);case InsertListItemAction() when insertListItem != null:
@@ -525,7 +525,7 @@ return duplicateListItem(_that.source);case ReorderListItemAction() when reorder
 return reorderListItem(_that.source,_that.newIndex);case PutMapEntryAction() when putMapEntry != null:
 return putMapEntry(_that.target,_that.key,_that.value);case RemoveMapEntryAction() when removeMapEntry != null:
 return removeMapEntry(_that.target,_that.key);case ReplaceConcreteTypeAction() when replaceConcreteType != null:
-return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);case _:
+return replaceConcreteType(_that.target,_that.concreteType);case _:
   return null;
 
 }
@@ -538,7 +538,7 @@ return replaceConcreteType(_that.target,_that.concreteType,_that.initialValue);c
 
 class SetValueAction implements LocalAction {
   const SetValueAction({required this.target, required this.value});
-  
+
 
  final  BindingReference target;
  final  TypedExpression value;
@@ -605,7 +605,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -614,7 +614,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -626,7 +626,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class InsertListItemAction implements LocalAction {
   const InsertListItemAction({required this.target, required this.index, required this.value});
-  
+
 
  final  BindingReference target;
  final  TypedExpression index;
@@ -695,7 +695,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -704,7 +704,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get index {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.index, (value) {
     return _then(_self.copyWith(index: value));
   });
@@ -713,7 +713,7 @@ $TypedExpressionCopyWith<$Res> get index {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -725,7 +725,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class RemoveListItemAction implements LocalAction {
   const RemoveListItemAction({required this.target, required this.index});
-  
+
 
  final  BindingReference target;
  final  TypedExpression index;
@@ -792,7 +792,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -801,7 +801,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get index {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.index, (value) {
     return _then(_self.copyWith(index: value));
   });
@@ -813,7 +813,7 @@ $TypedExpressionCopyWith<$Res> get index {
 
 class AppendListItemAction implements LocalAction {
   const AppendListItemAction({required this.target, required this.value});
-  
+
 
  final  BindingReference target;
  final  TypedExpression value;
@@ -880,7 +880,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -889,7 +889,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -901,7 +901,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class DuplicateListItemAction implements LocalAction {
   const DuplicateListItemAction({required this.source});
-  
+
 
  final  BindingReference source;
 
@@ -966,7 +966,7 @@ as BindingReference,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -978,7 +978,7 @@ $BindingReferenceCopyWith<$Res> get source {
 
 class ReorderListItemAction implements LocalAction {
   const ReorderListItemAction({required this.source, required this.newIndex});
-  
+
 
  final  BindingReference source;
  final  TypedExpression newIndex;
@@ -1045,7 +1045,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1054,7 +1054,7 @@ $BindingReferenceCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get newIndex {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.newIndex, (value) {
     return _then(_self.copyWith(newIndex: value));
   });
@@ -1066,7 +1066,7 @@ $TypedExpressionCopyWith<$Res> get newIndex {
 
 class PutMapEntryAction implements LocalAction {
   const PutMapEntryAction({required this.target, required this.key, required this.value});
-  
+
 
  final  BindingReference target;
  final  TypedExpression key;
@@ -1135,7 +1135,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1144,7 +1144,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1153,7 +1153,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1165,7 +1165,7 @@ $TypedExpressionCopyWith<$Res> get value {
 
 class RemoveMapEntryAction implements LocalAction {
   const RemoveMapEntryAction({required this.target, required this.key});
-  
+
 
  final  BindingReference target;
  final  TypedExpression key;
@@ -1232,7 +1232,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1241,7 +1241,7 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1252,12 +1252,11 @@ $TypedExpressionCopyWith<$Res> get key {
 
 
 class ReplaceConcreteTypeAction implements LocalAction {
-  const ReplaceConcreteTypeAction({required this.target, required this.concreteType, required this.initialValue});
-  
+  const ReplaceConcreteTypeAction({required this.target, required this.concreteType});
+
 
  final  BindingReference target;
  final  ResolvedTypeRef concreteType;
- final  TypedExpression initialValue;
 
 /// Create a copy of LocalAction
 /// with the given fields replaced by the non-null parameter values.
@@ -1269,18 +1268,18 @@ $ReplaceConcreteTypeActionCopyWith<ReplaceConcreteTypeAction> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReplaceConcreteTypeAction&&(identical(other.target, target) || other.target == target)&&(identical(other.concreteType, concreteType) || other.concreteType == concreteType)&&(identical(other.initialValue, initialValue) || other.initialValue == initialValue));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReplaceConcreteTypeAction&&(identical(other.target, target) || other.target == target)&&(identical(other.concreteType, concreteType) || other.concreteType == concreteType));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,target,concreteType,initialValue);
+    return Object.hash(runtimeType,target,concreteType);
 }
 
 @override
 String toString() {
-    return 'LocalAction.replaceConcreteType(target: $target, concreteType: $concreteType, initialValue: $initialValue)';
+    return 'LocalAction.replaceConcreteType(target: $target, concreteType: $concreteType)';
 }
 
 
@@ -1291,11 +1290,11 @@ abstract mixin class $ReplaceConcreteTypeActionCopyWith<$Res> implements $LocalA
   factory $ReplaceConcreteTypeActionCopyWith(ReplaceConcreteTypeAction value, $Res Function(ReplaceConcreteTypeAction) _then) = _$ReplaceConcreteTypeActionCopyWithImpl;
 @useResult
 $Res call({
- BindingReference target, ResolvedTypeRef concreteType, TypedExpression initialValue
+ BindingReference target, ResolvedTypeRef concreteType
 });
 
 
-$BindingReferenceCopyWith<$Res> get target;$ResolvedTypeRefCopyWith<$Res> get concreteType;$TypedExpressionCopyWith<$Res> get initialValue;
+$BindingReferenceCopyWith<$Res> get target;$ResolvedTypeRefCopyWith<$Res> get concreteType;
 
 }
 /// @nodoc
@@ -1308,12 +1307,11 @@ class _$ReplaceConcreteTypeActionCopyWithImpl<$Res>
 
 /// Create a copy of LocalAction
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? target = null,Object? concreteType = null,Object? initialValue = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? target = null,Object? concreteType = null,}) {
   return _then(ReplaceConcreteTypeAction(
 target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
 as BindingReference,concreteType: null == concreteType ? _self.concreteType : concreteType // ignore: cast_nullable_to_non_nullable
-as ResolvedTypeRef,initialValue: null == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
-as TypedExpression,
+as ResolvedTypeRef,
   ));
 }
 
@@ -1322,7 +1320,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get target {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1331,18 +1329,9 @@ $BindingReferenceCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get concreteType {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.concreteType, (value) {
     return _then(_self.copyWith(concreteType: value));
-  });
-}/// Create a copy of LocalAction
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TypedExpressionCopyWith<$Res> get initialValue {
-  
-  return $TypedExpressionCopyWith<$Res>(_self.initialValue, (value) {
-    return _then(_self.copyWith(initialValue: value));
   });
 }
 }
@@ -1512,7 +1501,7 @@ return invokeCommand(_that.capabilityId,_that.payload);case _:
 
 class ReloadRealmAction implements RealmAction {
   const ReloadRealmAction();
-  
+
 
 
 
@@ -1544,7 +1533,7 @@ String toString() {
 
 class InvokeRealmCommandAction implements RealmAction {
   const InvokeRealmCommandAction({required this.capabilityId, required this.payload});
-  
+
 
  final  CapabilityId capabilityId;
  final  TypedExpression payload;
@@ -1611,7 +1600,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $CapabilityIdCopyWith<$Res> get capabilityId {
-  
+
   return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
     return _then(_self.copyWith(capabilityId: value));
   });
@@ -1620,7 +1609,7 @@ $CapabilityIdCopyWith<$Res> get capabilityId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get payload {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.payload, (value) {
     return _then(_self.copyWith(payload: value));
   });
@@ -1816,7 +1805,7 @@ return unavailable(_that.diagnostics);case _:
 
 class MutationSuccess implements TypedMutationResult {
   const MutationSuccess({required this.revision, required this.value}): assert(revision >= 0, 'Revision must not be negative.');
-  
+
 
  final  int revision;
  final  DataValue value;
@@ -1883,7 +1872,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1895,7 +1884,7 @@ $DataValueCopyWith<$Res> get value {
 
 class MutationConflict implements TypedMutationResult {
   const MutationConflict({required this.expectedRevision, required this.actualRevision, required this.actualValue});
-  
+
 
  final  int expectedRevision;
  final  int actualRevision;
@@ -1964,7 +1953,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get actualValue {
-  
+
   return $DataValueCopyWith<$Res>(_self.actualValue, (value) {
     return _then(_self.copyWith(actualValue: value));
   });
@@ -1976,7 +1965,7 @@ $DataValueCopyWith<$Res> get actualValue {
 
 class MutationInvalid implements TypedMutationResult {
    MutationInvalid( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-  
+
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -2050,7 +2039,7 @@ as List<TypeDiagnostic>,
 
 class MutationPermissionDenied implements TypedMutationResult {
   const MutationPermissionDenied(this.message);
-  
+
 
  final  String message;
 
@@ -2118,7 +2107,7 @@ as String,
 
 class MutationUncertain implements TypedMutationResult {
   const MutationUncertain({required this.message, required this.cause, required this.stackTrace, this.replay, this.submissionId});
-  
+
 
  final  String message;
  final  Object cause;
@@ -2192,7 +2181,7 @@ as Future<TypedMutationResult> Function()?,submissionId: freezed == submissionId
 
 class MutationUnavailable implements TypedMutationResult {
    MutationUnavailable( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-  
+
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -2426,7 +2415,7 @@ return invalid(_that.diagnostics);case _:
 
 class LocalMutationApplied implements LocalMutationResult {
   const LocalMutationApplied({required this.bindingId, required this.value});
-  
+
 
  final  BindingId bindingId;
  final  DataValue value;
@@ -2493,7 +2482,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -2502,7 +2491,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -2514,7 +2503,7 @@ $DataValueCopyWith<$Res> get value {
 
 class LocalMutationInvalid implements LocalMutationResult {
   const LocalMutationInvalid( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-  
+
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

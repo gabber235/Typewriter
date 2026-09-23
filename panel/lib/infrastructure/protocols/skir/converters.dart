@@ -36,9 +36,6 @@ extension RecordIdExtension on skir.RecordId {
       "${_formatStringKey(table)}:${_formatRecordIdKey(key)}";
 }
 
-/// Resource tables for identities created by panel authoring.
-enum AuthoringResource { book, tag, page, element }
-
 final _resourceRandom = Random.secure();
 const _resourceAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -47,15 +44,16 @@ const _resourceAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 /// Callers must retain the returned value for the complete submission flow.
 /// Reusing it across retries makes a replay address the same resource instead
 /// of creating a duplicate.
-skir.RecordId newResourceId(AuthoringResource resource) => skir.RecordId(
-  table: resource.name,
-  key: skir.RecordIdKey.wrapString(
-    String.fromCharCodes([
-      for (var index = 0; index < 20; index++)
-        _resourceAlphabet.codeUnitAt(_resourceRandom.nextInt(36)),
-    ]),
-  ),
+skir.ResourceId newResourceId() => skir.ResourceId(
+  value: String.fromCharCodes([
+    for (var index = 0; index < 20; index++)
+      _resourceAlphabet.codeUnitAt(_resourceRandom.nextInt(36)),
+  ]),
 );
+
+extension ResourceIdExtension on skir.ResourceId {
+  String get id => value;
+}
 
 String _formatRecordIdKey(skir.RecordIdKey key) {
   return switch (key) {

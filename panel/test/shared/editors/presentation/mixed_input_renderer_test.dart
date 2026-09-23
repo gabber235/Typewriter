@@ -266,7 +266,7 @@ _Selection _selection({
     for (final value in values)
       LocalEditor(
         rootType: type,
-        typeCatalog: const TypeCatalog([]),
+        typeCatalog: receivedRealmCatalog(),
         value: value,
       ),
   ];
@@ -275,7 +275,7 @@ _Selection _selection({
     MultiEditOwner(
       owners: owners,
       rootType: type,
-      typeCatalog: const TypeCatalog([]),
+      typeCatalog: receivedRealmCatalog(),
       commitInteractions: (interactions) => interactions.commitIndependently(),
     ),
   );

@@ -16,6 +16,7 @@ class ComposedEditor extends StatefulWidget {
     this.conversions = const [],
     this.host = const EditorHostCapabilities(),
     this.referenceOrigins = const [],
+    this.bindingFocusController,
     this.headerShortcuts = const {},
     this.historyNamespace = "local",
     this.readOnly = false,
@@ -25,7 +26,8 @@ class ComposedEditor extends StatefulWidget {
   final PresentationModel model;
   final List<ConversionDefinition> conversions;
   final EditorHostCapabilities host;
-  final List<RecordId> referenceOrigins;
+  final List<ResourceId> referenceOrigins;
+  final RenderedBindingFocusController? bindingFocusController;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;
@@ -82,18 +84,20 @@ class _ComposedEditorState extends State<ComposedEditor> {
       realmSearchSourceBuilder: widget.host.presentationSearch?.source,
       referenceSearchSourceBuilder: references?.search,
       resolveReferences: references?.resolve,
+      referenceEligibility: references?.eligibility,
       referenceOrigins: [
         ...widget.referenceOrigins,
         for (final input in widget.model.inputs.values)
           if (input case PresentationEditInput(:final owner))
             for (final source in _resources(owner))
               if (source case TransactionalEditorSource(:final resource?))
-                if (resource.key.identity case final RecordId identity)
+                if (resource.key.identity case final ResourceId identity)
                   identity,
       ],
       referencePolicies:
           references?.policies ?? const ReferenceCandidatePolicyRegistry(),
       editOwnerFor: _session.owner,
+      bindingFocusController: widget.bindingFocusController,
       headerShortcuts: widget.headerShortcuts,
       startInteraction: _session.beginInteraction,
       setBinding: (reference, value, context, aliases) {
@@ -146,6 +150,11 @@ class _ComposedEditorState extends State<ComposedEditor> {
         mainAxisSize: MainAxisSize.min,
         spacing: context.spacing.space2,
         children: [
+          for (final owner in owners)
+            if (owner is TransactionalEditorSource &&
+                (owner.contractReconciliationPending ||
+                    owner.contractUnavailable))
+              _EditorContractReconciliation(owner: owner),
           for (final owner in owners)
             if ({
               EditorSavePhase.conflict,
@@ -214,11 +223,7 @@ class _ComposedEditorState extends State<ComposedEditor> {
         (type is NamedType
             ? registry.definition(type.reference)?.defaultPresentationId
             : null);
-    final candidates = [
-      ...builtinPresentationDefinitions(),
-      ...widget.model.presentations,
-    ];
-    final definition = candidates
+    final definition = widget.model.presentations
         .where((value) => value.id == selected)
         .firstOrNull;
     if (definition == null) return null;
@@ -311,3 +316,62 @@ Iterable<EditorSource> _resources(EditOwner owner) => switch (owner) {
   MultiEditOwner(:final owners) => owners.expand(_resources),
   _ => const [],
 };
+
+class _EditorContractReconciliation extends StatelessWidget {
+  const _EditorContractReconciliation({required this.owner});
+
+  final TransactionalEditorSource owner;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    label: owner.contractUnavailable
+        ? "Editor contract unavailable"
+        : "Editor contract changed",
+    child: Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(context.spacing.space3),
+      decoration: BoxDecoration(
+        color: context.theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(context.spacing.space2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: context.spacing.space2,
+        children: [
+          Text(
+            owner.contractUnavailable
+                ? "Editor contract unavailable"
+                : "Editor contract changed",
+            style: context.theme.textTheme.titleSmall,
+          ),
+          Text(
+            owner.contractUnavailable
+                ? "Your draft is preserved. Retry when the Realm contract is available."
+                : "Your draft is preserved. Reconcile it with the new contract, or discard it and reload the resource.",
+          ),
+          Wrap(
+            spacing: context.spacing.space2,
+            children: [
+              if (owner.contractUnavailable)
+                TextButton(
+                  onPressed: owner.retryContractRefresh,
+                  child: const Text("Retry contract"),
+                )
+              else ...[
+                TextButton(
+                  onPressed: owner.reconcilePendingContract,
+                  child: const Text("Reconcile draft"),
+                ),
+                TextButton(
+                  onPressed: owner.discardDraftAndAcceptPendingContract,
+                  child: const Text("Discard and reload"),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}

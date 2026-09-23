@@ -8,6 +8,52 @@
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::skir::base::access::v1::permission::{Permission, Permissions};
 
+/// Realm request routes exposed by the current service contract.
+pub const REALM_REQUEST_SUFFIXES: &[&str] = &[
+    "compiled.content.watch",
+    "editor.capability.command.invoke",
+    "editor.capability.computation.invoke",
+    "editor.catalog.fetch",
+    "editor.catalog.invalidate",
+    "editor.presentation.search",
+    "editor.presentation.search.cancel",
+    "editor.typed.value.initialize",
+    "editor.authoring.batch.apply",
+    "editor.authoring.batch.preview",
+    "editor.authoring.compiled.status.query",
+    "editor.authoring.compiled.watch",
+    "editor.authoring.graph.query",
+    "editor.authoring.graph.search",
+    "shared.blob.begin",
+    "shared.blob.complete",
+    "shared.blob.metadata",
+    "shared.blob.read",
+    "shared.blob.write",
+    "shared.catalog.fetch",
+    "shared.publish",
+];
+
+/// Realm event routes published by the current service contract.
+pub const REALM_EVENT_SUFFIXES: &[&str] = &[
+    "compiled.content.watch",
+    "editor.catalog.invalidate",
+    "editor.presentation.search",
+    "editor.authoring.changed",
+    "editor.authoring.compiled.activated",
+    "editor.authoring.compiled.changed",
+];
+
+/// Realm requests issued by services attached to a Realm.
+pub const SHARED_REQUEST_SUFFIXES: &[&str] = &[
+    "shared.blob.begin",
+    "shared.blob.complete",
+    "shared.blob.metadata",
+    "shared.blob.read",
+    "shared.blob.write",
+    "shared.catalog.fetch",
+    "shared.publish",
+];
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 /// Optional identity provider data used to enrich a durable Typewriter user record.
 pub struct DiscordData {

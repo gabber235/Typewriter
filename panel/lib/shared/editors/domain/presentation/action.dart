@@ -68,7 +68,6 @@ sealed class LocalAction with _$LocalAction {
   const factory LocalAction.replaceConcreteType({
     required BindingReference target,
     required ResolvedTypeRef concreteType,
-    required TypedExpression initialValue,
   }) = ReplaceConcreteTypeAction;
 }
 

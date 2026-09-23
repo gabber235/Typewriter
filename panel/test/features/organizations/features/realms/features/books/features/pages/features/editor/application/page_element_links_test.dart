@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -10,7 +12,9 @@ void main() {
         "source",
         RecordValue({
           "name": const StringValue("Source"),
-          "targets": ListValue([ReferenceValue(recordId("element:target"))]),
+          "targets": ListValue([
+            ReferenceValue(skir.ResourceId(value: "target")),
+          ]),
         }),
         outward: const [
           ElementLink(
@@ -34,19 +38,25 @@ void main() {
       final projectedSource = _definition(projected.first);
       final projectedTarget = _definition(projected.last);
 
-      expect(projectedSource.outwardEdges, const [
-        ElementLink(linkId: "source_child", otherId: "child", path: "children"),
+      expect(projectedSource.outwardEdges, [
+        const ElementLink(
+          linkId: "source_child",
+          otherId: "child",
+          path: "children",
+        ),
         ElementLink(
           linkId: "source:.targets[0]",
           otherId: "target",
           path: ".targets[0]",
+          sourcePath: DataPath.root.field("targets").index(0),
         ),
       ]);
-      expect(projectedTarget.inwardEdges, const [
+      expect(projectedTarget.inwardEdges, [
         ElementLink(
           linkId: "source:.targets[0]",
           otherId: "source",
           path: ".targets[0]",
+          sourcePath: DataPath.root.field("targets").index(0),
         ),
       ]);
 
@@ -63,6 +73,28 @@ void main() {
       expect(_definition(withoutReference.last).inwardEdges, isEmpty);
     },
   );
+
+  test("preserves distinct slots between identical endpoints", () {
+    final projected = [
+      _entry(
+        "source",
+        RecordValue({
+          "fallback": ReferenceValue(skir.ResourceId(value: "target")),
+          "success": ReferenceValue(skir.ResourceId(value: "target")),
+        }),
+      ),
+      _entry("target", RecordValue({"name": const StringValue("Target")})),
+    ].projectLinks();
+
+    expect(
+      _definition(projected.first).outwardEdges.map((link) => link.linkId),
+      ["source:.fallback", "source:.success"],
+    );
+    expect(_definition(projected.last).inwardEdges.map((link) => link.linkId), [
+      "source:.fallback",
+      "source:.success",
+    ]);
+  });
 }
 
 PageElement _entry(

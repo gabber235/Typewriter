@@ -15,27 +15,24 @@ import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.encodeToByteArray
 
 @OptIn(ExperimentalSerializationApi::class)
 val ElementModelTest by testSuite {
     test("element contribution preserves typed icon and color values") {
         val descriptor = descriptor()
         val contribution =
-            ElementDiscoveryContribution(
+            ContentDiscoveryContribution(
                 descriptors =
                     listOf(
                         descriptor.copy(
                             searchDefinition =
-                                ElementSearchDefinition(
-                                    ElementSearchPolicy.ORDINARY_TEXT,
+                                ContentSearchDefinition(
+                                    ContentSearchPolicy.ORDINARY_TEXT,
                                     listOf(
-                                        ElementSearchPropertyOverride(
+                                        ContentSearchPropertyOverride(
                                             descriptor.type,
                                             "title",
-                                            ElementSearchMode.SUMMARY,
+                                            ContentSearchMode.SUMMARY,
                                         ),
                                     ),
                                     listOf(descriptor.type),
@@ -44,32 +41,22 @@ val ElementModelTest by testSuite {
                     ),
             )
 
-        val decoded = ElementDiscoveryContributionCodec.decode(ElementDiscoveryContributionCodec.encode(contribution))
+        val decoded = ContentDiscoveryContributionCodec.decode(ContentDiscoveryContributionCodec.encode(contribution))
 
         decoded shouldBe contribution
     }
 
-    test("element contribution decodes descriptors produced before search metadata") {
-        val descriptor = descriptor()
-        val legacyContribution =
-            LegacyElementDiscoveryContribution(
-                listOf(
-                    LegacyElementDescriptor(
-                        descriptor.id,
-                        descriptor.type,
-                        descriptor.name,
-                        descriptor.description,
-                        descriptor.icon,
-                        descriptor.color,
-                        descriptor.availability,
-                    ),
-                ),
-            )
+    test("one content contribution carries element and cue roles") {
+        val element = descriptor()
+        val cueId = DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e282")
+        val cue = element.copy(
+            id = ContentTypeId(cueId),
+            type = ResolvedTypeRef(TypeId.Declared(cueId), 1),
+            role = ContentRole.CUE,
+        )
+        val contribution = ContentDiscoveryContribution(descriptors = listOf(element, cue))
 
-        val decoded = ElementDiscoveryContributionCodec.decode(legacyCbor.encodeToByteArray(legacyContribution))
-
-        decoded.descriptors.single() shouldBe descriptor
-        decoded.descriptors.single().searchDefinition shouldBe null
+        ContentDiscoveryContributionCodec.decode(ContentDiscoveryContributionCodec.encode(contribution)) shouldBe contribution
     }
 
     test("availability expressions evaluate deployment facts") {
@@ -89,11 +76,11 @@ val ElementModelTest by testSuite {
         val origin = ArtifactId("example:extension")
         val descriptor = descriptor()
         val catalog =
-            ElementCatalogAssembler.assemble(
+            ContentCatalogAssembler.assemble(
                 listOf(
-                    KeyedElementContribution(
+                    KeyedContentContribution(
                         ContributionKey(origin, "paper", ProducerId("elements"), ContributionName("catalog.cbor")),
-                        ElementDiscoveryContribution(descriptors = listOf(descriptor)),
+                        ContentDiscoveryContribution(descriptors = listOf(descriptor)),
                     ),
                 ),
                 listOf(
@@ -114,19 +101,19 @@ val ElementModelTest by testSuite {
         val origin = ArtifactId("example:extension")
         val descriptor = descriptor().copy(availability = AvailabilityExpression.Fact("feature.preview", "enabled"))
         val contribution =
-            KeyedElementContribution(
+            KeyedContentContribution(
                 ContributionKey(origin, "common", ProducerId("elements"), ContributionName("catalog.cbor")),
-                ElementDiscoveryContribution(descriptors = listOf(descriptor)),
+                ContentDiscoveryContribution(descriptors = listOf(descriptor)),
             )
 
         val unavailable =
-            ElementCatalogAssembler.assemble(
+            ContentCatalogAssembler.assemble(
                 listOf(contribution),
                 listOf(SourcePartCatalogEntry(origin, "common", Eligibility.Eligible)),
                 DeploymentFacts(),
             )
         val available =
-            ElementCatalogAssembler.assemble(
+            ContentCatalogAssembler.assemble(
                 listOf(contribution),
                 listOf(SourcePartCatalogEntry(origin, "common", Eligibility.Eligible)),
                 DeploymentFacts(mapOf("feature.preview" to "enabled")),
@@ -138,30 +125,12 @@ val ElementModelTest by testSuite {
     }
 }
 
-@Serializable
-private data class LegacyElementDiscoveryContribution(
-    val descriptors: List<LegacyElementDescriptor>,
-)
-
-@Serializable
-private data class LegacyElementDescriptor(
-    val id: ElementTypeId,
-    val type: ResolvedTypeRef,
-    val name: String,
-    val description: String,
-    val icon: Icon,
-    val color: Color,
-    val availability: AvailabilityExpression,
-)
-
-@OptIn(ExperimentalSerializationApi::class)
-private val legacyCbor = Cbor { encodeDefaults = true }
-
-private fun descriptor(): ElementDescriptor {
+private fun descriptor(): ContentDescriptor {
     val id = DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")
-    return ElementDescriptor(
-        id = ElementTypeId(id),
+    return ContentDescriptor(
+        id = ContentTypeId(id),
         type = ResolvedTypeRef(TypeId.Declared(id), 1),
+        role = ContentRole.ELEMENT,
         name = "Synthetic Entry",
         description = "Verifies discovery",
         icon = Icon.Iconify("material-symbols:science"),

@@ -153,6 +153,16 @@ final class PresentationSession extends ChangeNotifier {
       );
       if (structural != null) return structural;
     }
+    if (action.action case final ReplaceConcreteTypeAction replacement
+        when target is! EditorStructureOwner) {
+      final concrete = _replaceConcreteType(
+        target,
+        destination,
+        replacement,
+        context,
+      );
+      if (concrete != null) return concrete;
+    }
     if (target is MultiEditOwner) {
       final input =
           model.inputs[destination.bindingId]! as PresentationEditInput;
@@ -265,6 +275,63 @@ final class PresentationSession extends ChangeNotifier {
     );
   }
 
+  EditorMutationResult? _replaceConcreteType(
+    EditOwner? owner,
+    BindingReference destination,
+    ReplaceConcreteTypeAction action,
+    ExpressionContext context,
+  ) {
+    if (owner == null) return null;
+    final input = model.inputs[destination.bindingId];
+    if (input is! PresentationEditInput) return null;
+    final registry = TypeRegistry(model.catalog);
+    final inspected = context.bindings.inspect(destination, registry: registry);
+    if (inspected case TypeFailure(:final diagnostics)) {
+      return EditorMutationResult.invalid(diagnostics);
+    }
+    final declared = inspected.valueOrNull!.type;
+    if (declared is! NamedType ||
+        !NamedType(action.concreteType)
+            .isStructurallyAssignableTo(declared, registry)) {
+      return EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Concrete type does not refine the declared type",
+          path: destination.path,
+        ),
+      ]);
+    }
+    final resolved = registry.resolveExact(action.concreteType).valueOrNull;
+    if (resolved == null || !resolved.isConcrete) {
+      return EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Concrete type is unavailable",
+          path: destination.path,
+        ),
+      ]);
+    }
+    final initial = resolved.representation.createInitialValue(
+      registry: registry,
+    );
+    if (initial case TypeFailure(:final diagnostics)) {
+      return EditorMutationResult.invalid(diagnostics);
+    }
+    final path = input.path.followedBy(destination.path);
+    return owner.update(
+      path,
+      PolymorphicValue(
+        concreteType: action.concreteType,
+        value: initial.valueOrNull!,
+      ),
+      structuralMutation: EditorReplaceConcreteType(
+        path,
+        action.concreteType,
+        initial.valueOrNull!,
+      ),
+    );
+  }
+
   EditorMutationResult? _executeStructuralDraftAction(
     EditorStructureOwner owner,
     BindingReference destination,
@@ -319,13 +386,7 @@ final class PresentationSession extends ChangeNotifier {
         path,
         evaluate(key),
       ),
-      ReplaceConcreteTypeAction(:final concreteType, :final initialValue) =>
-        _replaceDraftConcrete(
-          owner,
-          path,
-          concreteType,
-          evaluate(initialValue),
-        ),
+      ReplaceConcreteTypeAction() => const EditorMutationResult.conflict(),
       SetValueAction() || InsertListItemAction() => null,
     };
   }
@@ -386,17 +447,6 @@ EditorMutationResult? _removeDraftMap(
       byId ??
       entries.where((entry) => entry.key.valueOrNull == key).firstOrNull;
   return entry == null ? null : owner.removeMapEntry(path, entry.id);
-}
-
-EditorMutationResult _replaceDraftConcrete(
-  EditorStructureOwner owner,
-  DataPath path,
-  ResolvedTypeRef type,
-  DataValue? value,
-) {
-  final selected = owner.selectConcreteType(path, type);
-  if (selected is! AppliedEditorMutation || value == null) return selected;
-  return owner.updateConcretePayload(path, value);
 }
 
 EditorMutationResult? _draftListSource(

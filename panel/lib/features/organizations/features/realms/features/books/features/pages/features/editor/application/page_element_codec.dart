@@ -1,81 +1,124 @@
 part of "page_elements.dart";
 
-// New elements are initialized from the resolved catalog schema, then encoded
-// into the wire value expected by the authoring service. Diagnostics stay at the
-// boundary so callers can report why creation cannot proceed.
-skir.TypedValue _initialElementValue(
-  ElementDefinition definition,
-  String id,
-  String name,
-  TypeRegistry registry,
-  SkirEditorCodec codec,
-  DataValue? prepared,
-) {
-  final initial = prepared == null
-      ? materializeReadyValue(NamedType(definition.rootType), registry)
-      : TypeResult.success(prepared);
-  final value = initial.valueOrNull;
-  if (value == null) {
-    throw ApiException.badRequest(initial.diagnostics.join("; "));
-  }
-  if (value is! RecordValue) {
-    throw ApiException.badRequest("Element values must be records");
-  }
-  final identified = value
-      .withField("id", DataValue.string(id))
-      .withField("name", DataValue.string(name));
-  final encoded = codec.encodeValue(identified);
-  return encoded.valueOrNull ??
-      (throw ApiException.badRequest(encoded.diagnostics.join("; ")));
-}
-
-// Decoding deliberately preserves degraded and cross page states. A missing
-// catalog definition or invalid value must remain visible to the editor rather
-// than silently disappearing from the page projection.
 List<PageElement> _decodePageElements(
-  skir.PageDocument document,
+  skir.ResourceId pageId,
+  Iterable<skir.AuthoringResource> resources,
+  Iterable<skir.AuthoringEdge> edges,
+  Map<skir.ResourceId, skir.PresentationSubject> subjects,
   RealmEditorCatalogSnapshot snapshot,
 ) {
-  final codec = SkirEditorCodec(
-    TypeRegistry(bootstrapTypeCatalog(snapshot.catalog.definitions)),
-  );
-  final localIds = document.elements.map((element) => element.id.id).toSet();
+  final codec = TypedAuthoringCodec(snapshot);
+  final byId = {for (final resource in resources) resource.id: resource};
+  final page = byId[pageId];
+  if (page == null) return const [];
+  final pageType = codec.decodeResourceOrThrow(page).content.rootType;
+  final ownershipRelation = snapshot.relations.values
+      .where(
+        (relation) =>
+            relation.sourceEndpoint?.owner == pageType &&
+            relation.sourceEndpoint?.path == DataPath.root.field("elements"),
+      )
+      .singleOrNull;
+  if (ownershipRelation == null) {
+    throw StateError("The Page elements relation is unavailable");
+  }
+  final owningRelations = {
+    for (final relation in snapshot.relations.values)
+      if (relation.families.contains("resource.ownership")) relation.id,
+  };
+  final ownedEdges = [
+    for (final edge in edges)
+      if (edge.origin
+          case skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value)
+          when owningRelations.contains(value.relationId.value))
+        edge,
+  ];
+  int sourceIndex(skir.AuthoringEdge edge) => switch (edge.origin) {
+    skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value) =>
+      value.sourceIndex ?? 0,
+    _ => 0,
+  };
+  final localIds = <skir.ResourceId>{};
+  void visit(skir.ResourceId id) {
+    if (!localIds.add(id)) return;
+    final children =
+        ownedEdges
+            .where(
+              (edge) =>
+                  edge.source == id &&
+                  byId[edge.target]?.definition.toDomain() ==
+                      CoreResourceDefinitionIds.cue,
+            )
+            .toList()
+          ..sort(
+            (left, right) => sourceIndex(left).compareTo(sourceIndex(right)),
+          );
+    for (final child in children) {
+      visit(child.target);
+    }
+  }
+
+  final direct =
+      ownedEdges
+          .where(
+            (edge) =>
+                edge.source == pageId &&
+                switch (edge.origin) {
+                  skir.AuthoringEdgeOrigin_declaredRelationWrapper(
+                    :final value,
+                  ) =>
+                    value.relationId.value == ownershipRelation.id,
+                  _ => false,
+                } &&
+                byId[edge.target]?.definition.toDomain() ==
+                    CoreResourceDefinitionIds.element,
+          )
+          .toList()
+        ..sort(
+          (left, right) => sourceIndex(left).compareTo(sourceIndex(right)),
+        );
+  for (final edge in direct) {
+    visit(edge.target);
+  }
+  final ordinaryEdges = [
+    for (final edge in edges)
+      if (edge.origin is skir.AuthoringEdgeOrigin_ordinaryReferenceWrapper)
+        edge,
+  ];
   final local = <PageElement>[];
-  for (final element in document.elements) {
-    final catalogEntry = snapshot.elements[element.elementType];
-    final definition = catalogEntry?.definition.toElementDefinition();
-    final decoded = codec.decodeValue(element.value).valueOrNull;
-    final data = decoded is RecordValue ? decoded : null;
+  for (final id in localIds) {
+    final resource = byId[id];
+    if (resource == null) continue;
+    final decoded = codec.decodeResourceOrThrow(resource);
+    final data = decoded.content.rootValue;
+    final placementValue = elementPlacementPath.read(data).valueOrNull;
+    if (placementValue == null) continue;
+    final placement = decodePlacement(placementValue);
+    final definition = snapshot.elements.values
+        .where((entry) => entry.definition.type == decoded.content.rootType)
+        .firstOrNull
+        ?.definition
+        .toElementDefinition();
+    final isCue =
+        resource.definition.toDomain() == CoreResourceDefinitionIds.cue;
     final outgoing = [
-      for (final reference in document.references)
-        if (reference.source.id == element.id.id)
-          ElementLink(
-            linkId: "${reference.source.id}:${reference.slot}",
-            otherId: reference.target.id,
-            path: reference.slot,
-          ),
+      for (final edge in ordinaryEdges)
+        if (edge.source == id) _elementLink(edge, edge.target, codec.registry),
     ];
     final incoming = [
-      for (final reference in document.references)
-        if (reference.target.id == element.id.id)
-          ElementLink(
-            linkId: "${reference.source.id}:${reference.slot}",
-            otherId: reference.source.id,
-            path: reference.slot,
-          ),
+      for (final edge in ordinaryEdges)
+        if (edge.target == id) _elementLink(edge, edge.source, codec.registry),
     ];
 
-    final placement = element.placement;
-    if (placement case skir.ElementPlacement_timelineSegmentWrapper(
-      value: final timing,
-    )) {
-      if (definition != null && data != null) {
+    if (isCue && placement is TimelineSegmentPlacement) {
+      final TimelineSegmentPlacement(:startFrame, :endFrame) = placement;
+      if (definition != null && data is RecordValue) {
         local.add(
           PageElement.cue(
             cue: Cue.segment(
-              id: element.id.id,
-              startFrame: timing.startFrame,
-              endFrame: timing.endFrame,
+              id: id.value,
+              startFrame: startFrame,
+              endFrame: endFrame,
               elementDefinition: definition,
               data: data,
               inwardLinks: incoming,
@@ -86,15 +129,14 @@ List<PageElement> _decodePageElements(
       }
       continue;
     }
-    if (placement case skir.ElementPlacement_timelineKeyframeWrapper(
-      value: final timing,
-    )) {
-      if (definition != null && data != null) {
+    if (isCue && placement is TimelineKeyframePlacement) {
+      final TimelineKeyframePlacement(:frame) = placement;
+      if (definition != null && data is RecordValue) {
         local.add(
           PageElement.cue(
             cue: Cue.keyframe(
-              id: element.id.id,
-              frame: timing.frame,
+              id: id.value,
+              frame: frame,
               elementDefinition: definition,
               data: data,
               inwardLinks: incoming,
@@ -105,26 +147,21 @@ List<PageElement> _decodePageElements(
       continue;
     }
     final entryPlacement = switch (placement) {
-      skir.ElementPlacement_graphWrapper(:final value) => EntryPlacement(
-        x: value.x,
-        y: value.y,
-        width: value.width,
-        height: value.height,
+      GraphPlacement(:final x, :final y, :final width, :final height) =>
+        EntryPlacement(x: x, y: y, width: width, height: height),
+      TimelineEntryPlacement(:final trackIndex) => EntryPlacement(
+        kind: EntryPlacementKind.timelineEntry,
+        x: trackIndex,
+        y: 0,
+        width: 1,
+        height: 1,
       ),
-      skir.ElementPlacement_timelineEntryWrapper(:final value) =>
-        EntryPlacement(
-          kind: EntryPlacementKind.timelineEntry,
-          x: value.trackIndex,
-          y: 0,
-          width: 1,
-          height: 1,
-        ),
       _ => const EntryPlacement(x: 0, y: 0, width: 1, height: 1),
     };
-    final entry = definition != null && data != null
+    final entry = definition != null && data is RecordValue
         ? PageEntry.definition(
             definition: EntryDefinition(
-              id: element.id.id,
+              id: id.value,
               elementDefinition: definition,
               placement: entryPlacement,
               data: data,
@@ -133,8 +170,10 @@ List<PageElement> _decodePageElements(
             ),
           )
         : PageEntry.missingElementDefinition(
-            id: element.id.id,
-            name: data?.requiredStringField("name") ?? element.id.id,
+            id: id.value,
+            name: data is RecordValue
+                ? data.requiredStringField("name")
+                : id.value,
             placement: entryPlacement,
             inwardLinks: incoming,
             outwardLinks: outgoing,
@@ -142,35 +181,121 @@ List<PageElement> _decodePageElements(
     local.add(PageElement.entry(entry: entry));
   }
 
+  final relatedIds = <skir.ResourceId>{
+    for (final edge in ordinaryEdges)
+      if (localIds.contains(edge.source) && !localIds.contains(edge.target))
+        edge.target,
+    for (final edge in ordinaryEdges)
+      if (localIds.contains(edge.target) && !localIds.contains(edge.source))
+        edge.source,
+  };
   final related = <PageElement>[];
-  for (final summary in document.crossPageTargets) {
-    if (localIds.contains(summary.id.id)) continue;
-    if (!summary.exists || summary.elementType == null) {
+  for (final id in relatedIds) {
+    final resource = byId[id];
+    final inward = [
+      for (final edge in ordinaryEdges)
+        if (edge.target == id && localIds.contains(edge.source))
+          _elementLink(edge, edge.source, codec.registry),
+    ];
+    final outward = [
+      for (final edge in ordinaryEdges)
+        if (edge.source == id && localIds.contains(edge.target))
+          _elementLink(edge, edge.target, codec.registry),
+    ];
+    if (resource == null) {
       related.add(
-        PageElement.entry(entry: PageEntry.nonexistent(id: summary.id.id)),
+        PageElement.entry(entry: PageEntry.nonexistent(id: id.value)),
       );
       continue;
     }
-    final catalogEntry = snapshot.elements[summary.elementType];
-    final page = summary.page;
-    if (catalogEntry == null || page == null) continue;
+    final decoded = codec.decodeResource(resource).valueOrNull;
+    final definition = decoded == null
+        ? null
+        : snapshot.elements.values
+              .where(
+                (entry) => entry.definition.type == decoded.content.rootType,
+              )
+              .firstOrNull
+              ?.definition
+              .toElementDefinition();
+    final owner = edges
+        .where((edge) {
+          if (edge.target != id) return false;
+          return switch (edge.origin) {
+            skir.AuthoringEdgeOrigin_declaredRelationWrapper(:final value) =>
+              value.relationId.value == ownershipRelation.id,
+            _ => false,
+          };
+        })
+        .map((edge) => edge.source)
+        .firstOrNull;
+    final subject = subjects[id];
+    final typedSubject = subject == null
+        ? null
+        : codec.decodeSubject(subject).valueOrNull;
+    final name = _resourceName(resource, codec) ?? id.value;
     related.add(
       PageElement.entry(
-        entry: PageEntry.reference(
-          id: summary.id.id,
-          name: summary.name ?? summary.id.id,
-          elementDefinition: catalogEntry.definition.toElementDefinition(),
-          pageId: page.id,
-        ),
+        entry: definition != null && owner != null && typedSubject != null
+            ? PageEntry.reference(
+                id: id.value,
+                name: name,
+                subject: typedSubject,
+                elementDefinition: definition,
+                pageId: owner.value,
+                inwardLinks: inward,
+                outwardLinks: outward,
+              )
+            : PageEntry.unavailableReference(
+                id: id.value,
+                name: name,
+                inwardLinks: inward,
+                outwardLinks: outward,
+              ),
       ),
     );
   }
   return [...local, ...related];
 }
 
+ElementLink _elementLink(
+  skir.AuthoringEdge edge,
+  skir.ResourceId other,
+  TypeRegistry registry,
+) {
+  final origin = edge.origin;
+  if (origin is! skir.AuthoringEdgeOrigin_ordinaryReferenceWrapper) {
+    throw StateError("Expected an ordinary reference edge");
+  }
+  final path = SkirEditorCodec(registry)
+      .decodePath(origin.value.path)
+      .valueOrNull;
+  return ElementLink(
+    linkId: edge.id.value,
+    otherId: other.value,
+    path: origin.value.slot,
+    sourcePath: path,
+  );
+}
+
+String? _resourceName(
+  skir.AuthoringResource resource,
+  TypedAuthoringCodec codec,
+) {
+  final value = codec.decodeResource(resource).valueOrNull?.content.rootValue;
+  if (value is! RecordValue) return null;
+  final name = value.fields["name"];
+  return name is StringValue ? name.value : null;
+}
+
 String _elementName(PageElement element) => switch (element) {
   PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
     definition.name,
+  PageElementEntry(entry: MissingElementDefinitionPageEntry(:final name)) =>
+    name,
+  PageElementEntry(entry: ReferencePageEntry(:final name)) => name,
+  PageElementEntry(entry: UnavailableReferencePageEntry(:final name)) => name,
+  PageElementEntry(entry: NonexistentPageEntry(:final id)) => id,
   PageElementCue(:final cue) => cue.elementDefinition.name,
-  _ => element.id,
+  _ => "Element",
 };

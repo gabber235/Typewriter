@@ -20,10 +20,7 @@ void main() {
       await tester.tap(find.byType(PrimarySearchButton));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AuthoringBookSearchResultItem), findsWidgets);
-      expect(find.byType(AuthoringTagSearchResultItem), findsWidgets);
-      expect(find.byType(AuthoringPageSearchResultItem), findsWidgets);
-      expect(find.byType(AuthoringElementSearchResultItem), findsWidgets);
+      expect(find.byType(AuthoringSearchResultItem), findsWidgets);
       expect(find.textContaining("NATS"), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -37,12 +34,9 @@ void main() {
       await tester.pumpWidget(authoringSearchResultGalleryStory());
       await tester.pumpAndSettle();
 
-      expect(find.byType(AuthoringBookSearchResultItem), findsOneWidget);
-      expect(find.byType(AuthoringTagSearchResultItem), findsOneWidget);
-      expect(find.byType(AuthoringPageSearchResultItem), findsOneWidget);
-      expect(find.byType(AuthoringElementSearchResultItem), findsOneWidget);
+      expect(find.byType(AuthoringSearchResultItem), findsNWidgets(4));
       expect(find.text("Main Quest"), findsWidgets);
-      expect(find.text("Meet The Mayor"), findsOneWidget);
+      expect(find.text("Meet the Mayor"), findsOneWidget);
       expect(
         find.textContaining("old bridge", findRichText: true),
         findsOneWidget,

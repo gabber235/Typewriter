@@ -1,5 +1,7 @@
 package com.typewritermc.library
 
+import com.typewritermc.types.Resource
+
 /**
  * Answers ancestry and link eligibility against a fixed collection of tags.
  *
@@ -7,9 +9,9 @@ package com.typewritermc.library
  * an unknown ancestry result rather than a false claim.
  */
 class TagHierarchy(
-    tags: Collection<Tag>,
+    tags: Collection<Resource<TagId, Tag>>,
 ) {
-    private val tagsById = tags.associateBy(Tag::id)
+    private val tagsById = tags.associateBy(Resource<TagId, Tag>::id)
 
     init {
         require(tagsById.size == tags.size) { "Tag hierarchy ids must be unique." }
@@ -35,7 +37,7 @@ class TagHierarchy(
             if (!visited.add(currentId)) continue
 
             val current = tagsById[currentId] ?: return null
-            val parentIds = current.parents.mapTo(linkedSetOf()) { it.tagId() }
+            val parentIds = current.content.parents.mapTo(linkedSetOf()) { it.tagId() }
             if (candidate in parentIds) return true
             pending.addAll(parentIds)
         }
@@ -53,7 +55,7 @@ class TagHierarchy(
     ): Boolean {
         if (child == parent) return false
         val childTag = tagsById[child] ?: return false
-        if (parent !in tagsById || parent in childTag.parents.map { it.tagId() }) return false
+        if (parent !in tagsById || parent in childTag.content.parents.map { it.tagId() }) return false
         return isAncestor(child, parent) == false && isAncestor(parent, child) == false
     }
 }

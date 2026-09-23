@@ -54,7 +54,6 @@ struct RemoveMapEntryAction(810700008) {
 struct ReplaceConcreteNominalTypeAction(810700009) {
   target: BindingRef = 0;
   concrete_type: ResolvedTypeRef = 1;
-  value: TypedExpression = 2;
 }
 
 // A mutation that can be evaluated and applied within the current editor

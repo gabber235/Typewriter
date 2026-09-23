@@ -6,48 +6,48 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("destination scope exposes only compatible pages and kinds", () {
+  test("destination scope exposes only compatible pages and types", () {
     final books = ValueNotifier<AsyncValue<List<Book>>>(AsyncData([_book]));
-    final compatibleKinds = ValueNotifier(
-      AsyncValue.data({_compatibleKind: _policy}),
+    final compatibleFields = ValueNotifier(
+      AsyncValue.data({_compatibleType: _field}),
     );
     addTearDown(books.dispose);
-    addTearDown(compatibleKinds.dispose);
+    addTearDown(compatibleFields.dispose);
     final scope = elementDestinationScope(
       books: books,
-      compatibleKinds: compatibleKinds,
+      compatibleFields: compatibleFields,
     );
 
     expect(
-      scope.evaluate(_pageResult(_compatibleKind), SearchQueryContext.empty),
+      scope.evaluate(_pageResult(_compatibleType), SearchQueryContext.empty),
       isA<SearchResultVisible>(),
     );
     expect(
-      scope.evaluate(_pageResult(_incompatibleKind), SearchQueryContext.empty),
+      scope.evaluate(_pageResult(_incompatibleType), SearchQueryContext.empty),
       isA<SearchResultHidden>(),
     );
     expect(
-      scope.evaluate(_kindResult(_compatibleKind), _bookQuery),
+      scope.evaluate(_kindResult(_compatibleType), _bookQuery),
       isA<SearchResultVisible>(),
     );
     expect(
-      scope.evaluate(_kindResult(_compatibleKind), SearchQueryContext.empty),
+      scope.evaluate(_kindResult(_compatibleType), SearchQueryContext.empty),
       isA<SearchResultHidden>(),
     );
   });
 
   test("activation returns the selected existing page", () async {
     final books = ValueNotifier<AsyncValue<List<Book>>>(AsyncData([_book]));
-    final compatibleKinds = ValueNotifier(
-      AsyncValue.data({_compatibleKind: _policy}),
+    final compatibleFields = ValueNotifier(
+      AsyncValue.data({_compatibleType: _field}),
     );
     addTearDown(books.dispose);
-    addTearDown(compatibleKinds.dispose);
+    addTearDown(compatibleFields.dispose);
     final activation = elementDestinationActivation(
       books: books,
-      compatibleKinds: compatibleKinds,
+      compatibleFields: compatibleFields,
     );
-    final result = _pageResult(_compatibleKind);
+    final result = _pageResult(_compatibleType);
 
     final outcome = await activation.activate(
       SearchActivationContext(
@@ -60,31 +60,50 @@ void main() {
 
     expect(outcome, isA<SearchActivationComplete<ElementPageSelection>>());
     final selection =
-        (outcome as SearchActivationComplete<ElementPageSelection>).value
-            as ExistingElementPageSelection;
+        (outcome as SearchActivationComplete<ElementPageSelection>).value;
     expect(selection.pageId, _pageId);
     expect(selection.bookId, _book.bookId);
-    expect(selection.policy, _policy);
+    expect(selection.field, _field);
   });
 }
 
 final _book = Book(
-  bookId: recordId("book:test"),
+  bookId: skir.ResourceId(value: "test"),
   title: "Test Book",
   icon: "mdi:book",
   color: Colors.blue,
   tagIds: const [],
 );
-final _pageId = recordId("page:compatible");
-const _compatibleKind = PageKindRef(id: "compatible", revision: 1);
-const _incompatibleKind = PageKindRef(id: "incompatible", revision: 1);
+final _pageId = skir.ResourceId(value: "compatible");
+final _compatibleType = ResolvedTypeRef(id: const QualifiedTypeId(namespace: "test", name: "CompatiblePage"), revision: 1);
+final _incompatibleType = ResolvedTypeRef(id: const QualifiedTypeId(namespace: "test", name: "IncompatiblePage"), revision: 1);
 final _elementType = ResolvedTypeRef(
   id: DeclaredTypeId("0123456789abcdef0123456789abcdef"),
   revision: 1,
 );
-final _policy = PageEntryCreationPolicy(
-  placement: PageEntryCreationPlacement.graph,
-  types: {_elementType},
+final _field = RealmRelationField(
+  relation: RealmRelationDefinition(
+    id: "page.elements",
+    source: _compatibleType,
+    target: _elementType,
+    onSourceDelete: RealmRelationDeletePolicy.cascade,
+    onTargetDelete: RealmRelationDeletePolicy.clear,
+    sourceEndpoint: RealmRelationEndpointDefinition(
+      owner: _compatibleType,
+      path: DataPath.root.field("elements"),
+      side: RealmRelationEndpointSide.source,
+      cardinality: RealmRelationCardinality.many,
+    ),
+    targetEndpoint: null,
+    families: const {"resource.ownership"},
+  ),
+  endpoint: RealmRelationEndpointDefinition(
+    owner: _compatibleType,
+    path: DataPath.root.field("elements"),
+    side: RealmRelationEndpointSide.source,
+    cardinality: RealmRelationCardinality.many,
+  ),
+  target: _elementType,
 );
 final _bookQuery = SearchQueryContext(
   normalizedQuery: "",
@@ -94,34 +113,71 @@ final _bookQuery = SearchQueryContext(
   ],
 );
 
-SearchResult _pageResult(PageKindRef kind) => SearchResult(
+SearchResult _pageResult(ResolvedTypeRef kind) => SearchResult(
   id: "page:${kind.id}",
-  type: authoringPageSearchResultType,
-  payload: skir.AuthoringSearchPage(
-    id: _pageId,
-    name: "Compatible",
-    kind: kind.toSkir(),
-    book: skir.AuthoringSearchBookContext(id: _book.bookId, title: _book.title),
-    chapter: "",
-  ),
+  type: authoringResourceSearchResultType,
+  payload: _pagePayload(kind),
 );
 
-SearchResult _kindResult(PageKindRef kind) => SearchResult(
+AuthoringSearchResultPayload _pagePayload(ResolvedTypeRef kind) {
+  final content = TypedValueEnvelope(
+    rootType: kind,
+    rootValue: RecordValue({}),
+  );
+  final catalog = TypeCatalog([
+    TypeDefinition(
+      id: kind,
+      kind: NominalTypeKind.concrete,
+      representation: const RecordType(fields: {}),
+    ),
+  ]);
+  return AuthoringSearchResultPayload(
+    subject: (
+      content: content,
+      descriptor: content,
+      identityEnvelope: content,
+      identity: (id: _pageId, owner: _book.bookId),
+    ),
+    context: TypedValueEnvelope(
+      rootType: kind,
+      rootValue: RecordValue({"book": ReferenceValue(_book.bookId)}),
+    ),
+    presentation: (
+      model: PresentationModel(
+        catalog: catalog,
+        inputs: const {},
+        root: PresentationNode(
+          id: "test.page.result",
+          element: TextElement("Compatible".asStringLiteral),
+        ),
+      ),
+      presentation: const PresentationId(namespace: "test", name: "page"),
+    ),
+    definition: CoreResourceDefinitionIds.page,
+    ownerPath: [_book.bookId],
+  );
+}
+
+SearchResult _kindResult(ResolvedTypeRef kind) => SearchResult(
   id: "kind:${kind.id}",
-  type: pageKindSearchResultType,
+  type: pageTypeSearchResultType,
   payload: RealmPageDefinition(
-    kind: kind,
-    name: kind.id,
+    type: kind,
+    name: kind.id.toString(),
     description: null,
     icon: const IconValue.iconify("mdi:test-tube"),
     color: Colors.blue,
-    editor: RealmGraphPageEditor(
-      direction: GraphDirection.leftToRight,
-      nodeTypes: [_elementType],
-    ),
+    editor: const RealmGraphPageEditor(direction: GraphDirection.leftToRight),
     originArtifactId: "test",
     sourcePart: "test",
+    presentationSubject: _catalogSubject(referenceResourceTypes.page),
   ),
+);
+
+TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
+  target: type,
+  descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
 );
 
 final class _NoCommands implements SearchCommandDispatcher {

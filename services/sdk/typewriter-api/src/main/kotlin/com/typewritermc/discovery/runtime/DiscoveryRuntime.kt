@@ -14,17 +14,6 @@ import java.net.URL
 import java.net.URLClassLoader
 
 /**
- * Factory implemented by generated providers to bind a contribution into an isolated Koin application.
- *
- * The contribution key carries provenance into the generated bindings. Providers are loaded reflectively and
- * require a public zero argument constructor.
- */
-interface GeneratedDiscoveryModule {
-    /** Builds the Koin module for the generated contribution identified by [contribution]. */
-    fun module(contribution: ContributionKey): Module
-}
-
-/**
  * Supplies executable artifact URLs and deployment context to discovery loading.
  *
  * Artifact selection and eligibility must be resolved before loading. The module loader consumes the already

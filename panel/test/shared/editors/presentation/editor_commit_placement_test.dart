@@ -133,10 +133,12 @@ void main() {
         id: "duplicates",
         element: ColumnElement(
           children: [
-            _commit,
-            const PresentationNode(
-              id: "second",
-              element: CommitControlsElement(binding: _binding),
+            PresentationAxisChild.fixed(_commit),
+            PresentationAxisChild.fixed(
+              const PresentationNode(
+                id: "second",
+                element: CommitControlsElement(binding: _binding),
+              ),
             ),
           ],
         ),
@@ -302,19 +304,23 @@ void main() {
             id: "content",
             element: ColumnElement(
               children: [
-                PresentationNode(
-                  id: "label",
-                  element: TextElement(
-                    TypedExpression(
-                      resultType: StringType(),
-                      expression: LiteralExpression(StringValue(content)),
+                PresentationAxisChild.fixed(
+                  PresentationNode(
+                    id: "label",
+                    element: TextElement(
+                      TypedExpression(
+                        resultType: StringType(),
+                        expression: LiteralExpression(StringValue(content)),
+                      ),
                     ),
                   ),
                 ),
-                PresentationNode(
-                  id: "commit",
-                  element: CommitControlsElement(
-                    binding: BindingReference(bindingId: local),
+                PresentationAxisChild.fixed(
+                  PresentationNode(
+                    id: "commit",
+                    element: CommitControlsElement(
+                      binding: BindingReference(bindingId: local),
+                    ),
                   ),
                 ),
               ],

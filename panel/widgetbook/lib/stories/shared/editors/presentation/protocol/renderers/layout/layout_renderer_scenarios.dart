@@ -64,7 +64,10 @@ final layoutRendererScenarios = [
       "column",
       PresentationElement.column(
         spacing: 12,
-        children: [_label("columnOne", "First"), _label("columnTwo", "Second")],
+        children: [
+          PresentationAxisChild.fixed(_label("columnOne", "First")),
+          PresentationAxisChild.fixed(_label("columnTwo", "Second")),
+        ],
       ),
     ),
   ),
@@ -77,7 +80,10 @@ final layoutRendererScenarios = [
       "row",
       PresentationElement.row(
         spacing: 12,
-        children: [_label("rowOne", "First"), _label("rowTwo", "Second")],
+        children: [
+          PresentationAxisChild.fixed(_label("rowOne", "First")),
+          PresentationAxisChild.fixed(_label("rowTwo", "Second")),
+        ],
       ),
     ),
   ),
@@ -330,19 +336,47 @@ final layoutRendererScenarios = [
           PresentationElement.column(
             spacing: 72,
             children: [
-              _anchorStoryNode(
-                "source",
-                "Source",
-                PresentationAnchorAlignment.bottomCenter,
+              PresentationAxisChild.fixed(
+                _anchorStoryNode(
+                  "source",
+                  "Source",
+                  PresentationAnchorAlignment.bottomCenter,
+                ),
               ),
-              _anchorStoryNode(
-                "target",
-                "Target",
-                PresentationAnchorAlignment.topCenter,
+              PresentationAxisChild.fixed(
+                _anchorStoryNode(
+                  "target",
+                  "Target",
+                  PresentationAnchorAlignment.topCenter,
+                ),
               ),
             ],
           ),
         ),
+      ),
+    ),
+  ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.adaptiveLeading,
+    name: "Adaptive leading",
+    type: const UnitType(),
+    value: const UnitValue(),
+    presentation: storyNode(
+      "adaptiveLeading",
+      PresentationElement.adaptiveLeading(
+        leading: _label("adaptiveLeading.icon", "Quest"),
+        center: storyNode(
+          "adaptiveLeading.center",
+          PresentationElement.text("Dragon hunt".asStringLiteral),
+        ),
+        suffix: _label("adaptiveLeading.status", "Ready"),
+        padding: const PresentationInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
+        ),
+        compactPadding: const PresentationInsets.symmetric(vertical: 8),
+        gap: 12,
+        minimumCenterWidth: 120,
       ),
     ),
   ),

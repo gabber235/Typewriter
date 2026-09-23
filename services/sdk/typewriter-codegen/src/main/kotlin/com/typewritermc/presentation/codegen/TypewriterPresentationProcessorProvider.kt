@@ -35,6 +35,7 @@ import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationSpec
 import com.typewritermc.presentation.TypewriterPresentation
+import com.typewritermc.types.PresentationRole
 
 /**
  * KSP entrypoint generating [PresentationProvider] implementations and discovery bindings from annotated top level
@@ -137,6 +138,24 @@ private class TypewriterPresentationProcessor(
                         .builder("priority", Int::class, KModifier.OVERRIDE)
                         .initializer("%L", annotation.priority)
                         .build(),
+                ).addProperty(
+                    PropertySpec
+                        .builder(
+                            "roles",
+                            Set::class.asClassName().parameterizedBy(PresentationRole::class.asClassName()),
+                            KModifier.OVERRIDE,
+                        ).initializer(
+                            CodeBlock
+                                .builder()
+                                .add("setOf(")
+                                .apply {
+                                    annotation.roles.forEachIndexed { index, role ->
+                                        if (index > 0) add(", ")
+                                        add("%T.%L", PresentationRole::class, role.name)
+                                    }
+                                }.add(")")
+                                .build(),
+                        ).build(),
                 ).addFunction(
                     FunSpec
                         .builder("specification")

@@ -62,13 +62,14 @@ extension PageEntryPatterns on PageEntry {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DefinitionPageEntry value)?  definition,TResult Function( ReferencePageEntry value)?  reference,TResult Function( NonexistentPageEntry value)?  nonexistent,TResult Function( MissingElementDefinitionPageEntry value)?  missingElementDefinition,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DefinitionPageEntry value)?  definition,TResult Function( ReferencePageEntry value)?  reference,TResult Function( NonexistentPageEntry value)?  nonexistent,TResult Function( UnavailableReferencePageEntry value)?  unavailableReference,TResult Function( MissingElementDefinitionPageEntry value)?  missingElementDefinition,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that);case ReferencePageEntry() when reference != null:
 return reference(_that);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return nonexistent(_that);case UnavailableReferencePageEntry() when unavailableReference != null:
+return unavailableReference(_that);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
 return missingElementDefinition(_that);case _:
   return orElse();
 
@@ -87,13 +88,14 @@ return missingElementDefinition(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DefinitionPageEntry value)  definition,required TResult Function( ReferencePageEntry value)  reference,required TResult Function( NonexistentPageEntry value)  nonexistent,required TResult Function( MissingElementDefinitionPageEntry value)  missingElementDefinition,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DefinitionPageEntry value)  definition,required TResult Function( ReferencePageEntry value)  reference,required TResult Function( NonexistentPageEntry value)  nonexistent,required TResult Function( UnavailableReferencePageEntry value)  unavailableReference,required TResult Function( MissingElementDefinitionPageEntry value)  missingElementDefinition,}){
 final _that = this;
 switch (_that) {
 case DefinitionPageEntry():
 return definition(_that);case ReferencePageEntry():
 return reference(_that);case NonexistentPageEntry():
-return nonexistent(_that);case MissingElementDefinitionPageEntry():
+return nonexistent(_that);case UnavailableReferencePageEntry():
+return unavailableReference(_that);case MissingElementDefinitionPageEntry():
 return missingElementDefinition(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -111,13 +113,14 @@ return missingElementDefinition(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DefinitionPageEntry value)?  definition,TResult? Function( ReferencePageEntry value)?  reference,TResult? Function( NonexistentPageEntry value)?  nonexistent,TResult? Function( MissingElementDefinitionPageEntry value)?  missingElementDefinition,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DefinitionPageEntry value)?  definition,TResult? Function( ReferencePageEntry value)?  reference,TResult? Function( NonexistentPageEntry value)?  nonexistent,TResult? Function( UnavailableReferencePageEntry value)?  unavailableReference,TResult? Function( MissingElementDefinitionPageEntry value)?  missingElementDefinition,}){
 final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that);case ReferencePageEntry() when reference != null:
 return reference(_that);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return nonexistent(_that);case UnavailableReferencePageEntry() when unavailableReference != null:
+return unavailableReference(_that);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
 return missingElementDefinition(_that);case _:
   return null;
 
@@ -135,12 +138,13 @@ return missingElementDefinition(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( EntryDefinition definition)?  definition,TResult Function( String id,  String name,  ElementDefinition elementDefinition,  String pageId,  List<EntryMetadata> metadata)?  reference,TResult Function( String id)?  nonexistent,TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  missingElementDefinition,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( EntryDefinition definition)?  definition,TResult Function( String id,  String name,  TypedPresentationSubject subject,  ElementDefinition elementDefinition,  String pageId,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  reference,TResult Function( String id)?  nonexistent,TResult Function( String id,  String name,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  unavailableReference,TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  missingElementDefinition,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that.definition);case ReferencePageEntry() when reference != null:
-return reference(_that.id,_that.name,_that.elementDefinition,_that.pageId,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that.id);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return reference(_that.id,_that.name,_that.subject,_that.elementDefinition,_that.pageId,_that.inwardLinks,_that.outwardLinks,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
+return nonexistent(_that.id);case UnavailableReferencePageEntry() when unavailableReference != null:
+return unavailableReference(_that.id,_that.name,_that.inwardLinks,_that.outwardLinks,_that.metadata);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
 return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
   return orElse();
 
@@ -159,12 +163,13 @@ return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inward
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( EntryDefinition definition)  definition,required TResult Function( String id,  String name,  ElementDefinition elementDefinition,  String pageId,  List<EntryMetadata> metadata)  reference,required TResult Function( String id)  nonexistent,required TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)  missingElementDefinition,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( EntryDefinition definition)  definition,required TResult Function( String id,  String name,  TypedPresentationSubject subject,  ElementDefinition elementDefinition,  String pageId,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)  reference,required TResult Function( String id)  nonexistent,required TResult Function( String id,  String name,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)  unavailableReference,required TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)  missingElementDefinition,}) {final _that = this;
 switch (_that) {
 case DefinitionPageEntry():
 return definition(_that.definition);case ReferencePageEntry():
-return reference(_that.id,_that.name,_that.elementDefinition,_that.pageId,_that.metadata);case NonexistentPageEntry():
-return nonexistent(_that.id);case MissingElementDefinitionPageEntry():
+return reference(_that.id,_that.name,_that.subject,_that.elementDefinition,_that.pageId,_that.inwardLinks,_that.outwardLinks,_that.metadata);case NonexistentPageEntry():
+return nonexistent(_that.id);case UnavailableReferencePageEntry():
+return unavailableReference(_that.id,_that.name,_that.inwardLinks,_that.outwardLinks,_that.metadata);case MissingElementDefinitionPageEntry():
 return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
   throw StateError('Unexpected subclass');
 
@@ -182,12 +187,13 @@ return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inward
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( EntryDefinition definition)?  definition,TResult? Function( String id,  String name,  ElementDefinition elementDefinition,  String pageId,  List<EntryMetadata> metadata)?  reference,TResult? Function( String id)?  nonexistent,TResult? Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  missingElementDefinition,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( EntryDefinition definition)?  definition,TResult? Function( String id,  String name,  TypedPresentationSubject subject,  ElementDefinition elementDefinition,  String pageId,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  reference,TResult? Function( String id)?  nonexistent,TResult? Function( String id,  String name,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  unavailableReference,TResult? Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  missingElementDefinition,}) {final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that.definition);case ReferencePageEntry() when reference != null:
-return reference(_that.id,_that.name,_that.elementDefinition,_that.pageId,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that.id);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return reference(_that.id,_that.name,_that.subject,_that.elementDefinition,_that.pageId,_that.inwardLinks,_that.outwardLinks,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
+return nonexistent(_that.id);case UnavailableReferencePageEntry() when unavailableReference != null:
+return unavailableReference(_that.id,_that.name,_that.inwardLinks,_that.outwardLinks,_that.metadata);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
 return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
   return null;
 
@@ -201,7 +207,7 @@ return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inward
 
 class DefinitionPageEntry with DiagnosticableTreeMixin implements PageEntry {
   const DefinitionPageEntry({required this.definition});
-  
+
 
  final  EntryDefinition definition;
 
@@ -272,7 +278,7 @@ as EntryDefinition,
 @override
 @pragma('vm:prefer-inline')
 $EntryDefinitionCopyWith<$Res> get definition {
-  
+
   return $EntryDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });
@@ -283,13 +289,28 @@ $EntryDefinitionCopyWith<$Res> get definition {
 
 
 class ReferencePageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const ReferencePageEntry({required this.id, required this.name, required this.elementDefinition, required this.pageId,  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),assert(pageId != "", 'Page ID must not be empty.'),_metadata = metadata;
-  
+  const ReferencePageEntry({required this.id, required this.name, required this.subject, required this.elementDefinition, required this.pageId,  List<ElementLink> inwardLinks = const [],  List<ElementLink> outwardLinks = const [],  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),assert(pageId != "", 'Page ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata;
+
 
  final  String id;
  final  String name;
+ final  TypedPresentationSubject subject;
  final  ElementDefinition elementDefinition;
  final  String pageId;
+ final  List<ElementLink> _inwardLinks;
+@JsonKey() List<ElementLink> get inwardLinks {
+  if (_inwardLinks is EqualUnmodifiableListView) return _inwardLinks;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_inwardLinks);
+}
+
+ final  List<ElementLink> _outwardLinks;
+@JsonKey() List<ElementLink> get outwardLinks {
+  if (_outwardLinks is EqualUnmodifiableListView) return _outwardLinks;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_outwardLinks);
+}
+
  final  List<EntryMetadata> _metadata;
 @JsonKey() List<EntryMetadata> get metadata {
   if (_metadata is EqualUnmodifiableListView) return _metadata;
@@ -309,23 +330,23 @@ $ReferencePageEntryCopyWith<ReferencePageEntry> get copyWith => _$ReferencePageE
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
     ..add(DiagnosticsProperty('type', 'PageEntry.reference'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('elementDefinition', elementDefinition))..add(DiagnosticsProperty('pageId', pageId))..add(DiagnosticsProperty('metadata', metadata));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('subject', subject))..add(DiagnosticsProperty('elementDefinition', elementDefinition))..add(DiagnosticsProperty('pageId', pageId))..add(DiagnosticsProperty('inwardLinks', inwardLinks))..add(DiagnosticsProperty('outwardLinks', outwardLinks))..add(DiagnosticsProperty('metadata', metadata));
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferencePageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.pageId, pageId) || other.pageId == pageId)&&const DeepCollectionEquality().equals(other.metadata, _metadata));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferencePageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.pageId, pageId) || other.pageId == pageId)&&const DeepCollectionEquality().equals(other.inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other.outwardLinks, _outwardLinks)&&const DeepCollectionEquality().equals(other.metadata, _metadata));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,elementDefinition,pageId,const DeepCollectionEquality().hash(_metadata));
+    return Object.hash(runtimeType,id,name,subject,elementDefinition,pageId,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks),const DeepCollectionEquality().hash(_metadata));
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'PageEntry.reference(id: $id, name: $name, elementDefinition: $elementDefinition, pageId: $pageId, metadata: $metadata)';
+    return 'PageEntry.reference(id: $id, name: $name, subject: $subject, elementDefinition: $elementDefinition, pageId: $pageId, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks, metadata: $metadata)';
 }
 
 
@@ -336,7 +357,7 @@ abstract mixin class $ReferencePageEntryCopyWith<$Res> implements $PageEntryCopy
   factory $ReferencePageEntryCopyWith(ReferencePageEntry value, $Res Function(ReferencePageEntry) _then) = _$ReferencePageEntryCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, ElementDefinition elementDefinition, String pageId, List<EntryMetadata> metadata
+ String id, String name, TypedPresentationSubject subject, ElementDefinition elementDefinition, String pageId, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks, List<EntryMetadata> metadata
 });
 
 
@@ -353,13 +374,16 @@ class _$ReferencePageEntryCopyWithImpl<$Res>
 
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? elementDefinition = null,Object? pageId = null,Object? metadata = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? subject = null,Object? elementDefinition = null,Object? pageId = null,Object? inwardLinks = null,Object? outwardLinks = null,Object? metadata = null,}) {
   return _then(ReferencePageEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as String,subject: null == subject ? _self.subject : subject // ignore: cast_nullable_to_non_nullable
+as TypedPresentationSubject,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
 as ElementDefinition,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as String,metadata: null == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
+as String,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,outwardLinks: null == outwardLinks ? _self._outwardLinks : outwardLinks // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,metadata: null == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
 as List<EntryMetadata>,
   ));
 }
@@ -369,7 +393,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $ElementDefinitionCopyWith<$Res> get elementDefinition {
-  
+
   return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
     return _then(_self.copyWith(elementDefinition: value));
   });
@@ -381,7 +405,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 
 class NonexistentPageEntry with DiagnosticableTreeMixin implements PageEntry {
   const NonexistentPageEntry({required this.id}): assert(id != "", 'ID must not be empty.');
-  
+
 
  final  String id;
 
@@ -453,9 +477,109 @@ as String,
 /// @nodoc
 
 
+class UnavailableReferencePageEntry with DiagnosticableTreeMixin implements PageEntry {
+  const UnavailableReferencePageEntry({required this.id, required this.name,  List<ElementLink> inwardLinks = const [],  List<ElementLink> outwardLinks = const [],  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata;
+
+
+ final  String id;
+ final  String name;
+ final  List<ElementLink> _inwardLinks;
+@JsonKey() List<ElementLink> get inwardLinks {
+  if (_inwardLinks is EqualUnmodifiableListView) return _inwardLinks;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_inwardLinks);
+}
+
+ final  List<ElementLink> _outwardLinks;
+@JsonKey() List<ElementLink> get outwardLinks {
+  if (_outwardLinks is EqualUnmodifiableListView) return _outwardLinks;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_outwardLinks);
+}
+
+ final  List<EntryMetadata> _metadata;
+@JsonKey() List<EntryMetadata> get metadata {
+  if (_metadata is EqualUnmodifiableListView) return _metadata;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_metadata);
+}
+
+
+/// Create a copy of PageEntry
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UnavailableReferencePageEntryCopyWith<UnavailableReferencePageEntry> get copyWith => _$UnavailableReferencePageEntryCopyWithImpl<UnavailableReferencePageEntry>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'PageEntry.unavailableReference'))
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('inwardLinks', inwardLinks))..add(DiagnosticsProperty('outwardLinks', outwardLinks))..add(DiagnosticsProperty('metadata', metadata));
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UnavailableReferencePageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other.outwardLinks, _outwardLinks)&&const DeepCollectionEquality().equals(other.metadata, _metadata));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks),const DeepCollectionEquality().hash(_metadata));
+}
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+    return 'PageEntry.unavailableReference(id: $id, name: $name, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks, metadata: $metadata)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UnavailableReferencePageEntryCopyWith<$Res> implements $PageEntryCopyWith<$Res> {
+  factory $UnavailableReferencePageEntryCopyWith(UnavailableReferencePageEntry value, $Res Function(UnavailableReferencePageEntry) _then) = _$UnavailableReferencePageEntryCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks, List<EntryMetadata> metadata
+});
+
+
+
+
+}
+/// @nodoc
+class _$UnavailableReferencePageEntryCopyWithImpl<$Res>
+    implements $UnavailableReferencePageEntryCopyWith<$Res> {
+  _$UnavailableReferencePageEntryCopyWithImpl(this._self, this._then);
+
+  final UnavailableReferencePageEntry _self;
+  final $Res Function(UnavailableReferencePageEntry) _then;
+
+/// Create a copy of PageEntry
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? inwardLinks = null,Object? outwardLinks = null,Object? metadata = null,}) {
+  return _then(UnavailableReferencePageEntry(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,outwardLinks: null == outwardLinks ? _self._outwardLinks : outwardLinks // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,metadata: null == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
+as List<EntryMetadata>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
 class MissingElementDefinitionPageEntry with DiagnosticableTreeMixin implements PageEntry {
   const MissingElementDefinitionPageEntry({required this.id, required this.name, required this.placement, required  List<ElementLink> inwardLinks, required  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata;
-  
+
 
  final  String id;
  final  String name;
@@ -554,7 +678,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -641,7 +765,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $ElementDefinitionCopyWith<$Res> get elementDefinition {
-  
+
   return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
     return _then(_self.copyWith(elementDefinition: value));
   });
@@ -650,7 +774,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -793,7 +917,7 @@ return $default(_that.id,_that.elementDefinition,_that.placement,_that.data,_tha
 
 class _EntryDefinition extends EntryDefinition with DiagnosticableTreeMixin {
   const _EntryDefinition({required this.id, required this.elementDefinition, required this.placement, required this.data, required  List<ElementLink> inwardEdges, required  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardEdges = inwardEdges,_outwardEdges = outwardEdges,_metadata = metadata,super._();
-  
+
 
 @override final  String id;
 @override final  ElementDefinition elementDefinition;
@@ -894,7 +1018,7 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $ElementDefinitionCopyWith<$Res> get elementDefinition {
-  
+
   return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
     return _then(_self.copyWith(elementDefinition: value));
   });
@@ -903,7 +1027,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });

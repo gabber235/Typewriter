@@ -8,6 +8,7 @@ final class CreationDraft extends ChangeNotifier
     required this.rootType,
     required TypeRegistry registry,
     Map<MaterializationLocation, DataValue> fixedValues = const {},
+    this.concreteTypeInitializer,
   }) : typeCatalog = registry.catalog,
        _registry = registry,
        _root = planCreationDraft(
@@ -18,15 +19,33 @@ final class CreationDraft extends ChangeNotifier
     _nextId = _maximumId(_root) + 1;
   }
 
+  CreationDraft.fromMaterialized({
+    required this.rootType,
+    required DataValue value,
+    required TypeRegistry registry,
+    this.concreteTypeInitializer,
+  }) : typeCatalog = registry.catalog,
+       _registry = registry,
+       _root = draftFromValue(
+         type: rootType,
+         value: value,
+         registry: registry,
+       ) {
+    _nextId = _maximumId(_root) + 1;
+  }
+
   @override
   final TypeExpression rootType;
   @override
   final TypeCatalog typeCatalog;
   final TypeRegistry _registry;
+  final ConcreteTypeInitializer? concreteTypeInitializer;
   DraftValue _root;
   late int _nextId;
   bool _disposed = false;
   final Set<_CreationDraftInteraction> _interactions = {};
+  final Map<DataPath, int> _selectionRequests = {};
+  int _nextSelectionRequest = 0;
 
   DraftValue get root => _root;
   TypeRegistry get registry => _registry;
@@ -282,7 +301,10 @@ final class CreationDraft extends ChangeNotifier
   });
 
   @override
-  EditorMutationResult selectConcreteType(DataPath path, ResolvedTypeRef type) {
+  Future<EditorMutationResult> selectConcreteTypeAsync(
+    DataPath path,
+    ResolvedTypeRef type,
+  ) async {
     final located = _locate(_root, rootType, path.segments, 0, _registry);
     if (located case (
       final PolymorphicDraftValue draft,
@@ -299,14 +321,86 @@ final class CreationDraft extends ChangeNotifier
       }
       final resolved = _registry.resolveExact(type).valueOrNull;
       if (resolved == null || !resolved.isConcrete) return _invalidPath(path);
-      return _replaceStructure(
-        path,
-        PolymorphicDraftValue(
-          draft.id,
-          concreteType: type,
-          payload: _newDraft(resolved.representation),
+      final request = ++_nextSelectionRequest;
+      _selectionRequests[path] = request;
+      if (draft.concreteType == type) {
+        return EditorMutationResult.applied(const UnitValue());
+      }
+      final initializer = concreteTypeInitializer;
+      if (initializer == null) {
+        return EditorMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Concrete type initialization is unavailable",
+            path: path,
+          ),
+        ]);
+      }
+
+      final ConcreteTypeInitializationResult initialized;
+      try {
+        initialized = await initializer(type: type, supplied: null);
+      } on Object catch (error) {
+        return EditorMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Concrete type initialization failed: $error",
+            path: path,
+          ),
+        ]);
+      }
+      EditorMutationResult replaceIfCurrent(PolymorphicDraftValue next) {
+        if (_disposed || _selectionRequests[path] != request) {
+          return const EditorMutationResult.conflict();
+        }
+        final current = _locate(_root, rootType, path.segments, 0, _registry);
+        if (current case (final PolymorphicDraftValue latest, NamedType())
+            when identical(latest, draft)) {
+          return _replaceStructure(path, next);
+        }
+        return const EditorMutationResult.conflict();
+      }
+
+      return switch (initialized) {
+        ConcreteTypeInitialized(:final value)
+            when value.rootType == type &&
+                value.rootValue
+                    .validateAgainst(
+                      resolved.representation,
+                      registry: _registry,
+                    )
+                    .isEmpty =>
+          replaceIfCurrent(
+            PolymorphicDraftValue(
+              draft.id,
+              concreteType: type,
+              payload: _freshDraft(resolved.representation, value.rootValue),
+            ),
+          ),
+        ConcreteTypeInitialized() => EditorMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Realm returned a value for the wrong concrete type",
+            path: path,
+          ),
+        ]),
+        ConcreteTypeNeedsInput(:final suppliedValue) => replaceIfCurrent(
+          PolymorphicDraftValue(
+            draft.id,
+            concreteType: type,
+            payload: suppliedValue == null
+                ? _reidentify(
+                    planCreationDraftWithoutDefaults(
+                      type: resolved.representation,
+                      registry: _registry,
+                    ),
+                  )
+                : _freshDraft(resolved.representation, suppliedValue),
+          ),
         ),
-      );
+        ConcreteTypeInitializationRejected(:final diagnostics) =>
+          EditorMutationResult.invalid(diagnostics),
+      };
     }
     return _invalidPath(path);
   }
@@ -640,6 +734,7 @@ TypeResult<DataValue> _projectRecord(
   final diagnostics = <TypeDiagnostic>[];
   for (final field in types.values) {
     final node = fields[field.name];
+    if (node is MissingDraftValue && field.defaulted) continue;
     if (node == null) {
       diagnostics.add(
         TypeDiagnostic(

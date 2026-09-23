@@ -51,7 +51,7 @@ Widget primarySearchButtonStory({
       storyEntryIndex.values.first.definition.elementDefinition.typeId.uuid;
   final fixtures = AuthoringSearchStoryFixtures(
     elementType: elementType,
-    pageKind: pageDefinition.kind.toSkir(),
+    pageType: pageDefinition.type,
   );
 
   return FakeApp(
@@ -65,10 +65,7 @@ Widget primarySearchButtonStory({
               initialQuery: initialQuery,
             ),
             hostEffectExecutors: [
-              SearchHostEffectExecutor<OpenAuthoringBookEffect>((_) async {}),
-              SearchHostEffectExecutor<OpenAuthoringTagEffect>((_) async {}),
-              SearchHostEffectExecutor<OpenAuthoringPageEffect>((_) async {}),
-              SearchHostEffectExecutor<OpenAuthoringElementEffect>(
+              SearchHostEffectExecutor<OpenAuthoringResourceEffect>(
                 (_) async {},
               ),
             ],
@@ -80,6 +77,7 @@ Widget primarySearchButtonStory({
       }),
       ...authoringSessionMockOverrides(
         initial: pageStoryAuthoring(pageDefinition, storyElements),
+        includeCatalog: false,
       ),
       authoringEntryIndexProvider.overrideWith(
         (ref, scope) =>
@@ -115,7 +113,7 @@ Widget primarySearchButtonStory({
         elements: storyElements,
       ),
       ...bookPagesProviderOverrides(state: pagesState),
-      ...pagesProviderOverrides(pageKind: pageDefinition.kind),
+      ...pagesProviderOverrides(pageType: pageDefinition.type),
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: booksState),

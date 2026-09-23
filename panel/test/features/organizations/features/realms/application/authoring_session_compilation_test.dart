@@ -7,182 +7,136 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/provider_test_utils.dart";
 
-const _snapshotSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.snapshot.get";
-const _eventSubject =
-    "service.from.realm1.organization.org1.realm.library.authoring.changed";
+const _graphSubject =
+    "service.to.realm1.organization.org1.realm.editor.authoring.graph.query";
+const _statusSubject =
+    "service.to.realm1.organization.org1.realm.editor.authoring.compiled.status.query";
 const _compiledSubject =
-    "service.from.realm1.organization.org1.realm.compiled.content.watch";
+    "service.from.realm1.organization.org1.realm.editor.authoring.compiled.changed";
 
 void main() {
-  test("direct page changes update an acquired document", () async {
+  test("compiled content changes refresh resource compilation state", () async {
     final nats = FakeNatsClient();
-    var snapshotSequence = 1;
-    var snapshotRequests = 0;
-    var pageName = "Initial";
-    final snapshotScopes = <List<skir.AuthoringSnapshotScope_kind>>[];
-    skir.PageCompileStatus compileStatus = skir.PageCompileStatus.notCompiled;
-
-    nats.registerHandler(_snapshotSubject, (payload) {
-      final request = skir.GetAuthoringSnapshotRequest.serializer.fromBytes(
-        payload,
-      );
-      snapshotScopes.add(request.scopes.map((scope) => scope.kind).toList());
-      snapshotRequests++;
-      if (snapshotRequests == 4) {
-        pageName = "During refresh";
-        nats.emitMessageOnSubject(
-          _eventSubject,
-          skir.AuthoringChanged.serializer.toBytes(
-            skir.AuthoringChanged(
-              sequence: 3,
-              batchId: "during-compile-refresh",
-              changes: [
-                skir.AuthoringResourceChange.wrapUpsertPage(
-                  _wirePage("During refresh"),
-                ),
-              ],
-              indirectlyAffectedResources: const [],
-            ),
+    skir.CompiledResourceState status = skir.CompiledResourceState.notCompiled;
+    var statusRequests = 0;
+    nats
+      ..registerHandler(
+        _graphSubject,
+        (_) => skir.QueryAuthoringGraphResponse.serializer.toBytes(
+          skir.QueryAuthoringGraphResponse.createSuccess(
+            generation: skir.CatalogGeneration(value: "1"),
+            sequence: 1,
+            resources: [_pageResource],
+            edges: const [],
+            selections: const [],
+            diagnostics: const [],
+            presentations: const [],
+          ),
+        ),
+      )
+      ..registerHandler(_statusSubject, (_) {
+        statusRequests++;
+        return skir.QueryCompiledResourceStatusResponse.serializer.toBytes(
+          skir.QueryCompiledResourceStatusResponse.createSuccess(
+            statuses: [
+              skir.CompiledResourceStatus(root: _pageRoot, state: status),
+            ],
           ),
         );
-      }
-      return skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-        skir.GetAuthoringSnapshotResponse.createSuccess(
-          sequence: snapshotSequence,
-          slices: [
-            for (final scope in request.scopes)
-              switch (scope) {
-                skir.AuthoringSnapshotScope.library_ =>
-                  skir.AuthoringSnapshotSlice.createLibrary(
-                    books: [_wireBook()],
-                    tags: const [],
-                  ),
-                skir.AuthoringSnapshotScope_bookWrapper() =>
-                  skir.AuthoringSnapshotSlice.createBook(
-                    bookId: _book,
-                    book: _wireBook(),
-                    pages: [_wirePage(pageName)],
-                  ),
-                skir.AuthoringSnapshotScope_pageWrapper() =>
-                  skir.AuthoringSnapshotSlice.createPage(
-                    pageId: _page,
-                    document: skir.PageDocument(
-                      page: _wirePage(pageName),
-                      elements: const [],
-                      references: const [],
-                      crossPageTargets: const [],
-                      crossPageSources: const [],
-                      diagnostics: const [],
-                      compileStatus: compileStatus,
-                    ),
-                  ),
-                skir.AuthoringSnapshotScope_unknown() => throw StateError(
-                  "Unknown authoring scope",
-                ),
-              },
-          ],
-        ),
-      );
-    });
-
+      });
     final container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWithValue(nats),
         organizationIdProvider.overrideWithValue(_org),
         realmIdProvider.overrideWithValue(_realm),
+        realmEditorCatalogProvider.overrideWithValue(
+          AsyncData(
+            RealmEditorCatalogState.ready(
+              RealmEditorCatalogSnapshot(
+                catalog: _catalog,
+                generation: const CatalogGeneration("1"),
+                compilationProjections: [
+                  RealmAuthoringCompilationProjection(
+                    id: "typewriter.page",
+                    root: TypeExpression.named(_pageType),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
       ],
     );
-
     final provider = authoringSessionProvider(_org, _realm);
     final subscription = container.listen(provider, (_, _) {});
-    final libraryLease = container.read(provider.notifier).acquireLibrary();
-    await libraryLease.ready;
-    final bookLease = container.read(provider.notifier).acquireBook(_book);
-    await bookLease.ready;
+    final lease = container
+        .read(provider.notifier)
+        .acquire(_page.pageAuthoringSelection);
+    await lease.ready;
 
-    final pageLease = container.read(provider.notifier).acquirePage(_page);
-    await pageLease.ready;
+    expect(
+      container.read(provider).compiledStatuses[_pageRoot],
+      skir.CompiledResourceState.notCompiled,
+    );
 
+    status = skir.CompiledResourceState.createBlocked(
+      lastActiveManifestId: null,
+      diagnosticCount: 1,
+    );
     nats.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(
-          sequence: 2,
-          batchId: "page-update",
-          changes: [
-            skir.AuthoringResourceChange.wrapUpsertPage(_wirePage("Updated")),
+      _compiledSubject,
+      skir.CompiledContentChanged.serializer.toBytes(
+        skir.CompiledContentChanged(
+          generation: skir.CatalogGeneration(value: "1"),
+          sourceSequence: 1,
+          states: [
+            skir.CompiledResourceStateChange.createUpsert(
+              root: _pageRoot,
+              state: status,
+            ),
           ],
-          indirectlyAffectedResources: const [],
         ),
       ),
     );
     await waitForProvider(
       container,
       provider,
-      (state) => state.sequence == 2,
-      description: "direct page change sequence 2",
+      (state) =>
+          state.compiledStatuses[_pageRoot]
+              is skir.CompiledResourceState_blockedWrapper,
+      description: "blocked resource compilation state",
     );
+    expect(statusRequests, 1);
 
-    expect(container.read(provider).pages[_page]?.name, "Updated");
-    expect(container.read(provider).documents[_page]?.page.name, "Updated");
-
-    snapshotSequence = 4;
-    compileStatus = skir.PageCompileStatus.createBlocked(
-      lastActiveManifestId: null,
-      diagnosticCount: 1,
+    final unrelatedRoot = skir.CompilationRoot(
+      projection: skir.CompilationProjectionId(value: "typewriter.page"),
+      resource: skir.ResourceId(value: "unrelated"),
     );
     nats.emitMessageOnSubject(
       _compiledSubject,
-      skir.WatchCompiledContentResponse.serializer.toBytes(
-        skir.WatchCompiledContentResponse.createBlocked(),
+      skir.CompiledContentChanged.serializer.toBytes(
+        skir.CompiledContentChanged(
+          generation: skir.CatalogGeneration(value: "1"),
+          sourceSequence: 1,
+          states: [
+            skir.CompiledResourceStateChange.createUpsert(
+              root: unrelatedRoot,
+              state: skir.CompiledResourceState.notCompiled,
+            ),
+          ],
+        ),
       ),
     );
-
-    await waitForProvider(
-      container,
-      provider,
-      (state) =>
-          state.documents[_page]?.compileStatus
-              is skir.PageCompileStatus_blockedWrapper,
-      description: "blocked page compile status",
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      container.read(provider).compiledStatuses.containsKey(unrelatedRoot),
+      isFalse,
     );
 
-    await waitForProvider(
-      container,
-      provider,
-      (state) => state.sequence == 4,
-      description: "full recovery sequence 4",
-    );
-
-    expect(container.read(provider).pages[_page]?.name, "During refresh");
-    expect(snapshotRequests, 4);
-    expect(snapshotScopes.last, [
-      skir.AuthoringSnapshotScope_kind.libraryConst,
-      skir.AuthoringSnapshotScope_kind.bookWrapper,
-      skir.AuthoringSnapshotScope_kind.pageWrapper,
-    ]);
-
-    final pageOnlyRequestBytes = skir.GetAuthoringSnapshotRequest.serializer
-        .toBytes(
-          skir.GetAuthoringSnapshotRequest(
-            scopes: [skir.AuthoringSnapshotScope.createPage(pageId: _page)],
-          ),
-        )
-        .length;
-    final compilationRequestBytes = nats.requests
-        .where((request) => request.subject == _snapshotSubject)
-        .last
-        .payload
-        .length;
-    expect(compilationRequestBytes, greaterThan(pageOnlyRequestBytes));
-
-    pageLease.release();
-    bookLease.release();
-    libraryLease.release();
+    lease.release();
     subscription.close();
     container.dispose();
     await nats.dispose();
@@ -191,22 +145,28 @@ void main() {
 
 final _org = recordId("organization:org1");
 final _realm = recordId("service:realm1");
-final _book = recordId("book:book1");
-final _page = recordId("page:page1");
-
-skir.Page _wirePage(String name) => skir.Page(
-  id: _page,
-  book: _book,
-  name: name,
-  kind: skir.PageKindRef(id: skir.PageKindId(value: "test"), revision: 1),
-  chapter: "",
-  priority: 0,
+final _page = skir.ResourceId(value: "page1");
+final _pageRoot = skir.CompilationRoot(
+  projection: skir.CompilationProjectionId(value: "typewriter.page"),
+  resource: _page,
 );
-
-skir.Book _wireBook() => skir.Book(
-  id: _book,
-  title: "Book",
-  icon: "mdi:book",
-  color: skir.Color(argb: 0xFF000000.toSigned(32)),
-  tags: const [],
+final _wireCodec = SkirEditorCodec(TypeRegistry(const TypeCatalog([])));
+final _pageType = ResolvedTypeRef(
+  id: DeclaredTypeId("22222222222222222222222222222222"),
+  revision: 1,
+);
+final _catalog = TypeCatalog([
+  TypeDefinition(
+    id: _pageType,
+    kind: NominalTypeKind.concrete,
+    representation: const StringType(),
+  ),
+]);
+final _pageResource = skir.AuthoringResource(
+  id: _page,
+  definition: CoreResourceDefinitionIds.page.toWire(),
+  content: skir.TypedValueEnvelope(
+    rootType: _wireCodec.encodeType(_pageType).valueOrNull!,
+    rootValue: _wireCodec.encodeValue(const StringValue("Page")).valueOrNull!,
+  ),
 );

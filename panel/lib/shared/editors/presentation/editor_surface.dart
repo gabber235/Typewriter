@@ -33,7 +33,7 @@ class EditorSurface extends StatelessWidget {
   final List<PresentationCollectionSource> collections;
   final List<ConversionDefinition> conversions;
   final EditorHostCapabilities host;
-  final List<RecordId> referenceOrigins;
+  final List<ResourceId> referenceOrigins;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;

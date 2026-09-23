@@ -30,7 +30,20 @@ val DiscoveryModelTest by testSuite {
                 ),
             )
 
-        assembled.catalog.definitions shouldBe listOf(definition)
+        assembled.catalog.definitions.single { it.id == definition.id } shouldBe definition
+    }
+
+    test("a declared type keeps its published display name when another graph references it") {
+        val referenced = TypeDefinition(
+            id = ResolvedTypeRef(TypeId.Declared(com.typewritermc.types.DeclaredTypeId.parse("019d3a87005070008000000000000050")), 1),
+            kind = NominalTypeKind.CONCRETE,
+        )
+        val published = referenced.copy(displayName = "Shared Book")
+        val assembled = TypeContributionAssembler.assemble(
+            listOf(contribution("first", referenced), contribution("second", published)),
+        )
+
+        assembled.catalog.definitions.single { it.id == referenced.id }.displayName shouldBe "Shared Book"
     }
 
     test("conflicting qualified parent definitions fail assembly") {
@@ -107,7 +120,7 @@ val DiscoveryModelTest by testSuite {
                 listOf(SourcePartCatalogEntry(origin, "paper", Eligibility.Ineligible(listOf("Not selected.")))),
             )
 
-        assembled.catalog.definitions shouldBe listOf(definition)
+        assembled.catalog.definitions.single { it.id == definition.id } shouldBe definition
         assembled.executableBindings shouldBe emptyList()
     }
 

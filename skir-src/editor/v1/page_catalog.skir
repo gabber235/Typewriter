@@ -1,12 +1,11 @@
+import { CatalogPresentationSubject } from "editor/v1/catalog_presentation.skir";
 import { ResolvedTypeRef } from "editor/v1/type_catalog.skir";
-import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
 import { Color } from "kernel/v1/color.skir";
 import { Icon } from "kernel/v1/icon.skir";
-import { PageKindRef } from "kernel/v1/page_kind.skir";
 
-// Page catalog metadata tells the panel which page kinds exist and which structural editor owns each kind.
+// Page catalog metadata tells the panel which concrete Page types exist and which editor owns each type.
 // Accepted definitions and diagnostics travel together so invalid declarations remain explainable without becoming
-// selectable page kinds.
+// selectable Page types.
 
 enum GraphDirection(811300001) {
   left_to_right = 1;
@@ -17,14 +16,9 @@ enum GraphDirection(811300001) {
 
 struct GraphPageEditorDefinition(811300002) {
   direction: GraphDirection = 0;
-  node_types: [ResolvedTypeRef] = 1;
 }
 
-struct TimelinePageEditorDefinition(811300003) {
-  track_types: [ResolvedTypeRef] = 0;
-  segment_types: [ResolvedTypeRef] = 1;
-  keyframe_types: [ResolvedTypeRef] = 2;
-}
+struct TimelinePageEditorDefinition(811300003) {}
 
 enum PageEditorDefinition(811300004) {
   graph: GraphPageEditorDefinition = 1;
@@ -32,19 +26,19 @@ enum PageEditorDefinition(811300004) {
 }
 
 struct PageDescriptor(811300005) {
-  kind: PageKindRef = 0;
+  type: ResolvedTypeRef = 0;
   name: string = 1;
   description: string? = 2;
   icon: Icon = 3;
   color: Color = 4;
   editor: PageEditorDefinition = 5;
-  authoring_rules: [PageAuthoringRuleRef] = 6;
 }
 
 struct PageCatalogEntry(811300006) {
   origin_artifact_id: string = 0;
   source_part: string = 1;
   descriptor: PageDescriptor = 2;
+  presentation_subject: CatalogPresentationSubject = 3;
 }
 
 struct PageDiagnostic(811300007) {
@@ -53,11 +47,5 @@ struct PageDiagnostic(811300007) {
   origin_artifact_id: string? = 2;
   source_part: string? = 3;
   declaration_name: string? = 4;
-  kind: PageKindRef? = 5;
-}
-
-struct PageAuthoringRuleRef(811300008) {
-  id: string = 0;
-  revision: int32 = 1;
-  configuration: TypedValueEnvelope? = 2;
+  type: ResolvedTypeRef? = 5;
 }

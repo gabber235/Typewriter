@@ -33,7 +33,7 @@ void main() {
       ),
     );
 
-    final text = tester.widget<SelectableText>(find.byType(SelectableText));
+    final text = tester.widget<Text>(find.text("Styled text"));
     expect(text.semanticsLabel, "Styled example");
     expect(text.textAlign, TextAlign.center);
     expect(text.style?.color, textColor);
@@ -64,21 +64,25 @@ void main() {
           id: "dynamicText",
           element: ColumnElement(
             children: [
-              PresentationNode(
-                id: "text",
-                element: TextElement(
-                  "Dynamic weight".asStringLiteral,
-                  fontWeight: weightExpression,
+              PresentationAxisChild.fixed(
+                PresentationNode(
+                  id: "text",
+                  element: TextElement(
+                    "Dynamic weight".asStringLiteral,
+                    fontWeight: weightExpression,
+                  ),
                 ),
               ),
-              PresentationNode(
-                id: "update",
-                element: ButtonElement(
-                  label: "Update weight".asStringLiteral,
-                  action: EditorAction.local(
-                    SetValueAction(
-                      target: _rootBinding,
-                      value: 650.asIntegerLiteral,
+              PresentationAxisChild.fixed(
+                PresentationNode(
+                  id: "update",
+                  element: ButtonElement(
+                    label: "Update weight".asStringLiteral,
+                    action: EditorAction.local(
+                      SetValueAction(
+                        target: _rootBinding,
+                        value: 650.asIntegerLiteral,
+                      ),
                     ),
                   ),
                 ),
@@ -89,7 +93,7 @@ void main() {
       ),
     );
 
-    SelectableText text() => tester.widget(find.byType(SelectableText));
+    Text text() => tester.widget(find.text("Dynamic weight"));
     expect(text().style?.fontVariations, const [FontVariation.weight(350)]);
 
     await tester.tap(find.text("Update weight"));
@@ -225,19 +229,21 @@ void main() {
           element: ColumnElement(
             children: [
               for (final (index, entry) in cases.indexed)
-                PresentationNode(
-                  id: "status$index",
-                  element: StatusElement(
-                    value: "value$index".asStringLiteral,
-                    cases: [
-                      StatusCase(
-                        match: StringValue("value$index"),
-                        appearance: StatusAppearance(
-                          tone: entry.$1,
-                          label: "Status $index".asStringLiteral,
+                PresentationAxisChild.fixed(
+                  PresentationNode(
+                    id: "status$index",
+                    element: StatusElement(
+                      value: "value$index".asStringLiteral,
+                      cases: [
+                        StatusCase(
+                          match: StringValue("value$index"),
+                          appearance: StatusAppearance(
+                            tone: entry.$1,
+                            label: "Status $index".asStringLiteral,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -355,30 +361,34 @@ void main() {
           id: "selectRoot",
           element: ColumnElement(
             children: [
-              PresentationNode(
-                id: "select",
-                element: SelectInputElement(
-                  control: const BoundControl(binding: _rootBinding),
-                  options: [
-                    SelectOption(
-                      id: "one",
-                      label: "One".asStringLiteral,
-                      value: "one".asStringLiteral,
-                    ),
-                    SelectOption(
-                      id: "two",
-                      label: "Two".asStringLiteral,
-                      value: "two".asStringLiteral,
-                    ),
-                  ],
+              PresentationAxisChild.fixed(
+                PresentationNode(
+                  id: "select",
+                  element: SelectInputElement(
+                    control: const BoundControl(binding: _rootBinding),
+                    options: [
+                      SelectOption(
+                        id: "one",
+                        label: "One".asStringLiteral,
+                        value: "one".asStringLiteral,
+                      ),
+                      SelectOption(
+                        id: "two",
+                        label: "Two".asStringLiteral,
+                        value: "two".asStringLiteral,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const PresentationNode(
-                id: "value",
-                element: TextElement(
-                  TypedExpression(
-                    resultType: StringType(),
-                    expression: BindingExpression(_rootBinding),
+              PresentationAxisChild.fixed(
+                const PresentationNode(
+                  id: "value",
+                  element: TextElement(
+                    TypedExpression(
+                      resultType: StringType(),
+                      expression: BindingExpression(_rootBinding),
+                    ),
                   ),
                 ),
               ),
@@ -428,23 +438,27 @@ void main() {
       id: "root",
       element: ColumnElement(
         children: [
-          PresentationNode(
-            id: "value",
-            element: TextElement(
-              const TypedExpression(
-                resultType: StringType(),
-                expression: BindingExpression(_rootBinding),
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "value",
+              element: TextElement(
+                const TypedExpression(
+                  resultType: StringType(),
+                  expression: BindingExpression(_rootBinding),
+                ),
               ),
             ),
           ),
-          PresentationNode(
-            id: "set",
-            element: ButtonElement(
-              label: "Set value".asStringLiteral,
-              action: EditorAction.local(
-                SetValueAction(
-                  target: _rootBinding,
-                  value: "after".asStringLiteral,
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "set",
+              element: ButtonElement(
+                label: "Set value".asStringLiteral,
+                action: EditorAction.local(
+                  SetValueAction(
+                    target: _rootBinding,
+                    value: "after".asStringLiteral,
+                  ),
                 ),
               ),
             ),
@@ -476,13 +490,17 @@ void main() {
       id: "root",
       element: ColumnElement(
         children: [
-          PresentationNode(
-            id: "valid",
-            element: TextElement("Still available".asStringLiteral),
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "valid",
+              element: TextElement("Still available".asStringLiteral),
+            ),
           ),
-          const PresentationNode(
-            id: "invalid",
-            element: NumericInputElement(BoundControl(binding: _rootBinding)),
+          PresentationAxisChild.fixed(
+            const PresentationNode(
+              id: "invalid",
+              element: NumericInputElement(BoundControl(binding: _rootBinding)),
+            ),
           ),
         ],
       ),
@@ -600,29 +618,33 @@ void main() {
       id: "root",
       element: ColumnElement(
         children: [
-          const PresentationNode(
-            id: "conditional",
-            element: ConditionalElement(
-              condition: TypedExpression(
-                resultType: BooleanType(),
-                expression: LiteralExpression(BooleanValue(false)),
-              ),
-              whenTrue: PresentationNode(
-                id: "hidden",
-                element: TextElement(
-                  TypedExpression(
-                    resultType: StringType(),
-                    expression: LiteralExpression(StringValue("Hidden")),
+          PresentationAxisChild.fixed(
+            const PresentationNode(
+              id: "conditional",
+              element: ConditionalElement(
+                condition: TypedExpression(
+                  resultType: BooleanType(),
+                  expression: LiteralExpression(BooleanValue(false)),
+                ),
+                whenTrue: PresentationNode(
+                  id: "hidden",
+                  element: TextElement(
+                    TypedExpression(
+                      resultType: StringType(),
+                      expression: LiteralExpression(StringValue("Hidden")),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-          PresentationNode(
-            id: "readonly",
-            element: ButtonElement(
-              label: "Read only".asStringLiteral,
-              action: action,
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "readonly",
+              element: ButtonElement(
+                label: "Read only".asStringLiteral,
+                action: action,
+              ),
             ),
           ),
         ],
@@ -698,7 +720,7 @@ void main() {
           rootType: root,
           rootValue: const UnitValue(),
         ),
-        typeCatalog: TypeCatalog([
+        typeCatalog: receivedRealmCatalog([
           TypeDefinition(
             id: root,
             kind: NominalTypeKind.concrete,
@@ -796,7 +818,7 @@ Widget _polymorphicRenderer() => EditorProtocolRenderer(
       "choice": PolymorphicValue(concreteType: _dogType, value: UnitValue()),
     }),
   ),
-  typeCatalog: const TypeCatalog([
+  typeCatalog: receivedRealmCatalog([
     TypeDefinition(
       id: _polymorphicRootType,
       kind: NominalTypeKind.concrete,
@@ -860,7 +882,7 @@ Widget _polymorphicMatchRenderer() => EditorProtocolRenderer(
       ),
     }),
   ),
-  typeCatalog: const TypeCatalog([
+  typeCatalog: receivedRealmCatalog([
     TypeDefinition(
       id: _polymorphicRootType,
       kind: NominalTypeKind.concrete,
@@ -959,7 +981,7 @@ EditorProtocolRenderer _renderer({
   );
   return EditorProtocolRenderer(
     envelope: TypedValueEnvelope(rootType: root, rootValue: value),
-    typeCatalog: TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

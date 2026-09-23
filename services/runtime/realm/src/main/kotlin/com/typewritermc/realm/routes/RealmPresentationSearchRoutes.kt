@@ -12,7 +12,7 @@ import skirout.editor.v1.search.RealmPresentationSearchUpdate
  */
 internal class RealmPresentationSearchRoutes(
     private val source: RealmPresentationSearchSource,
-    private val contracts: LibraryContracts,
+    private val contracts: EditorContracts,
     private val realmAddress: RealmAddress,
 ) {
     /**

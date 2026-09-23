@@ -31,10 +31,16 @@ extension TypeCatalogWireEncoding on TypeCatalog {
     final diagnostics = <TypeDiagnostic>[];
     for (final definition in this.definitions) {
       final representation = codec.encodeExpression(definition.representation);
+      final initialValue = definition.initialValue == null
+          ? const TypeResult<wire.TypedValue?>.success(null)
+          : SkirDataValueCodec(codec)
+                .encode(definition.initialValue!)
+                .mapValue((value) => value);
       final id = codec.encodeReference(definition.id);
       final parents = <wire.ResolvedTypeRef>[];
       diagnostics
         ..addAll(representation.diagnostics)
+        ..addAll(initialValue.diagnostics)
         ..addAll(id.diagnostics);
       for (final parent in definition.parents) {
         final encoded = codec.encodeReference(parent);
@@ -67,13 +73,16 @@ extension TypeCatalogWireEncoding on TypeCatalog {
       if (encodedId == null || encodedRepresentation == null) continue;
       definitions.add(
         wire.TypeDefinition(
-          displayName: definition.id.id.displayName,
+          displayName: definition.displayName ?? definition.id.id.displayName,
+          qualifiedName: definition.qualifiedName,
           parameters: parameters,
           directParents: parents,
           representation: encodedRepresentation,
           typeId: encodedId.typeId,
           revision: encodedId.revision,
           kind: definition.kind._encodeWire,
+          declarationOwner:
+              definition.declarationOwner ?? definition.id.id._defaultOwner,
           defaultPresentationId: definition.defaultPresentationId == null
               ? null
               : (definition.defaultPresentationId!)._encodeWire,
@@ -85,6 +94,26 @@ extension TypeCatalogWireEncoding on TypeCatalog {
               ),
           ],
           outgoingConversionIds: const [],
+          rolePresentations: [
+            for (final entry in definition.rolePresentations.entries)
+              wire.RolePresentation(
+                role: entry.key._encodeWire,
+                presentationId: entry.value._encodeWire,
+              ),
+          ],
+          fieldMergePolicies: [
+            for (final policy in definition.fieldMergePolicies)
+              wire.FieldMergePolicy(
+                fieldPath: policy.path.segments.map((segment) {
+                  if (segment case FieldPathSegment(:final name)) return name;
+                  throw ArgumentError(
+                    "Merge policies currently support field paths only",
+                  );
+                }),
+                strategy: policy.strategy._encodeWire,
+              ),
+          ],
+          initializer: initialValue.valueOrNull,
         ),
       );
     }
@@ -119,6 +148,7 @@ extension WireTypeDefinitionListDecoding on Iterable<wire.TypeDefinition> {
             TypeDefinition(
               id: id,
               kind: decodedKind,
+              declarationOwner: value.declarationOwner,
               parameters: [
                 for (final parameter in value.parameters)
                   TypeParameter(name: parameter.name),
@@ -156,9 +186,15 @@ extension on wire.TypeDefinition {
   ) {
     final value = this;
     final representation = codec.decodeExpression(value.representation);
+    final initialValue = value.initializer == null
+        ? const TypeResult<DataValue?>.success(null)
+        : SkirDataValueCodec(codec)
+              .decode(value.initializer)
+              .mapValue((value) => value);
     final kind = value.kind._decodeDomain();
     final diagnostics = <TypeDiagnostic>[
       ...representation.diagnostics,
+      ...initialValue.diagnostics,
       ...kind.diagnostics,
     ];
     final parents = <ResolvedTypeRef>[];
@@ -189,16 +225,66 @@ extension on wire.TypeDefinition {
           );
     diagnostics.addAll(defaultPresentation.diagnostics);
 
+    final rolePresentations = <PresentationRole, PresentationId>{};
+    for (final association in value.rolePresentations) {
+      final role = association.role._decodeDomain();
+      final presentation = association.presentationId._decodeDomain();
+      diagnostics
+        ..addAll(role.diagnostics)
+        ..addAll(presentation.diagnostics);
+      final decodedRole = role.valueOrNull;
+      final decodedPresentation = presentation.valueOrNull;
+      if (decodedRole == null || decodedPresentation == null) continue;
+      if (rolePresentations.containsKey(decodedRole)) {
+        diagnostics.add(
+          invalidWire(
+            "Presentation role '${decodedRole.name}' is declared more than once",
+          ).diagnostics.single,
+        );
+        continue;
+      }
+      rolePresentations[decodedRole] = decodedPresentation;
+    }
+
+    final fieldMergePolicies = <FieldMergePolicy>[];
+    final mergePaths = <DataPath>{};
+    for (final policy in value.fieldMergePolicies) {
+      final strategy = policy.strategy._decodeDomain();
+      diagnostics.addAll(strategy.diagnostics);
+      final path = DataPath([
+        for (final name in policy.fieldPath) DataPathSegment.field(name),
+      ]);
+      if (path.segments.isEmpty || !mergePaths.add(path)) {
+        diagnostics.add(
+          invalidWire(
+            path.segments.isEmpty
+                ? "Merge policy path is empty"
+                : "Merge policy path is declared more than once",
+          ).diagnostics.single,
+        );
+        continue;
+      }
+      if (strategy.valueOrNull case final decoded?) {
+        fieldMergePolicies.add(FieldMergePolicy(path: path, strategy: decoded));
+      }
+    }
+
     if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
     return TypeResult.success(
       TypeDefinition(
         id: id,
         kind: kind.valueOrNull!,
+        displayName: value.displayName,
+        qualifiedName: value.qualifiedName,
+        declarationOwner: value.declarationOwner,
         representation: representation.valueOrNull!,
         parameters: parameters,
         parents: parents,
         defaultPresentationId: defaultPresentation.valueOrNull,
         namedPresentations: namedPresentations,
+        rolePresentations: rolePresentations,
+        fieldMergePolicies: fieldMergePolicies,
+        initialValue: initialValue.valueOrNull,
       ),
     );
   }
@@ -213,6 +299,64 @@ extension on wire.TypeDefinition {
       ),
     );
   }
+}
+
+extension on PresentationRole {
+  wire.PresentationRole get _encodeWire => switch (this) {
+    PresentationRole.creation => wire.PresentationRole.creation,
+    PresentationRole.referenceSummary => wire.PresentationRole.referenceSummary,
+    PresentationRole.referenceOption => wire.PresentationRole.referenceOption,
+    PresentationRole.catalogOption => wire.PresentationRole.catalogOption,
+    PresentationRole.authoringResult => wire.PresentationRole.authoringResult,
+    PresentationRole.pageTile => wire.PresentationRole.pageTile,
+    PresentationRole.graphNode => wire.PresentationRole.graphNode,
+    PresentationRole.inspectorHeader => wire.PresentationRole.inspectorHeader,
+  };
+}
+
+extension on wire.PresentationRole {
+  TypeResult<PresentationRole> _decodeDomain() => switch (this) {
+    wire.PresentationRole.creation => const TypeResult.success(
+      PresentationRole.creation,
+    ),
+    wire.PresentationRole.referenceSummary => const TypeResult.success(
+      PresentationRole.referenceSummary,
+    ),
+    wire.PresentationRole.referenceOption => const TypeResult.success(
+      PresentationRole.referenceOption,
+    ),
+    wire.PresentationRole.catalogOption => const TypeResult.success(
+      PresentationRole.catalogOption,
+    ),
+    wire.PresentationRole.authoringResult => const TypeResult.success(
+      PresentationRole.authoringResult,
+    ),
+    wire.PresentationRole.pageTile => const TypeResult.success(
+      PresentationRole.pageTile,
+    ),
+    wire.PresentationRole.graphNode => const TypeResult.success(
+      PresentationRole.graphNode,
+    ),
+    wire.PresentationRole.inspectorHeader => const TypeResult.success(
+      PresentationRole.inspectorHeader,
+    ),
+    _ => invalidWire("Unknown presentation role"),
+  };
+}
+
+extension on FieldMergeStrategy {
+  wire.FieldMergeStrategy get _encodeWire => switch (this) {
+    FieldMergeStrategy.setMembership => wire.FieldMergeStrategy.setMembership,
+  };
+}
+
+extension on wire.FieldMergeStrategy {
+  TypeResult<FieldMergeStrategy> _decodeDomain() => switch (this) {
+    wire.FieldMergeStrategy.setMembership => const TypeResult.success(
+      FieldMergeStrategy.setMembership,
+    ),
+    _ => invalidWire("Unknown field merge strategy"),
+  };
 }
 
 extension on wire.TypeParameter {
@@ -261,6 +405,14 @@ extension on wire.TypeDefinitionKind {
       NominalTypeKind.sealedAbstract,
     ),
     _ => invalidWire("Unknown nominal type kind"),
+  };
+}
+
+extension on TypeId {
+  String get _defaultOwner => switch (this) {
+    OptionTypeId() || SomeTypeId() || NoneTypeId() => "builtin",
+    DeclaredTypeId(:final uuid) => uuid,
+    QualifiedTypeId(:final namespace) => namespace,
   };
 }
 

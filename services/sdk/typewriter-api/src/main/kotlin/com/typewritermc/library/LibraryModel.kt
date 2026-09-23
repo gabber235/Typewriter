@@ -1,17 +1,19 @@
 package com.typewritermc.library
 
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ElementTypeId
-import com.typewritermc.elements.ReferenceSlotId
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.elements.Element
 import com.typewritermc.types.Color
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Referenceable
-import com.typewritermc.types.ResourceId
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.typewritermc.types.OwnsResource
+import com.typewritermc.types.RelationDeletePolicy
+import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ToMany
+import com.typewritermc.types.ToOne
+import com.typewritermc.types.TypewriterRelation
+import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.TypeId
 
 /**
  * Groups authored pages under a stable identity and library name.
@@ -19,14 +21,22 @@ import kotlinx.serialization.Serializable
  * Tags are references to separate records; constructing a book does not resolve them or enforce database
  * uniqueness.
  */
-@Serializable
+@TypewriterType(id = "bbb646b300cf4dd2b7aab051854e4dd1")
 data class Book(
-    val id: BookId,
-    val title: LibraryName,
-    val icon: Icon,
-    val color: Color,
-    val tags: Set<Ref<Tag>>,
+    val title: String = "",
+    val icon: Icon = Icon.Iconify("material-symbols:book"),
+    val color: Color = Color(0xff3f51b5u),
+    val tags: Set<Ref<Tag>> = emptySet(),
+    val pages: ToMany<BookPages, Page> = ToMany.empty(),
 ) : Referenceable
+
+/** Owns the synchronized Book to Page containment relationship. */
+@TypewriterRelation(
+    id = BOOK_PAGES_RELATION_ID,
+    onSourceDelete = RelationDeletePolicy.CASCADE,
+    onTargetDelete = RelationDeletePolicy.CLEAR,
+)
+sealed interface BookPages : OwnsResource<Book, Page>
 
 /**
  * Represents a library tag with potentially multiple parents and editor placement.
@@ -34,152 +44,32 @@ data class Book(
  * Hierarchy validation belongs to [TagHierarchy] and the repository. The record itself permits unresolved parent
  * references.
  */
-@Serializable
+@TypewriterType(id = "ce1ae253a42d4509935c48b8ecba664a")
 data class Tag(
-    val id: TagId,
-    val name: LibraryName,
-    val color: Color,
-    val parents: Set<Ref<Tag>>,
-    val placement: GridPlacement,
+    val name: String = "",
+    val color: Color = Color(0xff9e9e9eu),
+    val parents: Set<Ref<Tag>> = emptySet(),
+    val placement: GraphPlacement,
 ) : Referenceable
 
-/**
- * Stores page metadata and its selected editor schema independently of element content.
- *
- * [PageDocument] adds elements, reference summaries, and diagnostics. The kind includes a revision so consumers
- * can detect incompatible schema changes.
- */
-@Serializable
-data class Page(
-    val id: PageId,
-    val book: Ref<Book>,
-    val name: LibraryName,
-    val kind: PageKindRef,
-    val chapter: ChapterPath,
-    val priority: Int,
-) : Referenceable
-
-/**
- * Stores the rectangular editor position of a library record in grid units.
- *
- * Coordinates identify the top left corner. The model does not validate bounds because the owning editor decides
- * which placements are valid.
- */
-@Serializable
-data class GridPlacement(
-    val x: Int,
-    val y: Int,
-    val width: Int,
-    val height: Int,
-)
-
-/**
- * Provides the editor view of a page with logical element values and reference diagnostics.
- *
- * Element identities and source slot pairs must be unique. Cross page summaries may describe missing resources.
- * [compileStatus] reports publication state separately from whether the document can be edited.
- */
-@Serializable
-data class PageDocument(
-    val page: Page,
-    val elements: List<PageDocumentElement>,
-    val references: List<PageReference>,
-    val crossPageTargets: List<ResourceSummary>,
-    val crossPageSources: List<ResourceSummary>,
-    val diagnostics: List<PageDocumentDiagnostic>,
-    val compileStatus: PageCompileStatus = PageCompileStatus.NotCompiled,
-) {
-    init {
-        require(elements.map(PageDocumentElement::id).distinct().size == elements.size) {
-            "Page document element ids must be unique."
-        }
-        require(references.map { it.source to it.slot }.distinct().size == references.size) {
-            "Page document reference slots must be unique per source."
-        }
-    }
+/** Shared authored fields for concrete Page resource types. */
+interface Page : Referenceable {
+    val book: ToOne<BookPages, Book>
+    val name: String
+    val chapter: ChapterPath
+    val priority: Int
+    val elements: ToMany<PageElements, Element>
 }
 
-/**
- * Carries an editor element with assembled logical values rather than persistence slot markers.
- *
- * The schema revision identifies the shape of [value]; consult document diagnostics before treating it as valid
- * compiled content.
- */
-@Serializable
-data class PageDocumentElement(
-    val id: ElementInstanceId,
-    val elementType: ElementTypeId,
-    val schemaRevision: Int,
-    val value: DataValue,
-    val placement: ElementPlacement,
+val PAGE_CONTRACT_TYPE = ResolvedTypeRef(TypeId.Qualified("com.typewritermc.library", "Page"), 1)
+
+/** Owns Page containment of authored element resources. */
+@TypewriterRelation(
+    id = PAGE_ELEMENTS_RELATION_ID,
+    onSourceDelete = RelationDeletePolicy.CASCADE,
+    onTargetDelete = RelationDeletePolicy.CLEAR,
 )
+sealed interface PageElements : OwnsResource<Page, Element>
 
-/**
- * Connects an element slot to a resource and records the type expected by that slot.
- *
- * The target may be unresolved in an editable document. Resolution and diagnostic reporting belong to the
- * repository that assembled the document.
- */
-@Serializable
-data class PageReference(
-    val source: ElementInstanceId,
-    val slot: ReferenceSlotId,
-    val target: ResourceId,
-    val expectedType: com.typewritermc.types.TypeExpression,
-)
-
-/**
- * Describes a referenced resource without loading its full document.
- *
- * [exists] distinguishes missing targets, while optional name, element type, and page fields supply context when
- * known.
- */
-@Serializable
-data class ResourceSummary(
-    val id: ResourceId,
-    val name: String?,
-    val elementType: ElementTypeId? = null,
-    val page: Ref<Page>? = null,
-    val exists: Boolean,
-)
-
-/**
- * Reports an authoring or reference problem without making the document unavailable to the editor.
- *
- * Optional locations let consumers focus the affected element, slot, or resource; a document level diagnostic
- * leaves them absent.
- */
-@Serializable
-data class PageDocumentDiagnostic(
-    val code: String,
-    val message: String,
-    val element: ElementInstanceId? = null,
-    val slot: ReferenceSlotId? = null,
-    val target: ResourceId? = null,
-)
-
-/**
- * Reports whether the current authored page has usable compiled content.
- *
- * A blocked page may retain a previously active manifest. Consumers must not interpret that manifest as proof that
- * the latest authoring revision compiled successfully.
- */
-@Serializable
-sealed interface PageCompileStatus {
-    @Serializable
-    @SerialName("not_compiled")
-    data object NotCompiled : PageCompileStatus
-
-    @Serializable
-    @SerialName("active")
-    data class Active(
-        val manifestId: String,
-    ) : PageCompileStatus
-
-    @Serializable
-    @SerialName("blocked")
-    data class Blocked(
-        val lastActiveManifestId: String?,
-        val diagnosticCount: Int,
-    ) : PageCompileStatus
-}
+const val BOOK_PAGES_RELATION_ID = "4fbbe0dcedd84ccb8b7ce8c6a6105551"
+const val PAGE_ELEMENTS_RELATION_ID = "349b4d11c4464d13ad4ca063ead60c62"

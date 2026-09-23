@@ -1,6 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../support/realm_catalog_fixture.dart";
+
 void main() {
   const container = ResolvedTypeRef(
     id: QualifiedTypeId(namespace: "test", name: "Container"),
@@ -8,7 +10,7 @@ void main() {
   );
   const string = StringType();
   TypeRegistry registry(DataValue initial) => TypeRegistry(
-    TypeCatalog([
+    receivedRealmCatalog([
       TypeDefinition(
         id: container,
         kind: NominalTypeKind.concrete,
@@ -49,7 +51,7 @@ void main() {
     );
   });
 
-  test("abstract fields require an explicit concrete descendant", () {
+  test("abstract fields use Realm initialized concrete values", () async {
     final abstract = ResolvedTypeRef(
       id: QualifiedTypeId(namespace: "test", name: "Abstract"),
       revision: 1,
@@ -95,9 +97,19 @@ void main() {
       ]),
     );
 
-    final draft = CreationDraft(rootType: NamedType(root), registry: types);
+    final draft = CreationDraft(
+      rootType: NamedType(root),
+      registry: types,
+      concreteTypeInitializer: ({required type, required supplied}) async =>
+          ConcreteTypeInitialized(
+            TypedValueEnvelope(
+              rootType: type,
+              rootValue: RecordValue({"value": const StringValue("realm")}),
+            ),
+          ),
+    );
     addTearDown(draft.dispose);
-    draft.selectConcreteType(DataPath.root.field("choice"), first);
+    await draft.selectConcreteTypeAsync(DataPath.root.field("choice"), first);
     final result = draft.finalize();
 
     expect(
@@ -105,7 +117,7 @@ void main() {
       RecordValue({
         "choice": PolymorphicValue(
           concreteType: first,
-          value: RecordValue({"value": const StringValue("")}),
+          value: RecordValue({"value": const StringValue("realm")}),
         ),
       }),
     );

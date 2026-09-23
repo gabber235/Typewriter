@@ -7,17 +7,122 @@ part of "editor_presentation_encoder.dart";
 extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
   TypeResult<wire.PresentationElement> _children(PresentationElement value) {
     final children = switch (value) {
-      ChildrenLayoutElement(:final children) ||
+      WrapElement(:final children) ||
       GridElement(:final children) ||
       StackElement(:final children) => children,
       _ => throw StateError("Element does not contain children"),
     };
-    return _nodes(children).mapValue(
-      (children) => wire.PresentationElement.createChildren(
-        children: children,
-        layout: value._childrenLayout._encodeWire,
-      ),
+    return _nodes(children).mapValue((children) {
+      final encoded = switch (value) {
+        WrapElement(
+          :final spacing,
+          :final runSpacing,
+          :final mainAxisAlignment,
+          :final crossAxisAlignment,
+        ) =>
+          wire.ChildrenElement.createWrap(
+            children: children,
+            layout: wire.WrapChildrenLayout(
+              spacing: spacing,
+              runSpacing: runSpacing,
+              mainAxisAlignment: mainAxisAlignment._encodeWire,
+              crossAxisAlignment: crossAxisAlignment._encodeWire,
+            ),
+          ),
+        GridElement(
+          :final columns,
+          :final horizontalSpacing,
+          :final verticalSpacing,
+        ) =>
+          wire.ChildrenElement.createGrid(
+            children: children,
+            layout: wire.GridChildrenLayout(
+              columns: columns,
+              horizontalSpacing: horizontalSpacing,
+              verticalSpacing: verticalSpacing,
+            ),
+          ),
+        StackElement() => wire.ChildrenElement.createStack(children: children),
+        _ => throw StateError("Element does not contain ordinary children"),
+      };
+      return wire.PresentationElement.wrapChildren(encoded);
+    });
+  }
+
+  TypeResult<wire.PresentationElement> _axisChildren(
+    ChildrenLayoutElement value,
+  ) {
+    final encoded = <wire.AxisChild>[];
+    final diagnostics = <TypeDiagnostic>[];
+    for (final child in switch (value) {
+      ColumnElement(:final children) || RowElement(:final children) => children,
+      _ => throw StateError("Element does not contain axis children"),
+    }) {
+      final node = encodeNode(child.child);
+      diagnostics.addAll(node.diagnostics);
+      if (node.valueOrNull case final value?) {
+        encoded.add(switch (child) {
+          FixedPresentationAxisChild() => wire.AxisChild.wrapFixed(value),
+          FlexiblePresentationAxisChild(:final flex, :final fit) =>
+            wire.AxisChild.createFlexible(
+              child: value,
+              flex: flex,
+              fit: switch (fit) {
+                PresentationFlexFit.tight => wire.FlexFit.tight,
+                PresentationFlexFit.loose => wire.FlexFit.loose,
+              },
+            ),
+        });
+      }
+    }
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    final layout = wire.AxisChildrenLayout(
+      spacing: value.spacing,
+      mainAxisAlignment: value.mainAxisAlignment._encodeWire,
+      crossAxisAlignment: value.crossAxisAlignment._encodeWire,
     );
+    final children = switch (value) {
+      ColumnElement() => wire.ChildrenElement.createColumn(
+        children: encoded,
+        layout: layout,
+      ),
+      RowElement() => wire.ChildrenElement.createRow(
+        children: encoded,
+        layout: layout,
+      ),
+      _ => throw StateError("Element does not contain axis children"),
+    };
+    return TypeResult.success(wire.PresentationElement.wrapChildren(children));
+  }
+
+  TypeResult<wire.PresentationElement> _adaptiveLeading(
+    AdaptiveLeadingElement value,
+  ) {
+    final leading = encodeNode(value.leading);
+    final center = value.center == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.center!).mapValue((value) => value);
+    final suffix = value.suffix == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.suffix!).mapValue((value) => value);
+    final diagnostics = [
+      ...leading.diagnostics,
+      ...center.diagnostics,
+      ...suffix.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationElement.createAdaptiveLeading(
+              leading: leading.valueOrNull!,
+              center: center.valueOrNull,
+              suffix: suffix.valueOrNull,
+              padding: value.padding._encode,
+              compactPadding: value.compactPadding._encode,
+              gap: value.gap,
+              minimumCenterWidth: value.minimumCenterWidth,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
   }
 
   TypeResult<wire.PresentationElement> _section(SectionElement value) {
@@ -242,55 +347,6 @@ extension on PresentationCrossAxisAlignment {
     PresentationCrossAxisAlignment.center => wire.CrossAxisAlignment.center,
     PresentationCrossAxisAlignment.end => wire.CrossAxisAlignment.end,
     PresentationCrossAxisAlignment.stretch => wire.CrossAxisAlignment.stretch,
-  };
-}
-
-extension on PresentationElement {
-  PresentationChildrenLayout get _childrenLayout => switch (this) {
-    ColumnElement(
-      :final spacing,
-      :final mainAxisAlignment,
-      :final crossAxisAlignment,
-    ) =>
-      PresentationChildrenLayout.column(
-        spacing: spacing,
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-      ),
-    RowElement(
-      :final spacing,
-      :final mainAxisAlignment,
-      :final crossAxisAlignment,
-    ) =>
-      PresentationChildrenLayout.row(
-        spacing: spacing,
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-      ),
-    WrapElement(
-      :final spacing,
-      :final runSpacing,
-      :final mainAxisAlignment,
-      :final crossAxisAlignment,
-    ) =>
-      PresentationChildrenLayout.wrap(
-        spacing: spacing,
-        runSpacing: runSpacing,
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-      ),
-    GridElement(
-      :final columns,
-      :final horizontalSpacing,
-      :final verticalSpacing,
-    ) =>
-      PresentationChildrenLayout.grid(
-        columns: columns,
-        horizontalSpacing: horizontalSpacing,
-        verticalSpacing: verticalSpacing,
-      ),
-    StackElement() => const PresentationChildrenLayout.stack(),
-    _ => throw StateError("Element does not contain children"),
   };
 }
 

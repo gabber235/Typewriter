@@ -3,6 +3,7 @@ import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/realm_catalog_fixture.dart";
 import "search_input_test_harness.dart";
 import "support/editor_utils.dart";
 
@@ -192,7 +193,7 @@ void main() {
     final source = await tester.pumpTypedEditor(
       type: NamedType(standardTypeRefs.color),
       value: IntegerValue(BigInt.from(0xFF112233)),
-      registry: TypeRegistry(const TypeCatalog([])),
+      registry: TypeRegistry(receivedRealmCatalog()),
       presentation: const PresentationNode(
         id: "color",
         element: ColorInputElement(

@@ -1,0 +1,85 @@
+import {
+  CatalogGeneration,
+  ResourceId,
+} from "editor/v1/type_catalog.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+
+// Projection neutral compiled content delivery. Payload bytes remain in blob storage.
+
+struct CompilationProjectionId(810900100) {
+  value: string = 0;
+}
+
+struct CompilationRoot(810900101) {
+  projection: CompilationProjectionId = 0;
+  resource: ResourceId = 1;
+}
+
+struct CompiledBlobPointer(810900102) {
+  digest: string = 0;
+  size: int64 = 1;
+}
+
+struct CompiledArtifactPointer(810900103) {
+  semantic_digest: string = 0;
+  blob: CompiledBlobPointer = 1;
+}
+
+struct CompiledContentActivation(810900104) {
+  activation_revision: int64 = 0;
+  manifest_digest: string = 1;
+  manifest: CompiledBlobPointer = 2;
+  artifacts: [CompiledArtifactPointer] = 3;
+}
+
+enum CompiledResourceState(810900105) {
+  not_compiled = 1;
+  active: struct {
+    manifest_id: string = 0;
+  } = 2;
+  blocked: struct {
+    last_active_manifest_id: string? = 0;
+    diagnostic_count: int32 = 1;
+  } = 3;
+}
+
+struct CompiledResourceStatus(810900106) {
+  root: CompilationRoot = 0;
+  state: CompiledResourceState = 1;
+}
+
+enum CompiledResourceStateChange(810900107) {
+  upsert: struct {
+    root: CompilationRoot = 0;
+    state: CompiledResourceState = 1;
+  } = 1;
+  remove: CompilationRoot = 2;
+}
+
+struct CompiledContentChanged(810900108) {
+  generation: CatalogGeneration = 0;
+  source_sequence: int64 = 1;
+  states: [CompiledResourceStateChange] = 2;
+}
+
+method WatchCompiledContent(
+  struct {}
+): enum {
+  initial: struct {
+    activation: CompiledContentActivation? = 0;
+  } = 1;
+  activated: CompiledContentActivation = 2;
+  blocked: struct {} = 3;
+  internal_error: InternalError = 4;
+} = 920004;
+
+method QueryCompiledResourceStatus(
+  struct {
+    roots: [CompilationRoot] = 0;
+  }
+): enum {
+  success: struct {
+    statuses: [CompiledResourceStatus] = 0;
+  } = 1;
+  internal_error: InternalError = 2;
+} = 920005;

@@ -161,13 +161,13 @@ RecordType _runtimeInstanceRecord({
 TypeField _stringField(String name) =>
     TypeField(name: name, type: const StringType());
 
-final _hostInspectorCatalog = TypeCatalog([
+final _hostInspectorCatalog = panelPresentationTypeCatalog([
   _hostInspectorType,
   ..._hostConfigurationDefinitions,
 ]);
-final _realmInstanceInspectorCatalog = TypeCatalog([
+final _realmInstanceInspectorCatalog = panelPresentationTypeCatalog([
   _realmInstanceInspectorType,
 ]);
-final _engineInstanceInspectorCatalog = TypeCatalog([
+final _engineInstanceInspectorCatalog = panelPresentationTypeCatalog([
   _engineInstanceInspectorType,
 ]);

@@ -9,6 +9,30 @@ enum TypeVariance { invariant, covariant, contravariant }
 /// Declares whether a nominal type can be instantiated or extended.
 enum NominalTypeKind { concrete, openAbstract, sealedAbstract }
 
+/// Semantic surface for which a nominal type can supply a presentation.
+enum PresentationRole {
+  creation,
+  referenceSummary,
+  referenceOption,
+  catalogOption,
+  authoringResult,
+  pageTile,
+  graphNode,
+  inspectorHeader,
+}
+
+/// Closed field reconciliation strategies understood by the editor.
+enum FieldMergeStrategy { setMembership }
+
+/// Associates one canonical field path with its reconciliation strategy.
+@freezed
+abstract class FieldMergePolicy with _$FieldMergePolicy {
+  const factory FieldMergePolicy({
+    required DataPath path,
+    required FieldMergeStrategy strategy,
+  }) = _FieldMergePolicy;
+}
+
 /// A generic parameter, including the values permitted for its argument.
 @freezed
 abstract class TypeParameter with _$TypeParameter {
@@ -24,17 +48,24 @@ abstract class TypeParameter with _$TypeParameter {
 ///
 /// The representation is the editable structural view. Parents add inherited
 /// constraints. The registry owns resolution, substitution, inheritance
-/// checks, and the resulting ancestor set; this value remains immutable input.
+/// checks, and the resulting ancestor set. The initial value is the portable
+/// value used when authoring starts without an explicit value.
 @freezed
 abstract class TypeDefinition with _$TypeDefinition {
   const factory TypeDefinition({
     required ResolvedTypeRef id,
     required NominalTypeKind kind,
+    String? displayName,
+    String? qualifiedName,
+    String? declarationOwner,
     @Default(AnyType()) TypeExpression representation,
     @Default([]) List<TypeParameter> parameters,
     @Default([]) List<ResolvedTypeRef> parents,
     PresentationId? defaultPresentationId,
     @Default({}) Map<String, PresentationId> namedPresentations,
+    @Default({}) Map<PresentationRole, PresentationId> rolePresentations,
+    @Default([]) List<FieldMergePolicy> fieldMergePolicies,
+    DataValue? initialValue,
   }) = _TypeDefinition;
 }
 
@@ -57,6 +88,7 @@ abstract class ResolvedType with _$ResolvedType {
     required TypeExpression representation,
     required Set<ResolvedTypeRef> ancestors,
     @Default({}) Set<ResolvedTypeRef> directParents,
+    DataValue? initialValue,
   }) = _ResolvedType;
 
   const ResolvedType._();

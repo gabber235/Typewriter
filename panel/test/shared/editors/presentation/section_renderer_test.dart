@@ -259,7 +259,7 @@ void main() {
         .singleWhere((decoration) => decoration.color == surfaceColor);
     expect(decoration.borderRadius, BorderRadius.circular(4));
     expect(
-      tester.widget<EditableText>(find.text("Contained")).style.color,
+      tester.widget<Text>(find.text("Contained")).style?.color,
       contentColor,
     );
   });
@@ -284,7 +284,7 @@ EditorProtocolRenderer _renderer(PresentationNode presentation) {
   );
   return EditorProtocolRenderer(
     envelope: const TypedValueEnvelope(rootType: root, rootValue: UnitValue()),
-    typeCatalog: const TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

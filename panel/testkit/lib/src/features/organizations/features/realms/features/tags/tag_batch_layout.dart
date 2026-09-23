@@ -6,11 +6,14 @@ const _horizontalSpacing = 2;
 const _verticalSpacing = 2;
 
 extension on List<Tag> {
-  Map<skir.RecordId, int> _calculateLayers() {
+  Map<skir.ResourceId, int> _calculateLayers() {
     final tagById = {for (final tag in this) tag.tagId: tag};
-    final depthCache = <skir.RecordId, int>{};
+    final depthCache = <skir.ResourceId, int>{};
 
-    int calculateDepth(skir.RecordId tagId, [Set<skir.RecordId>? visiting]) {
+    int calculateDepth(
+      skir.ResourceId tagId, [
+      Set<skir.ResourceId>? visiting,
+    ]) {
       visiting ??= {};
 
       if (visiting.contains(tagId)) return 0;
@@ -52,7 +55,7 @@ extension on List<List<Tag>> {
   List<List<Tag>> _orderedForMinimalCrossing() {
     if (isEmpty) return this;
 
-    final positionInLayer = <skir.RecordId, int>{};
+    final positionInLayer = <skir.ResourceId, int>{};
 
     for (int index = 0; index < first.length; index++) {
       positionInLayer[first[index].tagId] = index;
@@ -96,7 +99,7 @@ extension on List<List<Tag>> {
 
         result.add(
           tag.copyWith(
-            placement: Placement(
+            placement: GraphPlacement(
               x: x,
               y: y,
               width: _tagWidth,
@@ -112,7 +115,7 @@ extension on List<List<Tag>> {
 }
 
 extension on Tag {
-  double _calculateBarycenter(Map<skir.RecordId, int> positionInLayer) {
+  double _calculateBarycenter(Map<skir.ResourceId, int> positionInLayer) {
     if (parentIds.isEmpty) return 0;
 
     var sum = 0;

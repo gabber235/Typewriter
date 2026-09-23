@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PresentationDefinition {
 
- PresentationId get id; List<PresentationInputParameter> get inputs; PresentationNode get root; BindingId? get primaryInput;
+ PresentationId get id; List<PresentationInputParameter> get inputs; PresentationNode get root; BindingId? get primaryInput; Map<PresentationCollectionSourceId, PresentationCollectionSchema> get collections;
 /// Create a copy of PresentationDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $PresentationDefinitionCopyWith<PresentationDefinition> get copyWith => _$Presen
 @override
 bool operator ==(Object other) {
   final _this = this as PresentationDefinition;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationDefinition&&(identical(other.id, _this.id) || other.id == _this.id)&&const DeepCollectionEquality().equals(other.inputs, _this.inputs)&&(identical(other.root, _this.root) || other.root == _this.root)&&(identical(other.primaryInput, _this.primaryInput) || other.primaryInput == _this.primaryInput));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationDefinition&&(identical(other.id, _this.id) || other.id == _this.id)&&const DeepCollectionEquality().equals(other.inputs, _this.inputs)&&(identical(other.root, _this.root) || other.root == _this.root)&&(identical(other.primaryInput, _this.primaryInput) || other.primaryInput == _this.primaryInput)&&const DeepCollectionEquality().equals(other.collections, _this.collections));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PresentationDefinition;
-  return Object.hash(runtimeType,_this.id,const DeepCollectionEquality().hash(_this.inputs),_this.root,_this.primaryInput);
+  return Object.hash(runtimeType,_this.id,const DeepCollectionEquality().hash(_this.inputs),_this.root,_this.primaryInput,const DeepCollectionEquality().hash(_this.collections));
 }
 
 @override
 String toString() {
   final _this = this as PresentationDefinition;
-  return 'PresentationDefinition(id: ${_this.id}, inputs: ${_this.inputs}, root: ${_this.root}, primaryInput: ${_this.primaryInput})';
+  return 'PresentationDefinition(id: ${_this.id}, inputs: ${_this.inputs}, root: ${_this.root}, primaryInput: ${_this.primaryInput}, collections: ${_this.collections})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $PresentationDefinitionCopyWith<$Res>  {
   factory $PresentationDefinitionCopyWith(PresentationDefinition value, $Res Function(PresentationDefinition) _then) = _$PresentationDefinitionCopyWithImpl;
 @useResult
 $Res call({
- PresentationId id, List<PresentationInputParameter> inputs, PresentationNode root, BindingId? primaryInput
+ PresentationId id, List<PresentationInputParameter> inputs, PresentationNode root, BindingId? primaryInput, Map<PresentationCollectionSourceId, PresentationCollectionSchema> collections
 });
 
 
@@ -68,13 +68,14 @@ class _$PresentationDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of PresentationDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? inputs = null,Object? root = null,Object? primaryInput = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? inputs = null,Object? root = null,Object? primaryInput = freezed,Object? collections = null,}) {
   return _then(PresentationDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as PresentationId,inputs: null == inputs ? _self.inputs : inputs // ignore: cast_nullable_to_non_nullable
 as List<PresentationInputParameter>,root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
 as PresentationNode,primaryInput: freezed == primaryInput ? _self.primaryInput : primaryInput // ignore: cast_nullable_to_non_nullable
-as BindingId?,
+as BindingId?,collections: null == collections ? _self.collections : collections // ignore: cast_nullable_to_non_nullable
+as Map<PresentationCollectionSourceId, PresentationCollectionSchema>,
   ));
 }
 /// Create a copy of PresentationDefinition
@@ -189,10 +190,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PresentationId id,  List<PresentationInputParameter> inputs,  PresentationNode root,  BindingId? primaryInput)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PresentationId id,  List<PresentationInputParameter> inputs,  PresentationNode root,  BindingId? primaryInput,  Map<PresentationCollectionSourceId, PresentationCollectionSchema> collections)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationDefinition() when $default != null:
-return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
+return $default(_that.id,_that.inputs,_that.root,_that.primaryInput,_that.collections);case _:
   return orElse();
 
 }
@@ -210,10 +211,10 @@ return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PresentationId id,  List<PresentationInputParameter> inputs,  PresentationNode root,  BindingId? primaryInput)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PresentationId id,  List<PresentationInputParameter> inputs,  PresentationNode root,  BindingId? primaryInput,  Map<PresentationCollectionSourceId, PresentationCollectionSchema> collections)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationDefinition():
-return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
+return $default(_that.id,_that.inputs,_that.root,_that.primaryInput,_that.collections);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -230,10 +231,10 @@ return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PresentationId id,  List<PresentationInputParameter> inputs,  PresentationNode root,  BindingId? primaryInput)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PresentationId id,  List<PresentationInputParameter> inputs,  PresentationNode root,  BindingId? primaryInput,  Map<PresentationCollectionSourceId, PresentationCollectionSchema> collections)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationDefinition() when $default != null:
-return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
+return $default(_that.id,_that.inputs,_that.root,_that.primaryInput,_that.collections);case _:
   return null;
 
 }
@@ -245,7 +246,7 @@ return $default(_that.id,_that.inputs,_that.root,_that.primaryInput);case _:
 
 
 class _PresentationDefinition extends PresentationDefinition {
-  const _PresentationDefinition({required this.id, required  List<PresentationInputParameter> inputs, required this.root, this.primaryInput}): _inputs = inputs,super._();
+  const _PresentationDefinition({required this.id, required  List<PresentationInputParameter> inputs, required this.root, this.primaryInput,  Map<PresentationCollectionSourceId, PresentationCollectionSchema> collections = const <PresentationCollectionSourceId, PresentationCollectionSchema>{}}): _inputs = inputs,_collections = collections,super._();
   
 
 @override final  PresentationId id;
@@ -258,6 +259,13 @@ class _PresentationDefinition extends PresentationDefinition {
 
 @override final  PresentationNode root;
 @override final  BindingId? primaryInput;
+ final  Map<PresentationCollectionSourceId, PresentationCollectionSchema> _collections;
+@override@JsonKey() Map<PresentationCollectionSourceId, PresentationCollectionSchema> get collections {
+  if (_collections is EqualUnmodifiableMapView) return _collections;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_collections);
+}
+
 
 /// Create a copy of PresentationDefinition
 /// with the given fields replaced by the non-null parameter values.
@@ -269,18 +277,18 @@ _$PresentationDefinitionCopyWith<_PresentationDefinition> get copyWith => __$Pre
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationDefinition&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.inputs, _inputs)&&(identical(other.root, root) || other.root == root)&&(identical(other.primaryInput, primaryInput) || other.primaryInput == primaryInput));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationDefinition&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.inputs, _inputs)&&(identical(other.root, root) || other.root == root)&&(identical(other.primaryInput, primaryInput) || other.primaryInput == primaryInput)&&const DeepCollectionEquality().equals(other.collections, _collections));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_inputs),root,primaryInput);
+    return Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_inputs),root,primaryInput,const DeepCollectionEquality().hash(_collections));
 }
 
 @override
 String toString() {
-    return 'PresentationDefinition(id: $id, inputs: $inputs, root: $root, primaryInput: $primaryInput)';
+    return 'PresentationDefinition(id: $id, inputs: $inputs, root: $root, primaryInput: $primaryInput, collections: $collections)';
 }
 
 
@@ -291,7 +299,7 @@ abstract mixin class _$PresentationDefinitionCopyWith<$Res> implements $Presenta
   factory _$PresentationDefinitionCopyWith(_PresentationDefinition value, $Res Function(_PresentationDefinition) _then) = __$PresentationDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- PresentationId id, List<PresentationInputParameter> inputs, PresentationNode root, BindingId? primaryInput
+ PresentationId id, List<PresentationInputParameter> inputs, PresentationNode root, BindingId? primaryInput, Map<PresentationCollectionSourceId, PresentationCollectionSchema> collections
 });
 
 
@@ -308,13 +316,14 @@ class __$PresentationDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of PresentationDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? inputs = null,Object? root = null,Object? primaryInput = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? inputs = null,Object? root = null,Object? primaryInput = freezed,Object? collections = null,}) {
   return _then(_PresentationDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as PresentationId,inputs: null == inputs ? _self._inputs : inputs // ignore: cast_nullable_to_non_nullable
 as List<PresentationInputParameter>,root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
 as PresentationNode,primaryInput: freezed == primaryInput ? _self.primaryInput : primaryInput // ignore: cast_nullable_to_non_nullable
-as BindingId?,
+as BindingId?,collections: null == collections ? _self._collections : collections // ignore: cast_nullable_to_non_nullable
+as Map<PresentationCollectionSourceId, PresentationCollectionSchema>,
   ));
 }
 

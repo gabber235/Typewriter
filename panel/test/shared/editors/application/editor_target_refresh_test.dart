@@ -38,6 +38,80 @@ ResourceEditorTarget _target({
 );
 
 void main() {
+  test("incompatible replacement stays pending across a host rebuild", () {
+    final workspace = LocalWorkSession();
+    addTearDown(workspace.dispose);
+    final source = workspace.editor(
+      _contractTarget("one", 1, "Remote one"),
+    ) as TransactionalEditorSource;
+    workspace.retain(_key);
+    source.update(_title, const StringValue("Draft"));
+
+    final rebuilt = workspace.editor(_contractTarget("two", 2, "Remote two"));
+
+    expect(rebuilt, same(source));
+    expect(source.contractReconciliationPending, isTrue);
+    expect(source.readOnly, isTrue);
+    expect(source.value(_title).valueOrNull, const StringValue("Draft"));
+    expect(
+      source.value(_description).valueOrNull,
+      const StringValue("Remote one"),
+    );
+
+    expect(source.reconcilePendingContract(), isTrue);
+    expect(source.contractReconciliationPending, isFalse);
+    expect(source.readOnly, isFalse);
+    expect(source.value(_title).valueOrNull, const StringValue("Draft"));
+    expect(
+      source.value(_description).valueOrNull,
+      const StringValue("Remote two"),
+    );
+  });
+
+  test("discard accepts an incompatible replacement explicitly", () {
+    final workspace = LocalWorkSession();
+    addTearDown(workspace.dispose);
+    final source = workspace.editor(
+      _contractTarget("one", 1, "Remote one"),
+    ) as TransactionalEditorSource;
+    workspace.retain(_key);
+    source.update(_title, const StringValue("Draft"));
+    workspace.editor(_contractTarget("two", 2, "Remote two"));
+
+    expect(source.discardDraftAndAcceptPendingContract(), isTrue);
+    expect(source.hasWork, isFalse);
+    expect(source.value(_title).valueOrNull, const StringValue("Original"));
+    expect(
+      source.value(_description).valueOrNull,
+      const StringValue("Remote two"),
+    );
+  });
+
+  test("unavailable contract preserves draft until retry succeeds", () async {
+    final workspace = LocalWorkSession();
+    addTearDown(workspace.dispose);
+    final target = _contractTarget("one", 1, "Remote one");
+    final resource = target.resource as FakeEditableResource;
+    final source = workspace.editor(target) as TransactionalEditorSource;
+    workspace.retain(_key);
+    source
+      ..update(_title, const StringValue("Draft"))
+      ..markContractUnavailable("Catalog unavailable");
+
+    expect(source.contractUnavailable, isTrue);
+    expect(source.readOnly, isTrue);
+    expect(source.value(_title).valueOrNull, const StringValue("Draft"));
+
+    resource.load = () async => _ContractSnapshot(
+      "one",
+      source.document.copyWith(revision: 2, readOnly: false, diagnostics: []),
+    );
+    expect(await source.retryContractRefresh(), isTrue);
+    expect(source.contractUnavailable, isFalse);
+    expect(source.readOnly, isFalse);
+    expect(source.value(_title).valueOrNull, const StringValue("Draft"));
+  });
+
   test(
     "replacement preserves drafts and uses current validation and commit",
     () async {
@@ -185,4 +259,52 @@ void main() {
       EditorCommitPolicy.applyResource,
     );
   });
+}
+
+ResourceEditorTarget _contractTarget(
+  String contract,
+  int revision,
+  String description,
+) {
+  final snapshot = _ContractSnapshot(
+    contract,
+    EditorDocument(
+      rootType: RecordType(
+        fields: const {
+          "title": TypeField(name: "title", type: StringType()),
+          "description": TypeField(name: "description", type: StringType()),
+        },
+      ),
+      typeCatalog: const TypeCatalog([]),
+      confirmedValue: _value("Original", description),
+      revision: revision,
+    ),
+  );
+  return ResourceEditorTarget(
+    targetId: _key.identity,
+    label: "Resource",
+    resource: FakeEditableResource(
+      key: _key,
+      current: snapshot,
+      commit: (commit) async => MutationSuccess(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
+      ),
+    ),
+    snapshot: snapshot,
+    commitPolicy: EditorCommitPolicy.applyResource,
+  );
+}
+
+final class _ContractSnapshot extends EditorSnapshot
+    implements EditorContractSnapshot {
+  const _ContractSnapshot(this.contract, this.document);
+
+  final String contract;
+  @override
+  final EditorDocument document;
+
+  @override
+  bool contractCompatibleWith(EditorSnapshot candidate) =>
+      candidate is _ContractSnapshot && candidate.contract == contract;
 }

@@ -128,6 +128,14 @@ Widget connectionLayerRendererUseCase(BuildContext context) =>
     rendererStory(context, layoutRendererScenarios[11]);
 
 @widgetbook.UseCase(
+  name: "Adaptive leading",
+  type: EditorProtocolRenderer,
+  path: _path,
+)
+Widget adaptiveLeadingRendererUseCase(BuildContext context) =>
+    rendererStory(context, layoutRendererScenarios[12]);
+
+@widgetbook.UseCase(
   name: "Hierarchy sequence",
   type: EditorProtocolRenderer,
   path: _path,

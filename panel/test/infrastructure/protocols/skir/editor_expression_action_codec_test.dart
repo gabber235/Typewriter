@@ -186,6 +186,15 @@ void main() {
         ),
         skir.Expression_kind.colorOperationWrapper,
       ),
+      (
+        const TypedExpression(
+          resultType: RecordType(
+            fields: {"value": TypeField(name: "value", type: StringType())},
+          ),
+          expression: RecordExpression({"value": text}),
+        ),
+        skir.Expression_kind.recordWrapper,
+      ),
     ];
 
     for (final (expression, expectedKind) in expressions) {
@@ -255,11 +264,7 @@ void main() {
       ),
       (
         EditorAction.local(
-          ReplaceConcreteTypeAction(
-            target: binding,
-            concreteType: named,
-            initialValue: text,
-          ),
+          ReplaceConcreteTypeAction(target: binding, concreteType: named),
         ),
         skir.LocalEditorAction_kind.replaceConcreteNominalTypeWrapper,
       ),

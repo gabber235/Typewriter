@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -190,6 +192,7 @@ void main() {
         PageEntry.reference(
           id: "reference",
           name: "Reference",
+          subject: _subject("reference", "page"),
           elementDefinition: _elementDefinition(),
           pageId: "page",
         ).id,
@@ -218,7 +221,7 @@ void main() {
       data: RecordValue({
         "id": const StringValue("source"),
         "name": const StringValue("Source"),
-        "child": ReferenceValue(recordId("element:previous")),
+        "child": ReferenceValue(skir.ResourceId(value: "previous")),
       }),
       inwardEdges: const [],
       outwardEdges: const [],
@@ -246,7 +249,7 @@ void main() {
 
       expect(values, {
         DataPath.root.field("child"): ReferenceValue(
-          recordId("element:target"),
+          skir.ResourceId(value: "target"),
         ),
       });
     });
@@ -279,7 +282,6 @@ void main() {
         kind: NominalTypeKind.concrete,
         representation: RecordType(
           fields: const {
-            "id": TypeField(name: "id", type: StringType()),
             "name": TypeField(name: "name", type: StringType()),
             "message": TypeField(name: "message", type: StringType()),
           },
@@ -302,7 +304,6 @@ void main() {
       ),
     );
     final value = RecordValue(const {
-      "id": StringValue("entry"),
       "name": StringValue("Entry name"),
       "message": StringValue("Hello"),
     });
@@ -310,13 +311,9 @@ void main() {
       targetId: "entry",
       label: "Entry name",
       document: EditorDocument(
-        rootType: RecordType(
-          fields: {
-            "value": TypeField(name: "value", type: NamedType(_rootType)),
-          },
-        ),
+        rootType: NamedType(_rootType),
         typeCatalog: catalog,
-        confirmedValue: RecordValue({"value": value}),
+        confirmedValue: value,
         revision: 1,
       ),
       commit: (commit) async =>
@@ -342,13 +339,32 @@ void main() {
 
     final model = selection.buildPresentation(owners);
     final children = (model.root.element as ColumnElement).children;
-    final name = children.first.element as TypedFieldElement;
+    final name = children.first.child.element as TypedFieldElement;
 
     expect(name.binding, rootBinding.at(DataPath.root.field("name")));
     expect(name.expectedType, const StringType());
-    expect(children.last.element, isA<PresentationInvocationElement>());
+    expect(children.last.child.element, isA<PresentationInvocationElement>());
   });
 }
+
+TypedPresentationSubject _subject(String id, String owner) => (
+  content: TypedValueEnvelope(
+    rootType: referenceResourceTypes.element,
+    rootValue: const StringValue("content"),
+  ),
+  descriptor: TypedValueEnvelope(
+    rootType: referenceResourceTypes.element,
+    rootValue: const StringValue("descriptor"),
+  ),
+  identityEnvelope: TypedValueEnvelope(
+    rootType: referenceResourceTypes.element,
+    rootValue: const StringValue("identity"),
+  ),
+  identity: (
+    id: skir.ResourceId(value: id),
+    owner: skir.ResourceId(value: owner),
+  ),
+);
 
 ElementDefinition _elementDefinition({
   ElementDeprecation? deprecation,

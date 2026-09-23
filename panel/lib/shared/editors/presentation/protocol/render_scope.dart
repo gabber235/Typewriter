@@ -265,10 +265,12 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,
     ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,
     ReferenceResourceResolver? resolveReferences,
-    @Default([]) List<RecordId> referenceOrigins,
+    ReferenceEligibilityEvaluator? referenceEligibility,
+    @Default([]) List<ResourceId> referenceOrigins,
     @Default(ReferenceCandidatePolicyRegistry())
     ReferenceCandidatePolicyRegistry referencePolicies,
     EditOwner? Function(BindingReference reference)? editOwnerFor,
+    RenderedBindingFocusController? bindingFocusController,
     @Default({})
     Map<PresentationCollectionSourceId, PresentationCollectionSource>
     collections,

@@ -20,8 +20,11 @@ void main() {
         id: const PresentationCollectionSourceId("elements"),
         schema: const PresentationCollectionSchema(
           rowType: StringType(),
-          keyType: StringType(),
           rowBindingId: BindingId(1),
+          selectability: TypedExpression(
+            resultType: BooleanType(),
+            expression: LiteralExpression(BooleanValue(true)),
+          ),
           key: TypedExpression(
             resultType: StringType(),
             expression: Expression.binding(
@@ -50,8 +53,11 @@ void main() {
       );
       const schema = PresentationCollectionSchema(
         rowType: StringType(),
-        keyType: StringType(),
         rowBindingId: BindingId(1),
+        selectability: TypedExpression(
+          resultType: BooleanType(),
+          expression: LiteralExpression(BooleanValue(true)),
+        ),
         key: TypedExpression(
           resultType: StringType(),
           expression: Expression.literal(StringValue("key")),
@@ -63,8 +69,11 @@ void main() {
         schema,
         const PresentationCollectionSchema(
           rowType: StringType(),
-          keyType: StringType(),
           rowBindingId: BindingId(1),
+          selectability: TypedExpression(
+            resultType: BooleanType(),
+            expression: LiteralExpression(BooleanValue(true)),
+          ),
           key: TypedExpression(
             resultType: StringType(),
             expression: Expression.literal(StringValue("key")),

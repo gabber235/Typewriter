@@ -1,5 +1,8 @@
 package com.typewritermc.discovery
 
+import com.typewritermc.types.RelationDefinition
+import com.typewritermc.types.RelationId
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 
@@ -27,6 +30,7 @@ data class KeyedExecutableBinding(
  */
 data class AssembledTypeDiscovery(
     val catalog: TypeCatalog,
+    val relations: List<RelationDefinition>,
     val prototypeBindings: List<PrototypeBinding>,
     val executableBindings: List<KeyedExecutableBinding>,
 )
@@ -55,15 +59,37 @@ object TypeContributionAssembler {
         }
 
         val definitions = linkedMapOf<Any, TypeDefinition>()
+        StandardTypes.definitions.forEach { definition -> definitions[definition.id] = definition }
         val prototypeBindings = linkedMapOf<Any, PrototypeBinding>()
+        val relations = linkedMapOf<RelationId, RelationDefinition>()
         val executableBindings = linkedMapOf<Pair<DiscoveryDomainId, String>, KeyedExecutableBinding>()
         val extensionEligibility = sourceParts.associateBy { it.artifact to it.sourcePart }
         ordered.forEach { keyed ->
             keyed.contribution.definitions.forEach { definition ->
-                val previous = definitions.putIfAbsent(definition.id, definition)
-                require(previous == null || previous == definition) {
+                val previous = definitions[definition.id]
+                require(previous == null || previous.copy(displayName = definition.displayName, qualifiedName = definition.qualifiedName) == definition) {
                     "Conflicting type definition ${definition.id} from ${keyed.key}."
                 }
+                val defaultName = TypeDefinition(id = definition.id, kind = definition.kind).displayName
+                require(previous == null || previous.displayName == definition.displayName ||
+                    previous.displayName == defaultName || definition.displayName == defaultName) {
+                    "Conflicting type display name ${definition.id} from ${keyed.key}."
+                }
+                require(previous == null || previous.qualifiedName == null || definition.qualifiedName == null ||
+                    previous.qualifiedName == definition.qualifiedName) {
+                    "Conflicting qualified type name ${definition.id} from ${keyed.key}."
+                }
+                definitions[definition.id] = when {
+                    previous == null -> definition
+                    else -> previous.copy(
+                        displayName = if (previous.displayName == defaultName) definition.displayName else previous.displayName,
+                        qualifiedName = previous.qualifiedName ?: definition.qualifiedName,
+                    )
+                }
+            }
+            keyed.contribution.relations.forEach { definition ->
+                val previous = relations[definition.id]
+                relations[definition.id] = previous?.merge(definition) ?: definition
             }
             val eligibility = extensionEligibility[keyed.key.origin to keyed.key.sourcePart]?.eligibility
             if (eligibility is Eligibility.Ineligible) return@forEach
@@ -85,6 +111,7 @@ object TypeContributionAssembler {
 
         return AssembledTypeDiscovery(
             catalog = TypeCatalog(definitions.values.sortedBy { it.id.toString() }),
+            relations = relations.values.sortedBy { it.id.value },
             prototypeBindings = prototypeBindings.values.sortedBy { it.type.toString() },
             executableBindings =
                 executableBindings.values.sortedWith(
@@ -92,6 +119,24 @@ object TypeContributionAssembler {
                 ),
         )
     }
+}
+
+private fun RelationDefinition.merge(other: RelationDefinition): RelationDefinition {
+    require(source == other.source && target == other.target) { "Conflicting relation endpoints for $id." }
+    require(families == other.families) { "Conflicting relation families for $id." }
+    require(onSourceDelete == other.onSourceDelete && onTargetDelete == other.onTargetDelete) {
+        "Conflicting relation deletion policy for $id."
+    }
+    require(sourceEndpoint == null || other.sourceEndpoint == null || sourceEndpoint == other.sourceEndpoint) {
+        "Conflicting source endpoint for $id."
+    }
+    require(targetEndpoint == null || other.targetEndpoint == null || targetEndpoint == other.targetEndpoint) {
+        "Conflicting target endpoint for $id."
+    }
+    return copy(
+        sourceEndpoint = sourceEndpoint ?: other.sourceEndpoint,
+        targetEndpoint = targetEndpoint ?: other.targetEndpoint,
+    )
 }
 
 private fun ContributionKey.sortKey(): String = "${origin.value}/$sourcePart/${producer.value}/${name.value}"

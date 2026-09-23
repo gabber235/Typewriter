@@ -17,6 +17,7 @@ part "page_element_models.dart";
 part "page_element_mutation_context.dart";
 part "page_element_mutations.dart";
 part "page_element_projections.dart";
+part "page_element_relationships.dart";
 part "page_element_values.dart";
 part "page_elements.freezed.dart";
 part "page_elements.g.dart";
@@ -31,35 +32,39 @@ PageDocumentHealth? pageDocumentHealth(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
 ) {
   final activeOrganizationId = ref.watch(organizationIdProvider);
   final activeRealmId = ref.watch(realmIdProvider);
   if (activeOrganizationId != organizationId || activeRealmId != realmId) {
     return null;
   }
-  final document = ref
-      .watch(authoringSessionProvider(organizationId, realmId))
-      .documents[pageId];
-  if (document == null) return null;
+  final session = ref.watch(authoringSessionProvider(organizationId, realmId));
+  if (!session.resources.containsKey(pageId)) return null;
+  final matchingStatuses = session.compiledStatuses.entries.where(
+    (entry) => entry.key.resource == pageId,
+  );
+  final status = matchingStatuses.isEmpty ? null : matchingStatuses.first.value;
+  final diagnostics = session.diagnostics
+      .where((diagnostic) => diagnostic.resource == pageId)
+      .map((diagnostic) => diagnostic.message)
+      .toList(growable: false);
   return PageDocumentHealth(
-    diagnostics: document.diagnostics
-        .map((diagnostic) => diagnostic.message)
-        .toList(growable: false),
-    compileBlocked:
-        document.compileStatus is skir.PageCompileStatus_blockedWrapper,
-    activeManifestId: switch (document.compileStatus) {
-      skir.PageCompileStatus_activeWrapper(:final value) => value.manifestId,
-      skir.PageCompileStatus_blockedWrapper(:final value) =>
+    diagnostics: diagnostics,
+    compileBlocked: status is skir.CompiledResourceState_blockedWrapper,
+    activeManifestId: switch (status) {
+      skir.CompiledResourceState_activeWrapper(:final value) =>
+        value.manifestId,
+      skir.CompiledResourceState_blockedWrapper(:final value) =>
         value.lastActiveManifestId,
       _ => null,
     },
   );
 }
 
-/// Owns the page scoped editing coordinator.
+/// Adapts the shared authoring session to the page element editor.
 ///
-/// The provider acquires the page lease, waits for the authoring session and
+/// The provider acquires a typed resource selection, waits for the authoring session and
 /// catalog projection, then exposes mutations that submit through the shared
 /// editor owners. Callers should use [withReadyPageElements] when invoking it
 /// outside a widget that already holds the page lifecycle.
@@ -75,14 +80,23 @@ class PageElements extends _$PageElements
     skir.RecordId realmId,
     String pageId,
   ) async {
-    _pageId = recordId("page:$pageId");
+    _pageId = skir.ResourceId(value: pageId);
     if (ref.watch(organizationIdProvider) != organizationId ||
         ref.watch(realmIdProvider) != realmId) {
       throw ApiException.conflict("The selected realm changed");
     }
     _sessionProvider = authoringSessionProvider(organizationId, realmId);
+    final catalog = (await ref.watch(realmEditorCatalogProvider.future))
+        .snapshot;
+    if (catalog == null) {
+      throw ApiException.badRequest("The editor catalog is unavailable");
+    }
     final lease = ref.watch(
-      authoringPageScopeProvider(organizationId, realmId, _pageId),
+      authoringSelectionLeaseProvider(
+        organizationId,
+        realmId,
+        _pageId.pageContentSelection(catalog),
+      ),
     );
     final documentsProvider = decodedRealmDocumentsProvider(
       organizationId,

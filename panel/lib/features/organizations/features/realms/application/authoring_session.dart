@@ -8,9 +8,9 @@
 //
 // The session is keyed by organization and realm through Riverpod. It starts
 // its watches when a scope is acquired or the provider is observed, and
-// releases subscriptions when its provider is disposed. Library, book, and
-// page leases determine which snapshot slices are retained and whether the
-// session should stay alive.
+// releases subscriptions when its provider is disposed. Generic graph
+// selection leases determine which snapshot slices are retained and whether
+// the session should stay alive.
 //
 // AuthoringResourceRepository owns editor resource requests and their mutation
 // combiner. SkirMutationClient owns request transport and local submission
@@ -38,8 +38,8 @@ part "authoring_operation_label.dart";
 @riverpod
 /// Owns the canonical authoring state for one organization and realm.
 ///
-/// Canonical state contains only server accepted books, tags, pages, and page
-/// documents. Local editor drafts belong to [LocalWorkCommands] and are
+/// Canonical state contains server accepted resources and relations for every
+/// retained selection. Local editor drafts belong to [LocalWorkCommands] and are
 /// projected over this state by editor resources. A state [sequence] couples
 /// every canonical projection to the server revision that produced it. The
 /// session applies only the next sequence, buffers future changes, and fetches
@@ -48,7 +48,7 @@ part "authoring_operation_label.dart";
 ///
 /// Use a scope lease before reading a resource that needs an authoritative
 /// snapshot. The lease keeps this provider alive, waits for subscriptions and
-/// its initial refresh through [AuthoringScopeLease.ready], and must be
+/// its initial refresh through [AuthoringSelectionLease.ready], and must be
 /// released when the resource stops being used.
 ///
 /// Direct create and delete commands are routed through [prepare] and
@@ -62,24 +62,31 @@ class AuthoringSession extends _$AuthoringSession
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) {
-    _client = ref.watch(natsProvider);
     final repository = ref
         .watch(resourceRepositoriesProvider)
         .authoring(organizationId, realmId);
     final results = repository.changes.listen(_accept);
+    final compiledChanges = repository.compiledChanges.listen(_acceptCompiled);
     final invalidations = repository.invalidations.listen(
       (_) => _scheduleRefresh(),
     );
+    ref.listen(realmEditorCatalogProvider, (_, next) {
+      final catalogGeneration = next.value?.snapshot?.generation.value;
+      final sessionGeneration = state.generation?.value;
+      if (catalogGeneration != null &&
+          sessionGeneration != null &&
+          catalogGeneration != sessionGeneration) {
+        state = state.copyWith(generation: null);
+        _scheduleRefresh();
+      }
+    });
     ref
       ..onDispose(results.cancel)
+      ..onDispose(compiledChanges.cancel)
       ..onDispose(invalidations.cancel);
-    _address = RealmServiceAddress(
-      organizationId: organizationId,
-      realmId: realmId,
-    );
-
+    _repository = repository;
     ref.onDispose(_dispose);
-    _startOperation = _start();
+    _startOperation = repository.start();
     return const AuthoringSessionState();
   }
 
@@ -96,28 +103,12 @@ class AuthoringSession extends _$AuthoringSession
   /// running because refresh requests coalesce.
   Future<void> refresh() => _refresh();
 
-  /// Retains the library scope and returns its lifecycle lease.
+  /// Retains one graph selection and returns its lifecycle lease.
   ///
-  /// Await [AuthoringScopeLease.ready] before using library collections, then
-  /// call [AuthoringScopeLease.release] exactly once when finished.
-  AuthoringScopeLease acquireLibrary() =>
-      _acquire(const _AuthoringScope.library());
-
-  /// Retains the book scope and returns its lifecycle lease.
-  ///
-  /// The first lease for [bookId] fetches the book and its pages. Await
-  /// [AuthoringScopeLease.ready] before reading the resulting canonical state.
-  /// Release the lease when the book is no longer in use.
-  AuthoringScopeLease acquireBook(skir.RecordId bookId) =>
-      _acquire(_AuthoringScope.book(bookId));
-
-  /// Retains the page scope and returns its lifecycle lease.
-  ///
-  /// The first lease for [pageId] fetches the page and its document. Await
-  /// [AuthoringScopeLease.ready] before reading the resulting canonical state.
-  /// Release the lease when the page is no longer in use.
-  AuthoringScopeLease acquirePage(skir.RecordId pageId) =>
-      _acquire(_AuthoringScope.page(pageId));
+  /// Equivalent selections share one bounded snapshot request. The caller must
+  /// await [AuthoringSelectionLease.ready], then release the lease exactly once.
+  AuthoringSelectionLease acquire(skir.GraphSelection selection) =>
+      _acquire(selection);
 
   /// Prepares one authoring batch for the shared local mutation owner.
   ///
@@ -132,42 +123,15 @@ class AuthoringSession extends _$AuthoringSession
     Iterable<skir.AuthoringOperation> operations, {
     String? batchId,
   }) {
-    final request = skir.ApplyAuthoringBatchRequest(
-      batchId: batchId ?? uuid.v4(),
-      operations: operations,
-    );
-    return ref.prepareSkir(
-      _address.request("library.authoring.batch.apply"),
-      skir.ApplyAuthoringBatchRequest.serializer.toBytes(request),
-      skir.ApplyAuthoringBatchResponse.serializer,
-      label: _authoringLabel(request.operations),
-      classify: (response) => switch (response) {
-        skir.ApplyAuthoringBatchResponse_appliedWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.ApplyAuthoringBatchResponse_unknown() ||
-        skir.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
-      onResponse: (response) async {
-        switch (response) {
-          case skir.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
-            _accept(value);
-          case skir.ApplyAuthoringBatchResponse_conflictWrapper():
-            await _refresh();
-          case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
-              skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-              skir.ApplyAuthoringBatchResponse_unknown():
-        }
-      },
-      submissionId: request.batchId,
-      resources: {
-        for (final operation in request.operations)
-          for (final resource in _operationResources(operation))
-            (organizationId, realmId, resource),
-      },
-      replay: SubmissionReplay.identicalRequest,
-    );
+    final generation =
+        state.generation ??
+        (throw StateError("The authoring catalog is not loaded"));
+    return _repository.prepare([
+      (
+        generation: CatalogGeneration(generation.value),
+        operations: operations.toList(growable: false),
+      ),
+    ], batchId: batchId);
   }
 
   /// Applies one authoring batch through the shared local mutation owner.
@@ -189,40 +153,47 @@ class AuthoringSession extends _$AuthoringSession
     }
   }
 
-  /// Executes operations and Realm page rules without committing state.
+  /// Executes operations and registered Realm graph rules without committing state.
   Future<skir.PreviewAuthoringBatchResponse> preview(
     Iterable<skir.AuthoringOperation> operations,
   ) {
-    final request = skir.PreviewAuthoringBatchRequest(operations: operations);
-    return ref.requestSkir(
-      _address.request("library.authoring.batch.preview"),
-      skir.PreviewAuthoringBatchRequest.serializer.toBytes(request),
-      skir.PreviewAuthoringBatchResponse.serializer,
+    final generation =
+        state.generation ??
+        (throw StateError("The authoring catalog is not loaded"));
+    return _repository.preview(
+      generation: CatalogGeneration(generation.value),
+      operations: operations,
     );
   }
 
-  _AuthoringScopeLease _acquire(_AuthoringScope scope) {
-    final added = !_scopeCounts.containsKey(scope);
-    _scopeCounts.update(scope, (count) => count + 1, ifAbsent: () => 1);
-    final ready = added
-        ? _scopeReadiness[scope] = _startOperation.then((_) => _refresh())
-        : _scopeReadiness[scope] ?? _startOperation;
-    final retention = ref.keepAlive();
-    return _AuthoringScopeLease(ready, () {
-      _release(scope);
-      retention.close();
-    });
+  Future<skir.SearchAuthoringGraphResponse> search(
+    skir.SearchAuthoringGraphRequest request,
+  ) => _repository.search(request);
+}
+
+extension AuthoringResourceMutations on AuthoringSession {
+  skir.AuthoringOperation deleteOperation(skir.ResourceId resourceId) {
+    final base = snapshot.resources[resourceId];
+    if (base == null) throw ApiException.notFound("Resource");
+    return skir.AuthoringOperation.createDelete(id: resourceId, base: base);
   }
 
-  void _release(_AuthoringScope scope) {
-    final count = _scopeCounts[scope];
-    if (count == null) return;
-    if (count == 1) {
-      _scopeCounts.remove(scope);
-      _scopeReadiness.remove(scope);
-    } else {
-      _scopeCounts[scope] = count - 1;
-    }
+  Future<void> deleteResource(
+    skir.ResourceId resourceId, {
+    String conflictMessage = "The resource changed before deletion",
+  }) async {
+    final response = await apply([deleteOperation(resourceId)]);
+    response.requireApplied(conflictMessage: conflictMessage);
+  }
+
+  Future<void> deleteResources(
+    Iterable<skir.ResourceId> resourceIds, {
+    String conflictMessage = "A resource changed before deletion",
+  }) async {
+    final operations = resourceIds.map(deleteOperation).toList(growable: false);
+    if (operations.isEmpty) return;
+    final response = await apply(operations);
+    response.requireApplied(conflictMessage: conflictMessage);
   }
 }
 
@@ -288,6 +259,8 @@ extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
         return;
       case skir.ApplyAuthoringBatchResponse_conflictWrapper():
         throw ApiException.conflict(conflictMessage);
+      case skir.ApplyAuthoringBatchResponse_catalogChangedWrapper():
+        throw ApiException.conflict("The authoring catalog changed");
       case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
           skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
           skir.ApplyAuthoringBatchResponse_unknown():
@@ -302,6 +275,8 @@ extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
       ApiException.internalServerError(),
     skir.ApplyAuthoringBatchResponse_unknown() =>
       ApiException.unknownResponseMessage(),
+    skir.ApplyAuthoringBatchResponse_catalogChangedWrapper() =>
+      ApiException.conflict("The authoring catalog changed"),
     _ => throw StateError("The authoring response is not a failure"),
   };
 
@@ -319,43 +294,16 @@ extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
       };
 }
 
-/// Keeps the library projection and its session alive while observed.
+/// Keeps one arbitrary graph selection and its session alive while observed.
 @riverpod
-AuthoringScopeLease authoringLibraryScope(
+AuthoringSelectionLease authoringSelectionLease(
   Ref ref,
   skir.RecordId organizationId,
   skir.RecordId realmId,
+  skir.GraphSelection selection,
 ) {
   final session = authoringSessionProvider(organizationId, realmId);
-  final lease = ref.read(session.notifier).acquireLibrary();
-  ref.onDispose(lease.release);
-  return lease;
-}
-
-/// Keeps a book projection and its session alive while observed.
-@riverpod
-AuthoringScopeLease authoringBookScope(
-  Ref ref,
-  skir.RecordId organizationId,
-  skir.RecordId realmId,
-  skir.RecordId bookId,
-) {
-  final session = authoringSessionProvider(organizationId, realmId);
-  final lease = ref.read(session.notifier).acquireBook(bookId);
-  ref.onDispose(lease.release);
-  return lease;
-}
-
-/// Keeps a page projection and its session alive while observed.
-@riverpod
-AuthoringScopeLease authoringPageScope(
-  Ref ref,
-  skir.RecordId organizationId,
-  skir.RecordId realmId,
-  skir.RecordId pageId,
-) {
-  final session = authoringSessionProvider(organizationId, realmId);
-  final lease = ref.read(session.notifier).acquirePage(pageId);
+  final lease = ref.read(session.notifier).acquire(selection);
   ref.onDispose(lease.release);
   return lease;
 }

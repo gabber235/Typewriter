@@ -183,7 +183,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
 Future<bool> showPageDeletionDialogue(
   WidgetRef ref,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
   String pageName,
 ) {
   return showConfirmationDialogue(
@@ -195,10 +195,10 @@ Future<bool> showPageDeletionDialogue(
     confirmIcon: MaterialSymbols.delete_forever,
     onConfirm: () async {
       final router = ref.read(appRouterProvider);
-      final result = await ref.readAuthoringSession().notifier.deletePage(
+      await ref.readAuthoringSession().notifier.deleteResource(
         pageId,
+        conflictMessage: "The page no longer exists",
       );
-      result.requireApplied(conflictMessage: "The page no longer exists");
       final context = ref.context;
       if (!context.mounted) return;
       final organizationId = ref.read(organizationIdProvider);

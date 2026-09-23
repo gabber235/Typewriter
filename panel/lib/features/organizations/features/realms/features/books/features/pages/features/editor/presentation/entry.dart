@@ -5,6 +5,8 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 // Focus uses white because node colors come from the element catalog and can
@@ -18,11 +20,17 @@ const _entryFocusColor = Colors.white;
 /// This widget only chooses the visual variant and passes its state to the
 /// variant renderer.
 class EntryNode extends HookConsumerWidget {
-  const EntryNode({required this.pageId, required this.entry, super.key});
+  const EntryNode({
+    required this.pageId,
+    required this.entry,
+    this.subjects,
+    super.key,
+  });
 
   /// Page coordinator that owns mutations for a local entry definition.
   final String pageId;
   final PageEntry entry;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,6 +38,7 @@ class EntryNode extends HookConsumerWidget {
       DefinitionPageEntry(definition: final definition) => _DefinitionEntryNode(
         pageId: pageId,
         definition: definition,
+        subjects: subjects,
       ),
       ReferencePageEntry(
         id: final id,
@@ -42,8 +51,11 @@ class EntryNode extends HookConsumerWidget {
           name: name,
           elementDefinition: elementDefinition,
           pageId: pageId,
+          subjects: subjects,
         ),
       MissingElementDefinitionPageEntry(id: final id, name: final name) =>
+        _MissingElementDefinitionEntryNode(id: id, name: name),
+      UnavailableReferencePageEntry(id: final id, name: final name) =>
         _MissingElementDefinitionEntryNode(id: id, name: name),
       _ => const _NonexistentEntryNode(),
     };
@@ -51,10 +63,15 @@ class EntryNode extends HookConsumerWidget {
 }
 
 class _DefinitionEntryNode extends HookConsumerWidget {
-  const _DefinitionEntryNode({required this.pageId, required this.definition});
+  const _DefinitionEntryNode({
+    required this.pageId,
+    required this.definition,
+    required this.subjects,
+  });
 
   final String pageId;
   final EntryDefinition definition;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,9 +87,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
     final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
-    final registry = catalog == null
-        ? null
-        : TypeRegistry(bootstrapTypeCatalog(catalog.catalog.definitions));
+    final registry = catalog == null ? null : TypeRegistry(catalog.catalog);
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     final entryIndex = organizationId == null || realmId == null
@@ -97,6 +112,12 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                       name: definition.name,
                       elementDefinition: definition.elementDefinition,
                       isDeprecated: isDeprecated,
+                      body: subjects == null
+                          ? null
+                          : _EntryRoleNode(
+                              entryId: entryIdentifier.referenceId,
+                              subjects: subjects,
+                            ),
                     );
             },
           ),
@@ -108,6 +129,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                   isSelected: isSelected,
                   isAccepting: false,
                   isRejecting: false,
+                  subjects: subjects,
                 )
               : _PlaceholderEntryNode(
                   name: definition.name,
@@ -154,6 +176,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                   isSelected: isSelected,
                   isAccepting: isAccepting,
                   isRejecting: isRejecting,
+                  subjects: subjects,
                 );
               },
             ),
@@ -170,6 +193,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
     required bool isSelected,
     required bool isAccepting,
     required bool isRejecting,
+    required AsyncValue<AuthoringSubjectProjection>? subjects,
   }) {
     if (isRejecting) {
       return MouseRegion(
@@ -179,12 +203,17 @@ class _DefinitionEntryNode extends HookConsumerWidget {
           borderRadius: context.shapes.smallBorderRadius,
           child: Padding(
             padding: const EdgeInsets.all(7.0),
-            child: InnerElementNode(
-              name: definition.name,
-              elementDefinition: definition.elementDefinition,
-              color: context.colors.contentPrimary,
-              isDeprecated: isDeprecated,
-            ),
+            child: subjects == null
+                ? InnerElementNode(
+                    name: definition.name,
+                    elementDefinition: definition.elementDefinition,
+                    color: context.colors.contentPrimary,
+                    isDeprecated: isDeprecated,
+                  )
+                : _EntryRoleNode(
+                    entryId: EntryIdentifier(definition.id).referenceId,
+                    subjects: subjects,
+                  ),
           ),
         ),
       );
@@ -230,12 +259,17 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.easeOutCirc,
                 alignment: Alignment.topCenter,
-                child: InnerElementNode(
-                  name: definition.name,
-                  elementDefinition: definition.elementDefinition,
-                  color: highlightColor,
-                  isDeprecated: isDeprecated,
-                ),
+                child: subjects == null
+                    ? InnerElementNode(
+                        name: definition.name,
+                        elementDefinition: definition.elementDefinition,
+                        color: highlightColor,
+                        isDeprecated: isDeprecated,
+                      )
+                    : _EntryRoleNode(
+                        entryId: EntryIdentifier(definition.id).referenceId,
+                        subjects: subjects,
+                      ),
               ),
             ),
           ),
@@ -246,6 +280,61 @@ class _DefinitionEntryNode extends HookConsumerWidget {
 
   bool _isEntryDeprecated(EntryDefinition definition) {
     return definition.elementDefinition.isDeprecated;
+  }
+}
+
+class _EntryRoleNode extends StatelessWidget {
+  const _EntryRoleNode({required this.entryId, required this.subjects});
+
+  final skir.ResourceId entryId;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
+
+  @override
+  Widget build(BuildContext context) {
+    final projection = switch (subjects) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    if (projection == null) {
+      if (subjects?.hasError ?? subjects == null) {
+        return const Tooltip(
+          message: "Entry presentation is unavailable",
+          child: Icon(Icons.warning_rounded, size: 14),
+        );
+      }
+      return ShimmerBox.rectangle(width: double.infinity, height: 20);
+    }
+    final subject = projection.subjects[entryId];
+    final result = subject == null
+        ? null
+        : TypedAuthoringCodec(projection.catalog).subjectPresentation(
+            subject,
+            PresentationRole.graphNode,
+            collections: projection.collections,
+          );
+    final diagnostics = result?.diagnostics ?? projection.diagnostics;
+    final model =
+        result?.valueOrNull?.model ??
+        PresentationModel(
+          catalog: projection.catalog.catalog,
+          inputs: const {},
+          root: PresentationNode(
+            id: "entry.graph.node.diagnostic",
+            element: DiagnosticElement(
+              diagnostics.isEmpty
+                  ? const [
+                      TypeDiagnostic(
+                        code: TypeDiagnosticCode.invalidPresentation,
+                        message: "Entry presentation subject is unavailable",
+                        pathPresent: false,
+                      ),
+                    ]
+                  : diagnostics,
+            ),
+          ),
+          diagnostics: diagnostics,
+        );
+    return IgnorePointer(child: ComposedEditor(model: model, readOnly: true));
   }
 }
 
@@ -377,12 +466,14 @@ class _ReferenceEntryNode extends HookConsumerWidget {
     required this.name,
     required this.elementDefinition,
     required this.pageId,
+    required this.subjects,
   });
 
   final String id;
   final String name;
   final ElementDefinition elementDefinition;
   final String pageId;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -399,10 +490,11 @@ class _ReferenceEntryNode extends HookConsumerWidget {
           elementDefinition.color.withValues(alpha: 0.05),
           Surface.colorOf(context),
         );
-
-        final highlightColor = isFocused
+        final frameColor = isFocused
             ? _entryFocusColor
-            : elementDefinition.color;
+            : isSelected
+            ? elementDefinition.color
+            : elementDefinition.color.withValues(alpha: 0);
 
         return LongPressDraggable<EntryIdentifier>(
           data: entryIdentifier,
@@ -419,21 +511,37 @@ class _ReferenceEntryNode extends HookConsumerWidget {
             isDeprecated: isDeprecated,
             isReference: true,
           ),
-          child: Material(
-            animationDuration: 300.ms,
-            color: backgroundColor,
-            shape: RoundedRectangleBorder(
-              side: BorderSide(color: elementDefinition.color, width: 3),
+          child: AnimatedContainer(
+            duration: 100.ms,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: Border.all(color: frameColor, width: 3),
               borderRadius: context.shapes.smallBorderRadius,
             ),
-            child: InnerElementNode(
-              name: name,
-              elementDefinition: elementDefinition,
-              color: highlightColor,
-              isDeprecated: isDeprecated,
-              isReference: true,
-              // TODO: Resolve page name from pageId if available in providers.
-              pageId: pageId,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final showNavigation = constraints.maxWidth >= 96;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _EntryRoleNode(
+                        entryId: entryIdentifier.referenceId,
+                        subjects: subjects,
+                      ),
+                    ),
+                    if (showNavigation)
+                      IconButton(
+                        tooltip: "Open referenced entry",
+                        onPressed: () => unawaited(
+                          ref
+                              .read(appRouterProvider)
+                              .push(RouteRoute(pageId: pageId)),
+                        ),
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                      ),
+                  ],
+                );
+              },
             ),
           ),
         );
@@ -577,6 +685,7 @@ class _FeedbackEntryNode extends StatelessWidget {
     required this.name,
     required this.elementDefinition,
     required this.isDeprecated,
+    this.body,
     this.isReference = false,
     this.pageId,
   });
@@ -584,6 +693,7 @@ class _FeedbackEntryNode extends StatelessWidget {
   final String name;
   final ElementDefinition elementDefinition;
   final bool isDeprecated;
+  final Widget? body;
   final bool isReference;
   final String? pageId;
 
@@ -599,49 +709,55 @@ class _FeedbackEntryNode extends StatelessWidget {
           horizontal: context.spacing.space3,
           vertical: context.spacing.space1,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icones.value(elementDefinition.icon, color: foreground, size: 18),
-            SizedBox(width: context.spacing.space2),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: foreground,
-                      fontSize: 13,
-                      decoration: isDeprecated
-                          ? TextDecoration.lineThrough
-                          : null,
-                      decorationThickness: 2.8,
-                      decorationColor: Theme.of(context)
-                          .scaffoldBackgroundColor,
-                      decorationStyle: TextDecorationStyle.wavy,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+        child:
+            body ??
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icones.value(
+                  elementDefinition.icon,
+                  color: foreground,
+                  size: 18,
+                ),
+                SizedBox(width: context.spacing.space2),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: foreground,
+                          fontSize: 13,
+                          decoration: isDeprecated
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationThickness: 2.8,
+                          decorationColor: Theme.of(context)
+                              .scaffoldBackgroundColor,
+                          decorationStyle: TextDecorationStyle.wavy,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        elementDefinition.name,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: secondaryForeground,
+                          fontSize: 11,
+                          decoration: isDeprecated
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationThickness: 2.5,
+                          decorationColor: Theme.of(context)
+                              .scaffoldBackgroundColor,
+                          decorationStyle: TextDecorationStyle.wavy,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    elementDefinition.name,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: secondaryForeground,
-                      fontSize: 11,
-                      decoration: isDeprecated
-                          ? TextDecoration.lineThrough
-                          : null,
-                      decorationThickness: 2.5,
-                      decorationColor: Theme.of(context)
-                          .scaffoldBackgroundColor,
-                      decorationStyle: TextDecorationStyle.wavy,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
       ),
     );
   }

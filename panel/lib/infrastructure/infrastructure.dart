@@ -11,4 +11,4 @@ export "protocols/skir/converters.dart";
 export "protocols/skir/editor_catalog_codec.dart";
 export "protocols/skir/editor_codec.dart";
 export "protocols/skir/editor_diagnostic_codec.dart";
-export "protocols/skir/skir.dart" show RecordId;
+export "protocols/skir/skir.dart" show RecordId, ResourceId;

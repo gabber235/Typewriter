@@ -1,4 +1,7 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "materialization_model.freezed.dart";
 
 extension type const DraftNodeId(int value) {}
 
@@ -116,8 +119,40 @@ final class EditorPolymorphicStructure {
   final EditorValue payload;
 }
 
+/// Result returned by the authoritative type initializer when a polymorphic
+/// editor selects a concrete type.
+@freezed
+sealed class ConcreteTypeInitializationResult
+    with _$ConcreteTypeInitializationResult {
+  const factory ConcreteTypeInitializationResult.initialized(
+    TypedValueEnvelope value,
+  ) = ConcreteTypeInitialized;
+
+  const factory ConcreteTypeInitializationResult.needsInput({
+    DataValue? suppliedValue,
+  }) = ConcreteTypeNeedsInput;
+
+  const factory ConcreteTypeInitializationResult.rejected(
+    List<TypeDiagnostic> diagnostics,
+  ) = ConcreteTypeInitializationRejected;
+}
+
+typedef ConcreteTypeInitializer =
+    Future<ConcreteTypeInitializationResult> Function({
+      required ResolvedTypeRef type,
+      required DataValue? supplied,
+    });
+
+abstract interface class ConcreteTypeSelectionOwner {
+  Future<EditorMutationResult> selectConcreteTypeAsync(
+    DataPath path,
+    ResolvedTypeRef type,
+  );
+}
+
 /// Structural capability for an owner whose containers may be incomplete.
-abstract interface class EditorStructureOwner implements EditOwner {
+abstract interface class EditorStructureOwner
+    implements EditOwner, ConcreteTypeSelectionOwner {
   EditorListStructure? listStructure(DataPath path);
   EditorMapStructure? mapStructure(DataPath path);
   EditorPolymorphicStructure? polymorphicStructure(DataPath path);
@@ -140,7 +175,6 @@ abstract interface class EditorStructureOwner implements EditOwner {
     DataValue value,
   );
 
-  EditorMutationResult selectConcreteType(DataPath path, ResolvedTypeRef type);
   EditorValue concretePayloadValue(DataPath path, DataPath payloadPath);
   EditorMutationResult updateConcretePayloadAt(
     DataPath path,

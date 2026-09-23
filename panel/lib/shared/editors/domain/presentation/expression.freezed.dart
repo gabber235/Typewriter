@@ -80,7 +80,7 @@ as Expression,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -89,7 +89,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionCopyWith<$Res> get expression {
-  
+
   return $ExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -232,7 +232,7 @@ return $default(_that.resultType,_that.expression);case _:
 
 class _TypedExpression implements TypedExpression {
   const _TypedExpression({required this.resultType, required this.expression});
-  
+
 
 @override final  TypeExpression resultType;
 @override final  Expression expression;
@@ -299,7 +299,7 @@ as Expression,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -308,7 +308,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionCopyWith<$Res> get expression {
-  
+
   return $ExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -359,7 +359,7 @@ extension ExpressionPatterns on Expression {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiteralExpression value)?  literal,TResult Function( BindingExpression value)?  binding,TResult Function( FieldAccessExpression value)?  fieldAccess,TResult Function( InterpolationExpression value)?  interpolation,TResult Function( ComparisonExpression value)?  comparison,TResult Function( BooleanExpression value)?  boolean,TResult Function( ArithmeticExpression value)?  arithmetic,TResult Function( ConditionalExpression value)?  conditional,TResult Function( CollectionMapExpression value)?  collectionMap,TResult Function( CollectionFilterExpression value)?  collectionFilter,TResult Function( CollectionQuantifierExpression value)?  collectionQuantifier,TResult Function( CollectionFindExpression value)?  collectionFind,TResult Function( CollectionCountExpression value)?  collectionCount,TResult Function( CollectionDistinctExpression value)?  collectionDistinct,TResult Function( CollectionSortExpression value)?  collectionSort,TResult Function( CollectionGroupExpression value)?  collectionGroup,TResult Function( CollectionReduceExpression value)?  collectionReduce,TResult Function( CollectionFoldExpression value)?  collectionFold,TResult Function( CollectionTransformExpression value)?  collectionTransform,TResult Function( IsTypeExpression value)?  isType,TResult Function( ConversionExpression value)?  conversion,TResult Function( StringOperationExpression value)?  stringOperation,TResult Function( CollectionOperationExpression value)?  collectionOperation,TResult Function( RegexExpression value)?  regex,TResult Function( CoalesceExpression value)?  coalesce,TResult Function( ColorOperationExpression value)?  colorOperation,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiteralExpression value)?  literal,TResult Function( BindingExpression value)?  binding,TResult Function( FieldAccessExpression value)?  fieldAccess,TResult Function( InterpolationExpression value)?  interpolation,TResult Function( ComparisonExpression value)?  comparison,TResult Function( BooleanExpression value)?  boolean,TResult Function( ArithmeticExpression value)?  arithmetic,TResult Function( ConditionalExpression value)?  conditional,TResult Function( CollectionMapExpression value)?  collectionMap,TResult Function( CollectionFilterExpression value)?  collectionFilter,TResult Function( CollectionQuantifierExpression value)?  collectionQuantifier,TResult Function( CollectionFindExpression value)?  collectionFind,TResult Function( CollectionCountExpression value)?  collectionCount,TResult Function( CollectionDistinctExpression value)?  collectionDistinct,TResult Function( CollectionSortExpression value)?  collectionSort,TResult Function( CollectionGroupExpression value)?  collectionGroup,TResult Function( CollectionReduceExpression value)?  collectionReduce,TResult Function( CollectionFoldExpression value)?  collectionFold,TResult Function( CollectionTransformExpression value)?  collectionTransform,TResult Function( IsTypeExpression value)?  isType,TResult Function( ConversionExpression value)?  conversion,TResult Function( StringOperationExpression value)?  stringOperation,TResult Function( CollectionOperationExpression value)?  collectionOperation,TResult Function( RegexExpression value)?  regex,TResult Function( CoalesceExpression value)?  coalesce,TResult Function( RecordExpression value)?  record,TResult Function( ColorOperationExpression value)?  colorOperation,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
@@ -387,7 +387,8 @@ return conversion(_that);case StringOperationExpression() when stringOperation !
 return stringOperation(_that);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that);case RegexExpression() when regex != null:
 return regex(_that);case CoalesceExpression() when coalesce != null:
-return coalesce(_that);case ColorOperationExpression() when colorOperation != null:
+return coalesce(_that);case RecordExpression() when record != null:
+return record(_that);case ColorOperationExpression() when colorOperation != null:
 return colorOperation(_that);case _:
   return orElse();
 
@@ -406,7 +407,7 @@ return colorOperation(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiteralExpression value)  literal,required TResult Function( BindingExpression value)  binding,required TResult Function( FieldAccessExpression value)  fieldAccess,required TResult Function( InterpolationExpression value)  interpolation,required TResult Function( ComparisonExpression value)  comparison,required TResult Function( BooleanExpression value)  boolean,required TResult Function( ArithmeticExpression value)  arithmetic,required TResult Function( ConditionalExpression value)  conditional,required TResult Function( CollectionMapExpression value)  collectionMap,required TResult Function( CollectionFilterExpression value)  collectionFilter,required TResult Function( CollectionQuantifierExpression value)  collectionQuantifier,required TResult Function( CollectionFindExpression value)  collectionFind,required TResult Function( CollectionCountExpression value)  collectionCount,required TResult Function( CollectionDistinctExpression value)  collectionDistinct,required TResult Function( CollectionSortExpression value)  collectionSort,required TResult Function( CollectionGroupExpression value)  collectionGroup,required TResult Function( CollectionReduceExpression value)  collectionReduce,required TResult Function( CollectionFoldExpression value)  collectionFold,required TResult Function( CollectionTransformExpression value)  collectionTransform,required TResult Function( IsTypeExpression value)  isType,required TResult Function( ConversionExpression value)  conversion,required TResult Function( StringOperationExpression value)  stringOperation,required TResult Function( CollectionOperationExpression value)  collectionOperation,required TResult Function( RegexExpression value)  regex,required TResult Function( CoalesceExpression value)  coalesce,required TResult Function( ColorOperationExpression value)  colorOperation,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiteralExpression value)  literal,required TResult Function( BindingExpression value)  binding,required TResult Function( FieldAccessExpression value)  fieldAccess,required TResult Function( InterpolationExpression value)  interpolation,required TResult Function( ComparisonExpression value)  comparison,required TResult Function( BooleanExpression value)  boolean,required TResult Function( ArithmeticExpression value)  arithmetic,required TResult Function( ConditionalExpression value)  conditional,required TResult Function( CollectionMapExpression value)  collectionMap,required TResult Function( CollectionFilterExpression value)  collectionFilter,required TResult Function( CollectionQuantifierExpression value)  collectionQuantifier,required TResult Function( CollectionFindExpression value)  collectionFind,required TResult Function( CollectionCountExpression value)  collectionCount,required TResult Function( CollectionDistinctExpression value)  collectionDistinct,required TResult Function( CollectionSortExpression value)  collectionSort,required TResult Function( CollectionGroupExpression value)  collectionGroup,required TResult Function( CollectionReduceExpression value)  collectionReduce,required TResult Function( CollectionFoldExpression value)  collectionFold,required TResult Function( CollectionTransformExpression value)  collectionTransform,required TResult Function( IsTypeExpression value)  isType,required TResult Function( ConversionExpression value)  conversion,required TResult Function( StringOperationExpression value)  stringOperation,required TResult Function( CollectionOperationExpression value)  collectionOperation,required TResult Function( RegexExpression value)  regex,required TResult Function( CoalesceExpression value)  coalesce,required TResult Function( RecordExpression value)  record,required TResult Function( ColorOperationExpression value)  colorOperation,}){
 final _that = this;
 switch (_that) {
 case LiteralExpression():
@@ -434,7 +435,8 @@ return conversion(_that);case StringOperationExpression():
 return stringOperation(_that);case CollectionOperationExpression():
 return collectionOperation(_that);case RegexExpression():
 return regex(_that);case CoalesceExpression():
-return coalesce(_that);case ColorOperationExpression():
+return coalesce(_that);case RecordExpression():
+return record(_that);case ColorOperationExpression():
 return colorOperation(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -449,7 +451,7 @@ return colorOperation(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiteralExpression value)?  literal,TResult? Function( BindingExpression value)?  binding,TResult? Function( FieldAccessExpression value)?  fieldAccess,TResult? Function( InterpolationExpression value)?  interpolation,TResult? Function( ComparisonExpression value)?  comparison,TResult? Function( BooleanExpression value)?  boolean,TResult? Function( ArithmeticExpression value)?  arithmetic,TResult? Function( ConditionalExpression value)?  conditional,TResult? Function( CollectionMapExpression value)?  collectionMap,TResult? Function( CollectionFilterExpression value)?  collectionFilter,TResult? Function( CollectionQuantifierExpression value)?  collectionQuantifier,TResult? Function( CollectionFindExpression value)?  collectionFind,TResult? Function( CollectionCountExpression value)?  collectionCount,TResult? Function( CollectionDistinctExpression value)?  collectionDistinct,TResult? Function( CollectionSortExpression value)?  collectionSort,TResult? Function( CollectionGroupExpression value)?  collectionGroup,TResult? Function( CollectionReduceExpression value)?  collectionReduce,TResult? Function( CollectionFoldExpression value)?  collectionFold,TResult? Function( CollectionTransformExpression value)?  collectionTransform,TResult? Function( IsTypeExpression value)?  isType,TResult? Function( ConversionExpression value)?  conversion,TResult? Function( StringOperationExpression value)?  stringOperation,TResult? Function( CollectionOperationExpression value)?  collectionOperation,TResult? Function( RegexExpression value)?  regex,TResult? Function( CoalesceExpression value)?  coalesce,TResult? Function( ColorOperationExpression value)?  colorOperation,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiteralExpression value)?  literal,TResult? Function( BindingExpression value)?  binding,TResult? Function( FieldAccessExpression value)?  fieldAccess,TResult? Function( InterpolationExpression value)?  interpolation,TResult? Function( ComparisonExpression value)?  comparison,TResult? Function( BooleanExpression value)?  boolean,TResult? Function( ArithmeticExpression value)?  arithmetic,TResult? Function( ConditionalExpression value)?  conditional,TResult? Function( CollectionMapExpression value)?  collectionMap,TResult? Function( CollectionFilterExpression value)?  collectionFilter,TResult? Function( CollectionQuantifierExpression value)?  collectionQuantifier,TResult? Function( CollectionFindExpression value)?  collectionFind,TResult? Function( CollectionCountExpression value)?  collectionCount,TResult? Function( CollectionDistinctExpression value)?  collectionDistinct,TResult? Function( CollectionSortExpression value)?  collectionSort,TResult? Function( CollectionGroupExpression value)?  collectionGroup,TResult? Function( CollectionReduceExpression value)?  collectionReduce,TResult? Function( CollectionFoldExpression value)?  collectionFold,TResult? Function( CollectionTransformExpression value)?  collectionTransform,TResult? Function( IsTypeExpression value)?  isType,TResult? Function( ConversionExpression value)?  conversion,TResult? Function( StringOperationExpression value)?  stringOperation,TResult? Function( CollectionOperationExpression value)?  collectionOperation,TResult? Function( RegexExpression value)?  regex,TResult? Function( CoalesceExpression value)?  coalesce,TResult? Function( RecordExpression value)?  record,TResult? Function( ColorOperationExpression value)?  colorOperation,}){
 final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
@@ -477,7 +479,8 @@ return conversion(_that);case StringOperationExpression() when stringOperation !
 return stringOperation(_that);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that);case RegexExpression() when regex != null:
 return regex(_that);case CoalesceExpression() when coalesce != null:
-return coalesce(_that);case ColorOperationExpression() when colorOperation != null:
+return coalesce(_that);case RecordExpression() when record != null:
+return record(_that);case ColorOperationExpression() when colorOperation != null:
 return colorOperation(_that);case _:
   return null;
 
@@ -495,7 +498,7 @@ return colorOperation(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  literal,TResult Function( BindingReference binding)?  binding,TResult Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult Function( List<InterpolationPart> parts)?  interpolation,TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)?  collectionMap,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFilter,TResult Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)?  collectionQuantifier,TResult Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFind,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionCount,TResult Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)?  collectionDistinct,TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)?  collectionSort,TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)?  collectionGroup,TResult Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionReduce,TResult Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionFold,TResult Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)?  collectionTransform,TResult Function( TypedExpression source,  TypeExpression type)?  isType,TResult Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult Function( List<TypedExpression> operands)?  coalesce,TResult Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)?  colorOperation,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  literal,TResult Function( BindingReference binding)?  binding,TResult Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult Function( List<InterpolationPart> parts)?  interpolation,TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)?  collectionMap,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFilter,TResult Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)?  collectionQuantifier,TResult Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFind,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionCount,TResult Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)?  collectionDistinct,TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)?  collectionSort,TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)?  collectionGroup,TResult Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionReduce,TResult Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionFold,TResult Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)?  collectionTransform,TResult Function( TypedExpression source,  TypeExpression type)?  isType,TResult Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult Function( List<TypedExpression> operands)?  coalesce,TResult Function( Map<String, TypedExpression> fields)?  record,TResult Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)?  colorOperation,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
 return literal(_that.value);case BindingExpression() when binding != null:
@@ -522,7 +525,8 @@ return conversion(_that.conversionId,_that.input);case StringOperationExpression
 return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that.operation,_that.operands);case RegexExpression() when regex != null:
 return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression() when coalesce != null:
-return coalesce(_that.operands);case ColorOperationExpression() when colorOperation != null:
+return coalesce(_that.operands);case RecordExpression() when record != null:
+return record(_that.fields);case ColorOperationExpression() when colorOperation != null:
 return colorOperation(_that.operation,_that.color,_that.alpha);case _:
   return orElse();
 
@@ -541,7 +545,7 @@ return colorOperation(_that.operation,_that.color,_that.alpha);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  literal,required TResult Function( BindingReference binding)  binding,required TResult Function( TypedExpression target,  String fieldName)  fieldAccess,required TResult Function( List<InterpolationPart> parts)  interpolation,required TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)  comparison,required TResult Function( BooleanOperator operator,  List<TypedExpression> operands)  boolean,required TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)  arithmetic,required TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)  collectionMap,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)  collectionFilter,required TResult Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)  collectionQuantifier,required TResult Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)  collectionFind,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)  collectionCount,required TResult Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)  collectionDistinct,required TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)  collectionSort,required TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)  collectionGroup,required TResult Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)  collectionReduce,required TResult Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)  collectionFold,required TResult Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)  collectionTransform,required TResult Function( TypedExpression source,  TypeExpression type)  isType,required TResult Function( ConversionId conversionId,  TypedExpression input)  conversion,required TResult Function( StringOperation operation,  List<TypedExpression> operands)  stringOperation,required TResult Function( CollectionOperation operation,  List<TypedExpression> operands)  collectionOperation,required TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)  regex,required TResult Function( List<TypedExpression> operands)  coalesce,required TResult Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)  colorOperation,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  literal,required TResult Function( BindingReference binding)  binding,required TResult Function( TypedExpression target,  String fieldName)  fieldAccess,required TResult Function( List<InterpolationPart> parts)  interpolation,required TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)  comparison,required TResult Function( BooleanOperator operator,  List<TypedExpression> operands)  boolean,required TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)  arithmetic,required TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)  collectionMap,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)  collectionFilter,required TResult Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)  collectionQuantifier,required TResult Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)  collectionFind,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)  collectionCount,required TResult Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)  collectionDistinct,required TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)  collectionSort,required TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)  collectionGroup,required TResult Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)  collectionReduce,required TResult Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)  collectionFold,required TResult Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)  collectionTransform,required TResult Function( TypedExpression source,  TypeExpression type)  isType,required TResult Function( ConversionId conversionId,  TypedExpression input)  conversion,required TResult Function( StringOperation operation,  List<TypedExpression> operands)  stringOperation,required TResult Function( CollectionOperation operation,  List<TypedExpression> operands)  collectionOperation,required TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)  regex,required TResult Function( List<TypedExpression> operands)  coalesce,required TResult Function( Map<String, TypedExpression> fields)  record,required TResult Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)  colorOperation,}) {final _that = this;
 switch (_that) {
 case LiteralExpression():
 return literal(_that.value);case BindingExpression():
@@ -568,7 +572,8 @@ return conversion(_that.conversionId,_that.input);case StringOperationExpression
 return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression():
 return collectionOperation(_that.operation,_that.operands);case RegexExpression():
 return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression():
-return coalesce(_that.operands);case ColorOperationExpression():
+return coalesce(_that.operands);case RecordExpression():
+return record(_that.fields);case ColorOperationExpression():
 return colorOperation(_that.operation,_that.color,_that.alpha);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -583,7 +588,7 @@ return colorOperation(_that.operation,_that.color,_that.alpha);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  literal,TResult? Function( BindingReference binding)?  binding,TResult? Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult? Function( List<InterpolationPart> parts)?  interpolation,TResult? Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult? Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult? Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult? Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)?  collectionMap,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFilter,TResult? Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)?  collectionQuantifier,TResult? Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFind,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionCount,TResult? Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)?  collectionDistinct,TResult? Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)?  collectionSort,TResult? Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)?  collectionGroup,TResult? Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionReduce,TResult? Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionFold,TResult? Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)?  collectionTransform,TResult? Function( TypedExpression source,  TypeExpression type)?  isType,TResult? Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult? Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult? Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult? Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult? Function( List<TypedExpression> operands)?  coalesce,TResult? Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)?  colorOperation,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  literal,TResult? Function( BindingReference binding)?  binding,TResult? Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult? Function( List<InterpolationPart> parts)?  interpolation,TResult? Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult? Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult? Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult? Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)?  collectionMap,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFilter,TResult? Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)?  collectionQuantifier,TResult? Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFind,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionCount,TResult? Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)?  collectionDistinct,TResult? Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)?  collectionSort,TResult? Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)?  collectionGroup,TResult? Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionReduce,TResult? Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionFold,TResult? Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)?  collectionTransform,TResult? Function( TypedExpression source,  TypeExpression type)?  isType,TResult? Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult? Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult? Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult? Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult? Function( List<TypedExpression> operands)?  coalesce,TResult? Function( Map<String, TypedExpression> fields)?  record,TResult? Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)?  colorOperation,}) {final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
 return literal(_that.value);case BindingExpression() when binding != null:
@@ -610,7 +615,8 @@ return conversion(_that.conversionId,_that.input);case StringOperationExpression
 return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that.operation,_that.operands);case RegexExpression() when regex != null:
 return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression() when coalesce != null:
-return coalesce(_that.operands);case ColorOperationExpression() when colorOperation != null:
+return coalesce(_that.operands);case RecordExpression() when record != null:
+return record(_that.fields);case ColorOperationExpression() when colorOperation != null:
 return colorOperation(_that.operation,_that.color,_that.alpha);case _:
   return null;
 
@@ -624,7 +630,7 @@ return colorOperation(_that.operation,_that.color,_that.alpha);case _:
 
 class LiteralExpression implements Expression {
   const LiteralExpression(this.value);
-  
+
 
  final  DataValue value;
 
@@ -689,7 +695,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -701,7 +707,7 @@ $DataValueCopyWith<$Res> get value {
 
 class BindingExpression implements Expression {
   const BindingExpression(this.binding);
-  
+
 
  final  BindingReference binding;
 
@@ -766,7 +772,7 @@ as BindingReference,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -778,7 +784,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 
 class FieldAccessExpression implements Expression {
   const FieldAccessExpression({required this.target, required this.fieldName}): assert(fieldName != "", 'Field name must not be empty.');
-  
+
 
  final  TypedExpression target;
  final  String fieldName;
@@ -845,7 +851,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get target {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -857,7 +863,7 @@ $TypedExpressionCopyWith<$Res> get target {
 
 class InterpolationExpression implements Expression {
   const InterpolationExpression( List<InterpolationPart> parts): _parts = parts;
-  
+
 
  final  List<InterpolationPart> _parts;
  List<InterpolationPart> get parts {
@@ -931,7 +937,7 @@ as List<InterpolationPart>,
 
 class ComparisonExpression implements Expression {
   const ComparisonExpression({required this.operator, required this.left, required this.right});
-  
+
 
  final  ComparisonOperator operator;
  final  TypedExpression left;
@@ -1000,7 +1006,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get left {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.left, (value) {
     return _then(_self.copyWith(left: value));
   });
@@ -1009,7 +1015,7 @@ $TypedExpressionCopyWith<$Res> get left {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get right {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.right, (value) {
     return _then(_self.copyWith(right: value));
   });
@@ -1021,7 +1027,7 @@ $TypedExpressionCopyWith<$Res> get right {
 
 class BooleanExpression implements Expression {
   const BooleanExpression({required this.operator, required  List<TypedExpression> operands}): _operands = operands;
-  
+
 
  final  BooleanOperator operator;
  final  List<TypedExpression> _operands;
@@ -1097,7 +1103,7 @@ as List<TypedExpression>,
 
 class ArithmeticExpression implements Expression {
   const ArithmeticExpression({required this.operator, required  List<TypedExpression> operands}): _operands = operands;
-  
+
 
  final  ArithmeticOperator operator;
  final  List<TypedExpression> _operands;
@@ -1173,7 +1179,7 @@ as List<TypedExpression>,
 
 class ConditionalExpression implements Expression {
   const ConditionalExpression({required this.condition, required this.whenTrue, required this.whenFalse});
-  
+
 
  final  TypedExpression condition;
  final  TypedExpression whenTrue;
@@ -1242,7 +1248,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get condition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
     return _then(_self.copyWith(condition: value));
   });
@@ -1251,7 +1257,7 @@ $TypedExpressionCopyWith<$Res> get condition {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get whenTrue {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.whenTrue, (value) {
     return _then(_self.copyWith(whenTrue: value));
   });
@@ -1260,7 +1266,7 @@ $TypedExpressionCopyWith<$Res> get whenTrue {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get whenFalse {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.whenFalse, (value) {
     return _then(_self.copyWith(whenFalse: value));
   });
@@ -1272,7 +1278,7 @@ $TypedExpressionCopyWith<$Res> get whenFalse {
 
 class CollectionMapExpression implements Expression {
   const CollectionMapExpression({required this.source, required this.itemBindingId, required this.transform});
-  
+
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1341,7 +1347,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1350,7 +1356,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1359,7 +1365,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get transform {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.transform, (value) {
     return _then(_self.copyWith(transform: value));
   });
@@ -1371,7 +1377,7 @@ $TypedExpressionCopyWith<$Res> get transform {
 
 class CollectionFilterExpression implements Expression {
   const CollectionFilterExpression({required this.source, required this.itemBindingId, required this.predicate});
-  
+
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1440,7 +1446,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1449,7 +1455,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1458,7 +1464,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1470,7 +1476,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionQuantifierExpression implements Expression {
   const CollectionQuantifierExpression({required this.source, required this.quantifier, required this.itemBindingId, required this.predicate});
-  
+
 
  final  TypedExpression source;
  final  CollectionQuantifier quantifier;
@@ -1541,7 +1547,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1550,7 +1556,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1559,7 +1565,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1571,7 +1577,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionFindExpression implements Expression {
   const CollectionFindExpression({required this.source, required this.selection, required this.itemBindingId, required this.predicate});
-  
+
 
  final  TypedExpression source;
  final  CollectionSelection selection;
@@ -1642,7 +1648,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1651,7 +1657,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1660,7 +1666,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1672,7 +1678,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionCountExpression implements Expression {
   const CollectionCountExpression({required this.source, required this.itemBindingId, required this.predicate});
-  
+
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1741,7 +1747,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1750,7 +1756,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1759,7 +1765,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get predicate {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
     return _then(_self.copyWith(predicate: value));
   });
@@ -1771,7 +1777,7 @@ $TypedExpressionCopyWith<$Res> get predicate {
 
 class CollectionDistinctExpression implements Expression {
   const CollectionDistinctExpression({required this.source, this.key, this.itemBindingId});
-  
+
 
  final  TypedExpression source;
  final  TypedExpression? key;
@@ -1840,7 +1846,7 @@ as BindingId?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1876,7 +1882,7 @@ $BindingIdCopyWith<$Res>? get itemBindingId {
 
 class CollectionSortExpression implements Expression {
   const CollectionSortExpression({required this.source, required this.key, required this.itemBindingId, required this.direction, this.comparator});
-  
+
 
  final  TypedExpression source;
  final  TypedExpression key;
@@ -1949,7 +1955,7 @@ as CollectionComparator?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1958,7 +1964,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1967,7 +1973,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1991,7 +1997,7 @@ $CollectionComparatorCopyWith<$Res>? get comparator {
 
 class CollectionGroupExpression implements Expression {
   const CollectionGroupExpression({required this.source, required this.key, required this.itemBindingId, this.value});
-  
+
 
  final  TypedExpression source;
  final  TypedExpression key;
@@ -2062,7 +2068,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2071,7 +2077,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -2080,7 +2086,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -2104,7 +2110,7 @@ $TypedExpressionCopyWith<$Res>? get value {
 
 class CollectionReduceExpression implements Expression {
   const CollectionReduceExpression({required this.source, required this.accumulatorBindingId, required this.itemBindingId, required this.reduction});
-  
+
 
  final  TypedExpression source;
  final  BindingId accumulatorBindingId;
@@ -2175,7 +2181,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2184,7 +2190,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get accumulatorBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.accumulatorBindingId, (value) {
     return _then(_self.copyWith(accumulatorBindingId: value));
   });
@@ -2193,7 +2199,7 @@ $BindingIdCopyWith<$Res> get accumulatorBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -2202,7 +2208,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get reduction {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.reduction, (value) {
     return _then(_self.copyWith(reduction: value));
   });
@@ -2214,7 +2220,7 @@ $TypedExpressionCopyWith<$Res> get reduction {
 
 class CollectionFoldExpression implements Expression {
   const CollectionFoldExpression({required this.source, required this.initial, required this.accumulatorBindingId, required this.itemBindingId, required this.reduction});
-  
+
 
  final  TypedExpression source;
  final  TypedExpression initial;
@@ -2287,7 +2293,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2296,7 +2302,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get initial {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.initial, (value) {
     return _then(_self.copyWith(initial: value));
   });
@@ -2305,7 +2311,7 @@ $TypedExpressionCopyWith<$Res> get initial {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get accumulatorBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.accumulatorBindingId, (value) {
     return _then(_self.copyWith(accumulatorBindingId: value));
   });
@@ -2314,7 +2320,7 @@ $BindingIdCopyWith<$Res> get accumulatorBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -2323,7 +2329,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get reduction {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.reduction, (value) {
     return _then(_self.copyWith(reduction: value));
   });
@@ -2335,7 +2341,7 @@ $TypedExpressionCopyWith<$Res> get reduction {
 
 class CollectionTransformExpression implements Expression {
   const CollectionTransformExpression({required this.source, required this.operation, this.transform, this.itemBindingId, this.count});
-  
+
 
  final  TypedExpression source;
  final  CollectionTransformOperation operation;
@@ -2408,7 +2414,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2456,7 +2462,7 @@ $TypedExpressionCopyWith<$Res>? get count {
 
 class IsTypeExpression implements Expression {
   const IsTypeExpression({required this.source, required this.type});
-  
+
 
  final  TypedExpression source;
  final  TypeExpression type;
@@ -2523,7 +2529,7 @@ as TypeExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2532,7 +2538,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2544,7 +2550,7 @@ $TypeExpressionCopyWith<$Res> get type {
 
 class ConversionExpression implements Expression {
   const ConversionExpression({required this.conversionId, required this.input});
-  
+
 
  final  ConversionId conversionId;
  final  TypedExpression input;
@@ -2611,7 +2617,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $ConversionIdCopyWith<$Res> get conversionId {
-  
+
   return $ConversionIdCopyWith<$Res>(_self.conversionId, (value) {
     return _then(_self.copyWith(conversionId: value));
   });
@@ -2620,7 +2626,7 @@ $ConversionIdCopyWith<$Res> get conversionId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get input {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.input, (value) {
     return _then(_self.copyWith(input: value));
   });
@@ -2632,7 +2638,7 @@ $TypedExpressionCopyWith<$Res> get input {
 
 class StringOperationExpression implements Expression {
   const StringOperationExpression({required this.operation, required  List<TypedExpression> operands}): _operands = operands;
-  
+
 
  final  StringOperation operation;
  final  List<TypedExpression> _operands;
@@ -2708,7 +2714,7 @@ as List<TypedExpression>,
 
 class CollectionOperationExpression implements Expression {
   const CollectionOperationExpression({required this.operation, required  List<TypedExpression> operands}): _operands = operands;
-  
+
 
  final  CollectionOperation operation;
  final  List<TypedExpression> _operands;
@@ -2784,7 +2790,7 @@ as List<TypedExpression>,
 
 class RegexExpression implements Expression {
   const RegexExpression({required this.operation, required this.source, required this.pattern, this.group, this.replacement});
-  
+
 
  final  RegexOperation operation;
  final  TypedExpression source;
@@ -2857,7 +2863,7 @@ as String?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -2869,7 +2875,7 @@ $TypedExpressionCopyWith<$Res> get source {
 
 class CoalesceExpression implements Expression {
   const CoalesceExpression( List<TypedExpression> operands): _operands = operands;
-  
+
 
  final  List<TypedExpression> _operands;
  List<TypedExpression> get operands {
@@ -2941,9 +2947,83 @@ as List<TypedExpression>,
 /// @nodoc
 
 
+class RecordExpression implements Expression {
+  const RecordExpression( Map<String, TypedExpression> fields): _fields = fields;
+
+
+ final  Map<String, TypedExpression> _fields;
+ Map<String, TypedExpression> get fields {
+  if (_fields is EqualUnmodifiableMapView) return _fields;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_fields);
+}
+
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RecordExpressionCopyWith<RecordExpression> get copyWith => _$RecordExpressionCopyWithImpl<RecordExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RecordExpression&&const DeepCollectionEquality().equals(other.fields, _fields));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_fields));
+}
+
+@override
+String toString() {
+    return 'Expression.record(fields: $fields)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RecordExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $RecordExpressionCopyWith(RecordExpression value, $Res Function(RecordExpression) _then) = _$RecordExpressionCopyWithImpl;
+@useResult
+$Res call({
+ Map<String, TypedExpression> fields
+});
+
+
+
+
+}
+/// @nodoc
+class _$RecordExpressionCopyWithImpl<$Res>
+    implements $RecordExpressionCopyWith<$Res> {
+  _$RecordExpressionCopyWithImpl(this._self, this._then);
+
+  final RecordExpression _self;
+  final $Res Function(RecordExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? fields = null,}) {
+  return _then(RecordExpression(
+null == fields ? _self._fields : fields // ignore: cast_nullable_to_non_nullable
+as Map<String, TypedExpression>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
 class ColorOperationExpression implements Expression {
   const ColorOperationExpression({required this.operation, required this.color, required this.alpha});
-  
+
 
  final  ColorOperation operation;
  final  TypedExpression color;
@@ -3012,7 +3092,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get color {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
     return _then(_self.copyWith(color: value));
   });
@@ -3021,7 +3101,7 @@ $TypedExpressionCopyWith<$Res> get color {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get alpha {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.alpha, (value) {
     return _then(_self.copyWith(alpha: value));
   });
@@ -3097,7 +3177,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get leftBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.leftBindingId, (value) {
     return _then(_self.copyWith(leftBindingId: value));
   });
@@ -3106,7 +3186,7 @@ $BindingIdCopyWith<$Res> get leftBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rightBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.rightBindingId, (value) {
     return _then(_self.copyWith(rightBindingId: value));
   });
@@ -3115,7 +3195,7 @@ $BindingIdCopyWith<$Res> get rightBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get comparison {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.comparison, (value) {
     return _then(_self.copyWith(comparison: value));
   });
@@ -3258,7 +3338,7 @@ return $default(_that.leftBindingId,_that.rightBindingId,_that.comparison);case 
 
 class _CollectionComparator implements CollectionComparator {
   const _CollectionComparator({required this.leftBindingId, required this.rightBindingId, required this.comparison});
-  
+
 
 @override final  BindingId leftBindingId;
 @override final  BindingId rightBindingId;
@@ -3327,7 +3407,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get leftBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.leftBindingId, (value) {
     return _then(_self.copyWith(leftBindingId: value));
   });
@@ -3336,7 +3416,7 @@ $BindingIdCopyWith<$Res> get leftBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get rightBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.rightBindingId, (value) {
     return _then(_self.copyWith(rightBindingId: value));
   });
@@ -3345,7 +3425,7 @@ $BindingIdCopyWith<$Res> get rightBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get comparison {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.comparison, (value) {
     return _then(_self.copyWith(comparison: value));
   });
@@ -3522,7 +3602,7 @@ return value(_that.value);case _:
 
 class InterpolationText implements InterpolationPart {
   const InterpolationText(this.value);
-  
+
 
 @override final  String value;
 
@@ -3590,7 +3670,7 @@ as String,
 
 class InterpolationValue implements InterpolationPart {
   const InterpolationValue(this.value);
-  
+
 
 @override final  TypedExpression value;
 
@@ -3655,7 +3735,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -3865,7 +3945,7 @@ return $default(_that.maximumDepth,_that.maximumNodes,_that.maximumEvaluations);
 
 class _ExpressionBudget implements ExpressionBudget {
   const _ExpressionBudget({this.maximumDepth = 32, this.maximumNodes = 512, this.maximumEvaluations = 4096}): assert(maximumDepth > 0, 'Maximum depth must be positive.'),assert(maximumNodes > 0, 'Maximum node count must be positive.'),assert(maximumEvaluations > 0, 'Maximum evaluations must be positive.');
-  
+
 
 @override@JsonKey() final  int maximumDepth;
 @override@JsonKey() final  int maximumNodes;

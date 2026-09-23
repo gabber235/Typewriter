@@ -11,7 +11,7 @@ part of 'pages.dart';
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 
 @ProviderFor(CanonicalBookPages)
@@ -20,18 +20,18 @@ final canonicalBookPagesProvider = CanonicalBookPagesFamily._();
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 final class CanonicalBookPagesProvider
     extends $AsyncNotifierProvider<CanonicalBookPages, List<Page>> {
   /// Retains and exposes canonical pages belonging to one book.
   ///
   /// The realm authoring session owns the data and server sequence. This provider
-  /// leases the book scope for its lifetime, refreshes on sequenced session
+  /// leases the registered book page selection, refreshes on sequenced session
   /// observations, and does not include local editor drafts.
   CanonicalBookPagesProvider._({
     required CanonicalBookPagesFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'canonicalBookPagesProvider',
@@ -66,12 +66,12 @@ final class CanonicalBookPagesProvider
 }
 
 String _$canonicalBookPagesHash() =>
-    r'ba469908442a6355a0fac21b3d894ee3b97e7dc7';
+    r'a7768b53aef528a8b6d1c0f15d577168004bd7dc';
 
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 
 final class CanonicalBookPagesFamily extends $Family
@@ -81,7 +81,7 @@ final class CanonicalBookPagesFamily extends $Family
           AsyncValue<List<Page>>,
           List<Page>,
           FutureOr<List<Page>>,
-          skir.RecordId
+          skir.ResourceId
         > {
   CanonicalBookPagesFamily._()
     : super(
@@ -95,10 +95,10 @@ final class CanonicalBookPagesFamily extends $Family
   /// Retains and exposes canonical pages belonging to one book.
   ///
   /// The realm authoring session owns the data and server sequence. This provider
-  /// leases the book scope for its lifetime, refreshes on sequenced session
+  /// leases the registered book page selection, refreshes on sequenced session
   /// observations, and does not include local editor drafts.
 
-  CanonicalBookPagesProvider call(skir.RecordId bookId) =>
+  CanonicalBookPagesProvider call(skir.ResourceId bookId) =>
       CanonicalBookPagesProvider._(argument: bookId, from: this);
 
   @override
@@ -108,14 +108,14 @@ final class CanonicalBookPagesFamily extends $Family
 /// Retains and exposes canonical pages belonging to one book.
 ///
 /// The realm authoring session owns the data and server sequence. This provider
-/// leases the book scope for its lifetime, refreshes on sequenced session
+/// leases the registered book page selection, refreshes on sequenced session
 /// observations, and does not include local editor drafts.
 
 abstract class _$CanonicalBookPages extends $AsyncNotifier<List<Page>> {
-  late final _$args = ref.$arg as skir.RecordId;
-  skir.RecordId get bookId => _$args;
+  late final _$args = ref.$arg as skir.ResourceId;
+  skir.ResourceId get bookId => _$args;
 
-  FutureOr<List<Page>> build(skir.RecordId bookId);
+  FutureOr<List<Page>> build(skir.ResourceId bookId);
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -132,7 +132,7 @@ abstract class _$CanonicalBookPages extends $AsyncNotifier<List<Page>> {
   }
 }
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
@@ -141,21 +141,21 @@ abstract class _$CanonicalBookPages extends $AsyncNotifier<List<Page>> {
 @ProviderFor(CanonicalPage)
 final canonicalPageProvider = CanonicalPageFamily._();
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
 /// [projectedPage], not this provider.
 final class CanonicalPageProvider
     extends $AsyncNotifierProvider<CanonicalPage, Page> {
-  /// Retains one canonical page through a page scope lease.
+  /// Retains one canonical page through a typed resource selection lease.
   ///
   /// Missing pages become a not found outcome after the authoritative snapshot or
   /// a later sequenced removal. Draft values are intentionally supplied by
   /// [projectedPage], not this provider.
   CanonicalPageProvider._({
     required CanonicalPageFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'canonicalPageProvider',
@@ -189,9 +189,9 @@ final class CanonicalPageProvider
   }
 }
 
-String _$canonicalPageHash() => r'f481bfbd075a8d4f3d30f07826624af98effe5a9';
+String _$canonicalPageHash() => r'651d6fc417753c91f75c5c75e0e43c0026423bfa';
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
@@ -204,7 +204,7 @@ final class CanonicalPageFamily extends $Family
           AsyncValue<Page>,
           Page,
           FutureOr<Page>,
-          skir.RecordId
+          skir.ResourceId
         > {
   CanonicalPageFamily._()
     : super(
@@ -215,30 +215,30 @@ final class CanonicalPageFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Retains one canonical page through a page scope lease.
+  /// Retains one canonical page through a typed resource selection lease.
   ///
   /// Missing pages become a not found outcome after the authoritative snapshot or
   /// a later sequenced removal. Draft values are intentionally supplied by
   /// [projectedPage], not this provider.
 
-  CanonicalPageProvider call(skir.RecordId pageId) =>
+  CanonicalPageProvider call(skir.ResourceId pageId) =>
       CanonicalPageProvider._(argument: pageId, from: this);
 
   @override
   String toString() => r'canonicalPageProvider';
 }
 
-/// Retains one canonical page through a page scope lease.
+/// Retains one canonical page through a typed resource selection lease.
 ///
 /// Missing pages become a not found outcome after the authoritative snapshot or
 /// a later sequenced removal. Draft values are intentionally supplied by
 /// [projectedPage], not this provider.
 
 abstract class _$CanonicalPage extends $AsyncNotifier<Page> {
-  late final _$args = ref.$arg as skir.RecordId;
-  skir.RecordId get pageId => _$args;
+  late final _$args = ref.$arg as skir.ResourceId;
+  skir.ResourceId get pageId => _$args;
 
-  FutureOr<Page> build(skir.RecordId pageId);
+  FutureOr<Page> build(skir.ResourceId pageId);
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -285,7 +285,7 @@ final class ProjectedBookPagesProvider
   /// canonical data because no scoped local projection can be selected.
   ProjectedBookPagesProvider._({
     required ProjectedBookPagesFamily super.from,
-    required (skir.RecordId, String) super.argument,
+    required (skir.ResourceId, String) super.argument,
   }) : super(
          retry: null,
          name: r'projectedBookPagesProvider',
@@ -312,7 +312,7 @@ final class ProjectedBookPagesProvider
 
   @override
   AsyncValue<List<Page>> create(Ref ref) {
-    final argument = this.argument as (skir.RecordId, String);
+    final argument = this.argument as (skir.ResourceId, String);
     return projectedBookPages(ref, argument.$1, argument.$2);
   }
 
@@ -336,7 +336,7 @@ final class ProjectedBookPagesProvider
 }
 
 String _$projectedBookPagesHash() =>
-    r'd8d9337bba88b6e02b21cdf141e448b15d10a2f7';
+    r'6a33308159b0dcfa293cc098ff02d75cf043534e';
 
 /// Produces the book page list visible to the library sidebar.
 ///
@@ -348,7 +348,7 @@ final class ProjectedBookPagesFamily extends $Family
     with
         $FunctionalFamilyOverride<
           AsyncValue<List<Page>>,
-          (skir.RecordId, String)
+          (skir.ResourceId, String)
         > {
   ProjectedBookPagesFamily._()
     : super(
@@ -365,7 +365,7 @@ final class ProjectedBookPagesFamily extends $Family
   /// page name or chapter. Missing organization or realm context falls back to
   /// canonical data because no scoped local projection can be selected.
 
-  ProjectedBookPagesProvider call(skir.RecordId bookId, String search) =>
+  ProjectedBookPagesProvider call(skir.ResourceId bookId, String search) =>
       ProjectedBookPagesProvider._(argument: (bookId, search), from: this);
 
   @override
@@ -451,7 +451,7 @@ final class ProjectedPageProvider
   /// ignored by [Page.projected], preserving the last valid visible metadata.
   ProjectedPageProvider._({
     required ProjectedPageFamily super.from,
-    required skir.RecordId super.argument,
+    required skir.ResourceId super.argument,
   }) : super(
          retry: null,
          name: r'projectedPageProvider',
@@ -477,7 +477,7 @@ final class ProjectedPageProvider
 
   @override
   AsyncValue<Page> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
+    final argument = this.argument as skir.ResourceId;
     return projectedPage(ref, argument);
   }
 
@@ -500,7 +500,7 @@ final class ProjectedPageProvider
   }
 }
 
-String _$projectedPageHash() => r'da4bb88cb18e4588af6f6e3a70a235e70aa227f1';
+String _$projectedPageHash() => r'c016ba20844afb63f2a9dc30ca7d1a2146794212';
 
 /// Produces one page with its current local metadata projection.
 ///
@@ -508,7 +508,7 @@ String _$projectedPageHash() => r'da4bb88cb18e4588af6f6e3a70a235e70aa227f1';
 /// ignored by [Page.projected], preserving the last valid visible metadata.
 
 final class ProjectedPageFamily extends $Family
-    with $FunctionalFamilyOverride<AsyncValue<Page>, skir.RecordId> {
+    with $FunctionalFamilyOverride<AsyncValue<Page>, skir.ResourceId> {
   ProjectedPageFamily._()
     : super(
         retry: null,
@@ -523,7 +523,7 @@ final class ProjectedPageFamily extends $Family
   /// Canonical loading and errors pass through. An invalid draft projection is
   /// ignored by [Page.projected], preserving the last valid visible metadata.
 
-  ProjectedPageProvider call(skir.RecordId pageId) =>
+  ProjectedPageProvider call(skir.ResourceId pageId) =>
       ProjectedPageProvider._(argument: pageId, from: this);
 
   @override
@@ -538,8 +538,13 @@ final pageIdProvider = PageIdProvider._();
 /// Resolves the route's string parameter to the typed page record identity.
 
 final class PageIdProvider
-    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
-    with $Provider<skir.RecordId?> {
+    extends
+        $FunctionalProvider<
+          skir.ResourceId?,
+          skir.ResourceId?,
+          skir.ResourceId?
+        >
+    with $Provider<skir.ResourceId?> {
   /// Resolves the route's string parameter to the typed page record identity.
   PageIdProvider._()
     : super(
@@ -557,21 +562,21 @@ final class PageIdProvider
 
   @$internal
   @override
-  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.ResourceId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  skir.RecordId? create(Ref ref) {
+  skir.ResourceId? create(Ref ref) {
     return pageId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(skir.RecordId? value) {
+  Override overrideWithValue(skir.ResourceId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
+      providerOverride: $SyncValueProvider<skir.ResourceId?>(value),
     );
   }
 }
 
-String _$pageIdHash() => r'e84de71cb1dea33c615fa06593cb8408a692b5d9';
+String _$pageIdHash() => r'fb91dcb92fa878f2ab501d2e2f8431b1c500b34c';

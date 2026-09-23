@@ -219,6 +219,15 @@ Future<void> _waitFor(bool Function() condition) async {
 }
 
 final class _TrackingSource implements RealmEditorCatalogSource {
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
+
   int fetchCount = 0;
   int watchCount = 0;
   int cancelCount = 0;
@@ -274,6 +283,7 @@ RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
           color: const Color(0xFF7C4DFF),
           availability: ElementAvailability.always(),
         ),
+        presentationSubject: _catalogSubject(type),
         eligible: true,
         available: true,
       ),
@@ -281,7 +291,22 @@ RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
   );
 }
 
+TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
+  target: type,
+  descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+);
+
 final class _ElementSource implements RealmEditorCatalogSource {
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
+
   final _watch = StreamController<RealmEditorCatalogWatchEvent>();
 
   @override

@@ -2,7 +2,7 @@ package com.typewritermc.realm
 
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.elements.ContentCatalog
 import com.typewritermc.pages.PageCatalog
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import skirout.editor.v1.presentation.SearchSelectorDefinition
 
 /**
  * Owns the current deployment catalog snapshot and its invalidation notifications.
@@ -55,9 +56,39 @@ class RealmDiscoverySnapshotStore {
  */
 data class RealmDiscoverySnapshot(
     val discovery: DeploymentDiscoverySnapshot,
-    val elements: ElementCatalog,
+    val resourceDefinitions: List<AuthoringResourceDefinition> = emptyList(),
+    val relations: List<com.typewritermc.types.RelationDefinition> = emptyList(),
+    val collectionProjections: List<skirout.editor.v1.authoring.CollectionProjectionDefinition> = emptyList(),
+    val authoringSearch: AuthoringSearchDefinition? = null,
+    val compilationProjections: List<skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition> = emptyList(),
+    val elements: ContentCatalog,
     val pages: PageCatalog = PageCatalog(emptyList(), emptyList()),
     val presentations: List<skirout.editor.v1.presentation.PresentationDefinition> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val presentationDiagnostics: List<com.typewritermc.presentation.PresentationDiagnostic> = emptyList(),
 )
+
+/** Realm supplied search controls and indexed facets for authored resources. */
+data class AuthoringSearchDefinition(
+    val definitions: List<ResourceDefinitionId>,
+    val selectors: List<SearchSelectorDefinition>,
+    val facets: List<AuthoringSearchFacetDefinition>,
+)
+
+data class AuthoringSearchFacetDefinition(
+    val id: String,
+    val label: String,
+    val selectorId: String,
+)
+
+typealias AuthoringResourceDefinition = com.typewritermc.authoring.AuthoringResourceDefinition
+typealias ResourceDefinitionId = com.typewritermc.authoring.ResourceDefinitionId
+
+/** Stable ids for the definitions supplied by the core Realm runtime. */
+object CoreResourceDefinitionIds {
+    val BOOK = ResourceDefinitionId("typewriter.book")
+    val TAG = ResourceDefinitionId("typewriter.tag")
+    val PAGE = ResourceDefinitionId("typewriter.page")
+    val ELEMENT = ResourceDefinitionId("typewriter.element")
+    val CUE = ResourceDefinitionId("typewriter.cue")
+}

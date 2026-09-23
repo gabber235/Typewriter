@@ -6,6 +6,8 @@ import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.catalog.InitializeTypedValueRequest
+import skirout.editor.v1.catalog.InitializeTypedValueResult
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
@@ -62,13 +64,21 @@ private class FakeRealmEditorCatalogSource : RealmEditorCatalogSource {
             capabilityDefinitions = emptyList(),
             subtypeResults = emptyList(),
             diagnostics = emptyList(),
-            elementEntries = emptyList(),
+            contentEntries = emptyList(),
             pageEntries = emptyList(),
             pageDiagnostics = emptyList(),
+            resourceDefinitions = emptyList(),
+            relationDefinitions = emptyList(),
+            collectionProjectionDefinitions = emptyList(),
+            authoringSearch = null,
+            authoringCompilationProjections = emptyList(),
         )
 
     override suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogWatchUpdate =
         CatalogWatchUpdate.createInitial(value = "fake")
+
+    override suspend fun initialize(request: InitializeTypedValueRequest): InitializeTypedValueResult =
+        InitializeTypedValueResult.UnavailableWrapper(emptyList())
 }
 
 private fun emptyCatalogRequest() =

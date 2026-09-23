@@ -1,4 +1,6 @@
 import "package:flutter/widgets.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Opens the current page's element type picker.
@@ -19,37 +21,49 @@ Future<void> showAddElementSearch(
       throw ApiException.badRequest("No realm selected");
     }
 
-    final targetPageId = recordId("page:$pageId");
-    final policy = ref.valued(
-      pageEntryCreationPolicyForPageProvider(targetPageId),
-    );
+    final targetPageId = skir.ResourceId(value: pageId);
+    final field = ref.valued(pageElementsFieldForPageProvider(targetPageId));
 
-    return SearchContribution(
-      session: SearchSession(
-        source: ElementTypeSearchSource(
-          definitions: ref.valued(availableElementDefinitionsFutureProvider),
-        ),
-        scope: pageElementTypeScope(policy: policy),
-        interaction: SearchInteraction(
-          activation: SearchActivation.command(
-            resolve: (result) => result.type == elementTypeSearchResultType
-                ? createElementOnPageCommandId
-                : null,
-            dependencies: [policy],
-          ),
-          selectionMode: SearchSelectionMode.single,
-          commands: [
-            createElementOnPageCommand(
-              ref: ref,
-              organizationId: organizationId,
-              realmId: realmId,
-              pageId: targetPageId,
-              policy: policy,
-              preferredGraphAnchor: preferredGraphAnchor,
-            ),
-          ],
+    return relationSearchContribution(
+      ref: ref,
+      organizationId: organizationId,
+      realmId: realmId,
+      host: targetPageId,
+      field: field,
+      initialValue: (option) async {
+        final page = ref.read(projectedPageProvider(targetPageId)).value;
+        final editor = page == null
+            ? null
+            : ref
+                  .read(realmEditorCatalogProvider)
+                  .value
+                  ?.snapshot
+                  ?.pageCatalog
+                  .definitions[page.rootType]
+                  ?.editor;
+        if (editor == null) {
+          throw ApiException.badRequest("The Page editor is unavailable");
+        }
+        final placement = await ref.withReadyPageElements(
+          pageId,
+          (elements) => elements.creationPlacement(switch (editor) {
+            RealmGraphPageEditor() => EntryPlacementKind.graph,
+            RealmTimelinePageEditor() => EntryPlacementKind.timelineEntry,
+          }, preferredGraphAnchor: preferredGraphAnchor),
+        );
+        return RecordValue({
+          "name": StringValue(option.label),
+          "placement": placementValue(placement),
+        });
+      },
+      createdEffect: (created) => SelectCreatedElementEffect(
+        pageId: targetPageId,
+        elementIdentifier: EntryIdentifier(
+          created.id.value,
+          pageId: targetPageId.id,
         ),
       ),
+    ).copyWith(
       hostEffectExecutors: [
         SearchHostEffectExecutor<SelectCreatedElementEffect>((effect) {
           if (effect.pageId != targetPageId) {
@@ -61,7 +75,5 @@ Future<void> showAddElementSearch(
     );
   },
   searchHint: "Add element",
-  rowRenderers: {
-    elementTypeSearchResultType.id: buildElementTypeSearchResultItem,
-  },
+  rowRenderers: {...relationSearchRowRenderers},
 );

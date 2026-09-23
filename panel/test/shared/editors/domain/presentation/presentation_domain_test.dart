@@ -63,23 +63,36 @@ void main() {
       );
     });
 
-    test("provides dedicated semantic color and icon presentations", () {
-      final definitions = {
-        for (final definition in builtinPresentationDefinitions())
-          definition.id: definition.root.element,
-      };
+    test("labels polymorphic choices from catalog short names", () {
+      final abstractType = ResolvedTypeRef(
+        id: DeclaredTypeId("11111111111111111111111111111111"),
+        revision: 1,
+      );
+      final concreteType = ResolvedTypeRef(
+        id: DeclaredTypeId("22222222222222222222222222222222"),
+        revision: 1,
+      );
+      final registry = TypeRegistry(
+        TypeCatalog([
+          TypeDefinition(id: abstractType, kind: NominalTypeKind.openAbstract),
+          TypeDefinition(
+            id: concreteType,
+            kind: NominalTypeKind.concrete,
+            parents: [abstractType],
+            displayName: "MaterialIcon",
+            qualifiedName: "com.typewritermc.icon.MaterialIcon",
+          ),
+        ]),
+      );
 
+      final element = NamedType(abstractType)
+          .generateDefaultPresentation(registry: registry)
+          .element;
+
+      expect(element, isA<PolymorphicInputElement>());
       expect(
-        definitions[standardColorPresentationId],
-        isA<ColorInputElement>(),
-      );
-      expect(
-        definitions[standardIconifyPresentationId],
-        isA<SearchInputElement>(),
-      );
-      expect(
-        definitions[standardSvgIconPresentationId],
-        isA<NamedInputElement>(),
+        (element as PolymorphicInputElement).concreteTypes.single.label,
+        "MaterialIcon".asStringLiteral,
       );
     });
   });
@@ -191,21 +204,27 @@ void main() {
       id: "root",
       element: ColumnElement(
         children: [
-          PresentationNode(
-            id: "valid",
-            element: TextInputElement(control: BoundControl(binding: binding)),
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "valid",
+              element: TextInputElement(
+                control: BoundControl(binding: binding),
+              ),
+            ),
           ),
-          PresentationNode(
-            id: "invalid",
-            element: NumericInputElement(BoundControl(binding: binding)),
+          PresentationAxisChild.fixed(
+            PresentationNode(
+              id: "invalid",
+              element: NumericInputElement(BoundControl(binding: binding)),
+            ),
           ),
         ],
       ),
     ).localizeFailures(context, registry: null);
     final children = (localized.element as ColumnElement).children;
 
-    expect(children.first.element, isA<TextInputElement>());
-    expect(children.last.element, isA<DiagnosticElement>());
+    expect(children.first.child.element, isA<TextInputElement>());
+    expect(children.last.child.element, isA<DiagnosticElement>());
   });
 
   test("rejects a date and time control with no visible parts", () {

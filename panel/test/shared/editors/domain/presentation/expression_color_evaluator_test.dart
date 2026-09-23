@@ -1,8 +1,10 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../support/realm_catalog_fixture.dart";
+
 void main() {
-  final registry = TypeRegistry(const TypeCatalog([]));
+  final registry = TypeRegistry(receivedRealmCatalog());
   const context = ExpressionContext(bindings: BindingEnvironment({}));
 
   test("color operation replaces the alpha channel", () {

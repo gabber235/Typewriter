@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/content/content_renderer.stories.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/data/data_renderer.stories.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/data/data_renderer_variants.stories.dart";
@@ -46,7 +47,7 @@ void main() {
 
   test("every renderer story starts with a valid typed value", () {
     for (final scenario in scenarios) {
-      final registry = TypeRegistry(TypeCatalog(scenario.definitions));
+      final registry = TypeRegistry(receivedRealmCatalog(scenario.definitions));
       expect(
         scenario.value.validateAgainst(scenario.type, registry: registry),
         isEmpty,

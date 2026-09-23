@@ -26,13 +26,13 @@ EditorRealmRuntime storyRealmRuntime(Iterable<Tag> tags) {
               for (final tag in values)
                 SearchNode.result(
                   result: SearchResult(
-                    id: tag.tagId.toSurrealQl(),
+                    id: tag.tagId.value,
                     type: presentationSearchResultType,
                     title: tag.name,
                     payload: PresentationSearchResultPayload(
                       selectedValue: ReferenceValue(tag.tagId),
                       presentation: PresentationNode(
-                        id: "widgetbook.reference.${tag.tagId.id}",
+                        id: "widgetbook.reference.${tag.tagId.value}",
                         element: TextElement(tag.name.asStringLiteral),
                       ),
                       expressions: const ExpressionContext(
@@ -52,11 +52,6 @@ EditorRealmRuntime storyRealmRuntime(Iterable<Tag> tags) {
             title: byId[id]?.name,
           ),
       ],
-      policies: ReferenceCandidatePolicyRegistry({
-        tagParentReferencePolicyId: CallbackReferenceCandidatePolicy(
-          (_) => ReferenceCandidateDecision.allowed(),
-        ),
-      }),
     ),
   );
 }

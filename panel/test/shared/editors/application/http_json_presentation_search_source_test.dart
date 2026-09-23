@@ -6,6 +6,8 @@ import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/test_utils.dart";
+
 void main() {
   final registry = TypeRegistry(const TypeCatalog([]));
 
@@ -132,6 +134,66 @@ void main() {
     );
   });
 
+  test("maps Iconify API identifiers into typed icon records", () async {
+    late http.Request captured;
+    final client = MockClient((request) async {
+      captured = request;
+      return http.Response(
+        jsonEncode({
+          "icons": ["mdi:book", "invalid", "game-icons:broad-dagger"],
+        }),
+        200,
+      );
+    });
+    final query = _binding(_queryBindingId);
+    final identifier = _binding(_candidateBindingId)
+        .regexCapture(r"^([a-z0-9-]+:[a-z0-9-]+)$", group: 1);
+    final source = _source(
+      _provider(
+        uri: "https://api.iconify.design/search".asStringLiteral,
+        resultPath: r"$.icons[*]",
+        parameters: [
+          HttpQueryParameter(
+            name: "query",
+            value: query.regexCapture(r"^(?:[^:]+:)?(.+)$", group: 1),
+          ),
+          HttpQueryParameter(
+            name: "prefix",
+            value: query
+                .regexCapture(r"^([^:]+):(.+)$", group: 1)
+                .coalesce("".asStringLiteral),
+            omitIfEmpty: true,
+          ),
+          HttpQueryParameter(name: "limit", value: "64".asStringLiteral),
+        ],
+        mapping: _mapping(
+          selectedValue: TypedExpression(
+            resultType: NamedType(standardTypeRefs.iconifyIcon),
+            expression: RecordExpression({"value": identifier}),
+          ),
+        ),
+      ),
+      client,
+      TypeRegistry(receivedRealmCatalog()),
+    );
+    addTearDown(source.dispose);
+    addTearDown(client.close);
+
+    final snapshot = await _search(source, "mdi:book");
+
+    expect(captured.url.queryParameters, {
+      "query": "book",
+      "prefix": "mdi",
+      "limit": "64",
+    });
+    expect(_resultIds(snapshot), ["mdi:book", "game-icons:broad-dagger"]);
+    expect(
+      _payload(snapshot.nodes.first).selectedValue,
+      RecordValue({"value": const StringValue("mdi:book")}),
+    );
+    expect(snapshot.errorSummaries, hasLength(1));
+  });
+
   test("rejects a non HTTPS provider before issuing a request", () async {
     var requested = false;
     final client = MockClient((_) async {
@@ -174,6 +236,7 @@ HttpJsonPresentationSearchSource _source(
 
 HttpJsonSearchProvider _provider({
   TypedExpression? uri,
+  String resultPath = r"$.items[*]",
   List<HttpQueryParameter> parameters = const [],
   List<HttpJsonContextBinding> contextBindings = const [],
   SearchResultMapping? mapping,
@@ -181,7 +244,7 @@ HttpJsonSearchProvider _provider({
 }) => HttpJsonSearchProvider(
   uri: uri ?? "https://api.example/search".asStringLiteral,
   parameters: parameters,
-  resultPath: r"$.items[*]",
+  resultPath: resultPath,
   resultType: const StringType(),
   result: mapping ?? _mapping(),
   contextBindings: contextBindings,

@@ -45,9 +45,12 @@ class DepthBox extends HookWidget {
   Widget build(BuildContext context) {
     final parent = DepthContainer.maybeOf(context);
     final depth = this.depth ?? (parent?.depth ?? -1) + 1;
+    final surfaceColor = Surface.maybeOf(context)?.color;
 
     final color = enabled
-        ? depth.isEven
+        ? surfaceColor != null && depth == 0
+              ? surfaceColor
+              : depth.isEven
               ? Theme.of(context).colorScheme.surfaceContainerLowest
               : Theme.of(context).colorScheme.surface
         : Colors.transparent;

@@ -71,22 +71,8 @@ extension DataValueValidation on DataValue {
     }
 
     if (value is ReferenceValue && type is ReferenceType) {
-      if (registry == null) {
-        return [
-          _invalid(path, "A registry is required to validate a reference"),
-        ];
-      }
-      final family = registry.referenceFamily(type.target);
-      if (family case TypeFailure(:final diagnostics)) return diagnostics;
-      final expectedTable = family.valueOrNull!.name;
-      if (value.id.table != expectedTable) {
-        return [
-          _invalid(
-            path,
-            "Reference targets '${value.id.table}' but '$expectedTable' is required",
-          ),
-        ];
-      }
+      // Resource identity is opaque. Target compatibility requires the target
+      // resource and is validated by Realm against the generation pinned graph.
       return const [];
     }
 

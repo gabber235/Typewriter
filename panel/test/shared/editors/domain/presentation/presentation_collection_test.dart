@@ -209,8 +209,11 @@ LocalPresentationCollectionSource _source(
     id: const PresentationCollectionSourceId("elements"),
     schema: PresentationCollectionSchema(
       rowType: rowType,
-      keyType: const StringType(),
       rowBindingId: rowBinding,
+      selectability: const TypedExpression(
+        resultType: BooleanType(),
+        expression: LiteralExpression(BooleanValue(true)),
+      ),
       key: field("key", const StringType()),
       relations: [
         PresentationCollectionRelation(

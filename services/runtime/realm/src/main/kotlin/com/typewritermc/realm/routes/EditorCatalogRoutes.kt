@@ -10,7 +10,7 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
  */
 internal class EditorCatalogRoutes(
     private val source: RealmEditorCatalogSource,
-    private val contracts: LibraryContracts,
+    private val contracts: EditorContracts,
     private val realmAddress: RealmAddress,
 ) {
     /** Registers catalog fetch and initial generation operations on the current Realm router. */
@@ -18,6 +18,9 @@ internal class EditorCatalogRoutes(
         with(builder) {
             unary(contracts.fetchEditorCatalog) { call ->
                 source.fetch(call.request)
+            }
+            unary(contracts.initializeTypedValue) { call ->
+                source.initialize(call.request)
             }
             watch(contracts.watchEditorCatalog) { call ->
                 source.initialGeneration(call.request)

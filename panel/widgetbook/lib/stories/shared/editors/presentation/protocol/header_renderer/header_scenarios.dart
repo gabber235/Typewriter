@@ -54,8 +54,7 @@ SemanticHeaderScenario generatedCompositeScenario() => (
     ]),
   }),
   presentation: null,
-  description:
-      "Generated root records stay flat while nested records and collections receive compact collapsible headers.",
+  description: "Generated root records stay flat while nested records and collections receive compact collapsible headers.",
 );
 
 SemanticHeaderScenario listActionsScenario() => (
@@ -66,8 +65,7 @@ SemanticHeaderScenario listActionsScenario() => (
     _task("Start the cinematic", false),
   ]),
   presentation: null,
-  description:
-      "Use the collection header to append. Item headers expose drag reorder, duplicate, and remove actions.",
+  description: "Use the collection header to append. Item headers expose drag reorder, duplicate, and remove actions.",
 );
 
 SemanticHeaderScenario mapActionsScenario() => (
@@ -83,8 +81,7 @@ SemanticHeaderScenario mapActionsScenario() => (
     ),
   ]),
   presentation: null,
-  description:
-      "Map collection actions live in the outer header. Each entry has its rendered key, content, and removal shortcut.",
+  description: "Map collection actions live in the outer header. Each entry has its rendered key, content, and removal shortcut.",
 );
 
 SemanticHeaderScenario mergedHeaderScenario() {
@@ -121,8 +118,7 @@ SemanticHeaderScenario mergedHeaderScenario() {
         ),
       ),
     ),
-    description:
-        "Outer and inner metadata for the same canonical binding combine into one visual header.",
+    description: "Outer and inner metadata for the same canonical binding combine into one visual header.",
   );
 }
 

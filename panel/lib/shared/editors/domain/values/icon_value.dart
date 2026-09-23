@@ -47,11 +47,11 @@ extension IconValueValidation on IconValue {
   PolymorphicValue get typedValue => switch (this) {
     IconifyIconValue(:final value) => PolymorphicValue(
       concreteType: standardTypeRefs.iconifyIcon,
-      value: StringValue(value),
+      value: RecordValue({"value": StringValue(value)}),
     ),
     SvgIconValue(:final source) => PolymorphicValue(
       concreteType: standardTypeRefs.svgIcon,
-      value: StringValue(source),
+      value: RecordValue({"source": StringValue(source)}),
     ),
   };
 }
@@ -62,13 +62,38 @@ extension IconValueValidation on IconValue {
 /// boundary and return `null` rather than being coerced.
 extension DataValueIcon on DataValue {
   IconValue? get iconValueOrNull => switch (this) {
-    PolymorphicValue(concreteType: final type, value: StringValue(:final value))
+    PolymorphicValue(
+      concreteType: final type,
+      value: RecordValue(fields: {"value": StringValue(:final value)}),
+    )
         when type == standardTypeRefs.iconifyIcon =>
       IconValue.iconify(value),
-    PolymorphicValue(concreteType: final type, value: StringValue(:final value))
+    PolymorphicValue(
+      concreteType: final type,
+      value: RecordValue(fields: {"source": StringValue(:final value)}),
+    )
         when type == standardTypeRefs.svgIcon =>
       IconValue.svg(value),
     _ => null,
+  };
+
+  /// Resolves a concrete icon representation when its expression carries the
+  /// nominal concrete type, as in a search result or selected-value preview.
+  IconValue? iconValueFor(TypeExpression type) => switch ((type, this)) {
+    (
+      NamedType(reference: final reference),
+      RecordValue(fields: {"value": StringValue(:final value)}),
+    )
+        when reference == standardTypeRefs.iconifyIcon &&
+            value.isValidIconifyValue =>
+      IconValue.iconify(value),
+    (
+      NamedType(reference: final reference),
+      RecordValue(fields: {"source": StringValue(:final value)}),
+    )
+        when reference == standardTypeRefs.svgIcon && value.isSanitizedSvg =>
+      IconValue.svg(value),
+    _ => iconValueOrNull,
   };
 }
 

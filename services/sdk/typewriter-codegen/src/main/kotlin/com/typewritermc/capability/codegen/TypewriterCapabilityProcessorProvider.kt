@@ -214,7 +214,7 @@ private class TypewriterCapabilityProcessor(
             kind = kind,
             requestType = requestType.toTypeName(),
             resultType = resultType?.toTypeName(),
-            id = "cap_v1_${signature.sha256()}",
+            id = "cap_${signature.sha256()}",
         )
     }
 

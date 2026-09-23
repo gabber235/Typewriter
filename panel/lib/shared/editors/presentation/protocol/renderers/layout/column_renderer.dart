@@ -11,6 +11,6 @@ extension ColumnElementRendering on ColumnElement {
     mainAxisSize: MainAxisSize.min,
     mainAxisAlignment: mainAxisAlignment.mainAxisAlignment,
     crossAxisAlignment: crossAxisAlignment.crossAxisAlignment,
-    children: children.renderSpaced(spacing, scope, vertical: true),
+    children: children.renderAxisChildren(spacing, scope, vertical: true),
   );
 }

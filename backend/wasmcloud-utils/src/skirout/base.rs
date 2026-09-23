@@ -14,7 +14,6 @@
 //   cargo add skir-client
 pub mod kernel;
 pub mod service;
+pub mod organization;
 pub mod editor;
 pub mod access;
-pub mod organization;
-pub mod library;

@@ -12,30 +12,26 @@ abstract class Book with _$Book {
   @Assert("title != \"\"", "Title must not be empty.")
   @Assert("icon != \"\"", "Icon must not be empty.")
   const factory Book({
-    required skir.RecordId bookId,
+    required skir.ResourceId bookId,
     required String title,
     required String icon,
     required Color color,
-    required List<skir.RecordId> tagIds,
+    required List<skir.ResourceId> tagIds,
   }) = _Book;
 
   const Book._();
 
-  /// Converts the authoring contract into the value used by providers and UI.
-  factory Book.fromWire(skir.Book book) => Book(
-    bookId: book.id,
-    title: book.title,
-    icon: book.icon,
-    color: book.color.toFlutterColor(),
-    tagIds: book.tags.toList(),
-  );
-
-  /// Converts this immutable value into the authoring operation payload.
-  skir.Book toWire() => skir.Book(
-    id: this.bookId,
-    title: title,
-    icon: icon,
-    color: color.toSkirColor(),
-    tags: tagIds,
-  );
+  factory Book.fromTyped(TypedAuthoringResource resource) {
+    final value = resource.content.rootValue;
+    final provisional = Book(
+      bookId: resource.id,
+      title: "_",
+      icon: "_",
+      color: Colors.black,
+      tagIds: const [],
+    );
+    final decoded = provisional.withInspectorValue(value);
+    if (decoded == null) throw StateError("The Book content is invalid");
+    return decoded;
+  }
 }

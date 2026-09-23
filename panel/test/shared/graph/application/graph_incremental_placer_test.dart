@@ -48,6 +48,50 @@ void main() {
     expect(placed.single.overlaps(obstacle, gap: 1), isFalse);
   });
 
+  test("keeps placement inside each directional region", () {
+    final cases = [
+      (
+        const GraphPlacementRegion.leftOf(0),
+        (GraphGridRect rect) => rect.right <= 0,
+      ),
+      (
+        const GraphPlacementRegion.rightOf(8),
+        (GraphGridRect rect) => rect.x >= 8,
+      ),
+      (
+        const GraphPlacementRegion.above(0),
+        (GraphGridRect rect) => rect.bottom <= 0,
+      ),
+      (
+        const GraphPlacementRegion.below(6),
+        (GraphGridRect rect) => rect.y >= 6,
+      ),
+    ];
+
+    for (final (region, isAllowed) in cases) {
+      final placed = placer.placeGroup(
+        obstacles: [_rect(-8, -8, 16, 14)],
+        group: [_rect(0, 0, 4, 2)],
+        anchor: Offset.zero,
+        allowedRegion: region,
+      );
+
+      expect(isAllowed(placed.single), isTrue);
+      expect(placed.single.overlaps(_rect(-8, -8, 16, 14), gap: 1), isFalse);
+    }
+  });
+
+  test("uses a valid directional escape bound through dense obstacles", () {
+    final placed = placer.placeGroup(
+      obstacles: [for (var y = -10; y <= 10; y += 2) _rect(4, y, 4, 1)],
+      group: [_rect(0, 0, 4, 1)],
+      anchor: const Offset(6, 0),
+      allowedRegion: const GraphPlacementRegion.rightOf(4),
+    );
+
+    expect(placed.single.x, greaterThanOrEqualTo(9));
+  });
+
   test("empty group has no placement", () {
     expect(
       placer.placeGroup(

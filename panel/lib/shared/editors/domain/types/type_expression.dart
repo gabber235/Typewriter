@@ -121,5 +121,6 @@ abstract class TypeField with _$TypeField {
     required String name,
     required TypeExpression type,
     DataValue? initialValue,
+    @Default(false) bool defaulted,
   }) = _TypeField;
 }

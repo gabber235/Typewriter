@@ -75,9 +75,9 @@ class TestSelectableIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final initial = NamedType(
-      rootDefinition.id,
-    ).createInitialValue(registry: TypeRegistry(typeCatalog)).valueOrNull;
+    final initial = NamedType(rootDefinition.id)
+        .createInitialValue(registry: TypeRegistry(typeCatalog))
+        .valueOrNull;
     final data =
         ref.watch(testDataProvider(id)) ??
         (initial is RecordValue ? initial : RecordValue(const {}))

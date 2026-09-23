@@ -1,29 +1,17 @@
 package com.typewritermc.engine
 
-import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.ElementTypeId
-import com.typewritermc.library.Page
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.DataPath
+import com.typewritermc.types.RelationId
+import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.TypeExpression
+import com.typewritermc.elements.ReferenceSlotId
+import com.typewritermc.authoring.ResourceDefinitionId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * Identifies the authored source of compiled content independently of its expansion context.
- *
- * A source can appear in more than one compiled instance; use [CompiledElementKey] when indexing runtime elements.
- */
-@Serializable
-data class SourceElementKey(
-    val element: Ref<Element>,
-)
-
-/**
- * Distinguishes an instance within compiled expansion using an ordered sequence of segments.
- *
- * [Root] represents content without an expansion path. Segment syntax is not validated by this value object.
- */
+/** Distinguishes one generated occurrence of an authored resource. */
 @Serializable
 data class InstancePath(
     val segments: List<String>,
@@ -33,11 +21,6 @@ data class InstancePath(
     }
 }
 
-/**
- * Carries the instance context that distinguishes compilations of the same authored source.
- *
- * The root context is used when no instancing path is required.
- */
 @Serializable
 data class CompilationContext(
     val instancePath: InstancePath,
@@ -47,64 +30,48 @@ data class CompilationContext(
     }
 }
 
-/**
- * Identifies one compiled occurrence by source and compilation context.
- *
- * Runtime maps must use this complete key so expanded occurrences do not overwrite one another.
- */
+/** Identifies a resource in a compiled occurrence. */
 @Serializable
-data class CompiledElementKey(
-    val source: SourceElementKey,
+data class CompiledResourceKey(
+    val source: ResourceId,
     val context: CompilationContext,
 )
 
-/**
- * Carries a logical element payload prepared for engine decoding.
- *
- * The source identity and schema revision retain authoring provenance, while [key] distinguishes compiled
- * occurrences. Values have already passed compiler projection; this data class does not repeat validation.
- */
+/** Retains the typed scalar record before graph hydration. */
 @Serializable
-data class CompiledElement(
-    val key: CompiledElementKey,
-    val sourceId: ElementInstanceId,
-    val elementType: ElementTypeId,
-    val schemaRevision: Int,
-    val value: DataValue,
-    val placement: CompiledPlacement,
+data class CompiledResource(
+    val key: CompiledResourceKey,
+    val definition: ResourceDefinitionId,
+    val rootType: ResolvedTypeRef,
+    val valueWithSlots: DataValue,
 )
 
-/**
- * Retains placement information relevant to execution.
- *
- * Graph coordinates and dimensions are intentionally absent. Timeline placements retain track or frame positions;
- * these data classes do not validate scheduling bounds.
- */
 @Serializable
-sealed interface CompiledPlacement {
+sealed interface CompiledEdgeOrigin {
     @Serializable
-    @SerialName("graph_v1")
-    data object Graph : CompiledPlacement
+    @SerialName("declared")
+    data class Declared(
+        val relation: RelationId,
+        val sourceIndex: Int? = null,
+        val targetIndex: Int? = null,
+    ) : CompiledEdgeOrigin
 
     @Serializable
-    @SerialName("timeline_entry_v1")
-    data class TimelineEntry(
-        val trackIndex: Int,
-    ) : CompiledPlacement
-
-    @Serializable
-    @SerialName("timeline_segment_v1")
-    data class TimelineSegment(
-        val startFrame: Int,
-        val endFrame: Int,
-    ) : CompiledPlacement
-
-    @Serializable
-    @SerialName("timeline_keyframe_v1")
-    data class TimelineKeyframe(
-        val frame: Int,
-    ) : CompiledPlacement
+    @SerialName("reference")
+    data class Reference(
+        val slot: ReferenceSlotId,
+        val path: DataPath,
+        val expectedType: TypeExpression,
+    ) : CompiledEdgeOrigin
 }
+
+/** A link between compiled keys, including keys outside this shard. */
+@Serializable
+data class CompiledEdge(
+    val source: CompiledResourceKey,
+    val target: CompiledResourceKey,
+    val origin: CompiledEdgeOrigin,
+)
 
 /**
  * Identifies compiled content using 64 lowercase SHA256 hexadecimal characters.
@@ -122,46 +89,15 @@ value class ContentDigest(
     }
 }
 
-/**
- * Packages the compiled elements of one page with its semantic digest and input fingerprint.
- *
- * The fingerprint supports reuse when compiler inputs are unchanged. The shard digest identifies compiled output;
- * the blob pointer separately identifies its serialized bytes.
- */
+/** A Page rooted typed graph with owned records and incident links. */
 @Serializable
 data class CompiledPageShard(
     val formatRevision: Int,
     val digest: ContentDigest,
     val inputFingerprint: ContentDigest,
-    val page: Ref<Page>,
-    val elements: List<CompiledElement>,
-)
-
-/**
- * Links a page in the manifest to the semantic digest of its compiled shard.
- *
- * The reference is the manifest authority for page membership. The shard payload must be fetched through the
- * activation pointer and then checked against both this digest and page identity.
- */
-@Serializable
-data class CompiledPageReference(
-    val page: Ref<Page>,
-    val shard: ContentDigest,
-)
-
-/**
- * Selects the page shards forming one compiled content revision.
- *
- * Source and catalog revisions record compilation inputs. The manifest is metadata, so loading requires the
- * referenced shards and validation of their page identities.
- */
-@Serializable
-data class CompiledManifest(
-    val formatRevision: Int,
-    val digest: ContentDigest,
-    val sourceRevision: String,
-    val catalogRevision: String,
-    val pages: List<CompiledPageReference>,
+    val root: CompiledResourceKey,
+    val resources: List<CompiledResource>,
+    val edges: List<CompiledEdge>,
 )
 
 /**
@@ -176,73 +112,6 @@ data class CompiledBlobPointer(
 ) {
     init {
         require(size >= 0) { "Compiled blob size must not be negative." }
-    }
-}
-
-/**
- * Maps a semantic shard digest to the blob containing its serialized representation.
- *
- * Keep the two identities distinct when resolving manifest pages and verifying downloaded bytes.
- */
-@Serializable
-data class CompiledShardPointer(
-    val shard: ContentDigest,
-    val blob: CompiledBlobPointer,
-)
-
-/**
- * Announces a positive activation revision and the blob pointers needed to load it.
- *
- * Shard identities must be unique. [manifestDigest] is the semantic manifest identity, while [manifest] verifies
- * its serialized blob. Consumers use activation revision to reject stale delivery.
- */
-@Serializable
-data class CompiledContentActivation(
-    val activationRevision: Long,
-    val manifestDigest: ContentDigest,
-    val manifest: CompiledBlobPointer,
-    val shards: List<CompiledShardPointer>,
-) {
-    init {
-        require(activationRevision > 0) { "Compiled content activation revisions must be positive." }
-        require(shards.map(CompiledShardPointer::shard).distinct().size == shards.size) {
-            "Compiled content activation must not contain duplicate shards."
-        }
-    }
-}
-
-/**
- * Groups a decoded manifest with all page shards it references.
- *
- * Construction rejects duplicate shard digests and missing or mismatched page shards. It does not recompute
- * content digests or forbid extra unreferenced shards.
- */
-@Serializable
-data class CompiledContentBundle(
-    val manifest: CompiledManifest,
-    val shards: List<CompiledPageShard>,
-) {
-    init {
-        val byDigest = shards.associateBy(CompiledPageShard::digest)
-        require(byDigest.size == shards.size) { "Compiled content bundles must not contain duplicate shards." }
-        require(manifest.pages.all { page -> byDigest[page.shard]?.page == page.page }) {
-            "Compiled content bundles must contain every manifest shard with matching page identity."
-        }
-    }
-}
-
-/**
- * Pairs loaded content with the positive delivery revision used to order runtime application.
- *
- * The revision describes activation order, not the schema or file format revision.
- */
-@Serializable
-data class ActivatedCompiledContent(
-    val activationRevision: Long,
-    val content: CompiledContentBundle,
-) {
-    init {
-        require(activationRevision > 0) { "Compiled content activation revisions must be positive." }
     }
 }
 
@@ -267,8 +136,8 @@ data class CompileDiagnostic(
     val code: String,
     val message: String,
     val severity: CompileDiagnosticSeverity,
-    val source: ElementInstanceId? = null,
-    val target: com.typewritermc.types.ResourceId? = null,
+    val source: ResourceId? = null,
+    val target: ResourceId? = null,
 )
 
 /**

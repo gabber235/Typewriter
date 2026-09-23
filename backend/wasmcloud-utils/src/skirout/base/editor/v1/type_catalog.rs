@@ -722,6 +722,45 @@ impl TypedDurationValue {
 }
 
 // ==============================================================================
+// struct ResourceId
+// ==============================================================================
+
+/// Opaque authored resource identity. Consumers compare it and never parse it.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResourceId {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceId>>,
+}
+
+impl ResourceId {
+    pub fn default_ref() -> &'static ResourceId {
+        static D: std::sync::LazyLock<ResourceId> = std::sync::LazyLock::new(ResourceId::default);
+        &D
+    }
+}
+
+impl ResourceId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ResourceId>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "ResourceId",
+                    "Opaque authored resource identity. Consumers compare it and never parse it.",
+                    |x: &ResourceId| &x._unrecognized,
+                    |x: &mut ResourceId, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ResourceId::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum TypedValue
 // ==============================================================================
 
@@ -749,7 +788,7 @@ pub enum TypedValue {
     Record(Box<TypedRecordValue>),
     Named(Box<TypedNamedValue>),
     Duration(Box<TypedDurationValue>),
-    Reference(Box<crate::skirout::base::kernel::v1::record_id::RecordId>),
+    Reference(Box<ResourceId>),
 }
 
 impl Default for TypedValue {
@@ -891,6 +930,7 @@ pub struct RecordField {
     pub name: String,
     pub value_type: TypeExpression,
     pub initializer: Option<TypedValue>,
+    pub defaulted: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RecordField>>,
 }
@@ -1519,6 +1559,178 @@ impl NamedPresentation {
 }
 
 // ==============================================================================
+// enum PresentationRole
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationRole {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationRole>>),
+    ReferenceSummary,
+    ReferenceOption,
+    CatalogOption,
+    AuthoringResult,
+    PageTile,
+    GraphNode,
+    InspectorHeader,
+    Creation,
+}
+
+impl Default for PresentationRole {
+    fn default() -> Self {
+        PresentationRole::Unknown(None)
+    }
+}
+
+impl PresentationRole {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationRole> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationRole>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationRole| match x {
+                        PresentationRole::Unknown(_) => 0,
+                        PresentationRole::ReferenceSummary => 1,
+                        PresentationRole::ReferenceOption => 2,
+                        PresentationRole::CatalogOption => 3,
+                        PresentationRole::AuthoringResult => 4,
+                        PresentationRole::PageTile => 5,
+                        PresentationRole::GraphNode => 6,
+                        PresentationRole::InspectorHeader => 7,
+                        PresentationRole::Creation => 8,
+                    },
+                    |u| PresentationRole::Unknown(Some(u)),
+                    |x: &PresentationRole| match x { PresentationRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/type_catalog.skir",
+                    "PresentationRole",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationRole> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationRole::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RolePresentation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RolePresentation {
+    pub role: PresentationRole,
+    pub presentation_id: PresentationId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RolePresentation>>,
+}
+
+impl RolePresentation {
+    pub fn default_ref() -> &'static RolePresentation {
+        static D: std::sync::LazyLock<RolePresentation> = std::sync::LazyLock::new(RolePresentation::default);
+        &D
+    }
+}
+
+impl RolePresentation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RolePresentation> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RolePresentation>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "RolePresentation",
+                    "",
+                    |x: &RolePresentation| &x._unrecognized,
+                    |x: &mut RolePresentation, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RolePresentation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RolePresentation::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum FieldMergeStrategy
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FieldMergeStrategy {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<FieldMergeStrategy>>),
+    SetMembership,
+}
+
+impl Default for FieldMergeStrategy {
+    fn default() -> Self {
+        FieldMergeStrategy::Unknown(None)
+    }
+}
+
+impl FieldMergeStrategy {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<FieldMergeStrategy> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<FieldMergeStrategy>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &FieldMergeStrategy| match x {
+                        FieldMergeStrategy::Unknown(_) => 0,
+                        FieldMergeStrategy::SetMembership => 1,
+                    },
+                    |u| FieldMergeStrategy::Unknown(Some(u)),
+                    |x: &FieldMergeStrategy| match x { FieldMergeStrategy::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/type_catalog.skir",
+                    "FieldMergeStrategy",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<FieldMergeStrategy> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(FieldMergeStrategy::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct FieldMergePolicy
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct FieldMergePolicy {
+    pub field_path: Vec<String>,
+    pub strategy: FieldMergeStrategy,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<FieldMergePolicy>>,
+}
+
+impl FieldMergePolicy {
+    pub fn default_ref() -> &'static FieldMergePolicy {
+        static D: std::sync::LazyLock<FieldMergePolicy> = std::sync::LazyLock::new(FieldMergePolicy::default);
+        &D
+    }
+}
+
+impl FieldMergePolicy {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<FieldMergePolicy> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<FieldMergePolicy>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "FieldMergePolicy",
+                    "",
+                    |x: &FieldMergePolicy| &x._unrecognized,
+                    |x: &mut FieldMergePolicy, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<FieldMergePolicy> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(FieldMergePolicy::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct TypeDefinition
 // ==============================================================================
 
@@ -1534,6 +1746,11 @@ pub struct TypeDefinition {
     pub default_presentation_id: Option<PresentationId>,
     pub named_presentations: crate::skir_client::KeyedVec<NamedPresentation_byName>,
     pub outgoing_conversion_ids: Vec<ConversionId>,
+    pub role_presentations: Vec<RolePresentation>,
+    pub field_merge_policies: Vec<FieldMergePolicy>,
+    pub declaration_owner: String,
+    pub initializer: Option<TypedValue>,
+    pub qualified_name: Option<String>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypeDefinition>>,
 }
@@ -1721,6 +1938,11 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ResourceId> = ResourceId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &ResourceId| &x.value, |x: &mut ResourceId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TypedValue> = TypedValue::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("unit", 1, 1, "", TypedValue::Unit);
                 (*a).add_wrapper_variant("boolean", 2, 2, crate::skir_client::Serializer::bool(), "", |v| TypedValue::Boolean(v), |x| match x { TypedValue::Boolean(v) => v, _ => unreachable!() });
@@ -1743,7 +1965,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("record", 19, 19, crate::skir_client::internal::struct_serializer_from_static(TypedRecordValue::_adapter()), "", |v| TypedValue::Record(Box::new(v)), |x| match x { TypedValue::Record(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("named", 20, 20, crate::skir_client::internal::struct_serializer_from_static(TypedNamedValue::_adapter()), "", |v| TypedValue::Named(Box::new(v)), |x| match x { TypedValue::Named(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("duration", 21, 21, crate::skir_client::internal::struct_serializer_from_static(TypedDurationValue::_adapter()), "", |v| TypedValue::Duration(Box::new(v)), |x| match x { TypedValue::Duration(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("reference", 22, 22, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |v| TypedValue::Reference(Box::new(v)), |x| match x { TypedValue::Reference(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("reference", 22, 22, crate::skir_client::internal::struct_serializer_from_static(ResourceId::_adapter()), "", |v| TypedValue::Reference(Box::new(v)), |x| match x { TypedValue::Reference(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1764,6 +1986,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("name", 0, crate::skir_client::Serializer::string(), "", |x: &RecordField| &x.name, |x: &mut RecordField, v| x.name = v);
                 (*a).add_field("value_type", 1, crate::skir_client::internal::enum_serializer_from_static(TypeExpression::_adapter()), "", |x: &RecordField| &x.value_type, |x: &mut RecordField, v| x.value_type = v);
                 (*a).add_field("initializer", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TypedValue::_adapter())), "", |x: &RecordField| &x.initializer, |x: &mut RecordField, v| x.initializer = v);
+                (*a).add_field("defaulted", 3, crate::skir_client::Serializer::bool(), "", |x: &RecordField| &x.defaulted, |x: &mut RecordField, v| x.defaulted = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1860,6 +2083,35 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationRole> = PresentationRole::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("reference_summary", 1, 1, "", PresentationRole::ReferenceSummary);
+                (*a).add_constant_variant("reference_option", 2, 2, "", PresentationRole::ReferenceOption);
+                (*a).add_constant_variant("catalog_option", 3, 3, "", PresentationRole::CatalogOption);
+                (*a).add_constant_variant("authoring_result", 4, 4, "", PresentationRole::AuthoringResult);
+                (*a).add_constant_variant("page_tile", 5, 5, "", PresentationRole::PageTile);
+                (*a).add_constant_variant("graph_node", 6, 6, "", PresentationRole::GraphNode);
+                (*a).add_constant_variant("inspector_header", 7, 7, "", PresentationRole::InspectorHeader);
+                (*a).add_constant_variant("creation", 8, 8, "", PresentationRole::Creation);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RolePresentation> = RolePresentation::_adapter() as *const _ as *mut _;
+                (*a).add_field("role", 0, crate::skir_client::internal::enum_serializer_from_static(PresentationRole::_adapter()), "", |x: &RolePresentation| &x.role, |x: &mut RolePresentation, v| x.role = v);
+                (*a).add_field("presentation_id", 1, crate::skir_client::internal::struct_serializer_from_static(PresentationId::_adapter()), "", |x: &RolePresentation| &x.presentation_id, |x: &mut RolePresentation, v| x.presentation_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<FieldMergeStrategy> = FieldMergeStrategy::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("set_membership", 1, 1, "", FieldMergeStrategy::SetMembership);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<FieldMergePolicy> = FieldMergePolicy::_adapter() as *const _ as *mut _;
+                (*a).add_field("field_path", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &FieldMergePolicy| &x.field_path, |x: &mut FieldMergePolicy, v| x.field_path = v);
+                (*a).add_field("strategy", 1, crate::skir_client::internal::enum_serializer_from_static(FieldMergeStrategy::_adapter()), "", |x: &FieldMergePolicy| &x.strategy, |x: &mut FieldMergePolicy, v| x.strategy = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TypeDefinition> = TypeDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("display_name", 0, crate::skir_client::Serializer::string(), "", |x: &TypeDefinition| &x.display_name, |x: &mut TypeDefinition, v| x.display_name = v);
                 (*a).add_field("parameters", 1, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<TypeParameter_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(TypeParameter::_adapter())), "", |x: &TypeDefinition| &x.parameters, |x: &mut TypeDefinition, v| x.parameters = v);
@@ -1871,6 +2123,11 @@ fn initialize_module_serializers() {
                 (*a).add_field("default_presentation_id", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationId::_adapter())), "", |x: &TypeDefinition| &x.default_presentation_id, |x: &mut TypeDefinition, v| x.default_presentation_id = v);
                 (*a).add_field("named_presentations", 8, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<NamedPresentation_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(NamedPresentation::_adapter())), "", |x: &TypeDefinition| &x.named_presentations, |x: &mut TypeDefinition, v| x.named_presentations = v);
                 (*a).add_field("outgoing_conversion_ids", 9, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ConversionId::_adapter())), "", |x: &TypeDefinition| &x.outgoing_conversion_ids, |x: &mut TypeDefinition, v| x.outgoing_conversion_ids = v);
+                (*a).add_field("role_presentations", 10, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RolePresentation::_adapter())), "", |x: &TypeDefinition| &x.role_presentations, |x: &mut TypeDefinition, v| x.role_presentations = v);
+                (*a).add_field("field_merge_policies", 11, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(FieldMergePolicy::_adapter())), "", |x: &TypeDefinition| &x.field_merge_policies, |x: &mut TypeDefinition, v| x.field_merge_policies = v);
+                (*a).add_field("declaration_owner", 12, crate::skir_client::Serializer::string(), "", |x: &TypeDefinition| &x.declaration_owner, |x: &mut TypeDefinition, v| x.declaration_owner = v);
+                (*a).add_field("initializer", 13, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TypedValue::_adapter())), "", |x: &TypeDefinition| &x.initializer, |x: &mut TypeDefinition, v| x.initializer = v);
+                (*a).add_field("qualified_name", 14, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &TypeDefinition| &x.qualified_name, |x: &mut TypeDefinition, v| x.qualified_name = v);
                 (*a).finalize();
             }
             unsafe {

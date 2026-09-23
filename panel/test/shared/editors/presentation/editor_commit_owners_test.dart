@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -15,6 +16,32 @@ Future<void> _invokePrimaryAction(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets("contract change exposes explicit draft reconciliation", (
+    tester,
+  ) async {
+    final workspace = LocalWorkSession();
+    addTearDown(workspace.dispose);
+    final owner = workspace.editor(
+      _contractTarget("one", 1),
+    ) as TransactionalEditorSource;
+    workspace.retain(_contractKey);
+    owner.update(DataPath.root, const StringValue("draft"));
+    workspace.editor(_contractTarget("two", 2));
+
+    await tester.pumpTestApp(
+      child: ComposedEditor(model: PresentationModel.editor(owner: owner)),
+    );
+
+    expect(find.text("Editor contract changed"), findsOneWidget);
+    expect(find.text("Reconcile draft"), findsOneWidget);
+    expect(find.text("Discard and reload"), findsOneWidget);
+    await tester.tap(find.text("Reconcile draft"));
+    await tester.pump();
+
+    expect(find.text("Editor contract changed"), findsNothing);
+    expect(owner.value(DataPath.root).valueOrNull, const StringValue("draft"));
+  });
+
   testWidgets("commit controls appear for work and disappear after discard", (
     tester,
   ) async {
@@ -215,4 +242,45 @@ void main() {
     expect(attempts, ["saved", "failed"]);
     expect(second.hasWork, isTrue);
   });
+}
+
+const _contractKey = EditorResourceKey(scope: "contract", identity: "resource");
+
+ResourceEditorTarget _contractTarget(String contract, int revision) {
+  final snapshot = _ContractSnapshot(
+    contract,
+    EditorDocument(
+      rootType: const StringType(),
+      typeCatalog: const TypeCatalog([]),
+      confirmedValue: const StringValue("remote"),
+      revision: revision,
+    ),
+  );
+  return ResourceEditorTarget(
+    targetId: _contractKey.identity,
+    label: "Resource",
+    resource: FakeEditableResource(
+      key: _contractKey,
+      current: snapshot,
+      commit: (commit) async => MutationSuccess(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
+      ),
+    ),
+    snapshot: snapshot,
+    commitPolicy: EditorCommitPolicy.applyResource,
+  );
+}
+
+final class _ContractSnapshot extends EditorSnapshot
+    implements EditorContractSnapshot {
+  const _ContractSnapshot(this.contract, this.document);
+
+  final String contract;
+  @override
+  final EditorDocument document;
+
+  @override
+  bool contractCompatibleWith(EditorSnapshot candidate) =>
+      candidate is _ContractSnapshot && candidate.contract == contract;
 }
