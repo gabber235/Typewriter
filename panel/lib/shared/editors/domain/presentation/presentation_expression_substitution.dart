@@ -134,6 +134,10 @@ extension on Expression {
         conversionId: value.conversionId,
         input: value.input.substituteTypes(substitutions),
       ),
+      RecordExpression() => RecordExpression({
+        for (final field in value.fields.entries)
+          field.key: field.value.substituteTypes(substitutions),
+      }),
       StringOperationExpression() => StringOperationExpression(
         operation: value.operation,
         operands: value.operands

@@ -1563,6 +1563,100 @@ impl ColorOperationExpression {
 }
 
 // ==============================================================================
+// struct RecordExpressionField
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RecordExpressionField {
+    pub name: String,
+    pub value: TypedExpression,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RecordExpressionField>>,
+}
+
+impl RecordExpressionField {
+    pub fn default_ref() -> &'static RecordExpressionField {
+        static D: std::sync::LazyLock<RecordExpressionField> = std::sync::LazyLock::new(RecordExpressionField::default);
+        &D
+    }
+}
+
+pub struct RecordExpressionField_byName;
+
+impl crate::skir_client::KeyedVecSpec for RecordExpressionField_byName {
+    type Item = RecordExpressionField;
+    type StorageKey = String;
+    type Lookup = crate::skir_client::internal::BorrowLookup;
+    fn get_key(item: &RecordExpressionField) -> String {
+        item.name.clone()
+    }
+    fn key_extractor() -> &'static str {
+        "name"
+    }
+    fn default_item() -> &'static RecordExpressionField {
+        RecordExpressionField::default_ref()
+    }
+}
+
+impl RecordExpressionField {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RecordExpressionField> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RecordExpressionField>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/expression.skir",
+                    "RecordExpressionField",
+                    "",
+                    |x: &RecordExpressionField| &x._unrecognized,
+                    |x: &mut RecordExpressionField, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RecordExpressionField> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RecordExpressionField::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RecordExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RecordExpression {
+    pub fields: crate::skir_client::KeyedVec<RecordExpressionField_byName>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RecordExpression>>,
+}
+
+impl RecordExpression {
+    pub fn default_ref() -> &'static RecordExpression {
+        static D: std::sync::LazyLock<RecordExpression> = std::sync::LazyLock::new(RecordExpression::default);
+        &D
+    }
+}
+
+impl RecordExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RecordExpression> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RecordExpression>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/expression.skir",
+                    "RecordExpression",
+                    "",
+                    |x: &RecordExpression| &x._unrecognized,
+                    |x: &mut RecordExpression, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RecordExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RecordExpression::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum Expression
 // ==============================================================================
 
@@ -1595,6 +1689,7 @@ pub enum Expression {
     Regex(Box<RegexExpression>),
     Coalesce(Box<CoalesceExpression>),
     ColorOperation(Box<ColorOperationExpression>),
+    Record(Box<RecordExpression>),
 }
 
 impl Default for Expression {
@@ -1636,6 +1731,7 @@ impl Expression {
                         Expression::Regex(_) => 24,
                         Expression::Coalesce(_) => 25,
                         Expression::ColorOperation(_) => 26,
+                        Expression::Record(_) => 27,
                     },
                     |u| Expression::Unknown(Some(u)),
                     |x: &Expression| match x { Expression::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1969,6 +2065,17 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RecordExpressionField> = RecordExpressionField::_adapter() as *const _ as *mut _;
+                (*a).add_field("name", 0, crate::skir_client::Serializer::string(), "", |x: &RecordExpressionField| &x.name, |x: &mut RecordExpressionField, v| x.name = v);
+                (*a).add_field("value", 1, crate::skir_client::internal::struct_serializer_from_static(TypedExpression::_adapter()), "", |x: &RecordExpressionField| &x.value, |x: &mut RecordExpressionField, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RecordExpression> = RecordExpression::_adapter() as *const _ as *mut _;
+                (*a).add_field("fields", 0, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<RecordExpressionField_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(RecordExpressionField::_adapter())), "", |x: &RecordExpression| &x.fields, |x: &mut RecordExpression, v| x.fields = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<Expression> = Expression::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("literal", 1, 1, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |v| Expression::Literal(Box::new(v)), |x| match x { Expression::Literal(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("binding", 2, 2, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |v| Expression::Binding(Box::new(v)), |x| match x { Expression::Binding(b) => b.as_ref(), _ => unreachable!() });
@@ -1996,6 +2103,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("regex", 24, 24, crate::skir_client::internal::struct_serializer_from_static(RegexExpression::_adapter()), "", |v| Expression::Regex(Box::new(v)), |x| match x { Expression::Regex(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("coalesce", 25, 25, crate::skir_client::internal::struct_serializer_from_static(CoalesceExpression::_adapter()), "", |v| Expression::Coalesce(Box::new(v)), |x| match x { Expression::Coalesce(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("color_operation", 26, 26, crate::skir_client::internal::struct_serializer_from_static(ColorOperationExpression::_adapter()), "", |v| Expression::ColorOperation(Box::new(v)), |x| match x { Expression::ColorOperation(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("record", 27, 27, crate::skir_client::internal::struct_serializer_from_static(RecordExpression::_adapter()), "", |v| Expression::Record(Box::new(v)), |x| match x { Expression::Record(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

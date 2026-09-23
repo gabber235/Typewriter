@@ -156,6 +156,7 @@ final class SkirExpressionEncoder {
     CoalesceExpression(:final operands) => _operands(operands).mapValue(
       (operands) => wire.Expression.createCoalesce(operands: operands),
     ),
+    RecordExpression(:final fields) => _record(fields),
     ColorOperationExpression(:final operation, :final color, :final alpha) =>
       combineResults(
         encode(color),
@@ -169,6 +170,25 @@ final class SkirExpressionEncoder {
         ),
       ),
   };
+
+  TypeResult<wire.Expression> _record(Map<String, TypedExpression> fields) {
+    final encoded = <wire.RecordExpressionField>[];
+    final diagnostics = <TypeDiagnostic>[];
+    for (final entry in fields.entries) {
+      if (entry.key.isEmpty) {
+        diagnostics.add(wireDiagnostic("Record expression field is empty"));
+        continue;
+      }
+      final result = encode(entry.value);
+      diagnostics.addAll(result.diagnostics);
+      if (result.valueOrNull case final value?) {
+        encoded.add(wire.RecordExpressionField(name: entry.key, value: value));
+      }
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(wire.Expression.createRecord(fields: encoded))
+        : TypeResult.failure(diagnostics);
+  }
 
   TypeResult<wire.Expression> _interpolation(List<InterpolationPart> parts) {
     final values = <wire.InterpolationPart>[];

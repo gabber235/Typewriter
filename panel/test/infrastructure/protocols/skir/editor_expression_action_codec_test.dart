@@ -186,6 +186,15 @@ void main() {
         ),
         skir.Expression_kind.colorOperationWrapper,
       ),
+      (
+        const TypedExpression(
+          resultType: RecordType(
+            fields: {"value": TypeField(name: "value", type: StringType())},
+          ),
+          expression: RecordExpression({"value": text}),
+        ),
+        skir.Expression_kind.recordWrapper,
+      ),
     ];
 
     for (final (expression, expectedKind) in expressions) {

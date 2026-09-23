@@ -5486,6 +5486,236 @@ final class ColorOperationExpression_mutable
 }
 
 // -----------------------------------------------------------------------------
+// struct RecordExpressionField
+// -----------------------------------------------------------------------------
+
+sealed class RecordExpressionField_orMutable {
+  _core.String get name;
+  TypedExpression_orMutable get value;
+
+  RecordExpressionField toFrozen();
+}
+
+/// Deeply immutable.
+final class RecordExpressionField implements RecordExpressionField_orMutable {
+  @_core.override
+  final _core.String name;
+  @_core.override
+  final TypedExpression value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RecordExpressionField({
+    required _core.String name,
+    required TypedExpression_orMutable value,
+  }) => RecordExpressionField._(name, value.toFrozen());
+
+  RecordExpressionField._(this.name, this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RecordExpressionField._(
+    "",
+    TypedExpression.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RecordExpressionField_mutable mutable() =>
+      RecordExpressionField_mutable._("", TypedExpression.defaultInstance);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RecordExpressionField toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RecordExpressionField_mutable toMutable() =>
+      RecordExpressionField_mutable._(this.name, this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RecordExpressionField) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.name, this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RecordExpressionField` instances.
+  static _skir.StructSerializer<
+    RecordExpressionField,
+    RecordExpressionField_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        1,
+        TypedExpression.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/expression.skir:RecordExpressionField",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RecordExpressionField_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RecordExpressionField].
+final class RecordExpressionField_mutable
+    implements RecordExpressionField_orMutable {
+  _core.String name;
+  TypedExpression_orMutable value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RecordExpressionField_mutable._(this.name, this.value);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RecordExpressionField toFrozen() =>
+      RecordExpressionField(name: this.name, value: this.value).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RecordExpression
+// -----------------------------------------------------------------------------
+
+sealed class RecordExpression_orMutable {
+  _core.Iterable<RecordExpressionField_orMutable> get fields;
+
+  RecordExpression toFrozen();
+}
+
+/// Deeply immutable.
+final class RecordExpression implements RecordExpression_orMutable {
+  @_core.override
+  final _skir.KeyedIterable<RecordExpressionField, _core.String> fields;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RecordExpression({
+    required _core.Iterable<RecordExpressionField_orMutable> fields,
+  }) => RecordExpression._(
+    _skir.internal__keyedMappedCopy(
+      fields,
+      "name",
+      (it) => it.name,
+      (it) => it.toFrozen(),
+    ),
+  );
+
+  RecordExpression._(this.fields);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RecordExpression._(_skir.KeyedIterable.empty);
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RecordExpression_mutable mutable() =>
+      RecordExpression_mutable._(_skir.KeyedIterable.empty);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RecordExpression toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RecordExpression_mutable toMutable() =>
+      RecordExpression_mutable._(this.fields);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RecordExpression) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.fields];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RecordExpression` instances.
+  static _skir.StructSerializer<RecordExpression, RecordExpression_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "fields",
+        "fields",
+        0,
+        _skir.Serializers.keyedIterable(
+          RecordExpressionField.serializer,
+          (RecordExpressionField it) => it.name,
+          internal__getKeySpec: "name",
+        ),
+        "",
+        (it) => it.fields,
+        (it, v) => it.fields = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/expression.skir:RecordExpression",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RecordExpression_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RecordExpression].
+final class RecordExpression_mutable implements RecordExpression_orMutable {
+  _core.Iterable<RecordExpressionField_orMutable> fields;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RecordExpression_mutable._(this.fields);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RecordExpression toFrozen() =>
+      RecordExpression(fields: this.fields).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum Expression
 // -----------------------------------------------------------------------------
 
@@ -5519,6 +5749,7 @@ final class ColorOperationExpression_mutable
 ///     case Expression_regex(:var value): { ... }
 ///     case Expression_coalesce(:var value): { ... }
 ///     case Expression_colorOperation(:var value): { ... }
+///     case Expression_record(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -5920,6 +6151,15 @@ sealed class Expression {
     ColorOperationExpression(operation: operation, color: color, alpha: alpha),
   );
 
+  /// Create a 'record' variant wrapping around the given value.
+  factory Expression.wrapRecord(RecordExpression value) =>
+      Expression_recordWrapper._(value);
+
+  /// Same as `wrapRecord(RecordExpression(...))`.
+  factory Expression.createRecord({
+    required _core.Iterable<RecordExpressionField_orMutable> fields,
+  }) => Expression.wrapRecord(RecordExpression(fields: fields));
+
   /// Returns the kind of variant held by this Expression.
   Expression_kind get kind;
 
@@ -6186,6 +6426,16 @@ sealed class Expression {
         (it) => it.value,
         ordinal: Expression_kind.colorOperationWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        27,
+        "record",
+        "wrapRecord",
+        RecordExpression.serializer,
+        "",
+        Expression_recordWrapper._,
+        (it) => it.value,
+        ordinal: Expression_kind.recordWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -6231,7 +6481,8 @@ enum Expression_kind {
   collectionOperationWrapper(23),
   regexWrapper(24),
   coalesceWrapper(25),
-  colorOperationWrapper(26);
+  colorOperationWrapper(26),
+  recordWrapper(27);
 
   final _core.int _ordinal;
 
@@ -6506,6 +6757,15 @@ final class Expression_colorOperationWrapper extends _Expression_wrapper {
 
   @_core.override
   Expression_kind get kind => Expression_kind.colorOperationWrapper;
+}
+
+final class Expression_recordWrapper extends _Expression_wrapper {
+  final RecordExpression value;
+
+  Expression_recordWrapper._(this.value);
+
+  @_core.override
+  Expression_kind get kind => Expression_kind.recordWrapper;
 }
 
 // -----------------------------------------------------------------------------

@@ -211,6 +211,9 @@ sealed class Expression with _$Expression {
   const factory Expression.coalesce(List<TypedExpression> operands) =
       CoalesceExpression;
 
+  const factory Expression.record(Map<String, TypedExpression> fields) =
+      RecordExpression;
+
   const factory Expression.colorOperation({
     required ColorOperation operation,
     required TypedExpression color,
