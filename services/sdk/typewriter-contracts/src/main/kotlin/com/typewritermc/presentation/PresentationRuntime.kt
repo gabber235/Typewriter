@@ -1758,12 +1758,21 @@ private fun stringExpression(value: String): TypedExpression =
         expression = Expression.LiteralWrapper(TypedValue.StringWrapper(value)),
     )
 
+private fun unboundedNumericConstraints(): NumericConstraints =
+    NumericConstraints(
+        minimum = null,
+        minimumInclusive = true,
+        maximum = null,
+        maximumInclusive = true,
+        multipleOf = null,
+    )
+
 private fun integerExpression(value: Int): TypedExpression =
     TypedExpression(
         resultType =
             SkirTypeExpression.createSignedInteger(
                 width = IntegerWidth.THIRTY_TWO_BITS,
-                constraints = NumericConstraints.partial(),
+                constraints = unboundedNumericConstraints(),
             ),
         expression = Expression.LiteralWrapper(TypedValue.SignedThirtyTwoWrapper(value)),
     )
@@ -1779,7 +1788,7 @@ private fun floatExpression(value: Double): TypedExpression =
         resultType =
             SkirTypeExpression.createFloat(
                 width = FloatWidth.SIXTY_FOUR_BITS,
-                constraints = NumericConstraints.partial(),
+                constraints = unboundedNumericConstraints(),
             ),
         expression = Expression.LiteralWrapper(TypedValue.FloatSixtyFourWrapper(value)),
     )

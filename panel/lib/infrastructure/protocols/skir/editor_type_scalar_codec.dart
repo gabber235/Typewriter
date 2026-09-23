@@ -182,8 +182,8 @@ abstract final class SkirTypeScalarCodec {
     wire.NumericConstraints value,
     T? Function(String source) parse,
   ) {
-    if (!value.minimumInclusive ||
-        !value.maximumInclusive ||
+    if ((value.minimum != null && !value.minimumInclusive) ||
+        (value.maximum != null && !value.maximumInclusive) ||
         value.multipleOf != null) {
       return invalidWire(
         "Exclusive bounds and multiples are not supported by the panel type",
