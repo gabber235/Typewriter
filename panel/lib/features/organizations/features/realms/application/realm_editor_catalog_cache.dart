@@ -174,6 +174,17 @@ final class RealmEditorCatalogCache {
   final Map<int, RealmEditorCatalogRequest> _requests = {};
   final List<_RetainedCatalogSnapshot> _retained = [];
 
+  /// A ready snapshot is usable for a reader only when the fetch that produced
+  /// it included that reader's entire request. Merely finding a type in the
+  /// decoded catalog does not prove its presentations were requested.
+  bool covers(
+    RealmEditorCatalogSnapshot snapshot,
+    RealmEditorCatalogRequest request,
+  ) => _retained.any(
+    (item) =>
+        identical(item.snapshot, snapshot) && item.request.covers(request),
+  );
+
   RealmEditorCatalogRequest get _requested => _requests.values.fold(
     RealmEditorCatalogRequest(),
     (combined, request) => combined.merge(request),

@@ -328,8 +328,7 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
               if (page.pageId.id == sourcePageIds.single) return false;
               final editor = ref
                   .read(realmEditorCatalogProvider)
-                  .value
-                  ?.snapshot
+                  .currentCatalog
                   ?.pageCatalog
                   .definitions[page.rootType]
                   ?.editor;
@@ -343,11 +342,15 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
     final rootTypes = {
       for (final entry in cached) entry.definition.elementDefinition.rootType,
     };
-    final catalog = ref.read(realmEditorCatalogProvider).requireValue.snapshot!;
+    final catalog = ref
+        .read(realmEditorCatalogProvider)
+        .requireCurrentCatalog();
     final registry = TypeRegistry(catalog.catalog);
     final pages = placementCompatiblePages
         .where((page) {
-          final field = ref.read(pageElementsFieldProvider(page.rootType)).value;
+          final field = ref
+              .read(pageElementsFieldProvider(page.rootType))
+              .value;
           return field != null &&
               rootTypes.every((root) => field.accepts(root, registry));
         })
@@ -426,8 +429,7 @@ Future<EntryIdentifier?> _selectLinkTarget(
   final index = ref
       .read(realmEntryIndexProvider(organizationId, realmId))
       .requireValue;
-  final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
-  if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
+  final snapshot = ref.read(realmEditorCatalogProvider).requireCurrentCatalog();
   final registry = TypeRegistry(snapshot.catalog);
   final selectedIds = entries.map((entry) => entry.id.id).toSet();
   final sourcePages = _cachedEntries(
@@ -597,8 +599,7 @@ Future<void> _linkEntries(
 ) async {
   final currentEntries = _cachedEntries(ref, entries);
   final target = _cachedEntryIdentifiers(ref, [targetIdentifier]).single;
-  final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
-  if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
+  final snapshot = ref.read(realmEditorCatalogProvider).requireCurrentCatalog();
   final registry = TypeRegistry(snapshot.catalog);
   final identity = EntryIdentifier(
     target.definition.id,
@@ -667,8 +668,7 @@ Future<DataPath?> _selectDuplicateLinkPath(
   WidgetRef ref,
   List<EntrySelection> entries,
 ) async {
-  final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
-  if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
+  final snapshot = ref.read(realmEditorCatalogProvider).requireCurrentCatalog();
   final registry = TypeRegistry(snapshot.catalog);
   final candidates = [
     for (final entry in entries)
@@ -815,8 +815,7 @@ Future<RecordValue?> _prepareReplacementValue(
   EntrySelection entry,
   ElementDefinition replacement,
 ) async {
-  final snapshot = ref.read(realmEditorCatalogProvider).requireValue.snapshot;
-  if (snapshot == null) throw ApiException.badRequest("Catalog is unavailable");
+  final snapshot = ref.read(realmEditorCatalogProvider).requireCurrentCatalog();
   final registry = TypeRegistry(snapshot.catalog);
   final representation = replacement
       .resolve(registry)

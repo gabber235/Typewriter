@@ -140,7 +140,6 @@ class ElementTypeSearchResultItem extends ConsumerWidget {
       ref
           .watch(realmEditorCatalogProvider)
           .value
-          ?.snapshot
           ?.elements[definition.typeId.uuid]
           ?.presentationSubject,
     );
@@ -179,7 +178,7 @@ PresentationModel _catalogPresentation(
   WidgetRef ref,
   TypedCatalogPresentationSubject? subject,
 ) {
-  final snapshot = ref.watch(realmEditorCatalogProvider).value?.snapshot;
+  final snapshot = ref.watch(realmEditorCatalogProvider).value;
   if (snapshot != null && subject != null) {
     final result = TypedAuthoringCodec(snapshot).catalogPresentation(subject);
     if (result.valueOrNull case final presentation?) {

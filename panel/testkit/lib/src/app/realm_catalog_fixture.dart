@@ -1,4 +1,50 @@
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+
+/// Supplies exact-generation catalog reads in authoring session tests.
+RealmEditorCatalogCache fixedRealmCatalogCache({
+  required RealmEditorCatalogSnapshot snapshot,
+  required skir.RecordId organizationId,
+  required skir.RecordId realmId,
+}) => RealmEditorCatalogCache(
+  source: _FixedRealmCatalogSource(snapshot),
+  route: RealmEditorCatalogRoute(
+    organizationId: organizationId,
+    realmId: realmId,
+  ),
+);
+
+final class _FixedRealmCatalogSource implements RealmEditorCatalogSource {
+  const _FixedRealmCatalogSource(this.snapshot);
+
+  final RealmEditorCatalogSnapshot snapshot;
+
+  @override
+  Future<RealmEditorCatalogFetchResult> fetch(
+    RealmEditorCatalogRoute route,
+    RealmEditorCatalogRequest request, {
+    CatalogGeneration? expectedGeneration,
+  }) async =>
+      expectedGeneration != null && expectedGeneration != snapshot.generation
+      ? RealmEditorCatalogGenerationMismatch(snapshot.generation)
+      : RealmEditorCatalogFetched(snapshot);
+
+  @override
+  Stream<RealmEditorCatalogWatchEvent> watchInvalidations(
+    RealmEditorCatalogRoute route,
+  ) => const Stream.empty();
+
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) =>
+      Future.error(UnsupportedError("Initialization is outside this fixture"));
+}
 
 const realmFixtureGeneration = CatalogGeneration("fixture");
 

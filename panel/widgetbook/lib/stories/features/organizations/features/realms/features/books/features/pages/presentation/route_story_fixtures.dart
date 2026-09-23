@@ -70,31 +70,29 @@ RealmPageDefinition timelinePageStoryDefinition(List<PageElement> elements) =>
       presentationSubject: _catalogSubject(referenceResourceTypes.page),
     );
 
-RealmEditorCatalogState pageStoryCatalog(
+RealmEditorCatalogSnapshot pageStoryCatalog(
   ResolvedTypeRef rootType,
   List<PageElement> elements,
 ) {
   final value = _rootValues(elements)[rootType];
-  return RealmEditorCatalogState.ready(
-    receivedRealmEditorCatalog(
-      generation: const CatalogGeneration("widgetbook"),
-      definitions: [
-        ..._pageStoryReferenceDefinitions(_pageStoryPlaceholderValue),
-        ..._pageStoryPlacementDefinitions,
-        TypeDefinition(
-          id: rootType,
-          kind: NominalTypeKind.concrete,
-          parents: [referenceResourceTypes.element],
-          representation: value == null
-              ? RecordType(fields: {})
-              : _recordType(value),
-        ),
-      ],
-    ),
+  return receivedRealmEditorCatalog(
+    generation: const CatalogGeneration("widgetbook"),
+    definitions: [
+      ..._pageStoryReferenceDefinitions(_pageStoryPlaceholderValue),
+      ..._pageStoryPlacementDefinitions,
+      TypeDefinition(
+        id: rootType,
+        kind: NominalTypeKind.concrete,
+        parents: [referenceResourceTypes.element],
+        representation: value == null
+            ? RecordType(fields: {})
+            : _recordType(value),
+      ),
+    ],
   );
 }
 
-RealmEditorCatalogState pageStoryPageCatalog(
+RealmEditorCatalogSnapshot pageStoryPageCatalog(
   RealmPageDefinition pageDefinition,
   List<PageElement> elements,
 ) {
@@ -109,102 +107,100 @@ RealmEditorCatalogState pageStoryPageCatalog(
   ].nonNulls;
   final rootValues = _rootValues(elements);
   final pageValue = _pageStoryValue(pageDefinition);
-  return RealmEditorCatalogState.ready(
-    receivedRealmEditorCatalog(
-      generation: const CatalogGeneration("widgetbook"),
-      definitions: [
-        ..._pageStoryReferenceDefinitions(pageValue),
-        ..._pageStoryPlacementDefinitions,
-        for (final entry in rootValues.entries)
-          TypeDefinition(
-            id: entry.key,
-            kind: NominalTypeKind.concrete,
-            parents: [referenceResourceTypes.element],
-            representation: _recordType(entry.value),
-            rolePresentations: {
-              PresentationRole.graphNode: _storyRoleId(entry.key),
-              PresentationRole.inspectorHeader: _storyRoleId(entry.key),
-            },
-          ),
-      ],
-      presentations: {
-        for (final entry in rootValues.entries)
-          _storyRoleId(entry.key): PresentationDefinition(
-            id: _storyRoleId(entry.key),
-            inputs: [
-              PresentationInputParameter(
-                id: const BindingId(0),
-                name: "content",
-                type: NamedType(entry.key),
-              ),
-            ],
-            primaryInput: const BindingId(0),
-            root: PresentationNode(
-              id: "${entry.key.id.displayName}.subject",
-              element: TextElement(
-                TypedExpression(
-                  resultType: const StringType(),
-                  expression: BindingExpression(
-                    const BindingReference(
-                      bindingId: BindingId(0),
-                      path: DataPath([FieldPathSegment("name")]),
-                    ),
+  return receivedRealmEditorCatalog(
+    generation: const CatalogGeneration("widgetbook"),
+    definitions: [
+      ..._pageStoryReferenceDefinitions(pageValue),
+      ..._pageStoryPlacementDefinitions,
+      for (final entry in rootValues.entries)
+        TypeDefinition(
+          id: entry.key,
+          kind: NominalTypeKind.concrete,
+          parents: [referenceResourceTypes.element],
+          representation: _recordType(entry.value),
+          rolePresentations: {
+            PresentationRole.graphNode: _storyRoleId(entry.key),
+            PresentationRole.inspectorHeader: _storyRoleId(entry.key),
+          },
+        ),
+    ],
+    presentations: {
+      for (final entry in rootValues.entries)
+        _storyRoleId(entry.key): PresentationDefinition(
+          id: _storyRoleId(entry.key),
+          inputs: [
+            PresentationInputParameter(
+              id: const BindingId(0),
+              name: "content",
+              type: NamedType(entry.key),
+            ),
+          ],
+          primaryInput: const BindingId(0),
+          root: PresentationNode(
+            id: "${entry.key.id.displayName}.subject",
+            element: TextElement(
+              TypedExpression(
+                resultType: const StringType(),
+                expression: BindingExpression(
+                  const BindingReference(
+                    bindingId: BindingId(0),
+                    path: DataPath([FieldPathSegment("name")]),
                   ),
                 ),
               ),
             ),
           ),
-      },
-      elements: {
-        for (final definition in elementDefinitions)
-          definition.typeId.uuid: RealmElementCatalogEntry(
-            originArtifactId: "widgetbook",
-            sourcePart: "page-story",
-            definition: DiscoveredElementDefinition(
-              id: definition.typeId.uuid,
-              type: definition.rootType,
-              name: definition.name,
-              description: definition.description,
-              icon: definition.icon,
-              color: definition.color,
-              availability: const ElementAvailability.always(),
-            ),
-            presentationSubject: _catalogSubject(definition.rootType),
-            eligible: true,
-            available: true,
+        ),
+    },
+    elements: {
+      for (final definition in elementDefinitions)
+        definition.typeId.uuid: RealmElementCatalogEntry(
+          originArtifactId: "widgetbook",
+          sourcePart: "page-story",
+          definition: DiscoveredElementDefinition(
+            id: definition.typeId.uuid,
+            type: definition.rootType,
+            name: definition.name,
+            description: definition.description,
+            icon: definition.icon,
+            color: definition.color,
+            availability: const ElementAvailability.always(),
           ),
-      },
-      pageCatalog: RealmPageCatalog(
-        definitions: {pageDefinition.type: pageDefinition},
-      ),
-      resourceDefinitions: {
-        CoreResourceDefinitionIds.page: RealmResourceDefinition(
-          id: CoreResourceDefinitionIds.page,
-          acceptedRoot: NamedType(referenceResourceTypes.page),
+          presentationSubject: _catalogSubject(definition.rootType),
+          eligible: true,
+          available: true,
         ),
-        CoreResourceDefinitionIds.element: RealmResourceDefinition(
-          id: CoreResourceDefinitionIds.element,
-          acceptedRoot: NamedType(referenceResourceTypes.element),
-        ),
-      },
-      relations: {
-        "widgetbook.page.elements": RealmRelationDefinition(
-          id: "widgetbook.page.elements",
-          source: referenceResourceTypes.page,
-          target: referenceResourceTypes.element,
-          onSourceDelete: RealmRelationDeletePolicy.cascade,
-          onTargetDelete: RealmRelationDeletePolicy.clear,
-          sourceEndpoint: RealmRelationEndpointDefinition(
-            owner: referenceResourceTypes.page,
-            path: DataPath.root.field("elements"),
-            side: RealmRelationEndpointSide.source,
-            cardinality: RealmRelationCardinality.many,
-          ),
-          targetEndpoint: null,
-          families: const {"resource.ownership"},
-        ),
-      },
+    },
+    pageCatalog: RealmPageCatalog(
+      definitions: {pageDefinition.type: pageDefinition},
     ),
+    resourceDefinitions: {
+      CoreResourceDefinitionIds.page: RealmResourceDefinition(
+        id: CoreResourceDefinitionIds.page,
+        acceptedRoot: NamedType(referenceResourceTypes.page),
+      ),
+      CoreResourceDefinitionIds.element: RealmResourceDefinition(
+        id: CoreResourceDefinitionIds.element,
+        acceptedRoot: NamedType(referenceResourceTypes.element),
+      ),
+    },
+    relations: {
+      "widgetbook.page.elements": RealmRelationDefinition(
+        id: "widgetbook.page.elements",
+        source: referenceResourceTypes.page,
+        target: referenceResourceTypes.element,
+        onSourceDelete: RealmRelationDeletePolicy.cascade,
+        onTargetDelete: RealmRelationDeletePolicy.clear,
+        sourceEndpoint: RealmRelationEndpointDefinition(
+          owner: referenceResourceTypes.page,
+          path: DataPath.root.field("elements"),
+          side: RealmRelationEndpointSide.source,
+          cardinality: RealmRelationCardinality.many,
+        ),
+        targetEndpoint: null,
+        families: const {"resource.ownership"},
+      ),
+    },
   );
 }
 
@@ -218,7 +214,7 @@ AuthoringSubjectProjection pageStorySubjectProjection(
   List<PageElement> elements,
   AuthoringSubjectScope scope,
 ) {
-  final catalog = pageStoryPageCatalog(pageDefinition, elements).snapshot!;
+  final catalog = pageStoryPageCatalog(pageDefinition, elements);
   final definitions = {
     for (final element in elements)
       if (element case PageElementEntry(

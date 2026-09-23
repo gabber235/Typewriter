@@ -111,14 +111,13 @@ class CanonicalBookPages extends _$CanonicalBookPages {
     if (organizationId == null) throw ApiException.noOrganization();
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     final provider = authoringSessionProvider(organizationId, realmId);
-    ref.watch(
-      realmEditorCatalogLeaseProvider(
-        RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
-      ),
+    final view = await ref.readAuthoringView(
+      organizationId: organizationId,
+      realmId: realmId,
+      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
+      selections: (_) => [bookId.bookAuthoringSelection],
     );
-    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
-    final catalog = catalogState.snapshot;
-    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final catalog = view.catalog;
     final codec = TypedAuthoringCodec(catalog);
     List<Page> project(AuthoringSessionState value) {
       return value.resources.values
@@ -139,15 +138,7 @@ class CanonicalBookPages extends _$CanonicalBookPages {
       }
     });
 
-    final lease = ref.watch(
-      authoringSelectionLeaseProvider(
-        organizationId,
-        realmId,
-        bookId.bookAuthoringSelection,
-      ),
-    );
-    await lease.ready;
-    return project(ref.read(provider));
+    return project(view.session);
   }
 }
 
@@ -165,14 +156,13 @@ class CanonicalPage extends _$CanonicalPage {
     if (organizationId == null) throw ApiException.noOrganization();
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     final provider = authoringSessionProvider(organizationId, realmId);
-    ref.watch(
-      realmEditorCatalogLeaseProvider(
-        RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
-      ),
+    final view = await ref.readAuthoringView(
+      organizationId: organizationId,
+      realmId: realmId,
+      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
+      selections: (_) => [pageId.pageAuthoringSelection],
     );
-    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
-    final catalog = catalogState.snapshot;
-    if (catalog == null) throw StateError("The editor catalog is unavailable");
+    final catalog = view.catalog;
     final codec = TypedAuthoringCodec(catalog);
     ref.listen(provider, (_, value) {
       if (value.sequence == null) return;
@@ -191,15 +181,7 @@ class CanonicalPage extends _$CanonicalPage {
           : AsyncData(page);
     });
 
-    final lease = ref.watch(
-      authoringSelectionLeaseProvider(
-        organizationId,
-        realmId,
-        pageId.pageAuthoringSelection,
-      ),
-    );
-    await lease.ready;
-    final value = ref.read(provider);
+    final value = view.session;
     final resource = value.resources[pageId];
     final decoded = resource == null
         ? null

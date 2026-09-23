@@ -20,12 +20,14 @@ void main() {
         TypeDefinition(
           id: owner,
           kind: NominalTypeKind.concrete,
-          representation: RecordType(fields: {
-            "cues": TypeField(
-              name: "cues",
-              type: ListType(element: ReferenceType(target: child)),
-            ),
-          }),
+          representation: RecordType(
+            fields: {
+              "cues": TypeField(
+                name: "cues",
+                type: ListType(element: ReferenceType(target: child)),
+              ),
+            },
+          ),
         ),
         TypeDefinition(id: child, kind: NominalTypeKind.concrete),
       ]),
@@ -48,17 +50,23 @@ void main() {
         ),
       },
     );
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        realmEditorCatalogProvider.overrideWith(
-          (ref) => Stream.value(RealmEditorCatalogState.ready(catalog)),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          realmEditorCatalogProvider.overrideWith(
+            (ref) => Future.value(catalog),
+          ),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: RelationAddMenu(
+              host: skir.ResourceId(value: "owner"),
+              rootType: owner,
+            ),
+          ),
         ),
-      ],
-      child: MaterialApp(home: Scaffold(body: RelationAddMenu(
-        host: skir.ResourceId(value: "owner"),
-        rootType: owner,
-      ))),
-    ));
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byTooltip("Add related resource"), findsOneWidget);

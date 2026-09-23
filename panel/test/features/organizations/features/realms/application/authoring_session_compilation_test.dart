@@ -44,24 +44,28 @@ void main() {
           ),
         );
       });
+    final catalog = RealmEditorCatalogSnapshot(
+      catalog: _catalog,
+      generation: const CatalogGeneration("1"),
+      compilationProjections: [
+        RealmAuthoringCompilationProjection(
+          id: "typewriter.page",
+          root: TypeExpression.named(_pageType),
+        ),
+      ],
+    );
     final container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWithValue(nats),
         organizationIdProvider.overrideWithValue(_org),
         realmIdProvider.overrideWithValue(_realm),
-        realmEditorCatalogProvider.overrideWithValue(
+        realmEditorCatalogProvider.overrideWithValue(AsyncData(catalog)),
+        realmEditorCatalogCacheProvider.overrideWithValue(
           AsyncData(
-            RealmEditorCatalogState.ready(
-              RealmEditorCatalogSnapshot(
-                catalog: _catalog,
-                generation: const CatalogGeneration("1"),
-                compilationProjections: [
-                  RealmAuthoringCompilationProjection(
-                    id: "typewriter.page",
-                    root: TypeExpression.named(_pageType),
-                  ),
-                ],
-              ),
+            fixedRealmCatalogCache(
+              snapshot: catalog,
+              organizationId: _org,
+              realmId: _realm,
             ),
           ),
         ),

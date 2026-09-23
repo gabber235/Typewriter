@@ -30,23 +30,19 @@ class CanonicalBooks extends _$CanonicalBooks {
       return [];
     }
 
-    ref.watch(
-      realmEditorCatalogLeaseProvider(
-        RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
-      ),
-    );
-    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
-    final catalog = catalogState.snapshot;
-    if (catalog == null) throw StateError("The editor catalog is unavailable");
-    final collectionLeases = [
-      for (final selection in catalog.collectionSelections(
-        catalog.presentations.values,
-      ))
-        ref.watch(
-          authoringSelectionLeaseProvider(organizationId, realmId, selection),
+    final view = await ref.readAuthoringView(
+      organizationId: organizationId,
+      realmId: realmId,
+      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
+      selections: (catalog) => [
+        ...catalog.collectionSelections(catalog.presentations.values),
+        authoringDefinitionSelection(
+          key: "books",
+          definitions: const [CoreResourceDefinitionIds.book],
         ),
-    ];
-    await Future.wait(collectionLeases.map((lease) => lease.ready));
+      ],
+    );
+    final catalog = view.catalog;
     final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
     ref.listen(provider, (_, value) {
@@ -55,18 +51,7 @@ class CanonicalBooks extends _$CanonicalBooks {
         state = AsyncData(_projectBooks(value, codec));
       }
     });
-    final lease = ref.watch(
-      authoringSelectionLeaseProvider(
-        organizationId,
-        realmId,
-        authoringDefinitionSelection(
-          key: "books",
-          definitions: const [CoreResourceDefinitionIds.book],
-        ),
-      ),
-    );
-    await lease.ready;
-    return _projectBooks(ref.read(provider), codec);
+    return _projectBooks(view.session, codec);
   }
 
   /// Applies the changed inspector fields of [book] against [expected].

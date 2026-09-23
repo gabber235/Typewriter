@@ -113,7 +113,7 @@ final class RealmAuthoringSearchSource
   }
 
   RealmEditorCatalogSnapshot _catalog() {
-    final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    final snapshot = ref.read(realmEditorCatalogProvider).currentCatalog;
     if (snapshot == null) {
       throw StateError("Realm search catalog is unavailable");
     }
@@ -121,7 +121,7 @@ final class RealmAuthoringSearchSource
   }
 
   RealmEditorCatalogSnapshot? get _catalogOrNull =>
-      ref.read(realmEditorCatalogProvider).value?.snapshot;
+      ref.read(realmEditorCatalogProvider).currentCatalog;
 
   List<skir.ResourceDefinitionId> _resourceDefinitions(
     RealmEditorCatalogSnapshot catalog,
@@ -251,7 +251,7 @@ final class RealmAuthoringSearchSource
     if (demand == null) {
       return RealmEditorCatalogFetchResult.unavailable(request.diagnostics);
     }
-    final cache = ref.read(realmEditorCatalogCacheProvider);
+    final cache = await ref.read(realmEditorCatalogCacheProvider.future);
     if (cache == null) {
       return RealmEditorCatalogFetchResult.unavailable([
         realmEditorCatalogUnavailableDiagnostic(
@@ -532,7 +532,7 @@ Future<List<ReferenceResourceSummary>> resolveAuthoringReferences({
       encodedTarget.diagnostics.map((item) => item.message).join(", "),
     );
   }
-  final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+  final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
   if (catalog == null) {
     throw StateError("Realm reference catalog is unavailable");
   }
@@ -557,7 +557,7 @@ Future<List<ReferenceResourceSummary>> resolveAuthoringReferences({
   if (demand.valueOrNull == null) {
     throw StateError(demand.diagnostics.map((item) => item.message).join(", "));
   }
-  final cache = ref.read(realmEditorCatalogCacheProvider);
+  final cache = await ref.read(realmEditorCatalogCacheProvider.future);
   if (cache == null) throw StateError("Realm reference catalog is unavailable");
   final exact = await cache.fetchExact(
     CatalogGeneration(graph.generation.value),

@@ -20,8 +20,7 @@ final class BookAuthoringNavigationAdapter
   Future<void> open(Ref ref, OpenAuthoringResourceEffect effect) async {
     final handler = ref
         .read(realmEditorCatalogProvider)
-        .value
-        ?.snapshot
+        .currentCatalog
         ?.resourceDefinitions[effect.definition]
         ?.navigationHandler;
     switch (handler) {
@@ -62,7 +61,7 @@ final class BookAuthoringNavigationAdapter
 
 extension on OpenAuthoringResourceEffect {
   SelectableIdentifier elementIdentifier(Ref ref, skir.ResourceId pageId) {
-    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
     final resolved = catalog == null
         ? null
         : TypeRegistry(catalog.catalog).resolveExact(rootType).valueOrNull;

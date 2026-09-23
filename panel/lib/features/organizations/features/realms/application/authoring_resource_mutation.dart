@@ -16,7 +16,7 @@ extension AuthoringResourceMutation on Ref {
     if (resource == null || revision == null) {
       throw ApiException.notFound(label);
     }
-    final catalog = read(realmEditorCatalogProvider).value?.snapshot;
+    final catalog = read(realmEditorCatalogProvider).currentCatalog;
     if (catalog == null) throw StateError("The editor catalog is unavailable");
     final codec = TypedAuthoringCodec(catalog);
     final content = codec.decodeResourceOrThrow(resource).content;

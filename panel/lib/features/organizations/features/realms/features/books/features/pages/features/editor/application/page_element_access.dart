@@ -51,20 +51,27 @@ Future<T> _withReadyPageElements<T>(
   final session = container.read(
     authoringSessionProvider(organizationId, realmId).notifier,
   );
-  final catalog = (await container.read(realmEditorCatalogProvider.future))
-      .snapshot;
-  if (catalog == null) {
-    throw ApiException.badRequest("The editor catalog is unavailable");
-  }
-  final lease = session.acquire(
-    skir.ResourceId(value: pageId).pageContentSelection(catalog),
+  final catalogProvider = realmCatalogProvider(
+    RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
   );
-  final provider = pageElementsProvider(organizationId, realmId, pageId);
-  final pageSubscription = container.listen(provider, (_, _) {});
-
-  final elements = container.read(provider.notifier);
-  final ready = container.read(provider.future);
+  final catalogSubscription = container.listen(catalogProvider, (_, _) {});
+  void noCleanup() {}
+  var releaseLease = noCleanup;
+  var closePage = noCleanup;
   try {
+    final catalog = await container.read(catalogProvider.future);
+    if (realmChanged.isCompleted) {
+      throw ApiException.conflict("The selected realm changed while loading");
+    }
+    final lease = session.acquire(
+      skir.ResourceId(value: pageId).pageContentSelection(catalog),
+    );
+    releaseLease = lease.release;
+    final provider = pageElementsProvider(organizationId, realmId, pageId);
+    final pageSubscription = container.listen(provider, (_, _) {});
+    closePage = pageSubscription.close;
+    final elements = container.read(provider.notifier);
+    final ready = container.read(provider.future);
     final isReady = await Future.any([
       Future.wait([lease.ready, ready], eagerError: true).then((_) => true),
       realmChanged.future.then((_) => false),
@@ -84,7 +91,8 @@ Future<T> _withReadyPageElements<T>(
   } finally {
     organizationSubscription.close();
     realmSubscription.close();
-    pageSubscription.close();
-    lease.release();
+    catalogSubscription.close();
+    closePage();
+    releaseLease();
   }
 }

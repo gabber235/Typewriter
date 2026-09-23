@@ -46,11 +46,13 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
         StackTrace.current,
       );
     }
-    final catalog = ref
-        .watch(realmEditorCatalogForTypeProvider(rootType))
-        .value
-        ?.snapshot;
-    if (catalog == null || session.sequence == null) {
+    final catalogState = ref.watch(realmEditorCatalogForTypeProvider(rootType));
+    if (catalogState.isLoading) return const AsyncLoading();
+    if (catalogState.mapUnready<Selectable>() case final pending?) {
+      return pending;
+    }
+    final catalog = catalogState.requireValue;
+    if (session.sequence == null) {
       return const AsyncLoading();
     }
     if (session.generation?.value != catalog.generation.value) {

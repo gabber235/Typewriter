@@ -75,7 +75,7 @@ final class ResourceCreationSession {
     if (organizationId == null || realmId == null) {
       throw StateError("No Realm is selected");
     }
-    final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
     if (catalog == null) throw StateError("The editor catalog is unavailable");
     final definition = catalog.resourceDefinitions[request.definition];
     if (definition == null ||

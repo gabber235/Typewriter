@@ -144,8 +144,7 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
     final navigationHandler = ref
         .read(realmEditorCatalogProvider)
-        .value
-        ?.snapshot
+        .currentCatalog
         ?.resourceDefinitions[effect.definition]
         ?.navigationHandler;
     final registry = AuthoringResourceNavigationRegistry(const [

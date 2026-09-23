@@ -21,11 +21,24 @@ class TagsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(projectedTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
+    final catalogRequest = RealmEditorCatalogRequest(
+      types: {referenceResourceTypes.tag},
+    );
+    final catalogState = ref.watch(realmCatalogProvider(catalogRequest));
+    final canCreate =
+        catalogState.currentCatalog
+            ?.creatableRoots(CoreResourceDefinitionIds.tag)
+            .singleOrNull !=
+        null;
 
     Future<void> handleCreateTag() async {
       final tags = tagsAsync.value ?? const <Tag>[];
-      final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-      final root = catalog?.creatableRoots(CoreResourceDefinitionIds.tag).singleOrNull;
+      final catalog = ref
+          .read(realmCatalogProvider(catalogRequest))
+          .requireCurrentCatalog();
+      final root = catalog
+          .creatableRoots(CoreResourceDefinitionIds.tag)
+          .singleOrNull;
       if (root == null) throw StateError("Tag creation is unavailable");
       final created = await ref
           .read(resourceCreationProvider)
@@ -69,12 +82,12 @@ class TagsPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: (_) => handleCreateTag(),
+              onInvoke: canCreate ? (_) => handleCreateTag() : null,
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: handleCreateTag,
+            onPressed: canCreate ? handleCreateTag : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -90,7 +103,7 @@ class TagsPage extends HookConsumerWidget {
                         return EmptyScreen(
                           title: "No tags yet",
                           buttonText: "Create Tag",
-                          onPressed: handleCreateTag,
+                          onPressed: canCreate ? handleCreateTag : null,
                         );
                       }
                       return TagGraph(

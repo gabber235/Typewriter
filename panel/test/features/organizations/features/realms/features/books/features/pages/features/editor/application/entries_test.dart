@@ -99,17 +99,13 @@ void main() {
         catalog: catalog,
         generation: const CatalogGeneration("1"),
       );
-      final ready =
-          AsyncValue<RealmEditorCatalogState>.data(
-            RealmEditorCatalogState.ready(snapshot),
-          ).resolveElement(
+      final ready = AsyncValue<RealmEditorCatalogSnapshot>.data(snapshot)
+          .resolveElement(
             definition,
             (resolvedCatalog, presentations) => resolvedCatalog,
           );
-      final loading =
-          const AsyncValue<RealmEditorCatalogState>.data(
-            RealmEditorCatalogState.loading(),
-          ).resolveElement(
+      final loading = const AsyncValue<RealmEditorCatalogSnapshot>.loading()
+          .resolveElement(
             definition,
             (resolvedCatalog, presentations) => resolvedCatalog,
           );
@@ -132,10 +128,8 @@ void main() {
         generation: const CatalogGeneration("1"),
       );
 
-      final result =
-          AsyncValue<RealmEditorCatalogState>.data(
-            RealmEditorCatalogState.ready(snapshot),
-          ).resolveElement(
+      final result = AsyncValue<RealmEditorCatalogSnapshot>.data(snapshot)
+          .resolveElement(
             _elementDefinition(),
             (catalog, presentations) => catalog,
           );

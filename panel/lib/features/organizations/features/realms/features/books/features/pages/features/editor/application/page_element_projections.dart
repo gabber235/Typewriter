@@ -15,8 +15,8 @@ decodedRealmDocumentValues(
   final revision = session.sequence;
   if (revision == null) return const AsyncLoading();
   final roots = SkirTypeCodec(TypeRegistry(const TypeCatalog([])));
-  ref.watch(
-    realmEditorCatalogLeaseProvider(
+  final catalog = ref.watch(
+    realmCatalogProvider(
       RealmEditorCatalogRequest(
         types: {
           for (final resource in session.resources.values)
@@ -32,36 +32,33 @@ decodedRealmDocumentValues(
       ),
     ),
   );
-  final catalog = ref.watch(realmEditorCatalogProvider);
   if (catalog.isLoading) return const AsyncLoading();
+  if (catalog.mapUnready<AuthoringValue<Map<String, List<PageElement>>>>()
+      case final pending?) {
+    return pending;
+  }
+  if (session.generation?.value != catalog.requireValue.generation.value) {
+    return const AsyncLoading();
+  }
   return catalog.when(
-    data: (catalogState) => switch (catalogState) {
-      RealmEditorCatalogReady(:final value) => AsyncData(
-        AuthoringValue(
-          value: {
-            for (final selection in session.selections.entries)
-              if (PageContentSelectionKey.parse(selection.key) case final key?)
-                key.page.value: _decodePageElements(
-                  key.page,
-                  selection.value.resourceIds
-                      .map((id) => session.resources[id])
-                      .nonNulls,
-                  selection.value.edgeIds
-                      .map((id) => session.edges[id])
-                      .nonNulls,
-                  session.presentations,
-                  value,
-                ),
-          },
-          revision: revision,
-        ),
+    data: (value) => AsyncData(
+      AuthoringValue(
+        value: {
+          for (final selection in session.selections.entries)
+            if (PageContentSelectionKey.parse(selection.key) case final key?)
+              key.page.value: _decodePageElements(
+                key.page,
+                selection.value.resourceIds
+                    .map((id) => session.resources[id])
+                    .nonNulls,
+                selection.value.edgeIds.map((id) => session.edges[id]).nonNulls,
+                session.presentations,
+                value,
+              ),
+        },
+        revision: revision,
       ),
-      RealmEditorCatalogUnavailable(:final diagnostics) => AsyncError(
-        ElementDefinitionException(diagnostics),
-        StackTrace.current,
-      ),
-      RealmEditorCatalogLoading() => const AsyncLoading(),
-    },
+    ),
     error: AsyncError.new,
     loading: AsyncLoading.new,
   );

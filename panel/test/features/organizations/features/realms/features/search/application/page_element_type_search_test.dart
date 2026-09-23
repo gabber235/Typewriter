@@ -5,26 +5,48 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("page field scope accepts only compatible element definitions", () {
-    final field = ValueNotifier<AsyncValue<RealmRelationField>>(AsyncData(_field));
-    final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogState>>(
-      AsyncData(RealmEditorCatalogState.ready(RealmEditorCatalogSnapshot(
-        catalog: TypeCatalog([
-          TypeDefinition(id: _compatibleType, kind: NominalTypeKind.concrete),
-          TypeDefinition(id: _incompatibleType, kind: NominalTypeKind.concrete),
-        ]),
-        generation: const CatalogGeneration("test"),
-      ))),
+    final field = ValueNotifier<AsyncValue<RealmRelationField>>(
+      AsyncData(_field),
+    );
+    final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogSnapshot>>(
+      AsyncData(
+        RealmEditorCatalogSnapshot(
+          catalog: TypeCatalog([
+            TypeDefinition(id: _compatibleType, kind: NominalTypeKind.concrete),
+            TypeDefinition(
+              id: _incompatibleType,
+              kind: NominalTypeKind.concrete,
+            ),
+          ]),
+          generation: const CatalogGeneration("test"),
+        ),
+      ),
     );
     addTearDown(field.dispose);
     addTearDown(catalog.dispose);
     final scope = pageRelationFieldScope(field: field, catalog: catalog);
 
-    expect(scope.evaluate(_result(_compatibleDefinition), SearchQueryContext.empty), isA<SearchResultVisible>());
-    expect(scope.evaluate(_result(_incompatibleDefinition), SearchQueryContext.empty), isA<SearchResultHidden>());
-    expect(scope.evaluate(_unrelatedResult, SearchQueryContext.empty), isA<SearchResultHidden>());
+    expect(
+      scope.evaluate(_result(_compatibleDefinition), SearchQueryContext.empty),
+      isA<SearchResultVisible>(),
+    );
+    expect(
+      scope.evaluate(
+        _result(_incompatibleDefinition),
+        SearchQueryContext.empty,
+      ),
+      isA<SearchResultHidden>(),
+    );
+    expect(
+      scope.evaluate(_unrelatedResult, SearchQueryContext.empty),
+      isA<SearchResultHidden>(),
+    );
 
     field.value = const AsyncLoading();
-    expect(scope.evaluate(_result(_compatibleDefinition), SearchQueryContext.empty), isA<SearchResultHidden>());
+    expect(
+      scope.evaluate(_result(_compatibleDefinition), SearchQueryContext.empty),
+      isA<SearchResultHidden>(),
+    );
   });
 }
 
@@ -37,7 +59,8 @@ final _incompatibleType = ResolvedTypeRef(
   revision: 1,
 );
 final _pageType = ResolvedTypeRef(
-  id: const QualifiedTypeId(namespace: "test", name: "Page"), revision: 1,
+  id: const QualifiedTypeId(namespace: "test", name: "Page"),
+  revision: 1,
 );
 final _field = RealmRelationField(
   relation: RealmRelationDefinition(

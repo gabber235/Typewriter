@@ -18,9 +18,7 @@ final class ElementPageSelection {
 
 SearchActivation<ElementPageSelection> elementDestinationActivation({
   required ValueListenable<AsyncValue<List<Book>>> books,
-  required ValueListenable<
-    AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>
-  >
+  required ValueListenable<AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>>
   compatibleFields,
   Ref? ref,
 }) => SearchActivation.custom(
@@ -67,11 +65,13 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
         if (field == null || book == null) {
           return const SearchActivationResult.cancelled();
         }
-        final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-        final bookType = catalog?.creatableRoots(CoreResourceDefinitionIds.book).singleOrNull;
-        final bookField = bookType == null ? null : catalog?.relationField(
-          bookType, DataPath.root.field("pages"),
-        );
+        final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
+        final bookType = catalog
+            ?.creatableRoots(CoreResourceDefinitionIds.book)
+            .singleOrNull;
+        final bookField = bookType == null
+            ? null
+            : catalog?.relationField(bookType, DataPath.root.field("pages"));
         if (bookField == null) return const SearchActivationResult.cancelled();
         final created = await context.prompts.show(
           (promptContext) => ref

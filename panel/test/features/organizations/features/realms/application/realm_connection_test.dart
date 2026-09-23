@@ -81,21 +81,24 @@ void main() {
     expect(states.last, RealmConnectionState.notSelected);
   });
 
-  test("moves from checking to online", () async {
+  test("remains loading while checking, then resolves online", () async {
     final states = <RealmConnectionState>[];
+    final phases = <AsyncValue<RealmConnectionState>>[];
     final container = _containerWithRealm(_realm());
     addTearDown(container.dispose);
     final subscription = container.listen(realmConnectionProvider, (
       previous,
       next,
     ) {
+      phases.add(next);
       if (next.hasValue) states.add(next.requireValue);
     }, fireImmediately: true);
     addTearDown(subscription.close);
 
     await _waitForState(states, RealmConnectionState.online);
 
-    expect(states, contains(RealmConnectionState.checking));
+    expect(phases.first, isA<AsyncLoading<RealmConnectionState>>());
+    expect(states, isNot(contains(RealmConnectionState.checking)));
     expect(states.last, RealmConnectionState.online);
   });
 
@@ -191,9 +194,13 @@ void main() {
     container
       ..invalidate(selectedRealmProvider)
       ..invalidate(realmConnectionProvider);
+    expect(
+      container.read(realmInteractionProvider).connectionState,
+      RealmConnectionState.checking,
+    );
     await _waitForState(states, RealmConnectionState.online);
 
-    expect(states, contains(RealmConnectionState.checking));
+    expect(states, isNot(contains(RealmConnectionState.checking)));
     expect(states.last, RealmConnectionState.online);
   });
 }

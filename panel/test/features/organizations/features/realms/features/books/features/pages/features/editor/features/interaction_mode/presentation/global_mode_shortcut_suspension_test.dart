@@ -14,7 +14,7 @@ void main() {
       overrides: [
         realmIdProvider.overrideWithValue(recordId("service:test")),
         realmConnectionProvider.overrideWith(
-          (ref) => Stream.value(RealmConnectionState.offline),
+          (ref) => Future.value(RealmConnectionState.offline),
         ),
       ],
       child: const SizedBox(
@@ -42,7 +42,7 @@ void main() {
       overrides: [
         realmIdProvider.overrideWithValue(recordId("service:test")),
         realmConnectionProvider.overrideWith(
-          (ref) => Stream.value(RealmConnectionState.online),
+          (ref) => Future.value(RealmConnectionState.online),
         ),
       ],
       child: const SizedBox(

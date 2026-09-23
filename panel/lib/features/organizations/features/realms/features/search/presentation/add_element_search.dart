@@ -36,8 +36,7 @@ Future<void> showAddElementSearch(
             ? null
             : ref
                   .read(realmEditorCatalogProvider)
-                  .value
-                  ?.snapshot
+                  .currentCatalog
                   ?.pageCatalog
                   .definitions[page.rootType]
                   ?.editor;

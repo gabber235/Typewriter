@@ -82,7 +82,7 @@ final class AuthoringSubjectsProvider
   }
 }
 
-String _$authoringSubjectsHash() => r'5c431a1397007566f01ce423edd2db0c36a28020';
+String _$authoringSubjectsHash() => r'ad8d5dc48f39deeaa79c2dd12075b91a21d94057';
 
 /// Resolves a whole visible resource scope under one exact catalog generation.
 ///

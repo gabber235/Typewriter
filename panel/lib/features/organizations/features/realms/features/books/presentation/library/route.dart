@@ -21,10 +21,23 @@ class LibraryPage extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
+    final catalogRequest = RealmEditorCatalogRequest(
+      types: {referenceResourceTypes.book},
+    );
+    final catalogState = ref.watch(realmCatalogProvider(catalogRequest));
+    final canCreate =
+        catalogState.currentCatalog
+            ?.creatableRoots(CoreResourceDefinitionIds.book)
+            .singleOrNull !=
+        null;
 
     Future<void> handleCreateBook() async {
-      final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
-      final root = catalog?.creatableRoots(CoreResourceDefinitionIds.book).singleOrNull;
+      final catalog = ref
+          .read(realmCatalogProvider(catalogRequest))
+          .requireCurrentCatalog();
+      final root = catalog
+          .creatableRoots(CoreResourceDefinitionIds.book)
+          .singleOrNull;
       if (root == null) throw StateError("Book creation is unavailable");
       final created = await ref
           .read(resourceCreationProvider)
@@ -65,12 +78,12 @@ class LibraryPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: (_) => handleCreateBook(),
+              onInvoke: canCreate ? (_) => handleCreateBook() : null,
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: handleCreateBook,
+            onPressed: canCreate ? handleCreateBook : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -100,7 +113,7 @@ class LibraryPage extends HookConsumerWidget {
                               ? "Insert your favorite story here"
                               : "No books match your search",
                           buttonText: "Create Book",
-                          onPressed: handleCreateBook,
+                          onPressed: canCreate ? handleCreateBook : null,
                         );
                       }
 

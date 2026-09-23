@@ -33,7 +33,7 @@ final class AuthoringCreationOption {
 final class AuthoringCreationSearchSource implements SearchSource {
   AuthoringCreationSearchSource(this.catalog, {this.field});
 
-  final ValueListenable<AsyncValue<RealmEditorCatalogState>> catalog;
+  final ValueListenable<AsyncValue<RealmEditorCatalogSnapshot>> catalog;
   final ValueListenable<AsyncValue<RealmRelationField>>? field;
   final _snapshots = BehaviorSubject<SearchSourceSnapshot>.seeded(.loading());
   late final _refresher = SearchRefresher(
@@ -45,7 +45,13 @@ final class AuthoringCreationSearchSource implements SearchSource {
   var _disposed = false;
 
   List<AuthoringCreationOption> get _options {
-    final snapshot = catalog.value.value?.snapshot;
+    if (catalog.value.isLoading ||
+        catalog.value.hasError ||
+        field?.value.isLoading == true ||
+        field?.value.hasError == true) {
+      return const [];
+    }
+    final snapshot = catalog.value.value;
     if (snapshot == null) return const [];
     final selectedField = field?.value.value;
     if (field != null && selectedField == null) return const [];
@@ -111,10 +117,10 @@ final class AuthoringCreationSearchSource implements SearchSource {
     final error = catalog.value.error ?? field?.value.error;
     _snapshots.add(
       SearchSourceSnapshot(
-        status: error != null
-            ? SearchSourceStatus.error
-            : catalog.value.isLoading || field?.value.isLoading == true
+        status: catalog.value.isLoading || field?.value.isLoading == true
             ? SearchSourceStatus.loading
+            : error != null
+            ? SearchSourceStatus.error
             : SearchSourceStatus.ready,
         nodes: options.isEmpty
             ? const []

@@ -56,7 +56,12 @@ SearchCommand createElementOnPageCommand({
         "Page compatibility is unavailable",
       );
     }
-    if (!current.requireValue.accepts(definition.rootType, TypeRegistry(ref.read(realmEditorCatalogProvider).requireValue.snapshot!.catalog))) {
+    if (!current.requireValue.accepts(
+      definition.rootType,
+      TypeRegistry(
+        ref.read(realmEditorCatalogProvider).requireCurrentCatalog().catalog,
+      ),
+    )) {
       return const SearchCommandState.hidden();
     }
     return const SearchCommandState.enabled();
@@ -82,7 +87,12 @@ SearchCommand createElementOnPageCommand({
         message: "Page compatibility is unavailable",
       );
     }
-    if (!livePolicy.accepts(definition.rootType, TypeRegistry(ref.read(realmEditorCatalogProvider).requireValue.snapshot!.catalog))) {
+    if (!livePolicy.accepts(
+      definition.rootType,
+      TypeRegistry(
+        ref.read(realmEditorCatalogProvider).requireCurrentCatalog().catalog,
+      ),
+    )) {
       return const SearchCommandResult.failed(
         message: "The selected page is no longer compatible",
       );
@@ -120,8 +130,7 @@ Future<String?> _createElementOnPage({
   if (page == null) return null;
   final pageEditor = ref
       .read(realmEditorCatalogProvider)
-      .value
-      ?.snapshot
+      .currentCatalog
       ?.pageCatalog
       .definitions[page.rootType]
       ?.editor;

@@ -41,18 +41,21 @@ mixin _AuthoringSessionSnapshots on _$AuthoringSession {
     })
   >
   _fetchSnapshot(List<skir.GraphSelection> selections) async {
-    final generation = state.generation ?? _catalogGeneration();
+    final currentCatalog = await ref.read(realmEditorCatalogProvider.future);
+    final generation =
+        state.generation ??
+        skir.CatalogGeneration(value: currentCatalog.generation.value);
     final graph = await _repository.fetchSelections(
       selections,
       generation: generation,
     );
     final graphGeneration = CatalogGeneration(graph.generation.value);
     final request = _catalogRequest(graph);
-    final currentCatalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    final cache = await ref.read(realmEditorCatalogCacheProvider.future);
     final catalog =
-        currentCatalog != null &&
+        cache != null &&
             currentCatalog.generation == graphGeneration &&
-            _catalogCovers(currentCatalog, request)
+            cache.covers(currentCatalog, request)
         ? currentCatalog
         : await _fetchExactCatalog(graphGeneration, request);
     final activeSelections = graph.selections
@@ -82,21 +85,11 @@ mixin _AuthoringSessionSnapshots on _$AuthoringSession {
     );
   }
 
-  bool _catalogCovers(
-    RealmEditorCatalogSnapshot catalog,
-    RealmEditorCatalogRequest request,
-  ) {
-    final registry = TypeRegistry(catalog.catalog);
-    return request.types.every(
-      (type) => registry.resolveExact(type).valueOrNull != null,
-    );
-  }
-
   Future<RealmEditorCatalogSnapshot> _fetchExactCatalog(
     CatalogGeneration generation,
     RealmEditorCatalogRequest request,
   ) async {
-    final cache = ref.read(realmEditorCatalogCacheProvider);
+    final cache = await ref.read(realmEditorCatalogCacheProvider.future);
     if (cache == null) throw StateError("The editor catalog is unavailable");
     return switch (await cache.fetchExact(generation, request)) {
       RealmEditorCatalogFetched(:final snapshot) => snapshot,
@@ -109,12 +102,6 @@ mixin _AuthoringSessionSnapshots on _$AuthoringSession {
           diagnostics.map((diagnostic) => diagnostic.message).join("; "),
         ),
     };
-  }
-
-  skir.CatalogGeneration _catalogGeneration() {
-    final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
-    if (snapshot == null) throw StateError("The editor catalog is unavailable");
-    return skir.CatalogGeneration(value: snapshot.generation.value);
   }
 
   void _applySnapshot(

@@ -100,7 +100,7 @@ Widget _authoringSearchResultStory(
     overrides: [
       pageIdProvider.overrideWith((ref) => null),
       realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
+        (ref) => Future.value(
           authoringSearchStoryCatalog(
             pageStoryPageCatalog(pageDefinition, storyElements),
           ),
@@ -140,7 +140,7 @@ Widget authoringSearchResultGalleryStory() {
     overrides: [
       pageIdProvider.overrideWith((ref) => null),
       realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
+        (ref) => Future.value(
           authoringSearchStoryCatalog(
             pageStoryPageCatalog(pageDefinition, storyElements),
           ),

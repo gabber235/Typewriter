@@ -16,7 +16,7 @@ class RelationAddMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
+    final catalog = ref.watch(realmEditorCatalogProvider).currentCatalog;
     if (catalog == null) return const SizedBox.shrink();
     final fields = <RealmRelationField>[
       for (final relation in catalog.relations.values)

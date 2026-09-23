@@ -92,20 +92,26 @@ Widget primarySearchButtonStory({
         ),
       ),
       realmConnectionProvider.overrideWith(
-        (ref) => Stream.value(RealmConnectionState.online),
+        (ref) => Future.value(RealmConnectionState.online),
       ),
       realmEditorCatalogForTypeProvider.overrideWith(
         (ref, rootType) =>
-            Stream.value(pageStoryCatalog(rootType, storyElements)),
+            Future.value(pageStoryCatalog(rootType, storyElements)),
       ),
       realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
+        (ref) => Future.value(
           authoringSearchStoryCatalog(
             pageStoryPageCatalog(pageDefinition, storyElements),
           ),
         ),
       ),
-      realmEditorCatalogLeaseProvider.overrideWith((ref, request) => null),
+      realmCatalogProvider.overrideWith2(
+        (request) => StoryRealmCatalog(
+          authoringSearchStoryCatalog(
+            pageStoryPageCatalog(pageDefinition, storyElements),
+          ),
+        ),
+      ),
       pageDocumentHealthProvider.overrideWith((ref, argument) => null),
       ...entryProviderOverrides(),
       ...pageElementsProviderOverrides(

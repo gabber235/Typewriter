@@ -13,12 +13,12 @@ const linkRelatedResourceCommandId = SearchCommandId("authoring.relation.link");
 
 SearchScope relationFieldSearchScope({
   required ValueListenable<AsyncValue<RealmRelationField>> field,
-  required ValueListenable<AsyncValue<RealmEditorCatalogState>> catalog,
+  required ValueListenable<AsyncValue<RealmEditorCatalogSnapshot>> catalog,
 }) => PredicateSearchScope(
   dependencies: [field, catalog],
   evaluate: (result, query) {
     final selected = field.value.value;
-    final snapshot = catalog.value.value?.snapshot;
+    final snapshot = catalog.value.currentCatalog;
     if (selected == null || snapshot == null) {
       return const SearchResultVisibility.hidden();
     }
@@ -86,7 +86,7 @@ List<SearchCommand> relationFieldCommands({
           message: "The relation is unavailable",
         );
       }
-      final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
+      final snapshot = ref.read(realmEditorCatalogProvider).currentCatalog;
       if (snapshot == null ||
           !selected.accepts(option.root, TypeRegistry(snapshot.catalog))) {
         return const SearchCommandResult.failed(
@@ -141,7 +141,7 @@ List<SearchCommand> relationFieldCommands({
         : const SearchCommandState.enabled(),
     execute: (execution, payload, target) async {
       final selected = field.value.value;
-      final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
+      final snapshot = ref.read(realmEditorCatalogProvider).currentCatalog;
       if (selected == null ||
           snapshot == null ||
           !selected.accepts(
@@ -192,7 +192,7 @@ skir.CreationAttachment? _nearestOwnership(
   skir.ResourceId host,
   ResolvedTypeRef targetType,
 ) {
-  final catalog = ref.read(realmEditorCatalogProvider).value?.snapshot;
+  final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
   if (catalog == null) return null;
   final state = ref.readAuthoringSession().state;
   final codec = TypedAuthoringCodec(catalog);

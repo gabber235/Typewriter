@@ -84,8 +84,7 @@ class TagGraph extends HookConsumerWidget {
         if (tagList.isEmpty) {
           final root = ref
               .read(realmEditorCatalogProvider)
-              .value
-              ?.snapshot
+              .currentCatalog
               ?.creatableRoots(CoreResourceDefinitionIds.tag)
               .singleOrNull;
           return EmptyTagsPage(

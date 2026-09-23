@@ -54,7 +54,7 @@ final class CanonicalBooksProvider
   CanonicalBooks create() => CanonicalBooks();
 }
 
-String _$canonicalBooksHash() => r'423848561bc7d427d3fc28e70293f987840e83b6';
+String _$canonicalBooksHash() => r'e4fdf434d3852eed6dce2d4511cbcb914d58c104';
 
 /// Owns the confirmed book collection for the selected organization and realm.
 ///

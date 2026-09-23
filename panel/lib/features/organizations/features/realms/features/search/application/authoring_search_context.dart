@@ -85,16 +85,17 @@ String authoringBookInitialQuery(
 /// policy immediately before mutation.
 SearchScope pageRelationFieldScope({
   required ValueListenable<AsyncValue<RealmRelationField>> field,
-  required ValueListenable<AsyncValue<RealmEditorCatalogState>> catalog,
+  required ValueListenable<AsyncValue<RealmEditorCatalogSnapshot>> catalog,
 }) => PredicateSearchScope(
   dependencies: [field, catalog],
   evaluate: (result, query) {
     final current = field.value.value;
-    final snapshot = catalog.value.value?.snapshot;
+    final snapshot = catalog.value.currentCatalog;
     return switch (result.payload) {
       ElementDefinition(:final rootType)
           when snapshot != null &&
-              current?.accepts(rootType, TypeRegistry(snapshot.catalog)) == true =>
+              current?.accepts(rootType, TypeRegistry(snapshot.catalog)) ==
+                  true =>
         const SearchResultVisibility.visible(),
       _ => const SearchResultVisibility.hidden(),
     };
@@ -103,9 +104,7 @@ SearchScope pageRelationFieldScope({
 
 SearchScope elementDestinationScope({
   required ValueListenable<AsyncValue<List<Book>>> books,
-  required ValueListenable<
-    AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>
-  >
+  required ValueListenable<AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>>
   compatibleFields,
 }) => PredicateSearchScope(
   dependencies: [books, compatibleFields],

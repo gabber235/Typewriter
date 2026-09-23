@@ -83,13 +83,24 @@ List<Override> authoringSessionMockOverrides({
     ),
     if (includeCatalog) ...[
       realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
-          RealmEditorCatalogState.ready(catalog ?? authoringFixtureCatalog()),
-        ),
+        (ref) async => catalog ?? authoringFixtureCatalog(),
       ),
-      realmEditorCatalogLeaseProvider.overrideWith((ref, request) => null),
+      realmCatalogProvider.overrideWith2(
+        (request) => _FixtureRealmCatalog(catalog ?? authoringFixtureCatalog()),
+      ),
     ],
   ];
+}
+
+final class _FixtureRealmCatalog extends RealmCatalog {
+  _FixtureRealmCatalog(this.snapshot);
+
+  final RealmEditorCatalogSnapshot snapshot;
+
+  @override
+  Future<RealmEditorCatalogSnapshot> build(
+    RealmEditorCatalogRequest request,
+  ) async => snapshot;
 }
 
 AuthoringSessionState _fixtureState({

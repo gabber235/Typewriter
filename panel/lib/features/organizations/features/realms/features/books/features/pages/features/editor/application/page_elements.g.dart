@@ -194,7 +194,7 @@ final class PageElementsProvider
   }
 }
 
-String _$pageElementsHash() => r'efa6f0cd51a765e890df9397af81c556c8a28847';
+String _$pageElementsHash() => r'27d76a569c75a8e1651f5f254987199bfbb5e54d';
 
 /// Adapts the shared authoring session to the page element editor.
 ///
@@ -348,7 +348,7 @@ final class DecodedRealmDocumentValuesProvider
 }
 
 String _$decodedRealmDocumentValuesHash() =>
-    r'273a4e078f68adbbfc68644a1cfeec39f11f2a8a';
+    r'1adc2b3ddb42c04bd332b2c9a83c3717fee11d07';
 
 final class DecodedRealmDocumentValuesFamily extends $Family
     with

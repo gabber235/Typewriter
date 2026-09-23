@@ -127,7 +127,7 @@ class _PageTile extends HookConsumerWidget {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
 
     final field = ref.watch(pageElementsFieldProvider(page.rootType)).value;
-    final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
+    final catalog = ref.watch(realmEditorCatalogProvider).currentCatalog;
 
     final backgroundColor = isSelected
         ? context.theme.colorScheme.primaryContainer
@@ -155,7 +155,8 @@ class _PageTile extends HookConsumerWidget {
       builder: (context, constraints) {
         return DragTarget<EntryDragPayload>(
           onWillAcceptWithDetails: (details) {
-            return field != null && catalog != null &&
+            return field != null &&
+                catalog != null &&
                 details.data.entries.every((entry) {
                   final elementType = entry.elementType;
                   return elementType != null &&

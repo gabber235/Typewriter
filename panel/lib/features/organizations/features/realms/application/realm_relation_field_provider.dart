@@ -12,13 +12,14 @@ AsyncValue<RealmRelationField> relationFieldForResource(
   DataPath path,
 ) {
   final catalog = ref.watch(realmEditorCatalogProvider);
+  if (catalog.isLoading) return const AsyncLoading();
   if (catalog.mapUnready<RealmRelationField>() case final pending?) {
     return pending;
   }
-  final snapshot = catalog.requireValue.snapshot;
+  final snapshot = catalog.requireValue;
   final organizationId = ref.watch(organizationIdProvider);
   final realmId = ref.watch(realmIdProvider);
-  if (snapshot == null || organizationId == null || realmId == null) {
+  if (organizationId == null || realmId == null) {
     return AsyncError(
       ApiException.badRequest("The Realm catalog is unavailable"),
       StackTrace.current,

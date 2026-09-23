@@ -25,7 +25,7 @@ mixin _PageElementMutationContext on _$PageElements {
     TypedAuthoringCodec authoring,
   })
   _codec() {
-    final snapshot = ref.read(realmEditorCatalogProvider).value?.snapshot;
+    final snapshot = ref.read(realmEditorCatalogProvider).currentCatalog;
     if (snapshot == null) {
       throw ApiException.badRequest("The editor catalog is unavailable");
     }

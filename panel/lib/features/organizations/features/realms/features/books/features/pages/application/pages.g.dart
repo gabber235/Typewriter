@@ -66,7 +66,7 @@ final class CanonicalBookPagesProvider
 }
 
 String _$canonicalBookPagesHash() =>
-    r'a7768b53aef528a8b6d1c0f15d577168004bd7dc';
+    r'6a43a0e9ebc2213caadca8095e342548a54870aa';
 
 /// Retains and exposes canonical pages belonging to one book.
 ///
@@ -189,7 +189,7 @@ final class CanonicalPageProvider
   }
 }
 
-String _$canonicalPageHash() => r'651d6fc417753c91f75c5c75e0e43c0026423bfa';
+String _$canonicalPageHash() => r'ee4bd1c29ef0f9b7beaa323494d8c9c3a334358c';
 
 /// Retains one canonical page through a typed resource selection lease.
 ///

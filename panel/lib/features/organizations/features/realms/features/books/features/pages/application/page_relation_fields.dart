@@ -11,15 +11,13 @@ AsyncValue<RealmRelationField> pageElementsField(
   ResolvedTypeRef pageType,
 ) {
   final catalog = ref.watch(realmEditorCatalogProvider);
+  if (catalog.isLoading) return const AsyncLoading();
   if (catalog.mapUnready<RealmRelationField>() case final value?) return value;
-  final snapshot = catalog.requireValue.snapshot;
-  if (snapshot == null) {
-    return AsyncError(
-      ApiException.badRequest("The editor catalog is unavailable"),
-      StackTrace.current,
-    );
-  }
-  final field = snapshot.relationField(pageType, DataPath.root.field("elements"));
+  final snapshot = catalog.requireValue;
+  final field = snapshot.relationField(
+    pageType,
+    DataPath.root.field("elements"),
+  );
   if (field == null) {
     return AsyncError(
       ApiException.badRequest("The Page has no elements relation"),
@@ -47,13 +45,20 @@ compatiblePageElementsFields(Ref ref, ResolvedTypeRef elementType) {
       case final value?) {
     return value;
   }
-  final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
-  if (catalog == null) return const AsyncData({});
+  final catalogState = ref.watch(realmEditorCatalogProvider);
+  if (catalogState.isLoading) return const AsyncLoading();
+  if (catalogState.mapUnready<Map<ResolvedTypeRef, RealmRelationField>>()
+      case final pending?) {
+    return pending;
+  }
+  final catalog = catalogState.requireValue;
   final registry = TypeRegistry(catalog.catalog);
-  return AsyncData(Map.unmodifiable({
-    for (final entry in fields.requireValue.entries)
-      if (entry.value.accepts(elementType, registry)) entry.key: entry.value,
-  }));
+  return AsyncData(
+    Map.unmodifiable({
+      for (final entry in fields.requireValue.entries)
+        if (entry.value.accepts(elementType, registry)) entry.key: entry.value,
+    }),
+  );
 }
 
 @riverpod
@@ -61,17 +66,12 @@ AsyncValue<Map<ResolvedTypeRef, RealmRelationField>> pageElementsFields(
   Ref ref,
 ) {
   final catalog = ref.watch(realmEditorCatalogProvider);
+  if (catalog.isLoading) return const AsyncLoading();
   if (catalog.mapUnready<Map<ResolvedTypeRef, RealmRelationField>>()
       case final value?) {
     return value;
   }
-  final snapshot = catalog.requireValue.snapshot;
-  if (snapshot == null) {
-    return AsyncError(
-      ApiException.badRequest("The editor catalog is unavailable"),
-      StackTrace.current,
-    );
-  }
+  final snapshot = catalog.requireValue;
   final fields = <ResolvedTypeRef, RealmRelationField>{};
   for (final definition in snapshot.pageCatalog.definitions.values) {
     final field = snapshot.relationField(

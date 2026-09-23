@@ -86,7 +86,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
 
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
-    final catalog = ref.watch(realmEditorCatalogProvider).value?.snapshot;
+    final catalog = ref.watch(realmEditorCatalogProvider).currentCatalog;
     final registry = catalog == null ? null : TypeRegistry(catalog.catalog);
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);

@@ -11,6 +11,18 @@ import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 part "route_story_fixtures.dart";
 part "route_story_authoring.dart";
 
+/// Supplies the same snapshot to every requested catalog scope in stories.
+class StoryRealmCatalog extends RealmCatalog {
+  StoryRealmCatalog(this.snapshot);
+
+  final RealmEditorCatalogSnapshot snapshot;
+
+  @override
+  Future<RealmEditorCatalogSnapshot> build(
+    RealmEditorCatalogRequest request,
+  ) async => snapshot;
+}
+
 @widgetbook.UseCase(name: "Graph", type: PagePage)
 Widget pagePageGraphUseCase(BuildContext context) {
   final direction = context.knobs.object.dropdown(
@@ -140,14 +152,14 @@ Widget pagePageStory({
         ),
       ),
       realmConnectionProvider.overrideWith(
-        (ref) => Stream.value(RealmConnectionState.online),
+        (ref) => Future.value(RealmConnectionState.online),
       ),
       realmEditorCatalogForTypeProvider.overrideWith(
         (ref, rootType) =>
-            Stream.value(pageStoryCatalog(rootType, storyElements ?? const [])),
+            Future.value(pageStoryCatalog(rootType, storyElements ?? const [])),
       ),
       realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
+        (ref) => Future.value(
           pageStoryPageCatalog(definition, storyElements ?? const []),
         ),
       ),
@@ -158,7 +170,11 @@ Widget pagePageStory({
           scope,
         ),
       ),
-      realmEditorCatalogLeaseProvider.overrideWith((ref, request) => null),
+      realmCatalogProvider.overrideWith2(
+        (request) => StoryRealmCatalog(
+          pageStoryPageCatalog(definition, storyElements ?? const []),
+        ),
+      ),
       pageDocumentHealthProvider.overrideWith((ref, argument) => null),
       ...entryProviderOverrides(),
       ...pageElementsProviderOverrides(

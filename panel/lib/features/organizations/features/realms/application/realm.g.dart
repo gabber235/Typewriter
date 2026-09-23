@@ -212,7 +212,7 @@ String _$realmsAvailabilityHash() =>
 /// The selected realm must resolve, report an active runtime status, and have
 /// its owner host connected. Resolution failures become [unavailable]; known
 /// inactive or disconnected realms become [offline]. Topology invalidation is
-/// the recovery path, and causes Riverpod to reevaluate this stream.
+/// the recovery path, and causes Riverpod to reevaluate this result.
 
 @ProviderFor(realmConnection)
 final realmConnectionProvider = RealmConnectionProvider._();
@@ -222,24 +222,24 @@ final realmConnectionProvider = RealmConnectionProvider._();
 /// The selected realm must resolve, report an active runtime status, and have
 /// its owner host connected. Resolution failures become [unavailable]; known
 /// inactive or disconnected realms become [offline]. Topology invalidation is
-/// the recovery path, and causes Riverpod to reevaluate this stream.
+/// the recovery path, and causes Riverpod to reevaluate this result.
 
 final class RealmConnectionProvider
     extends
         $FunctionalProvider<
           AsyncValue<RealmConnectionState>,
           RealmConnectionState,
-          Stream<RealmConnectionState>
+          FutureOr<RealmConnectionState>
         >
     with
         $FutureModifier<RealmConnectionState>,
-        $StreamProvider<RealmConnectionState> {
+        $FutureProvider<RealmConnectionState> {
   /// Derives the connection gate consumed by the workspace and editor providers.
   ///
   /// The selected realm must resolve, report an active runtime status, and have
   /// its owner host connected. Resolution failures become [unavailable]; known
   /// inactive or disconnected realms become [offline]. Topology invalidation is
-  /// the recovery path, and causes Riverpod to reevaluate this stream.
+  /// the recovery path, and causes Riverpod to reevaluate this result.
   RealmConnectionProvider._()
     : super(
         from: null,
@@ -256,17 +256,17 @@ final class RealmConnectionProvider
 
   @$internal
   @override
-  $StreamProviderElement<RealmConnectionState> $createElement(
+  $FutureProviderElement<RealmConnectionState> $createElement(
     $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  Stream<RealmConnectionState> create(Ref ref) {
+  FutureOr<RealmConnectionState> create(Ref ref) {
     return realmConnection(ref);
   }
 }
 
-String _$realmConnectionHash() => r'4a138358818b34afa64c45a4107bb05a1f356342';
+String _$realmConnectionHash() => r'08a930d77f59a7bb80c3648b671d268da9594a4b';
 
 /// Provides a synchronous interaction policy for widgets during async checks.
 ///
@@ -330,4 +330,4 @@ final class RealmInteractionProvider
   }
 }
 
-String _$realmInteractionHash() => r'c5ab3f670a6f9d86721d1555509b4ca8239b6b85';
+String _$realmInteractionHash() => r'53d08c62de035e50e7d0a4b2bb5afdffb32f2ac3';

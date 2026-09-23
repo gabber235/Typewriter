@@ -71,7 +71,7 @@ class AuthoringSession extends _$AuthoringSession
       (_) => _scheduleRefresh(),
     );
     ref.listen(realmEditorCatalogProvider, (_, next) {
-      final catalogGeneration = next.value?.snapshot?.generation.value;
+      final catalogGeneration = next.value?.generation.value;
       final sessionGeneration = state.generation?.value;
       if (catalogGeneration != null &&
           sessionGeneration != null &&

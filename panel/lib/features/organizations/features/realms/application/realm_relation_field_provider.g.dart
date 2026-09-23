@@ -76,7 +76,7 @@ final class RelationFieldForResourceProvider
 }
 
 String _$relationFieldForResourceHash() =>
-    r'2236b67fcfe6106d8709496f9d510877c37fae05';
+    r'55d7a175709a48cceab3e9e51cc5d5d5709b9d58';
 
 final class RelationFieldForResourceFamily extends $Family
     with

@@ -44,14 +44,19 @@ class BookIdentifier extends SelectableIdentifier
         .authoring(organization, realm);
     final router = ref.watch(appRouterProvider);
     final session = ref.watch(authoringSessionProvider(organization, realm));
-    ref.watch(
-      realmEditorCatalogLeaseProvider(
+    final catalogState = ref.watch(
+      realmCatalogProvider(
         RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
       ),
     );
-    final catalogState = ref.watch(realmEditorCatalogProvider).value;
-    final catalog = catalogState?.snapshot;
-    if (catalog == null) return const AsyncLoading();
+    if (catalogState.isLoading) return const AsyncLoading();
+    if (catalogState.mapUnready<Selectable>() case final pending?) {
+      return pending;
+    }
+    final catalog = catalogState.requireValue;
+    if (session.generation?.value != catalog.generation.value) {
+      return const AsyncLoading();
+    }
     final codec = TypedAuthoringCodec(catalog);
     final bookValue = session.bookEditorValue(bookId, codec);
     if (bookValue == null) {

@@ -410,6 +410,10 @@ String? _name(skir.AuthoringResource? resource) => resource == null
 
 final class _Harness {
   _Harness() {
+    final catalog = RealmEditorCatalogSnapshot(
+      catalog: _catalog,
+      generation: const CatalogGeneration("1"),
+    );
     nats.registerHandler(
       _statusSubject,
       (_) => skir.QueryCompiledResourceStatusResponse.serializer.toBytes(
@@ -423,13 +427,13 @@ final class _Harness {
         natsProvider.overrideWithValue(nats),
         organizationIdProvider.overrideWithValue(_org),
         realmIdProvider.overrideWithValue(_realm),
-        realmEditorCatalogProvider.overrideWithValue(
+        realmEditorCatalogProvider.overrideWithValue(AsyncData(catalog)),
+        realmEditorCatalogCacheProvider.overrideWithValue(
           AsyncData(
-            RealmEditorCatalogState.ready(
-              RealmEditorCatalogSnapshot(
-                catalog: _catalog,
-                generation: const CatalogGeneration("1"),
-              ),
+            fixedRealmCatalogCache(
+              snapshot: catalog,
+              organizationId: _org,
+              realmId: _realm,
             ),
           ),
         ),

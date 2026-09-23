@@ -41,15 +41,21 @@ Future<AuthoringSubjectProjection> authoringSubjects(
   Ref ref,
   AuthoringSubjectScope scope,
 ) async {
-  final session = ref.watch(
-    authoringSessionProvider(scope.organizationId, scope.realmId),
+  final provider = authoringSessionProvider(
+    scope.organizationId,
+    scope.realmId,
   );
-  final generation = session.generation;
-  final sequence = session.sequence;
-  if (generation == null || sequence == null) {
-    throw StateError("The authoring scope is not loaded");
-  }
-  final cache = ref.watch(realmEditorCatalogCacheProvider);
+  final current = ref.watch(provider);
+  final session = current.generation != null && current.sequence != null
+      ? current
+      : await ref
+            .streamed(provider)
+            .firstWhere(
+              (value) => value.generation != null && value.sequence != null,
+            );
+  final generation = session.generation!;
+  final sequence = session.sequence!;
+  final cache = await ref.watch(realmEditorCatalogCacheProvider.future);
   if (cache == null ||
       cache.route.organizationId != scope.organizationId ||
       cache.route.realmId != scope.realmId) {

@@ -62,23 +62,19 @@ class CanonicalTags extends _$CanonicalTags {
     if (organizationId == null || realmId == null) {
       return [];
     }
-    ref.watch(
-      realmEditorCatalogLeaseProvider(
-        RealmEditorCatalogRequest(types: {referenceResourceTypes.tag}),
-      ),
-    );
-    final catalogState = await ref.watch(realmEditorCatalogProvider.future);
-    final catalog = catalogState.snapshot;
-    if (catalog == null) throw StateError("The editor catalog is unavailable");
-    final collectionLeases = [
-      for (final selection in catalog.collectionSelections(
-        catalog.presentations.values,
-      ))
-        ref.watch(
-          authoringSelectionLeaseProvider(organizationId, realmId, selection),
+    final view = await ref.readAuthoringView(
+      organizationId: organizationId,
+      realmId: realmId,
+      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.tag}),
+      selections: (catalog) => [
+        ...catalog.collectionSelections(catalog.presentations.values),
+        authoringDefinitionSelection(
+          key: "tags",
+          definitions: const [CoreResourceDefinitionIds.tag],
         ),
-    ];
-    await Future.wait(collectionLeases.map((lease) => lease.ready));
+      ],
+    );
+    final catalog = view.catalog;
     final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
     ref.listen(provider, (_, value) {
@@ -87,19 +83,7 @@ class CanonicalTags extends _$CanonicalTags {
         state = AsyncData(_projectTags(value, codec));
       }
     });
-    final lease = ref.watch(
-      authoringSelectionLeaseProvider(
-        organizationId,
-        realmId,
-        authoringDefinitionSelection(
-          key: "tags",
-          definitions: const [CoreResourceDefinitionIds.tag],
-        ),
-      ),
-    );
-
-    await lease.ready;
-    return _projectTags(ref.read(provider), codec);
+    return _projectTags(view.session, codec);
   }
 
   /// Saves a tag through the shared editor mutation boundary.
