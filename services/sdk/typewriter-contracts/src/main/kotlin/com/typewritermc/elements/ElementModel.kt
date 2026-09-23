@@ -1,8 +1,8 @@
 package com.typewritermc.elements
 
 import com.typewritermc.authoring.Placement
-import com.typewritermc.authoring.TimelineKeyframePlacement
 import com.typewritermc.authoring.TimelineCuePlacement
+import com.typewritermc.authoring.TimelineKeyframePlacement
 import com.typewritermc.authoring.TimelineSegmentPlacement
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.types.Color
@@ -13,6 +13,7 @@ import com.typewritermc.types.Icon
 import com.typewritermc.types.Referenceable
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
+import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
@@ -65,7 +66,7 @@ interface Keyframe : Cue {
  */
 @JvmInline
 @Serializable
-@com.typewritermc.types.TypewriterType(id = "ef2cd4c6ab4f4c5a9f0850f3d7a0f58f")
+@TypewriterType(id = "ef2cd4c6ab4f4c5a9f0850f3d7a0f58f")
 value class ContentTypeId(
     val value: DeclaredTypeId,
 )
