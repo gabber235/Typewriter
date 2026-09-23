@@ -15,8 +15,9 @@
 
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:nats/jetstream@0.1.0": wasmcloud_utils::wasmcloud::messaging::jetstream,
+        "wasmcloud:nats/core@0.1.0": wasmcloud_utils::wasmcloud::messaging::core,
+        "wasmcloud:nats/core-handler@0.1.0": wasmcloud_utils::wasmcloud::messaging::core_handler,
     },
     generate_all,
 });
@@ -28,7 +29,7 @@ use wasmcloud_utils::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
         Permissions,
     },
-    wasmcloud::messaging::{handler::Guest, reply, types},
+    wasmcloud::messaging::{core_handler::Guest, reply, types},
 };
 
 mod common;
@@ -43,7 +44,7 @@ const SERVICES_SUBJECT: &str = "auth.permissions.typewriter-services";
 
 impl Guest for TypewriterPermissions {
     #[otel_wasi::wasi_instrument(service = "auth-typewriter-permissions", export)]
-    async fn handle_message(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+    async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         handle_message_async(msg).await
     }
 }
@@ -53,7 +54,7 @@ impl Guest for TypewriterPermissions {
 /// Only the two configured policy subjects are valid. The response is serialized using the Skir
 /// contract consumed by the auth callout, which preserves the ownership boundary between policy
 /// calculation and NATS claim signing.
-async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi::Error> {
+async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
     main_attribute!("messaging.destination.name" = msg.subject.clone());
 
     let request = match decode_skir!(GetEntityPermissionRequest, &msg.body) {

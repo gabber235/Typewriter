@@ -26,6 +26,7 @@ pub(crate) struct TelemetryCapture {
 struct CaptureState {
     spans: Mutex<VecDeque<CapturedSpan>>,
     omitted: AtomicUsize,
+    changed: tokio::sync::Notify,
 }
 
 #[derive(Clone, Debug)]
@@ -64,6 +65,7 @@ impl SpanProcessor for CaptureProcessor {
             resource: self.resource.clone(),
             span,
         });
+        self.state.changed.notify_waiters();
     }
 
     fn force_flush(&self) -> OTelSdkResult {
@@ -76,6 +78,34 @@ impl SpanProcessor for CaptureProcessor {
 }
 
 impl TelemetryCapture {
+    pub(crate) async fn wait_for_span(
+        &self,
+        name: &str,
+        timeout: Duration,
+    ) -> anyhow::Result<SpanData> {
+        tokio::time::timeout(timeout, async {
+            loop {
+                let changed = self.state.changed.notified();
+                tokio::pin!(changed);
+                changed.as_mut().enable();
+                if let Some(span) = self
+                    .state
+                    .spans
+                    .lock()
+                    .map_err(|_| anyhow::anyhow!("span capture lock poisoned"))?
+                    .iter()
+                    .find(|captured| captured.span.name == name)
+                    .map(|captured| captured.span.clone())
+                {
+                    return Ok(span);
+                }
+                changed.await;
+            }
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("no completed span named `{name}` within {timeout:?}"))?
+    }
+
     pub(crate) fn render(&self) -> Result<Vec<String>, &'static str> {
         let mut spans = self
             .state

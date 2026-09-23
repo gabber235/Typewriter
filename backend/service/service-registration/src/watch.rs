@@ -13,7 +13,7 @@ use wasmcloud_utils::{
     skir::base::service::v1::organization::{
         WatchOrganizationServicesRequest, WatchOrganizationServicesResponse,
     },
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::service::ServiceRecord;
@@ -24,7 +24,7 @@ use wasmcloud_utils::database::service::ServiceRecord;
 /// The user and organization path parameters identify the requested scope. The request body is
 /// still decoded to enforce the Skir boundary, although the current request has no fields.
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchOrganizationServicesResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

@@ -1,14 +1,7 @@
 use crate::wasmcloud::messaging;
-use otel_wasi::ResultWithSlug;
-use serde::Deserialize;
 
 /// JetStream stream that acknowledges persisted membership events.
 const MEMBERSHIP_STREAM: &str = "TYPEWRITER_MEMBERSHIP";
-
-#[derive(Deserialize)]
-struct JetStreamPublishAck {
-    stream: String,
-}
 
 /// Typed address for publishing one SKIR message kind.
 ///
@@ -45,15 +38,14 @@ impl<M> SkirSubject<M> {
     /// `TYPEWRITER_MEMBERSHIP`. A reply from another stream is rejected to avoid
     /// reporting persistence for the wrong event pipeline.
     pub async fn persist(&self, message: M) -> Result<(), otel_wasi::Error> {
-        let response = messaging::request(self.subject.clone(), (self.serialize)(&message)).await?;
-        let acknowledgement: JetStreamPublishAck = serde_json::from_slice(&response.body)
-            .error_with_slug("membership-event-ack-decode-failed")?;
-        if acknowledgement.stream != MEMBERSHIP_STREAM {
+        let acknowledgement =
+            messaging::persist(self.subject.clone(), (self.serialize)(&message)).await?;
+        if acknowledgement.stream_name != MEMBERSHIP_STREAM {
             return Err(otel_wasi::Error::new(
                 "membership-event-wrong-stream",
                 format!(
                     "expected {MEMBERSHIP_STREAM}, got {}",
-                    acknowledgement.stream
+                    acknowledgement.stream_name
                 ),
             ));
         }

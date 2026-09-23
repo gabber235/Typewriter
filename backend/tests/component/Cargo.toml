@@ -19,6 +19,7 @@ repository = "https://github.com/gabber235/Typewriter"
 [workspace.dependencies]
 anyhow = "1"
 async-trait = "0.1"
+async-nats = "0.49.1"
 base64 = "0.22"
 bytes = "1"
 cargo_metadata = "0.23"
@@ -50,7 +51,10 @@ surrealdb-types = "3.2.4"
 sha2 = "0.10"
 syn = { version = "2", features = ["full", "extra-traits"] }
 thiserror = "2"
+tempfile = "3"
 tokio = { version = "1", features = [
+    "process",
+    "io-util",
     "macros",
     "rt-multi-thread",
     "net",
@@ -76,13 +80,14 @@ wasmtime-wasi-http = { version = "47.0.3", default-features = false, features = 
 
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 
-wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "76dc551a3", default-features = false, features = [
+wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "c8984bda3fadaf825d0b47f69a8041561fd3d32c", default-features = false, features = [
+    "wasmcloud-nats",
     "wasi-config",
     "wasi-logging",
     "wasi-otel",
     "wasm_component_model_implements",
 ] }
-wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "b3bf99e0f87ebaf404474f43cebc10ee82da8f60" }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "f7dad10b6c739e8e1fc58432aef4fe1021763d10" }
 
 [profile.dev]
 debug = 0

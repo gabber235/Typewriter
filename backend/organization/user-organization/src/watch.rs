@@ -6,7 +6,7 @@ use wasmcloud_utils::{
     skir::base::organization::v1::user::{
         WatchUserOrganizationsRequest, WatchUserOrganizationsResponse,
     },
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 /// Returns the current organization list for the user in the message subject.
@@ -16,7 +16,7 @@ use wasmcloud_utils::{
 /// request a fresh snapshot after a sequence gap.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchUserOrganizationsResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;

@@ -56,10 +56,25 @@ async fn configured_credentials_are_returned(
 
 #[component_test(AuthSentinel)]
 async fn unknown_path_is_rejected(context: &mut TestContext<AuthSentinel>) -> TestResult {
-    let response = context.http()?.get("/unknown").send().await?;
+    let response = context
+        .http()?
+        .get("/unknown")
+        .header(
+            "traceparent",
+            "00-11111111111111111111111111111111-2222222222222222-01",
+        )
+        .send()
+        .await?;
 
     assert_eq!(response.status(), http::StatusCode::NOT_FOUND);
     assert_eq!(response.text().await?, "not found\n");
+    let span = context
+        .wait_for_span("handle", std::time::Duration::from_secs(2))
+        .await?;
+    assert_eq!(
+        span.span_context.trace_id().to_string(),
+        "11111111111111111111111111111111"
+    );
     Ok(())
 }
 
