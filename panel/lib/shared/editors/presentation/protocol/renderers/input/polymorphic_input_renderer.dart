@@ -74,7 +74,8 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AdaptiveChoiceControl<ResolvedTypeRef>(
+            _ConcreteTypeChoice(
+              key: ValueKey(reference.path),
               selected: selectedType,
               initialization: field.mixed
                   ? SelectionInitializationPolicy.explicit
@@ -83,18 +84,9 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
                 for (final candidate in element.concreteTypes)
                   candidate.type: scope.expressionText(candidate.label),
               },
-              enabled: field.editable,
-              onSelected: (type) {
-                if (type == null) return;
-                if (selectionOwner != null) {
-                  unawaited(
-                    selectionOwner.selectConcreteTypeAsync(
-                      reference.path,
-                      type,
-                    ),
-                  );
-                }
-              },
+              enabled: field.editable && selectionOwner != null,
+              owner: selectionOwner,
+              path: reference.path,
             ),
             if (field.mixed) const MixedValueMessage(),
             SizedBox(height: context.spacing.space3),
@@ -107,6 +99,125 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
       },
     );
   }
+}
+
+class _ConcreteTypeChoice extends StatefulWidget {
+  const _ConcreteTypeChoice({
+    required this.selected,
+    required this.initialization,
+    required this.choices,
+    required this.enabled,
+    required this.owner,
+    required this.path,
+    super.key,
+  });
+
+  final ResolvedTypeRef? selected;
+  final SelectionInitializationPolicy initialization;
+  final Map<ResolvedTypeRef, String> choices;
+  final bool enabled;
+  final ConcreteTypeSelectionOwner? owner;
+  final DataPath path;
+
+  @override
+  State<_ConcreteTypeChoice> createState() => _ConcreteTypeChoiceState();
+}
+
+class _ConcreteTypeChoiceState extends State<_ConcreteTypeChoice> {
+  ResolvedTypeRef? _pending;
+  List<TypeDiagnostic>? _diagnostics;
+  int _request = 0;
+
+  @override
+  void didUpdateWidget(covariant _ConcreteTypeChoice oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.owner != widget.owner || oldWidget.path != widget.path) {
+      _request++;
+      _pending = null;
+      _diagnostics = null;
+    }
+  }
+
+  Future<void> _select(ResolvedTypeRef type) async {
+    final owner = widget.owner;
+    if (owner == null || type == widget.selected) return;
+    final request = ++_request;
+    setState(() {
+      _pending = type;
+      _diagnostics = null;
+    });
+    final EditorMutationResult result;
+    try {
+      result = await owner.selectConcreteTypeAsync(widget.path, type);
+    } on Object catch (error) {
+      if (!mounted || request != _request) return;
+      setState(() {
+        _pending = null;
+        _diagnostics = [
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Concrete type selection failed: $error",
+            path: widget.path,
+          ),
+        ];
+      });
+      return;
+    }
+    if (!mounted || request != _request) return;
+    setState(() {
+      _pending = null;
+      _diagnostics = switch (result) {
+        InvalidEditorMutation(:final diagnostics) =>
+          diagnostics.isEmpty
+              ? [
+                  TypeDiagnostic(
+                    code: TypeDiagnosticCode.invalidValue,
+                    message: "Concrete type could not be initialized",
+                    path: widget.path,
+                  ),
+                ]
+              : diagnostics,
+        ConflictingEditorMutation() => [
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Concrete type selection was superseded",
+            path: widget.path,
+          ),
+        ],
+        AppliedEditorMutation() => null,
+      };
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      AdaptiveChoiceControl<ResolvedTypeRef>(
+        selected: widget.selected,
+        initialization: widget.initialization,
+        choices: widget.choices,
+        enabled: widget.enabled && _pending == null,
+        onSelected: (type) {
+          if (type != null) unawaited(_select(type));
+        },
+      ),
+      if (_pending != null)
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+      if (_diagnostics case final diagnostics?)
+        presentationDiagnostic(context, diagnostics),
+    ],
+  );
 }
 
 Widget _draftConcreteEditor(
