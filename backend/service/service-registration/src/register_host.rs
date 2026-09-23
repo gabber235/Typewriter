@@ -19,7 +19,7 @@ use wasmcloud_utils::{
     skir::base::service::v1::topology::{
         RegisterServiceHostRequest, RegisterServiceHostResponse, WatchOrganizationTopologyResponse,
     },
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -36,7 +36,7 @@ struct RegisterHostResult {
 /// Repeated equal advertisements return the existing revision and publish nothing. Changed
 /// advertisements are committed before the organization topology update is published.
 pub async fn handle(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<RegisterServiceHostResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;

@@ -19,13 +19,14 @@ spec:
           interfaces:
             - tracing
         - namespace: wasmcloud
-          package: messaging
-          version: "0.4.0"
+          package: nats
+          version: "0.1.0"
           interfaces:
-            - handler
-            - consumer
+            - core-handler
+            - core
+            - jetstream
           config:
-            subscriptions: auth.permissions.typewriter-panel,auth.permissions.typewriter-services
+            core-subscriptions: auth.permissions.typewriter-panel:typewriter.auth-auth-typewriter-permissions,auth.permissions.typewriter-services:typewriter.auth-auth-typewriter-permissions
         - namespace: seamlezz
           package: surrealdb
           version: "0.4.0"

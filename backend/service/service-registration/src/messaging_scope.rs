@@ -14,7 +14,7 @@ use wasmcloud_utils::{
         GetServiceMessagingScopeResponse_NotFound, ServiceMessagingScope,
     },
     skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Debug, Deserialize)]
@@ -31,7 +31,7 @@ struct MessagingScopeRecord {
 /// the service record does not exist. A found service with no registered host is still returned,
 /// with both Realm relationships absent.
 pub async fn handle(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     _params: HashMap<String, String>,
 ) -> Result<GetServiceMessagingScopeResponse, otel_wasi::Error> {
     let request = decode_skir!(GetServiceMessagingScopeRequest, &msg.body)?;

@@ -12,6 +12,7 @@ mod diagnostic;
 mod http_mock;
 mod manifest;
 mod messaging_mock;
+mod nats;
 mod outgoing;
 mod runtime;
 mod telemetry;
@@ -38,6 +39,7 @@ use std::{
     time::Instant,
 };
 
+use crate::nats::NatsDriver;
 use anyhow::Result;
 use component_test_model::{FixtureDescriptor, TestDescriptor};
 use futures_util::FutureExt;
@@ -48,7 +50,7 @@ use tokio::{
     sync::{OwnedSemaphorePermit, Semaphore},
 };
 use tracing_subscriber::prelude::*;
-use wash_runtime::{engine::Engine, plugin::wasmcloud_messaging::InMemoryMessagingDriver};
+use wash_runtime::engine::Engine;
 
 /// Result returned by a component test body.
 pub type TestResult = anyhow::Result<()>;
@@ -67,8 +69,9 @@ pub trait FixtureDeclaration: Send + Sync + 'static {
 pub struct TestContext<F> {
     descriptor: &'static TestDescriptor,
     http: Option<(SocketAddr, String)>,
-    messaging: Option<InMemoryMessagingDriver>,
+    messaging: Option<NatsDriver>,
     messaging_mock: Option<MessagingMock>,
+    telemetry: telemetry::TelemetryCapture,
     handles: HashMap<TypeId, Arc<dyn Any + Send + Sync>>,
     transcript: VecDeque<String>,
     marker: PhantomData<F>,
@@ -114,7 +117,16 @@ impl<F> TestContext<F> {
             .map(|value| (*value).clone())
             .map_err(|_| anyhow::anyhow!("registered marker is not an HTTP mock"))
     }
-    /// Returns the in memory client for publishing or requesting through the workload broker.
+    /// Waits for a completed guest span captured by this fixture.
+    pub async fn wait_for_span(
+        &self,
+        name: &str,
+        timeout: std::time::Duration,
+    ) -> Result<opentelemetry_sdk::trace::SpanData> {
+        self.telemetry.wait_for_span(name, timeout).await
+    }
+
+    /// Returns the NATS client for publishing or requesting through the workload broker.
     pub fn messaging(&self) -> Result<MessagingClient> {
         self.messaging
             .clone()
@@ -184,9 +196,9 @@ impl IncomingHttpClient {
     }
 }
 
-/// Client for exercising the fixture's in memory broker connections.
+/// Client for exercising the fixture's isolated NATS server.
 #[derive(Clone)]
-pub struct MessagingClient(InMemoryMessagingDriver);
+pub struct MessagingClient(NatsDriver);
 impl MessagingClient {
     /// Publishes a one way message to the workload broker.
     pub async fn publish(
@@ -212,20 +224,16 @@ impl MessagingClient {
             .await?
             .body)
     }
-    /// Waits until the in memory broker has finished queued delivery.
+    /// Waits until the broker delivery queues and guest handlers are idle.
     pub async fn wait_idle(&self) -> Result<()> {
         self.0.wait_idle().await.map_err(Into::into)
     }
 }
-fn host_message(
-    subject: impl Into<String>,
-    body: impl Into<Vec<u8>>,
-) -> wash_runtime::plugin::wasmcloud_messaging::HostMessage {
-    wash_runtime::plugin::wasmcloud_messaging::HostMessage {
+fn host_message(subject: impl Into<String>, body: impl Into<Vec<u8>>) -> crate::nats::HostMessage {
+    crate::nats::HostMessage {
         subject: subject.into(),
         reply_to: None,
         body: body.into(),
-        trace_context: None,
     }
 }
 
@@ -254,6 +262,9 @@ fn globals() -> Result<&'static Globals> {
     GLOBALS
         .get_or_init(|| {
             wash_runtime::init_crypto();
+            opentelemetry::global::set_text_map_propagator(
+                opentelemetry_sdk::propagation::TraceContextPropagator::new(),
+            );
             let host_tracer_provider = SdkTracerProvider::builder()
                 .with_sampler(Sampler::AlwaysOn)
                 .build();
@@ -455,13 +466,14 @@ where
         }
     }
     let mut context = if let Some(fixture) = &running {
-        fixture.context(descriptor, handles, transcript)
+        fixture.context(descriptor, handles, transcript, telemetry.clone())
     } else {
         TestContext {
             descriptor,
             http: None,
             messaging: None,
             messaging_mock: None,
+            telemetry: telemetry.clone(),
             handles,
             transcript,
             marker: PhantomData,
@@ -561,6 +573,11 @@ where
             .and_then(|value| value)
         {
             failures.push(format!("stopping host: {error:#}"));
+        }
+        if let Some(messaging) = &fixture.messaging {
+            if let Err(error) = messaging.close().await {
+                failures.push(format!("stopping NATS: {error:#}"));
+            }
         }
     }
     diagnostic.phase("cleaning extensions");

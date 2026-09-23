@@ -15,6 +15,7 @@ pub struct SyntheticMessaging;
 impl FixtureSpec for SyntheticMessaging {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
+            .otel()
             .messaging_with(|mock| {
                 mock.expect_publish("component.out")
                     .body(b"payload".to_vec());
@@ -47,6 +48,7 @@ pub struct SyntheticMessagingRequest;
 impl FixtureSpec for SyntheticMessagingRequest {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
+            .otel()
             .messaging_with(|mock| {
                 mock.expect_request("dependency.echo")
                     .body(b"question".to_vec())
@@ -89,6 +91,7 @@ pub struct SyntheticComposed;
 impl FixtureSpec for SyntheticComposed {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
+            .otel()
             .messaging_with(|mock| {
                 mock.expect_request("dependency.echo")
                     .body(b"composed".to_vec());
@@ -108,5 +111,15 @@ async fn optional_component_replies(context: &mut TestContext<SyntheticComposed>
         .messaging()?
         .publish("test.request", b"composed".to_vec())
         .await?;
-    context.messaging()?.wait_idle().await
+    context.messaging()?.wait_idle().await?;
+    let first = context
+        .wait_for_span("synthetic_message", std::time::Duration::from_secs(2))
+        .await?;
+    let reply = context
+        .wait_for_span("synthetic_reply", std::time::Duration::from_secs(2))
+        .await?;
+    assert!(first.span_context.is_valid());
+    assert_eq!(first.span_context.trace_id(), reply.span_context.trace_id());
+    assert_ne!(first.span_context.span_id(), reply.span_context.span_id());
+    Ok(())
 }

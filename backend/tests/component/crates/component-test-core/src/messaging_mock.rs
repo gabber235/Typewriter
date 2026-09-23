@@ -6,8 +6,8 @@ use std::{
     time::Duration,
 };
 
+use crate::nats::{HostMessage, ResponderRequest};
 use anyhow::{Result, bail};
-use wash_runtime::plugin::wasmcloud_messaging::{HostMessage, ResponderRequest};
 
 const TRANSCRIPT_LIMIT: usize = 128;
 
@@ -95,12 +95,8 @@ impl MessagingMock {
         self.push(MessagingOperation::Request, pattern.into())
     }
 
-    pub fn expect_persisted_publish(
-        &self,
-        pattern: impl Into<String>,
-    ) -> MessagingExpectation {
+    pub fn expect_persisted_publish(&self, pattern: impl Into<String>) -> MessagingExpectation {
         self.expect_request(pattern)
-            .reply(br#"{"stream":"TYPEWRITER_MEMBERSHIP","seq":1}"#.to_vec())
     }
 
     fn push(&self, operation: MessagingOperation, pattern: String) -> MessagingExpectation {
@@ -327,8 +323,8 @@ impl ScriptedResponse {
                         subject,
                         reply_to: None,
                         body,
-                        trace_context: None,
-                    })?;
+                    })
+                    .await?;
             }
             Some(ScriptedReply::Error(message, delay)) => {
                 tokio::time::sleep(delay).await;
@@ -390,7 +386,6 @@ mod tests {
             subject: subject.into(),
             reply_to: None,
             body: body.into(),
-            trace_context: None,
         }
     }
 

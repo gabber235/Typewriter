@@ -19,13 +19,14 @@ spec:
           interfaces:
             - tracing
         - namespace: wasmcloud
-          package: messaging
-          version: "0.4.0"
+          package: nats
+          version: "0.1.0"
           interfaces:
-            - handler
-            - consumer
+            - core-handler
+            - core
+            - jetstream
           config:
-            subscriptions: service.*.status,service.*.messaging.scope,typewriter.from.service.*.status,typewriter.from.service.*.messaging.scope,typewriter.from.service.*.heartbeat,typewriter.from.service.*.shutdown,typewriter.from.user.*.organization.*.services.*,typewriter.from.user.*.organization.*.topology.*,typewriter.from.service.*.execution.*
+            core-subscriptions: service.*.status:typewriter.service-registration,service.*.messaging.scope:typewriter.service-registration,typewriter.from.service.*.status:typewriter.service-registration,typewriter.from.service.*.messaging.scope:typewriter.service-registration,typewriter.from.service.*.heartbeat:typewriter.service-registration,typewriter.from.service.*.shutdown:typewriter.service-registration,typewriter.from.user.*.organization.*.services.*:typewriter.service-registration,typewriter.from.user.*.organization.*.topology.*:typewriter.service-registration,typewriter.from.service.*.execution.*:typewriter.service-registration
         - namespace: seamlezz
           package: surrealdb
           version: "0.4.0"

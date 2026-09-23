@@ -9,16 +9,22 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 
-pub use crate::bindings::exports::wasmcloud::messaging::*;
-pub use crate::bindings::wasmcloud::messaging::*;
+pub use crate::bindings::exports::wasmcloud::nats::*;
+pub use crate::bindings::wasmcloud::nats::*;
 
-fn current_trace_context()
--> Option<crate::bindings::wasmcloud::observability::propagation::TraceContext> {
+fn current_trace_headers() -> Option<Vec<types::HeaderEntry>> {
     otel_wasi::current_propagation_context().map(|context| {
-        crate::bindings::wasmcloud::observability::propagation::TraceContext {
-            traceparent: context.traceparent,
-            tracestate: context.tracestate,
+        let mut headers = vec![types::HeaderEntry {
+            name: "traceparent".into(),
+            value: context.traceparent,
+        }];
+        if let Some(value) = context.tracestate {
+            headers.push(types::HeaderEntry {
+                name: "tracestate".into(),
+                value,
+            });
         }
+        headers
     })
 }
 
@@ -192,20 +198,18 @@ fn parse_subject_inner(template: &str, subject: &str) -> Result<HashMap<String, 
 /// `message-reply-failed` for broker failures, or `message-no-reply-to` when the input
 /// cannot be answered.
 pub async fn reply(
-    reply_to: types::BrokerMessage,
+    reply_to: types::NatsMessage,
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
     if let Some(reply_to) = reply_to.reply_to {
-        consumer::publish(
-            types::BrokerMessage {
-                subject: reply_to,
-                reply_to: None,
-                body: data.into(),
-            },
-            current_trace_context(),
-        )
+        core::publish(types::NatsMessage {
+            subject: reply_to,
+            reply_to: None,
+            body: data.into(),
+            headers: current_trace_headers(),
+        })
         .await
-        .map_err(|e| otel_wasi::Error::new("message-reply-failed", e))
+        .map_err(|e| otel_wasi::Error::new("message-reply-failed", e.to_string()))
     } else {
         Err(otel_wasi::Error::new(
             "message-no-reply-to",
@@ -223,14 +227,12 @@ pub async fn send(
     reply_to: String,
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
-    consumer::publish(
-        types::BrokerMessage {
-            subject,
-            reply_to: Some(reply_to),
-            body: data.into(),
-        },
-        current_trace_context(),
-    )
+    core::publish(types::NatsMessage {
+        subject,
+        reply_to: Some(reply_to),
+        body: data.into(),
+        headers: current_trace_headers(),
+    })
     .await
     .error_with_slug("message-send-failed")
 }
@@ -240,14 +242,12 @@ pub async fn send(
 /// Use this for notifications and other one way messages. Broker failures are returned
 /// as `message-publish-failed`.
 pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), otel_wasi::Error> {
-    consumer::publish(
-        types::BrokerMessage {
-            subject,
-            reply_to: None,
-            body: data.into(),
-        },
-        current_trace_context(),
-    )
+    core::publish(types::NatsMessage {
+        subject,
+        reply_to: None,
+        body: data.into(),
+        headers: current_trace_headers(),
+    })
     .await
     .error_with_slug("message-publish-failed")
 }
@@ -259,10 +259,33 @@ pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), ot
 pub async fn request(
     subject: String,
     data: impl Into<Vec<u8>>,
-) -> Result<types::BrokerMessage, otel_wasi::Error> {
-    consumer::request(subject, data.into(), 5000, current_trace_context())
-        .await
-        .error_with_slug("message-request-failed")
+) -> Result<types::NatsMessage, otel_wasi::Error> {
+    core::request(
+        types::NatsMessage {
+            subject,
+            body: data.into(),
+            reply_to: None,
+            headers: current_trace_headers(),
+        },
+        5000,
+    )
+    .await
+    .error_with_slug("message-request-failed")
+}
+
+/// Publish durably through JetStream and return its typed acknowledgement.
+pub async fn persist(
+    subject: String,
+    body: Vec<u8>,
+) -> Result<jetstream::PublishAck, otel_wasi::Error> {
+    jetstream::publish(types::NatsMessage {
+        subject,
+        body,
+        reply_to: None,
+        headers: current_trace_headers(),
+    })
+    .await
+    .error_with_slug("message-persist-failed")
 }
 
 /// Serialize and reply with a handler result while preserving typed SKIR outcomes.
@@ -271,7 +294,7 @@ pub async fn request(
 /// the enum's generic `InternalError` variant, then returns the original error so the
 /// dispatch boundary can retain its logging and tracing context.
 pub async fn reply_handler_result<R>(
-    msg: types::BrokerMessage,
+    msg: types::NatsMessage,
     result: Result<R, otel_wasi::Error>,
 ) -> Result<(), otel_wasi::Error>
 where
@@ -294,7 +317,7 @@ where
     }
 }
 
-async fn reply_response<R>(msg: types::BrokerMessage, response: R) -> Result<(), otel_wasi::Error>
+async fn reply_response<R>(msg: types::NatsMessage, response: R) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {

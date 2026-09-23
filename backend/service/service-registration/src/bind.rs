@@ -25,7 +25,7 @@ use wasmcloud_utils::{
         ServiceBoundNotification,
     },
     skir_domain_result, skir_variant,
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::{organization::OrganizationRecord, service::ServiceRecord};
@@ -44,7 +44,7 @@ struct BindResult {
 /// the binding itself is durable and a later snapshot can converge the view.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_bind(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<BindServiceResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

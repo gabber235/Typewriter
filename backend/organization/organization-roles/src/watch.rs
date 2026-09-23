@@ -13,7 +13,7 @@ use wasmcloud_utils::{
     skir::base::organization::v1::role::{
         WatchOrganizationRolesRequest, WatchOrganizationRolesResponse,
     },
-    wasmcloud::messaging::types::BrokerMessage,
+    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::organization::OrganizationRoleRecord;
@@ -25,7 +25,7 @@ use wasmcloud_utils::database::organization::OrganizationRoleRecord;
 /// failures are returned through the dispatch layer as an internal error response.
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
-    msg: BrokerMessage,
+    msg: NatsMessage,
     params: HashMap<String, String>,
 ) -> Result<WatchOrganizationRolesResponse, otel_wasi::Error> {
     let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;

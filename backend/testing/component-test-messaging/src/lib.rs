@@ -6,33 +6,33 @@
 
 wit_bindgen::generate!({
     with: {
-        "wasmcloud:messaging/consumer@0.4.0": wasmcloud_utils::wasmcloud::messaging::consumer,
-        "wasmcloud:messaging/handler@0.4.0": wasmcloud_utils::wasmcloud::messaging::handler,
+        "wasmcloud:nats/jetstream@0.1.0": wasmcloud_utils::wasmcloud::messaging::jetstream,
+        "wasmcloud:nats/core@0.1.0": wasmcloud_utils::wasmcloud::messaging::core,
+        "wasmcloud:nats/core-handler@0.1.0": wasmcloud_utils::wasmcloud::messaging::core_handler,
     },
     generate_all,
 });
 
-use wasmcloud_utils::wasmcloud::messaging::{self, handler::Guest, types};
+use wasmcloud_utils::wasmcloud::messaging::{self, core_handler::Guest, types};
 
 struct Component;
 wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     /// Runs the messaging scenario selected by the incoming subject.
-    async fn handle_message(message: types::BrokerMessage) -> Result<(), String> {
+    #[otel_wasi::wasi_instrument(
+        service = "component-test-messaging",
+        name = "synthetic_message",
+        export
+    )]
+    async fn handle_message(message: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         match message.subject.as_str() {
-            "test.publish" => messaging::publish("component.out".into(), message.body)
-                .await
-                .map_err(|error| error.to_string()),
+            "test.publish" => messaging::publish("component.out".into(), message.body).await,
             // The request path keeps the original body unchanged and exposes the dependency
             // reply through a separate publish so the fixture can assert both operations.
             "test.request" => {
-                let response = messaging::request("dependency.echo".into(), message.body)
-                    .await
-                    .map_err(|error| error.to_string())?;
-                messaging::publish("component.result".into(), response.body)
-                    .await
-                    .map_err(|error| error.to_string())
+                let response = messaging::request("dependency.echo".into(), message.body).await?;
+                messaging::publish("component.result".into(), response.body).await
             }
             _ => Ok(()),
         }
