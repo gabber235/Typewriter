@@ -93,7 +93,6 @@ private fun ConversionScope.encode(definition: TypeDefinition): SkirTypeDefiniti
                 NominalTypeKind.SEALED_ABSTRACT -> SkirTypeDefinitionKind.SEALED_ABSTRACT
             },
         declarationOwner = definition.declarationOwner,
-        defaultPresentationId = definition.defaultPresentationId?.let(::encode),
         namedPresentations =
             definition.namedPresentations.toSortedMap().map { (name, id) ->
                 SkirNamedPresentation(name = name, presentationId = encode(id))
@@ -122,7 +121,6 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
         representation = at("representation") { decode(definition.representation) },
         parameters = definition.parameters.mapIndexed { index, value -> at("parameter $index") { decode(value) } },
         parents = definition.directParents.mapIndexed { index, value -> at("parent $index") { decode(value) } },
-        defaultPresentationId = definition.defaultPresentationId?.let(::decode),
         namedPresentations =
             definition.namedPresentations.associate { value -> value.name to decode(value.presentationId) },
         displayName = definition.displayName,
@@ -143,6 +141,7 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
 
 private fun ConversionScope.encode(role: PresentationRole): SkirPresentationRole =
     when (role) {
+        PresentationRole.EDITOR -> SkirPresentationRole.EDITOR
         PresentationRole.CREATION -> SkirPresentationRole.CREATION
         PresentationRole.REFERENCE_SUMMARY -> SkirPresentationRole.REFERENCE_SUMMARY
         PresentationRole.REFERENCE_OPTION -> SkirPresentationRole.REFERENCE_OPTION
@@ -155,6 +154,7 @@ private fun ConversionScope.encode(role: PresentationRole): SkirPresentationRole
 
 private fun ConversionScope.decode(role: SkirPresentationRole): PresentationRole =
     when (role) {
+        SkirPresentationRole.EDITOR -> PresentationRole.EDITOR
         SkirPresentationRole.CREATION -> PresentationRole.CREATION
         SkirPresentationRole.REFERENCE_SUMMARY -> PresentationRole.REFERENCE_SUMMARY
         SkirPresentationRole.REFERENCE_OPTION -> PresentationRole.REFERENCE_OPTION

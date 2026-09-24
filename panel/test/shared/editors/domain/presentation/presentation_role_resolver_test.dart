@@ -103,7 +103,7 @@ void main() {
     );
   });
 
-  test("creation editor invokes its role presentation and otherwise uses the default", () {
+  test("creation editor tries creation and then editor role", () {
     const defaultId = PresentationId(namespace: "test", name: "default");
     const creationId = PresentationId(namespace: "test", name: "creation");
     final reference = _reference("Resource");
@@ -123,8 +123,7 @@ void main() {
             id: reference,
             kind: NominalTypeKind.concrete,
             representation: const StringType(),
-            defaultPresentationId: defaultId,
-            rolePresentations: roles,
+            rolePresentations: {PresentationRole.editor: defaultId, ...roles},
           ),
         ]),
       );
@@ -136,7 +135,7 @@ void main() {
         final model = PresentationModel.editor(
           owner: draft,
           presentations: presentations,
-          preferredRole: PresentationRole.creation,
+          roles: const [PresentationRole.creation, PresentationRole.editor],
         );
         return (model.root.element as PresentationInvocationElement)
             .presentationId;
@@ -147,6 +146,59 @@ void main() {
 
     expect(selected(const {PresentationRole.creation: creationId}), creationId);
     expect(selected(const {}), defaultId);
+  });
+
+  test("a descendant inherits a readable editor and missing definitions use structure", () {
+    const editorId = PresentationId(namespace: "test", name: "base.editor");
+    final base = TypeDefinition(
+      id: _reference("BaseEditor"),
+      kind: NominalTypeKind.openAbstract,
+      representation: const StringType(),
+      rolePresentations: const {PresentationRole.editor: editorId},
+    );
+    final leaf = TypeDefinition(
+      id: _reference("LeafEditor"),
+      kind: NominalTypeKind.concrete,
+      parents: [base.id],
+      representation: const StringType(),
+    );
+    final catalog = TypeCatalog([base, leaf]);
+    final presentation = PresentationDefinition.single(
+      id: editorId,
+      target: NamedType(base.id),
+      root: const PresentationNode(id: "read", element: DividerElement()),
+    );
+    final selected = PresentationModel.value(
+      type: NamedType(leaf.id),
+      value: const StringValue("example"),
+      catalog: catalog,
+      presentations: [presentation],
+    );
+    expect(
+      (selected.root.element as PresentationInvocationElement).presentationId,
+      editorId,
+    );
+
+    final generated = PresentationModel.value(
+      type: NamedType(leaf.id),
+      value: const StringValue("example"),
+      catalog: catalog,
+    );
+    expect(generated.root.element, isNot(isA<PresentationInvocationElement>()));
+
+    final incompatible = PresentationModel.value(
+      type: NamedType(leaf.id),
+      value: const StringValue("example"),
+      catalog: catalog,
+      presentations: [
+        PresentationDefinition.single(
+          id: editorId,
+          target: const IntegerType(width: IntegerWidth.signed32),
+          root: const PresentationNode(id: "wrong", element: DividerElement()),
+        ),
+      ],
+    );
+    expect(incompatible.root.element, isNot(isA<PresentationInvocationElement>()));
   });
 }
 

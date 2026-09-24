@@ -107,26 +107,38 @@ abstract class PresentationModel with _$PresentationModel {
     List<PresentationDefinition> presentations = const [],
     List<PresentationCollectionSource> collections = const [],
     List<TypeDiagnostic> diagnostics = const [],
-  }) => PresentationModel(
-    catalog: catalog,
-    inputs: {
-      const BindingId(0): PresentationInput.value(
-        type: type,
-        value: EditorValue.ready(value),
-      ),
-    },
-    root: presentation ?? _singlePresentationRoot(type, catalog, presentations),
-    presentations: presentations,
-    collections: PresentationCollections(collections),
-    diagnostics: diagnostics,
-  );
+  }) {
+    final resolutionDiagnostics = <TypeDiagnostic>[];
+    return PresentationModel(
+      catalog: catalog,
+      inputs: {
+        const BindingId(0): PresentationInput.value(
+          type: type,
+          value: EditorValue.ready(value),
+        ),
+      },
+      root:
+          presentation ??
+          _singlePresentationRoot(
+            type,
+            catalog,
+            presentations,
+            roles: const [PresentationRole.editor],
+            access: PresentationInputAccess.read,
+            diagnostics: resolutionDiagnostics,
+          ),
+      presentations: presentations,
+      collections: PresentationCollections(collections),
+      diagnostics: [...diagnostics, ...resolutionDiagnostics],
+    );
+  }
 
   /// Builds a presentation whose root binding delegates edits to [owner].
   factory PresentationModel.editor({
     required EditOwner owner,
     DataPath path = DataPath.root,
     PresentationNode? presentation,
-    PresentationRole? preferredRole,
+    List<PresentationRole> roles = const [PresentationRole.editor],
     List<PresentationDefinition> presentations = const [],
     List<PresentationCollectionSource> collections = const [],
     List<TypeDiagnostic> diagnostics = const [],
@@ -136,13 +148,7 @@ abstract class PresentationModel with _$PresentationModel {
             .resolvePath(path, registry: TypeRegistry(owner.typeCatalog))
             .valueOrNull ??
         owner.rootType;
-    final registry = TypeRegistry(owner.typeCatalog);
-    final roleResult = preferredRole != null && declared is NamedType
-        ? registry.resolveOptionalPresentationRole(
-            declared.reference,
-            preferredRole,
-          )
-        : null;
+    final resolutionDiagnostics = <TypeDiagnostic>[];
     return PresentationModel(
       catalog: owner.typeCatalog,
       inputs: {const BindingId(0): PresentationInput.edit(owner, path: path)},
@@ -152,11 +158,13 @@ abstract class PresentationModel with _$PresentationModel {
             declared,
             owner.typeCatalog,
             presentations,
-            preferredPresentationId: roleResult?.valueOrNull,
+            roles: roles,
+            access: PresentationInputAccess.edit,
+            diagnostics: resolutionDiagnostics,
           ),
       presentations: presentations,
       collections: PresentationCollections(collections),
-      diagnostics: [...diagnostics, ...?roleResult?.diagnostics],
+      diagnostics: [...diagnostics, ...resolutionDiagnostics],
     );
   }
 
@@ -183,23 +191,54 @@ PresentationNode _singlePresentationRoot(
   TypeExpression declared,
   TypeCatalog catalog,
   List<PresentationDefinition> presentations, {
-  PresentationId? preferredPresentationId,
+  required List<PresentationRole> roles,
+  required PresentationInputAccess access,
+  required List<TypeDiagnostic> diagnostics,
 }) {
   final registry = TypeRegistry(catalog);
   final resolved = declared is NamedType
       ? registry.resolve(declared).valueOrNull?.representation ?? declared
       : declared;
-  final selected =
-      preferredPresentationId ??
-      (declared is NamedType
-          ? registry.definition(declared.reference)?.defaultPresentationId
-          : null);
-  final definition = presentations
-      .where(
-        (definition) =>
-            definition.id == selected && definition.inputs.length == 1,
-      )
-      .firstOrNull;
+  PresentationDefinition? definition;
+  if (declared is NamedType) {
+    for (final role in roles) {
+      final result = registry.resolveOptionalPresentationRole(
+        declared.reference,
+        role,
+      );
+      diagnostics.addAll(result.diagnostics);
+      final selected = result.valueOrNull;
+      if (selected == null) continue;
+      final candidate = presentations
+          .where((value) => value.id == selected)
+          .firstOrNull;
+      if (candidate == null ||
+          candidate.inputs.length != 1 ||
+          (access == PresentationInputAccess.read &&
+              candidate.inputs.single.access == PresentationInputAccess.edit)) {
+        continue;
+      }
+      final expected = candidate.inputs.single.type;
+      final compatible =
+          inferNominalOrAncestorPresentationSubstitutions(
+                expected.bindingNominal(registry),
+                declared.bindingNominal(registry),
+                registry,
+              ) !=
+              null ||
+          (expected is! NamedType &&
+              (expected.inferPresentationSubstitutions(
+                        declared.bindingRepresentation(registry),
+                      ) !=
+                      null ||
+                  declared
+                      .bindingRepresentation(registry)
+                      .isStructurallyAssignableTo(expected, registry)));
+      if (!compatible) continue;
+      definition = candidate;
+      break;
+    }
+  }
   if (definition == null) {
     final generated =
         declared is NamedType &&

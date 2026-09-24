@@ -83,9 +83,6 @@ extension TypeCatalogWireEncoding on TypeCatalog {
           kind: definition.kind._encodeWire,
           declarationOwner:
               definition.declarationOwner ?? definition.id.id._defaultOwner,
-          defaultPresentationId: definition.defaultPresentationId == null
-              ? null
-              : (definition.defaultPresentationId!)._encodeWire,
           namedPresentations: [
             for (final entry in definition.namedPresentations.entries)
               wire.NamedPresentation(
@@ -218,13 +215,6 @@ extension on wire.TypeDefinition {
         namedPresentations[value.name] = presentation;
       }
     }
-    final defaultPresentation = value.defaultPresentationId == null
-        ? const TypeResult<PresentationId?>.success(null)
-        : (value.defaultPresentationId!)._decodeDomain().mapValue(
-            (value) => value,
-          );
-    diagnostics.addAll(defaultPresentation.diagnostics);
-
     final rolePresentations = <PresentationRole, PresentationId>{};
     for (final association in value.rolePresentations) {
       final role = association.role._decodeDomain();
@@ -280,7 +270,6 @@ extension on wire.TypeDefinition {
         representation: representation.valueOrNull!,
         parameters: parameters,
         parents: parents,
-        defaultPresentationId: defaultPresentation.valueOrNull,
         namedPresentations: namedPresentations,
         rolePresentations: rolePresentations,
         fieldMergePolicies: fieldMergePolicies,
@@ -303,6 +292,7 @@ extension on wire.TypeDefinition {
 
 extension on PresentationRole {
   wire.PresentationRole get _encodeWire => switch (this) {
+    PresentationRole.editor => wire.PresentationRole.editor,
     PresentationRole.creation => wire.PresentationRole.creation,
     PresentationRole.referenceSummary => wire.PresentationRole.referenceSummary,
     PresentationRole.referenceOption => wire.PresentationRole.referenceOption,
@@ -316,6 +306,9 @@ extension on PresentationRole {
 
 extension on wire.PresentationRole {
   TypeResult<PresentationRole> _decodeDomain() => switch (this) {
+    wire.PresentationRole.editor => const TypeResult.success(
+      PresentationRole.editor,
+    ),
     wire.PresentationRole.creation => const TypeResult.success(
       PresentationRole.creation,
     ),

@@ -177,12 +177,12 @@ RealmEditorCatalogSnapshot authoringFixtureCatalog() {
   const bookType = authoringFixtureBookType;
   const tagType = authoringFixtureTagType;
   const bookPresentation = PresentationId(
-    namespace: "typewriter.core",
-    name: "book.default",
+    namespace: "typewritermc:realm",
+    name: "book.editor",
   );
   const tagPresentation = PresentationId(
-    namespace: "typewriter.core",
-    name: "tag.default",
+    namespace: "typewritermc:realm",
+    name: "tag.editor",
   );
   return receivedRealmEditorCatalog(
     definitions: [
@@ -211,7 +211,7 @@ RealmEditorCatalogSnapshot authoringFixtureCatalog() {
             ),
           },
         ),
-        defaultPresentationId: bookPresentation,
+        rolePresentations: {PresentationRole.editor: bookPresentation},
         fieldMergePolicies: [
           FieldMergePolicy(
             path: DataPath.root.field("tags"),
@@ -259,7 +259,7 @@ RealmEditorCatalogSnapshot authoringFixtureCatalog() {
             ),
           },
         ),
-        defaultPresentationId: tagPresentation,
+        rolePresentations: {PresentationRole.editor: tagPresentation},
         fieldMergePolicies: [
           FieldMergePolicy(
             path: DataPath.root.field("parents"),
@@ -357,8 +357,8 @@ const authoringFixtureTagType = ResolvedTypeRef(
   revision: 1,
 );
 const authoringFixtureTagPresentationId = PresentationId(
-  namespace: "typewriter.core",
-  name: "tag.default",
+  namespace: "typewritermc:realm",
+  name: "tag.editor",
 );
 
 PresentationCollectionSource authoringFixtureTagCollection(

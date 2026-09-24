@@ -2,6 +2,7 @@ package com.typewritermc.realm
 
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
+import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.elements.Element
 import com.typewritermc.elements.Entry
 import com.typewritermc.library.Book
@@ -9,6 +10,10 @@ import com.typewritermc.library.Page
 import com.typewritermc.library.TAG_COLLECTION_SOURCE_ID
 import com.typewritermc.library.Tag
 import com.typewritermc.presentation.PresentationCatalogAssembler
+import com.typewritermc.presentation.CollectionProjectionCatalogAssembler
+import com.typewritermc.presentation.CollectionProjectionProvider
+import com.typewritermc.presentation.PresentationProvider
+import com.typewritermc.library.CoreResourceDefinitionIds
 import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.CatalogMetadataTypePrototype
 import com.typewritermc.types.NominalTypeKind
@@ -34,7 +39,7 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.SearchProvider
 
 val CoreLibraryPresentationsTest by testSuite {
-    test("core providers assemble defaults and inherited resource roles for entry types") {
+    test("discovered core declarations assemble editor and contextual roles") {
         val classLoader = DefaultRealmRuntimeFactory::class.java.classLoader
         val contributions =
             classLoader
@@ -101,15 +106,33 @@ val CoreLibraryPresentationsTest by testSuite {
                 definitions,
             )
 
-        val catalog =
-            PresentationCatalogAssembler.assemble(
-                coreLibraryPresentationProviders(),
-                prototypes,
-                TypeCatalog(definitions),
-            )
+        val presentationBindings = classLoader.getResources("META-INF/typewriter/contributions/types/presentations.cbor")
+            .toList().flatMap { resource -> resource.openStream().use { TypeDiscoveryContributionCodec.decode(it.readAllBytes()).executableBindings } }
+        val providers = presentationBindings.map { binding ->
+            val providerClass = binding.moduleProviderClass.removeSuffix("DiscoveryModule") + "Provider"
+            Class.forName(providerClass, true, classLoader).getDeclaredConstructor(String::class.java, String::class.java)
+                .newInstance(CORE_NAMESPACE, "core-library") as PresentationProvider
+        }
+        val projectionBindings = classLoader.getResources("META-INF/typewriter/contributions/types/collection-projections.cbor")
+            .toList().flatMap { resource -> resource.openStream().use { TypeDiscoveryContributionCodec.decode(it.readAllBytes()).executableBindings } }
+        val projectionProviders = projectionBindings.map { binding ->
+            val providerClass = binding.moduleProviderClass.removeSuffix("DiscoveryModule") + "Provider"
+            Class.forName(providerClass, true, classLoader).getDeclaredConstructor(String::class.java)
+                .newInstance("core-library") as CollectionProjectionProvider
+        }
+        val projections = CollectionProjectionCatalogAssembler.assemble(
+            projectionProviders,
+            prototypes,
+            listOf(AuthoringResourceDefinition(CoreResourceDefinitionIds.TAG, TypeExpression.Named(prototypes.require(Tag::class).type))),
+        )
+        projections.diagnostics shouldBe emptyList()
+        projections.definitions.map { it.sourceId } shouldBe listOf(TAG_COLLECTION_SOURCE_ID)
+        val catalog = PresentationCatalogAssembler.assemble(
+            providers, prototypes, TypeCatalog(definitions), collectionProjections = projections.definitions,
+        )
 
         catalog.diagnostics shouldBe emptyList()
-        val iconify = catalog.definitions.single { it.presentationId.name == "icon.iconify.default" }
+        val iconify = catalog.definitions.single { it.presentationId.name == "icon.iconify.editor" }
         val iconifyChildren = (iconify.root.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
         val iconifyNode = (iconifyChildren.value.children.single() as AxisChild.FixedWrapper).value
         val iconifySearch = (iconifyNode.element as PresentationElement.SearchInputWrapper).value
@@ -124,12 +147,18 @@ val CoreLibraryPresentationsTest by testSuite {
         (iconifySearch.customValue?.expression is Expression.RecordWrapper) shouldBe true
         (iconifySearch.summary != null) shouldBe true
         (http.result.presentation.nodeId != suggested.result.presentation.nodeId) shouldBe true
-        definition(catalog.types, prototypes.require(Book::class).type).defaultPresentationId shouldBe
-            PresentationId(CORE_NAMESPACE, "book.default")
-        definition(catalog.types, prototypes.require(Tag::class).type).defaultPresentationId shouldBe
-            PresentationId(CORE_NAMESPACE, "tag.default")
-        definition(catalog.types, prototypes.require(Page::class).type).defaultPresentationId shouldBe
-            PresentationId(CORE_NAMESPACE, "page.default")
+        resolveRole(catalog.types, prototypes.require(Book::class).type, PresentationRole.EDITOR) shouldBe
+            PresentationId(CORE_NAMESPACE, "book.editor")
+        resolveRole(catalog.types, prototypes.require(Tag::class).type, PresentationRole.EDITOR) shouldBe
+            PresentationId(CORE_NAMESPACE, "tag.editor")
+        resolveRole(catalog.types, prototypes.require(Page::class).type, PresentationRole.EDITOR) shouldBe
+            PresentationId(CORE_NAMESPACE, "page.editor")
+        listOf(PresentationRole.REFERENCE_SUMMARY, PresentationRole.REFERENCE_OPTION, PresentationRole.INSPECTOR_HEADER)
+            .map { role -> resolveRole(catalog.types, prototypes.require(Book::class).type, role) }
+            .distinct() shouldBe listOf(PresentationId(CORE_NAMESPACE, "book.reference"))
+        listOf(PresentationRole.REFERENCE_SUMMARY, PresentationRole.REFERENCE_OPTION, PresentationRole.GRAPH_NODE, PresentationRole.INSPECTOR_HEADER)
+            .map { role -> resolveRole(catalog.types, prototypes.require(Tag::class).type, role) }
+            .distinct() shouldBe listOf(PresentationId(CORE_NAMESPACE, "tag.reference"))
         resolveRole(catalog.types, prototypes.require(Book::class).type, PresentationRole.CREATION) shouldBe
             PresentationId(CORE_NAMESPACE, "book.creation")
         resolveRole(catalog.types, prototypes.require(Page::class).type, PresentationRole.CREATION) shouldBe
@@ -146,23 +175,23 @@ val CoreLibraryPresentationsTest by testSuite {
         resolveRole(catalog.types, inheritedEntry, PresentationRole.REFERENCE_SUMMARY) shouldBe
             PresentationId(CORE_NAMESPACE, "element.reference")
         catalog.definitions
-            .single { it.presentationId.name == "book.default" }
+            .single { it.presentationId.name == "book.editor" }
             .dependencies.collections
             .single()
             .sourceId shouldBe TAG_COLLECTION_SOURCE_ID
         catalog.definitions
             .single { it.presentationId.name == "book.creation" }
             .dependencies.collections shouldBe emptyList()
-        sectionNames(catalog.definitions.single { it.presentationId.name == "book.default" }) shouldBe
+        sectionNames(catalog.definitions.single { it.presentationId.name == "book.editor" }) shouldBe
             listOf("title", "icon", "color", "tags", "effective-tags")
         sectionNames(catalog.definitions.single { it.presentationId.name == "book.creation" }) shouldBe
             listOf("title", "icon", "color", "tags")
-        sectionNames(catalog.definitions.single { it.presentationId.name == "page.default" }) shouldBe
+        sectionNames(catalog.definitions.single { it.presentationId.name == "page.editor" }) shouldBe
             listOf("book", "name", "chapter", "priority")
         sectionNames(catalog.definitions.single { it.presentationId.name == "page.creation" }) shouldBe
             listOf("name", "chapter", "priority")
         catalog.definitions
-            .single { it.presentationId.name == "tag.default" }
+            .single { it.presentationId.name == "tag.editor" }
             .dependencies.collections
             .single()
             .sourceId shouldBe TAG_COLLECTION_SOURCE_ID
@@ -181,7 +210,7 @@ private fun searchLeaf(provider: SearchProvider): SearchProvider =
         else -> provider
     }
 
-private const val CORE_NAMESPACE = "typewriter.core"
+private const val CORE_NAMESPACE = "typewritermc:realm"
 
 private fun sectionNames(definition: PresentationDefinition): List<String> {
     val children = (definition.root.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper

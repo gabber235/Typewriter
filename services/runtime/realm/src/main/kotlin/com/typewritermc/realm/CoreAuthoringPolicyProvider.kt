@@ -1,5 +1,7 @@
 package com.typewritermc.realm
 
+import com.typewritermc.library.CoreResourceDefinitionIds
+
 import com.typewritermc.authoring.AuthoringCompilationProjection
 import com.typewritermc.authoring.AuthoringCompilationResult
 import com.typewritermc.authoring.AuthoringContentDigest

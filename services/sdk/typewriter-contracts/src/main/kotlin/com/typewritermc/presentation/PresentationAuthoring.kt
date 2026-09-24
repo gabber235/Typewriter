@@ -16,13 +16,12 @@ import kotlin.reflect.KProperty1
 /**
  * Registers a top level presentation declaration for generated discovery.
  *
- * [default] participates in the target type default selection. Higher priorities are considered first; tied
- * priorities produce diagnostics and selection proceeds to a lower unique priority.
+ * Each role selects independently. Higher priorities are considered first; tied priorities produce diagnostics
+ * and selection proceeds to a lower unique priority.
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterPresentation(
-    val default: Boolean = false,
     val priority: Int = 0,
     val roles: Array<PresentationRole> = [],
 )

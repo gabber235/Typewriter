@@ -197,8 +197,14 @@ extension on DefaultPresentationElement {
 
     final input = selected.primaryInput;
 
-    if (input == null) return null;
-    return scope.bindPresentation(selected, {input: binding}).valueOrNull;
+    if (input == null) {
+      return (
+        resolved.type.generateDefaultPresentation(binding: binding),
+        scope,
+      );
+    }
+    return scope.bindPresentation(selected, {input: binding}).valueOrNull ??
+        (resolved.type.generateDefaultPresentation(binding: binding), scope);
   }
 }
 

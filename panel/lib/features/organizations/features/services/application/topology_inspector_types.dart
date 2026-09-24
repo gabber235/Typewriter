@@ -108,7 +108,9 @@ final _hostInspectorType = TypeDefinition(
 final _realmInstanceInspectorType = TypeDefinition(
   id: _realmInstanceInspectorTypeRef,
   kind: NominalTypeKind.concrete,
-  defaultPresentationId: _realmInstanceInspectorPresentationId,
+  rolePresentations: {
+    PresentationRole.editor: _realmInstanceInspectorPresentationId,
+  },
   representation: _runtimeInstanceRecord(
     extraFields: {
       _RuntimeInspectorFields.target: _stringField(
@@ -121,7 +123,9 @@ final _realmInstanceInspectorType = TypeDefinition(
 final _engineInstanceInspectorType = TypeDefinition(
   id: _engineInstanceInspectorTypeRef,
   kind: NominalTypeKind.concrete,
-  defaultPresentationId: _engineInstanceInspectorPresentationId,
+  rolePresentations: {
+    PresentationRole.editor: _engineInstanceInspectorPresentationId,
+  },
   representation: _runtimeInstanceRecord(
     extraFields: {
       _RuntimeInspectorFields.target: _stringField(

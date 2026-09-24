@@ -6,6 +6,7 @@ import com.typewritermc.capability.RealmCommandCapabilityRef
 import com.typewritermc.capability.RealmSearchCapabilityRef
 import com.typewritermc.types.Color
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
@@ -107,7 +108,7 @@ val PresentationCatalogAssemblerTest by testSuite {
             }
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = specification)),
+                listOf(provider("test", emptySet(), specification = specification)),
                 prototypes,
                 TypeCatalog(emptyList()),
             )
@@ -152,7 +153,7 @@ val PresentationCatalogAssemblerTest by testSuite {
             }
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = specification)),
+                listOf(provider("test", emptySet(), specification = specification)),
                 prototypes,
                 TypeCatalog(emptyList()),
             )
@@ -203,7 +204,7 @@ val PresentationCatalogAssemblerTest by testSuite {
             }
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = child), provider("test", false, specification = parent)),
+                listOf(provider("test", emptySet(), specification = child), provider("test", emptySet(), specification = parent)),
                 prototypes,
                 TypeCatalog(emptyList()),
             )
@@ -273,7 +274,7 @@ val PresentationCatalogAssemblerTest by testSuite {
             }
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = specification)),
+                listOf(provider("test", emptySet(), specification = specification)),
                 prototypes,
                 TypeCatalog(emptyList()),
             )
@@ -313,7 +314,7 @@ val PresentationCatalogAssemblerTest by testSuite {
 
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = specification)),
+                listOf(provider("test", emptySet(), specification = specification)),
                 prototypes,
                 TypeCatalog(listOf(holder.definition, logical.definition)),
             )
@@ -348,7 +349,7 @@ val PresentationCatalogAssemblerTest by testSuite {
 
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = specification)),
+                listOf(provider("test", emptySet(), specification = specification)),
                 prototypes,
                 TypeCatalog(listOf(holder.definition, numeric.definition)),
             )
@@ -361,7 +362,7 @@ val PresentationCatalogAssemblerTest by testSuite {
         val prototypes = TypePrototypeRegistry(emptyList())
         val valid = context(PresentationBuildContext(prototypes)) { presentation("invalid") {} }
         val invalidProvider =
-            object : PresentationProvider by provider("test", false, specification = valid) {
+            object : PresentationProvider by provider("test", emptySet(), specification = valid) {
                 override fun specification(context: PresentationBuildContext): PresentationSpec<*> =
                     context(context) {
                         presentation("invalid") {
@@ -393,7 +394,7 @@ val PresentationCatalogAssemblerTest by testSuite {
             }
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = child), provider("test", false, specification = parent)),
+                listOf(provider("test", emptySet(), specification = child), provider("test", emptySet(), specification = parent)),
                 prototypes,
                 TypeCatalog(emptyList()),
             )
@@ -420,7 +421,7 @@ val PresentationCatalogAssemblerTest by testSuite {
 
         val catalog =
             PresentationCatalogAssembler.assemble(
-                listOf(provider("test", false, specification = child), provider("test", false, specification = parent)),
+                listOf(provider("test", emptySet(), specification = child), provider("test", emptySet(), specification = parent)),
                 prototypes,
                 TypeCatalog(listOf(base.definition, concrete.definition)),
             )
@@ -444,7 +445,7 @@ val PresentationCatalogAssemblerTest by testSuite {
                     listOf(
                         provider(
                             namespace = "example:artifact",
-                            default = true,
+                            roles = setOf(PresentationRole.EDITOR),
                             specification = specification,
                         ),
                     ),
@@ -454,7 +455,7 @@ val PresentationCatalogAssemblerTest by testSuite {
 
         catalog.types.definitions
             .single()
-            .defaultPresentationId
+            .rolePresentations[PresentationRole.EDITOR]
             ?.name shouldBe "editor"
         val root =
             catalog.definitions
@@ -505,7 +506,7 @@ val PresentationCatalogAssemblerTest by testSuite {
 
         val catalog =
             PresentationCatalogAssembler.assemble(
-                providers = listOf(provider("example", true, specification = specification)),
+                providers = listOf(provider("example", setOf(PresentationRole.EDITOR), specification = specification)),
                 prototypes = prototypes,
                 types = TypeCatalog(listOf(prototype.definition)),
             )
@@ -522,9 +523,9 @@ val PresentationCatalogAssemblerTest by testSuite {
         val providers =
             context(context) {
                 listOf(
-                    provider("first", true, 10, presentation<Sample>("first") { textInput(Sample::message) }),
-                    provider("second", true, 10, presentation<Sample>("second") { textInput(Sample::message) }),
-                    provider("fallback", true, 5, presentation<Sample>("fallback") { textInput(Sample::message) }),
+                    provider("first", setOf(PresentationRole.EDITOR), 10, presentation<Sample>("first") { textInput(Sample::message) }),
+                    provider("second", setOf(PresentationRole.EDITOR), 10, presentation<Sample>("second") { textInput(Sample::message) }),
+                    provider("fallback", setOf(PresentationRole.EDITOR), 5, presentation<Sample>("fallback") { textInput(Sample::message) }),
                 )
             }
 
@@ -537,7 +538,7 @@ val PresentationCatalogAssemblerTest by testSuite {
 
         catalog.types.definitions
             .single()
-            .defaultPresentationId
+            .rolePresentations[PresentationRole.EDITOR]
             ?.namespace shouldBe "fallback"
         catalog.diagnostics.map(PresentationDiagnostic::code) shouldContain "priority_tie"
     }
@@ -565,7 +566,7 @@ val PresentationCatalogAssemblerTest by testSuite {
             }
         val catalog =
             PresentationCatalogAssembler.assemble(
-                providers = listOf(provider("example", true, specification = specification)),
+                providers = listOf(provider("example", setOf(PresentationRole.EDITOR), specification = specification)),
                 prototypes = prototypes,
                 types = TypeCatalog(listOf(sample.definition, item.definition)),
                 capabilities =
@@ -642,11 +643,27 @@ val PresentationCatalogAssemblerTest by testSuite {
                 }
             }
 
+        val unavailable = PresentationCatalogAssembler.assemble(
+            providers = listOf(provider("example", emptySet(), specification = specification)),
+            prototypes = prototypes,
+            types = TypeCatalog(listOf(sample.definition, row.definition)),
+        )
+        unavailable.definitions shouldBe emptyList()
+        unavailable.diagnostics.map(PresentationDiagnostic::code) shouldBe listOf("missing_collection")
+
         val catalog =
             PresentationCatalogAssembler.assemble(
-                providers = listOf(provider("example", false, specification = specification)),
+                providers = listOf(provider("example", emptySet(), specification = specification)),
                 prototypes = prototypes,
                 types = TypeCatalog(listOf(sample.definition, row.definition)),
+                collectionProjections = listOf(
+                    skirout.editor.v1.authoring.CollectionProjectionDefinition(
+                        sourceId = "test.rows",
+                        resources = skirout.editor.v1.authoring.ResourceFilter(definitions = emptyList(), assignableTo = null),
+                        rowType = SkirTypeCodec.encode(rowReference).getOrThrow(),
+                        fields = emptyList(),
+                    ),
+                ),
             )
 
         catalog.diagnostics shouldBe emptyList()
@@ -722,7 +739,7 @@ private fun <T : Any> prototype(
 
 private fun provider(
     namespace: String,
-    default: Boolean,
+    roles: Set<PresentationRole>,
     priority: Int = 0,
     specification: PresentationSpec<*>,
 ): PresentationProvider =
@@ -730,7 +747,7 @@ private fun provider(
         override val namespace = namespace
         override val sourcePart = "common"
         override val declarationName = specification.name
-        override val default = default
+        override val roles = roles
         override val priority = priority
 
         override fun specification(context: PresentationBuildContext) = specification

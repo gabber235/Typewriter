@@ -39,8 +39,8 @@ import com.typewritermc.types.PresentationRole
 
 /**
  * KSP entrypoint generating [PresentationProvider] implementations and discovery bindings from annotated top level
- * functions. Each provider preserves namespace and source part provenance, exposes the annotation's default and
- * priority metadata, and invokes the source function inside [PresentationBuildContext]. The emitted resource is
+ * functions. Each provider preserves namespace and source part provenance, exposes role and priority metadata,
+ * and invokes the source function inside [PresentationBuildContext]. The emitted resource is
  * consumed by manifest discovery, so runtime loading does not scan source annotations.
  */
 class TypewriterPresentationProcessorProvider : SymbolProcessorProvider {
@@ -127,11 +127,6 @@ private class TypewriterPresentationProcessor(
                     PropertySpec
                         .builder("declarationName", String::class, KModifier.OVERRIDE)
                         .initializer("%S", functionName)
-                        .build(),
-                ).addProperty(
-                    PropertySpec
-                        .builder("default", Boolean::class, KModifier.OVERRIDE)
-                        .initializer("%L", annotation.default)
                         .build(),
                 ).addProperty(
                     PropertySpec

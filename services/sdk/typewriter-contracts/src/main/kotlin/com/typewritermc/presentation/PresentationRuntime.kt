@@ -13,6 +13,7 @@ import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.action.RealmEditorAction
+import skirout.editor.v1.authoring.CollectionProjectionDefinition
 import skirout.editor.v1.binding.BindingId
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.CoalesceExpression
@@ -101,10 +102,7 @@ interface PresentationProvider {
     /** Declaration name used to identify failures before a specification exists. */
     val declarationName: String
 
-    /** Whether this provider may become the default presentation for its target type. */
-    val default: Boolean
-
-    /** Priority used to select among default or same named presentations. */
+    /** Priority used to select among declarations for the same role or name. */
     val priority: Int
 
     /** Semantic roles claimed for the declaration target. */
@@ -132,11 +130,11 @@ data class PresentationDiagnostic(
 /**
  * Returns compiled protocol presentations, updated type associations, and rejected declaration diagnostics.
  *
- * Use the returned type catalog to observe default and named presentation choices; the input catalog is not
+ * Use the returned type catalog to observe role and named presentation choices; the input catalog is not
  * mutated.
  */
 data class PresentationCatalog(
-    /** Type catalog with valid default and named presentation associations. */
+    /** Type catalog with valid role and named presentation associations. */
     val types: TypeCatalog,
     /** Compiled protocol definitions in stable presentation identity order. */
     val definitions: List<PresentationDefinition>,
@@ -147,7 +145,7 @@ data class PresentationCatalog(
 /**
  * Compiles authored presentations and associates valid choices with their target types.
  *
- * Malformed trees, missing capabilities, and duplicate identities produce diagnostics. Default and named selection
+ * Malformed trees, missing capabilities, and duplicate identities produce diagnostics. Role and named selection
  * prefer the highest unique priority, skipping tied priority groups. Compiled definitions and provider processing
  * use stable ordering.
  */
@@ -157,6 +155,7 @@ object PresentationCatalogAssembler {
         prototypes: TypePrototypeRegistry,
         types: TypeCatalog,
         capabilities: Collection<RealmCapabilityDescriptor> = emptyList(),
+        collectionProjections: Collection<CollectionProjectionDefinition> = emptyList(),
     ): PresentationCatalog {
         val diagnostics = mutableListOf<PresentationDiagnostic>()
         val context = PresentationBuildContext(prototypes)
@@ -170,20 +169,35 @@ object PresentationCatalogAssembler {
                     ),
                 ).mapNotNull { provider -> compile(provider, context, prototypes, diagnostics) }
         val knownCapabilities = capabilities.mapTo(mutableSetOf()) { it.id.value }
+        val projectionBySource = collectionProjections.associateBy(CollectionProjectionDefinition::sourceId)
         val valid =
             compiled.filter { candidate ->
                 val missing =
                     candidate.definition.dependencies.capabilities
                         .map { it.value }
                         .filterNot(knownCapabilities::contains)
-                if (missing.isEmpty()) {
+                val unavailableCollections =
+                    candidate.definition.dependencies.collections
+                        .filter { declared ->
+                            projectionBySource[declared.sourceId]?.rowType?.let(SkirTypeExpression::NamedWrapper) != declared.rowType
+                        }.map { it.sourceId }
+                if (missing.isEmpty() && unavailableCollections.isEmpty()) {
                     true
                 } else {
-                    diagnostics +=
-                        candidate.diagnostic(
-                            "missing_capability",
-                            "Presentation references unavailable capabilities: ${missing.sorted().joinToString()}.",
-                        )
+                    if (missing.isNotEmpty()) {
+                        diagnostics +=
+                            candidate.diagnostic(
+                                "missing_capability",
+                                "Presentation references unavailable capabilities: ${missing.sorted().joinToString()}.",
+                            )
+                    }
+                    if (unavailableCollections.isNotEmpty()) {
+                        diagnostics +=
+                            candidate.diagnostic(
+                                "missing_collection",
+                                "Presentation references unavailable collection sources: ${unavailableCollections.sorted().joinToString()}.",
+                            )
+                    }
                     false
                 }
             }
@@ -242,7 +256,6 @@ object PresentationCatalogAssembler {
         val updatedTypes =
             types.definitions.map { definition ->
                 val candidates = byTarget[definition.id].orEmpty()
-                val default = select(candidates.filter(CompiledPresentation::default), "default", diagnostics)
                 val named =
                     candidates
                         .groupBy { it.specificationName }
@@ -254,7 +267,7 @@ object PresentationCatalogAssembler {
                             select(candidates.filter { role in it.roles }, "${role.name.lowercase()} role", diagnostics)
                                 ?.let { role to it.id }
                         }.toMap()
-                definition.copy(defaultPresentationId = default?.id, namedPresentations = named, rolePresentations = roles)
+                definition.copy(namedPresentations = named, rolePresentations = roles)
             }
         return PresentationCatalog(
             types = TypeCatalog(updatedTypes),
@@ -277,8 +290,8 @@ object PresentationCatalogAssembler {
             val specification = provider.specification(context)
             val target =
                 (context.type(specification.target) as? TypeExpression.Named)?.reference
-            require((!provider.default && provider.roles.isEmpty()) || target != null) {
-                "Default and role presentations require a nominal declaration target."
+            require(provider.roles.isEmpty() || target != null) {
+                "Role presentations require a nominal declaration target."
             }
             val compiler = NodeCompiler(prototypes, specification.inputs)
             val root = compiler.compile(specification.root, "root", emptyList())
@@ -296,7 +309,6 @@ object PresentationCatalogAssembler {
                 inputs = specification.inputs,
                 invocations = compiler.invocations,
                 specificationName = specification.name,
-                default = provider.default,
                 roles = provider.roles,
                 priority = provider.priority,
                 provider = provider,
@@ -355,7 +367,6 @@ private data class CompiledPresentation(
     val inputs: List<PresentationInputRef<*>>,
     val invocations: List<AuthoredPresentationNode.Invocation>,
     val specificationName: String,
-    val default: Boolean,
     val roles: Set<PresentationRole>,
     val priority: Int,
     val provider: PresentationProvider,

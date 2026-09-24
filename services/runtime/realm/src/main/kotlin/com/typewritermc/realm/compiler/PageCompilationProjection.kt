@@ -4,7 +4,7 @@ import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.library.PAGE_CONTRACT_TYPE
-import com.typewritermc.realm.CoreResourceDefinitionIds
+import com.typewritermc.library.CoreResourceDefinitionIds
 import com.typewritermc.realm.repository.AuthoringGraphDelta
 import com.typewritermc.realm.repository.AuthoringWorkingGraph
 import com.typewritermc.realm.repository.ResourceRelationOrigin

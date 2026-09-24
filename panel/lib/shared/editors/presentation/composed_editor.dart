@@ -221,7 +221,12 @@ class _ComposedEditorState extends State<ComposedEditor> {
     final selected =
         id ??
         (type is NamedType
-            ? registry.definition(type.reference)?.defaultPresentationId
+            ? registry
+                  .resolveOptionalPresentationRole(
+                    type.reference,
+                    PresentationRole.editor,
+                  )
+                  .valueOrNull
             : null);
     final definition = widget.model.presentations
         .where((value) => value.id == selected)

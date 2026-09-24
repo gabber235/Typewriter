@@ -3,7 +3,7 @@ package com.typewritermc.realm.repository
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.library.BOOK_PAGES_RELATION_ID
 import com.typewritermc.library.PAGE_ELEMENTS_RELATION_ID
-import com.typewritermc.realm.CoreResourceDefinitionIds
+import com.typewritermc.library.CoreResourceDefinitionIds
 import com.typewritermc.realm.compiler.GraphReadRequirement
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataValue

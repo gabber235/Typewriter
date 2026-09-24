@@ -139,7 +139,7 @@ class SyntheticRealmCapabilities {
 
 /** Builds the default editor presentation with controls for both message variants. */
 @TypewriterPresentation(
-    default = true,
+    roles = [com.typewritermc.types.PresentationRole.EDITOR],
     priority = 100,
 )
 context(_: PresentationBuildContext)

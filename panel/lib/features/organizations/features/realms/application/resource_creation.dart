@@ -348,7 +348,7 @@ final class _ResourceCreationEditorState
     final value = result.valueOrNull;
     final model = PresentationModel.editor(
       owner: widget.draft,
-      preferredRole: PresentationRole.creation,
+      roles: const [PresentationRole.creation, PresentationRole.editor],
       presentations: widget.presentations,
       diagnostics: result.diagnostics,
     );

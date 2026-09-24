@@ -5354,6 +5354,8 @@ final class NamedPresentation_mutable implements NamedPresentation_orMutable {
 ///   ```
 ///   switch (e) {
 ///     case PresentationRole_unknown(): { ... }
+///     case PresentationRole.editor: { ... }
+///     case PresentationRole.creation: { ... }
 ///     case PresentationRole.referenceSummary: { ... }
 ///     case PresentationRole.referenceOption: { ... }
 ///     case PresentationRole.catalogOption: { ... }
@@ -5361,7 +5363,6 @@ final class NamedPresentation_mutable implements NamedPresentation_orMutable {
 ///     case PresentationRole.pageTile: { ... }
 ///     case PresentationRole.graphNode: { ... }
 ///     case PresentationRole.inspectorHeader: { ... }
-///     case PresentationRole.creation: { ... }
 ///   }
 ///   ```
 ///
@@ -5371,6 +5372,8 @@ sealed class PresentationRole {
   /// Default value for fields of type `PresentationRole`.
   static const PresentationRole unknown = PresentationRole_unknown._instance;
 
+  static const editor = _PresentationRole_consts.editorConst;
+  static const creation = _PresentationRole_consts.creationConst;
   static const referenceSummary =
       _PresentationRole_consts.referenceSummaryConst;
   static const referenceOption = _PresentationRole_consts.referenceOptionConst;
@@ -5379,7 +5382,6 @@ sealed class PresentationRole {
   static const pageTile = _PresentationRole_consts.pageTileConst;
   static const graphNode = _PresentationRole_consts.graphNodeConst;
   static const inspectorHeader = _PresentationRole_consts.inspectorHeaderConst;
-  static const creation = _PresentationRole_consts.creationConst;
 
   /// Returns the kind of variant held by this PresentationRole.
   PresentationRole_kind get kind;
@@ -5387,61 +5389,62 @@ sealed class PresentationRole {
   /// Serializer for `PresentationRole` instances.
   static _skir.EnumSerializer<PresentationRole> get serializer {
     if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "editor", "editor", "", editor);
       _serializerBuilder.addConstantVariant(
-        1,
+        2,
+        "creation",
+        "creation",
+        "",
+        creation,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
         "reference_summary",
         "referenceSummary",
         "",
         referenceSummary,
       );
       _serializerBuilder.addConstantVariant(
-        2,
+        4,
         "reference_option",
         "referenceOption",
         "",
         referenceOption,
       );
       _serializerBuilder.addConstantVariant(
-        3,
+        5,
         "catalog_option",
         "catalogOption",
         "",
         catalogOption,
       );
       _serializerBuilder.addConstantVariant(
-        4,
+        6,
         "authoring_result",
         "authoringResult",
         "",
         authoringResult,
       );
       _serializerBuilder.addConstantVariant(
-        5,
+        7,
         "page_tile",
         "pageTile",
         "",
         pageTile,
       );
       _serializerBuilder.addConstantVariant(
-        6,
+        8,
         "graph_node",
         "graphNode",
         "",
         graphNode,
       );
       _serializerBuilder.addConstantVariant(
-        7,
+        9,
         "inspector_header",
         "inspectorHeader",
         "",
         inspectorHeader,
-      );
-      _serializerBuilder.addConstantVariant(
-        8,
-        "creation",
-        "creation",
-        "",
-        creation,
       );
       _serializerBuilder.finalize();
     }
@@ -5463,14 +5466,15 @@ sealed class PresentationRole {
 /// The kind of variant held by a `PresentationRole`.
 enum PresentationRole_kind {
   unknown(0),
-  referenceSummaryConst(1),
-  referenceOptionConst(2),
-  catalogOptionConst(3),
-  authoringResultConst(4),
-  pageTileConst(5),
-  graphNodeConst(6),
-  inspectorHeaderConst(7),
-  creationConst(8);
+  editorConst(1),
+  creationConst(2),
+  referenceSummaryConst(3),
+  referenceOptionConst(4),
+  catalogOptionConst(5),
+  authoringResultConst(6),
+  pageTileConst(7),
+  graphNodeConst(8),
+  inspectorHeaderConst(9);
 
   final _core.int _ordinal;
 
@@ -5497,14 +5501,15 @@ final class PresentationRole_unknown implements PresentationRole {
 }
 
 enum _PresentationRole_consts implements PresentationRole {
+  editorConst(PresentationRole_kind.editorConst),
+  creationConst(PresentationRole_kind.creationConst),
   referenceSummaryConst(PresentationRole_kind.referenceSummaryConst),
   referenceOptionConst(PresentationRole_kind.referenceOptionConst),
   catalogOptionConst(PresentationRole_kind.catalogOptionConst),
   authoringResultConst(PresentationRole_kind.authoringResultConst),
   pageTileConst(PresentationRole_kind.pageTileConst),
   graphNodeConst(PresentationRole_kind.graphNodeConst),
-  inspectorHeaderConst(PresentationRole_kind.inspectorHeaderConst),
-  creationConst(PresentationRole_kind.creationConst);
+  inspectorHeaderConst(PresentationRole_kind.inspectorHeaderConst);
 
   @_core.override
   final PresentationRole_kind kind;
@@ -5881,7 +5886,6 @@ sealed class TypeDefinition_orMutable {
   TypeId get typeId;
   _core.int get revision;
   TypeDefinitionKind get kind;
-  PresentationId_orMutable? get defaultPresentationId;
   _core.Iterable<NamedPresentation_orMutable> get namedPresentations;
   _core.Iterable<ConversionId_orMutable> get outgoingConversionIds;
   _core.Iterable<RolePresentation_orMutable> get rolePresentations;
@@ -5910,8 +5914,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
   @_core.override
   final TypeDefinitionKind kind;
   @_core.override
-  final PresentationId? defaultPresentationId;
-  @_core.override
   final _skir.KeyedIterable<NamedPresentation, _core.String> namedPresentations;
   @_core.override
   final _core.Iterable<ConversionId> outgoingConversionIds;
@@ -5935,7 +5937,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     required TypeId typeId,
     required _core.int revision,
     required TypeDefinitionKind kind,
-    required PresentationId_orMutable? defaultPresentationId,
     required _core.Iterable<NamedPresentation_orMutable> namedPresentations,
     required _core.Iterable<ConversionId_orMutable> outgoingConversionIds,
     required _core.Iterable<RolePresentation_orMutable> rolePresentations,
@@ -5956,7 +5957,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     typeId,
     revision,
     kind,
-    (defaultPresentationId != null) ? defaultPresentationId.toFrozen() : null,
     _skir.internal__keyedMappedCopy(
       namedPresentations,
       "name",
@@ -5982,7 +5982,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.typeId,
     this.revision,
     this.kind,
-    this.defaultPresentationId,
     this.namedPresentations,
     this.outgoingConversionIds,
     this.rolePresentations,
@@ -6001,7 +6000,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     TypeId.unknown,
     0,
     TypeDefinitionKind.unknown,
-    null,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -6021,7 +6019,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     TypeId.unknown,
     0,
     TypeDefinitionKind.unknown,
-    null,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -6045,7 +6042,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.typeId,
     this.revision,
     this.kind,
-    this.defaultPresentationId,
     this.namedPresentations,
     this.outgoingConversionIds,
     this.rolePresentations,
@@ -6076,7 +6072,6 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     this.typeId,
     this.revision,
     this.kind,
-    this.defaultPresentationId,
     this.namedPresentations,
     this.outgoingConversionIds,
     this.rolePresentations,
@@ -6161,18 +6156,9 @@ final class TypeDefinition implements TypeDefinition_orMutable {
         (it, v) => it.kind = v,
       );
       _serializerBuilder.addField(
-        "default_presentation_id",
-        "defaultPresentationId",
-        7,
-        _skir.Serializers.optional(PresentationId.serializer),
-        "",
-        (it) => it.defaultPresentationId,
-        (it, v) => it.defaultPresentationId = v,
-      );
-      _serializerBuilder.addField(
         "named_presentations",
         "namedPresentations",
-        8,
+        7,
         _skir.Serializers.keyedIterable(
           NamedPresentation.serializer,
           (NamedPresentation it) => it.name,
@@ -6185,7 +6171,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
       _serializerBuilder.addField(
         "outgoing_conversion_ids",
         "outgoingConversionIds",
-        9,
+        8,
         _skir.Serializers.iterable(ConversionId.serializer),
         "",
         (it) => it.outgoingConversionIds,
@@ -6194,7 +6180,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
       _serializerBuilder.addField(
         "role_presentations",
         "rolePresentations",
-        10,
+        9,
         _skir.Serializers.iterable(RolePresentation.serializer),
         "",
         (it) => it.rolePresentations,
@@ -6203,7 +6189,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
       _serializerBuilder.addField(
         "field_merge_policies",
         "fieldMergePolicies",
-        11,
+        10,
         _skir.Serializers.iterable(FieldMergePolicy.serializer),
         "",
         (it) => it.fieldMergePolicies,
@@ -6212,7 +6198,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
       _serializerBuilder.addField(
         "declaration_owner",
         "declarationOwner",
-        12,
+        11,
         _skir.Serializers.string,
         "",
         (it) => it.declarationOwner,
@@ -6221,7 +6207,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
       _serializerBuilder.addField(
         "initializer",
         "initializer",
-        13,
+        12,
         _skir.Serializers.optional(TypedValue.serializer),
         "",
         (it) => it.initializer,
@@ -6230,7 +6216,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
       _serializerBuilder.addField(
         "qualified_name",
         "qualifiedName",
-        14,
+        13,
         _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.qualifiedName,
@@ -6261,7 +6247,6 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
   TypeId typeId;
   _core.int revision;
   TypeDefinitionKind kind;
-  PresentationId_orMutable? defaultPresentationId;
   _core.Iterable<NamedPresentation_orMutable> namedPresentations;
   _core.Iterable<ConversionId_orMutable> outgoingConversionIds;
   _core.Iterable<RolePresentation_orMutable> rolePresentations;
@@ -6279,7 +6264,6 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     this.typeId,
     this.revision,
     this.kind,
-    this.defaultPresentationId,
     this.namedPresentations,
     this.outgoingConversionIds,
     this.rolePresentations,
@@ -6367,7 +6351,6 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     typeId: this.typeId,
     revision: this.revision,
     kind: this.kind,
-    defaultPresentationId: this.defaultPresentationId,
     namedPresentations: this.namedPresentations,
     outgoingConversionIds: this.outgoingConversionIds,
     rolePresentations: this.rolePresentations,

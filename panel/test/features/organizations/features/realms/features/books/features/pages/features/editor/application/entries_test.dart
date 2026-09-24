@@ -114,7 +114,7 @@ void main() {
       expect(loading, isA<AsyncLoading<TypeCatalog>>());
     });
 
-    test("catalogue resolution rejects missing presentation dependencies", () {
+    test("catalogue resolution leaves missing editor presentations to the renderer", () {
       const missingId = PresentationId(namespace: "example", name: "editor");
       final snapshot = RealmEditorCatalogSnapshot(
         catalog: TypeCatalog([
@@ -122,7 +122,7 @@ void main() {
             id: _rootType,
             kind: NominalTypeKind.concrete,
             representation: RecordType(fields: {}),
-            defaultPresentationId: missingId,
+            rolePresentations: const {PresentationRole.editor: missingId},
           ),
         ]),
         generation: const CatalogGeneration("1"),
@@ -134,16 +134,7 @@ void main() {
             (catalog, presentations) => catalog,
           );
 
-      expect(result, isA<AsyncError<TypeCatalog>>());
-      final exception = result.error! as ElementDefinitionException;
-      expect(
-        exception.diagnostics.single.code,
-        TypeDiagnosticCode.invalidPresentation,
-      );
-      expect(
-        exception.diagnostics.single.message,
-        "Realm catalog omitted required presentations: example/editor",
-      );
+      expect(result, isA<AsyncData<TypeCatalog>>());
     });
   });
 
@@ -280,7 +271,7 @@ void main() {
             "message": TypeField(name: "message", type: StringType()),
           },
         ),
-        defaultPresentationId: presentationId,
+        rolePresentations: {PresentationRole.editor: presentationId},
       ),
     ]);
     final presentation = PresentationDefinition.single(

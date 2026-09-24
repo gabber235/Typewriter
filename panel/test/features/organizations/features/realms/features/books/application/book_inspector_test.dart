@@ -89,7 +89,7 @@ _bookSelection(
   LocalPresentationCollectionSource? collection,
   RealmEditorCatalogSnapshot? catalog,
 }) {
-  final definition = presentation ?? _presentation("book.default");
+  final definition = presentation ?? _presentation("book.editor");
   final snapshotCatalog = catalog ?? _catalog(_bookType);
   final codec = TypedAuthoringCodec(snapshotCatalog);
   final snapshot = TypedAuthoringEditorSnapshot(
@@ -138,7 +138,7 @@ _bookSelection(
 }
 
 PresentationDefinition _presentation(String name) => PresentationDefinition(
-  id: PresentationId(namespace: "typewriter.core", name: name),
+  id: PresentationId(namespace: "typewritermc:realm", name: name),
   inputs: const [],
   root: const PresentationNode(
     id: "root",

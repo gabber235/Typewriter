@@ -6818,6 +6818,8 @@ sealed class PresentationRole private constructor() {
     /** The kind of variant held by a `PresentationRole`. */
     enum class Kind {
         UNKNOWN,
+        EDITOR_CONST,
+        CREATION_CONST,
         REFERENCE_SUMMARY_CONST,
         REFERENCE_OPTION_CONST,
         CATALOG_OPTION_CONST,
@@ -6825,7 +6827,6 @@ sealed class PresentationRole private constructor() {
         PAGE_TILE_CONST,
         GRAPH_NODE_CONST,
         INSPECTOR_HEADER_CONST,
-        CREATION_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN")) internal constructor(
@@ -6840,6 +6841,38 @@ sealed class PresentationRole private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
+        }
+    }
+
+    object EDITOR : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.EDITOR_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.EDITOR_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.EDITOR_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object CREATION : skirout.editor.v1.type_catalog.PresentationRole() {
+        override val kind get() = Kind.CREATION_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.CREATION_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.CREATION_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
         }
     }
 
@@ -6955,22 +6988,6 @@ sealed class PresentationRole private constructor() {
         }
     }
 
-    object CREATION : skirout.editor.v1.type_catalog.PresentationRole() {
-        override val kind get() = Kind.CREATION_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.type_catalog.PresentationRole && other.kind == Kind.CREATION_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.CREATION_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.PresentationRole>? get() = null;
 
     abstract val kind: Kind;
@@ -7007,6 +7024,8 @@ sealed class PresentationRole private constructor() {
         val typeDescriptor get() = _serializerImpl.typeDescriptor;
 
         init {
+            EDITOR;
+            CREATION;
             REFERENCE_SUMMARY;
             REFERENCE_OPTION;
             CATALOG_OPTION;
@@ -7014,7 +7033,6 @@ sealed class PresentationRole private constructor() {
             PAGE_TILE;
             GRAPH_NODE;
             INSPECTOR_HEADER;
-            CREATION;
             _maybeFinalizeSerializer();
         }
 
@@ -7022,62 +7040,69 @@ sealed class PresentationRole private constructor() {
 
         private fun _maybeFinalizeSerializer() {
             _finalizationCounter += 1;
-            if (_finalizationCounter == 9) {
+            if (_finalizationCounter == 10) {
                 _serializerImpl.addConstantVariant(
                     1,
+                    "editor",
+                    Kind.EDITOR_CONST.ordinal,
+                    "",
+                    EDITOR,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "creation",
+                    Kind.CREATION_CONST.ordinal,
+                    "",
+                    CREATION,
+                );
+                _serializerImpl.addConstantVariant(
+                    3,
                     "reference_summary",
                     Kind.REFERENCE_SUMMARY_CONST.ordinal,
                     "",
                     REFERENCE_SUMMARY,
                 );
                 _serializerImpl.addConstantVariant(
-                    2,
+                    4,
                     "reference_option",
                     Kind.REFERENCE_OPTION_CONST.ordinal,
                     "",
                     REFERENCE_OPTION,
                 );
                 _serializerImpl.addConstantVariant(
-                    3,
+                    5,
                     "catalog_option",
                     Kind.CATALOG_OPTION_CONST.ordinal,
                     "",
                     CATALOG_OPTION,
                 );
                 _serializerImpl.addConstantVariant(
-                    4,
+                    6,
                     "authoring_result",
                     Kind.AUTHORING_RESULT_CONST.ordinal,
                     "",
                     AUTHORING_RESULT,
                 );
                 _serializerImpl.addConstantVariant(
-                    5,
+                    7,
                     "page_tile",
                     Kind.PAGE_TILE_CONST.ordinal,
                     "",
                     PAGE_TILE,
                 );
                 _serializerImpl.addConstantVariant(
-                    6,
+                    8,
                     "graph_node",
                     Kind.GRAPH_NODE_CONST.ordinal,
                     "",
                     GRAPH_NODE,
                 );
                 _serializerImpl.addConstantVariant(
-                    7,
+                    9,
                     "inspector_header",
                     Kind.INSPECTOR_HEADER_CONST.ordinal,
                     "",
                     INSPECTOR_HEADER,
-                );
-                _serializerImpl.addConstantVariant(
-                    8,
-                    "creation",
-                    Kind.CREATION_CONST.ordinal,
-                    "",
-                    CREATION,
                 );
                 _serializerImpl.finalizeEnum();
             }
@@ -7536,7 +7561,6 @@ sealed interface TypeDefinition_OrMutable {
     val typeId: skirout.editor.v1.type_catalog.TypeId;
     val revision: kotlin.Int;
     val kind: skirout.editor.v1.type_catalog.TypeDefinitionKind;
-    val defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable?;
     val namedPresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable>;
     val outgoingConversionIds: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId_OrMutable>;
     val rolePresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.RolePresentation_OrMutable>;
@@ -7558,7 +7582,6 @@ class TypeDefinition private constructor(
     override val typeId: skirout.editor.v1.type_catalog.TypeId,
     override val revision: kotlin.Int,
     override val kind: skirout.editor.v1.type_catalog.TypeDefinitionKind,
-    override val defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId?,
     override val namedPresentations: build.skir.KeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>,
     override val outgoingConversionIds: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId>,
     override val rolePresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.RolePresentation>,
@@ -7579,7 +7602,6 @@ class TypeDefinition private constructor(
         typeId: skirout.editor.v1.type_catalog.TypeId,
         revision: kotlin.Int,
         kind: skirout.editor.v1.type_catalog.TypeDefinitionKind,
-        defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable?,
         namedPresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable>,
         outgoingConversionIds: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable>,
         rolePresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RolePresentation_OrMutable>,
@@ -7597,7 +7619,6 @@ class TypeDefinition private constructor(
         typeId,
         revision,
         kind,
-        if (defaultPresentationId != null) defaultPresentationId.toFrozen() else null,
         build.skir.internal.toKeyedList(namedPresentations, "name", { it.name }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(outgoingConversionIds, { it.toFrozen() }),
         build.skir.internal.toFrozenList(rolePresentations, { it.toFrozen() }),
@@ -7620,7 +7641,6 @@ class TypeDefinition private constructor(
         typeId = this.typeId,
         revision = this.revision,
         kind = this.kind,
-        defaultPresentationId = this.defaultPresentationId,
         namedPresentations = this.namedPresentations,
         outgoingConversionIds = this.outgoingConversionIds,
         rolePresentations = this.rolePresentations,
@@ -7648,8 +7668,6 @@ class TypeDefinition private constructor(
             this.revision,
         kind: skirout.editor.v1.type_catalog.TypeDefinitionKind =
             this.kind,
-        defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable? =
-            this.defaultPresentationId,
         namedPresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable> =
             this.namedPresentations,
         outgoingConversionIds: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
@@ -7672,7 +7690,6 @@ class TypeDefinition private constructor(
         typeId,
         revision,
         kind,
-        if (defaultPresentationId != null) defaultPresentationId.toFrozen() else null,
         build.skir.internal.toKeyedList(namedPresentations, "name", { it.name }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(outgoingConversionIds, { it.toFrozen() }),
         build.skir.internal.toFrozenList(rolePresentations, { it.toFrozen() }),
@@ -7687,11 +7704,11 @@ class TypeDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.TypeDefinition && this.displayName == other.displayName && this.parameters == other.parameters && this.directParents == other.directParents && this.representation == other.representation && this.typeId == other.typeId && this.revision == other.revision && this.kind == other.kind && this.defaultPresentationId == other.defaultPresentationId && this.namedPresentations == other.namedPresentations && this.outgoingConversionIds == other.outgoingConversionIds && this.rolePresentations == other.rolePresentations && this.fieldMergePolicies == other.fieldMergePolicies && this.declarationOwner == other.declarationOwner && this.initializer == other.initializer && this.qualifiedName == other.qualifiedName);
+        return this === other || (other is skirout.editor.v1.type_catalog.TypeDefinition && this.displayName == other.displayName && this.parameters == other.parameters && this.directParents == other.directParents && this.representation == other.representation && this.typeId == other.typeId && this.revision == other.revision && this.kind == other.kind && this.namedPresentations == other.namedPresentations && this.outgoingConversionIds == other.outgoingConversionIds && this.rolePresentations == other.rolePresentations && this.fieldMergePolicies == other.fieldMergePolicies && this.declarationOwner == other.declarationOwner && this.initializer == other.initializer && this.qualifiedName == other.qualifiedName);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.displayName, this.parameters, this.directParents, this.representation, this.typeId, this.revision, this.kind, this.defaultPresentationId, this.namedPresentations, this.outgoingConversionIds, this.rolePresentations, this.fieldMergePolicies, this.declarationOwner, this.initializer, this.qualifiedName).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.displayName, this.parameters, this.directParents, this.representation, this.typeId, this.revision, this.kind, this.namedPresentations, this.outgoingConversionIds, this.rolePresentations, this.fieldMergePolicies, this.declarationOwner, this.initializer, this.qualifiedName).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -7719,8 +7736,6 @@ class TypeDefinition private constructor(
             0,
         override var kind: skirout.editor.v1.type_catalog.TypeDefinitionKind =
             skirout.editor.v1.type_catalog.TypeDefinitionKind.UNKNOWN,
-        override var defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable? =
-            null,
         override var namedPresentations: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable> =
             build.skir.internal.emptyKeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>(),
         override var outgoingConversionIds: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
@@ -7747,7 +7762,6 @@ class TypeDefinition private constructor(
             typeId = this.typeId,
             revision = this.revision,
             kind = this.kind,
-            defaultPresentationId = this.defaultPresentationId,
             namedPresentations = this.namedPresentations,
             outgoingConversionIds = this.outgoingConversionIds,
             rolePresentations = this.rolePresentations,
@@ -7865,7 +7879,6 @@ class TypeDefinition private constructor(
                 skirout.editor.v1.type_catalog.TypeId.UNKNOWN,
                 0,
                 skirout.editor.v1.type_catalog.TypeDefinitionKind.UNKNOWN,
-                null,
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RolePresentation>(),
@@ -7900,8 +7913,6 @@ class TypeDefinition private constructor(
                 0,
             kind: skirout.editor.v1.type_catalog.TypeDefinitionKind =
                 skirout.editor.v1.type_catalog.TypeDefinitionKind.UNKNOWN,
-            defaultPresentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable? =
-                null,
             namedPresentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedPresentation_OrMutable> =
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.type_catalog.NamedPresentation, kotlin.String>(),
             outgoingConversionIds: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
@@ -7924,7 +7935,6 @@ class TypeDefinition private constructor(
             typeId = typeId,
             revision = revision,
             kind = kind,
-            defaultPresentationId = defaultPresentationId,
             namedPresentations = namedPresentations,
             outgoingConversionIds = outgoingConversionIds,
             rolePresentations = rolePresentations,
@@ -8022,20 +8032,9 @@ class TypeDefinition private constructor(
                 { mut, v -> mut.kind = v },
             );
             serializerImpl.addField(
-                "default_presentation_id",
-                "defaultPresentationId",
-                7,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.type_catalog.PresentationId.serializer,
-                ),
-                "",
-                { it.defaultPresentationId },
-                { mut, v -> mut.defaultPresentationId = v },
-            );
-            serializerImpl.addField(
                 "named_presentations",
                 "namedPresentations",
-                8,
+                7,
                 build.skir.internal.keyedListSerializer(
                     skirout.editor.v1.type_catalog.NamedPresentation.serializer,
                     "name",
@@ -8048,7 +8047,7 @@ class TypeDefinition private constructor(
             serializerImpl.addField(
                 "outgoing_conversion_ids",
                 "outgoingConversionIds",
-                9,
+                8,
                 build.skir.Serializers.list(
                     skirout.editor.v1.type_catalog.ConversionId.serializer,
                 ),
@@ -8059,7 +8058,7 @@ class TypeDefinition private constructor(
             serializerImpl.addField(
                 "role_presentations",
                 "rolePresentations",
-                10,
+                9,
                 build.skir.Serializers.list(
                     skirout.editor.v1.type_catalog.RolePresentation.serializer,
                 ),
@@ -8070,7 +8069,7 @@ class TypeDefinition private constructor(
             serializerImpl.addField(
                 "field_merge_policies",
                 "fieldMergePolicies",
-                11,
+                10,
                 build.skir.Serializers.list(
                     skirout.editor.v1.type_catalog.FieldMergePolicy.serializer,
                 ),
@@ -8081,7 +8080,7 @@ class TypeDefinition private constructor(
             serializerImpl.addField(
                 "declaration_owner",
                 "declarationOwner",
-                12,
+                11,
                 build.skir.Serializers.string,
                 "",
                 { it.declarationOwner },
@@ -8090,7 +8089,7 @@ class TypeDefinition private constructor(
             serializerImpl.addField(
                 "initializer",
                 "initializer",
-                13,
+                12,
                 build.skir.Serializers.optional(
                     skirout.editor.v1.type_catalog.TypedValue.serializer,
                 ),
@@ -8101,7 +8100,7 @@ class TypeDefinition private constructor(
             serializerImpl.addField(
                 "qualified_name",
                 "qualifiedName",
-                14,
+                13,
                 build.skir.Serializers.optional(
                     build.skir.Serializers.string,
                 ),

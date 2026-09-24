@@ -26,13 +26,16 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
       resolvedBinding.type,
       presentationId,
     );
-    if (selected == null) {
-      final generated = resolvedBinding.type.generateDefaultPresentation(
+    Widget generated() => PresentationNodeRenderer(
+      node: resolvedBinding.type.generateDefaultPresentation(
         binding: binding,
         nodeId: "default.${binding.bindingId.value}",
         registry: scope.registry,
-      );
-      return PresentationNodeRenderer(node: generated, scope: scope);
+      ),
+      scope: scope,
+    );
+    if (selected == null) {
+      return generated();
     }
 
     if (scope.activePresentations.contains(selected.id)) {
@@ -46,17 +49,12 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
 
     final input = selected.primaryInput;
     if (input == null) {
-      return presentationDiagnostic(context, [
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPresentation,
-          message: "Default presentation requires one primary input",
-        ),
-      ]);
+      return generated();
     }
 
     final bound = scope.bindPresentation(selected, {input: binding});
-    if (bound case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
+    if (bound is TypeFailure) {
+      return generated();
     }
     return PresentationNodeRenderer(
       node: bound.valueOrNull!.$1,

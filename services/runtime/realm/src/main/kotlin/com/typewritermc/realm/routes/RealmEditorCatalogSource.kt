@@ -317,7 +317,6 @@ private fun RealmDiscoverySnapshot.closure(
         previousCapabilityCount = capabilityIds.size
         presentationIds.apply {
             discoveryCollector.definitions.forEach { definition ->
-                definition.defaultPresentationId?.let(::add)
                 addAll(definition.namedPresentations.values)
                 addAll(definition.rolePresentations.values)
             }

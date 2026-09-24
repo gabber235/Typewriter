@@ -18,10 +18,12 @@ void main() {
       representation: RecordType(
         fields: const {"name": TypeField(name: "name", type: StringType())},
       ),
-      defaultPresentationId: const PresentationId(
-        namespace: "example",
-        name: "main",
-      ),
+      rolePresentations: const {
+        PresentationRole.editor: PresentationId(
+          namespace: "example",
+          name: "main",
+        ),
+      },
     ),
   ]);
   final types = SkirTypeCodec(TypeRegistry(catalog));
@@ -60,8 +62,11 @@ void main() {
       encodedType.representation.kind,
       skir.TypeExpression_kind.recordWrapper,
     );
-    expect(encodedType.defaultPresentationId?.namespace, "example");
-    expect(encodedType.defaultPresentationId?.name, "main");
+    expect(
+      encodedType.rolePresentations.single.presentationId.namespace,
+      "example",
+    );
+    expect(encodedType.rolePresentations.single.presentationId.name, "main");
 
     expect(encodedCatalog.decodeDomain().valueOrNull!.catalog, catalog);
 

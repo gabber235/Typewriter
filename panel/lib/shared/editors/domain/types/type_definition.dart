@@ -11,6 +11,7 @@ enum NominalTypeKind { concrete, openAbstract, sealedAbstract }
 
 /// Semantic surface for which a nominal type can supply a presentation.
 enum PresentationRole {
+  editor,
   creation,
   referenceSummary,
   referenceOption,
@@ -61,7 +62,6 @@ abstract class TypeDefinition with _$TypeDefinition {
     @Default(AnyType()) TypeExpression representation,
     @Default([]) List<TypeParameter> parameters,
     @Default([]) List<ResolvedTypeRef> parents,
-    PresentationId? defaultPresentationId,
     @Default({}) Map<String, PresentationId> namedPresentations,
     @Default({}) Map<PresentationRole, PresentationId> rolePresentations,
     @Default([]) List<FieldMergePolicy> fieldMergePolicies,

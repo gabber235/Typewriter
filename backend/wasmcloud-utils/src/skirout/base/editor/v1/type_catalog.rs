@@ -1565,6 +1565,8 @@ impl NamedPresentation {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationRole {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationRole>>),
+    Editor,
+    Creation,
     ReferenceSummary,
     ReferenceOption,
     CatalogOption,
@@ -1572,7 +1574,6 @@ pub enum PresentationRole {
     PageTile,
     GraphNode,
     InspectorHeader,
-    Creation,
 }
 
 impl Default for PresentationRole {
@@ -1588,14 +1589,15 @@ impl PresentationRole {
                 crate::skir_client::internal::EnumAdapter::new(
                     |x: &PresentationRole| match x {
                         PresentationRole::Unknown(_) => 0,
-                        PresentationRole::ReferenceSummary => 1,
-                        PresentationRole::ReferenceOption => 2,
-                        PresentationRole::CatalogOption => 3,
-                        PresentationRole::AuthoringResult => 4,
-                        PresentationRole::PageTile => 5,
-                        PresentationRole::GraphNode => 6,
-                        PresentationRole::InspectorHeader => 7,
-                        PresentationRole::Creation => 8,
+                        PresentationRole::Editor => 1,
+                        PresentationRole::Creation => 2,
+                        PresentationRole::ReferenceSummary => 3,
+                        PresentationRole::ReferenceOption => 4,
+                        PresentationRole::CatalogOption => 5,
+                        PresentationRole::AuthoringResult => 6,
+                        PresentationRole::PageTile => 7,
+                        PresentationRole::GraphNode => 8,
+                        PresentationRole::InspectorHeader => 9,
                     },
                     |u| PresentationRole::Unknown(Some(u)),
                     |x: &PresentationRole| match x { PresentationRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1743,7 +1745,6 @@ pub struct TypeDefinition {
     pub type_id: TypeId,
     pub revision: i32,
     pub kind: TypeDefinitionKind,
-    pub default_presentation_id: Option<PresentationId>,
     pub named_presentations: crate::skir_client::KeyedVec<NamedPresentation_byName>,
     pub outgoing_conversion_ids: Vec<ConversionId>,
     pub role_presentations: Vec<RolePresentation>,
@@ -2084,14 +2085,15 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<PresentationRole> = PresentationRole::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("reference_summary", 1, 1, "", PresentationRole::ReferenceSummary);
-                (*a).add_constant_variant("reference_option", 2, 2, "", PresentationRole::ReferenceOption);
-                (*a).add_constant_variant("catalog_option", 3, 3, "", PresentationRole::CatalogOption);
-                (*a).add_constant_variant("authoring_result", 4, 4, "", PresentationRole::AuthoringResult);
-                (*a).add_constant_variant("page_tile", 5, 5, "", PresentationRole::PageTile);
-                (*a).add_constant_variant("graph_node", 6, 6, "", PresentationRole::GraphNode);
-                (*a).add_constant_variant("inspector_header", 7, 7, "", PresentationRole::InspectorHeader);
-                (*a).add_constant_variant("creation", 8, 8, "", PresentationRole::Creation);
+                (*a).add_constant_variant("editor", 1, 1, "", PresentationRole::Editor);
+                (*a).add_constant_variant("creation", 2, 2, "", PresentationRole::Creation);
+                (*a).add_constant_variant("reference_summary", 3, 3, "", PresentationRole::ReferenceSummary);
+                (*a).add_constant_variant("reference_option", 4, 4, "", PresentationRole::ReferenceOption);
+                (*a).add_constant_variant("catalog_option", 5, 5, "", PresentationRole::CatalogOption);
+                (*a).add_constant_variant("authoring_result", 6, 6, "", PresentationRole::AuthoringResult);
+                (*a).add_constant_variant("page_tile", 7, 7, "", PresentationRole::PageTile);
+                (*a).add_constant_variant("graph_node", 8, 8, "", PresentationRole::GraphNode);
+                (*a).add_constant_variant("inspector_header", 9, 9, "", PresentationRole::InspectorHeader);
                 (*a).finalize();
             }
             unsafe {
@@ -2120,14 +2122,13 @@ fn initialize_module_serializers() {
                 (*a).add_field("type_id", 4, crate::skir_client::internal::enum_serializer_from_static(TypeId::_adapter()), "", |x: &TypeDefinition| &x.type_id, |x: &mut TypeDefinition, v| x.type_id = v);
                 (*a).add_field("revision", 5, crate::skir_client::Serializer::int32(), "", |x: &TypeDefinition| &x.revision, |x: &mut TypeDefinition, v| x.revision = v);
                 (*a).add_field("kind", 6, crate::skir_client::internal::enum_serializer_from_static(TypeDefinitionKind::_adapter()), "", |x: &TypeDefinition| &x.kind, |x: &mut TypeDefinition, v| x.kind = v);
-                (*a).add_field("default_presentation_id", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationId::_adapter())), "", |x: &TypeDefinition| &x.default_presentation_id, |x: &mut TypeDefinition, v| x.default_presentation_id = v);
-                (*a).add_field("named_presentations", 8, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<NamedPresentation_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(NamedPresentation::_adapter())), "", |x: &TypeDefinition| &x.named_presentations, |x: &mut TypeDefinition, v| x.named_presentations = v);
-                (*a).add_field("outgoing_conversion_ids", 9, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ConversionId::_adapter())), "", |x: &TypeDefinition| &x.outgoing_conversion_ids, |x: &mut TypeDefinition, v| x.outgoing_conversion_ids = v);
-                (*a).add_field("role_presentations", 10, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RolePresentation::_adapter())), "", |x: &TypeDefinition| &x.role_presentations, |x: &mut TypeDefinition, v| x.role_presentations = v);
-                (*a).add_field("field_merge_policies", 11, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(FieldMergePolicy::_adapter())), "", |x: &TypeDefinition| &x.field_merge_policies, |x: &mut TypeDefinition, v| x.field_merge_policies = v);
-                (*a).add_field("declaration_owner", 12, crate::skir_client::Serializer::string(), "", |x: &TypeDefinition| &x.declaration_owner, |x: &mut TypeDefinition, v| x.declaration_owner = v);
-                (*a).add_field("initializer", 13, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TypedValue::_adapter())), "", |x: &TypeDefinition| &x.initializer, |x: &mut TypeDefinition, v| x.initializer = v);
-                (*a).add_field("qualified_name", 14, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &TypeDefinition| &x.qualified_name, |x: &mut TypeDefinition, v| x.qualified_name = v);
+                (*a).add_field("named_presentations", 7, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<NamedPresentation_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(NamedPresentation::_adapter())), "", |x: &TypeDefinition| &x.named_presentations, |x: &mut TypeDefinition, v| x.named_presentations = v);
+                (*a).add_field("outgoing_conversion_ids", 8, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ConversionId::_adapter())), "", |x: &TypeDefinition| &x.outgoing_conversion_ids, |x: &mut TypeDefinition, v| x.outgoing_conversion_ids = v);
+                (*a).add_field("role_presentations", 9, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RolePresentation::_adapter())), "", |x: &TypeDefinition| &x.role_presentations, |x: &mut TypeDefinition, v| x.role_presentations = v);
+                (*a).add_field("field_merge_policies", 10, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(FieldMergePolicy::_adapter())), "", |x: &TypeDefinition| &x.field_merge_policies, |x: &mut TypeDefinition, v| x.field_merge_policies = v);
+                (*a).add_field("declaration_owner", 11, crate::skir_client::Serializer::string(), "", |x: &TypeDefinition| &x.declaration_owner, |x: &mut TypeDefinition, v| x.declaration_owner = v);
+                (*a).add_field("initializer", 12, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TypedValue::_adapter())), "", |x: &TypeDefinition| &x.initializer, |x: &mut TypeDefinition, v| x.initializer = v);
+                (*a).add_field("qualified_name", 13, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &TypeDefinition| &x.qualified_name, |x: &mut TypeDefinition, v| x.qualified_name = v);
                 (*a).finalize();
             }
             unsafe {

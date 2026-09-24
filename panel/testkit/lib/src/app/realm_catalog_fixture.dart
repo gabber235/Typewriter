@@ -49,16 +49,16 @@ final class _FixedRealmCatalogSource implements RealmEditorCatalogSource {
 const realmFixtureGeneration = CatalogGeneration("fixture");
 
 const _colorPresentationId = PresentationId(
-  namespace: "typewriter.core",
-  name: "color.default",
+  namespace: "typewritermc:realm",
+  name: "color.editor",
 );
 const _iconifyPresentationId = PresentationId(
-  namespace: "typewriter.core",
-  name: "icon.iconify.default",
+  namespace: "typewritermc:realm",
+  name: "icon.iconify.editor",
 );
 const _svgPresentationId = PresentationId(
-  namespace: "typewriter.core",
-  name: "icon.svg.default",
+  namespace: "typewritermc:realm",
+  name: "icon.svg.editor",
 );
 
 /// Builds the type closure a panel test would receive from Realm.
@@ -112,7 +112,7 @@ final _realmDefinitions = <TypeDefinition>[
     id: standardTypeRefs.color,
     kind: NominalTypeKind.concrete,
     representation: const IntegerType(width: IntegerWidth.unsigned32),
-    defaultPresentationId: _colorPresentationId,
+    rolePresentations: {PresentationRole.editor: _colorPresentationId},
   ),
   TypeDefinition(
     id: standardTypeRefs.icon,
@@ -127,7 +127,7 @@ final _realmDefinitions = <TypeDefinition>[
     representation: const RecordType(
       fields: {"value": TypeField(name: "value", type: StringType())},
     ),
-    defaultPresentationId: _iconifyPresentationId,
+    rolePresentations: {PresentationRole.editor: _iconifyPresentationId},
   ),
   TypeDefinition(
     id: standardTypeRefs.svgIcon,
@@ -137,7 +137,7 @@ final _realmDefinitions = <TypeDefinition>[
     representation: const RecordType(
       fields: {"source": TypeField(name: "source", type: StringType())},
     ),
-    defaultPresentationId: _svgPresentationId,
+    rolePresentations: {PresentationRole.editor: _svgPresentationId},
   ),
 ];
 

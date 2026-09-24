@@ -9,6 +9,43 @@ extension TypeExpressionPresentationInference on TypeExpression {
   }
 }
 
+/// Infers a presentation's type arguments from the actual type or one of its ancestors.
+Map<String, TypeExpression>? inferNominalOrAncestorPresentationSubstitutions(
+  TypeExpression expected,
+  TypeExpression actual,
+  TypeRegistry registry,
+) {
+  final exact = expected.inferPresentationSubstitutions(actual);
+  if (exact != null || expected is! NamedType || actual is! NamedType) {
+    return exact;
+  }
+
+  final resolved = registry.resolveExact(actual.reference).valueOrNull;
+  if (resolved == null) return null;
+  Map<String, TypeExpression>? inferred;
+  for (final ancestor in resolved.ancestors) {
+    final candidate = expected.inferPresentationSubstitutions(
+      NamedType(ancestor),
+    );
+    if (candidate == null) continue;
+    if (inferred != null && !_sameSubstitutions(inferred, candidate)) {
+      return null;
+    }
+    inferred = candidate;
+  }
+  return inferred;
+}
+
+bool _sameSubstitutions(
+  Map<String, TypeExpression> left,
+  Map<String, TypeExpression> right,
+) =>
+    left.length == right.length &&
+    left.entries.every((entry) {
+      final value = right[entry.key];
+      return value != null && typeExpressionsEqual(entry.value, value);
+    });
+
 extension on TypeExpression {
   bool _unifyWith(
     TypeExpression exact,

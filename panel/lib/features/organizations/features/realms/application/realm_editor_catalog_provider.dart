@@ -543,35 +543,6 @@ extension RealmEditorCatalogElementResolution
     }
     final snapshot = requireValue;
     final catalog = snapshot.catalog;
-    final availablePresentationIds = {...snapshot.presentations.keys};
-
-    final missingPresentationIds = {
-      for (final type in catalog.definitions)
-        ...[
-          ?type.defaultPresentationId,
-          ...type.namedPresentations.values,
-          ...type.rolePresentations.values,
-        ].where((id) => !availablePresentationIds.contains(id)),
-    };
-    if (missingPresentationIds.isNotEmpty) {
-      final missingPresentationNames =
-          missingPresentationIds
-              .map((id) => "${id.namespace}/${id.name}")
-              .toList()
-            ..sort();
-      return AsyncValue.error(
-        ElementDefinitionException([
-          TypeDiagnostic(
-            code: TypeDiagnosticCode.invalidPresentation,
-            message:
-                "Realm catalog omitted required presentations: "
-                "${missingPresentationNames.join(", ")}",
-            pathPresent: false,
-          ),
-        ]),
-        StackTrace.current,
-      );
-    }
     final resolved = definition.resolve(TypeRegistry(catalog));
     if (resolved.valueOrNull == null) {
       return AsyncValue.error(

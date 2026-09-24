@@ -26,11 +26,11 @@ class PlayerMessageContainsTextEventEntry(
 ) : SequenceEntry
 
 // @TypewriterPresentation(
-//    default = true,
+//    roles = [PresentationRole.EDITOR],
 //    priority = 100,
 // )
 // context(_: PresentationBuildContext)
 // fun playerMessageContainsTextEventEntryEditor() =
-//    presentation<PlayerMessageContainsTextEventEntry>(name = "default") {
+//    presentation<PlayerMessageContainsTextEventEntry>(name = "editor") {
 //
 //    }

@@ -160,7 +160,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                 definitions =
                     fixture.snapshot.types.definitions.map { definition ->
                         if (definition.id == fixture.leaf.id) {
-                            definition.copy(defaultPresentationId = presentationId)
+                            definition.copy(rolePresentations = mapOf(com.typewritermc.types.PresentationRole.EDITOR to presentationId))
                         } else {
                             definition
                         }

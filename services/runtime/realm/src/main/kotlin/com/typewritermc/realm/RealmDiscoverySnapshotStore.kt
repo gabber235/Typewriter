@@ -83,12 +83,3 @@ data class AuthoringSearchFacetDefinition(
 
 typealias AuthoringResourceDefinition = com.typewritermc.authoring.AuthoringResourceDefinition
 typealias ResourceDefinitionId = com.typewritermc.authoring.ResourceDefinitionId
-
-/** Stable ids for the definitions supplied by the core Realm runtime. */
-object CoreResourceDefinitionIds {
-    val BOOK = ResourceDefinitionId("typewriter.book")
-    val TAG = ResourceDefinitionId("typewriter.tag")
-    val PAGE = ResourceDefinitionId("typewriter.page")
-    val ELEMENT = ResourceDefinitionId("typewriter.element")
-    val CUE = ResourceDefinitionId("typewriter.cue")
-}

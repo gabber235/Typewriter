@@ -289,7 +289,7 @@ val SyntheticDiscoveryTest by testSuite {
                     (segment as skirout.editor.v1.path.DataPathSegment.FieldWrapper).value.fieldName
                 }
 
-            entry.defaultPresentationId?.name shouldBe "editor"
+            entry.rolePresentations[com.typewritermc.types.PresentationRole.EDITOR]?.name shouldBe "editor"
             entry.namedPresentations["compact"]?.name shouldBe "compact"
             path shouldBe listOf("message", "repeat_count")
             catalog.diagnostics shouldBe emptyList()

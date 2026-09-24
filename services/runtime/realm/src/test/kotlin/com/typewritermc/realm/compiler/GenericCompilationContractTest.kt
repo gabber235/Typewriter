@@ -9,7 +9,7 @@ import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.library.Page
-import com.typewritermc.realm.CoreResourceDefinitionIds
+import com.typewritermc.library.CoreResourceDefinitionIds
 import com.typewritermc.realm.repository.AuthoringGraphDelta
 import com.typewritermc.realm.repository.AuthoringWorkingGraph
 import com.typewritermc.realm.repository.loadTestPrototypes

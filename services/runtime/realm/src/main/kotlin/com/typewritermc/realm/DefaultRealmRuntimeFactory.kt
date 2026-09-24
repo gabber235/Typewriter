@@ -25,6 +25,8 @@ import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.pages.PageCatalogAssembler
 import com.typewritermc.pages.PageProvider
+import com.typewritermc.presentation.CollectionProjectionCatalogAssembler
+import com.typewritermc.presentation.CollectionProjectionProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
@@ -147,15 +149,6 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     providers = loadedDiscovery.application.koin.getAll<RealmCapabilityProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                 )
-            val presentationCatalog =
-                PresentationCatalogAssembler.assemble(
-                    providers =
-                        coreLibraryPresentationProviders() +
-                            loadedDiscovery.application.koin.getAll<PresentationProvider>(),
-                    prototypes = loadedDiscovery.prototypes,
-                    types = assembled.discovery.types,
-                    capabilities = capabilityRegistry.descriptors,
-                )
             val pageCatalog =
                 PageCatalogAssembler.assemble(
                     providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
@@ -176,6 +169,20 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
                     catalog = assembled.discovery.types,
                     relations = assembled.runtimeDiscovery.relations,
+                )
+            val collectionProjections =
+                CollectionProjectionCatalogAssembler.assemble(
+                    providers = loadedDiscovery.application.koin.getAll<CollectionProjectionProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                    resourceDefinitions = authoringPolicies.definitions,
+                )
+            val presentationCatalog =
+                PresentationCatalogAssembler.assemble(
+                    providers = loadedDiscovery.application.koin.getAll<PresentationProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                    types = assembled.discovery.types,
+                    capabilities = capabilityRegistry.descriptors,
+                    collectionProjections = collectionProjections.definitions,
                 )
             val realmModule =
                 module {
@@ -230,7 +237,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
                     resourceDefinitions = authoringPolicies.definitions,
                     relations = assembled.runtimeDiscovery.relations,
-                    collectionProjections = coreLibraryCollectionProjections(loadedDiscovery.prototypes),
+                    collectionProjections = collectionProjections.definitions,
                     authoringSearch = authoringPolicies.searchDefinition(),
                     compilationProjections =
                         authoringPolicies.compilation.projections.map { projection ->
@@ -243,7 +250,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     pages = pageCatalog,
                     presentations = presentationCatalog.definitions,
                     capabilities = capabilityRegistry.descriptors,
-                    presentationDiagnostics = presentationCatalog.diagnostics,
+                    presentationDiagnostics = collectionProjections.diagnostics + presentationCatalog.diagnostics,
                 ),
             )
             val telemetry = startedApplication.koin.get<ServiceTelemetry>()

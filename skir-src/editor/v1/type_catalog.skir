@@ -229,14 +229,15 @@ struct NamedPresentation(810100025) {
 // A semantic surface resolved independently for each nominal type. Consumers
 // select the nearest associated ancestor for the requested role.
 enum PresentationRole(810100030) {
-  reference_summary = 1;
-  reference_option = 2;
-  catalog_option = 3;
-  authoring_result = 4;
-  page_tile = 5;
-  graph_node = 6;
-  inspector_header = 7;
-  creation = 8;
+  editor = 1;
+  creation = 2;
+  reference_summary = 3;
+  reference_option = 4;
+  catalog_option = 5;
+  authoring_result = 6;
+  page_tile = 7;
+  graph_node = 8;
+  inspector_header = 9;
 }
 
 struct RolePresentation(810100031) {
@@ -265,14 +266,13 @@ struct TypeDefinition(810100026) {
   type_id: TypeId = 4;
   revision: int32 = 5;
   kind: TypeDefinitionKind = 6;
-  default_presentation_id: PresentationId? = 7;
-  named_presentations: [NamedPresentation|name] = 8;
-  outgoing_conversion_ids: [ConversionId] = 9;
-  role_presentations: [RolePresentation] = 10;
-  field_merge_policies: [FieldMergePolicy] = 11;
-  declaration_owner: string = 12;
-  initializer: TypedValue? = 13;
-  qualified_name: string? = 14;
+  named_presentations: [NamedPresentation|name] = 7;
+  outgoing_conversion_ids: [ConversionId] = 8;
+  role_presentations: [RolePresentation] = 9;
+  field_merge_policies: [FieldMergePolicy] = 10;
+  declaration_owner: string = 11;
+  initializer: TypedValue? = 12;
+  qualified_name: string? = 13;
 }
 
 struct TypeCatalog(810100027) {

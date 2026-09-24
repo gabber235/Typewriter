@@ -29,7 +29,7 @@ void main() {
             kind: NominalTypeKind.concrete,
             representation: const ParameterType("T"),
             parameters: const [TypeParameter(name: "T")],
-            defaultPresentationId: presentationId,
+            rolePresentations: const {PresentationRole.editor: presentationId},
           ),
         ]),
         presentations: [
@@ -77,7 +77,7 @@ void main() {
             id: root,
             kind: NominalTypeKind.concrete,
             representation: const StringType(),
-            defaultPresentationId: id,
+            rolePresentations: const {PresentationRole.editor: id},
           ),
         ]),
         presentations: [
@@ -161,8 +161,8 @@ void main() {
     "uses the concrete default presentation inside a polymorphic input",
     (tester) async {
       const presentationId = PresentationId(
-        namespace: "typewriter.core",
-        name: "icon.iconify.default",
+        namespace: "typewritermc:realm",
+        name: "icon.iconify.editor",
       );
       await tester.pumpTestApp(
         child: EditorProtocolRenderer(

@@ -452,6 +452,7 @@ data class PresentationId(
 /** Identifies the semantic surface for which a presentation is selected. */
 @Serializable
 enum class PresentationRole {
+    EDITOR,
     CREATION,
     REFERENCE_SUMMARY,
     REFERENCE_OPTION,
@@ -550,7 +551,6 @@ data class TypeDefinition(
     val representation: TypeExpression = TypeExpression.Any,
     val parameters: List<TypeParameter> = emptyList(),
     val parents: List<ResolvedTypeRef> = emptyList(),
-    val defaultPresentationId: PresentationId? = null,
     val namedPresentations: Map<String, PresentationId> = emptyMap(),
     val displayName: String = id.displayName,
     val qualifiedName: String? = null,
@@ -887,10 +887,11 @@ fun TypeCatalog.effectiveRelationField(
         expression = (expression as? TypeExpression.Record)?.fields?.singleOrNull { it.name == field.name }?.type
             ?: return null
     }
-    val opposite = when (endpoint.cardinality) {
-        RelationCardinality.ONE -> (expression as? TypeExpression.Reference)?.target
-        RelationCardinality.MANY -> ((expression as? TypeExpression.ListType)?.element as? TypeExpression.Reference)?.target
-    } ?: return null
+    val opposite =
+        when (endpoint.cardinality) {
+            RelationCardinality.ONE -> (expression as? TypeExpression.Reference)?.target
+            RelationCardinality.MANY -> ((expression as? TypeExpression.ListType)?.element as? TypeExpression.Reference)?.target
+        } ?: return null
     val declaredOpposite = if (side == RelationEndpointSide.SOURCE) relation.target else relation.source
     require(isAssignableExactly(opposite, declaredOpposite)) {
         "Concrete relation field must keep the marker target type or narrow it."

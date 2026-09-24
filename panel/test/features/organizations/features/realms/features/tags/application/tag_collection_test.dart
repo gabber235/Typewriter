@@ -129,7 +129,7 @@ LocalPresentationCollectionSource _collection({
 }
 
 PresentationDefinition _presentation() => const PresentationDefinition(
-  id: PresentationId(namespace: "typewriter.core", name: "tag.default"),
+  id: PresentationId(namespace: "typewritermc:realm", name: "tag.editor"),
   inputs: [],
   root: PresentationNode(
     id: "root",
