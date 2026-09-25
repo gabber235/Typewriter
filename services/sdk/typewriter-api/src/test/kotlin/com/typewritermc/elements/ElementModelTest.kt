@@ -1,12 +1,12 @@
 package com.typewritermc.elements
 
 import com.typewritermc.discovery.ContributionKey
-import com.typewritermc.discovery.ContributionName
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.Eligibility
-import com.typewritermc.discovery.ProducerId
 import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.ContributionName
+import com.typewritermc.imprint.ProducerId
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.Icon

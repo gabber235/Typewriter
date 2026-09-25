@@ -3,7 +3,9 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.GeneratedContribution
+import com.typewritermc.imprint.ProducerId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
@@ -24,8 +26,8 @@ val ManifestContentPipelineTest by testSuite {
         val forward = realmContentPipeline(first, second).assemble(context)
         val reverse = realmContentPipeline(second, first).assemble(context)
 
-        forward.contributions.map(GeneratedContribution::name) shouldContainExactly listOf("a.cbor", "z.cbor")
-        reverse.contributions.map(GeneratedContribution::name) shouldContainExactly listOf("a.cbor", "z.cbor")
+        forward.contributions.map { it.name.value } shouldContainExactly listOf("a.cbor", "z.cbor")
+        reverse.contributions.map { it.name.value } shouldContainExactly listOf("a.cbor", "z.cbor")
         forward.runtimeEntrypoints shouldBe reverse.runtimeEntrypoints
     }
 
@@ -66,7 +68,7 @@ private fun contribution(name: String): GeneratedContribution =
     GeneratedContribution(
         origin = ArtifactId("typewritermc:realm"),
         sourcePart = "main",
-        producer = "types",
-        name = name,
+        producer = ProducerId("types"),
+        name = ContributionName(name),
         payload = name.encodeToByteArray(),
     )

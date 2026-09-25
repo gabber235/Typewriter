@@ -3,11 +3,13 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.GeneratedContribution
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.imprint.ProducerId
 import com.typewritermc.imprint.ResolvedArtifact
 import java.io.File
 import java.util.zip.ZipFile
@@ -131,8 +133,8 @@ internal data object ValidateContributionKeys : ManifestContentTransform {
                     listOf(
                         contribution.origin.value,
                         contribution.sourcePart,
-                        contribution.producer,
-                        contribution.name,
+                        contribution.producer.value,
+                        contribution.name.value,
                     )
                 }.filterValues { contributions -> contributions.size > 1 }
         require(duplicates.isEmpty()) {
@@ -169,8 +171,8 @@ internal data object CanonicalizeManifestContent : ManifestContentTransform {
                     compareBy(
                         { it.origin.value },
                         GeneratedContribution::sourcePart,
-                        GeneratedContribution::producer,
-                        GeneratedContribution::name,
+                        { it.producer.value },
+                        { it.name.value },
                     ),
                 ),
             runtimeEntrypoints = content.runtimeEntrypoints.sorted(),
@@ -235,7 +237,7 @@ private fun File.toGeneratedContribution(origin: ArtifactId): GeneratedContribut
     ) {
         "Unsafe Imprint contribution path $contributionPath."
     }
-    return GeneratedContribution(origin, sourcePart, producer, name, readBytes())
+    return GeneratedContribution(origin, sourcePart, ProducerId(producer), ContributionName(name), readBytes())
 }
 
 private fun File.readRuntimeEntrypoints(): List<String> =
@@ -272,8 +274,8 @@ private fun ZipFile.readContributions(
             GeneratedContribution(
                 origin = origin,
                 sourcePart = "main",
-                producer = producer,
-                name = "$namespace/$name",
+                producer = ProducerId(producer),
+                name = ContributionName("$namespace/$name"),
                 payload = getInputStream(entry).use { it.readBytes() },
             )
         }.toList()

@@ -1,13 +1,12 @@
 package com.typewritermc.elements
 
 import com.typewritermc.discovery.ContributionKey
-import com.typewritermc.discovery.ContributionName
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.Eligibility
-import com.typewritermc.discovery.ProducerId
 import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.imprint.ProducerId
 import com.typewritermc.types.ResolvedTypeRef
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -75,14 +74,14 @@ object ContentContributionReader {
         manifests
             .flatMap(ImprintManifest::contributions)
             .filter { it.producer == ELEMENT_DISCOVERY_PRODUCER }
-            .sortedBy { "${it.origin.value}/${it.sourcePart}/${it.name}" }
+            .sortedBy { "${it.origin.value}/${it.sourcePart}/${it.name.value}" }
             .map { generated ->
                 val key =
                     ContributionKey(
                         generated.origin,
                         generated.sourcePart,
-                        ProducerId(generated.producer),
-                        ContributionName(generated.name),
+                        generated.producer,
+                        generated.name,
                     )
                 KeyedContentContribution(
                     key,
@@ -183,4 +182,4 @@ const val ELEMENT_DISCOVERY_SCHEMA = "typewriter.elements"
 const val ELEMENT_DISCOVERY_VERSION = 1
 
 /** Manifest producer name used to select element discovery contributions. */
-const val ELEMENT_DISCOVERY_PRODUCER = "elements"
+val ELEMENT_DISCOVERY_PRODUCER = ProducerId("elements")

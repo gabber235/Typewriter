@@ -1,6 +1,8 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.ContributionName
+import com.typewritermc.imprint.ProducerId
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeDefinition
@@ -34,40 +36,6 @@ object DiscoveryDomains {
 
     /** Discovery boundary for gameplay and other execution capabilities. */
     val Execution = DiscoveryDomainId("execution")
-}
-
-/**
- * Identifies the generator responsible for a discovery payload.
- *
- * The reader uses this safe path segment to choose a codec; unknown producers can be retained without decoding
- * their payloads.
- */
-@JvmInline
-@Serializable
-value class ProducerId(
-    val value: String,
-) {
-    init {
-        require(value.matches(SEGMENT_PATTERN)) { "Producer ids must be safe path segments." }
-    }
-}
-
-/**
- * Names a contribution within its producer using a safe relative path.
- *
- * Each slash separated segment must match the discovery segment grammar; blank names and empty segments are
- * rejected.
- */
-@JvmInline
-@Serializable
-value class ContributionName(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank() && value.split('/').all(SEGMENT_PATTERN::matches)) {
-            "Contribution names must be safe relative paths."
-        }
-    }
 }
 
 /**

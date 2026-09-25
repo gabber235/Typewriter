@@ -6,8 +6,10 @@ import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CapabilityExtensionSourcePart
 import com.typewritermc.imprint.CommonExtensionSourcePart
+import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.imprint.ProducerId
 import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.types.NominalTypeKind

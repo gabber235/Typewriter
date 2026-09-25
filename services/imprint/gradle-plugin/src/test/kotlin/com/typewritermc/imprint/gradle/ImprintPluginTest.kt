@@ -233,8 +233,8 @@ val ImprintPluginTest by testSuite {
         val platformContribution = manifest.contributions.single()
         platformContribution.origin.value shouldBe "typewritermc:realm"
         platformContribution.sourcePart shouldBe "main"
-        platformContribution.producer shouldBe "types"
-        platformContribution.name shouldBe "platform/book.cbor"
+        platformContribution.producer.value shouldBe "types"
+        platformContribution.name.value shouldBe "platform/book.cbor"
         platformContribution.payload.decodeToString() shouldBe "platform book"
         jar.entries().contains(IMPRINT_RUNTIME_ENTRYPOINTS_PATH) shouldBe false
     }
@@ -350,17 +350,17 @@ val ImprintPluginTest by testSuite {
         jar.entries().contains(IMPRINT_RUNTIME_ENTRYPOINTS_PATH) shouldBe false
         manifest.resolvedCapabilities.map { it.id.value } shouldContainExactly
             listOf("typewritermc:base", "typewritermc:items")
-        val coreContribution = manifest.contributions.single { it.name == "core/pages.cbor" }
+        val coreContribution = manifest.contributions.single { it.name.value == "core/pages.cbor" }
         coreContribution.origin.value shouldBe "paper"
         coreContribution.sourcePart shouldBe "main"
-        coreContribution.producer shouldBe "types"
+        coreContribution.producer.value shouldBe "types"
         coreContribution.payload.decodeToString() shouldBe "core pages"
         manifest.contributions
-            .single { it.name == "platform/book.cbor" }
+            .single { it.name.value == "platform/book.cbor" }
             .payload
             .decodeToString() shouldBe "platform book"
         manifest.contributions
-            .single { it.name == "items.cbor" }
+            .single { it.name.value == "items.cbor" }
             .payload
             .decodeToString() shouldBe "items"
     }

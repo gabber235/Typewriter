@@ -1,9 +1,7 @@
 package com.typewritermc.discovery.runtime
 
 import com.typewritermc.discovery.ContributionKey
-import com.typewritermc.discovery.ContributionName
 import com.typewritermc.discovery.KeyedTypeContribution
-import com.typewritermc.discovery.ProducerId
 import com.typewritermc.discovery.TYPE_DISCOVERY_PRODUCER
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.imprint.GeneratedContribution
@@ -42,7 +40,7 @@ object ManifestDiscoveryReader {
 
         all.sortedBy { it.key().sortKey() }.forEach { contribution ->
             when (contribution.producer) {
-                TYPE_DISCOVERY_PRODUCER.value -> {
+                TYPE_DISCOVERY_PRODUCER -> {
                     typeContributions +=
                         KeyedTypeContribution(
                             contribution.key(),
@@ -68,6 +66,6 @@ object ManifestDiscoveryReader {
             }
 }
 
-private fun GeneratedContribution.key(): ContributionKey = ContributionKey(origin, sourcePart, ProducerId(producer), ContributionName(name))
+private fun GeneratedContribution.key(): ContributionKey = ContributionKey(origin, sourcePart, producer, name)
 
 private fun ContributionKey.sortKey(): String = "${origin.value}/$sourcePart/${producer.value}/${name.value}"
