@@ -281,7 +281,6 @@ internal class CoreAuthoringPolicyProvider(
             ) { resource ->
                 val definition = pageCatalog.definition(resource.rootReference)
                 ResourceTypeDescriptor(
-                    resource.rootReference,
                     definition?.name ?: "Page",
                     definition?.description.orEmpty(),
                     definition?.icon ?: Icon.Iconify("material-symbols:description"),
@@ -302,7 +301,6 @@ internal class CoreAuthoringPolicyProvider(
             ) { resource ->
                 val definition = elements.descriptor(resource.rootReference)
                 ResourceTypeDescriptor(
-                    resource.rootReference,
                     definition?.name ?: "Element",
                     definition?.description.orEmpty(),
                     definition?.icon ?: Icon.Iconify("material-symbols:extension"),
@@ -323,7 +321,6 @@ internal class CoreAuthoringPolicyProvider(
             ) { resource ->
                 val definition = elements.descriptor(resource.rootReference)
                 ResourceTypeDescriptor(
-                    resource.rootReference,
                     definition?.name ?: "Cue",
                     definition?.description.orEmpty(),
                     definition?.icon ?: Icon.Iconify("material-symbols:timeline"),
@@ -510,7 +507,6 @@ private fun AuthoringGraphResource.descriptor(
     color: UInt,
 ): ResourceTypeDescriptor =
     ResourceTypeDescriptor(
-        rootReference,
         name,
         description,
         Icon.Iconify(icon),

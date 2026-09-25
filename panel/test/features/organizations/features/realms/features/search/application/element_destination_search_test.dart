@@ -177,7 +177,6 @@ SearchResult _kindResult(ResolvedTypeRef kind) => SearchResult(
 TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
   target: type,
   descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
-  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
 );
 
 final class _NoCommands implements SearchCommandDispatcher {

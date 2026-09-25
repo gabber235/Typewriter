@@ -1,18 +1,9 @@
 package com.typewritermc.types
 
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
 import java.math.BigInteger
 import kotlin.time.Duration
 import kotlin.time.Instant
@@ -115,9 +106,7 @@ sealed interface TypeId {
  * Revisions must be positive. Definitions use references without arguments, while use sites may supply arguments;
  * consumers must apply the definition parameters when interpreting them.
  */
-@Serializable(with = ResolvedTypeRefSerializer::class)
-@TypewriterString
-@TypewriterType(id = "8f96c94c17b946d788e0e5e7049c8536")
+@Serializable
 data class ResolvedTypeRef(
     val id: TypeId,
     val revision: Int,
@@ -130,36 +119,6 @@ data class ResolvedTypeRef(
     /** Returns this reference with a copied list of generic arguments. */
     fun withArguments(arguments: Iterable<TypeExpression>) = copy(arguments = arguments.toList())
 }
-
-object ResolvedTypeRefSerializer : KSerializer<ResolvedTypeRef> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ResolvedTypeRef", PrimitiveKind.STRING)
-
-    override fun serialize(
-        encoder: Encoder,
-        value: ResolvedTypeRef,
-    ) {
-        encoder.encodeString(
-            typeReferenceJson.encodeToString(
-                ResolvedTypeRefSurrogate.serializer(),
-                ResolvedTypeRefSurrogate(value.id, value.revision, value.arguments),
-            ),
-        )
-    }
-
-    override fun deserialize(decoder: Decoder): ResolvedTypeRef {
-        val value = typeReferenceJson.decodeFromString(ResolvedTypeRefSurrogate.serializer(), decoder.decodeString())
-        return ResolvedTypeRef(value.id, value.revision, value.arguments)
-    }
-}
-
-@Serializable
-private data class ResolvedTypeRefSurrogate(
-    val id: TypeId,
-    val revision: Int,
-    val arguments: List<TypeExpression>,
-)
-
-private val typeReferenceJson = Json { classDiscriminator = "_kind" }
 
 /** Describes the bit width and signedness of a portable integer expression. */
 @Serializable

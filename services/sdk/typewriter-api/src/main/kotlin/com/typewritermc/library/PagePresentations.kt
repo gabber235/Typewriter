@@ -12,7 +12,6 @@ import com.typewritermc.presentation.rolePresentation
 import com.typewritermc.presentation.section
 import com.typewritermc.presentation.subjectLayout
 import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.ResolvedTypeRef
 
 @TypewriterPresentation(roles = [PresentationRole.EDITOR])
 context(context: PresentationBuildContext)
@@ -82,7 +81,6 @@ private fun pageCatalogRole(
     context(context) {
         rolePresentation<Page>(name) {
             val descriptor = input<ResourceTypeDescriptor>("descriptor")
-            input<ResolvedTypeRef>("identity")
             subjectLayout(
                 descriptor.field(ResourceTypeDescriptor::icon),
                 descriptor.field(ResourceTypeDescriptor::name).expression(),

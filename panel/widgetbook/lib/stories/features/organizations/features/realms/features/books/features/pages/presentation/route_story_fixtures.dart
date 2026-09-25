@@ -256,7 +256,6 @@ AuthoringSubjectProjection pageStorySubjectProjection(
 TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
   target: type,
   descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
-  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
 );
 
 Map<ResolvedTypeRef, RecordValue> _rootValues(List<PageElement> elements) {

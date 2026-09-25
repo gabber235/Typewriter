@@ -20,7 +20,6 @@ typedef TypedPresentationSubject = ({
 typedef TypedCatalogPresentationSubject = ({
   ResolvedTypeRef target,
   TypedValueEnvelope descriptor,
-  TypedValueEnvelope identity,
 });
 
 typedef SubjectPresentationModel = ({
@@ -211,13 +210,8 @@ final class TypedAuthoringCodec {
     skir.CatalogPresentationSubject subject,
   ) => _combine(
     _wire.decodeType(subject.target),
-    _combine(
-      decodeEnvelope(subject.descriptor),
-      decodeEnvelope(subject.identity),
-      (descriptor, identity) => (descriptor, identity),
-    ),
-    (target, values) =>
-        (target: target, descriptor: values.$1, identity: values.$2),
+    decodeEnvelope(subject.descriptor),
+    (target, descriptor) => (target: target, descriptor: descriptor),
   );
 
   /// Builds one read only role presentation from its declared subject inputs.
@@ -255,8 +249,8 @@ final class TypedAuthoringCodec {
   }) => _rolePresentation(
     target: subject.target,
     role: PresentationRole.catalogOption,
-    envelopes: {"descriptor": subject.descriptor, "identity": subject.identity},
-    allowed: const {"descriptor", "identity"},
+    envelopes: {"descriptor": subject.descriptor},
+    allowed: const {"descriptor"},
     collections: collections,
   );
 

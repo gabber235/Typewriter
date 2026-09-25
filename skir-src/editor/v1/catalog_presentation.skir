@@ -5,5 +5,4 @@ import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
 struct CatalogPresentationSubject(811400001) {
   target: ResolvedTypeRef = 0;
   descriptor: TypedValueEnvelope = 1;
-  identity: TypedValueEnvelope = 2;
 }

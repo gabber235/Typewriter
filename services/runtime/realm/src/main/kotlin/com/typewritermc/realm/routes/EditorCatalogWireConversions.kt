@@ -54,13 +54,11 @@ internal fun ContentCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): Skir
                 target = descriptor.type,
                 descriptor =
                     ResourceTypeDescriptor(
-                        type = descriptor.type,
                         name = descriptor.name,
                         description = descriptor.description,
                         icon = descriptor.icon,
                         color = descriptor.color,
                     ),
-                identity = descriptor.type,
                 prototypes = prototypes,
             ),
         eligibility =
@@ -151,13 +149,11 @@ internal fun PageCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): SkirPag
                 target = presentationTarget,
                 descriptor =
                     ResourceTypeDescriptor(
-                        type = presentationTarget,
                         name = descriptor.name,
                         description = descriptor.description.orEmpty(),
                         icon = descriptor.icon,
                         color = descriptor.color,
                     ),
-                identity = presentationTarget,
                 prototypes = prototypes,
             ),
     )
@@ -165,12 +161,10 @@ internal fun PageCatalogEntry.toSkir(prototypes: TypePrototypeRegistry): SkirPag
 private fun catalogPresentationSubject(
     target: com.typewritermc.types.ResolvedTypeRef,
     descriptor: ResourceTypeDescriptor,
-    identity: Any,
     prototypes: TypePrototypeRegistry,
 ) = CatalogPresentationSubject(
     target = target.toSkir().getOrThrow(),
     descriptor = prototypes.encode(descriptor).toWire(),
-    identity = prototypes.encode(identity).toWire(),
 )
 
 private fun PageDescriptor.toSkir(): SkirPageDescriptor =

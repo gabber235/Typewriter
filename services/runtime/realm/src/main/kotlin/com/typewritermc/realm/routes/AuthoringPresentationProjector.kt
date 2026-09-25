@@ -138,7 +138,7 @@ private fun AuthoringGraphResource.descriptor(
     description: String,
     icon: String,
     color: UInt,
-): ResourceTypeDescriptor = ResourceTypeDescriptor(root, name, description, Icon.Iconify(icon), Color(color))
+): ResourceTypeDescriptor = ResourceTypeDescriptor(name, description, Icon.Iconify(icon), Color(color))
 
 private fun AuthoringGraphResource.genericSubject(): AuthoringPresentationSubject =
     AuthoringPresentationSubject(

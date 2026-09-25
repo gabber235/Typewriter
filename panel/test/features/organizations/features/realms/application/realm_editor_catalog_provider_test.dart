@@ -471,7 +471,6 @@ RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
 TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
   target: type,
   descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
-  identity: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
 );
 
 final class _ElementSource implements RealmEditorCatalogSource {

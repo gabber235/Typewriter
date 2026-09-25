@@ -45,7 +45,6 @@ val AuthoringPresentationProjectionTest by testSuite {
                                 content = resource.content,
                                 descriptor =
                                     ResourceTypeDescriptor(
-                                        (resource.content.rootType as TypeExpression.Named).reference,
                                         "resources:${graph.resources.size}",
                                         "",
                                         Icon.Iconify("material-symbols:description"),

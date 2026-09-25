@@ -10,6 +10,9 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -66,7 +69,7 @@ val TypeModelTest by testSuite {
         expected.toString() shouldBe "019d1c2a8f7b7cc18c2a4a7b2fd1e281"
     }
 
-    test("resolved type reference serializer preserves identity revision and nested arguments") {
+    test("resolved type references serialize structurally at every nesting level") {
         val reference =
             ResolvedTypeRef(
                 TypeId.Qualified("example.types", "Container"),
@@ -83,9 +86,14 @@ val TypeModelTest by testSuite {
                     ),
             )
 
-        val encoded = Json.encodeToString(ResolvedTypeRefSerializer, reference)
+        val json = Json { classDiscriminator = "kind" }
+        val encoded = json.encodeToJsonElement(ResolvedTypeRef.serializer(), reference)
+        encoded.jsonObject["revision"]!!.jsonPrimitive.content shouldBe "7"
+        val nested = encoded.jsonObject["arguments"]!!.jsonArray.first().jsonObject["reference"]!!.jsonObject
+        nested["revision"]!!.jsonPrimitive.content shouldBe "3"
+        nested["id"]!!.jsonObject["kind"]!!.jsonPrimitive.content shouldBe "declared"
 
-        Json.decodeFromString(ResolvedTypeRefSerializer, encoded) shouldBe reference
+        json.decodeFromJsonElement(ResolvedTypeRef.serializer(), encoded) shouldBe reference
     }
 
     test("model rejects contradictory collection constraints") {

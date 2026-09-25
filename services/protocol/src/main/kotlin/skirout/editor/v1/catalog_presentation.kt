@@ -23,7 +23,6 @@ import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 sealed interface CatalogPresentationSubject_OrMutable {
     val target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
     val descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable;
-    val identity: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.catalog_presentation.CatalogPresentationSubject;
 }
@@ -33,7 +32,6 @@ sealed interface CatalogPresentationSubject_OrMutable {
 class CatalogPresentationSubject private constructor(
     override val target: skirout.editor.v1.type_catalog.ResolvedTypeRef,
     override val descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope,
-    override val identity: skirout.editor.v1.typed_value.TypedValueEnvelope,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
         null,
 ): skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable {
@@ -42,13 +40,11 @@ class CatalogPresentationSubject private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
         descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable,
-        identity: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
             null,
     ): this(
         target.toFrozen(),
         descriptor.toFrozen(),
-        identity.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -59,7 +55,6 @@ class CatalogPresentationSubject private constructor(
     fun toMutable() = Mutable(
         target = this.target,
         descriptor = this.descriptor,
-        identity = this.identity,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -70,12 +65,9 @@ class CatalogPresentationSubject private constructor(
             this.target,
         descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
             this.descriptor,
-        identity: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
-            this.identity,
     ) = skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
         target.toFrozen(),
         descriptor.toFrozen(),
-        identity.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -83,11 +75,11 @@ class CatalogPresentationSubject private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject && this.target == other.target && this.descriptor == other.descriptor && this.identity == other.identity);
+        return this === other || (other is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject && this.target == other.target && this.descriptor == other.descriptor);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.descriptor, this.identity).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.descriptor).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -105,8 +97,6 @@ class CatalogPresentationSubject private constructor(
             skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
         override var descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
             skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
-        override var identity: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
-            skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
             null,
     ): skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable {
@@ -114,7 +104,6 @@ class CatalogPresentationSubject private constructor(
         override fun toFrozen() = skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
             target = this.target,
             descriptor = this.descriptor,
-            identity = this.identity,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -149,29 +138,12 @@ class CatalogPresentationSubject private constructor(
                 is skirout.editor.v1.typed_value.TypedValueEnvelope.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [identity] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [identity] and returns it.
-         */
-        val mutableIdentity: skirout.editor.v1.typed_value.TypedValueEnvelope.Mutable get() {
-            var value = this.identity;
-            return when (value) {
-                is skirout.editor.v1.typed_value.TypedValueEnvelope -> {
-                    value = value.toMutable();
-                    this.identity = value;
-                    return value;
-                }
-                is skirout.editor.v1.typed_value.TypedValueEnvelope.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
                 skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
             );
 
@@ -190,12 +162,9 @@ class CatalogPresentationSubject private constructor(
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
             descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
                 skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
-            identity: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
-                skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
         ) = skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
             target = target,
             descriptor = descriptor,
-            identity = identity,
             _unrecognizedFields = null,
         );
 
@@ -233,15 +202,6 @@ class CatalogPresentationSubject private constructor(
                 "",
                 { it.descriptor },
                 { mut, v -> mut.descriptor = v },
-            );
-            serializerImpl.addField(
-                "identity",
-                "identity",
-                2,
-                skirout.editor.v1.typed_value.TypedValueEnvelope.serializer,
-                "",
-                { it.identity },
-                { mut, v -> mut.identity = v },
             );
             serializerImpl.finalizeStruct();
         }

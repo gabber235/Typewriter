@@ -317,14 +317,10 @@ extension on skir.CatalogPresentationSubject {
     final target = codec.decodeType(this.target);
     final descriptorType = codec.decodeType(descriptor.rootType);
     final descriptorValue = codec.decodeValue(descriptor.rootValue);
-    final identityType = codec.decodeType(identity.rootType);
-    final identityValue = codec.decodeValue(identity.rootValue);
     final diagnostics = [
       ...target.diagnostics,
       ...descriptorType.diagnostics,
       ...descriptorValue.diagnostics,
-      ...identityType.diagnostics,
-      ...identityValue.diagnostics,
     ];
     if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
     return TypeResult.success((
@@ -332,10 +328,6 @@ extension on skir.CatalogPresentationSubject {
       descriptor: TypedValueEnvelope(
         rootType: descriptorType.valueOrNull!,
         rootValue: descriptorValue.valueOrNull!,
-      ),
-      identity: TypedValueEnvelope(
-        rootType: identityType.valueOrNull!,
-        rootValue: identityValue.valueOrNull!,
       ),
     ));
   }

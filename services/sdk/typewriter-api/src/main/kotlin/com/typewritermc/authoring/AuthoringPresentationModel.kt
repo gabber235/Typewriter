@@ -47,7 +47,6 @@ data class ResourceIdentity(
 /** Describes one authored resource family for role presentations. */
 @TypewriterType(id = "da03c1ce637d4ee78c4916d304e57bf1")
 data class ResourceTypeDescriptor(
-    val type: ResolvedTypeRef,
     val name: String,
     val description: String,
     val icon: Icon,

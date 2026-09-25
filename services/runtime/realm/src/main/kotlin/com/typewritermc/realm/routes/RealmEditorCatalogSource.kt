@@ -282,7 +282,6 @@ private fun RealmDiscoverySnapshot.catalogTypes(prototypes: TypePrototypeRegistr
     elements.entries.map { it.descriptor.type } +
         listOf(
             prototypes.require(ResourceTypeDescriptor::class).type,
-            prototypes.require(ResolvedTypeRef::class).type,
         ) +
         pages.entries.map { it.presentationTarget }
 

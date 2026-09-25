@@ -25,7 +25,6 @@ import "./typed_value.dart" as _lib_editor_v1_typed_value;
 sealed class CatalogPresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get target;
   _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable get descriptor;
-  _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable get identity;
 
   CatalogPresentationSubject toFrozen();
 }
@@ -37,26 +36,18 @@ final class CatalogPresentationSubject
   final _lib_editor_v1_type_catalog.ResolvedTypeRef target;
   @_core.override
   final _lib_editor_v1_typed_value.TypedValueEnvelope descriptor;
-  @_core.override
-  final _lib_editor_v1_typed_value.TypedValueEnvelope identity;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogPresentationSubject({
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target,
     required _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable descriptor,
-    required _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable identity,
-  }) => CatalogPresentationSubject._(
-    target.toFrozen(),
-    descriptor.toFrozen(),
-    identity.toFrozen(),
-  );
+  }) => CatalogPresentationSubject._(target.toFrozen(), descriptor.toFrozen());
 
-  CatalogPresentationSubject._(this.target, this.descriptor, this.identity);
+  CatalogPresentationSubject._(this.target, this.descriptor);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogPresentationSubject._(
     _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_typed_value.TypedValueEnvelope.defaultInstance,
     _lib_editor_v1_typed_value.TypedValueEnvelope.defaultInstance,
   );
 
@@ -65,7 +56,6 @@ final class CatalogPresentationSubject
   static CatalogPresentationSubject_mutable mutable() =>
       CatalogPresentationSubject_mutable._(
         _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-        _lib_editor_v1_typed_value.TypedValueEnvelope.defaultInstance,
         _lib_editor_v1_typed_value.TypedValueEnvelope.defaultInstance,
       );
 
@@ -76,11 +66,7 @@ final class CatalogPresentationSubject
 
   /// Returns a mutable shallow copy of this instance.
   CatalogPresentationSubject_mutable toMutable() =>
-      CatalogPresentationSubject_mutable._(
-        this.target,
-        this.descriptor,
-        this.identity,
-      );
+      CatalogPresentationSubject_mutable._(this.target, this.descriptor);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -95,11 +81,7 @@ final class CatalogPresentationSubject
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.descriptor,
-    this.identity,
-  ];
+  _core.List get _equality_proxy => [this.target, this.descriptor];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -129,15 +111,6 @@ final class CatalogPresentationSubject
         (it) => it.descriptor,
         (it, v) => it.descriptor = v,
       );
-      _serializerBuilder.addField(
-        "identity",
-        "identity",
-        2,
-        _lib_editor_v1_typed_value.TypedValueEnvelope.serializer,
-        "",
-        (it) => it.identity,
-        (it, v) => it.identity = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -159,14 +132,9 @@ final class CatalogPresentationSubject_mutable
     implements CatalogPresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target;
   _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable descriptor;
-  _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable identity;
   _skir.internal__UnrecognizedFields? _u;
 
-  CatalogPresentationSubject_mutable._(
-    this.target,
-    this.descriptor,
-    this.identity,
-  );
+  CatalogPresentationSubject_mutable._(this.target, this.descriptor);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -192,23 +160,10 @@ final class CatalogPresentationSubject_mutable
     }
   }
 
-  /// If the value of [identity] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [identity] and returns it.
-  _lib_editor_v1_typed_value.TypedValueEnvelope_mutable get mutableIdentity {
-    final value = this.identity;
-    if (value is _lib_editor_v1_typed_value.TypedValueEnvelope_mutable) {
-      return value;
-    } else {
-      return this.identity =
-          (value as _lib_editor_v1_typed_value.TypedValueEnvelope).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   CatalogPresentationSubject toFrozen() => CatalogPresentationSubject(
     target: this.target,
     descriptor: this.descriptor,
-    identity: this.identity,
   ).._u = this._u;
 }
