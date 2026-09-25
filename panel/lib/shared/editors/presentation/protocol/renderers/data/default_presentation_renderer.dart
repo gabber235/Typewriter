@@ -2,10 +2,10 @@ part of "../../bound_value_renderer.dart";
 
 /// Resolves a type aware presentation while preserving the current binding.
 ///
-/// An explicit presentation id is preferred when it is compatible with the
-/// resolved type. Otherwise the type registry generates a default. Delegation
-/// is tracked in the scope and rejected when it would recurse, so malformed
-/// presentation definitions produce diagnostics instead of unbounded rendering.
+/// An explicit or type-owned editor is bound when its contract is valid.
+/// Generated controls serve types without an editor and read-only fields that
+/// cannot use one. Broken declarations and recursive delegation surface as
+/// field diagnostics.
 extension DefaultPresentationElementRendering on DefaultPresentationElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
     if (presentationId case final presentationId?
@@ -17,15 +17,20 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
         ),
       ]);
     }
-    final resolved = scope.resolve(binding);
+    final resolved = scope.inspect(binding);
     if (resolved case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
     }
     final resolvedBinding = resolved.valueOrNull!;
-    final selected = scope.resolvePresentation(
+    final selection = scope.resolvePresentation(
       resolvedBinding.type,
       presentationId,
+      scope.accessOf(binding),
     );
+    if (selection case TypeFailure(:final diagnostics)) {
+      return presentationDiagnostic(context, diagnostics);
+    }
+    final selected = selection.valueOrNull;
     Widget generated() => PresentationNodeRenderer(
       node: resolvedBinding.type.generateDefaultPresentation(
         binding: binding,
@@ -49,12 +54,17 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
 
     final input = selected.primaryInput;
     if (input == null) {
-      return generated();
+      return presentationDiagnostic(context, [
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidPresentation,
+          message: "Automatic editor has no primary input",
+        ),
+      ]);
     }
 
     final bound = scope.bindPresentation(selected, {input: binding});
-    if (bound is TypeFailure) {
-      return generated();
+    if (bound case TypeFailure(:final diagnostics)) {
+      return presentationDiagnostic(context, diagnostics);
     }
     return PresentationNodeRenderer(
       node: bound.valueOrNull!.$1,

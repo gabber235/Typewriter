@@ -54,7 +54,6 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
                 structuralOwner,
                 reference.path,
                 selectedType,
-                draft.payload,
               )
             : switch (selected?.presentation) {
                 final presentation? => PresentationNodeRenderer(
@@ -227,7 +226,6 @@ Widget _draftConcreteEditor(
   EditorStructureOwner owner,
   DataPath path,
   ResolvedTypeRef concreteType,
-  EditorValue payload,
 ) {
   const payloadBindingId = BindingId(2147483647);
   const payloadReference = BindingReference(bindingId: payloadBindingId);
@@ -238,10 +236,34 @@ Widget _draftConcreteEditor(
     revision: binding.revision,
     writable: binding.writable,
   );
-  final childScope = scope.withAlias(
+  final projectedScope = scope.withAlias(
     payloadBindingId,
-    element.control.binding,
+    payloadReference,
     source,
+  );
+  final childScope = projectedScope.copyWith(
+    inputAccess: {
+      ...projectedScope.inputAccess,
+      payloadBindingId: scope.accessOf(element.control.binding),
+    },
+    ownerBindings: {
+      ...projectedScope.ownerBindings,
+      payloadBindingId: scope.ownerReference(element.control.binding),
+    },
+    editOwnerFor: (reference) => reference.bindingId == payloadBindingId
+        ? owner
+        : scope.editOwnerFor?.call(reference),
+    startInteraction: (reference) => reference.bindingId == payloadBindingId
+        ? scope.beginInteraction(element.control.binding)
+        : scope.beginInteraction(reference),
+    setBinding: (reference, value, context, aliases) {
+      final destination = reference.canonicalizedWith(aliases);
+      if (destination.bindingId == payloadBindingId) {
+        owner.updateConcretePayloadAt(path, destination.path, value);
+      } else {
+        scope.setBinding(reference, value, context, aliases);
+      }
+    },
   );
   final selected = element.concreteTypes
       .where((candidate) => candidate.type == concreteType)
@@ -256,16 +278,12 @@ Widget _draftConcreteEditor(
       ),
     );
   }
-  return InspectedBinding(
-    reference: payloadReference,
-    type: NamedType(concreteType),
-    value: payload,
-    revision: binding.revision,
-    writable: binding.writable,
-  ).renderDefaultPresentation(
-    childScope,
-    nodeId: "polymorphic.${concreteType.id}",
-    root: true,
+  return PresentationNodeRenderer(
+    node: PresentationNode(
+      id: "polymorphic.${concreteType.id}",
+      element: const DefaultPresentationElement(binding: payloadReference),
+    ),
+    scope: childScope,
   );
 }
 

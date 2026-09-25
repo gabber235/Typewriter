@@ -135,7 +135,7 @@ final class _DraftMapInput extends StatelessWidget {
                     value: entry.key,
                     revision: binding.revision,
                     writable: binding.writable,
-                  ).renderDefaultPresentation(
+                  ).renderAutomaticPresentation(
                     childScope,
                     nodeId: "map.key.${entry.id.value}",
                     label: "Key",
@@ -168,7 +168,7 @@ final class _DraftMapInput extends StatelessWidget {
                     value: entry.value,
                     revision: binding.revision,
                     writable: binding.writable,
-                  ).renderDefaultPresentation(
+                  ).renderAutomaticPresentation(
                     childScope,
                     nodeId: "map.value.${entry.id.value}",
                     root: true,
@@ -404,7 +404,7 @@ class _MapInputState extends State<_MapInput> {
       value: entry.key,
       revision: binding.revision,
       writable: binding.writable,
-    ).renderDefaultPresentation(
+    ).renderAutomaticPresentation(
       childScope,
       nodeId: "map.key.${slot.identity.id}",
       label: "Key",
@@ -460,7 +460,7 @@ class _MapInputState extends State<_MapInput> {
       value: entry.value,
       revision: binding.revision,
       writable: binding.writable,
-    ).renderDefaultPresentation(
+    ).renderAutomaticPresentation(
       scope,
       nodeId: "map.value.${slot.identity.id}",
       root: true,

@@ -9,6 +9,31 @@ extension TypeExpressionPresentationInference on TypeExpression {
   }
 }
 
+/// Uses the same nominal and structural rules for catalog selection and
+/// invocation binding. Keeping both decisions here prevents a field from
+/// selecting a presentation that the invocation cannot bind.
+Map<String, TypeExpression>? inferPresentationInputSubstitutions(
+  TypeExpression expected,
+  TypeExpression actual,
+  TypeRegistry registry,
+) {
+  var inferred = expected.inferPresentationSubstitutions(actual);
+  inferred ??= inferNominalOrAncestorPresentationSubstitutions(
+    expected.bindingNominal(registry),
+    actual.bindingNominal(registry),
+    registry,
+  );
+  if (inferred == null && expected is! NamedType) {
+    final representation = actual.bindingRepresentation(registry);
+    inferred = expected.inferPresentationSubstitutions(representation);
+    if (inferred == null &&
+        representation.isStructurallyAssignableTo(expected, registry)) {
+      inferred = {};
+    }
+  }
+  return inferred;
+}
+
 /// Infers a presentation's type arguments from the actual type or one of its ancestors.
 Map<String, TypeExpression>? inferNominalOrAncestorPresentationSubstitutions(
   TypeExpression expected,

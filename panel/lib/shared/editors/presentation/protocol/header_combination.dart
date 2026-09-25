@@ -182,7 +182,13 @@ extension on DefaultPresentationElement {
   ) {
     final resolved = scope.resolve(binding).valueOrNull;
     if (resolved == null) return null;
-    final selected = scope.resolvePresentation(resolved.type, presentationId);
+    final selected = scope
+        .resolvePresentation(
+          resolved.type,
+          presentationId,
+          scope.accessOf(binding),
+        )
+        .valueOrNull;
     final child =
         selected?.root ??
         resolved.type.generateDefaultPresentation(
@@ -212,7 +218,9 @@ extension on PresentationInvocationElement {
   (PresentationNode, PresentationRenderScope)? _invokedChild(
     PresentationRenderScope scope,
   ) {
-    final definition = scope.resolvePresentation(null, presentationId);
+    final definition = scope
+        .resolvePresentation(null, presentationId, PresentationInputAccess.read)
+        .valueOrNull;
     if (definition == null ||
         scope.activePresentations.contains(presentationId)) {
       return null;

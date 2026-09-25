@@ -104,7 +104,8 @@ class _ComposedEditorState extends State<ComposedEditor> {
         _accept(_session.update(reference.canonicalizedWith(aliases), value));
       },
       executeAction: _execute,
-      resolvePresentation: (type, id) => _resolve(registry, type, id),
+      resolvePresentation: (type, id, access) =>
+          _resolve(registry, type, id, access),
     );
     final owners = <EditorSource>{
       for (final input in widget.model.inputs.values)
@@ -213,32 +214,44 @@ class _ComposedEditorState extends State<ComposedEditor> {
     );
   }
 
-  ResolvedPresentationDefinition? _resolve(
+  TypeResult<ResolvedPresentationDefinition?> _resolve(
     TypeRegistry registry,
     TypeExpression? type,
     PresentationId? id,
+    PresentationInputAccess access,
   ) {
-    final selected =
-        id ??
-        (type is NamedType
-            ? registry
-                  .resolveOptionalPresentationRole(
-                    type.reference,
-                    PresentationRole.editor,
-                  )
-                  .valueOrNull
-            : null);
-    final definition = widget.model.presentations
-        .where((value) => value.id == selected)
-        .firstOrNull;
-    if (definition == null) return null;
-
-    if (type != null && definition.inputs.length != 1) return null;
-    return ResolvedPresentationDefinition(
-      id: definition.id,
-      root: definition.root,
-      inputs: definition.inputs,
-      primaryInput: definition.primaryInput,
+    final selection = type == null
+        ? null
+        : selectAutomaticEditor(
+            registry: registry,
+            type: type,
+            presentations: widget.model.presentations,
+            access: access,
+            requested: id,
+          );
+    if (selection case TypeFailure(:final diagnostics)) {
+      return TypeResult.failure(diagnostics);
+    }
+    final definition = type == null
+        ? widget.model.presentations.where((item) => item.id == id).firstOrNull
+        : selection!.valueOrNull;
+    if (definition == null) {
+      return id == null || type != null
+          ? const TypeResult.success(null)
+          : TypeResult.failure([
+              const TypeDiagnostic(
+                code: TypeDiagnosticCode.invalidPresentation,
+                message: "Presentation is unavailable",
+              ),
+            ]);
+    }
+    return TypeResult.success(
+      ResolvedPresentationDefinition(
+        id: definition.id,
+        root: definition.root,
+        inputs: definition.inputs,
+        primaryInput: definition.primaryInput,
+      ),
     );
   }
 

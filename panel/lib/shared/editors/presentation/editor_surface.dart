@@ -43,29 +43,15 @@ class EditorSurface extends StatelessWidget {
     listenable: source,
     builder: (context, _) {
       if (source.document == null) return const SizedBox.shrink();
-      var model = PresentationModel.editor(
+      final model = PresentationModel.editor(
         owner: source,
+        path: path,
+        registry: registry,
         presentation: presentation,
         presentations: presentations,
         collections: collections,
         diagnostics: source.document!.diagnostics,
       );
-      if (path != DataPath.root) {
-        final type = source.rootType
-            .resolvePath(
-              path,
-              registry: registry ?? TypeRegistry(source.typeCatalog),
-            )
-            .valueOrNull;
-        if (type != null) {
-          model = model.copyWith(
-            inputs: {
-              const BindingId(0): PresentationInput.edit(source, path: path),
-            },
-            root: type.generateDefaultPresentation(),
-          );
-        }
-      }
       return ComposedEditor(
         model: model,
         host: host,

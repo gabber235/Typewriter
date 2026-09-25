@@ -141,13 +141,12 @@ final class _DefaultPresentationGenerator {
       element: TypedFieldElement(
         binding: binding,
         expectedType: field.type,
-        presentation: generate(
-          field.type,
-          binding,
-          "$id.control",
-          false,
-          field.name,
-        ),
+        presentation: field.type is NamedType
+            ? PresentationNode(
+                id: "$id.control",
+                element: DefaultPresentationElement(binding: binding),
+              )
+            : generate(field.type, binding, "$id.control", false, field.name),
       ),
     );
   }

@@ -26,7 +26,7 @@ PresentationRenderScope _scope(
   ownerBindings: ownerBindings,
   setBinding: (_, _, _, _) {},
   executeAction: (_, _, _) {},
-  resolvePresentation: (_, _) => null,
+  resolvePresentation: (_, _, _) => const TypeResult.success(null),
 );
 BindingSnapshot _text(String value, {bool writable = true}) => BindingSnapshot(
   type: const StringType(),
