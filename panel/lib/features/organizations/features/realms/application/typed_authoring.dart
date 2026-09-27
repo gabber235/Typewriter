@@ -46,9 +46,9 @@ abstract interface class TypedAuthoringSnapshot {
   skir.AuthoringOperation encodePreviewCommit(EditorCommit commit);
 }
 
-const resourceIdentityTypeId = TypeId.qualified(
-  namespace: "com.typewritermc.library",
-  name: "ResourceIdentity",
+// Matches the declared type id on com.typewritermc.authoring.ResourceIdentity.
+final resourceIdentityTypeId = TypeId.declared(
+  "214fdb63564640e5bc15c7524f6121ef",
 );
 
 /// Requests the exact catalog closure required to decode wire subjects.
