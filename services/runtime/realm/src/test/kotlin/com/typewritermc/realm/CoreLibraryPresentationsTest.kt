@@ -38,7 +38,11 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationDefinition
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.presentation.PresentationTextTone
 import skirout.editor.v1.presentation.SearchProvider
+import skirout.editor.v1.presentation.TextContent
 
 val CoreLibraryPresentationsTest by testSuite {
     test("discovered core declarations assemble editor and contextual roles") {
@@ -150,8 +154,19 @@ val CoreLibraryPresentationsTest by testSuite {
         (http.result.selectedValue.expression is Expression.RecordWrapper) shouldBe true
         (suggested.result.selectedValue.expression is Expression.RecordWrapper) shouldBe true
         (iconifySearch.customValue?.expression is Expression.RecordWrapper) shouldBe true
+        (iconifySearch.initialQuery != null) shouldBe true
         (iconifySearch.summary != null) shouldBe true
         (http.result.presentation.nodeId != suggested.result.presentation.nodeId) shouldBe true
+        val resultText = textContents(http.result.presentation)
+        resultText.size shouldBe 2
+        resultText.all {
+            it.paragraph.overflow == PresentationTextOverflow.CLIP && it.paragraph.tone == PresentationTextTone.PRIMARY
+        } shouldBe true
+        val summaryText = textContents(iconifySearch.summary!!)
+        summaryText.size shouldBe 1
+        summaryText.all {
+            it.paragraph.overflow == PresentationTextOverflow.CLIP && it.paragraph.tone == PresentationTextTone.PRIMARY
+        } shouldBe true
         resolveRole(catalog.types, prototypes.require(Book::class).type, PresentationRole.EDITOR) shouldBe
             PresentationId(CORE_NAMESPACE, "book.editor")
         resolveRole(catalog.types, prototypes.require(Tag::class).type, PresentationRole.EDITOR) shouldBe
@@ -213,6 +228,27 @@ private fun searchLeaf(provider: SearchProvider): SearchProvider =
         is SearchProvider.HistoryWrapper -> searchLeaf(provider.value.child)
         is SearchProvider.SectionWrapper -> searchLeaf(provider.value.child)
         else -> provider
+    }
+
+private fun textContents(node: PresentationNode): List<TextContent> =
+    when (val element = node.element) {
+        is PresentationElement.TextWrapper -> listOf(element.value)
+        is PresentationElement.ChildrenWrapper -> {
+            val children =
+                when (val layout = element.value) {
+                    is ChildrenElement.RowWrapper -> layout.value.children
+                    is ChildrenElement.ColumnWrapper -> layout.value.children
+                    else -> emptyList()
+                }
+            children.flatMap { child ->
+                when (child) {
+                    is AxisChild.FixedWrapper -> textContents(child.value)
+                    is AxisChild.FlexibleWrapper -> textContents(child.value.child)
+                    else -> emptyList()
+                }
+            }
+        }
+        else -> emptyList()
     }
 
 private const val CORE_NAMESPACE = "typewritermc:realm"

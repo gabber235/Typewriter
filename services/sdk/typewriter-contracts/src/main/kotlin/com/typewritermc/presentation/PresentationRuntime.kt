@@ -516,29 +516,7 @@ private class NodeCompiler(
                 presentationNode(
                     path,
                     PresentationElement.TextWrapper(
-                        TextContent(
-                            value = bindingExpression(node.value.type, inputId(node.value.input), node.value.fields),
-                            color = null,
-                            fontSize = null,
-                            fontWeight = null,
-                            fontItalic = null,
-                            fontOpticalSize = null,
-                            fontSlant = null,
-                            fontWidth = null,
-                            textAlignment = null,
-                            lineHeight = null,
-                            letterSpacing = null,
-                            decoration = null,
-                            semanticLabel = null,
-                            paragraph =
-                                TextParagraph(
-                                    maxLines = null,
-                                    overflow = PresentationTextOverflow.CLIP,
-                                    softWrap = true,
-                                    selectable = false,
-                                    tone = PresentationTextTone.PRIMARY,
-                                ),
-                        ),
+                        defaultTextContent(bindingExpression(node.value.type, inputId(node.value.input), node.value.fields)),
                     ),
                 )
             }
@@ -547,22 +525,7 @@ private class NodeCompiler(
                 presentationNode(
                     path,
                     PresentationElement.TextWrapper(
-                        TextContent(
-                            value = authoredExpression(node.value.authored),
-                            color = null,
-                            fontSize = null,
-                            fontWeight = null,
-                            fontItalic = null,
-                            fontOpticalSize = null,
-                            fontSlant = null,
-                            fontWidth = null,
-                            textAlignment = null,
-                            lineHeight = null,
-                            letterSpacing = null,
-                            decoration = null,
-                            semanticLabel = null,
-                            paragraph = defaultParagraph(),
-                        ),
+                        defaultTextContent(authoredExpression(node.value.authored)),
                     ),
                 )
             }
@@ -723,7 +686,7 @@ private class NodeCompiler(
                 missing =
                     presentationNode(
                         "$path.missing",
-                        PresentationElement.TextWrapper(TextContent.partial(value = stringExpression(node.missingLabel))),
+                        PresentationElement.TextWrapper(defaultTextContent(stringExpression(node.missingLabel))),
                     ),
                 loading = null,
             ),
@@ -957,7 +920,7 @@ private class NodeCompiler(
     ): PresentationNode {
         val label = collectionFieldExpression(collection, definition.rowBindingId.value, labelProperty)
         val color = collectionFieldExpression(collection, definition.rowBindingId.value, colorProperty)
-        val text = presentationNode("$path.label", PresentationElement.TextWrapper(TextContent.partial(value = label)))
+        val text = presentationNode("$path.label", PresentationElement.TextWrapper(defaultTextContent(label)))
         val adaptive =
             presentationNode(
                 "$path.adaptive",
@@ -1231,6 +1194,7 @@ private class NodeCompiler(
             },
             summary = { scope -> specification.summary?.let { searchLayout(it, "$path.summary", scope) } },
             customValue = { scope -> specification.customValue?.let { authoredExpression(it.authored, scope) } },
+            initialQuery = { scope -> specification.initialQuery?.let { authoredExpression(it.authored, scope) } },
         )
     }
 
@@ -1243,6 +1207,7 @@ private class NodeCompiler(
         provider: (SearchScope) -> SearchProvider,
         summary: (SearchScope) -> PresentationNode?,
         customValue: (SearchScope) -> TypedExpression?,
+        initialQuery: (SearchScope) -> TypedExpression? = { null },
     ): PresentationNode {
         val scope = SearchScope(allocateBindingId(), allocateBindingId(), allocateBindingId())
         return presentationNode(
@@ -1258,7 +1223,7 @@ private class NodeCompiler(
                     summary = summary(scope),
                     placeholder = placeholder?.let(::stringExpression),
                     customValue = customValue(scope),
-                    initialQuery = null,
+                    initialQuery = initialQuery(scope),
                 ),
             ),
         )
@@ -1416,7 +1381,7 @@ private class NodeCompiler(
             is SearchLayout.Text -> {
                 presentationNode(
                     path,
-                    PresentationElement.TextWrapper(TextContent.partial(value = authoredExpression(layout.value.authored, scope))),
+                    PresentationElement.TextWrapper(defaultTextContent(authoredExpression(layout.value.authored, scope))),
                 )
             }
 
@@ -1508,7 +1473,7 @@ private class NodeCompiler(
                         presentation =
                             presentationNode(
                                 "search-result:${node.capability.id.value}:$path",
-                                PresentationElement.TextWrapper(TextContent.partial(value = resultLabel)),
+                                PresentationElement.TextWrapper(defaultTextContent(resultLabel)),
                             ),
                         label = resultLabel,
                     )
@@ -1851,4 +1816,22 @@ private fun defaultParagraph(): TextParagraph =
         softWrap = true,
         selectable = false,
         tone = PresentationTextTone.PRIMARY,
+    )
+
+private fun defaultTextContent(value: TypedExpression): TextContent =
+    TextContent(
+        value = value,
+        color = null,
+        fontSize = null,
+        fontWeight = null,
+        fontItalic = null,
+        fontOpticalSize = null,
+        fontSlant = null,
+        fontWidth = null,
+        textAlignment = null,
+        lineHeight = null,
+        letterSpacing = null,
+        decoration = null,
+        semanticLabel = null,
+        paragraph = defaultParagraph(),
     )

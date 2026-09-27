@@ -213,6 +213,7 @@ internal data class AuthoredSearchInput<V : Any, R : Any>(
     val maximumExtent: Int,
     val result: SearchResultSpec<V>,
     val summary: SearchLayout?,
+    val initialQuery: PresentationExpression<String>?,
     val customValue: PresentationExpression<V>?,
     val provider: SearchProviderSpec<R>,
 )
@@ -233,6 +234,7 @@ class SearchInputBuilder<Value : Any, Result : Any> internal constructor(
 
     private var result: SearchResultSpec<Value>? = null
     private var summary: SearchLayout? = null
+    private var initialQuery: PresentationExpression<String>? = null
     private var customValue: PresentationExpression<Value>? = null
     private var provider: SearchProviderSpec<Result>? = null
 
@@ -253,14 +255,18 @@ class SearchInputBuilder<Value : Any, Result : Any> internal constructor(
         value: PresentationExpression<F>,
     ): SearchRecordField<T> = SearchRecordField(context.field(type, property.name).serializedName, value)
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any, F : Any> PresentationExpression<T>.field(property: KProperty1<T, F>): PresentationExpression<F> {
-        val fieldType = property.returnType.classifier as KClass<F>
-        return PresentationExpression(
+    inline fun <T : Any, reified F : Any> PresentationExpression<T>.field(property: KProperty1<T, F>): PresentationExpression<F> =
+        fieldTyped(property, F::class)
+
+    @PublishedApi
+    internal fun <T : Any, F : Any> PresentationExpression<T>.fieldTyped(
+        property: KProperty1<T, F>,
+        fieldType: KClass<F>,
+    ): PresentationExpression<F> =
+        PresentationExpression(
             fieldType,
             AuthoredExpression.Field(authored, context.field(type, property.name).serializedName, fieldType),
         )
-    }
 
     fun <T : Any> record(
         type: KClass<T>,
@@ -282,6 +288,11 @@ class SearchInputBuilder<Value : Any, Result : Any> internal constructor(
 
     fun summary(presentation: SearchLayoutBuilder.() -> Unit) {
         summary = SearchLayoutBuilder().apply(presentation).axis()
+    }
+
+    /** Text shown when editing begins; use a bound field for structured values. */
+    fun initialQuery(value: PresentationExpression<String>) {
+        initialQuery = value
     }
 
     fun customValue(value: PresentationExpression<Value>) {
@@ -335,6 +346,7 @@ class SearchInputBuilder<Value : Any, Result : Any> internal constructor(
             maximumExtent,
             checkNotNull(result) { "Search result mapping is required." },
             summary,
+            initialQuery,
             customValue,
             checkNotNull(provider) { "Search provider is required." },
         )

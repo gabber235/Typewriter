@@ -62,6 +62,7 @@ private fun iconifyEditor(context: PresentationBuildContext): PresentationSpec<I
                     }
                 }
                 val current = summaryValue.field(Icon.Iconify::value)
+                initialQuery(value.field(Icon.Iconify::value).expression())
                 val selectedPreview = summaryValue
                 summary {
                     row(spacing = 10.0) {
