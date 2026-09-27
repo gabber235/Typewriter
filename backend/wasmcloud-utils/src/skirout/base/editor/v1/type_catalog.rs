@@ -1621,7 +1621,7 @@ impl PresentationRole {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RolePresentation {
     pub role: PresentationRole,
-    pub presentation_id: PresentationId,
+    pub outcome: RolePresentationOutcome,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RolePresentation>>,
 }
@@ -1729,6 +1729,48 @@ impl FieldMergePolicy {
     pub fn serializer() -> crate::skir_client::Serializer<FieldMergePolicy> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(FieldMergePolicy::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum RolePresentationOutcome
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RolePresentationOutcome {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<RolePresentationOutcome>>),
+    Ready(Box<PresentationId>),
+    Rejected(String),
+}
+
+impl Default for RolePresentationOutcome {
+    fn default() -> Self {
+        RolePresentationOutcome::Unknown(None)
+    }
+}
+
+impl RolePresentationOutcome {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RolePresentationOutcome> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RolePresentationOutcome>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &RolePresentationOutcome| match x {
+                        RolePresentationOutcome::Unknown(_) => 0,
+                        RolePresentationOutcome::Ready(_) => 1,
+                        RolePresentationOutcome::Rejected(_) => 2,
+                    },
+                    |u| RolePresentationOutcome::Unknown(Some(u)),
+                    |x: &RolePresentationOutcome| match x { RolePresentationOutcome::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/type_catalog.skir",
+                    "RolePresentationOutcome",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RolePresentationOutcome> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(RolePresentationOutcome::_adapter())
     }
 }
 
@@ -2099,7 +2141,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RolePresentation> = RolePresentation::_adapter() as *const _ as *mut _;
                 (*a).add_field("role", 0, crate::skir_client::internal::enum_serializer_from_static(PresentationRole::_adapter()), "", |x: &RolePresentation| &x.role, |x: &mut RolePresentation, v| x.role = v);
-                (*a).add_field("presentation_id", 1, crate::skir_client::internal::struct_serializer_from_static(PresentationId::_adapter()), "", |x: &RolePresentation| &x.presentation_id, |x: &mut RolePresentation, v| x.presentation_id = v);
+                (*a).add_field("outcome", 1, crate::skir_client::internal::enum_serializer_from_static(RolePresentationOutcome::_adapter()), "", |x: &RolePresentation| &x.outcome, |x: &mut RolePresentation, v| x.outcome = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2111,6 +2153,12 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<FieldMergePolicy> = FieldMergePolicy::_adapter() as *const _ as *mut _;
                 (*a).add_field("field_path", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &FieldMergePolicy| &x.field_path, |x: &mut FieldMergePolicy, v| x.field_path = v);
                 (*a).add_field("strategy", 1, crate::skir_client::internal::enum_serializer_from_static(FieldMergeStrategy::_adapter()), "", |x: &FieldMergePolicy| &x.strategy, |x: &mut FieldMergePolicy, v| x.strategy = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<RolePresentationOutcome> = RolePresentationOutcome::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("ready", 1, 1, crate::skir_client::internal::struct_serializer_from_static(PresentationId::_adapter()), "", |v| RolePresentationOutcome::Ready(Box::new(v)), |x| match x { RolePresentationOutcome::Ready(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("rejected", 2, 2, crate::skir_client::Serializer::string(), "", |v| RolePresentationOutcome::Rejected(v), |x| match x { RolePresentationOutcome::Rejected(v) => v, _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

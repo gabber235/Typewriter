@@ -22,6 +22,7 @@ import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationEndpointDefinition
 import com.typewritermc.types.RelationEndpointSide
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
@@ -317,7 +318,7 @@ private fun RealmDiscoverySnapshot.closure(
         presentationIds.apply {
             discoveryCollector.definitions.forEach { definition ->
                 addAll(definition.namedPresentations.values)
-                addAll(definition.rolePresentations.values)
+                addAll(definition.rolePresentations.values.mapNotNull { (it as? RolePresentationStatus.Ready)?.id })
             }
         }
         presentationIds.mapNotNull(presentationsById::get).forEach { presentation ->

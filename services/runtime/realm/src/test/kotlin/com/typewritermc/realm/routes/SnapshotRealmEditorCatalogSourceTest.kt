@@ -160,7 +160,12 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                 definitions =
                     fixture.snapshot.types.definitions.map { definition ->
                         if (definition.id == fixture.leaf.id) {
-                            definition.copy(rolePresentations = mapOf(com.typewritermc.types.PresentationRole.EDITOR to presentationId))
+                            definition.copy(
+                                rolePresentations = mapOf(
+                                    com.typewritermc.types.PresentationRole.EDITOR to
+                                        com.typewritermc.types.RolePresentationStatus.Ready(presentationId),
+                                ),
+                            )
                         } else {
                             definition
                         }
@@ -177,6 +182,38 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
             ) as CatalogFetchResult.SuccessWrapper
 
         response.value.presentationDefinitions shouldBe listOf(presentation)
+    }
+
+    test("requested type retains a rejected role without requesting a missing definition") {
+        val fixture = catalogFixture()
+        val types =
+            fixture.snapshot.types.copy(
+                definitions =
+                    fixture.snapshot.types.definitions.map { definition ->
+                        if (definition.id == fixture.leaf.id) {
+                            definition.copy(
+                                rolePresentations = mapOf(
+                                    com.typewritermc.types.PresentationRole.EDITOR to
+                                        com.typewritermc.types.RolePresentationStatus.Rejected("builder failed"),
+                                ),
+                            )
+                        } else {
+                            definition
+                        }
+                    },
+            )
+        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.copy(types = types).editorCatalog() }
+
+        val response =
+            source.fetch(
+                emptyRequest(requestedTypes = listOf(SkirTypeCodec.encode(fixture.leaf.id).getOrThrow())),
+            ) as CatalogFetchResult.SuccessWrapper
+
+        response.value.presentationDefinitions shouldBe emptyList()
+        val returned =
+            SkirTypeCodec.decode(WireTypeCatalog.partial(definitions = response.value.typeDefinitions)).getOrThrow()
+        returned.definitions.single { it.id == fixture.leaf.id }.rolePresentations[com.typewritermc.types.PresentationRole.EDITOR] shouldBe
+            com.typewritermc.types.RolePresentationStatus.Rejected("builder failed")
     }
 
     test("successful fetch includes attributed presentation diagnostics") {

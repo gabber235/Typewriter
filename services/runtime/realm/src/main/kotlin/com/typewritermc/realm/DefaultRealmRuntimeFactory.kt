@@ -62,6 +62,7 @@ import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import org.slf4j.LoggerFactory
 import skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition
 import skirout.editor.v1.compiled_content.CompilationProjectionId
 import java.nio.file.Path
@@ -76,6 +77,8 @@ import kotlin.time.Duration.Companion.seconds
  * failure releases resources already acquired.
  */
 class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
+    private val logger = LoggerFactory.getLogger(DefaultRealmRuntimeFactory::class.java)
+
     /**
      * Reads the deployment package once, builds all Realm catalogs, and returns an inactive runtime.
      *
@@ -184,6 +187,16 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     capabilities = capabilityRegistry.descriptors,
                     collectionProjections = collectionProjections.definitions,
                 )
+            presentationCatalog.diagnostics.forEach { diagnostic ->
+                logger.atWarn()
+                    .addKeyValue("catalog.generation", assembled.discovery.generation.value)
+                    .addKeyValue("presentation.namespace", diagnostic.namespace.orEmpty())
+                    .addKeyValue("presentation.source_part", diagnostic.sourcePart.orEmpty())
+                    .addKeyValue("presentation.declaration", diagnostic.presentationName.orEmpty())
+                    .addKeyValue("presentation.code", diagnostic.code)
+                    .setCause(diagnostic.cause)
+                    .log("Presentation rejected: {}", diagnostic.message)
+            }
             val realmModule =
                 module {
                     single<OpenTelemetry> { context.host.openTelemetry }

@@ -296,9 +296,6 @@ private class TypewriterElementProcessor(
         }
         val rootProperties =
             successfulConversion.serializedProperties.filter { it.ownerType == element.reference }
-        if (element.descriptor.role == ContentRole.ELEMENT &&
-            !validateRequiredProperty(element, rootProperties, "name", String::class.qualifiedName!!)
-        ) return null
         val overrideDeclarations =
             successfulConversion.serializedProperties.mapNotNull { property ->
                 property.declaration.annotation<ContentSearch>()?.let { annotation ->
@@ -350,30 +347,6 @@ private class TypewriterElementProcessor(
             }
         val searchableElement = element.copy(descriptor = element.descriptor.copy(searchDefinition = searchDefinition))
         return GeneratedElement(searchableElement, graph, generatePrototype(searchableElement, graph))
-    }
-
-    private fun validateRequiredProperty(
-        element: ElementDeclaration,
-        properties: List<com.typewritermc.types.ksp.KspSerializedProperty>,
-        name: String,
-        expectedType: String,
-    ): Boolean {
-        val matches = properties.filter { it.serializedName == name }
-        val actualType =
-            matches
-                .singleOrNull()
-                ?.declaration
-                ?.type
-                ?.resolve()
-                ?.declaration
-                ?.qualifiedName
-                ?.asString()
-        if (actualType == expectedType) return true
-        logger.error(
-            "Typewriter elements must serialize '$name' as $expectedType.",
-            matches.singleOrNull()?.declaration ?: element.declaration,
-        )
-        return false
     }
 
     private fun generatePrototype(

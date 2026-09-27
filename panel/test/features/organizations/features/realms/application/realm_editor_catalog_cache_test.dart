@@ -412,7 +412,11 @@ RealmEditorCatalogFetched _catalogFetched(
         id: type,
         kind: NominalTypeKind.concrete,
         representation: representation,
-        rolePresentations: {PresentationRole.referenceSummary: presentation},
+        rolePresentations: {
+          PresentationRole.referenceSummary: RolePresentationStatus.ready(
+            presentation,
+          ),
+        },
       ),
     ]),
     generation: CatalogGeneration(generation),

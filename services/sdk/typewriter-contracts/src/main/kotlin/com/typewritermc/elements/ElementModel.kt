@@ -13,6 +13,7 @@ import com.typewritermc.types.Icon
 import com.typewritermc.types.Referenceable
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
+import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MetaSerializable
@@ -26,6 +27,7 @@ import kotlin.reflect.KClass
  * Resource identity lives outside the typed content. [ContentTypeId] identifies the schema. Runtime behavior is
  * supplied through separate facets.
  */
+@TypewriterRecordContract
 interface Element : Referenceable {
     val name: String
     val placement: Placement

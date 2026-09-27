@@ -119,8 +119,12 @@ RealmEditorCatalogSnapshot pageStoryPageCatalog(
           parents: [referenceResourceTypes.element],
           representation: _recordType(entry.value),
           rolePresentations: {
-            PresentationRole.graphNode: _storyRoleId(entry.key),
-            PresentationRole.inspectorHeader: _storyRoleId(entry.key),
+            PresentationRole.graphNode: RolePresentationStatus.ready(
+              _storyRoleId(entry.key),
+            ),
+            PresentationRole.inspectorHeader: RolePresentationStatus.ready(
+              _storyRoleId(entry.key),
+            ),
           },
         ),
     ],

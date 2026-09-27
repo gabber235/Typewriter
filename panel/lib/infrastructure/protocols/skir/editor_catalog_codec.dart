@@ -95,7 +95,12 @@ extension TypeCatalogWireEncoding on TypeCatalog {
             for (final entry in definition.rolePresentations.entries)
               wire.RolePresentation(
                 role: entry.key._encodeWire,
-                presentationId: entry.value._encodeWire,
+                outcome: switch (entry.value) {
+                  RolePresentationReady(:final id) =>
+                    wire.RolePresentationOutcome.wrapReady(id._encodeWire),
+                  RolePresentationRejected(:final message) =>
+                    wire.RolePresentationOutcome.wrapRejected(message),
+                },
               ),
           ],
           fieldMergePolicies: [
@@ -215,16 +220,32 @@ extension on wire.TypeDefinition {
         namedPresentations[value.name] = presentation;
       }
     }
-    final rolePresentations = <PresentationRole, PresentationId>{};
+    final rolePresentations = <PresentationRole, RolePresentationStatus>{};
     for (final association in value.rolePresentations) {
       final role = association.role._decodeDomain();
-      final presentation = association.presentationId._decodeDomain();
+      final outcome = switch (association.outcome) {
+        wire.RolePresentationOutcome_readyWrapper(:final value) =>
+          value._decodeDomain().mapValue<RolePresentationStatus>(
+            RolePresentationStatus.ready,
+          ),
+        wire.RolePresentationOutcome_rejectedWrapper(:final value) =>
+          value.isEmpty
+              ? invalidWire<RolePresentationStatus>(
+                  "Rejected presentation reason is empty",
+                )
+              : TypeResult<RolePresentationStatus>.success(
+                  RolePresentationStatus.rejected(value),
+                ),
+        _ => invalidWire<RolePresentationStatus>(
+          "Unknown role presentation outcome",
+        ),
+      };
       diagnostics
         ..addAll(role.diagnostics)
-        ..addAll(presentation.diagnostics);
+        ..addAll(outcome.diagnostics);
       final decodedRole = role.valueOrNull;
-      final decodedPresentation = presentation.valueOrNull;
-      if (decodedRole == null || decodedPresentation == null) continue;
+      final decodedOutcome = outcome.valueOrNull;
+      if (decodedRole == null || decodedOutcome == null) continue;
       if (rolePresentations.containsKey(decodedRole)) {
         diagnostics.add(
           invalidWire(
@@ -233,7 +254,7 @@ extension on wire.TypeDefinition {
         );
         continue;
       }
-      rolePresentations[decodedRole] = decodedPresentation;
+      rolePresentations[decodedRole] = decodedOutcome;
     }
 
     final fieldMergePolicies = <FieldMergePolicy>[];

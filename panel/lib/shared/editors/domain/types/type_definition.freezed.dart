@@ -13,6 +13,311 @@ part of 'type_definition.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$RolePresentationStatus {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RolePresentationStatus);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'RolePresentationStatus()';
+}
+
+
+}
+
+/// @nodoc
+class $RolePresentationStatusCopyWith<$Res>  {
+$RolePresentationStatusCopyWith(RolePresentationStatus _, $Res Function(RolePresentationStatus) __);
+}
+
+
+/// Adds pattern-matching-related methods to [RolePresentationStatus].
+extension RolePresentationStatusPatterns on RolePresentationStatus {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RolePresentationReady value)?  ready,TResult Function( RolePresentationRejected value)?  rejected,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case RolePresentationReady() when ready != null:
+return ready(_that);case RolePresentationRejected() when rejected != null:
+return rejected(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RolePresentationReady value)  ready,required TResult Function( RolePresentationRejected value)  rejected,}){
+final _that = this;
+switch (_that) {
+case RolePresentationReady():
+return ready(_that);case RolePresentationRejected():
+return rejected(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RolePresentationReady value)?  ready,TResult? Function( RolePresentationRejected value)?  rejected,}){
+final _that = this;
+switch (_that) {
+case RolePresentationReady() when ready != null:
+return ready(_that);case RolePresentationRejected() when rejected != null:
+return rejected(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PresentationId id)?  ready,TResult Function( String message)?  rejected,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case RolePresentationReady() when ready != null:
+return ready(_that.id);case RolePresentationRejected() when rejected != null:
+return rejected(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PresentationId id)  ready,required TResult Function( String message)  rejected,}) {final _that = this;
+switch (_that) {
+case RolePresentationReady():
+return ready(_that.id);case RolePresentationRejected():
+return rejected(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PresentationId id)?  ready,TResult? Function( String message)?  rejected,}) {final _that = this;
+switch (_that) {
+case RolePresentationReady() when ready != null:
+return ready(_that.id);case RolePresentationRejected() when rejected != null:
+return rejected(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class RolePresentationReady implements RolePresentationStatus {
+  const RolePresentationReady(this.id);
+
+
+ final  PresentationId id;
+
+/// Create a copy of RolePresentationStatus
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RolePresentationReadyCopyWith<RolePresentationReady> get copyWith => _$RolePresentationReadyCopyWithImpl<RolePresentationReady>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RolePresentationReady&&(identical(other.id, id) || other.id == id));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id);
+}
+
+@override
+String toString() {
+    return 'RolePresentationStatus.ready(id: $id)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RolePresentationReadyCopyWith<$Res> implements $RolePresentationStatusCopyWith<$Res> {
+  factory $RolePresentationReadyCopyWith(RolePresentationReady value, $Res Function(RolePresentationReady) _then) = _$RolePresentationReadyCopyWithImpl;
+@useResult
+$Res call({
+ PresentationId id
+});
+
+
+$PresentationIdCopyWith<$Res> get id;
+
+}
+/// @nodoc
+class _$RolePresentationReadyCopyWithImpl<$Res>
+    implements $RolePresentationReadyCopyWith<$Res> {
+  _$RolePresentationReadyCopyWithImpl(this._self, this._then);
+
+  final RolePresentationReady _self;
+  final $Res Function(RolePresentationReady) _then;
+
+/// Create a copy of RolePresentationStatus
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
+  return _then(RolePresentationReady(
+null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PresentationId,
+  ));
+}
+
+/// Create a copy of RolePresentationStatus
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationIdCopyWith<$Res> get id {
+
+  return $PresentationIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class RolePresentationRejected implements RolePresentationStatus {
+  const RolePresentationRejected(this.message);
+
+
+ final  String message;
+
+/// Create a copy of RolePresentationStatus
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RolePresentationRejectedCopyWith<RolePresentationRejected> get copyWith => _$RolePresentationRejectedCopyWithImpl<RolePresentationRejected>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RolePresentationRejected&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'RolePresentationStatus.rejected(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RolePresentationRejectedCopyWith<$Res> implements $RolePresentationStatusCopyWith<$Res> {
+  factory $RolePresentationRejectedCopyWith(RolePresentationRejected value, $Res Function(RolePresentationRejected) _then) = _$RolePresentationRejectedCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$RolePresentationRejectedCopyWithImpl<$Res>
+    implements $RolePresentationRejectedCopyWith<$Res> {
+  _$RolePresentationRejectedCopyWithImpl(this._self, this._then);
+
+  final RolePresentationRejected _self;
+  final $Res Function(RolePresentationRejected) _then;
+
+/// Create a copy of RolePresentationStatus
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(RolePresentationRejected(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$FieldMergePolicy {
 
  DataPath get path; FieldMergeStrategy get strategy;
@@ -588,7 +893,7 @@ $TypeExpressionCopyWith<$Res> get bound {
 /// @nodoc
 mixin _$TypeDefinition {
 
- ResolvedTypeRef get id; NominalTypeKind get kind; String? get displayName; String? get qualifiedName; String? get declarationOwner; TypeExpression get representation; List<TypeParameter> get parameters; List<ResolvedTypeRef> get parents; Map<String, PresentationId> get namedPresentations; Map<PresentationRole, PresentationId> get rolePresentations; List<FieldMergePolicy> get fieldMergePolicies; DataValue? get initialValue;
+ ResolvedTypeRef get id; NominalTypeKind get kind; String? get displayName; String? get qualifiedName; String? get declarationOwner; TypeExpression get representation; List<TypeParameter> get parameters; List<ResolvedTypeRef> get parents; Map<String, PresentationId> get namedPresentations; Map<PresentationRole, RolePresentationStatus> get rolePresentations; List<FieldMergePolicy> get fieldMergePolicies; DataValue? get initialValue;
 /// Create a copy of TypeDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -624,7 +929,7 @@ abstract mixin class $TypeDefinitionCopyWith<$Res>  {
   factory $TypeDefinitionCopyWith(TypeDefinition value, $Res Function(TypeDefinition) _then) = _$TypeDefinitionCopyWithImpl;
 @useResult
 $Res call({
- ResolvedTypeRef id, NominalTypeKind kind, String? displayName, String? qualifiedName, String? declarationOwner, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, Map<String, PresentationId> namedPresentations, Map<PresentationRole, PresentationId> rolePresentations, List<FieldMergePolicy> fieldMergePolicies, DataValue? initialValue
+ ResolvedTypeRef id, NominalTypeKind kind, String? displayName, String? qualifiedName, String? declarationOwner, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, Map<String, PresentationId> namedPresentations, Map<PresentationRole, RolePresentationStatus> rolePresentations, List<FieldMergePolicy> fieldMergePolicies, DataValue? initialValue
 });
 
 
@@ -653,7 +958,7 @@ as TypeExpression,parameters: null == parameters ? _self.parameters : parameters
 as List<TypeParameter>,parents: null == parents ? _self.parents : parents // ignore: cast_nullable_to_non_nullable
 as List<ResolvedTypeRef>,namedPresentations: null == namedPresentations ? _self.namedPresentations : namedPresentations // ignore: cast_nullable_to_non_nullable
 as Map<String, PresentationId>,rolePresentations: null == rolePresentations ? _self.rolePresentations : rolePresentations // ignore: cast_nullable_to_non_nullable
-as Map<PresentationRole, PresentationId>,fieldMergePolicies: null == fieldMergePolicies ? _self.fieldMergePolicies : fieldMergePolicies // ignore: cast_nullable_to_non_nullable
+as Map<PresentationRole, RolePresentationStatus>,fieldMergePolicies: null == fieldMergePolicies ? _self.fieldMergePolicies : fieldMergePolicies // ignore: cast_nullable_to_non_nullable
 as List<FieldMergePolicy>,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
 as DataValue?,
   ));
@@ -770,7 +1075,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, PresentationId> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, RolePresentationStatus> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TypeDefinition() when $default != null:
 return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.declarationOwner,_that.representation,_that.parameters,_that.parents,_that.namedPresentations,_that.rolePresentations,_that.fieldMergePolicies,_that.initialValue);case _:
@@ -791,7 +1096,7 @@ return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, PresentationId> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, RolePresentationStatus> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)  $default,) {final _that = this;
 switch (_that) {
 case _TypeDefinition():
 return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.declarationOwner,_that.representation,_that.parameters,_that.parents,_that.namedPresentations,_that.rolePresentations,_that.fieldMergePolicies,_that.initialValue);case _:
@@ -811,7 +1116,7 @@ return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, PresentationId> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ResolvedTypeRef id,  NominalTypeKind kind,  String? displayName,  String? qualifiedName,  String? declarationOwner,  TypeExpression representation,  List<TypeParameter> parameters,  List<ResolvedTypeRef> parents,  Map<String, PresentationId> namedPresentations,  Map<PresentationRole, RolePresentationStatus> rolePresentations,  List<FieldMergePolicy> fieldMergePolicies,  DataValue? initialValue)?  $default,) {final _that = this;
 switch (_that) {
 case _TypeDefinition() when $default != null:
 return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.declarationOwner,_that.representation,_that.parameters,_that.parents,_that.namedPresentations,_that.rolePresentations,_that.fieldMergePolicies,_that.initialValue);case _:
@@ -826,7 +1131,7 @@ return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.
 
 
 class _TypeDefinition implements TypeDefinition {
-  const _TypeDefinition({required this.id, required this.kind, this.displayName, this.qualifiedName, this.declarationOwner, this.representation = const AnyType(),  List<TypeParameter> parameters = const [],  List<ResolvedTypeRef> parents = const [],  Map<String, PresentationId> namedPresentations = const {},  Map<PresentationRole, PresentationId> rolePresentations = const {},  List<FieldMergePolicy> fieldMergePolicies = const [], this.initialValue}): _parameters = parameters,_parents = parents,_namedPresentations = namedPresentations,_rolePresentations = rolePresentations,_fieldMergePolicies = fieldMergePolicies;
+  const _TypeDefinition({required this.id, required this.kind, this.displayName, this.qualifiedName, this.declarationOwner, this.representation = const AnyType(),  List<TypeParameter> parameters = const [],  List<ResolvedTypeRef> parents = const [],  Map<String, PresentationId> namedPresentations = const {},  Map<PresentationRole, RolePresentationStatus> rolePresentations = const {},  List<FieldMergePolicy> fieldMergePolicies = const [], this.initialValue}): _parameters = parameters,_parents = parents,_namedPresentations = namedPresentations,_rolePresentations = rolePresentations,_fieldMergePolicies = fieldMergePolicies;
 
 
 @override final  ResolvedTypeRef id;
@@ -856,8 +1161,8 @@ class _TypeDefinition implements TypeDefinition {
   return EqualUnmodifiableMapView(_namedPresentations);
 }
 
- final  Map<PresentationRole, PresentationId> _rolePresentations;
-@override@JsonKey() Map<PresentationRole, PresentationId> get rolePresentations {
+ final  Map<PresentationRole, RolePresentationStatus> _rolePresentations;
+@override@JsonKey() Map<PresentationRole, RolePresentationStatus> get rolePresentations {
   if (_rolePresentations is EqualUnmodifiableMapView) return _rolePresentations;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_rolePresentations);
@@ -904,7 +1209,7 @@ abstract mixin class _$TypeDefinitionCopyWith<$Res> implements $TypeDefinitionCo
   factory _$TypeDefinitionCopyWith(_TypeDefinition value, $Res Function(_TypeDefinition) _then) = __$TypeDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- ResolvedTypeRef id, NominalTypeKind kind, String? displayName, String? qualifiedName, String? declarationOwner, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, Map<String, PresentationId> namedPresentations, Map<PresentationRole, PresentationId> rolePresentations, List<FieldMergePolicy> fieldMergePolicies, DataValue? initialValue
+ ResolvedTypeRef id, NominalTypeKind kind, String? displayName, String? qualifiedName, String? declarationOwner, TypeExpression representation, List<TypeParameter> parameters, List<ResolvedTypeRef> parents, Map<String, PresentationId> namedPresentations, Map<PresentationRole, RolePresentationStatus> rolePresentations, List<FieldMergePolicy> fieldMergePolicies, DataValue? initialValue
 });
 
 
@@ -933,7 +1238,7 @@ as TypeExpression,parameters: null == parameters ? _self._parameters : parameter
 as List<TypeParameter>,parents: null == parents ? _self._parents : parents // ignore: cast_nullable_to_non_nullable
 as List<ResolvedTypeRef>,namedPresentations: null == namedPresentations ? _self._namedPresentations : namedPresentations // ignore: cast_nullable_to_non_nullable
 as Map<String, PresentationId>,rolePresentations: null == rolePresentations ? _self._rolePresentations : rolePresentations // ignore: cast_nullable_to_non_nullable
-as Map<PresentationRole, PresentationId>,fieldMergePolicies: null == fieldMergePolicies ? _self._fieldMergePolicies : fieldMergePolicies // ignore: cast_nullable_to_non_nullable
+as Map<PresentationRole, RolePresentationStatus>,fieldMergePolicies: null == fieldMergePolicies ? _self._fieldMergePolicies : fieldMergePolicies // ignore: cast_nullable_to_non_nullable
 as List<FieldMergePolicy>,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
 as DataValue?,
   ));

@@ -19,9 +19,8 @@ void main() {
         fields: const {"name": TypeField(name: "name", type: StringType())},
       ),
       rolePresentations: const {
-        PresentationRole.editor: PresentationId(
-          namespace: "example",
-          name: "main",
+        PresentationRole.editor: RolePresentationStatus.ready(
+          PresentationId(namespace: "example", name: "main"),
         ),
       },
     ),
@@ -63,10 +62,19 @@ void main() {
       skir.TypeExpression_kind.recordWrapper,
     );
     expect(
-      encodedType.rolePresentations.single.presentationId.namespace,
+      (encodedType.rolePresentations.single.outcome
+              as skir.RolePresentationOutcome_readyWrapper)
+          .value
+          .namespace,
       "example",
     );
-    expect(encodedType.rolePresentations.single.presentationId.name, "main");
+    expect(
+      (encodedType.rolePresentations.single.outcome
+              as skir.RolePresentationOutcome_readyWrapper)
+          .value
+          .name,
+      "main",
+    );
 
     expect(encodedCatalog.decodeDomain().valueOrNull!.catalog, catalog);
 
@@ -123,5 +131,38 @@ void main() {
     );
     expect(encodedEnvelope.rootValue.kind, skir.TypedValue_kind.recordWrapper);
     expect(definitions.decodeEnvelope(encodedEnvelope).valueOrNull, envelope);
+  });
+
+  test("rejected role round trips and unknown outcome fails decoding", () {
+    final rejected = catalog.definitions.single.copyWith(
+      rolePresentations: const {
+        PresentationRole.editor: RolePresentationStatus.rejected(
+          "coreIconifyEditor failed",
+        ),
+      },
+    );
+    final encoded = TypeCatalog([rejected]).encodeWire().valueOrNull!;
+    expect(
+      (encoded.definitions.single.rolePresentations.single.outcome
+              as skir.RolePresentationOutcome_rejectedWrapper)
+          .value,
+      "coreIconifyEditor failed",
+    );
+    expect(
+      encoded.decodeDomain().valueOrNull!.catalog.definitions.single,
+      rejected,
+    );
+
+    final malformed = encoded.definitions.single.toMutable()
+      ..rolePresentations = [
+        skir.RolePresentation(
+          role: skir.PresentationRole.editor,
+          outcome: skir.RolePresentationOutcome.unknown,
+        ),
+      ];
+    final decoded = skir.TypeCatalog(definitions: [malformed.toFrozen()])
+        .decodeDomain();
+    expect(decoded, isA<TypeFailure<DecodedTypeCatalog>>());
+    expect(decoded.diagnostics.single.message, contains("Unknown role"));
   });
 }

@@ -16,10 +16,12 @@ import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.library.CoreResourceDefinitionIds
 import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.CatalogMetadataTypePrototype
+import com.typewritermc.types.Icon
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.PresentationId
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
@@ -132,6 +134,9 @@ val CoreLibraryPresentationsTest by testSuite {
         )
 
         catalog.diagnostics shouldBe emptyList()
+        definition(catalog.types, prototypes.require(Icon.Iconify::class).type)
+            .rolePresentations[PresentationRole.EDITOR] shouldBe
+            RolePresentationStatus.Ready(PresentationId(CORE_NAMESPACE, "icon.iconify.editor"))
         val iconify = catalog.definitions.single { it.presentationId.name == "icon.iconify.editor" }
         val iconifyChildren = (iconify.root.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
         val iconifyNode = (iconifyChildren.value.children.single() as AxisChild.FixedWrapper).value
@@ -260,7 +265,7 @@ private fun resolveRole(
         val current = frontier - visited
         visited += current
         current
-            .mapNotNull { reference -> definition(catalog, reference).rolePresentations[role] }
+            .mapNotNull { reference -> (definition(catalog, reference).rolePresentations[role] as? RolePresentationStatus.Ready)?.id }
             .distinct()
             .singleOrNull()
             ?.let { return it }

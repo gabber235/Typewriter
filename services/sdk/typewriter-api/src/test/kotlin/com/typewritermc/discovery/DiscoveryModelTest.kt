@@ -16,6 +16,7 @@ import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -55,6 +56,41 @@ val DiscoveryModelTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             TypeContributionAssembler.assemble(listOf(contribution("first", first), contribution("second", second)))
         }
+    }
+
+    test("active concrete type with a renamed inherited field fails staging") {
+        val parent = abstractDefinition("example", "Page").copy(
+            representation = TypeExpression.Record(listOf(TypeField("name", TypeExpression.StringType()))),
+        )
+        val concrete = TypeDefinition(
+            id = ResolvedTypeRef(TypeId.Qualified("example", "BrokenPage"), 1),
+            kind = NominalTypeKind.CONCRETE,
+            parents = listOf(parent.id),
+            representation = TypeExpression.Record(listOf(TypeField("display_name", TypeExpression.StringType()))),
+        )
+        val origin = ArtifactId("example:extension")
+        val contribution = KeyedTypeContribution(
+            ContributionKey(origin, "common", ProducerId("types"), ContributionName("declared.cbor")),
+            TypeDiscoveryContribution(
+                definitions = listOf(parent, concrete),
+                prototypeBindings = listOf(
+                    PrototypeBinding(concrete.id, "example.BrokenPage", "example.BrokenPagePrototype", setOf(DiscoveryDomains.Realm)),
+                ),
+                executableBindings = emptyList(),
+            ),
+        )
+
+        val failure = shouldThrow<IllegalArgumentException> {
+            TypeContributionAssembler.assemble(listOf(contribution))
+        }
+        failure.message?.contains("Page") shouldBe true
+        failure.message?.contains("name") shouldBe true
+
+        val inactive = TypeContributionAssembler.assemble(
+            listOf(contribution),
+            listOf(SourcePartCatalogEntry(origin, "common", Eligibility.Ineligible(listOf("Not selected.")))),
+        )
+        inactive.prototypeBindings shouldBe emptyList()
     }
 
     test("capability source part eligibility follows the selected engine graph") {

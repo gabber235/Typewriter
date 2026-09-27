@@ -242,7 +242,7 @@ enum PresentationRole(810100030) {
 
 struct RolePresentation(810100031) {
   role: PresentationRole = 0;
-  presentation_id: PresentationId = 1;
+  outcome: RolePresentationOutcome = 1;
 }
 
 enum FieldMergeStrategy(810100032) {
@@ -256,6 +256,13 @@ struct FieldMergePolicy(810100033) {
   // cycle between type definitions, typed map keys, and general data paths.
   field_path: [string] = 0;
   strategy: FieldMergeStrategy = 1;
+}
+
+// A declared role has one usable presentation or one rejection. Absence from
+// role_presentations means no declaration claimed the role.
+enum RolePresentationOutcome(810100034) {
+  ready: PresentationId = 1;
+  rejected: string = 2;
 }
 
 struct TypeDefinition(810100026) {

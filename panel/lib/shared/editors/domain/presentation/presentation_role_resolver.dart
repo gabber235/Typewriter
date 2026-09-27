@@ -11,21 +11,25 @@ extension PresentationRoleResolution on TypeRegistry {
     ResolvedTypeRef actual,
     PresentationRole role,
   ) {
-    final result = resolveOptionalPresentationRole(actual, role);
+    final result = resolveOptionalPresentationRoleStatus(actual, role);
     if (result case TypeFailure(:final diagnostics)) {
       return TypeResult.failure(diagnostics);
     }
-    final presentation = result.valueOrNull;
-    return presentation == null
-        ? _roleFailure(
-            "Presentation role '${role.name}' is unavailable for '$actual'",
-            actual,
-          )
-        : TypeResult.success(presentation);
+    return switch (result.valueOrNull) {
+      RolePresentationReady(:final id) => TypeResult.success(id),
+      RolePresentationRejected(:final message) => _roleFailure(
+        "Presentation role '${role.name}' is rejected for '$actual': $message",
+        actual,
+      ),
+      null => _roleFailure(
+        "Presentation role '${role.name}' is unavailable for '$actual'",
+        actual,
+      ),
+    };
   }
 
-  /// Returns null when no ancestor supplies the role and fails on ambiguity.
-  TypeResult<PresentationId?> resolveOptionalPresentationRole(
+  /// Returns null only when no ancestor declares the role; fails on ambiguity.
+  TypeResult<RolePresentationStatus?> resolveOptionalPresentationRoleStatus(
     ResolvedTypeRef actual,
     PresentationRole role,
   ) {
@@ -54,7 +58,10 @@ extension PresentationRoleResolution on TypeRegistry {
       if (matches.length > 1) {
         return _roleFailure(
           "Presentation role '${role.name}' is ambiguous for '$actual': "
-          "${matches.map((id) => '${id.namespace}/${id.name}').join(', ')}",
+          "${matches.map((status) => switch (status) {
+            RolePresentationReady(:final id) => '${id.namespace}/${id.name}',
+            RolePresentationRejected(:final message) => 'rejected: $message',
+          }).join(', ')}",
           actual,
         );
       }

@@ -30,7 +30,11 @@ void main() {
             kind: NominalTypeKind.concrete,
             representation: const ParameterType("T"),
             parameters: const [TypeParameter(name: "T")],
-            rolePresentations: const {PresentationRole.editor: presentationId},
+            rolePresentations: const {
+              PresentationRole.editor: RolePresentationStatus.ready(
+                presentationId,
+              ),
+            },
           ),
         ]),
         presentations: [
@@ -78,7 +82,9 @@ void main() {
             id: root,
             kind: NominalTypeKind.concrete,
             representation: const StringType(),
-            rolePresentations: const {PresentationRole.editor: id},
+            rolePresentations: const {
+              PresentationRole.editor: RolePresentationStatus.ready(id),
+            },
           ),
         ]),
         presentations: [
@@ -175,21 +181,7 @@ void main() {
             ),
           ),
           typeCatalog: receivedRealmCatalog(),
-          presentations: [
-            PresentationDefinition.single(
-              id: presentationId,
-              target: NamedType(standardTypeRefs.iconifyIcon),
-              root: PresentationNode(
-                id: "iconify",
-                element: TextInputElement(
-                  control: BoundControl(
-                    binding: _rootBinding.at(DataPath.root.field("value")),
-                  ),
-                  multiline: false,
-                ),
-              ),
-            ),
-          ],
+          presentations: [_iconifySearchPresentation(presentationId)],
           presentation: PresentationNode(
             id: "icon",
             element: PolymorphicInputElement(
@@ -205,8 +197,14 @@ void main() {
         ),
       );
 
-      expect(find.byType(TextFormField), findsOneWidget);
-      expect(find.text("mdi:account"), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              widget.properties.label == "Activate search input",
+        ),
+        findsOneWidget,
+      );
     },
   );
 
@@ -216,11 +214,6 @@ void main() {
     const presentationId = PresentationId(
       namespace: "typewritermc:realm",
       name: "icon.iconify.editor",
-    );
-    const candidate = BindingReference(bindingId: BindingId(12));
-    const identifier = TypedExpression(
-      resultType: StringType(),
-      expression: BindingExpression(candidate),
     );
     const book = ResolvedTypeRef(
       id: QualifiedTypeId(namespace: "test", name: "Book"),
@@ -261,38 +254,7 @@ void main() {
           binding: _rootBinding.at(DataPath.root.field("icon")),
         ),
       ),
-      presentations: [
-        PresentationDefinition.single(
-          id: presentationId,
-          target: NamedType(standardTypeRefs.iconifyIcon),
-          root: PresentationNode(
-            id: "iconify.search",
-            element: SearchInputElement(
-              control: const BoundControl(binding: _rootBinding),
-              selectionMode: SearchSelectionMode.single,
-              queryBindingId: const BindingId(10),
-              summaryBindingId: const BindingId(11),
-              maximumExtent: 260.0.asFloatLiteral,
-              provider: SearchProvider.staticValues(
-                values: const ListValue([StringValue("mdi:star")])
-                    .asLiteral(const ListType(element: StringType())),
-                result: SearchResultMapping(
-                  bindingId: const BindingId(12),
-                  key: identifier,
-                  selectedValue: TypedExpression(
-                    resultType: NamedType(standardTypeRefs.iconifyIcon),
-                    expression: RecordExpression({"value": identifier}),
-                  ),
-                  presentation: const PresentationNode(
-                    id: "result",
-                    element: TextElement(identifier),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+      presentations: [_iconifySearchPresentation(presentationId)],
     );
     expect(
       selectAutomaticEditor(
@@ -347,6 +309,103 @@ void main() {
     expect(find.byType(TextFormField), findsNothing);
   });
 
+  testWidgets("rejected Iconify editor shows its failure at the field", (
+    tester,
+  ) async {
+    final base = receivedRealmCatalog();
+    final iconify = base.definitions.singleWhere(
+      (definition) => definition.id == standardTypeRefs.iconifyIcon,
+    );
+    final catalog = receivedRealmCatalog([
+      iconify.copyWith(
+        rolePresentations: const {
+          PresentationRole.editor: RolePresentationStatus.rejected(
+            "coreIconifyEditor: Kotlin reflection implementation is not found",
+          ),
+        },
+      ),
+    ]);
+
+    await tester.pumpTestApp(
+      child: EditorProtocolRenderer(
+        envelope: TypedValueEnvelope(
+          rootType: standardTypeRefs.iconifyIcon,
+          rootValue: RecordValue({
+            "value": const StringValue("material-symbols:book"),
+          }),
+        ),
+        typeCatalog: catalog,
+      ),
+    );
+
+    expect(find.textContaining("coreIconifyEditor"), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+  });
+
+  testWidgets("Book creation keeps a rejected Iconify editor visible", (
+    tester,
+  ) async {
+    const book = ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: "BookWithIcon"),
+      revision: 1,
+    );
+    final base = receivedRealmCatalog();
+    final iconify = base.definitions.singleWhere(
+      (definition) => definition.id == standardTypeRefs.iconifyIcon,
+    );
+    final catalog = receivedRealmCatalog([
+      iconify.copyWith(
+        rolePresentations: const {
+          PresentationRole.editor: RolePresentationStatus.rejected(
+            "coreIconifyEditor failed",
+          ),
+        },
+      ),
+      TypeDefinition(
+        id: book,
+        kind: NominalTypeKind.concrete,
+        representation: RecordType(
+          fields: {
+            "icon": TypeField(
+              name: "icon",
+              type: NamedType(standardTypeRefs.icon),
+            ),
+          },
+        ),
+      ),
+    ]);
+    final draft = CreationDraft.fromMaterialized(
+      rootType: const NamedType(book),
+      value: RecordValue({
+        "icon": PolymorphicValue(
+          concreteType: standardTypeRefs.iconifyIcon,
+          value: RecordValue({
+            "value": const StringValue("material-symbols:book"),
+          }),
+        ),
+      }),
+      registry: TypeRegistry(catalog),
+    );
+    addTearDown(draft.dispose);
+
+    await tester.pumpTestApp(
+      child: ComposedEditor(
+        model: PresentationModel.editor(
+          owner: draft,
+          presentation: PresentationNode(
+            id: "book.create",
+            element: DefaultPresentationElement(
+              binding: _rootBinding.at(DataPath.root.field("icon")),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.textContaining("coreIconifyEditor failed"), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+  });
+
   test("automatic editor rejects a multi-input contract", () {
     const id = PresentationId(namespace: "test", name: "multi");
     final type = ResolvedTypeRef(
@@ -359,7 +418,9 @@ void main() {
           id: type,
           kind: NominalTypeKind.concrete,
           representation: const StringType(),
-          rolePresentations: const {PresentationRole.editor: id},
+          rolePresentations: const {
+            PresentationRole.editor: RolePresentationStatus.ready(id),
+          },
         ),
       ]),
     );
@@ -391,6 +452,26 @@ void main() {
       result.diagnostics.single.code,
       TypeDiagnosticCode.invalidPresentation,
     );
+  });
+
+  test("editable value without a declared editor uses generated fields", () {
+    final catalog = receivedRealmCatalog();
+    final iconify = catalog.definitions.singleWhere(
+      (definition) => definition.id == standardTypeRefs.iconifyIcon,
+    );
+    final registry = TypeRegistry(
+      receivedRealmCatalog([iconify.copyWith(rolePresentations: const {})]),
+    );
+
+    final result = selectAutomaticEditor(
+      registry: registry,
+      type: NamedType(standardTypeRefs.iconifyIcon),
+      access: PresentationInputAccess.edit,
+      presentations: const [],
+    );
+
+    expect(result, isA<TypeSuccess<PresentationDefinition?>>());
+    expect(result.valueOrNull, isNull);
   });
 
   test(
@@ -429,6 +510,43 @@ void main() {
 }
 
 const _rootBinding = BindingReference(bindingId: BindingId(0));
+
+PresentationDefinition _iconifySearchPresentation(PresentationId id) {
+  const identifier = TypedExpression(
+    resultType: StringType(),
+    expression: BindingExpression(BindingReference(bindingId: BindingId(12))),
+  );
+  return PresentationDefinition.single(
+    id: id,
+    target: NamedType(standardTypeRefs.iconifyIcon),
+    root: PresentationNode(
+      id: "iconify.search",
+      element: SearchInputElement(
+        control: const BoundControl(binding: _rootBinding),
+        selectionMode: SearchSelectionMode.single,
+        queryBindingId: const BindingId(10),
+        summaryBindingId: const BindingId(11),
+        maximumExtent: 260.0.asFloatLiteral,
+        provider: SearchProvider.staticValues(
+          values: const ListValue([StringValue("mdi:star")])
+              .asLiteral(const ListType(element: StringType())),
+          result: SearchResultMapping(
+            bindingId: const BindingId(12),
+            key: identifier,
+            selectedValue: TypedExpression(
+              resultType: NamedType(standardTypeRefs.iconifyIcon),
+              expression: RecordExpression({"value": identifier}),
+            ),
+            presentation: const PresentationNode(
+              id: "result",
+              element: TextElement(identifier),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
 
 EditorProtocolRenderer _renderer({
   required TypeExpression type,

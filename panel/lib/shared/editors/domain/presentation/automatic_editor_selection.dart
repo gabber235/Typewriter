@@ -19,14 +19,23 @@ TypeResult<PresentationDefinition?> selectAutomaticEditor({
     ids.add(requested);
   } else if (type is NamedType) {
     for (final role in roles) {
-      final association = registry.resolveOptionalPresentationRole(
+      final association = registry.resolveOptionalPresentationRoleStatus(
         type.reference,
         role,
       );
       if (association case TypeFailure(:final diagnostics)) {
         return TypeResult.failure(diagnostics);
       }
-      if (association.valueOrNull case final id?) ids.add(id);
+      switch (association.valueOrNull) {
+        case RolePresentationReady(:final id):
+          ids.add(id);
+        case RolePresentationRejected(:final message):
+          if (access == PresentationInputAccess.edit) {
+            return _invalidEditor(message, type);
+          }
+        case null:
+          break;
+      }
     }
   }
 

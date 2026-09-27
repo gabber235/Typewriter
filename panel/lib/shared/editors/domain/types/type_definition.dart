@@ -22,6 +22,16 @@ enum PresentationRole {
   inspectorHeader,
 }
 
+/// A declared role is usable or rejected. An absent map entry means no claim.
+@freezed
+sealed class RolePresentationStatus with _$RolePresentationStatus {
+  const factory RolePresentationStatus.ready(PresentationId id) =
+      RolePresentationReady;
+
+  const factory RolePresentationStatus.rejected(String message) =
+      RolePresentationRejected;
+}
+
 /// Closed field reconciliation strategies understood by the editor.
 enum FieldMergeStrategy { setMembership }
 
@@ -63,7 +73,8 @@ abstract class TypeDefinition with _$TypeDefinition {
     @Default([]) List<TypeParameter> parameters,
     @Default([]) List<ResolvedTypeRef> parents,
     @Default({}) Map<String, PresentationId> namedPresentations,
-    @Default({}) Map<PresentationRole, PresentationId> rolePresentations,
+    @Default({})
+    Map<PresentationRole, RolePresentationStatus> rolePresentations,
     @Default([]) List<FieldMergePolicy> fieldMergePolicies,
     DataValue? initialValue,
   }) = _TypeDefinition;

@@ -122,7 +122,9 @@ void main() {
             id: _rootType,
             kind: NominalTypeKind.concrete,
             representation: RecordType(fields: {}),
-            rolePresentations: const {PresentationRole.editor: missingId},
+            rolePresentations: const {
+              PresentationRole.editor: RolePresentationStatus.ready(missingId),
+            },
           ),
         ]),
         generation: const CatalogGeneration("1"),
@@ -271,7 +273,9 @@ void main() {
             "message": TypeField(name: "message", type: StringType()),
           },
         ),
-        rolePresentations: {PresentationRole.editor: presentationId},
+        rolePresentations: {
+          PresentationRole.editor: RolePresentationStatus.ready(presentationId),
+        },
       ),
     ]);
     final presentation = PresentationDefinition.single(

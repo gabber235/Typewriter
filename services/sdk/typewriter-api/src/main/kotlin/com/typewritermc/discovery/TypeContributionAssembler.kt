@@ -2,6 +2,7 @@ package com.typewritermc.discovery
 
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.RelationId
+import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
@@ -109,8 +110,14 @@ object TypeContributionAssembler {
             }
         }
 
+        val catalog = TypeCatalog(definitions.values.sortedBy { it.id.toString() })
+        val concreteTypes = catalog.definitions.filter { it.kind == NominalTypeKind.CONCRETE }.mapTo(mutableSetOf()) { it.id }
+        val violations = catalog.fieldContractViolations(
+            prototypeBindings.values.map { it.type }.filterTo(mutableSetOf()) { it in concreteTypes },
+        )
+        require(violations.isEmpty()) { violations.joinToString("; ") }
         return AssembledTypeDiscovery(
-            catalog = TypeCatalog(definitions.values.sortedBy { it.id.toString() }),
+            catalog = catalog,
             relations = relations.values.sortedBy { it.id.value },
             prototypeBindings = prototypeBindings.values.sortedBy { it.type.toString() },
             executableBindings =

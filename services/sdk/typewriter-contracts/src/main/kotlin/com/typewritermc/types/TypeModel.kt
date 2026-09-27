@@ -43,6 +43,14 @@ annotation class TypewriterType(
     val revision: Int = 1,
 )
 
+/**
+ * Declares that abstract properties are required serialized fields of every concrete implementation.
+ * A concrete implementation must store each field under the same wire name with an assignable type.
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class TypewriterRecordContract
+
 /** Declares that a Kotlin type uses a logical string serializer in Typewriter data. */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -422,6 +430,22 @@ enum class PresentationRole {
     INSPECTOR_HEADER,
 }
 
+/** A claimed semantic role is either usable or rejected; no map entry means no claim. */
+@Serializable
+sealed interface RolePresentationStatus {
+    @Serializable
+    @SerialName("ready")
+    data class Ready(val id: PresentationId) : RolePresentationStatus
+
+    @Serializable
+    @SerialName("rejected")
+    data class Rejected(val message: String) : RolePresentationStatus {
+        init {
+            require(message.isNotBlank()) { "A rejected presentation needs a reason." }
+        }
+    }
+}
+
 /** Addresses a nested value while retaining field, list, and map identity. */
 @Serializable
 data class DataPath(
@@ -514,7 +538,7 @@ data class TypeDefinition(
     val displayName: String = id.displayName,
     val qualifiedName: String? = null,
     val outgoingConversionIds: List<ConversionId> = emptyList(),
-    val rolePresentations: Map<PresentationRole, PresentationId> = emptyMap(),
+    val rolePresentations: Map<PresentationRole, RolePresentationStatus> = emptyMap(),
     val fieldMergePolicies: List<FieldMergePolicy> = emptyList(),
     val declarationOwner: String = defaultDeclarationOwner(id),
     val initialValue: DataValue? = null,
@@ -583,6 +607,71 @@ data class TypeCatalog(
             .sortedBy { it.id.stableSortKey }
     }
 
+    /** Resolves stored record fields together with fields promised by nominal parents. */
+    fun effectiveRecordFields(reference: ResolvedTypeRef): List<TypeField> =
+        effectiveFields(reference, emptySet()).values.map(EffectiveField::field)
+
+    /** Reports concrete stored fields that fail an inherited abstract record contract. */
+    fun fieldContractViolations(activeTypes: Set<ResolvedTypeRef>): List<FieldContractViolation> {
+        val byId = definitions.associateBy(TypeDefinition::id)
+        return activeTypes.sortedBy(ResolvedTypeRef::stableSortKey).flatMap { concrete ->
+            val definition = byId[concrete.copy(arguments = emptyList())]
+                ?: error("Unknown concrete type $concrete.")
+            require(definition.kind == NominalTypeKind.CONCRETE) { "Type $concrete is not concrete." }
+            val stored = (definition.representation as? TypeExpression.Record)?.fields.orEmpty().associateBy(TypeField::name)
+            inheritedFields(concrete, emptySet()).values.flatMap { required ->
+                val actual = stored[required.field.name]?.type
+                if (actual != null && isAssignableExactly(actual, required.field.type)) {
+                    emptyList()
+                } else {
+                    listOf(FieldContractViolation(concrete, required.owner, required.field.name, required.field.type, actual))
+                }
+            }
+        }
+    }
+
+    private fun effectiveFields(
+        reference: ResolvedTypeRef,
+        visited: Set<ResolvedTypeRef>,
+    ): LinkedHashMap<String, EffectiveField> {
+        require(reference !in visited) { "Cyclic type inheritance at $reference." }
+        val definition = requireNotNull(definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }) {
+            "Unknown type $reference."
+        }
+        val inherited = inheritedFields(reference, visited)
+        val bindings = definition.parameters.mapIndexedNotNull { index, parameter ->
+            reference.arguments.getOrNull(index)?.let { parameter.name to it }
+        }.toMap()
+        (definition.representation as? TypeExpression.Record)?.fields?.forEach { field ->
+            val resolved = field.copy(type = field.type.resolveTypeBindings(bindings))
+            val previous = inherited[resolved.name]
+            require(previous == null || isAssignableExactly(resolved.type, previous.field.type)) {
+                "Field ${resolved.name} on $reference does not refine the inherited type."
+            }
+            inherited[resolved.name] = EffectiveField(reference, resolved)
+        }
+        return inherited
+    }
+
+    private fun inheritedFields(
+        reference: ResolvedTypeRef,
+        visited: Set<ResolvedTypeRef>,
+    ): LinkedHashMap<String, EffectiveField> {
+        val definition = requireNotNull(definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }) {
+            "Unknown type $reference."
+        }
+        val bindings = definition.parameters.mapIndexedNotNull { index, parameter ->
+            reference.arguments.getOrNull(index)?.let { parameter.name to it }
+        }.toMap()
+        val fields = linkedMapOf<String, EffectiveField>()
+        definition.parents.forEach { parent ->
+            effectiveFields(parent.resolveTypeBindings(bindings), visited + reference).values.forEach { field ->
+                fields.mergeInheritedField(this, reference, field)
+            }
+        }
+        return fields
+    }
+
     /** Returns whether a candidate named type can be used where the target type is required. */
     fun isAssignableExactly(
         candidate: TypeExpression,
@@ -627,6 +716,35 @@ data class TypeCatalog(
         val definitionsById = definitions.associateBy(TypeDefinition::id)
         return isAssignableExactly(candidate, target, definitionsById, emptySet())
     }
+}
+
+private data class EffectiveField(val owner: ResolvedTypeRef, val field: TypeField)
+
+private fun MutableMap<String, EffectiveField>.mergeInheritedField(
+    catalog: TypeCatalog,
+    reference: ResolvedTypeRef,
+    candidate: EffectiveField,
+) {
+    val previous = this[candidate.field.name]
+    require(previous == null || catalog.isAssignableExactly(candidate.field.type, previous.field.type) ||
+        catalog.isAssignableExactly(previous.field.type, candidate.field.type)) {
+        "Conflicting inherited field ${candidate.field.name} on $reference from ${previous?.owner} and ${candidate.owner}."
+    }
+    if (previous == null || catalog.isAssignableExactly(candidate.field.type, previous.field.type)) {
+        this[candidate.field.name] = candidate
+    }
+}
+
+/** A concrete wire record does not satisfy a field promised by an abstract parent. */
+data class FieldContractViolation(
+    val concrete: ResolvedTypeRef,
+    val owner: ResolvedTypeRef,
+    val field: String,
+    val expected: TypeExpression,
+    val actual: TypeExpression?,
+) {
+    override fun toString(): String =
+        "$concrete violates $owner.$field: expected stored field $field of type $expected, found ${actual ?: "no field"}."
 }
 
 private fun isAssignableExactly(

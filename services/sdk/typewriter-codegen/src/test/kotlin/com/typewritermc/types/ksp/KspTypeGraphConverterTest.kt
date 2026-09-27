@@ -8,6 +8,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
@@ -163,6 +164,104 @@ val KspTypeGraphConverterTest by testSuite {
         result.serializedProperties.single().serializedName shouldBe "wire_name"
         val definition = result.graph.definitions.single()
         (definition.representation as TypeExpression.Record).fields.single().name shouldBe "wire_name"
+    }
+
+    test("marked interface properties become inherited record fields") {
+        val contract = classDeclaration(
+            "example.Page",
+            listOf(annotation("com.typewritermc.types.TypewriterRecordContract")),
+        )
+        every { contract.classKind } returns ClassKind.INTERFACE
+        val name = property("name", classType("kotlin.String"), hasBackingField = false)
+        every { name.getter } returns mockk<KSPropertyGetter> {
+            every { modifiers } returns setOf(Modifier.ABSTRACT)
+        }
+        every { contract.declarations } returns sequenceOf(name)
+        val entry = classDeclaration("example.SpecialPage")
+        every { entry.classKind } returns ClassKind.INTERFACE
+        every { entry.superTypes } returns sequenceOf(mockk { every { resolve() } returns type(contract) })
+
+        val result = KspTypeGraphConverter().convert(type(entry)) as KspTypeConversionResult.Success
+        val catalog = com.typewritermc.types.TypeCatalog(result.graph.definitions)
+        val parent = result.graph.definitions.single { it.displayName == "Page" }
+
+        (parent.representation as TypeExpression.Record).fields.map(TypeField::name) shouldBe listOf("name")
+        catalog.effectiveRecordFields((result.graph.root as TypeExpression.Named).reference).map(TypeField::name) shouldBe
+            listOf("name")
+    }
+
+    test("computed getter on a marked interface is not a stored field contract") {
+        val contract = classDeclaration(
+            "example.Page",
+            listOf(annotation("com.typewritermc.types.TypewriterRecordContract")),
+        )
+        every { contract.classKind } returns ClassKind.INTERFACE
+        val computed = property("label", classType("kotlin.String"), hasBackingField = false)
+        every { computed.getter } returns mockk<KSPropertyGetter> {
+            every { modifiers } returns emptySet()
+        }
+        every { contract.declarations } returns sequenceOf(computed)
+
+        val result = KspTypeGraphConverter().convert(type(contract)) as KspTypeConversionResult.Success
+
+        (result.graph.definitions.single().representation as TypeExpression.Record).fields shouldBe emptyList()
+    }
+
+    test("unmarked interface properties do not become stored fields") {
+        val interfaceType = classDeclaration("example.ViewOnly")
+        every { interfaceType.classKind } returns ClassKind.INTERFACE
+        val name = property("name", classType("kotlin.String"), hasBackingField = false)
+        every { name.getter } returns mockk<KSPropertyGetter> {
+            every { modifiers } returns setOf(Modifier.ABSTRACT)
+        }
+        every { interfaceType.declarations } returns sequenceOf(name)
+        every { interfaceType.getAllProperties() } returns sequenceOf(name)
+
+        val result = KspTypeGraphConverter().convert(type(interfaceType)) as KspTypeConversionResult.Success
+
+        (result.graph.definitions.single().representation as TypeExpression.Record).fields shouldBe emptyList()
+    }
+
+    test("renamed concrete field fails its inherited wire contract") {
+        val contract = classDeclaration(
+            "example.Page",
+            listOf(annotation("com.typewritermc.types.TypewriterRecordContract")),
+        )
+        every { contract.classKind } returns ClassKind.INTERFACE
+        every { contract.declarations } returns sequenceOf(
+            property("name", classType("kotlin.String"), modifiers = setOf(Modifier.ABSTRACT), hasBackingField = false),
+        )
+        val concrete = classDeclaration("example.BrokenPage")
+        every { concrete.superTypes } returns sequenceOf(mockk { every { resolve() } returns type(contract) })
+        every { concrete.getAllProperties() } returns sequenceOf(
+            property("name", classType("kotlin.String"), annotations =
+                listOf(annotation("kotlinx.serialization.SerialName", "display_name"))),
+        )
+
+        val result = KspTypeGraphConverter().convert(type(concrete)) as KspTypeConversionResult.Failure
+
+        result.diagnostics.single().message.contains("display_name") shouldBe true
+        result.diagnostics.single().message.contains("name") shouldBe true
+    }
+
+    test("computed concrete getter cannot satisfy an inherited stored field") {
+        val contract = classDeclaration(
+            "example.Element",
+            listOf(annotation("com.typewritermc.types.TypewriterRecordContract")),
+        )
+        every { contract.classKind } returns ClassKind.INTERFACE
+        every { contract.declarations } returns sequenceOf(
+            property("name", classType("kotlin.String"), modifiers = setOf(Modifier.ABSTRACT), hasBackingField = false),
+        )
+        val concrete = classDeclaration("example.BrokenElement")
+        every { concrete.superTypes } returns sequenceOf(mockk { every { resolve() } returns type(contract) })
+        every { concrete.getAllProperties() } returns sequenceOf(
+            property("name", classType("kotlin.String"), hasBackingField = false),
+        )
+
+        val result = KspTypeGraphConverter().convert(type(concrete)) as KspTypeConversionResult.Failure
+
+        result.diagnostics.single().message.contains("name") shouldBe true
     }
 
     test("function types return a diagnostic instead of throwing") {

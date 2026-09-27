@@ -440,14 +440,18 @@ bool editorCatalogContractsCompatible(
       }
     }
     for (final role in PresentationRole.values) {
-      final beforeRole = beforeTypes
-          .resolvePresentationRole(type, role)
-          .valueOrNull;
-      final afterRole = afterTypes
-          .resolvePresentationRole(type, role)
-          .valueOrNull;
+      final beforeRole = beforeTypes.resolveOptionalPresentationRoleStatus(
+        type,
+        role,
+      );
+      final afterRole = afterTypes.resolveOptionalPresentationRoleStatus(
+        type,
+        role,
+      );
       if (beforeRole != afterRole) return false;
-      if (beforeRole != null) presentationIds.add(beforeRole);
+      if (beforeRole.valueOrNull case RolePresentationReady(:final id)) {
+        presentationIds.add(id);
+      }
     }
   }
   for (final presentation in presentationIds) {

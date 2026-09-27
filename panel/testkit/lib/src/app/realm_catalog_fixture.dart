@@ -112,7 +112,11 @@ final _realmDefinitions = <TypeDefinition>[
     id: standardTypeRefs.color,
     kind: NominalTypeKind.concrete,
     representation: const IntegerType(width: IntegerWidth.unsigned32),
-    rolePresentations: {PresentationRole.editor: _colorPresentationId},
+    rolePresentations: {
+      PresentationRole.editor: RolePresentationStatus.ready(
+        _colorPresentationId,
+      ),
+    },
   ),
   TypeDefinition(
     id: standardTypeRefs.icon,
@@ -127,7 +131,11 @@ final _realmDefinitions = <TypeDefinition>[
     representation: const RecordType(
       fields: {"value": TypeField(name: "value", type: StringType())},
     ),
-    rolePresentations: {PresentationRole.editor: _iconifyPresentationId},
+    rolePresentations: {
+      PresentationRole.editor: RolePresentationStatus.ready(
+        _iconifyPresentationId,
+      ),
+    },
   ),
   TypeDefinition(
     id: standardTypeRefs.svgIcon,
@@ -137,7 +145,9 @@ final _realmDefinitions = <TypeDefinition>[
     representation: const RecordType(
       fields: {"source": TypeField(name: "source", type: StringType())},
     ),
-    rolePresentations: {PresentationRole.editor: _svgPresentationId},
+    rolePresentations: {
+      PresentationRole.editor: RolePresentationStatus.ready(_svgPresentationId),
+    },
   ),
 ];
 

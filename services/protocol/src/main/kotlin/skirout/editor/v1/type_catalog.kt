@@ -7112,7 +7112,7 @@ sealed class PresentationRole private constructor() {
 
 sealed interface RolePresentation_OrMutable {
     val role: skirout.editor.v1.type_catalog.PresentationRole;
-    val presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable;
+    val outcome: skirout.editor.v1.type_catalog.RolePresentationOutcome;
 
     fun toFrozen(): skirout.editor.v1.type_catalog.RolePresentation;
 }
@@ -7121,7 +7121,7 @@ sealed interface RolePresentation_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RolePresentation private constructor(
     override val role: skirout.editor.v1.type_catalog.PresentationRole,
-    override val presentationId: skirout.editor.v1.type_catalog.PresentationId,
+    override val outcome: skirout.editor.v1.type_catalog.RolePresentationOutcome,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RolePresentation>? =
         null,
 ): skirout.editor.v1.type_catalog.RolePresentation_OrMutable {
@@ -7129,12 +7129,12 @@ class RolePresentation private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         role: skirout.editor.v1.type_catalog.PresentationRole,
-        presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable,
+        outcome: skirout.editor.v1.type_catalog.RolePresentationOutcome,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RolePresentation>? =
             null,
     ): this(
         role,
-        presentationId.toFrozen(),
+        outcome,
         _unrecognizedFields,
     ) {}
 
@@ -7144,7 +7144,7 @@ class RolePresentation private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         role = this.role,
-        presentationId = this.presentationId,
+        outcome = this.outcome,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -7153,11 +7153,11 @@ class RolePresentation private constructor(
             _MustNameArguments,
         role: skirout.editor.v1.type_catalog.PresentationRole =
             this.role,
-        presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable =
-            this.presentationId,
+        outcome: skirout.editor.v1.type_catalog.RolePresentationOutcome =
+            this.outcome,
     ) = skirout.editor.v1.type_catalog.RolePresentation(
         role,
-        presentationId.toFrozen(),
+        outcome,
         this._unrecognizedFields,
     );
 
@@ -7165,11 +7165,11 @@ class RolePresentation private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.RolePresentation && this.role == other.role && this.presentationId == other.presentationId);
+        return this === other || (other is skirout.editor.v1.type_catalog.RolePresentation && this.role == other.role && this.outcome == other.outcome);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.role, this.presentationId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.role, this.outcome).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -7185,40 +7185,24 @@ class RolePresentation private constructor(
             _MustNameArguments,
         override var role: skirout.editor.v1.type_catalog.PresentationRole =
             skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN,
-        override var presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable =
-            skirout.editor.v1.type_catalog.PresentationId.partial(),
+        override var outcome: skirout.editor.v1.type_catalog.RolePresentationOutcome =
+            skirout.editor.v1.type_catalog.RolePresentationOutcome.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RolePresentation>? =
             null,
     ): skirout.editor.v1.type_catalog.RolePresentation_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.type_catalog.RolePresentation(
             role = this.role,
-            presentationId = this.presentationId,
+            outcome = this.outcome,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [presentationId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [presentationId] and returns it.
-         */
-        val mutablePresentationId: skirout.editor.v1.type_catalog.PresentationId.Mutable get() {
-            var value = this.presentationId;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.PresentationId -> {
-                    value = value.toMutable();
-                    this.presentationId = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.PresentationId.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.type_catalog.RolePresentation(
                 skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN,
-                skirout.editor.v1.type_catalog.PresentationId.partial(),
+                skirout.editor.v1.type_catalog.RolePresentationOutcome.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -7234,11 +7218,11 @@ class RolePresentation private constructor(
                 _MustNameArguments,
             role: skirout.editor.v1.type_catalog.PresentationRole =
                 skirout.editor.v1.type_catalog.PresentationRole.UNKNOWN,
-            presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable =
-                skirout.editor.v1.type_catalog.PresentationId.partial(),
+            outcome: skirout.editor.v1.type_catalog.RolePresentationOutcome =
+                skirout.editor.v1.type_catalog.RolePresentationOutcome.UNKNOWN,
         ) = skirout.editor.v1.type_catalog.RolePresentation(
             role = role,
-            presentationId = presentationId,
+            outcome = outcome,
             _unrecognizedFields = null,
         );
 
@@ -7269,13 +7253,13 @@ class RolePresentation private constructor(
                 { mut, v -> mut.role = v },
             );
             serializerImpl.addField(
-                "presentation_id",
-                "presentationId",
+                "outcome",
+                "outcome",
                 1,
-                skirout.editor.v1.type_catalog.PresentationId.serializer,
+                skirout.editor.v1.type_catalog.RolePresentationOutcome.serializer,
                 "",
-                { it.presentationId },
-                { mut, v -> mut.presentationId = v },
+                { it.outcome },
+                { mut, v -> mut.outcome = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -7549,6 +7533,144 @@ class FieldMergePolicy private constructor(
                 { mut, v -> mut.strategy = v },
             );
             serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class RolePresentationOutcome private constructor() {
+    /** The kind of variant held by a `RolePresentationOutcome`. */
+    enum class Kind {
+        UNKNOWN,
+        READY_WRAPPER,
+        REJECTED_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.RolePresentationOutcome.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.RolePresentationOutcome>?,
+    ) : skirout.editor.v1.type_catalog.RolePresentationOutcome() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.RolePresentationOutcome && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ReadyWrapper private constructor (
+        val value: skirout.editor.v1.type_catalog.PresentationId,
+    ) : skirout.editor.v1.type_catalog.RolePresentationOutcome() {
+        constructor(
+            value: skirout.editor.v1.type_catalog.PresentationId_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.READY_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.RolePresentationOutcome.ReadyWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 108386723;
+        }
+    }
+
+    class RejectedWrapper(
+        val value: kotlin.String,
+    ) : skirout.editor.v1.type_catalog.RolePresentationOutcome() {
+        override val kind get() = Kind.REJECTED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.RolePresentationOutcome.RejectedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -608496514;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.type_catalog.RolePresentationOutcome>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.RolePresentationOutcome._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [RolePresentationOutcome].
+         * Default value for fields of type [RolePresentationOutcome].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ReadyWrapper(skirout.editor.v1.type_catalog.PresentationId(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReady(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            namespace: kotlin.String,
+            name: kotlin.String,
+        ) = ReadyWrapper(
+            skirout.editor.v1.type_catalog.PresentationId(
+                namespace = namespace,
+                name = name,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.RolePresentationOutcome, Unknown>(
+                recordId = "editor/v1/type_catalog.skir:RolePresentationOutcome",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [RolePresentationOutcome] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [RolePresentationOutcome] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "ready",
+                    Kind.READY_WRAPPER.ordinal,
+                    skirout.editor.v1.type_catalog.PresentationId.serializer,
+                    "",
+                    { ReadyWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "rejected",
+                    Kind.REJECTED_WRAPPER.ordinal,
+                    build.skir.Serializers.string,
+                    "",
+                    { RejectedWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
         }
     }
 }

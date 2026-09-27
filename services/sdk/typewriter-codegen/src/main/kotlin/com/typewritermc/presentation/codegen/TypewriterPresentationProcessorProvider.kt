@@ -8,6 +8,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -22,6 +23,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.typewritermc.codegen.annotation
 import com.typewritermc.codegen.getSymbolsWithAnnotation
@@ -36,6 +38,7 @@ import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationSpec
 import com.typewritermc.presentation.TypewriterPresentation
 import com.typewritermc.types.PresentationRole
+import kotlin.reflect.KClass
 
 /**
  * KSP entrypoint generating [PresentationProvider] implementations and discovery bindings from annotated top level
@@ -91,8 +94,21 @@ private class TypewriterPresentationProcessor(
             logger.error("TypewriterPresentation functions must return PresentationSpec.", function)
             return null
         }
+        if (targetType(function) == null) {
+            logger.error("TypewriterPresentation functions must return PresentationSpec with a concrete target class.", function)
+            return null
+        }
         return function
     }
+
+    private fun targetType(function: KSFunctionDeclaration): KSClassDeclaration? =
+        function.returnType
+            ?.resolve()
+            ?.arguments
+            ?.singleOrNull()
+            ?.type
+            ?.resolve()
+            ?.declaration as? KSClassDeclaration
 
     private fun generate(function: KSFunctionDeclaration): ExecutableBinding {
         val functionName = function.simpleName.asString()
@@ -103,6 +119,7 @@ private class TypewriterPresentationProcessor(
         val moduleClass = ClassName(packageName, moduleName)
         val providerClass = ClassName(packageName, providerName)
         val annotation = requireNotNull(function.annotation<TypewriterPresentation>())
+        val targetType = requireNotNull(targetType(function))
         val provider =
             TypeSpec
                 .classBuilder(providerName)
@@ -127,6 +144,11 @@ private class TypewriterPresentationProcessor(
                     PropertySpec
                         .builder("declarationName", String::class, KModifier.OVERRIDE)
                         .initializer("%S", functionName)
+                        .build(),
+                ).addProperty(
+                    PropertySpec
+                        .builder("targetType", KClass::class.asClassName().parameterizedBy(STAR), KModifier.OVERRIDE)
+                        .initializer("%T::class", targetType.toClassName())
                         .build(),
                 ).addProperty(
                     PropertySpec

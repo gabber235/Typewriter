@@ -136,6 +136,9 @@ class TypePrototypeRegistry(
     private val definitionsByReference = definitions.associateBy(TypeDefinition::id)
     private val definitions = definitions.toList()
 
+    /** Structural definitions used by presentation binding and inherited field resolution. */
+    val catalog: TypeCatalog = TypeCatalog(this.definitions)
+
     init {
         require(byReference.size == all.size) { "Type prototype references must be unique." }
         require(byRuntimeType.size == all.size) {

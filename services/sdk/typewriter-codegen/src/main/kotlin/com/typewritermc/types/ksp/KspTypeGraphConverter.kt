@@ -14,6 +14,7 @@ import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Variance
 import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.FieldMergePolicy
 import com.typewritermc.types.FieldMergeStrategy
 import com.typewritermc.types.FloatWidth
@@ -50,20 +51,43 @@ class KspTypeGraphConverter(
         val context = ConversionContext(identityPolicy)
         val root = context.expression(type, listOf(type.displayName))
 
-        return if (root == null || context.diagnostics.isNotEmpty()) {
-            KspTypeConversionResult.Failure(context.diagnostics.toList())
-        } else {
-            KspTypeConversionResult.Success(
-                TypeGraph(
-                    root = root,
-                    definitions = context.definitions.values.sortedBy { it.id.sortKey },
-                ),
-                context.serializedProperties.sortedWith(
-                    compareBy<KspSerializedProperty> { it.ownerType.sortKey }.thenBy(KspSerializedProperty::serializedName),
-                ),
-                context.declarations.toMap(),
-            )
+        if (root == null || context.diagnostics.isNotEmpty()) {
+            return KspTypeConversionResult.Failure(context.diagnostics.toList())
         }
+        val graph = TypeGraph(root, context.definitions.values.sortedBy { it.id.sortKey })
+        val rootReference = (root as? TypeExpression.Named)?.reference
+        if (rootReference != null && graph.definitions.any {
+                it.id == rootReference.copy(arguments = emptyList()) && it.kind == NominalTypeKind.CONCRETE
+            }) {
+            val violations = try {
+                TypeCatalog(graph.definitions).fieldContractViolations(setOf(rootReference))
+            } catch (failure: IllegalArgumentException) {
+                return KspTypeConversionResult.Failure(
+                    listOf(KspTypeDiagnostic(listOf(rootReference.toString()), failure.message ?: "Invalid inherited record fields.")),
+                )
+            }
+            if (violations.isNotEmpty()) {
+                return KspTypeConversionResult.Failure(violations.map { violation ->
+                    val renamed = context.serializedProperties.firstOrNull { property ->
+                        property.ownerType == rootReference.copy(arguments = emptyList()) &&
+                            property.declaration.simpleName.asString() == violation.field &&
+                            property.serializedName != violation.field
+                    }
+                    KspTypeDiagnostic(
+                        listOf(rootReference.toString(), violation.owner.toString(), violation.field),
+                        if (renamed == null) violation.toString() else
+                            "${violation.concrete} serializes ${violation.owner}.${violation.field} as '${renamed.serializedName}'; the required wire field is '${violation.field}'.",
+                    )
+                })
+            }
+        }
+        return KspTypeConversionResult.Success(
+            graph,
+            context.serializedProperties.sortedWith(
+                compareBy<KspSerializedProperty> { it.ownerType.sortKey }.thenBy(KspSerializedProperty::serializedName),
+            ),
+            context.declarations.toMap(),
+        )
     }
 }
 
@@ -430,10 +454,28 @@ private class ConversionContext(
         identity: ResolvedTypeRef,
         path: List<String>,
     ): TypeExpression {
-        val fields =
+        val contract = declaration.hasAnnotation(TYPEWRITER_RECORD_CONTRACT_ANNOTATION)
+        if (contract && declaration.nominalKind == NominalTypeKind.CONCRETE) {
+            failure(path, "TypewriterRecordContract requires an abstract class or interface.")
+        }
+        val properties = if (contract) {
+            declaration.declarations.filterIsInstance<KSPropertyDeclaration>()
+                .filter { property ->
+                    property.extensionReceiver == null &&
+                        (property.isSerializedProperty || Modifier.ABSTRACT in property.modifiers ||
+                            Modifier.ABSTRACT in property.getter?.modifiers.orEmpty()) &&
+                        !property.isDelegated() && !property.hasAnnotation("kotlinx.serialization.Transient")
+                }.toList()
+        } else {
             orderedSerializedProperties(declaration)
+        }
+        val fields =
+            properties
                 .mapNotNull { property ->
                     val name = property.serialName ?: property.simpleName.asString()
+                    if (contract && name != property.simpleName.asString()) {
+                        failure(path + name, "Abstract record contract properties must keep their Kotlin name as the wire name.")
+                    }
                     expression(property.type.resolve(), path + name)?.let {
                         serializedProperties += KspSerializedProperty(identity, name, property)
                         TypeField(
@@ -539,6 +581,8 @@ private class ConversionContext(
         return null
     }
 }
+
+private const val TYPEWRITER_RECORD_CONTRACT_ANNOTATION = "com.typewritermc.types.TypewriterRecordContract"
 
 private val KSClassDeclaration.nominalKind: NominalTypeKind
     get() =

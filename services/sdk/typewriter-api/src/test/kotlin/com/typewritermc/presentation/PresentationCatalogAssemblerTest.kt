@@ -8,6 +8,7 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
@@ -456,7 +457,8 @@ val PresentationCatalogAssemblerTest by testSuite {
         catalog.types.definitions
             .single()
             .rolePresentations[PresentationRole.EDITOR]
-            ?.name shouldBe "editor"
+            .let { it as? RolePresentationStatus.Ready }
+            ?.id?.name shouldBe "editor"
         val root =
             catalog.definitions
                 .single()
@@ -471,6 +473,33 @@ val PresentationCatalogAssemblerTest by testSuite {
                 .single() as DataPathSegment.FieldWrapper
         field.value.fieldName shouldBe "wire_message"
         catalog.diagnostics shouldBe emptyList()
+    }
+
+    test("a builder failure retains its cause and rejects the declared editor role") {
+        val sample = prototype(Sample::class, "sample")
+        val prototypes = TypePrototypeRegistry(listOf(sample))
+        val valid =
+            context(PresentationBuildContext(prototypes)) {
+                presentation<Sample>("editor") { textInput(Sample::message) }
+            }
+        val failure = IllegalStateException("Kotlin reflection implementation is not found at runtime")
+        val failed =
+            object : PresentationProvider by provider("example", setOf(PresentationRole.EDITOR), specification = valid) {
+                override fun specification(context: PresentationBuildContext): PresentationSpec<*> = throw failure
+            }
+
+        val catalog =
+            PresentationCatalogAssembler.assemble(
+                providers = listOf(failed),
+                prototypes = prototypes,
+                types = TypeCatalog(listOf(sample.definition)),
+            )
+
+        catalog.definitions shouldBe emptyList()
+        catalog.diagnostics.single().cause shouldBe failure
+        catalog.diagnostics.single().target shouldBe sample.type
+        catalog.types.definitions.single().rolePresentations[PresentationRole.EDITOR] shouldBe
+            RolePresentationStatus.Rejected("editor: Kotlin reflection implementation is not found at runtime")
     }
 
     test("embedded wire trees assert duplicate descendant node ids") {
@@ -539,7 +568,8 @@ val PresentationCatalogAssemblerTest by testSuite {
         catalog.types.definitions
             .single()
             .rolePresentations[PresentationRole.EDITOR]
-            ?.namespace shouldBe "fallback"
+            .let { it as? RolePresentationStatus.Ready }
+            ?.id?.namespace shouldBe "fallback"
         catalog.diagnostics.map(PresentationDiagnostic::code) shouldContain "priority_tie"
     }
 
@@ -747,6 +777,7 @@ private fun provider(
         override val namespace = namespace
         override val sourcePart = "common"
         override val declarationName = specification.name
+        override val targetType = specification.target
         override val roles = roles
         override val priority = priority
 

@@ -5527,7 +5527,7 @@ enum _PresentationRole_consts implements PresentationRole {
 
 sealed class RolePresentation_orMutable {
   PresentationRole get role;
-  PresentationId_orMutable get presentationId;
+  RolePresentationOutcome get outcome;
 
   RolePresentation toFrozen();
 }
@@ -5537,27 +5537,27 @@ final class RolePresentation implements RolePresentation_orMutable {
   @_core.override
   final PresentationRole role;
   @_core.override
-  final PresentationId presentationId;
+  final RolePresentationOutcome outcome;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RolePresentation({
     required PresentationRole role,
-    required PresentationId_orMutable presentationId,
-  }) => RolePresentation._(role, presentationId.toFrozen());
+    required RolePresentationOutcome outcome,
+  }) => RolePresentation._(role, outcome);
 
-  RolePresentation._(this.role, this.presentationId);
+  RolePresentation._(this.role, this.outcome);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RolePresentation._(
     PresentationRole.unknown,
-    PresentationId.defaultInstance,
+    RolePresentationOutcome.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RolePresentation_mutable mutable() => RolePresentation_mutable._(
     PresentationRole.unknown,
-    PresentationId.defaultInstance,
+    RolePresentationOutcome.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -5567,7 +5567,7 @@ final class RolePresentation implements RolePresentation_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   RolePresentation_mutable toMutable() =>
-      RolePresentation_mutable._(this.role, this.presentationId);
+      RolePresentation_mutable._(this.role, this.outcome);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -5582,7 +5582,7 @@ final class RolePresentation implements RolePresentation_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.role, this.presentationId];
+  _core.List get _equality_proxy => [this.role, this.outcome];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -5601,13 +5601,13 @@ final class RolePresentation implements RolePresentation_orMutable {
         (it, v) => it.role = v,
       );
       _serializerBuilder.addField(
-        "presentation_id",
-        "presentationId",
+        "outcome",
+        "outcome",
         1,
-        PresentationId.serializer,
+        RolePresentationOutcome.serializer,
         "",
-        (it) => it.presentationId,
-        (it, v) => it.presentationId = v,
+        (it) => it.outcome,
+        (it, v) => it.outcome = v,
       );
       _serializerBuilder.finalize();
     }
@@ -5628,27 +5628,15 @@ final class RolePresentation implements RolePresentation_orMutable {
 /// Mutable version of [RolePresentation].
 final class RolePresentation_mutable implements RolePresentation_orMutable {
   PresentationRole role;
-  PresentationId_orMutable presentationId;
+  RolePresentationOutcome outcome;
   _skir.internal__UnrecognizedFields? _u;
 
-  RolePresentation_mutable._(this.role, this.presentationId);
-
-  /// If the value of [presentationId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [presentationId] and returns it.
-  PresentationId_mutable get mutablePresentationId {
-    final value = this.presentationId;
-    if (value is PresentationId_mutable) {
-      return value;
-    } else {
-      return this.presentationId = (value as PresentationId).toMutable();
-    }
-  }
+  RolePresentation_mutable._(this.role, this.outcome);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   RolePresentation toFrozen() =>
-      RolePresentation(role: this.role, presentationId: this.presentationId)
-        .._u = this._u;
+      RolePresentation(role: this.role, outcome: this.outcome).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5872,6 +5860,155 @@ final class FieldMergePolicy_mutable implements FieldMergePolicy_orMutable {
   FieldMergePolicy toFrozen() =>
       FieldMergePolicy(fieldPath: this.fieldPath, strategy: this.strategy)
         .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum RolePresentationOutcome
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case RolePresentationOutcome_unknown(): { ... }
+///     case RolePresentationOutcome_ready(:var value): { ... }
+///     case RolePresentationOutcome_rejected(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class RolePresentationOutcome {
+  /// Constant indicating an unknown `RolePresentationOutcome`.
+  /// Default value for fields of type `RolePresentationOutcome`.
+  static const RolePresentationOutcome unknown =
+      RolePresentationOutcome_unknown._instance;
+
+  /// Create a 'ready' variant wrapping around the given value.
+  factory RolePresentationOutcome.wrapReady(PresentationId value) =>
+      RolePresentationOutcome_readyWrapper._(value);
+
+  /// Same as `wrapReady(PresentationId(...))`.
+  factory RolePresentationOutcome.createReady({
+    required _core.String namespace,
+    required _core.String name,
+  }) => RolePresentationOutcome.wrapReady(
+    PresentationId(namespace: namespace, name: name),
+  );
+
+  /// Create a 'rejected' variant wrapping around the given value.
+  factory RolePresentationOutcome.wrapRejected(_core.String value) =>
+      RolePresentationOutcome_rejectedWrapper._(value);
+
+  /// Returns the kind of variant held by this RolePresentationOutcome.
+  RolePresentationOutcome_kind get kind;
+
+  /// Serializer for `RolePresentationOutcome` instances.
+  static _skir.EnumSerializer<RolePresentationOutcome> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "ready",
+        "wrapReady",
+        PresentationId.serializer,
+        "",
+        RolePresentationOutcome_readyWrapper._,
+        (it) => it.value,
+        ordinal: RolePresentationOutcome_kind.readyWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "rejected",
+        "wrapRejected",
+        _skir.Serializers.string,
+        "",
+        RolePresentationOutcome_rejectedWrapper._,
+        (it) => it.value,
+        ordinal: RolePresentationOutcome_kind.rejectedWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/type_catalog.skir:RolePresentationOutcome",
+        doc: "",
+        unknownInstance: RolePresentationOutcome_unknown._instance,
+        enumInstance: RolePresentationOutcome.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RolePresentationOutcome_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `RolePresentationOutcome`.
+enum RolePresentationOutcome_kind {
+  unknown(0),
+  readyWrapper(1),
+  rejectedWrapper(2);
+
+  final _core.int _ordinal;
+
+  const RolePresentationOutcome_kind(this._ordinal);
+}
+
+final class RolePresentationOutcome_unknown implements RolePresentationOutcome {
+  static const _instance = RolePresentationOutcome_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const RolePresentationOutcome_unknown._() : _u = null;
+  RolePresentationOutcome_unknown._unrecognized(this._u);
+
+  @_core.override
+  RolePresentationOutcome_kind get kind => RolePresentationOutcome_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is RolePresentationOutcome_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, RolePresentationOutcome.serializer);
+}
+
+sealed class _RolePresentationOutcome_wrapper
+    implements RolePresentationOutcome {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _RolePresentationOutcome_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, RolePresentationOutcome.serializer);
+}
+
+final class RolePresentationOutcome_readyWrapper
+    extends _RolePresentationOutcome_wrapper {
+  final PresentationId value;
+
+  RolePresentationOutcome_readyWrapper._(this.value);
+
+  @_core.override
+  RolePresentationOutcome_kind get kind =>
+      RolePresentationOutcome_kind.readyWrapper;
+}
+
+final class RolePresentationOutcome_rejectedWrapper
+    extends _RolePresentationOutcome_wrapper {
+  final _core.String value;
+
+  RolePresentationOutcome_rejectedWrapper._(this.value);
+
+  @_core.override
+  RolePresentationOutcome_kind get kind =>
+      RolePresentationOutcome_kind.rejectedWrapper;
 }
 
 // -----------------------------------------------------------------------------

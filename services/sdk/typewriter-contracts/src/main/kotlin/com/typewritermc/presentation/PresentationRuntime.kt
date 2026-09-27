@@ -4,6 +4,7 @@ import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.PresentationId
 import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
@@ -85,6 +86,7 @@ import skirout.editor.v1.presentation.FlexFit as WireFlexFit
 import skirout.editor.v1.presentation.TextRun as WireTextRun
 import skirout.editor.v1.type_catalog.PresentationId as SkirPresentationId
 import skirout.editor.v1.type_catalog.TypeExpression as SkirTypeExpression
+import kotlin.reflect.KClass
 
 /**
  * Generated bridge from an annotated declaration to deployment presentation assembly.
@@ -101,6 +103,9 @@ interface PresentationProvider {
 
     /** Declaration name used to identify failures before a specification exists. */
     val declarationName: String
+
+    /** Statically declared target, available even when [specification] fails. */
+    val targetType: KClass<*>
 
     /** Priority used to select among declarations for the same role or name. */
     val priority: Int
@@ -125,6 +130,12 @@ data class PresentationDiagnostic(
     val sourcePart: String? = null,
     /** Presentation name, when the specification supplied one. */
     val presentationName: String? = null,
+    /** Nominal target claimed before compilation, when available. */
+    val target: ResolvedTypeRef? = null,
+    /** Roles claimed by the rejected declaration. */
+    val roles: Set<PresentationRole> = emptySet(),
+    /** Original failure stays in Realm and is never included in the wire diagnostic. */
+    val cause: Throwable? = null,
 )
 
 /**
@@ -134,7 +145,7 @@ data class PresentationDiagnostic(
  * mutated.
  */
 data class PresentationCatalog(
-    /** Type catalog with valid role and named presentation associations. */
+    /** Type catalog with ready or rejected roles and valid named associations. */
     val types: TypeCatalog,
     /** Compiled protocol definitions in stable presentation identity order. */
     val definitions: List<PresentationDefinition>,
@@ -264,8 +275,16 @@ object PresentationCatalogAssembler {
                 val roles =
                     PresentationRole.entries
                         .mapNotNull { role ->
-                            select(candidates.filter { role in it.roles }, "${role.name.lowercase()} role", diagnostics)
-                                ?.let { role to it.id }
+                            val selected = select(candidates.filter { role in it.roles }, "${role.name.lowercase()} role", diagnostics)
+                            val status =
+                                selected?.let { RolePresentationStatus.Ready(it.id) }
+                                    ?: diagnostics
+                                        .filter { it.target == definition.id && role in it.roles }
+                                        .takeIf(List<PresentationDiagnostic>::isNotEmpty)
+                                        ?.joinToString("; ") { failure ->
+                                            "${failure.presentationName ?: "Presentation"}: ${failure.message}"
+                                        }?.let(RolePresentationStatus::Rejected)
+                            status?.let { role to it }
                         }.toMap()
                 definition.copy(namedPresentations = named, rolePresentations = roles)
             }
@@ -285,9 +304,13 @@ object PresentationCatalogAssembler {
         context: PresentationBuildContext,
         prototypes: TypePrototypeRegistry,
         diagnostics: MutableList<PresentationDiagnostic>,
-    ): CompiledPresentation? =
-        runCatching {
+    ): CompiledPresentation? {
+        val declaredTarget = runCatching { (context.type(provider.targetType) as? TypeExpression.Named)?.reference }.getOrNull()
+        return runCatching {
             val specification = provider.specification(context)
+            require(specification.target == provider.targetType) {
+                "Presentation target does not match the annotated return type for ${provider.declarationName}."
+            }
             val target =
                 (context.type(specification.target) as? TypeExpression.Named)?.reference
             require(provider.roles.isEmpty() || target != null) {
@@ -342,9 +365,13 @@ object PresentationCatalogAssembler {
                     namespace = provider.namespace,
                     sourcePart = provider.sourcePart,
                     presentationName = provider.declarationName,
+                    target = declaredTarget,
+                    roles = provider.roles,
+                    cause = failure,
                 )
             null
         }
+    }
 
     private fun select(
         candidates: List<CompiledPresentation>,
@@ -375,7 +402,15 @@ private data class CompiledPresentation(
     fun diagnostic(
         code: String,
         message: String,
-    ) = PresentationDiagnostic(code, message, provider.namespace, provider.sourcePart, specificationName)
+    ) = PresentationDiagnostic(
+        code = code,
+        message = message,
+        namespace = provider.namespace,
+        sourcePart = provider.sourcePart,
+        presentationName = specificationName,
+        target = target,
+        roles = roles,
+    )
 }
 
 private class NodeCompiler(
@@ -1704,7 +1739,12 @@ private class NodeCompiler(
     ): TypeExpression {
         val named = type as? TypeExpression.Named ?: return type
         if (named.reference in visited) return type
-        return resolveRepresentation(prototypes.require(named.reference).definition.representation, visited + named.reference)
+        val definition = prototypes.require(named.reference).definition
+        val representation = definition.representation
+        if (representation is TypeExpression.Record) {
+            return TypeExpression.Record(prototypes.catalog.effectiveRecordFields(named.reference))
+        }
+        return resolveRepresentation(representation, visited + named.reference)
     }
 
     private fun stringBindingExpression(

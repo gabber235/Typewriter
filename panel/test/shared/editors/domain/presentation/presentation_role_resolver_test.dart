@@ -45,6 +45,20 @@ void main() {
     expect(registry.resolvePresentationRole(leaf.id, role).valueOrNull, exact);
   });
 
+  test("a rejected exact role blocks an inherited ready role", () {
+    final base = _definition("Base", roles: const {role: inherited});
+    final leaf = _definition("Leaf", parents: [base.id]).copyWith(
+      rolePresentations: const {
+        role: RolePresentationStatus.rejected("builder failed"),
+      },
+    );
+    final registry = TypeRegistry(TypeCatalog([base, leaf]));
+
+    final result = registry.resolvePresentationRole(leaf.id, role);
+    expect(result, isA<TypeFailure<PresentationId>>());
+    expect(result.diagnostics.single.message, contains("builder failed"));
+  });
+
   test("diagnoses distinct associations at equal distance", () {
     final left = _definition(
       "Left",
@@ -89,15 +103,18 @@ void main() {
     final registry = TypeRegistry(TypeCatalog([base, leaf]));
 
     expect(
-      registry.resolveOptionalPresentationRole(
+      registry.resolveOptionalPresentationRoleStatus(
         leaf.id,
         PresentationRole.creation,
       ),
-      isA<TypeSuccess<PresentationId?>>(),
+      isA<TypeSuccess<RolePresentationStatus?>>(),
     );
     expect(
       registry
-          .resolveOptionalPresentationRole(leaf.id, PresentationRole.creation)
+          .resolveOptionalPresentationRoleStatus(
+            leaf.id,
+            PresentationRole.creation,
+          )
           .valueOrNull,
       isNull,
     );
@@ -123,7 +140,13 @@ void main() {
             id: reference,
             kind: NominalTypeKind.concrete,
             representation: const StringType(),
-            rolePresentations: {PresentationRole.editor: defaultId, ...roles},
+            rolePresentations: {
+              PresentationRole.editor: const RolePresentationStatus.ready(
+                defaultId,
+              ),
+              for (final entry in roles.entries)
+                entry.key: RolePresentationStatus.ready(entry.value),
+            },
           ),
         ]),
       );
@@ -154,7 +177,9 @@ void main() {
       id: _reference("BaseEditor"),
       kind: NominalTypeKind.openAbstract,
       representation: const StringType(),
-      rolePresentations: const {PresentationRole.editor: editorId},
+      rolePresentations: const {
+        PresentationRole.editor: RolePresentationStatus.ready(editorId),
+      },
     );
     final leaf = TypeDefinition(
       id: _reference("LeafEditor"),
@@ -198,7 +223,10 @@ void main() {
         ),
       ],
     );
-    expect(incompatible.root.element, isNot(isA<PresentationInvocationElement>()));
+    expect(
+      incompatible.root.element,
+      isNot(isA<PresentationInvocationElement>()),
+    );
   });
 }
 
@@ -212,7 +240,10 @@ TypeDefinition _definition(
   kind: NominalTypeKind.openAbstract,
   parameters: parameters,
   parents: parents,
-  rolePresentations: roles,
+  rolePresentations: {
+    for (final entry in roles.entries)
+      entry.key: RolePresentationStatus.ready(entry.value),
+  },
 );
 
 ResolvedTypeRef _reference(String name) => ResolvedTypeRef(

@@ -12,6 +12,7 @@ import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ToMany
 import com.typewritermc.types.ToOne
 import com.typewritermc.types.TypewriterRelation
+import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypeId
 
@@ -53,6 +54,7 @@ data class Tag(
 ) : Referenceable
 
 /** Shared authored fields for concrete Page resource types. */
+@TypewriterRecordContract
 interface Page : Referenceable {
     val book: ToOne<BookPages, Book>
     val name: String

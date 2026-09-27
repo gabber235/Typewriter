@@ -16,6 +16,7 @@ import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.PresentationId
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
@@ -38,6 +39,7 @@ import skirout.editor.v1.type_catalog.PresentationRole as SkirPresentationRole
 import skirout.editor.v1.type_catalog.RecordField as SkirRecordField
 import skirout.editor.v1.type_catalog.ResolvedTypeRef as SkirResolvedTypeRef
 import skirout.editor.v1.type_catalog.RolePresentation as SkirRolePresentation
+import skirout.editor.v1.type_catalog.RolePresentationOutcome as SkirRolePresentationOutcome
 import skirout.editor.v1.type_catalog.TypeCatalog as SkirTypeCatalog
 import skirout.editor.v1.type_catalog.TypeDefinition as SkirTypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionKind as SkirTypeDefinitionKind
@@ -99,8 +101,13 @@ private fun ConversionScope.encode(definition: TypeDefinition): SkirTypeDefiniti
             },
         outgoingConversionIds = definition.outgoingConversionIds.map(::encode),
         rolePresentations =
-            definition.rolePresentations.entries.sortedBy { it.key.ordinal }.map { (role, id) ->
-                SkirRolePresentation(role = encode(role), presentationId = encode(id))
+            definition.rolePresentations.entries.sortedBy { it.key.ordinal }.map { (role, status) ->
+                val outcome =
+                    when (status) {
+                        is RolePresentationStatus.Ready -> SkirRolePresentationOutcome.ReadyWrapper(encode(status.id))
+                        is RolePresentationStatus.Rejected -> SkirRolePresentationOutcome.RejectedWrapper(status.message)
+                    }
+                SkirRolePresentation(role = encode(role), outcome = outcome)
             },
         fieldMergePolicies = definition.fieldMergePolicies.map(::encode),
         initializer = definition.initialValue?.let(::encodeDataValue),
@@ -128,7 +135,19 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
         outgoingConversionIds = definition.outgoingConversionIds.map(::decode),
         rolePresentations =
             definition.rolePresentations
-                .map { decode(it.role) to decode(it.presentationId) }
+                .map { association ->
+                    val role = decode(association.role)
+                    val status =
+                        when (val outcome = association.outcome) {
+                            is SkirRolePresentationOutcome.ReadyWrapper -> RolePresentationStatus.Ready(decode(outcome.value))
+                            is SkirRolePresentationOutcome.RejectedWrapper -> {
+                                if (outcome.value.isBlank()) fail("Rejected presentation reason is empty.")
+                                RolePresentationStatus.Rejected(outcome.value)
+                            }
+                            else -> fail("Unknown role presentation outcome.")
+                        }
+                    role to status
+                }
                 .also { values ->
                     if (values.map { it.first }.distinct().size != values.size) {
                         fail("Presentation roles must be unique.")

@@ -211,7 +211,11 @@ RealmEditorCatalogSnapshot authoringFixtureCatalog() {
             ),
           },
         ),
-        rolePresentations: {PresentationRole.editor: bookPresentation},
+        rolePresentations: {
+          PresentationRole.editor: RolePresentationStatus.ready(
+            bookPresentation,
+          ),
+        },
         fieldMergePolicies: [
           FieldMergePolicy(
             path: DataPath.root.field("tags"),
@@ -259,7 +263,11 @@ RealmEditorCatalogSnapshot authoringFixtureCatalog() {
             ),
           },
         ),
-        rolePresentations: {PresentationRole.editor: tagPresentation},
+        rolePresentations: {
+          PresentationRole.editor: RolePresentationStatus.ready(
+            tagPresentation,
+          ),
+        },
         fieldMergePolicies: [
           FieldMergePolicy(
             path: DataPath.root.field("parents"),

@@ -17,6 +17,8 @@ import com.typewritermc.discovery.KeyedTypeContribution
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
+import com.typewritermc.elements.Element
+import com.typewritermc.elements.Entry
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
 import com.typewritermc.elements.ContentRole
@@ -25,6 +27,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.PageId
+import com.typewritermc.library.Page
 import com.typewritermc.pages.PageProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
@@ -32,6 +35,8 @@ import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationFamilyId
@@ -289,10 +294,62 @@ val SyntheticDiscoveryTest by testSuite {
                     (segment as skirout.editor.v1.path.DataPathSegment.FieldWrapper).value.fieldName
                 }
 
-            entry.rolePresentations[com.typewritermc.types.PresentationRole.EDITOR]?.name shouldBe "editor"
+            (entry.rolePresentations[com.typewritermc.types.PresentationRole.EDITOR] as? com.typewritermc.types.RolePresentationStatus.Ready)
+                ?.id?.name shouldBe "editor"
             entry.namedPresentations["compact"]?.name shouldBe "compact"
             path shouldBe listOf("message", "repeat_count")
             catalog.diagnostics shouldBe emptyList()
+        }
+    }
+
+    test("generated core presentations bind inherited Page Element and Entry fields") {
+        val core = ArtifactId("typewritermc:core")
+        val conformance = ArtifactId("typewritermc:conformance")
+        val contributions =
+            listOf(
+                core to "declared.cbor",
+                core to "presentations.cbor",
+                conformance to "declared.cbor",
+                conformance to "elements.cbor",
+            ).map { (origin, name) ->
+                KeyedTypeContribution(
+                    key = ContributionKey(origin, "common", ProducerId("types"), ContributionName(name)),
+                    contribution =
+                        if (origin == core) coreTypeContribution(name) else typeContribution(name),
+                )
+            }
+        val page = TypeId.Qualified("com.typewritermc.library", "Page")
+        val pageDefinitions = contributions.mapNotNull { keyed ->
+            keyed.contribution.definitions.firstOrNull { it.id.id == page }
+                ?.let { keyed.key to it }
+        }
+        pageDefinitions.map { it.second.representation } shouldBe
+            List(pageDefinitions.size) { pageDefinitions.first().second.representation }
+        val discovery = TypeContributionAssembler.assemble(contributions)
+        DiscoveryModuleLoader().load(
+            artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(core, conformance), DeploymentFacts(emptyMap())),
+            domain = DiscoveryDomains.Realm,
+            discovery = discovery,
+        ).use { deployment ->
+            val providers = deployment.application.koin.getAll<PresentationProvider>()
+                .filter { it.targetType in setOf(Page::class, Element::class, Entry::class) }
+            val catalog = PresentationCatalogAssembler.assemble(providers, deployment.prototypes, discovery.catalog)
+            val byName = catalog.types.definitions.associateBy { it.qualifiedName }
+
+            listOf("book", "name", "chapter", "priority", "elements") shouldBe
+                discovery.catalog.effectiveRecordFields(byName.getValue(Page::class.qualifiedName).id).map { it.name }
+            listOf("name", "placement") shouldBe
+                discovery.catalog.effectiveRecordFields(byName.getValue(Entry::class.qualifiedName).id).map { it.name }
+            catalog.diagnostics shouldBe emptyList()
+            listOf(
+                Page::class.qualifiedName to PresentationRole.EDITOR,
+                Page::class.qualifiedName to PresentationRole.CREATION,
+                Element::class.qualifiedName to PresentationRole.REFERENCE_SUMMARY,
+                Element::class.qualifiedName to PresentationRole.AUTHORING_RESULT,
+                Entry::class.qualifiedName to PresentationRole.GRAPH_NODE,
+            ).forEach { (name, role) ->
+                (byName.getValue(name).rolePresentations[role] is RolePresentationStatus.Ready) shouldBe true
+            }
         }
     }
 
@@ -409,6 +466,23 @@ private fun typeContribution(name: String) =
         .single { contribution ->
             contribution.prototypeBindings.any { it.runtimeClass.startsWith(CONFORMANCE_PACKAGE) } ||
                 contribution.executableBindings.any { it.moduleProviderClass.startsWith(CONFORMANCE_PACKAGE) }
+        }
+
+private fun coreTypeContribution(name: String) =
+    SyntheticEntry::class.java.classLoader
+        .getResources("META-INF/typewriter/contributions/types/$name")
+        .asSequence()
+        .map { resource -> resource.openStream().use { TypeDiscoveryContributionCodec.decode(it.readAllBytes()) } }
+        .single { contribution ->
+            when (name) {
+                "declared.cbor" ->
+                    contribution.prototypeBindings.any { it.runtimeClass == "com.typewritermc.library.Book" } &&
+                        contribution.definitions.none { it.qualifiedName?.startsWith(CONFORMANCE_PACKAGE) == true }
+                "presentations.cbor" -> contribution.executableBindings.any {
+                    it.moduleProviderClass == "com.typewritermc.library.CorePageEditorPresentationDiscoveryModule"
+                }
+                else -> false
+            }
         }
 
 private const val CONFORMANCE_PACKAGE = "com.typewritermc.extensions.conformance."
