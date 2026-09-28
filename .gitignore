@@ -161,7 +161,5 @@ PLAN.md
 /panel/doc
 plans/
 /docs/*
-!/docs/typed-runtime-data-handoff.md
-!/docs/runtime-reactions-design.md
 backend/.artifact_keeper_password
 AGENTS.local.md
