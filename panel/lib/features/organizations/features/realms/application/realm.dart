@@ -100,37 +100,31 @@ Future<Map<skir.RecordId, bool>> realmsAvailability(Ref ref) async {
 /// The selected realm must resolve, report an active runtime status, and have
 /// its owner host connected. Resolution failures become [unavailable]; known
 /// inactive or disconnected realms become [offline]. Topology invalidation is
-/// the recovery path, and causes Riverpod to reevaluate this stream.
+/// the recovery path, and causes Riverpod to reevaluate this result.
 @riverpod
-Stream<RealmConnectionState> realmConnection(Ref ref) async* {
+Future<RealmConnectionState> realmConnection(Ref ref) async {
   final id = ref.watch(realmIdProvider);
   if (id == null) {
-    yield RealmConnectionState.notSelected;
-    return;
+    return RealmConnectionState.notSelected;
   }
-
-  yield RealmConnectionState.checking;
 
   TopologyRealm? realm;
   try {
     realm = await ref.watch(selectedRealmProvider.future);
   } on Object {
-    yield RealmConnectionState.unavailable;
-    return;
+    return RealmConnectionState.unavailable;
   }
 
   if (realm == null) {
-    yield RealmConnectionState.unavailable;
-    return;
+    return RealmConnectionState.unavailable;
   }
 
   if (realm.state.status != TopologyRuntimeStatus.active ||
       !ref.watch(hostConnectedProvider(realm.ownerHost.id))) {
-    yield RealmConnectionState.offline;
-    return;
+    return RealmConnectionState.offline;
   }
 
-  yield RealmConnectionState.online;
+  return RealmConnectionState.online;
 }
 
 /// Provides a synchronous interaction policy for widgets during async checks.
@@ -141,10 +135,11 @@ Stream<RealmConnectionState> realmConnection(Ref ref) async* {
 @riverpod
 RealmInteractionState realmInteraction(Ref ref) {
   final realmId = ref.watch(realmIdProvider);
-  final connectionState =
-      ref.watch(realmConnectionProvider).value ??
-      (realmId == null
-          ? RealmConnectionState.notSelected
-          : RealmConnectionState.checking);
+  final connection = ref.watch(realmConnectionProvider);
+  final connectionState = connection.isLoading
+      ? (realmId == null
+            ? RealmConnectionState.notSelected
+            : RealmConnectionState.checking)
+      : connection.value ?? RealmConnectionState.unavailable;
   return RealmInteractionState(connectionState: connectionState);
 }

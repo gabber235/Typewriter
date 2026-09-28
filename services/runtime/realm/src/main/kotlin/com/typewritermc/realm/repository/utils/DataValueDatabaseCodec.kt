@@ -1,7 +1,7 @@
 package com.typewritermc.realm.repository.utils
 
 import com.surrealdb.Value
-import com.typewritermc.types.DataValue
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -12,36 +12,22 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
-/**
- * Stores portable values in a versioned database envelope using explicit variant discriminators.
- *
- * Decode requires the supported storage format and known database value shapes. Reference slot projection remains
- * encoded in the value tree; this codec does not resolve edges.
- */
-internal object DataValueDatabaseCodec {
+/** Encodes typed metadata as structured Surreal objects without string serialization. */
+internal object StructuredDatabaseCodec {
     private val json = Json { classDiscriminator = "kind" }
 
-    /** Encodes a logical value without resolving its separately stored reference edges. */
-    fun encode(value: DataValue): Map<String, Any?> =
-        mapOf(
-            "format" to STORAGE_FORMAT,
-            "data" to json.encodeToJsonElement(DataValue.serializer(), value).databaseValue(),
-        )
+    fun <T> encode(
+        serializer: KSerializer<T>,
+        value: T,
+    ): Any? = json.encodeToJsonElement(serializer, value).databaseValue()
 
-    /**
-     * Decodes only the supported storage format and leaves reference slots as stored values.
-     *
-     * Format rejection is intentional. Silent reinterpretation would make old persisted data look valid while
-     * changing its meaning.
-     */
-    fun decode(value: Value): DataValue {
-        val stored = value.requireObject()
-        require(stored.get("format").getLong() == STORAGE_FORMAT.toLong()) { "Unsupported element value storage format." }
-        return json.decodeFromJsonElement(DataValue.serializer(), stored.get("data").jsonElement())
-    }
+    fun <T> decode(
+        serializer: KSerializer<T>,
+        value: Value,
+    ): T = json.decodeFromJsonElement(serializer, value.jsonElement())
 }
 
-private fun JsonElement.databaseValue(): Any? =
+internal fun JsonElement.databaseValue(): Any? =
     when (this) {
         JsonNull -> {
             null
@@ -65,7 +51,7 @@ private fun JsonElement.databaseValue(): Any? =
         }
     }
 
-private fun Value.jsonElement(): JsonElement =
+internal fun Value.jsonElement(): JsonElement =
     when {
         isNull || isNone -> JsonNull
         isBoolean -> JsonPrimitive(getBoolean())
@@ -77,10 +63,3 @@ private fun Value.jsonElement(): JsonElement =
         isObject -> JsonObject(getObject().associate { it.key to it.value.jsonElement() })
         else -> error("Unsupported stored element value $this")
     }
-
-private fun Value.requireObject(): com.surrealdb.Object {
-    require(isObject) { "Stored element values must be objects." }
-    return getObject()
-}
-
-private const val STORAGE_FORMAT = 1

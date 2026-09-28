@@ -14,78 +14,40 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct ElementTypeId
+// struct ContentTypeId
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementTypeId {
+pub struct ContentTypeId {
     pub value: crate::skirout::base::editor::v1::type_catalog::DeclaredTypeId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementTypeId>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentTypeId>>,
 }
 
-impl ElementTypeId {
-    pub fn default_ref() -> &'static ElementTypeId {
-        static D: std::sync::LazyLock<ElementTypeId> = std::sync::LazyLock::new(ElementTypeId::default);
+impl ContentTypeId {
+    pub fn default_ref() -> &'static ContentTypeId {
+        static D: std::sync::LazyLock<ContentTypeId> = std::sync::LazyLock::new(ContentTypeId::default);
         &D
     }
 }
 
-impl ElementTypeId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementTypeId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementTypeId>> =
+impl ContentTypeId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentTypeId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentTypeId>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementTypeId",
+                    "ContentTypeId",
                     "",
-                    |x: &ElementTypeId| &x._unrecognized,
-                    |x: &mut ElementTypeId, u| x._unrecognized = u,
+                    |x: &ContentTypeId| &x._unrecognized,
+                    |x: &mut ContentTypeId, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementTypeId> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentTypeId> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ElementInstanceId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementInstanceId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementInstanceId>>,
-}
-
-impl ElementInstanceId {
-    pub fn default_ref() -> &'static ElementInstanceId {
-        static D: std::sync::LazyLock<ElementInstanceId> = std::sync::LazyLock::new(ElementInstanceId::default);
-        &D
-    }
-}
-
-impl ElementInstanceId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementInstanceId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementInstanceId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/element_catalog.skir",
-                    "ElementInstanceId",
-                    "",
-                    |x: &ElementInstanceId| &x._unrecognized,
-                    |x: &mut ElementInstanceId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementInstanceId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementInstanceId::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentTypeId::_adapter())
     }
 }
 
@@ -328,557 +290,675 @@ impl AvailabilityExpression {
 }
 
 // ==============================================================================
-// struct ElementSearchMode.Summary
+// struct ContentSearchMode.Summary
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchMode_Summary {
+pub struct ContentSearchMode_Summary {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_Summary>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchMode_Summary>>,
 }
 
-impl ElementSearchMode_Summary {
-    pub fn default_ref() -> &'static ElementSearchMode_Summary {
-        static D: std::sync::LazyLock<ElementSearchMode_Summary> = std::sync::LazyLock::new(ElementSearchMode_Summary::default);
+impl ContentSearchMode_Summary {
+    pub fn default_ref() -> &'static ContentSearchMode_Summary {
+        static D: std::sync::LazyLock<ContentSearchMode_Summary> = std::sync::LazyLock::new(ContentSearchMode_Summary::default);
         &D
     }
 }
 
-impl ElementSearchMode_Summary {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_Summary> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_Summary>> =
+impl ContentSearchMode_Summary {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchMode_Summary> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchMode_Summary>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchMode.Summary",
+                    "ContentSearchMode.Summary",
                     "",
-                    |x: &ElementSearchMode_Summary| &x._unrecognized,
-                    |x: &mut ElementSearchMode_Summary, u| x._unrecognized = u,
+                    |x: &ContentSearchMode_Summary| &x._unrecognized,
+                    |x: &mut ContentSearchMode_Summary, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_Summary> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchMode_Summary> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Summary::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_Summary::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementSearchMode.Body
+// struct ContentSearchMode.Body
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchMode_Body {
+pub struct ContentSearchMode_Body {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_Body>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchMode_Body>>,
 }
 
-impl ElementSearchMode_Body {
-    pub fn default_ref() -> &'static ElementSearchMode_Body {
-        static D: std::sync::LazyLock<ElementSearchMode_Body> = std::sync::LazyLock::new(ElementSearchMode_Body::default);
+impl ContentSearchMode_Body {
+    pub fn default_ref() -> &'static ContentSearchMode_Body {
+        static D: std::sync::LazyLock<ContentSearchMode_Body> = std::sync::LazyLock::new(ContentSearchMode_Body::default);
         &D
     }
 }
 
-impl ElementSearchMode_Body {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_Body> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_Body>> =
+impl ContentSearchMode_Body {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchMode_Body> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchMode_Body>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchMode.Body",
+                    "ContentSearchMode.Body",
                     "",
-                    |x: &ElementSearchMode_Body| &x._unrecognized,
-                    |x: &mut ElementSearchMode_Body, u| x._unrecognized = u,
+                    |x: &ContentSearchMode_Body| &x._unrecognized,
+                    |x: &mut ContentSearchMode_Body, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_Body> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchMode_Body> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Body::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_Body::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementSearchMode.Keyword
+// struct ContentSearchMode.Keyword
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchMode_Keyword {
+pub struct ContentSearchMode_Keyword {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_Keyword>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchMode_Keyword>>,
 }
 
-impl ElementSearchMode_Keyword {
-    pub fn default_ref() -> &'static ElementSearchMode_Keyword {
-        static D: std::sync::LazyLock<ElementSearchMode_Keyword> = std::sync::LazyLock::new(ElementSearchMode_Keyword::default);
+impl ContentSearchMode_Keyword {
+    pub fn default_ref() -> &'static ContentSearchMode_Keyword {
+        static D: std::sync::LazyLock<ContentSearchMode_Keyword> = std::sync::LazyLock::new(ContentSearchMode_Keyword::default);
         &D
     }
 }
 
-impl ElementSearchMode_Keyword {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_Keyword> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_Keyword>> =
+impl ContentSearchMode_Keyword {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchMode_Keyword> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchMode_Keyword>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchMode.Keyword",
+                    "ContentSearchMode.Keyword",
                     "",
-                    |x: &ElementSearchMode_Keyword| &x._unrecognized,
-                    |x: &mut ElementSearchMode_Keyword, u| x._unrecognized = u,
+                    |x: &ContentSearchMode_Keyword| &x._unrecognized,
+                    |x: &mut ContentSearchMode_Keyword, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_Keyword> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchMode_Keyword> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Keyword::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_Keyword::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementSearchMode.None
+// struct ContentSearchMode.None
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchMode_None {
+pub struct ContentSearchMode_None {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchMode_None>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchMode_None>>,
 }
 
-impl ElementSearchMode_None {
-    pub fn default_ref() -> &'static ElementSearchMode_None {
-        static D: std::sync::LazyLock<ElementSearchMode_None> = std::sync::LazyLock::new(ElementSearchMode_None::default);
+impl ContentSearchMode_None {
+    pub fn default_ref() -> &'static ContentSearchMode_None {
+        static D: std::sync::LazyLock<ContentSearchMode_None> = std::sync::LazyLock::new(ContentSearchMode_None::default);
         &D
     }
 }
 
-impl ElementSearchMode_None {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchMode_None> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchMode_None>> =
+impl ContentSearchMode_None {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchMode_None> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchMode_None>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchMode.None",
+                    "ContentSearchMode.None",
                     "",
-                    |x: &ElementSearchMode_None| &x._unrecognized,
-                    |x: &mut ElementSearchMode_None, u| x._unrecognized = u,
+                    |x: &ContentSearchMode_None| &x._unrecognized,
+                    |x: &mut ContentSearchMode_None, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode_None> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchMode_None> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_None::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_None::_adapter())
     }
 }
 
 // ==============================================================================
-// enum ElementSearchMode
+// enum ContentSearchMode
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ElementSearchMode {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementSearchMode>>),
-    Summary(Box<ElementSearchMode_Summary>),
-    Body(Box<ElementSearchMode_Body>),
-    Keyword(Box<ElementSearchMode_Keyword>),
-    None(Box<ElementSearchMode_None>),
+pub enum ContentSearchMode {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ContentSearchMode>>),
+    Summary(Box<ContentSearchMode_Summary>),
+    Body(Box<ContentSearchMode_Body>),
+    Keyword(Box<ContentSearchMode_Keyword>),
+    None(Box<ContentSearchMode_None>),
 }
 
-impl Default for ElementSearchMode {
+impl Default for ContentSearchMode {
     fn default() -> Self {
-        ElementSearchMode::Unknown(None)
+        ContentSearchMode::Unknown(None)
     }
 }
 
-impl ElementSearchMode {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementSearchMode> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementSearchMode>> =
+impl ContentSearchMode {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ContentSearchMode> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ContentSearchMode>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ElementSearchMode| match x {
-                        ElementSearchMode::Unknown(_) => 0,
-                        ElementSearchMode::Summary(_) => 1,
-                        ElementSearchMode::Body(_) => 2,
-                        ElementSearchMode::Keyword(_) => 3,
-                        ElementSearchMode::None(_) => 4,
+                    |x: &ContentSearchMode| match x {
+                        ContentSearchMode::Unknown(_) => 0,
+                        ContentSearchMode::Summary(_) => 1,
+                        ContentSearchMode::Body(_) => 2,
+                        ContentSearchMode::Keyword(_) => 3,
+                        ContentSearchMode::None(_) => 4,
                     },
-                    |u| ElementSearchMode::Unknown(Some(u)),
-                    |x: &ElementSearchMode| match x { ElementSearchMode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| ContentSearchMode::Unknown(Some(u)),
+                    |x: &ContentSearchMode| match x { ContentSearchMode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchMode",
+                    "ContentSearchMode",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchMode> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchMode> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ElementSearchMode::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(ContentSearchMode::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementSearchPolicy.OrdinaryText
+// struct ContentSearchPolicy.OrdinaryText
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchPolicy_OrdinaryText {
+pub struct ContentSearchPolicy_OrdinaryText {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchPolicy_OrdinaryText>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchPolicy_OrdinaryText>>,
 }
 
-impl ElementSearchPolicy_OrdinaryText {
-    pub fn default_ref() -> &'static ElementSearchPolicy_OrdinaryText {
-        static D: std::sync::LazyLock<ElementSearchPolicy_OrdinaryText> = std::sync::LazyLock::new(ElementSearchPolicy_OrdinaryText::default);
+impl ContentSearchPolicy_OrdinaryText {
+    pub fn default_ref() -> &'static ContentSearchPolicy_OrdinaryText {
+        static D: std::sync::LazyLock<ContentSearchPolicy_OrdinaryText> = std::sync::LazyLock::new(ContentSearchPolicy_OrdinaryText::default);
         &D
     }
 }
 
-impl ElementSearchPolicy_OrdinaryText {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchPolicy_OrdinaryText> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchPolicy_OrdinaryText>> =
+impl ContentSearchPolicy_OrdinaryText {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchPolicy_OrdinaryText> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchPolicy_OrdinaryText>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchPolicy.OrdinaryText",
+                    "ContentSearchPolicy.OrdinaryText",
                     "",
-                    |x: &ElementSearchPolicy_OrdinaryText| &x._unrecognized,
-                    |x: &mut ElementSearchPolicy_OrdinaryText, u| x._unrecognized = u,
+                    |x: &ContentSearchPolicy_OrdinaryText| &x._unrecognized,
+                    |x: &mut ContentSearchPolicy_OrdinaryText, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchPolicy_OrdinaryText> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchPolicy_OrdinaryText> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchPolicy_OrdinaryText::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchPolicy_OrdinaryText::_adapter())
     }
 }
 
 // ==============================================================================
-// enum ElementSearchPolicy
+// enum ContentSearchPolicy
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ElementSearchPolicy {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementSearchPolicy>>),
-    OrdinaryText(Box<ElementSearchPolicy_OrdinaryText>),
+pub enum ContentSearchPolicy {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ContentSearchPolicy>>),
+    OrdinaryText(Box<ContentSearchPolicy_OrdinaryText>),
 }
 
-impl Default for ElementSearchPolicy {
+impl Default for ContentSearchPolicy {
     fn default() -> Self {
-        ElementSearchPolicy::Unknown(None)
+        ContentSearchPolicy::Unknown(None)
     }
 }
 
-impl ElementSearchPolicy {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementSearchPolicy> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementSearchPolicy>> =
+impl ContentSearchPolicy {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ContentSearchPolicy> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ContentSearchPolicy>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ElementSearchPolicy| match x {
-                        ElementSearchPolicy::Unknown(_) => 0,
-                        ElementSearchPolicy::OrdinaryText(_) => 1,
+                    |x: &ContentSearchPolicy| match x {
+                        ContentSearchPolicy::Unknown(_) => 0,
+                        ContentSearchPolicy::OrdinaryText(_) => 1,
                     },
-                    |u| ElementSearchPolicy::Unknown(Some(u)),
-                    |x: &ElementSearchPolicy| match x { ElementSearchPolicy::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| ContentSearchPolicy::Unknown(Some(u)),
+                    |x: &ContentSearchPolicy| match x { ContentSearchPolicy::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchPolicy",
+                    "ContentSearchPolicy",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchPolicy> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchPolicy> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ElementSearchPolicy::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(ContentSearchPolicy::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementSearchPropertyOverride
+// struct ContentSearchPropertyOverride
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchPropertyOverride {
+pub struct ContentSearchPropertyOverride {
     pub owner_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
     pub field: String,
-    pub mode: ElementSearchMode,
+    pub mode: ContentSearchMode,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchPropertyOverride>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchPropertyOverride>>,
 }
 
-impl ElementSearchPropertyOverride {
-    pub fn default_ref() -> &'static ElementSearchPropertyOverride {
-        static D: std::sync::LazyLock<ElementSearchPropertyOverride> = std::sync::LazyLock::new(ElementSearchPropertyOverride::default);
+impl ContentSearchPropertyOverride {
+    pub fn default_ref() -> &'static ContentSearchPropertyOverride {
+        static D: std::sync::LazyLock<ContentSearchPropertyOverride> = std::sync::LazyLock::new(ContentSearchPropertyOverride::default);
         &D
     }
 }
 
-impl ElementSearchPropertyOverride {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchPropertyOverride> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchPropertyOverride>> =
+impl ContentSearchPropertyOverride {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchPropertyOverride> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchPropertyOverride>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchPropertyOverride",
+                    "ContentSearchPropertyOverride",
                     "",
-                    |x: &ElementSearchPropertyOverride| &x._unrecognized,
-                    |x: &mut ElementSearchPropertyOverride, u| x._unrecognized = u,
+                    |x: &ContentSearchPropertyOverride| &x._unrecognized,
+                    |x: &mut ContentSearchPropertyOverride, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchPropertyOverride> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchPropertyOverride> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchPropertyOverride::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchPropertyOverride::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementSearchDefinition
+// struct ContentSearchDefinition
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementSearchDefinition {
-    pub policy: ElementSearchPolicy,
-    pub property_overrides: Vec<ElementSearchPropertyOverride>,
+pub struct ContentSearchDefinition {
+    pub policy: ContentSearchPolicy,
+    pub property_overrides: Vec<ContentSearchPropertyOverride>,
     pub revision_fingerprint_inputs: Vec<crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementSearchDefinition>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentSearchDefinition>>,
 }
 
-impl ElementSearchDefinition {
-    pub fn default_ref() -> &'static ElementSearchDefinition {
-        static D: std::sync::LazyLock<ElementSearchDefinition> = std::sync::LazyLock::new(ElementSearchDefinition::default);
+impl ContentSearchDefinition {
+    pub fn default_ref() -> &'static ContentSearchDefinition {
+        static D: std::sync::LazyLock<ContentSearchDefinition> = std::sync::LazyLock::new(ContentSearchDefinition::default);
         &D
     }
 }
 
-impl ElementSearchDefinition {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementSearchDefinition> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementSearchDefinition>> =
+impl ContentSearchDefinition {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentSearchDefinition> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentSearchDefinition>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementSearchDefinition",
+                    "ContentSearchDefinition",
                     "",
-                    |x: &ElementSearchDefinition| &x._unrecognized,
-                    |x: &mut ElementSearchDefinition, u| x._unrecognized = u,
+                    |x: &ContentSearchDefinition| &x._unrecognized,
+                    |x: &mut ContentSearchDefinition, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementSearchDefinition> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentSearchDefinition> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementSearchDefinition::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentSearchDefinition::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementDescriptor
+// struct ContentRole.Element
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementDescriptor {
-    pub element_type_id: ElementTypeId,
+pub struct ContentRole_Element {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentRole_Element>>,
+}
+
+impl ContentRole_Element {
+    pub fn default_ref() -> &'static ContentRole_Element {
+        static D: std::sync::LazyLock<ContentRole_Element> = std::sync::LazyLock::new(ContentRole_Element::default);
+        &D
+    }
+}
+
+impl ContentRole_Element {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentRole_Element> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentRole_Element>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ContentRole.Element",
+                    "",
+                    |x: &ContentRole_Element| &x._unrecognized,
+                    |x: &mut ContentRole_Element, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ContentRole_Element> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ContentRole_Element::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ContentRole.Cue
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ContentRole_Cue {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentRole_Cue>>,
+}
+
+impl ContentRole_Cue {
+    pub fn default_ref() -> &'static ContentRole_Cue {
+        static D: std::sync::LazyLock<ContentRole_Cue> = std::sync::LazyLock::new(ContentRole_Cue::default);
+        &D
+    }
+}
+
+impl ContentRole_Cue {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentRole_Cue> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentRole_Cue>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/element_catalog.skir",
+                    "ContentRole.Cue",
+                    "",
+                    |x: &ContentRole_Cue| &x._unrecognized,
+                    |x: &mut ContentRole_Cue, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ContentRole_Cue> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ContentRole_Cue::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum ContentRole
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ContentRole {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ContentRole>>),
+    Element(Box<ContentRole_Element>),
+    Cue(Box<ContentRole_Cue>),
+}
+
+impl Default for ContentRole {
+    fn default() -> Self {
+        ContentRole::Unknown(None)
+    }
+}
+
+impl ContentRole {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ContentRole> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ContentRole>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &ContentRole| match x {
+                        ContentRole::Unknown(_) => 0,
+                        ContentRole::Element(_) => 1,
+                        ContentRole::Cue(_) => 2,
+                    },
+                    |u| ContentRole::Unknown(Some(u)),
+                    |x: &ContentRole| match x { ContentRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/element_catalog.skir",
+                    "ContentRole",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ContentRole> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ContentRole::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ContentDescriptor
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ContentDescriptor {
+    pub content_type_id: ContentTypeId,
     pub type_: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
     pub name: String,
     pub description: String,
     pub icon: crate::skirout::base::kernel::v1::icon::Icon,
     pub color: crate::skirout::base::kernel::v1::color::Color,
     pub availability: AvailabilityExpression,
-    pub search_definition: Option<ElementSearchDefinition>,
+    pub search_definition: Option<ContentSearchDefinition>,
+    pub role: ContentRole,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementDescriptor>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentDescriptor>>,
 }
 
-impl ElementDescriptor {
-    pub fn default_ref() -> &'static ElementDescriptor {
-        static D: std::sync::LazyLock<ElementDescriptor> = std::sync::LazyLock::new(ElementDescriptor::default);
+impl ContentDescriptor {
+    pub fn default_ref() -> &'static ContentDescriptor {
+        static D: std::sync::LazyLock<ContentDescriptor> = std::sync::LazyLock::new(ContentDescriptor::default);
         &D
     }
 }
 
-impl ElementDescriptor {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementDescriptor> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementDescriptor>> =
+impl ContentDescriptor {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentDescriptor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentDescriptor>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementDescriptor",
+                    "ContentDescriptor",
                     "",
-                    |x: &ElementDescriptor| &x._unrecognized,
-                    |x: &mut ElementDescriptor, u| x._unrecognized = u,
+                    |x: &ContentDescriptor| &x._unrecognized,
+                    |x: &mut ContentDescriptor, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementDescriptor> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentDescriptor> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementDescriptor::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentDescriptor::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementIneligibility
+// struct ContentIneligibility
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementIneligibility {
+pub struct ContentIneligibility {
     pub reasons: Vec<String>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementIneligibility>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentIneligibility>>,
 }
 
-impl ElementIneligibility {
-    pub fn default_ref() -> &'static ElementIneligibility {
-        static D: std::sync::LazyLock<ElementIneligibility> = std::sync::LazyLock::new(ElementIneligibility::default);
+impl ContentIneligibility {
+    pub fn default_ref() -> &'static ContentIneligibility {
+        static D: std::sync::LazyLock<ContentIneligibility> = std::sync::LazyLock::new(ContentIneligibility::default);
         &D
     }
 }
 
-impl ElementIneligibility {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementIneligibility> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementIneligibility>> =
+impl ContentIneligibility {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentIneligibility> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentIneligibility>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementIneligibility",
+                    "ContentIneligibility",
                     "",
-                    |x: &ElementIneligibility| &x._unrecognized,
-                    |x: &mut ElementIneligibility, u| x._unrecognized = u,
+                    |x: &ContentIneligibility| &x._unrecognized,
+                    |x: &mut ContentIneligibility, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementIneligibility> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentIneligibility> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementIneligibility::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentIneligibility::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementEligibility.Eligible
+// struct ContentEligibility.Eligible
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementEligibility_Eligible {
+pub struct ContentEligibility_Eligible {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementEligibility_Eligible>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentEligibility_Eligible>>,
 }
 
-impl ElementEligibility_Eligible {
-    pub fn default_ref() -> &'static ElementEligibility_Eligible {
-        static D: std::sync::LazyLock<ElementEligibility_Eligible> = std::sync::LazyLock::new(ElementEligibility_Eligible::default);
+impl ContentEligibility_Eligible {
+    pub fn default_ref() -> &'static ContentEligibility_Eligible {
+        static D: std::sync::LazyLock<ContentEligibility_Eligible> = std::sync::LazyLock::new(ContentEligibility_Eligible::default);
         &D
     }
 }
 
-impl ElementEligibility_Eligible {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementEligibility_Eligible> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementEligibility_Eligible>> =
+impl ContentEligibility_Eligible {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentEligibility_Eligible> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentEligibility_Eligible>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementEligibility.Eligible",
+                    "ContentEligibility.Eligible",
                     "",
-                    |x: &ElementEligibility_Eligible| &x._unrecognized,
-                    |x: &mut ElementEligibility_Eligible, u| x._unrecognized = u,
+                    |x: &ContentEligibility_Eligible| &x._unrecognized,
+                    |x: &mut ContentEligibility_Eligible, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementEligibility_Eligible> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentEligibility_Eligible> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementEligibility_Eligible::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentEligibility_Eligible::_adapter())
     }
 }
 
 // ==============================================================================
-// enum ElementEligibility
+// enum ContentEligibility
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ElementEligibility {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementEligibility>>),
-    Eligible(Box<ElementEligibility_Eligible>),
-    Ineligible(Box<ElementIneligibility>),
+pub enum ContentEligibility {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ContentEligibility>>),
+    Eligible(Box<ContentEligibility_Eligible>),
+    Ineligible(Box<ContentIneligibility>),
 }
 
-impl Default for ElementEligibility {
+impl Default for ContentEligibility {
     fn default() -> Self {
-        ElementEligibility::Unknown(None)
+        ContentEligibility::Unknown(None)
     }
 }
 
-impl ElementEligibility {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementEligibility> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementEligibility>> =
+impl ContentEligibility {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ContentEligibility> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ContentEligibility>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ElementEligibility| match x {
-                        ElementEligibility::Unknown(_) => 0,
-                        ElementEligibility::Eligible(_) => 1,
-                        ElementEligibility::Ineligible(_) => 2,
+                    |x: &ContentEligibility| match x {
+                        ContentEligibility::Unknown(_) => 0,
+                        ContentEligibility::Eligible(_) => 1,
+                        ContentEligibility::Ineligible(_) => 2,
                     },
-                    |u| ElementEligibility::Unknown(Some(u)),
-                    |x: &ElementEligibility| match x { ElementEligibility::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| ContentEligibility::Unknown(Some(u)),
+                    |x: &ContentEligibility| match x { ContentEligibility::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/element_catalog.skir",
-                    "ElementEligibility",
+                    "ContentEligibility",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementEligibility> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentEligibility> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ElementEligibility::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(ContentEligibility::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ElementCatalogEntry
+// struct ContentCatalogEntry
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementCatalogEntry {
+pub struct ContentCatalogEntry {
     pub origin_artifact_id: String,
     pub source_part: String,
-    pub descriptor: ElementDescriptor,
-    pub eligibility: ElementEligibility,
+    pub descriptor: ContentDescriptor,
+    pub presentation_subject: crate::skirout::base::editor::v1::catalog_presentation::CatalogPresentationSubject,
+    pub eligibility: ContentEligibility,
     pub available: bool,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementCatalogEntry>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContentCatalogEntry>>,
 }
 
-impl ElementCatalogEntry {
-    pub fn default_ref() -> &'static ElementCatalogEntry {
-        static D: std::sync::LazyLock<ElementCatalogEntry> = std::sync::LazyLock::new(ElementCatalogEntry::default);
+impl ContentCatalogEntry {
+    pub fn default_ref() -> &'static ContentCatalogEntry {
+        static D: std::sync::LazyLock<ContentCatalogEntry> = std::sync::LazyLock::new(ContentCatalogEntry::default);
         &D
     }
 }
 
-impl ElementCatalogEntry {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementCatalogEntry> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementCatalogEntry>> =
+impl ContentCatalogEntry {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ContentCatalogEntry> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ContentCatalogEntry>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/element_catalog.skir",
-                    "ElementCatalogEntry",
+                    "ContentCatalogEntry",
                     "",
-                    |x: &ElementCatalogEntry| &x._unrecognized,
-                    |x: &mut ElementCatalogEntry, u| x._unrecognized = u,
+                    |x: &ContentCatalogEntry| &x._unrecognized,
+                    |x: &mut ContentCatalogEntry, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementCatalogEntry> {
+    pub fn serializer() -> crate::skir_client::Serializer<ContentCatalogEntry> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementCatalogEntry::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ContentCatalogEntry::_adapter())
     }
 }
 
@@ -890,13 +970,8 @@ fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> =
         std::sync::LazyLock::new(|| {
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementTypeId> = ElementTypeId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::type_catalog::DeclaredTypeId::serializer(), "", |x: &ElementTypeId| &x.value, |x: &mut ElementTypeId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementInstanceId> = ElementInstanceId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &ElementInstanceId| &x.value, |x: &mut ElementInstanceId, v| x.value = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentTypeId> = ContentTypeId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skirout::base::editor::v1::type_catalog::DeclaredTypeId::serializer(), "", |x: &ContentTypeId| &x.value, |x: &mut ContentTypeId, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {
@@ -934,86 +1009,102 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_Summary> = ElementSearchMode_Summary::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchMode_Summary> = ContentSearchMode_Summary::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_Body> = ElementSearchMode_Body::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchMode_Body> = ContentSearchMode_Body::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_Keyword> = ElementSearchMode_Keyword::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchMode_Keyword> = ContentSearchMode_Keyword::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchMode_None> = ElementSearchMode_None::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchMode_None> = ContentSearchMode_None::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ElementSearchMode> = ElementSearchMode::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("summary", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Summary::_adapter()), "", |v| ElementSearchMode::Summary(Box::new(v)), |x| match x { ElementSearchMode::Summary(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("body", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Body::_adapter()), "", |v| ElementSearchMode::Body(Box::new(v)), |x| match x { ElementSearchMode::Body(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("keyword", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_Keyword::_adapter()), "", |v| ElementSearchMode::Keyword(Box::new(v)), |x| match x { ElementSearchMode::Keyword(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("none", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ElementSearchMode_None::_adapter()), "", |v| ElementSearchMode::None(Box::new(v)), |x| match x { ElementSearchMode::None(b) => b.as_ref(), _ => unreachable!() });
+                let a: *mut crate::skir_client::internal::EnumAdapter<ContentSearchMode> = ContentSearchMode::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("summary", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_Summary::_adapter()), "", |v| ContentSearchMode::Summary(Box::new(v)), |x| match x { ContentSearchMode::Summary(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("body", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_Body::_adapter()), "", |v| ContentSearchMode::Body(Box::new(v)), |x| match x { ContentSearchMode::Body(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("keyword", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_Keyword::_adapter()), "", |v| ContentSearchMode::Keyword(Box::new(v)), |x| match x { ContentSearchMode::Keyword(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("none", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ContentSearchMode_None::_adapter()), "", |v| ContentSearchMode::None(Box::new(v)), |x| match x { ContentSearchMode::None(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchPolicy_OrdinaryText> = ElementSearchPolicy_OrdinaryText::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchPolicy_OrdinaryText> = ContentSearchPolicy_OrdinaryText::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ElementSearchPolicy> = ElementSearchPolicy::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("ordinary_text", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementSearchPolicy_OrdinaryText::_adapter()), "", |v| ElementSearchPolicy::OrdinaryText(Box::new(v)), |x| match x { ElementSearchPolicy::OrdinaryText(b) => b.as_ref(), _ => unreachable!() });
+                let a: *mut crate::skir_client::internal::EnumAdapter<ContentSearchPolicy> = ContentSearchPolicy::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("ordinary_text", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ContentSearchPolicy_OrdinaryText::_adapter()), "", |v| ContentSearchPolicy::OrdinaryText(Box::new(v)), |x| match x { ContentSearchPolicy::OrdinaryText(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchPropertyOverride> = ElementSearchPropertyOverride::_adapter() as *const _ as *mut _;
-                (*a).add_field("owner_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ElementSearchPropertyOverride| &x.owner_type, |x: &mut ElementSearchPropertyOverride, v| x.owner_type = v);
-                (*a).add_field("field", 1, crate::skir_client::Serializer::string(), "", |x: &ElementSearchPropertyOverride| &x.field, |x: &mut ElementSearchPropertyOverride, v| x.field = v);
-                (*a).add_field("mode", 2, crate::skir_client::internal::enum_serializer_from_static(ElementSearchMode::_adapter()), "", |x: &ElementSearchPropertyOverride| &x.mode, |x: &mut ElementSearchPropertyOverride, v| x.mode = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchPropertyOverride> = ContentSearchPropertyOverride::_adapter() as *const _ as *mut _;
+                (*a).add_field("owner_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ContentSearchPropertyOverride| &x.owner_type, |x: &mut ContentSearchPropertyOverride, v| x.owner_type = v);
+                (*a).add_field("field", 1, crate::skir_client::Serializer::string(), "", |x: &ContentSearchPropertyOverride| &x.field, |x: &mut ContentSearchPropertyOverride, v| x.field = v);
+                (*a).add_field("mode", 2, crate::skir_client::internal::enum_serializer_from_static(ContentSearchMode::_adapter()), "", |x: &ContentSearchPropertyOverride| &x.mode, |x: &mut ContentSearchPropertyOverride, v| x.mode = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementSearchDefinition> = ElementSearchDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_field("policy", 0, crate::skir_client::internal::enum_serializer_from_static(ElementSearchPolicy::_adapter()), "", |x: &ElementSearchDefinition| &x.policy, |x: &mut ElementSearchDefinition, v| x.policy = v);
-                (*a).add_field("property_overrides", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ElementSearchPropertyOverride::_adapter())), "", |x: &ElementSearchDefinition| &x.property_overrides, |x: &mut ElementSearchDefinition, v| x.property_overrides = v);
-                (*a).add_field("revision_fingerprint_inputs", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &ElementSearchDefinition| &x.revision_fingerprint_inputs, |x: &mut ElementSearchDefinition, v| x.revision_fingerprint_inputs = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentSearchDefinition> = ContentSearchDefinition::_adapter() as *const _ as *mut _;
+                (*a).add_field("policy", 0, crate::skir_client::internal::enum_serializer_from_static(ContentSearchPolicy::_adapter()), "", |x: &ContentSearchDefinition| &x.policy, |x: &mut ContentSearchDefinition, v| x.policy = v);
+                (*a).add_field("property_overrides", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ContentSearchPropertyOverride::_adapter())), "", |x: &ContentSearchDefinition| &x.property_overrides, |x: &mut ContentSearchDefinition, v| x.property_overrides = v);
+                (*a).add_field("revision_fingerprint_inputs", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &ContentSearchDefinition| &x.revision_fingerprint_inputs, |x: &mut ContentSearchDefinition, v| x.revision_fingerprint_inputs = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementDescriptor> = ElementDescriptor::_adapter() as *const _ as *mut _;
-                (*a).add_field("element_type_id", 0, crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter()), "", |x: &ElementDescriptor| &x.element_type_id, |x: &mut ElementDescriptor, v| x.element_type_id = v);
-                (*a).add_field("type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ElementDescriptor| &x.type_, |x: &mut ElementDescriptor, v| x.type_ = v);
-                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &ElementDescriptor| &x.name, |x: &mut ElementDescriptor, v| x.name = v);
-                (*a).add_field("description", 3, crate::skir_client::Serializer::string(), "", |x: &ElementDescriptor| &x.description, |x: &mut ElementDescriptor, v| x.description = v);
-                (*a).add_field("icon", 4, crate::skirout::base::kernel::v1::icon::Icon::serializer(), "", |x: &ElementDescriptor| &x.icon, |x: &mut ElementDescriptor, v| x.icon = v);
-                (*a).add_field("color", 5, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &ElementDescriptor| &x.color, |x: &mut ElementDescriptor, v| x.color = v);
-                (*a).add_field("availability", 6, crate::skir_client::internal::enum_serializer_from_static(AvailabilityExpression::_adapter()), "", |x: &ElementDescriptor| &x.availability, |x: &mut ElementDescriptor, v| x.availability = v);
-                (*a).add_field("search_definition", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ElementSearchDefinition::_adapter())), "", |x: &ElementDescriptor| &x.search_definition, |x: &mut ElementDescriptor, v| x.search_definition = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentRole_Element> = ContentRole_Element::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementIneligibility> = ElementIneligibility::_adapter() as *const _ as *mut _;
-                (*a).add_field("reasons", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &ElementIneligibility| &x.reasons, |x: &mut ElementIneligibility, v| x.reasons = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentRole_Cue> = ContentRole_Cue::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementEligibility_Eligible> = ElementEligibility_Eligible::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::EnumAdapter<ContentRole> = ContentRole::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("element", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ContentRole_Element::_adapter()), "", |v| ContentRole::Element(Box::new(v)), |x| match x { ContentRole::Element(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("cue", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ContentRole_Cue::_adapter()), "", |v| ContentRole::Cue(Box::new(v)), |x| match x { ContentRole::Cue(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ElementEligibility> = ElementEligibility::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("eligible", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementEligibility_Eligible::_adapter()), "", |v| ElementEligibility::Eligible(Box::new(v)), |x| match x { ElementEligibility::Eligible(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("ineligible", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ElementIneligibility::_adapter()), "", |v| ElementEligibility::Ineligible(Box::new(v)), |x| match x { ElementEligibility::Ineligible(b) => b.as_ref(), _ => unreachable!() });
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentDescriptor> = ContentDescriptor::_adapter() as *const _ as *mut _;
+                (*a).add_field("content_type_id", 0, crate::skir_client::internal::struct_serializer_from_static(ContentTypeId::_adapter()), "", |x: &ContentDescriptor| &x.content_type_id, |x: &mut ContentDescriptor, v| x.content_type_id = v);
+                (*a).add_field("type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ContentDescriptor| &x.type_, |x: &mut ContentDescriptor, v| x.type_ = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &ContentDescriptor| &x.name, |x: &mut ContentDescriptor, v| x.name = v);
+                (*a).add_field("description", 3, crate::skir_client::Serializer::string(), "", |x: &ContentDescriptor| &x.description, |x: &mut ContentDescriptor, v| x.description = v);
+                (*a).add_field("icon", 4, crate::skirout::base::kernel::v1::icon::Icon::serializer(), "", |x: &ContentDescriptor| &x.icon, |x: &mut ContentDescriptor, v| x.icon = v);
+                (*a).add_field("color", 5, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &ContentDescriptor| &x.color, |x: &mut ContentDescriptor, v| x.color = v);
+                (*a).add_field("availability", 6, crate::skir_client::internal::enum_serializer_from_static(AvailabilityExpression::_adapter()), "", |x: &ContentDescriptor| &x.availability, |x: &mut ContentDescriptor, v| x.availability = v);
+                (*a).add_field("search_definition", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ContentSearchDefinition::_adapter())), "", |x: &ContentDescriptor| &x.search_definition, |x: &mut ContentDescriptor, v| x.search_definition = v);
+                (*a).add_field("role", 8, crate::skir_client::internal::enum_serializer_from_static(ContentRole::_adapter()), "", |x: &ContentDescriptor| &x.role, |x: &mut ContentDescriptor, v| x.role = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementCatalogEntry> = ElementCatalogEntry::_adapter() as *const _ as *mut _;
-                (*a).add_field("origin_artifact_id", 0, crate::skir_client::Serializer::string(), "", |x: &ElementCatalogEntry| &x.origin_artifact_id, |x: &mut ElementCatalogEntry, v| x.origin_artifact_id = v);
-                (*a).add_field("source_part", 1, crate::skir_client::Serializer::string(), "", |x: &ElementCatalogEntry| &x.source_part, |x: &mut ElementCatalogEntry, v| x.source_part = v);
-                (*a).add_field("descriptor", 2, crate::skir_client::internal::struct_serializer_from_static(ElementDescriptor::_adapter()), "", |x: &ElementCatalogEntry| &x.descriptor, |x: &mut ElementCatalogEntry, v| x.descriptor = v);
-                (*a).add_field("eligibility", 3, crate::skir_client::internal::enum_serializer_from_static(ElementEligibility::_adapter()), "", |x: &ElementCatalogEntry| &x.eligibility, |x: &mut ElementCatalogEntry, v| x.eligibility = v);
-                (*a).add_field("available", 4, crate::skir_client::Serializer::bool(), "", |x: &ElementCatalogEntry| &x.available, |x: &mut ElementCatalogEntry, v| x.available = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentIneligibility> = ContentIneligibility::_adapter() as *const _ as *mut _;
+                (*a).add_field("reasons", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &ContentIneligibility| &x.reasons, |x: &mut ContentIneligibility, v| x.reasons = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentEligibility_Eligible> = ContentEligibility_Eligible::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<ContentEligibility> = ContentEligibility::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("eligible", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ContentEligibility_Eligible::_adapter()), "", |v| ContentEligibility::Eligible(Box::new(v)), |x| match x { ContentEligibility::Eligible(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("ineligible", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ContentIneligibility::_adapter()), "", |v| ContentEligibility::Ineligible(Box::new(v)), |x| match x { ContentEligibility::Ineligible(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ContentCatalogEntry> = ContentCatalogEntry::_adapter() as *const _ as *mut _;
+                (*a).add_field("origin_artifact_id", 0, crate::skir_client::Serializer::string(), "", |x: &ContentCatalogEntry| &x.origin_artifact_id, |x: &mut ContentCatalogEntry, v| x.origin_artifact_id = v);
+                (*a).add_field("source_part", 1, crate::skir_client::Serializer::string(), "", |x: &ContentCatalogEntry| &x.source_part, |x: &mut ContentCatalogEntry, v| x.source_part = v);
+                (*a).add_field("descriptor", 2, crate::skir_client::internal::struct_serializer_from_static(ContentDescriptor::_adapter()), "", |x: &ContentCatalogEntry| &x.descriptor, |x: &mut ContentCatalogEntry, v| x.descriptor = v);
+                (*a).add_field("presentation_subject", 3, crate::skirout::base::editor::v1::catalog_presentation::CatalogPresentationSubject::serializer(), "", |x: &ContentCatalogEntry| &x.presentation_subject, |x: &mut ContentCatalogEntry, v| x.presentation_subject = v);
+                (*a).add_field("eligibility", 4, crate::skir_client::internal::enum_serializer_from_static(ContentEligibility::_adapter()), "", |x: &ContentCatalogEntry| &x.eligibility, |x: &mut ContentCatalogEntry, v| x.eligibility = v);
+                (*a).add_field("available", 5, crate::skir_client::Serializer::bool(), "", |x: &ContentCatalogEntry| &x.available, |x: &mut ContentCatalogEntry, v| x.available = v);
                 (*a).finalize();
             }
         });

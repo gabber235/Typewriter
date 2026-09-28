@@ -6,41 +6,39 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 final class AuthoringSearchStoryFixtures {
   AuthoringSearchStoryFixtures({
     required String elementType,
-    required skir.PageKindRef pageKind,
+    required ResolvedTypeRef pageType,
   }) {
-    mainQuest = skir.AuthoringSearchBook(
-      id: _id("book", "main_quest"),
-      title: "Main Quest",
-      icon: "fa6-solid:book-open",
-      color: skir.Color(argb: 0xff7c4dff),
-      tags: [mainQuestTag, storyTag],
+    mainQuest = _payload(
+      id: _resourceId("book", "main_quest"),
+      type: referenceResourceTypes.book,
+      definition: CoreResourceDefinitionIds.book,
+      label: "Main Quest",
     );
-    seasonalEvents = skir.AuthoringSearchBook(
-      id: _id("book", "seasonal_events"),
-      title: "Seasonal Events",
-      icon: "fa6-solid:snowflake",
-      color: skir.Color(argb: 0xff00a6a6),
-      tags: [eventTag],
+    seasonalEvents = _payload(
+      id: _resourceId("book", "seasonal_events"),
+      type: referenceResourceTypes.book,
+      definition: CoreResourceDefinitionIds.book,
+      label: "Seasonal Events",
     );
     villageArrival = _page(
       id: "village_arrival",
       name: "Village Arrival",
-      kind: pageKind,
-      book: mainQuest,
+      pageType: pageType,
+      bookId: mainQuest.id,
       chapter: "quest.intro",
     );
     meetTheMayor = _page(
       id: "meet_the_mayor",
       name: "Meet the Mayor",
-      kind: pageKind,
-      book: mainQuest,
+      pageType: pageType,
+      bookId: mainQuest.id,
       chapter: "quest.intro.dialogue",
     );
     winterFestival = _page(
       id: "winter_festival",
       name: "Winter Festival",
-      kind: pageKind,
-      book: seasonalEvents,
+      pageType: pageType,
+      bookId: seasonalEvents.id,
       chapter: "winter.opening",
     );
     mayorGreeting = _element(
@@ -69,60 +67,59 @@ final class AuthoringSearchStoryFixtures {
     );
   }
 
-  final organizationId = _id("organization", "widgetbook");
-  final realmId = _id("realm_instance", "authoring_demo");
+  final organizationId = recordId("organization:widgetbook");
+  final realmId = recordId("realm_instance:authoring_demo");
 
-  final mainQuestTag = skir.AuthoringSearchTag(
-    id: _id("tag", "main_quest"),
-    name: "Main Quest",
-    color: skir.Color(argb: 0xffffb300),
+  final mainQuestTag = _payload(
+    id: _resourceId("tag", "main_quest"),
+    type: referenceResourceTypes.tag,
+    definition: CoreResourceDefinitionIds.tag,
+    label: "Main Quest",
   );
-  final storyTag = skir.AuthoringSearchTag(
-    id: _id("tag", "story"),
-    name: "Story",
-    color: skir.Color(argb: 0xffab47bc),
+  final storyTag = _payload(
+    id: _resourceId("tag", "story"),
+    type: referenceResourceTypes.tag,
+    definition: CoreResourceDefinitionIds.tag,
+    label: "Story",
   );
-  final eventTag = skir.AuthoringSearchTag(
-    id: _id("tag", "event"),
-    name: "Event",
-    color: skir.Color(argb: 0xff26a69a),
+  final eventTag = _payload(
+    id: _resourceId("tag", "event"),
+    type: referenceResourceTypes.tag,
+    definition: CoreResourceDefinitionIds.tag,
+    label: "Event",
   );
 
-  late final skir.AuthoringSearchBook mainQuest;
-  late final skir.AuthoringSearchBook seasonalEvents;
-  late final skir.AuthoringSearchPage villageArrival;
-  late final skir.AuthoringSearchPage meetTheMayor;
-  late final skir.AuthoringSearchPage winterFestival;
-  late final skir.AuthoringSearchElement mayorGreeting;
-  late final skir.AuthoringSearchElement welcomeBundle;
-  late final skir.AuthoringSearchElement festivalAnnouncement;
+  late final AuthoringSearchResultPayload mainQuest;
+  late final AuthoringSearchResultPayload seasonalEvents;
+  late final AuthoringSearchResultPayload villageArrival;
+  late final AuthoringSearchResultPayload meetTheMayor;
+  late final AuthoringSearchResultPayload winterFestival;
+  late final AuthoringSearchResultPayload mayorGreeting;
+  late final AuthoringSearchResultPayload welcomeBundle;
+  late final AuthoringSearchResultPayload festivalAnnouncement;
 
   List<QuerySelectorDefinition> get selectors => [
     KeyValueSelectorDefinition(
       id: "book",
       key: "book:",
-      value: QuerySelectorValue.enumValue([
-        mainQuest.title,
-        seasonalEvents.title,
+      value: const QuerySelectorValue.enumValue([
+        "Main Quest",
+        "Seasonal Events",
       ]),
     ),
     KeyValueSelectorDefinition(
       id: "page",
       key: "page:",
       value: QuerySelectorValue.enumValue([
-        villageArrival.name,
-        meetTheMayor.name,
-        winterFestival.name,
+        "Village Arrival",
+        "Meet the Mayor",
+        "Winter Festival",
       ]),
     ),
     KeyValueSelectorDefinition(
       id: "tag",
       key: "tag:",
-      value: QuerySelectorValue.enumValue([
-        mainQuestTag.name,
-        storyTag.name,
-        eventTag.name,
-      ]),
+      value: QuerySelectorValue.enumValue(["Main Quest", "Story", "Event"]),
     ),
     KeyValueSelectorDefinition(
       id: "type",
@@ -137,58 +134,58 @@ final class AuthoringSearchStoryFixtures {
   List<SearchNode> get nodes => [
     _node(
       "book:main_quest",
-      authoringBookSearchResultType,
+      authoringResourceSearchResultType,
       mainQuest,
-      mainQuest.title,
+      "Main Quest",
     ),
     _node(
       "page:meet_the_mayor",
-      authoringPageSearchResultType,
+      authoringResourceSearchResultType,
       meetTheMayor,
-      meetTheMayor.name,
-      "${meetTheMayor.chapter} / ${mainQuest.title}",
+      "Meet the Mayor",
+      "quest.intro.dialogue / Main Quest",
     ),
     _node(
       "element:mayor_greeting",
-      authoringElementSearchResultType,
+      authoringResourceSearchResultType,
       mayorGreeting,
-      mayorGreeting.name,
-      meetTheMayor.name,
+      "Mayor Greeting",
+      "Meet the Mayor",
     ),
     _node(
       "element:welcome_bundle",
-      authoringElementSearchResultType,
+      authoringResourceSearchResultType,
       welcomeBundle,
-      welcomeBundle.name,
-      villageArrival.name,
+      "Give Welcome Bundle",
+      "Village Arrival",
     ),
     _node(
       "tag:main_quest",
-      authoringTagSearchResultType,
+      authoringResourceSearchResultType,
       mainQuestTag,
-      mainQuestTag.name,
+      "Main Quest",
     ),
     _node(
       "book:seasonal_events",
-      authoringBookSearchResultType,
+      authoringResourceSearchResultType,
       seasonalEvents,
-      seasonalEvents.title,
+      "Seasonal Events",
     ),
     _node(
       "page:winter_festival",
-      authoringPageSearchResultType,
+      authoringResourceSearchResultType,
       winterFestival,
-      winterFestival.name,
-      "${winterFestival.chapter} / ${seasonalEvents.title}",
+      "Winter Festival",
+      "winter.opening / Seasonal Events",
     ),
     _node(
       "element:festival_announcement",
-      authoringElementSearchResultType,
+      authoringResourceSearchResultType,
       festivalAnnouncement,
-      festivalAnnouncement.name,
-      winterFestival.name,
+      "Festival Announcement",
+      "Winter Festival",
     ),
-    _node("tag:event", authoringTagSearchResultType, eventTag, eventTag.name),
+    _node("tag:event", authoringResourceSearchResultType, eventTag, "Event"),
   ];
 
   SearchSource source({
@@ -207,10 +204,7 @@ final class AuthoringSearchStoryFixtures {
     interaction: SearchInteraction(
       activation: SearchActivation.command(
         resolve: (result) => switch (result.type) {
-          authoringBookSearchResultType => openAuthoringBookCommandId,
-          authoringTagSearchResultType => openAuthoringTagCommandId,
-          authoringPageSearchResultType => openAuthoringPageCommandId,
-          authoringElementSearchResultType => openAuthoringElementCommandId,
+          authoringResourceSearchResultType => openAuthoringResourceCommandId,
           _ => null,
         },
         dependencies: const [],
@@ -222,45 +216,125 @@ final class AuthoringSearchStoryFixtures {
   );
 }
 
-skir.AuthoringSearchPage _page({
+AuthoringSearchResultPayload _page({
   required String id,
   required String name,
-  required skir.PageKindRef kind,
-  required skir.AuthoringSearchBook book,
+  required ResolvedTypeRef pageType,
+  required skir.ResourceId bookId,
   required String chapter,
-}) => skir.AuthoringSearchPage(
-  id: _id("page", id),
-  name: name,
-  kind: kind,
-  book: skir.AuthoringSearchBookContext(id: book.id, title: book.title),
-  chapter: chapter,
+}) => _payload(
+  id: _resourceId("page", id),
+  owner: bookId,
+  type: pageType,
+  definition: CoreResourceDefinitionIds.page,
+  label: name,
+  context: {"book": ReferenceValue(bookId)},
+  content: const {},
 );
 
-skir.AuthoringSearchElement _element({
+AuthoringSearchResultPayload _element({
   required String id,
   required String name,
   required String elementType,
-  required skir.AuthoringSearchPage page,
+  required AuthoringSearchResultPayload page,
   required String text,
   required String highlight,
 }) {
-  final start = text.indexOf(highlight);
-  return skir.AuthoringSearchElement(
-    id: _id("element", id),
-    name: name,
-    elementType: elementType,
-    placement: skir.ElementPlacement.createGraph(
-      x: 0,
-      y: 0,
-      width: 4,
-      height: 2,
+  final bookId = page.owner;
+  if (bookId == null) {
+    throw ArgumentError.value(page, "page", "must have a book owner");
+  }
+  return _payload(
+    id: _resourceId("element", id),
+    owner: page.id,
+    type: ResolvedTypeRef(id: DeclaredTypeId(elementType), revision: 1),
+    definition: CoreResourceDefinitionIds.element,
+    label: name,
+    context: {"book": ReferenceValue(bookId)},
+    matchText: text,
+    highlight: highlight,
+  );
+}
+
+AuthoringSearchResultPayload _payload({
+  required skir.ResourceId id,
+  required ResolvedTypeRef type,
+  required ResourceDefinitionId definition,
+  required String label,
+  skir.ResourceId? owner,
+  Map<String, DataValue> content = const {},
+  Map<String, DataValue> context = const {},
+  String? matchText,
+  String? highlight,
+}) {
+  final catalog = TypeCatalog([
+    TypeDefinition(
+      id: type,
+      kind: NominalTypeKind.concrete,
+      representation: const RecordType(fields: {}),
     ),
-    page: page,
-    match: skir.AuthoringSearchMatch(
-      text: text,
-      start: start,
-      end: start + highlight.length,
+  ]);
+  final contentEnvelope = TypedValueEnvelope(
+    rootType: type,
+    rootValue: RecordValue(content),
+  );
+  final highlightStart = matchText == null || highlight == null
+      ? null
+      : matchText.indexOf(highlight);
+  final body =
+      matchText == null ||
+          highlight == null ||
+          highlightStart == null ||
+          highlightStart < 0
+      ? TextElement(label.asStringLiteral)
+      : RichTextElement(
+          runs: [
+            PresentationTextRun(text: "$label. ".asStringLiteral),
+            PresentationTextRun(
+              text: matchText.substring(0, highlightStart).asStringLiteral,
+            ),
+            PresentationTextRun(
+              text: highlight.asStringLiteral,
+              style: PresentationTextStyle(fontWeight: 700.asFloatLiteral),
+            ),
+            PresentationTextRun(
+              text: matchText
+                  .substring(highlightStart + highlight.length)
+                  .asStringLiteral,
+            ),
+          ],
+          paragraph: const TextParagraph(
+            maxLines: 2,
+            overflow: PresentationTextOverflow.ellipsis,
+          ),
+        );
+  return AuthoringSearchResultPayload(
+    subject: (
+      content: contentEnvelope,
+      descriptor: contentEnvelope,
+      identityEnvelope: contentEnvelope,
+      identity: (id: id, owner: owner),
     ),
+    context: TypedValueEnvelope(
+      rootType: type,
+      rootValue: RecordValue(context),
+    ),
+    presentation: (
+      model: PresentationModel(
+        catalog: catalog,
+        inputs: const {},
+        root: PresentationNode(
+          id: "story.search.${definition.value}",
+          element: body,
+        ),
+      ),
+      presentation: PresentationId(
+        namespace: "widgetbook",
+        name: definition.value,
+      ),
+    ),
+    definition: definition,
+    ownerPath: [?owner, if (context["book"] case ReferenceValue(:final id)) id],
   );
 }
 
@@ -280,5 +354,5 @@ SearchNode _node(
   ),
 );
 
-skir.RecordId _id(String table, String id) =>
-    skir.RecordId(table: table, key: skir.RecordIdKey.wrapString(id));
+skir.ResourceId _resourceId(String kind, String id) =>
+    skir.ResourceId(value: "$kind:$id");

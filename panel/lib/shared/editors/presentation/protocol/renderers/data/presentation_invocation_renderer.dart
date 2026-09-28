@@ -9,7 +9,15 @@ part of "../../bound_value_renderer.dart";
 /// diagnostic.
 extension PresentationInvocationRendering on PresentationInvocationElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
-    final definition = scope.resolvePresentation(null, presentationId);
+    final resolution = scope.resolvePresentation(
+      null,
+      presentationId,
+      PresentationInputAccess.read,
+    );
+    if (resolution case TypeFailure(:final diagnostics)) {
+      return presentationDiagnostic(context, diagnostics);
+    }
+    final definition = resolution.valueOrNull;
     if (definition == null ||
         scope.activePresentations.contains(presentationId)) {
       return presentationDiagnostic(context, [
@@ -68,18 +76,11 @@ extension PresentationInputScope on PresentationRenderScope {
 
       final actual = value.type;
 
-      var inferred = expected.inferPresentationSubstitutions(actual);
-      inferred ??= expected
-          .bindingNominal(registry)
-          .inferPresentationSubstitutions(actual.bindingNominal(registry));
-      if (inferred == null && expected is! NamedType) {
-        final representation = actual.bindingRepresentation(registry);
-        inferred = expected.inferPresentationSubstitutions(representation);
-        if (inferred == null &&
-            representation.isStructurallyAssignableTo(expected, registry)) {
-          inferred = {};
-        }
-      }
+      final inferred = inferPresentationInputSubstitutions(
+        expected,
+        actual,
+        registry,
+      );
       if (inferred == null) {
         return _inputFailure("Incompatible presentation input: ${input.name}");
       }

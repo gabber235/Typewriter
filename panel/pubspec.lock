@@ -93,10 +93,10 @@ packages:
     dependency: "direct main"
     description:
       name: auto_route
-      sha256: e9acfeb3df33d188fce4ad0239ef4238f333b7aa4d95ec52af3c2b9360dcd969
+      sha256: "538d8eb2ffc48de30abb30d4545a90405b5f8a29248b82d5e4b2977a79bfd229"
       url: "https://pub.dev"
     source: hosted
-    version: "11.1.0"
+    version: "11.2.0"
   auto_route_generator:
     dependency: "direct dev"
     description:
@@ -273,6 +273,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.9"
+  cupertino_ui:
+    dependency: transitive
+    description:
+      name: cupertino_ui
+      sha256: c23816577a1280cff409e989541767887011f8f1d8c1863a794ed308af46f2a9
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   dart_casing:
     dependency: "direct main"
     description:
@@ -414,6 +422,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  flutter_localizations:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_markdown_plus:
     dependency: "direct main"
     description:
@@ -872,6 +885,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_ui:
+    dependency: transitive
+    description:
+      name: material_ui
+      sha256: "134ab2f0843545c4e661e4ba2753fe1bcf0753cb690d5a9ee4870638a40411e9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.0"
   maybe_just_nothing:
     dependency: transitive
     description:
@@ -916,8 +937,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/nats_core"
-      ref: "5c695ca2f0e46440dbd9e2afe618a20980673036"
-      resolved-ref: "5c695ca2f0e46440dbd9e2afe618a20980673036"
+      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      resolved-ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
       url: "https://github.com/gabber235/nats.dart.git"
     source: git
     version: "0.0.1"
@@ -925,8 +946,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/nats_jetstream"
-      ref: "5c695ca2f0e46440dbd9e2afe618a20980673036"
-      resolved-ref: "5c695ca2f0e46440dbd9e2afe618a20980673036"
+      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      resolved-ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
       url: "https://github.com/gabber235/nats.dart.git"
     source: git
     version: "0.0.1"
@@ -1492,10 +1513,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11"
+      sha256: "0a10344e901e5b2e63819567951cb6a06673ed6b84f40462188ff5a0c41f371f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.12"
+    version: "0.7.14"
   test_screenshot:
     dependency: "direct dev"
     description:
@@ -1643,10 +1664,10 @@ packages:
     dependency: "direct main"
     description:
       name: vector_math
-      sha256: f36f9f3be64c6198714492bb455c11056e33e2f85d9a0b676a48301e44fdcf47
+      sha256: "92b9910f66ed1057fd4da7b040ae7c74cafacf885bdc81be496928d5049b032d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2"
+    version: "2.4.3"
   vm_service:
     dependency: transitive
     description:
@@ -1761,4 +1782,4 @@ packages:
     version: "2.2.4"
 sdks:
   dart: ">=3.13.0 <4.0.0"
-  flutter: ">=3.44.0"
+  flutter: ">=3.47.0"

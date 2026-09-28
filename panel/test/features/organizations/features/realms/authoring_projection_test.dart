@@ -1,16 +1,17 @@
 import "package:flutter/material.dart" hide Page;
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test("Tag projection overlays edited fields onto fresh canonical data", () {
     final canonical = Tag(
-      tagId: recordId("tag:test"),
+      tagId: skir.ResourceId(value: "test"),
       name: "Remote name",
       color: Colors.blue,
       parentIds: const [],
-      placement: const Placement(x: 1, y: 2, width: 3, height: 4),
+      placement: GraphPlacement(x: 1, y: 2, width: 3, height: 4),
     );
     final withDraftName = DataPath.root
         .field("name")
@@ -35,7 +36,7 @@ void main() {
 
   test("Book and Page projections decode domain values", () {
     final book = Book(
-      bookId: recordId("book:test"),
+      bookId: skir.ResourceId(value: "test"),
       title: "Remote title",
       icon: "mdi:book",
       color: Colors.blue,
@@ -59,10 +60,10 @@ void main() {
     );
 
     final page = Page(
-      pageId: recordId("page:test"),
+      pageId: skir.ResourceId(value: "test"),
       bookId: book.bookId,
       name: "Remote page",
-      kind: const PageKindRef(id: "kind", revision: 1),
+      rootType: referenceResourceTypes.page,
       chapter: "remote",
       priority: 1,
     );
@@ -78,30 +79,5 @@ void main() {
     );
     expect(projectedPage.chapter, "draft");
     expect(projectedPage.name, "Remote page");
-  });
-
-  test("Page element projection merges value and placement paths", () {
-    final definition = generateRandomEntryDefinition().copyWith(
-      id: "entry",
-      placement: const EntryPlacement(x: 1, y: 2, width: 3, height: 4),
-    );
-    final element = PageElement.entry(
-      entry: PageEntry.definition(definition: definition),
-    );
-    final x = elementPlacementPath.field("x");
-    final draft = x.replace(element.editorValue!, 9.asValue).valueOrNull!;
-
-    final projected = element.projected(
-      LocalEditorValue(value: draft, editedPaths: {x}),
-    );
-    final projectedDefinition = switch (projected) {
-      PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-        definition,
-      _ => throw StateError("Expected a definition entry"),
-    };
-
-    expect(projectedDefinition.placement.x, 9);
-    expect(projectedDefinition.placement.y, 2);
-    expect(projectedDefinition.data, definition.data);
   });
 }

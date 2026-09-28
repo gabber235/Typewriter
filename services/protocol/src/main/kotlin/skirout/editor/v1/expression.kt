@@ -6828,6 +6828,298 @@ class ColorOperationExpression private constructor(
     }
 }
 
+sealed interface RecordExpressionField_OrMutable {
+    val name: kotlin.String;
+    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.expression.RecordExpressionField;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RecordExpressionField private constructor(
+    override val name: kotlin.String,
+    override val value: skirout.editor.v1.expression.TypedExpression,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RecordExpressionField>? =
+        null,
+): skirout.editor.v1.expression.RecordExpressionField_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        name: kotlin.String,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RecordExpressionField>? =
+            null,
+    ): this(
+        name,
+        value.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        name = this.name,
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        name: kotlin.String =
+            this.name,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.value,
+    ) = skirout.editor.v1.expression.RecordExpressionField(
+        name,
+        value.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.expression.RecordExpressionField && this.name == other.name && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.name, this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.expression.RecordExpressionField.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [RecordExpressionField]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var name: kotlin.String =
+            "",
+        override var value: skirout.editor.v1.expression.TypedExpression =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RecordExpressionField>? =
+            null,
+    ): skirout.editor.v1.expression.RecordExpressionField_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.expression.RecordExpressionField(
+            name = this.name,
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.expression.RecordExpressionField(
+                "",
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RecordExpressionField].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            name: kotlin.String =
+                "",
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+        ) = skirout.editor.v1.expression.RecordExpressionField(
+            name = name,
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/expression.skir:RecordExpressionField",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [RecordExpressionField] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [RecordExpressionField] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "name",
+                "name",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.name },
+                { mut, v -> mut.name = v },
+            );
+            serializerImpl.addField(
+                "value",
+                "value",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface RecordExpression_OrMutable {
+    val fields: kotlin.collections.List<skirout.editor.v1.expression.RecordExpressionField_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.expression.RecordExpression;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RecordExpression private constructor(
+    override val fields: build.skir.KeyedList<skirout.editor.v1.expression.RecordExpressionField, kotlin.String>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RecordExpression>? =
+        null,
+): skirout.editor.v1.expression.RecordExpression_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        fields: kotlin.collections.Iterable<skirout.editor.v1.expression.RecordExpressionField_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RecordExpression>? =
+            null,
+    ): this(
+        build.skir.internal.toKeyedList(fields, "name", { it.name }, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        fields = this.fields,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        fields: kotlin.collections.Iterable<skirout.editor.v1.expression.RecordExpressionField_OrMutable> =
+            this.fields,
+    ) = skirout.editor.v1.expression.RecordExpression(
+        build.skir.internal.toKeyedList(fields, "name", { it.name }, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.expression.RecordExpression && this.fields == other.fields);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.fields).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.expression.RecordExpression.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [RecordExpression]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var fields: kotlin.collections.List<skirout.editor.v1.expression.RecordExpressionField> =
+            build.skir.internal.emptyKeyedList<skirout.editor.v1.expression.RecordExpressionField, kotlin.String>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RecordExpression>? =
+            null,
+    ): skirout.editor.v1.expression.RecordExpression_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.expression.RecordExpression(
+            fields = this.fields,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.expression.RecordExpression(
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.expression.RecordExpressionField, kotlin.String>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RecordExpression].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            fields: kotlin.collections.Iterable<skirout.editor.v1.expression.RecordExpressionField_OrMutable> =
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.expression.RecordExpressionField, kotlin.String>(),
+        ) = skirout.editor.v1.expression.RecordExpression(
+            fields = fields,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/expression.skir:RecordExpression",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [RecordExpression] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [RecordExpression] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "fields",
+                "fields",
+                0,
+                build.skir.internal.keyedListSerializer(
+                    skirout.editor.v1.expression.RecordExpressionField.serializer,
+                    "name",
+                    { it.name },
+                ),
+                "",
+                { it.fields },
+                { mut, v -> mut.fields = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 /** Deeply immutable. */
 sealed class Expression private constructor() {
     /** The kind of variant held by a `Expression`. */
@@ -6859,6 +7151,7 @@ sealed class Expression private constructor() {
         REGEX_WRAPPER,
         COALESCE_WRAPPER,
         COLOR_OPERATION_WRAPPER,
+        RECORD_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.Expression.UNKNOWN")) internal constructor(
@@ -7340,6 +7633,24 @@ sealed class Expression private constructor() {
         }
     }
 
+    class RecordWrapper private constructor (
+        val value: skirout.editor.v1.expression.RecordExpression,
+    ) : skirout.editor.v1.expression.Expression() {
+        constructor(
+            value: skirout.editor.v1.expression.RecordExpression_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.RECORD_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.expression.Expression.RecordWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -934908847;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.Expression>? get() = null;
 
     abstract val kind: Kind;
@@ -7758,6 +8069,18 @@ sealed class Expression private constructor() {
             )
         );
 
+        /** Shortcut for `RecordWrapper(skirout.editor.v1.expression.RecordExpression(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createRecord(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            fields: kotlin.collections.Iterable<skirout.editor.v1.expression.RecordExpressionField_OrMutable>,
+        ) = RecordWrapper(
+            skirout.editor.v1.expression.RecordExpression(
+                fields = fields,
+            )
+        );
+
         private val _serializerImpl =
             build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.Expression, Unknown>(
                 recordId = "editor/v1/expression.skir:Expression",
@@ -8016,6 +8339,15 @@ sealed class Expression private constructor() {
                     skirout.editor.v1.expression.ColorOperationExpression.serializer,
                     "",
                     { ColorOperationWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    27,
+                    "record",
+                    Kind.RECORD_WRAPPER.ordinal,
+                    skirout.editor.v1.expression.RecordExpression.serializer,
+                    "",
+                    { RecordWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();

@@ -5,14 +5,13 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hosts tag creation and the projected inheritance graph.
 ///
 /// Creation starts from a validated identifier dialog, submits through
 /// [CanonicalTags], then selects the returned resource only after persistence
-/// succeeds. Existing tags are rendered by [TagGraph], which handles layout
+/// succeeds. Existing tags are rendered by [TagGraph], which handles placement
 /// gestures through the same provider.
 @RoutePage()
 class TagsPage extends HookConsumerWidget {
@@ -22,14 +21,41 @@ class TagsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(projectedTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
+    final catalogRequest = RealmEditorCatalogRequest(
+      types: {referenceResourceTypes.tag},
+    );
+    final catalogState = ref.watch(realmCatalogProvider(catalogRequest));
+    final canCreate =
+        catalogState.currentCatalog
+            ?.creatableRoots(CoreResourceDefinitionIds.tag)
+            .singleOrNull !=
+        null;
 
     Future<void> handleCreateTag() async {
-      final name = await _showTagNameDialog(context);
-      if (name == null || name.isEmpty) return;
-      final newTag = await ref
-          .read(canonicalTagsProvider.notifier)
-          .createTag(name: name, preferredGraphAnchor: viewportCenter.value);
-      ref.read(selectionProvider.notifier).select(TagIdentifier(newTag.tagId));
+      final tags = tagsAsync.value ?? const <Tag>[];
+      final catalog = ref
+          .read(realmCatalogProvider(catalogRequest))
+          .requireCurrentCatalog();
+      final root = catalog
+          .creatableRoots(CoreResourceDefinitionIds.tag)
+          .singleOrNull;
+      if (root == null) throw StateError("Tag creation is unavailable");
+      final created = await ref
+          .read(resourceCreationProvider)
+          .create(
+            context: context,
+            request: ResourceCreationRequest(
+              definition: CoreResourceDefinitionIds.tag,
+              title: "Create Tag",
+              concreteRoot: root,
+              partial: tagCreationPartial(
+                tags,
+                preferredGraphAnchor: viewportCenter.value,
+              ),
+            ),
+          );
+      if (created == null) return;
+      ref.read(selectionProvider.notifier).select(TagIdentifier(created.id));
     }
 
     return Pane(
@@ -56,12 +82,12 @@ class TagsPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: (_) => handleCreateTag(),
+              onInvoke: canCreate ? (_) => handleCreateTag() : null,
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: handleCreateTag,
+            onPressed: canCreate ? handleCreateTag : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -77,7 +103,7 @@ class TagsPage extends HookConsumerWidget {
                         return EmptyScreen(
                           title: "No tags yet",
                           buttonText: "Create Tag",
-                          onPressed: handleCreateTag,
+                          onPressed: canCreate ? handleCreateTag : null,
                         );
                       }
                       return TagGraph(
@@ -93,64 +119,6 @@ class TagsPage extends HookConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  /// Collects an identifier compatible with the inspector's name field.
-  ///
-  /// Cancellation and invalid submission return null. The route owns only this
-  /// transient dialog value; canonical creation remains in the application
-  /// provider.
-  Future<String?> _showTagNameDialog(BuildContext context) async {
-    return showAdvancedDialog<String>(
-      context: context,
-      builder: (context) {
-        return HookConsumer(
-          builder: (context, ref, child) {
-            final controller = useTextEditingController();
-            final isValid = useListenableSelector(
-              controller,
-              () => controller.text.isValidIdentifier,
-            );
-            final focusNode = useFocusNode();
-
-            return AlertDialog(
-              title: const Text("Create Tag"),
-              content: EditorTextField(
-                focusNode: focusNode,
-                controller: controller,
-                autofocus: EditorTextFieldAutoFocus.textField,
-                decoration: const InputDecoration(hintText: "Enter tag name"),
-                inputFormatters: identifierInputFormats.toTextInputFormatters(),
-                onSubmitted: (value) {
-                  if (!isValid) return;
-                  Navigator.of(context).pop(value);
-                },
-              ),
-              actions: [
-                TextButton.icon(
-                  icon: const Icones(Fa6Solid.xmark),
-                  label: const Text("Cancel"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.color,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                LoadingButton.filledIcon(
-                  onPressed: isValid
-                      ? () => Navigator.of(context).pop(controller.text)
-                      : null,
-                  label: const Text("Create"),
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

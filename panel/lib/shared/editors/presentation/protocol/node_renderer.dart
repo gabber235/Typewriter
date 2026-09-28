@@ -67,12 +67,7 @@ class PresentationNodeRenderer extends StatelessWidget {
             header: header,
             scope: renderScope,
             contained: node.element is SectionElement,
-            showDirectDiagnostics: switch (node.element) {
-              ListInputElement() ||
-              MapInputElement() ||
-              RecordInputElement() => true,
-              _ => false,
-            },
+            showDirectDiagnostics: chain.showDirectDiagnostics,
             child: child,
           );
     final decoratedSurface = switch (node.element) {
@@ -126,7 +121,8 @@ extension on PresentationElement {
         context,
         scope,
       ),
-      final TextElement element => element.render(scope),
+      final TextElement element => element.render(context, scope),
+      final RichTextElement element => element.render(context, scope),
       final MarkdownElement element => element.render(scope),
       final IconElement element => element.render(context, scope),
       final ImageElement element => element.render(context, scope),
@@ -193,6 +189,7 @@ extension on PresentationElement {
       final TabsElement element => element.render(scope),
       final DividerElement element => element.render(),
       final SpacerElement element => element.render(scope),
+      final AdaptiveLeadingElement element => element.render(context, scope),
     };
   }
 }

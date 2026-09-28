@@ -4,7 +4,7 @@ export "decimal_comparison.dart";
 export "generic_inference.dart";
 export "identifier_type.dart";
 export "nullable_extrema.dart";
-export "reference_family.dart";
+export "reference_resource_types.dart";
 export "safe_refinement.dart";
 export "standard_types.dart";
 export "type_constraint_validation.dart";

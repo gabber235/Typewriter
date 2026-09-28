@@ -85,15 +85,82 @@ class BoundControlShell extends HookWidget {
     );
 
     final child = builder(context, field);
+    final focusableChild = _FocusableBoundControl(
+      controller: scope.bindingFocusController,
+      owner: scope.editOwnerFor?.call(binding.reference),
+      reference: scope.canonical(binding.reference),
+      child: child,
+    );
 
-    if (!labeled) return child;
+    if (!labeled) return focusableChild;
     return LabeledControl(
       control: control,
       scope: scope,
       missing: synthesizeMissingDiagnostic && field.missing,
-      child: child,
+      child: focusableChild,
     );
   }
+}
+
+class _FocusableBoundControl extends StatefulWidget {
+  const _FocusableBoundControl({
+    required this.controller,
+    required this.owner,
+    required this.reference,
+    required this.child,
+  });
+
+  final RenderedBindingFocusController? controller;
+  final EditOwner? owner;
+  final BindingReference reference;
+  final Widget child;
+
+  @override
+  State<_FocusableBoundControl> createState() => _FocusableBoundControlState();
+}
+
+class _FocusableBoundControlState extends State<_FocusableBoundControl> {
+  final _focusNode = FocusNode(debugLabel: "Rendered editor binding");
+  VoidCallback? _unregister;
+
+  @override
+  void initState() {
+    super.initState();
+    _register();
+  }
+
+  @override
+  void didUpdateWidget(_FocusableBoundControl oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.owner != widget.owner ||
+        oldWidget.reference != widget.reference) {
+      _register();
+    }
+  }
+
+  void _register() {
+    _unregister?.call();
+    _unregister = switch ((widget.controller, widget.owner)) {
+      (final controller?, final owner?) => controller.register(
+        owner: owner,
+        reference: widget.reference,
+        node: _focusNode,
+      ),
+      _ => null,
+    };
+  }
+
+  @override
+  void dispose() {
+    _unregister?.call();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Focus(focusNode: _focusNode, skipTraversal: true, child: widget.child);
 }
 
 /// The checked binding and interaction capabilities passed to a leaf control.

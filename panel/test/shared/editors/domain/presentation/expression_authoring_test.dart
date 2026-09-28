@@ -33,6 +33,35 @@ void main() {
     );
   });
 
+  test("constructs a typed record from an Iconify search string", () {
+    final expression = TypedExpression(
+      resultType: RecordType(
+        fields: {"value": TypeField(name: "value", type: StringType())},
+      ),
+      expression: RecordExpression({"value": "mdi:book".asStringLiteral}),
+    );
+
+    expect(
+      expression.evaluate(context, registry: null).valueOrNull,
+      RecordValue({"value": const StringValue("mdi:book")}),
+    );
+  });
+
+  test("rejects a manual Iconify identifier without prefix:name", () {
+    final identifier = "invalid".asStringLiteral.regexCapture(
+      r"^([a-z0-9-]+:[a-z0-9-]+)$",
+      group: 1,
+    );
+    final expression = TypedExpression(
+      resultType: const RecordType(
+        fields: {"value": TypeField(name: "value", type: StringType())},
+      ),
+      expression: RecordExpression({"value": identifier}),
+    );
+
+    expect(expression.evaluate(context, registry: null), isA<TypeFailure>());
+  });
+
   const itemBindingId = BindingId(1);
   const accumulatorBindingId = BindingId(2);
   const leftBindingId = BindingId(3);

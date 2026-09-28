@@ -395,6 +395,12 @@ class _InspectorContent extends HookConsumerWidget {
     // TODO: Add shimmer when loading.
     final session = ref.watch(inspectionSessionProvider);
     final runtime = ref.watch(editorRealmRuntimeProvider);
+    final bindingFocusController = ref.watch(
+      renderedBindingFocusControllerProvider,
+    );
+    ref.listen(selectionProvider, (_, _) {
+      bindingFocusController.cancelPendingFocus();
+    });
 
     return ListenableBuilder(
       listenable: session,
@@ -411,6 +417,7 @@ class _InspectorContent extends HookConsumerWidget {
                 key: ValueKey(ref.watch(selectionProvider)),
                 model: model,
                 host: runtime?.host() ?? const EditorHostCapabilities(),
+                bindingFocusController: bindingFocusController,
               ),
             const SizedBox(height: 5),
             InspectorOperations(),

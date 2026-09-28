@@ -12,7 +12,11 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Variance
+import com.typewritermc.types.DataPath
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.TypeCatalog
+import com.typewritermc.types.FieldMergePolicy
+import com.typewritermc.types.FieldMergeStrategy
 import com.typewritermc.types.FloatWidth
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NominalTypeKind
@@ -47,19 +51,43 @@ class KspTypeGraphConverter(
         val context = ConversionContext(identityPolicy)
         val root = context.expression(type, listOf(type.displayName))
 
-        return if (root == null || context.diagnostics.isNotEmpty()) {
-            KspTypeConversionResult.Failure(context.diagnostics.toList())
-        } else {
-            KspTypeConversionResult.Success(
-                TypeGraph(
-                    root = root,
-                    definitions = context.definitions.values.sortedBy { it.id.sortKey },
-                ),
-                context.serializedProperties.sortedWith(
-                    compareBy<KspSerializedProperty> { it.ownerType.sortKey }.thenBy(KspSerializedProperty::serializedName),
-                ),
-            )
+        if (root == null || context.diagnostics.isNotEmpty()) {
+            return KspTypeConversionResult.Failure(context.diagnostics.toList())
         }
+        val graph = TypeGraph(root, context.definitions.values.sortedBy { it.id.sortKey })
+        val rootReference = (root as? TypeExpression.Named)?.reference
+        if (rootReference != null && graph.definitions.any {
+                it.id == rootReference.copy(arguments = emptyList()) && it.kind == NominalTypeKind.CONCRETE
+            }) {
+            val violations = try {
+                TypeCatalog(graph.definitions).fieldContractViolations(setOf(rootReference))
+            } catch (failure: IllegalArgumentException) {
+                return KspTypeConversionResult.Failure(
+                    listOf(KspTypeDiagnostic(listOf(rootReference.toString()), failure.message ?: "Invalid inherited record fields.")),
+                )
+            }
+            if (violations.isNotEmpty()) {
+                return KspTypeConversionResult.Failure(violations.map { violation ->
+                    val renamed = context.serializedProperties.firstOrNull { property ->
+                        property.ownerType == rootReference.copy(arguments = emptyList()) &&
+                            property.declaration.simpleName.asString() == violation.field &&
+                            property.serializedName != violation.field
+                    }
+                    KspTypeDiagnostic(
+                        listOf(rootReference.toString(), violation.owner.toString(), violation.field),
+                        if (renamed == null) violation.toString() else
+                            "${violation.concrete} serializes ${violation.owner}.${violation.field} as '${renamed.serializedName}'; the required wire field is '${violation.field}'.",
+                    )
+                })
+            }
+        }
+        return KspTypeConversionResult.Success(
+            graph,
+            context.serializedProperties.sortedWith(
+                compareBy<KspSerializedProperty> { it.ownerType.sortKey }.thenBy(KspSerializedProperty::serializedName),
+            ),
+            context.declarations.toMap(),
+        )
     }
 }
 
@@ -72,6 +100,7 @@ sealed interface KspTypeConversionResult {
     data class Success(
         val graph: TypeGraph,
         val serializedProperties: List<KspSerializedProperty>,
+        val declarations: Map<ResolvedTypeRef, KSClassDeclaration>,
     ) : KspTypeConversionResult
 
     data class Failure(
@@ -125,6 +154,7 @@ private class ConversionContext(
     private val identityPolicy: KspTypeIdentityPolicy,
 ) {
     val definitions = linkedMapOf<ResolvedTypeRef, TypeDefinition>()
+    val declarations = linkedMapOf<ResolvedTypeRef, KSClassDeclaration>()
     val diagnostics = mutableListOf<KspTypeDiagnostic>()
     val serializedProperties = mutableListOf<KspSerializedProperty>()
     private val visiting = mutableSetOf<ResolvedTypeRef>()
@@ -162,6 +192,8 @@ private class ConversionContext(
                 ?: return failure(path, "Local and anonymous types require an explicit nominal identity.")
 
         if (qualifiedName == REF_TYPE) return reference(type, path)
+        if (qualifiedName == TO_ONE_TYPE) return relationReference(type, path, many = false)
+        if (qualifiedName == TO_MANY_TYPE) return relationReference(type, path, many = true)
         if (classDeclaration.hasAnnotation(TYPEWRITER_STRING_ANNOTATION)) {
             return logicalString(type, classDeclaration, path)
         }
@@ -193,6 +225,31 @@ private class ConversionContext(
             expression(targetType, path + "reference target") as? TypeExpression.Named
                 ?: return failure(path, "Ref target must resolve to a named type.")
         return TypeExpression.Reference(target.reference)
+    }
+
+    private fun relationReference(
+        type: KSType,
+        path: List<String>,
+        many: Boolean,
+    ): TypeExpression? {
+        if (type.arguments.size != 2) return failure(path, "Relation endpoints require marker and target type arguments.")
+        val targetType =
+            type.arguments[1].type?.resolve()
+                ?: return failure(path, "Relation endpoint target cannot be a star projection.")
+        val targetDeclaration =
+            targetType.declaration as? KSClassDeclaration
+                ?: return failure(path, "Relation endpoint target must be a nominal type.")
+        val referenceable =
+            targetDeclaration.qualifiedName?.asString() == REFERENCEABLE_TYPE ||
+                targetDeclaration.getAllSuperTypes().any {
+                    it.declaration.qualifiedName?.asString() == REFERENCEABLE_TYPE
+                }
+        if (!referenceable) return failure(path, "Relation endpoint target must inherit Referenceable.")
+        val target =
+            expression(targetType, path + "relation target") as? TypeExpression.Named
+                ?: return failure(path, "Relation endpoint target must resolve to a named type.")
+        val reference = TypeExpression.Reference(target.reference)
+        return if (many) TypeExpression.ListType(reference, unique = true) else reference
     }
 
     private fun alias(
@@ -257,6 +314,7 @@ private class ConversionContext(
         val identity =
             runCatching { identity(declaration) }
                 .getOrElse { return failure(path, it.message ?: "Could not assign a Typewriter identity.") }
+        declarations.putIfAbsent(identity, declaration)
         val arguments =
             type.arguments.mapIndexed { index, argument ->
                 argument.type?.resolve()?.let { expression(it, path + "argument $index") } ?: TypeExpression.Any
@@ -277,6 +335,7 @@ private class ConversionContext(
         val identity =
             runCatching { identity(declaration) }
                 .getOrElse { return failure(path, it.message ?: "Could not assign a Typewriter identity.") }
+        declarations.putIfAbsent(identity, declaration)
         val arguments =
             type.arguments.mapIndexed { index, argument ->
                 argument.type?.resolve()?.let { expression(it, path + "argument $index") } ?: TypeExpression.Any
@@ -286,6 +345,9 @@ private class ConversionContext(
                 TypeDefinition(
                     id = identity,
                     kind = NominalTypeKind.CONCRETE,
+                    displayName = declaration.simpleName.asString(),
+                    qualifiedName = declaration.qualifiedName?.asString(),
+                    declarationOwner = declaration.packageName.asString(),
                     representation = TypeExpression.StringType(),
                     parameters = declaration.typeParameters.map { parameter(it, path + identity.sortKey) },
                 )
@@ -314,21 +376,48 @@ private class ConversionContext(
             when (declaration.classKind) {
                 ClassKind.ENUM_CLASS -> enumRepresentation(declaration, definitionPath)
                 ClassKind.ENUM_ENTRY -> TypeExpression.Unit
+                else if (declaration.isValueClass) -> valueClassRepresentation(declaration, definitionPath)
                 else -> recordRepresentation(declaration, identity, definitionPath)
+            }
+        val mergePolicies =
+            if (representation is TypeExpression.Record) {
+                orderedSerializedProperties(declaration).mapNotNull { property ->
+                    if (!property.type.resolve().isSetCollection()) return@mapNotNull null
+                    val serializedName = property.serialName ?: property.simpleName.asString()
+                    FieldMergePolicy(DataPath.field(serializedName), FieldMergeStrategy.SET_MEMBERSHIP)
+                }
+            } else {
+                emptyList()
             }
         definitions[identity] =
             TypeDefinition(
                 id = identity,
                 kind = declaration.nominalKind,
+                displayName = declaration.simpleName.asString(),
+                qualifiedName = declaration.qualifiedName?.asString(),
+                declarationOwner = declaration.packageName.asString(),
                 representation = representation,
                 parameters = parameters,
                 parents = parents,
+                fieldMergePolicies = mergePolicies,
             )
         if (Modifier.SEALED in declaration.modifiers) {
             declaration.getSealedSubclasses().forEach { child ->
                 nominal(child.asStarProjectedType(), child, definitionPath + "sealed subtype ${child.simpleName.asString()}")
             }
         }
+    }
+
+    private fun valueClassRepresentation(
+        declaration: KSClassDeclaration,
+        path: List<String>,
+    ): TypeExpression {
+        val parameter =
+            declaration.primaryConstructor?.parameters?.singleOrNull()
+                ?: return failure(path, "A value class must have exactly one primary constructor parameter.")
+                    ?: TypeExpression.Unit
+        return expression(parameter.type.resolve(), path + (parameter.name?.asString() ?: "value"))
+            ?: TypeExpression.Unit
     }
 
     private fun parameter(
@@ -365,13 +454,35 @@ private class ConversionContext(
         identity: ResolvedTypeRef,
         path: List<String>,
     ): TypeExpression {
-        val fields =
+        val contract = declaration.hasAnnotation(TYPEWRITER_RECORD_CONTRACT_ANNOTATION)
+        if (contract && declaration.nominalKind == NominalTypeKind.CONCRETE) {
+            failure(path, "TypewriterRecordContract requires an abstract class or interface.")
+        }
+        val properties = if (contract) {
+            declaration.declarations.filterIsInstance<KSPropertyDeclaration>()
+                .filter { property ->
+                    property.extensionReceiver == null &&
+                        (property.isSerializedProperty || Modifier.ABSTRACT in property.modifiers ||
+                            Modifier.ABSTRACT in property.getter?.modifiers.orEmpty()) &&
+                        !property.isDelegated() && !property.hasAnnotation("kotlinx.serialization.Transient")
+                }.toList()
+        } else {
             orderedSerializedProperties(declaration)
+        }
+        val fields =
+            properties
                 .mapNotNull { property ->
                     val name = property.serialName ?: property.simpleName.asString()
+                    if (contract && name != property.simpleName.asString()) {
+                        failure(path + name, "Abstract record contract properties must keep their Kotlin name as the wire name.")
+                    }
                     expression(property.type.resolve(), path + name)?.let {
                         serializedProperties += KspSerializedProperty(identity, name, property)
-                        TypeField(name, it)
+                        TypeField(
+                            name = name,
+                            type = it,
+                            defaulted = property.hasConstructorDefault,
+                        )
                     }
                 }
         return if (declaration.classKind == ClassKind.OBJECT && fields.isEmpty()) {
@@ -471,6 +582,8 @@ private class ConversionContext(
     }
 }
 
+private const val TYPEWRITER_RECORD_CONTRACT_ANNOTATION = "com.typewritermc.types.TypewriterRecordContract"
+
 private val KSClassDeclaration.nominalKind: NominalTypeKind
     get() =
         when {
@@ -478,6 +591,9 @@ private val KSClassDeclaration.nominalKind: NominalTypeKind
             classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in modifiers -> NominalTypeKind.OPEN_ABSTRACT
             else -> NominalTypeKind.CONCRETE
         }
+
+private val KSClassDeclaration.isValueClass: Boolean
+    get() = Modifier.VALUE in modifiers || hasAnnotation("kotlin.jvm.JvmInline")
 
 private val KSType.displayName: String
     get() = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
@@ -506,9 +622,40 @@ private fun KSDeclaration.hasAnnotation(qualifiedName: String): Boolean =
 private val KSPropertyDeclaration.isSerializedProperty: Boolean
     get() =
         extensionReceiver == null &&
-            hasBackingField &&
+            (hasBackingField || isConstructorProperty) &&
             !isDelegated() &&
             !hasAnnotation("kotlinx.serialization.Transient")
+
+private val KSPropertyDeclaration.isConstructorProperty: Boolean
+    get() {
+        val owner = parentDeclaration as? KSClassDeclaration ?: return false
+        val name = simpleName.asString()
+        return owner.primaryConstructor?.parameters?.any { parameter ->
+            parameter.name?.asString() == name && (parameter.isVal || parameter.isVar)
+        } == true
+    }
+
+private val KSPropertyDeclaration.hasConstructorDefault: Boolean
+    get() {
+        val owner = parentDeclaration as? KSClassDeclaration ?: return false
+        val name = simpleName.asString()
+        return owner.primaryConstructor
+            ?.parameters
+            ?.firstOrNull { parameter ->
+                parameter.name?.asString() == name && (parameter.isVal || parameter.isVar)
+            }?.hasDefault == true
+    }
+
+private fun KSType.isSetCollection(): Boolean {
+    val qualifiedName = (declaration as? KSClassDeclaration)?.qualifiedName?.asString() ?: return false
+    return qualifiedName in
+        setOf(
+            "kotlin.collections.HashSet",
+            "kotlin.collections.LinkedHashSet",
+            "kotlin.collections.MutableSet",
+            "kotlin.collections.Set",
+        )
+}
 
 private val ResolvedTypeRef.sortKey: String
     get() =
@@ -520,6 +667,8 @@ private val ResolvedTypeRef.sortKey: String
 
 private const val TYPEWRITER_STRING_ANNOTATION = "com.typewritermc.types.TypewriterString"
 private const val REF_TYPE = "com.typewritermc.types.Ref"
+private const val TO_ONE_TYPE = "com.typewritermc.types.ToOne"
+private const val TO_MANY_TYPE = "com.typewritermc.types.ToMany"
 private const val REFERENCEABLE_TYPE = "com.typewritermc.types.Referenceable"
 
 private val PRIMITIVE_ARRAYS =

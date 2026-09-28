@@ -7,7 +7,9 @@ import com.typewritermc.types.DataMapEntry
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.RolePresentationStatus
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
@@ -54,6 +56,31 @@ val SkirCodecTest by testSuite {
         val wire = SkirTypeCodec.encode(catalog).successValue()
 
         SkirTypeCodec.decode(wire).successValue() shouldBe catalog
+    }
+
+    test("role rejection round trips and unknown outcome fails decoding") {
+        val definition =
+            TypeDefinition(
+                id = ResolvedTypeRef(TypeId.Qualified("example", "FailedEditor"), revision = 1),
+                kind = NominalTypeKind.CONCRETE,
+                rolePresentations = mapOf(PresentationRole.EDITOR to RolePresentationStatus.Rejected("builder failed")),
+            )
+        val wire = SkirTypeCodec.encode(TypeCatalog(listOf(definition))).successValue()
+        val outcome = wire.definitions.single().rolePresentations.single().outcome
+        (outcome is skirout.editor.v1.type_catalog.RolePresentationOutcome.RejectedWrapper) shouldBe true
+        SkirTypeCodec.decode(wire).successValue().definitions.single() shouldBe definition
+
+        val invalid = wire.definitions.single().toMutable().apply {
+            rolePresentations =
+                listOf(
+                    skirout.editor.v1.type_catalog.RolePresentation(
+                        role = skirout.editor.v1.type_catalog.PresentationRole.EDITOR,
+                        outcome = skirout.editor.v1.type_catalog.RolePresentationOutcome.UNKNOWN,
+                    ),
+                )
+        }
+        val malformed = skirout.editor.v1.type_catalog.TypeCatalog(definitions = listOf(invalid.toFrozen()))
+        (SkirTypeCodec.decode(malformed) is SkirConversionResult.Failure) shouldBe true
     }
 
     test("nested data values convert in both directions") {

@@ -45,7 +45,7 @@ class SemanticHeaderGallery extends StatelessWidget {
                         rootType: _storyRoot,
                         rootValue: scenario.value,
                       ),
-                      typeCatalog: TypeCatalog([
+                      typeCatalog: receivedRealmCatalog([
                         TypeDefinition(
                           id: _storyRoot,
                           kind: NominalTypeKind.concrete,

@@ -1,32 +1,5 @@
 part of "tags.dart";
 
-/// Persistent graph coordinates and dimensions for a tag node.
-///
-/// Coordinates are grid units interpreted by the tag graph. Width and height
-/// must remain positive because the inspector and graph require a visible
-/// node; [TagEditorSnapshot] enforces that rule for draft changes.
-@freezed
-abstract class Placement with _$Placement {
-  const factory Placement({
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-  }) = _Placement;
-
-  const Placement._();
-
-  factory Placement.fromWire(skir.GraphPlacement placement) => Placement(
-    x: placement.x,
-    y: placement.y,
-    width: placement.width,
-    height: placement.height,
-  );
-
-  skir.GraphPlacement toWire() =>
-      skir.GraphPlacement(x: x, y: y, width: width, height: height);
-}
-
 /// Immutable panel model of the wire level Realm tag.
 ///
 /// [parentIds] names direct parents. The relationship is treated as a directed
@@ -37,30 +10,58 @@ abstract class Placement with _$Placement {
 abstract class Tag with _$Tag {
   @Assert("name != \"\"", "Name must not be empty.")
   const factory Tag({
-    required skir.RecordId tagId,
+    required skir.ResourceId tagId,
     required String name,
     required Color color,
-    required List<skir.RecordId> parentIds,
-    required Placement placement,
+    required List<skir.ResourceId> parentIds,
+    required GraphPlacement placement,
   }) = _Tag;
 
   const Tag._();
 
-  factory Tag.fromWire(skir.Tag tag) => Tag(
-    tagId: tag.id,
-    name: tag.name,
-    color: tag.color.toFlutterColor(),
-    parentIds: tag.parents.toList(),
-    placement: Placement.fromWire(tag.placement),
-  );
-
-  skir.Tag toWire() => skir.Tag(
-    id: tagId,
-    name: name,
-    color: color.toSkirColor(),
-    parents: parentIds,
-    placement: placement.toWire(),
-  );
+  factory Tag.fromTyped(TypedAuthoringResource resource) {
+    final value = resource.content.rootValue;
+    if (value is! RecordValue) throw StateError("The Tag content is invalid");
+    final name = value.fields["name"];
+    final color = value.fields["color"];
+    final parents = value.fields["parents"];
+    final placement = value.fields["placement"];
+    if (name is! StringValue ||
+        color is! IntegerValue ||
+        parents is! ListValue ||
+        placement is! RecordValue) {
+      throw StateError("The Tag content is invalid");
+    }
+    final decodedColor = color.asColorOrNull;
+    final ids = parents.values
+        .whereType<ReferenceValue>()
+        .map((item) => item.id)
+        .toList();
+    final x = placement.fields["x"];
+    final y = placement.fields["y"];
+    final width = placement.fields["width"];
+    final height = placement.fields["height"];
+    if (decodedColor == null ||
+        ids.length != parents.values.length ||
+        x is! IntegerValue ||
+        y is! IntegerValue ||
+        width is! IntegerValue ||
+        height is! IntegerValue) {
+      throw StateError("The Tag content is invalid");
+    }
+    return Tag(
+      tagId: resource.id,
+      name: name.value,
+      color: decodedColor,
+      parentIds: ids,
+      placement: GraphPlacement(
+        x: x.value.toInt(),
+        y: y.value.toInt(),
+        width: width.value.toInt(),
+        height: height.value.toInt(),
+      ),
+    );
+  }
 }
 
 /// Converts a tag to and from the structural value used by the editor.
@@ -73,7 +74,7 @@ extension TagInspectorValue on Tag {
     "name": name.asValue,
     "color": color.asValue,
     "parents": ListValue(parentIds.map(ReferenceValue.new).toList()),
-    "layout": RecordValue({
+    "placement": RecordValue({
       "x": placement.x.asValue,
       "y": placement.y.asValue,
       "width": placement.width.asValue,
@@ -86,12 +87,12 @@ extension TagInspectorValue on Tag {
     final name = value.fields["name"];
     final color = value.fields["color"];
     final parents = value.fields["parents"];
-    final layout = value.fields["layout"];
+    final placement = value.fields["placement"];
     if (name is! StringValue ||
         name.value.trim().isEmpty ||
         color is! IntegerValue ||
         parents is! ListValue ||
-        layout is! RecordValue) {
+        placement is! RecordValue) {
       return null;
     }
 
@@ -100,10 +101,10 @@ extension TagInspectorValue on Tag {
         .whereType<ReferenceValue>()
         .map((parent) => parent.id)
         .toList();
-    final x = layout.fields["x"];
-    final y = layout.fields["y"];
-    final width = layout.fields["width"];
-    final height = layout.fields["height"];
+    final x = placement.fields["x"];
+    final y = placement.fields["y"];
+    final width = placement.fields["width"];
+    final height = placement.fields["height"];
 
     if (decodedColor == null ||
         parentIds.length != parents.values.length ||
@@ -119,7 +120,7 @@ extension TagInspectorValue on Tag {
       name: name.value,
       color: decodedColor,
       parentIds: parentIds,
-      placement: Placement(
+      placement: GraphPlacement(
         x: x.value.toInt(),
         y: y.value.toInt(),
         width: width.value.toInt(),
@@ -145,8 +146,8 @@ enum TagParentDropAction { link, unlink }
 /// conservatively because accepting it could create a cycle.
 TagParentDropAction? tagParentDropAction(
   Iterable<Tag> tags, {
-  required skir.RecordId childId,
-  required skir.RecordId parentId,
+  required skir.ResourceId childId,
+  required skir.ResourceId parentId,
 }) {
   final tagsById = {for (final tag in tags) tag.tagId: tag};
   final child = tagsById[childId];
@@ -172,12 +173,12 @@ TagParentDropAction? tagParentDropAction(
 }
 
 bool? _isAncestor(
-  Map<skir.RecordId, Tag> tagsById, {
-  required skir.RecordId tagId,
-  required skir.RecordId ancestorId,
+  Map<skir.ResourceId, Tag> tagsById, {
+  required skir.ResourceId tagId,
+  required skir.ResourceId ancestorId,
 }) {
   final pendingIds = [tagId];
-  final visitedIds = <skir.RecordId>{};
+  final visitedIds = <skir.ResourceId>{};
   while (pendingIds.isNotEmpty) {
     final currentId = pendingIds.removeLast();
     if (!visitedIds.add(currentId)) continue;

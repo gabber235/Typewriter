@@ -21,7 +21,9 @@ use wasmcloud_utils::{
     wasmcloud::messaging::request,
 };
 
-use crate::common::build_permissions;
+use crate::common::{
+    REALM_EVENT_SUFFIXES, REALM_REQUEST_SUFFIXES, SHARED_REQUEST_SUFFIXES, build_permissions,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 /// Claims consumed when deriving policy for a service identity.
@@ -221,15 +223,19 @@ fn add_realm_coordinator_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
-    allow_subscribe.push(format!(
-        "service.to.{realm_id}.organization.{organization_id}.realm.>"
-    ));
+    for suffix in REALM_REQUEST_SUFFIXES {
+        allow_subscribe.push(format!(
+            "service.to.{realm_id}.organization.{organization_id}.realm.{suffix}"
+        ));
+    }
     allow_subscribe.push(format!(
         "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.state"
     ));
-    allow_publish.push(format!(
-        "service.from.{realm_id}.organization.{organization_id}.realm.>"
-    ));
+    for suffix in REALM_EVENT_SUFFIXES {
+        allow_publish.push(format!(
+            "service.from.{realm_id}.organization.{organization_id}.realm.{suffix}"
+        ));
+    }
     for suffix in ["probe", "command", "status"] {
         allow_publish.push(format!(
             "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.{suffix}"
@@ -263,16 +269,6 @@ fn add_realm_participant_permissions(
         ));
     }
 }
-
-const SHARED_REQUEST_SUFFIXES: &[&str] = &[
-    "shared.catalog.fetch",
-    "shared.publish",
-    "shared.blob.metadata",
-    "shared.blob.read",
-    "shared.blob.begin",
-    "shared.blob.write",
-    "shared.blob.complete",
-];
 
 /// Read the authoritative host messaging scope used to qualify Realm permissions.
 async fn query_service_messaging_scope(

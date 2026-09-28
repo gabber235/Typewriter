@@ -11,9 +11,12 @@ import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
 
-const fixturePageKind = PageKindRef(id: "fixture.page", revision: 1);
+const fixturePageType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "fixture", name: "Page"),
+  revision: 1,
+);
 
-Page generateRandomPage([PageKindRef pageKind = fixturePageKind]) {
+Page generateRandomPage([ResolvedTypeRef pageType = fixturePageType]) {
   final pageName = faker.lorem
       .words(faker.randomGenerator.integer(3, min: 1))
       .join("_")
@@ -28,10 +31,10 @@ Page generateRandomPage([PageKindRef pageKind = fixturePageKind]) {
   ];
 
   return Page(
-    pageId: recordId("page:${faker.guid.guid()}"),
-    bookId: recordId("book:${faker.guid.guid()}"),
+    pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
+    bookId: skir.ResourceId(value: "book:${faker.guid.guid()}"),
     name: pageName,
-    kind: pageKind,
+    rootType: pageType,
     chapter: chapters.randomOrNull() ?? "",
     priority: faker.randomGenerator.integer(100, min: -10),
   );
@@ -43,7 +46,7 @@ class BookPagesMock extends CanonicalBookPages {
   final DisplayState displayState;
 
   @override
-  Future<List<Page>> build(skir.RecordId bookId) async {
+  Future<List<Page>> build(skir.ResourceId bookId) async {
     await ref.debounce(300.ms);
     await Future<void>.delayed(100.ms);
     final pages = await displayState.generate(generateRandomPage);
@@ -53,18 +56,18 @@ class BookPagesMock extends CanonicalBookPages {
 }
 
 class PagesMock extends CanonicalPage {
-  PagesMock({this.page, this.pageKind});
+  PagesMock({this.page, this.pageType});
 
   final Page? page;
-  final PageKindRef? pageKind;
+  final ResolvedTypeRef? pageType;
 
   @override
-  Future<Page> build(skir.RecordId pageId) async {
+  Future<Page> build(skir.ResourceId pageId) async {
     await Future<void>.delayed(50.ms);
     if (page != null) {
       return page!;
     }
-    final randomPage = generateRandomPage(pageKind ?? fixturePageKind);
+    final randomPage = generateRandomPage(pageType ?? fixturePageType);
     return randomPage.copyWith(pageId: pageId);
   }
 }
@@ -172,20 +175,32 @@ List<Override> bookPagesProviderOverrides({
   ),
 ];
 
-List<Override> pagesProviderOverrides({Page? page, PageKindRef? pageKind}) => [
+List<Override> pagesProviderOverrides({Page? page, ResolvedTypeRef? pageType}) => [
   canonicalPageProvider.overrideWith2(
-    (_) => PagesMock(page: page, pageKind: pageKind),
+    (_) => PagesMock(page: page, pageType: pageType),
   ),
 ];
 
 List<Override> pageElementsProviderOverrides({
   DisplayState state = DisplayState.loading,
   List<PageElement>? elements,
-}) => [
-  pageElementsProvider.overrideWith2(
-    (_) => PageElementsMock(displayState: state, elements: elements),
-  ),
-];
+}) {
+  return [
+    pageElementsProvider.overrideWith2(
+      (_) => PageElementsMock(displayState: state, elements: elements),
+    ),
+    authoringPageElementsProvider.overrideWith((ref, argument) {
+      final elements = ref.watch(
+        pageElementsProvider(argument.$1, argument.$2, argument.$3),
+      );
+      return elements.when(
+        data: (value) => AsyncData(AuthoringValue(value: value, revision: 1)),
+        error: AsyncError.new,
+        loading: AsyncLoading.new,
+      );
+    }),
+  ];
+}
 
 List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
   entryProvider.overrideWith2((_) => EntryMock(definition: definition)),
@@ -193,12 +208,12 @@ List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
 
 List<Override> pageIdProviderOverrides({String? pageId}) => [
   pageIdProvider.overrideWith(
-    (ref) => pageId != null ? recordId("page:$pageId") : null,
+    (ref) => pageId != null ? skir.ResourceId(value: "page:$pageId") : null,
   ),
 ];
 
 List<Override> bookIdProviderOverrides({String? bookId}) => [
   bookIdProvider.overrideWith(
-    (ref) => bookId != null ? recordId("book:$bookId") : null,
+    (ref) => bookId != null ? skir.ResourceId(value: "book:$bookId") : null,
   ),
 ];

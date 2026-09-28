@@ -107,44 +107,61 @@ abstract class PresentationModel with _$PresentationModel {
     List<PresentationDefinition> presentations = const [],
     List<PresentationCollectionSource> collections = const [],
     List<TypeDiagnostic> diagnostics = const [],
-  }) => PresentationModel(
-    catalog: catalog,
-    inputs: {
-      const BindingId(0): PresentationInput.value(
-        type: type,
-        value: EditorValue.ready(value),
-      ),
-    },
-    root: presentation ?? _singlePresentationRoot(type, catalog, presentations),
-    presentations: presentations,
-    collections: PresentationCollections(collections),
-    diagnostics: diagnostics,
-  );
+  }) {
+    return PresentationModel(
+      catalog: catalog,
+      inputs: {
+        const BindingId(0): PresentationInput.value(
+          type: type,
+          value: EditorValue.ready(value),
+        ),
+      },
+      root:
+          presentation ??
+          _singlePresentationRoot(
+            type,
+            catalog,
+            presentations,
+            roles: const [PresentationRole.editor],
+            access: PresentationInputAccess.read,
+          ),
+      presentations: presentations,
+      collections: PresentationCollections(collections),
+      diagnostics: diagnostics,
+    );
+  }
 
   /// Builds a presentation whose root binding delegates edits to [owner].
   factory PresentationModel.editor({
     required EditOwner owner,
     DataPath path = DataPath.root,
+    TypeRegistry? registry,
     PresentationNode? presentation,
+    List<PresentationRole> roles = const [PresentationRole.editor],
     List<PresentationDefinition> presentations = const [],
     List<PresentationCollectionSource> collections = const [],
     List<TypeDiagnostic> diagnostics = const [],
   }) {
+    final declared =
+        owner.rootType
+            .resolvePath(
+              path,
+              registry: registry ?? TypeRegistry(owner.typeCatalog),
+            )
+            .valueOrNull ??
+        owner.rootType;
     return PresentationModel(
       catalog: owner.typeCatalog,
       inputs: {const BindingId(0): PresentationInput.edit(owner, path: path)},
       root:
           presentation ??
           _singlePresentationRoot(
-            owner.rootType
-                    .resolvePath(
-                      path,
-                      registry: TypeRegistry(owner.typeCatalog),
-                    )
-                    .valueOrNull ??
-                owner.rootType,
+            declared,
             owner.typeCatalog,
             presentations,
+            roles: roles,
+            access: PresentationInputAccess.edit,
+            registryOverride: registry,
           ),
       presentations: presentations,
       collections: PresentationCollections(collections),
@@ -174,21 +191,29 @@ abstract class PresentationModel with _$PresentationModel {
 PresentationNode _singlePresentationRoot(
   TypeExpression declared,
   TypeCatalog catalog,
-  List<PresentationDefinition> presentations,
-) {
-  final registry = TypeRegistry(catalog);
+  List<PresentationDefinition> presentations, {
+  required List<PresentationRole> roles,
+  required PresentationInputAccess access,
+  TypeRegistry? registryOverride,
+}) {
+  final registry = registryOverride ?? TypeRegistry(catalog);
   final resolved = declared is NamedType
       ? registry.resolve(declared).valueOrNull?.representation ?? declared
       : declared;
-  final selected = declared is NamedType
-      ? registry.definition(declared.reference)?.defaultPresentationId
-      : null;
-  final definition = [...builtinPresentationDefinitions(), ...presentations]
-      .where(
-        (definition) =>
-            definition.id == selected && definition.inputs.length == 1,
-      )
-      .firstOrNull;
+  final selection = selectAutomaticEditor(
+    registry: registry,
+    type: declared,
+    presentations: presentations,
+    access: access,
+    roles: roles,
+  );
+  if (selection case TypeFailure(:final diagnostics)) {
+    return PresentationNode(
+      id: "editor.error",
+      element: DiagnosticElement(diagnostics),
+    );
+  }
+  final definition = selection.valueOrNull;
   if (definition == null) {
     final generated =
         declared is NamedType &&

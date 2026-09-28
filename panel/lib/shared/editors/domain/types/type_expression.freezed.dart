@@ -1423,7 +1423,7 @@ as String,
 /// @nodoc
 mixin _$TypeField {
 
- String get name; TypeExpression get type; DataValue? get initialValue;
+ String get name; TypeExpression get type; DataValue? get initialValue; bool get defaulted;
 /// Create a copy of TypeField
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1435,20 +1435,20 @@ $TypeFieldCopyWith<TypeField> get copyWith => _$TypeFieldCopyWithImpl<TypeField>
 @override
 bool operator ==(Object other) {
   final _this = this as TypeField;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeField&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.initialValue, _this.initialValue) || other.initialValue == _this.initialValue));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeField&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.initialValue, _this.initialValue) || other.initialValue == _this.initialValue)&&(identical(other.defaulted, _this.defaulted) || other.defaulted == _this.defaulted));
 }
 
 
 @override
 int get hashCode {
   final _this = this as TypeField;
-  return Object.hash(runtimeType,_this.name,_this.type,_this.initialValue);
+  return Object.hash(runtimeType,_this.name,_this.type,_this.initialValue,_this.defaulted);
 }
 
 @override
 String toString() {
   final _this = this as TypeField;
-  return 'TypeField(name: ${_this.name}, type: ${_this.type}, initialValue: ${_this.initialValue})';
+  return 'TypeField(name: ${_this.name}, type: ${_this.type}, initialValue: ${_this.initialValue}, defaulted: ${_this.defaulted})';
 }
 
 
@@ -1459,7 +1459,7 @@ abstract mixin class $TypeFieldCopyWith<$Res>  {
   factory $TypeFieldCopyWith(TypeField value, $Res Function(TypeField) _then) = _$TypeFieldCopyWithImpl;
 @useResult
 $Res call({
- String name, TypeExpression type, DataValue? initialValue
+ String name, TypeExpression type, DataValue? initialValue, bool defaulted
 });
 
 
@@ -1476,12 +1476,13 @@ class _$TypeFieldCopyWithImpl<$Res>
 
 /// Create a copy of TypeField
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? type = null,Object? initialValue = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? type = null,Object? initialValue = freezed,Object? defaulted = null,}) {
   return _then(TypeField(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as TypeExpression,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
-as DataValue?,
+as DataValue?,defaulted: null == defaulted ? _self.defaulted : defaulted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of TypeField
@@ -1587,10 +1588,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  TypeExpression type,  DataValue? initialValue)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  TypeExpression type,  DataValue? initialValue,  bool defaulted)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TypeField() when $default != null:
-return $default(_that.name,_that.type,_that.initialValue);case _:
+return $default(_that.name,_that.type,_that.initialValue,_that.defaulted);case _:
   return orElse();
 
 }
@@ -1608,10 +1609,10 @@ return $default(_that.name,_that.type,_that.initialValue);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  TypeExpression type,  DataValue? initialValue)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  TypeExpression type,  DataValue? initialValue,  bool defaulted)  $default,) {final _that = this;
 switch (_that) {
 case _TypeField():
-return $default(_that.name,_that.type,_that.initialValue);case _:
+return $default(_that.name,_that.type,_that.initialValue,_that.defaulted);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1628,10 +1629,10 @@ return $default(_that.name,_that.type,_that.initialValue);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  TypeExpression type,  DataValue? initialValue)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  TypeExpression type,  DataValue? initialValue,  bool defaulted)?  $default,) {final _that = this;
 switch (_that) {
 case _TypeField() when $default != null:
-return $default(_that.name,_that.type,_that.initialValue);case _:
+return $default(_that.name,_that.type,_that.initialValue,_that.defaulted);case _:
   return null;
 
 }
@@ -1643,12 +1644,13 @@ return $default(_that.name,_that.type,_that.initialValue);case _:
 
 
 class _TypeField implements TypeField {
-  const _TypeField({required this.name, required this.type, this.initialValue});
+  const _TypeField({required this.name, required this.type, this.initialValue, this.defaulted = false});
   
 
 @override final  String name;
 @override final  TypeExpression type;
 @override final  DataValue? initialValue;
+@override@JsonKey() final  bool defaulted;
 
 /// Create a copy of TypeField
 /// with the given fields replaced by the non-null parameter values.
@@ -1660,18 +1662,18 @@ _$TypeFieldCopyWith<_TypeField> get copyWith => __$TypeFieldCopyWithImpl<_TypeFi
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeField&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.initialValue, initialValue) || other.initialValue == initialValue));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TypeField&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.initialValue, initialValue) || other.initialValue == initialValue)&&(identical(other.defaulted, defaulted) || other.defaulted == defaulted));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,name,type,initialValue);
+    return Object.hash(runtimeType,name,type,initialValue,defaulted);
 }
 
 @override
 String toString() {
-    return 'TypeField(name: $name, type: $type, initialValue: $initialValue)';
+    return 'TypeField(name: $name, type: $type, initialValue: $initialValue, defaulted: $defaulted)';
 }
 
 
@@ -1682,7 +1684,7 @@ abstract mixin class _$TypeFieldCopyWith<$Res> implements $TypeFieldCopyWith<$Re
   factory _$TypeFieldCopyWith(_TypeField value, $Res Function(_TypeField) _then) = __$TypeFieldCopyWithImpl;
 @override @useResult
 $Res call({
- String name, TypeExpression type, DataValue? initialValue
+ String name, TypeExpression type, DataValue? initialValue, bool defaulted
 });
 
 
@@ -1699,12 +1701,13 @@ class __$TypeFieldCopyWithImpl<$Res>
 
 /// Create a copy of TypeField
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? type = null,Object? initialValue = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? type = null,Object? initialValue = freezed,Object? defaulted = null,}) {
   return _then(_TypeField(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as TypeExpression,initialValue: freezed == initialValue ? _self.initialValue : initialValue // ignore: cast_nullable_to_non_nullable
-as DataValue?,
+as DataValue?,defaulted: null == defaulted ? _self.defaulted : defaulted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

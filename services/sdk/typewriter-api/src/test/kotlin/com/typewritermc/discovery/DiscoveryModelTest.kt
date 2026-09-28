@@ -6,14 +6,17 @@ import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CapabilityExtensionSourcePart
 import com.typewritermc.imprint.CommonExtensionSourcePart
+import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.imprint.ProducerId
 import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypeField
 import com.typewritermc.types.TypeId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -30,7 +33,20 @@ val DiscoveryModelTest by testSuite {
                 ),
             )
 
-        assembled.catalog.definitions shouldBe listOf(definition)
+        assembled.catalog.definitions.single { it.id == definition.id } shouldBe definition
+    }
+
+    test("a declared type keeps its published display name when another graph references it") {
+        val referenced = TypeDefinition(
+            id = ResolvedTypeRef(TypeId.Declared(com.typewritermc.types.DeclaredTypeId.parse("019d3a87005070008000000000000050")), 1),
+            kind = NominalTypeKind.CONCRETE,
+        )
+        val published = referenced.copy(displayName = "Shared Book")
+        val assembled = TypeContributionAssembler.assemble(
+            listOf(contribution("first", referenced), contribution("second", published)),
+        )
+
+        assembled.catalog.definitions.single { it.id == referenced.id }.displayName shouldBe "Shared Book"
     }
 
     test("conflicting qualified parent definitions fail assembly") {
@@ -40,6 +56,41 @@ val DiscoveryModelTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             TypeContributionAssembler.assemble(listOf(contribution("first", first), contribution("second", second)))
         }
+    }
+
+    test("active concrete type with a renamed inherited field fails staging") {
+        val parent = abstractDefinition("example", "Page").copy(
+            representation = TypeExpression.Record(listOf(TypeField("name", TypeExpression.StringType()))),
+        )
+        val concrete = TypeDefinition(
+            id = ResolvedTypeRef(TypeId.Qualified("example", "BrokenPage"), 1),
+            kind = NominalTypeKind.CONCRETE,
+            parents = listOf(parent.id),
+            representation = TypeExpression.Record(listOf(TypeField("display_name", TypeExpression.StringType()))),
+        )
+        val origin = ArtifactId("example:extension")
+        val contribution = KeyedTypeContribution(
+            ContributionKey(origin, "common", ProducerId("types"), ContributionName("declared.cbor")),
+            TypeDiscoveryContribution(
+                definitions = listOf(parent, concrete),
+                prototypeBindings = listOf(
+                    PrototypeBinding(concrete.id, "example.BrokenPage", "example.BrokenPagePrototype", setOf(DiscoveryDomains.Realm)),
+                ),
+                executableBindings = emptyList(),
+            ),
+        )
+
+        val failure = shouldThrow<IllegalArgumentException> {
+            TypeContributionAssembler.assemble(listOf(contribution))
+        }
+        failure.message?.contains("Page") shouldBe true
+        failure.message?.contains("name") shouldBe true
+
+        val inactive = TypeContributionAssembler.assemble(
+            listOf(contribution),
+            listOf(SourcePartCatalogEntry(origin, "common", Eligibility.Ineligible(listOf("Not selected.")))),
+        )
+        inactive.prototypeBindings shouldBe emptyList()
     }
 
     test("capability source part eligibility follows the selected engine graph") {
@@ -107,7 +158,7 @@ val DiscoveryModelTest by testSuite {
                 listOf(SourcePartCatalogEntry(origin, "paper", Eligibility.Ineligible(listOf("Not selected.")))),
             )
 
-        assembled.catalog.definitions shouldBe listOf(definition)
+        assembled.catalog.definitions.single { it.id == definition.id } shouldBe definition
         assembled.executableBindings shouldBe emptyList()
     }
 

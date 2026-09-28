@@ -8,6 +8,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
@@ -22,6 +23,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.typewritermc.codegen.annotation
 import com.typewritermc.codegen.getSymbolsWithAnnotation
@@ -35,11 +37,13 @@ import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationSpec
 import com.typewritermc.presentation.TypewriterPresentation
+import com.typewritermc.types.PresentationRole
+import kotlin.reflect.KClass
 
 /**
  * KSP entrypoint generating [PresentationProvider] implementations and discovery bindings from annotated top level
- * functions. Each provider preserves namespace and source part provenance, exposes the annotation's default and
- * priority metadata, and invokes the source function inside [PresentationBuildContext]. The emitted resource is
+ * functions. Each provider preserves namespace and source part provenance, exposes role and priority metadata,
+ * and invokes the source function inside [PresentationBuildContext]. The emitted resource is
  * consumed by manifest discovery, so runtime loading does not scan source annotations.
  */
 class TypewriterPresentationProcessorProvider : SymbolProcessorProvider {
@@ -90,8 +94,21 @@ private class TypewriterPresentationProcessor(
             logger.error("TypewriterPresentation functions must return PresentationSpec.", function)
             return null
         }
+        if (targetType(function) == null) {
+            logger.error("TypewriterPresentation functions must return PresentationSpec with a concrete target class.", function)
+            return null
+        }
         return function
     }
+
+    private fun targetType(function: KSFunctionDeclaration): KSClassDeclaration? =
+        function.returnType
+            ?.resolve()
+            ?.arguments
+            ?.singleOrNull()
+            ?.type
+            ?.resolve()
+            ?.declaration as? KSClassDeclaration
 
     private fun generate(function: KSFunctionDeclaration): ExecutableBinding {
         val functionName = function.simpleName.asString()
@@ -102,6 +119,7 @@ private class TypewriterPresentationProcessor(
         val moduleClass = ClassName(packageName, moduleName)
         val providerClass = ClassName(packageName, providerName)
         val annotation = requireNotNull(function.annotation<TypewriterPresentation>())
+        val targetType = requireNotNull(targetType(function))
         val provider =
             TypeSpec
                 .classBuilder(providerName)
@@ -129,14 +147,32 @@ private class TypewriterPresentationProcessor(
                         .build(),
                 ).addProperty(
                     PropertySpec
-                        .builder("default", Boolean::class, KModifier.OVERRIDE)
-                        .initializer("%L", annotation.default)
+                        .builder("targetType", KClass::class.asClassName().parameterizedBy(STAR), KModifier.OVERRIDE)
+                        .initializer("%T::class", targetType.toClassName())
                         .build(),
                 ).addProperty(
                     PropertySpec
                         .builder("priority", Int::class, KModifier.OVERRIDE)
                         .initializer("%L", annotation.priority)
                         .build(),
+                ).addProperty(
+                    PropertySpec
+                        .builder(
+                            "roles",
+                            Set::class.asClassName().parameterizedBy(PresentationRole::class.asClassName()),
+                            KModifier.OVERRIDE,
+                        ).initializer(
+                            CodeBlock
+                                .builder()
+                                .add("setOf(")
+                                .apply {
+                                    annotation.roles.forEachIndexed { index, role ->
+                                        if (index > 0) add(", ")
+                                        add("%T.%L", PresentationRole::class, role.name)
+                                    }
+                                }.add(")")
+                                .build(),
+                        ).build(),
                 ).addFunction(
                     FunSpec
                         .builder("specification")

@@ -18,10 +18,11 @@ class AdaptiveLeadingLayout
     this.suffix,
     this.padding = EdgeInsets.zero,
     this.compactPadding,
-    // ignore: unused_element_parameter
     this.minCenterWidth = 30.0,
+    this.gap = 8.0,
     super.key,
-  });
+  }) : assert(minCenterWidth >= 0 && minCenterWidth != double.infinity),
+       assert(gap >= 0 && gap != double.infinity);
 
   final Widget leading;
   final Widget? center;
@@ -29,6 +30,7 @@ class AdaptiveLeadingLayout
   final EdgeInsets padding;
   final EdgeInsets? compactPadding;
   final double minCenterWidth;
+  final double gap;
 
   @override
   Iterable<_ElementSlot> get slots => _ElementSlot.values;
@@ -36,9 +38,11 @@ class AdaptiveLeadingLayout
   @override
   Widget? childForSlot(_ElementSlot slot) {
     return switch (slot) {
-      _ElementSlot.leading => leading,
-      _ElementSlot.center => center,
-      _ElementSlot.suffix => suffix,
+      _ElementSlot.leading => _AdaptiveSlot(visible: true, child: leading),
+      _ElementSlot.center =>
+        center == null ? null : _AdaptiveSlot(visible: false, child: center!),
+      _ElementSlot.suffix =>
+        suffix == null ? null : _AdaptiveSlot(visible: false, child: suffix!),
     };
   }
 
@@ -50,6 +54,7 @@ class AdaptiveLeadingLayout
       padding: padding,
       compactPadding: compactPadding ?? padding,
       minCenterWidth: minCenterWidth,
+      gap: gap,
     );
   }
 
@@ -61,7 +66,8 @@ class AdaptiveLeadingLayout
     renderObject
       ..padding = padding
       ..compactPadding = compactPadding ?? padding
-      ..minCenterWidth = minCenterWidth;
+      ..minCenterWidth = minCenterWidth
+      ..gap = gap;
   }
 }
 
@@ -71,6 +77,7 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
     required this._padding,
     required this._compactPadding,
     required this._minCenterWidth,
+    required this._gap,
   });
 
   EdgeInsets _padding;
@@ -97,13 +104,29 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
     markNeedsLayout();
   }
 
-  static const double _spacing = 8.0;
+  double _gap;
+  double get gap => _gap;
+  set gap(double value) {
+    if (_gap == value) return;
+    _gap = value;
+    markNeedsLayout();
+  }
 
   bool _showCenter = false;
   bool _showSuffix = false;
 
   @override
   void performLayout() {
+    if (!constraints.hasBoundedWidth || !constraints.hasBoundedHeight) {
+      final zero = BoxConstraints.tight(Size.zero);
+      for (final slot in _ElementSlot.values) {
+        childForSlot(slot)?.layout(zero);
+      }
+      size = constraints.constrain(Size.zero);
+      throw FlutterError(
+        "AdaptiveLeadingLayout requires finite maximum width and height.",
+      );
+    }
     final leadingChild = childForSlot(_ElementSlot.leading);
     final centerChild = childForSlot(_ElementSlot.center);
     final suffixChild = childForSlot(_ElementSlot.suffix);
@@ -129,14 +152,16 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
     final minWidthForAllThree =
         _padding.horizontal +
         leadingSize.width +
-        (centerChild != null ? _spacing + _minCenterWidth : 0) +
-        (suffixChild != null ? _spacing + suffixSize.width : 0);
+        (centerChild != null ? _gap + _minCenterWidth : 0) +
+        (suffixChild != null ? _gap + suffixSize.width : 0);
 
     final minWidthForLeadingCenter =
         _padding.horizontal +
         leadingSize.width +
-        (centerChild != null ? _spacing + _minCenterWidth : 0);
+        (centerChild != null ? _gap + _minCenterWidth : 0);
 
+    final previousShowCenter = _showCenter;
+    final previousShowSuffix = _showSuffix;
     _showCenter = false;
     _showSuffix = false;
     EdgeInsets activePadding;
@@ -155,6 +180,14 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
       activePadding = _compactPadding;
     }
 
+    (leadingChild as _RenderAdaptiveSlot?)?.visible = true;
+    (centerChild as _RenderAdaptiveSlot?)?.visible = _showCenter;
+    (suffixChild as _RenderAdaptiveSlot?)?.visible = _showSuffix;
+    if (previousShowCenter != _showCenter ||
+        previousShowSuffix != _showSuffix) {
+      markNeedsSemanticsUpdate();
+    }
+
     size = constraints.constrain(Size(availableWidth, constraints.maxHeight));
 
     final contentWidth = size.width - activePadding.horizontal;
@@ -163,8 +196,8 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
     if (_showCenter && _showSuffix) {
       final leadingX = activePadding.left;
       final suffixX = size.width - activePadding.right - suffixSize.width;
-      final centerStartX = leadingX + leadingSize.width + _spacing;
-      final centerEndX = suffixX - _spacing;
+      final centerStartX = leadingX + leadingSize.width + _gap;
+      final centerEndX = suffixX - _gap;
       final centerAvailableWidth = centerEndX - centerStartX;
 
       if (centerChild != null) {
@@ -208,7 +241,7 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
       }
     } else if (_showCenter) {
       final leadingX = activePadding.left;
-      final centerStartX = leadingX + leadingSize.width + _spacing;
+      final centerStartX = leadingX + leadingSize.width + _gap;
       final centerEndX = size.width - activePadding.right;
       final centerAvailableWidth = centerEndX - centerStartX;
 
@@ -311,5 +344,102 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
     }
 
     return false;
+  }
+
+  @override
+  void visitChildrenForSemantics(RenderObjectVisitor visitor) {
+    final leadingChild = childForSlot(_ElementSlot.leading);
+    final centerChild = childForSlot(_ElementSlot.center);
+    final suffixChild = childForSlot(_ElementSlot.suffix);
+    if (leadingChild != null) visitor(leadingChild);
+    if (_showCenter && centerChild != null) visitor(centerChild);
+    if (_showSuffix && suffixChild != null) visitor(suffixChild);
+  }
+}
+
+class _AdaptiveSlot extends StatefulWidget {
+  const _AdaptiveSlot({required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  State<_AdaptiveSlot> createState() => _AdaptiveSlotState();
+}
+
+class _AdaptiveSlotState extends State<_AdaptiveSlot> {
+  late bool _visible = widget.visible;
+  final FocusNode _focusNode = FocusNode(
+    debugLabel: "AdaptiveLeadingLayout slot",
+  );
+
+  void _setVisible(bool value) {
+    if (!mounted || _visible == value) return;
+    if (!value && _focusNode.hasFocus) _focusNode.unfocus();
+    setState(() => _visible = value);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AdaptiveSlotRenderWidget(
+      visible: widget.visible,
+      onVisibilityChanged: _setVisible,
+      child: Focus(
+        focusNode: _focusNode,
+        canRequestFocus: _visible,
+        descendantsAreFocusable: _visible,
+        child: ExcludeSemantics(excluding: !_visible, child: widget.child),
+      ),
+    );
+  }
+}
+
+class _AdaptiveSlotRenderWidget extends SingleChildRenderObjectWidget {
+  const _AdaptiveSlotRenderWidget({
+    required this.visible,
+    required this.onVisibilityChanged,
+    required super.child,
+  });
+
+  final bool visible;
+  final ValueChanged<bool> onVisibilityChanged;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderAdaptiveSlot(visible, onVisibilityChanged);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderAdaptiveSlot renderObject,
+  ) {
+    renderObject.onVisibilityChanged = onVisibilityChanged;
+  }
+}
+
+class _RenderAdaptiveSlot extends RenderProxyBox {
+  _RenderAdaptiveSlot(this._visible, this.onVisibilityChanged);
+
+  ValueChanged<bool> onVisibilityChanged;
+
+  bool _visible;
+  bool _visibilityCallbackScheduled = false;
+  bool get visible => _visible;
+  set visible(bool value) {
+    if (_visible == value) return;
+    _visible = value;
+    markNeedsSemanticsUpdate();
+    if (_visibilityCallbackScheduled) return;
+    _visibilityCallbackScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _visibilityCallbackScheduled = false;
+      if (attached) onVisibilityChanged(_visible);
+    });
   }
 }

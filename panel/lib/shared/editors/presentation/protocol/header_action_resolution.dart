@@ -456,15 +456,8 @@ extension on TypedExpression {
     List<TypeDiagnostic> diagnostics,
   ) {
     final value = _value(scope, diagnostics);
-    if (value case PolymorphicValue(
-      :final concreteType,
-      value: StringValue(:final value),
-    )) {
-      if (concreteType == standardTypeRefs.iconifyIcon) {
-        return IconValue.iconify(value);
-      }
-      if (concreteType == standardTypeRefs.svgIcon) return IconValue.svg(value);
-    }
+    final icon = value?.iconValueOrNull;
+    if (icon != null) return icon;
     diagnostics.add(_invalidHeaderValue("Header icon must evaluate to Icon"));
     return null;
   }

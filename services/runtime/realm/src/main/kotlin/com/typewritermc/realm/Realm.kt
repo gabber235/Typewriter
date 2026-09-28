@@ -3,22 +3,28 @@ package com.typewritermc.realm
 import com.surrealdb.Surreal
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.realm.compiler.CompiledArtifactStore
-import com.typewritermc.realm.compiler.RealmCompileCoordinator
-import com.typewritermc.realm.compiler.RealmCompiler
-import com.typewritermc.realm.compiler.SurrealCompiledContentRepository
-import com.typewritermc.realm.repository.PageDocumentCatalog
+import com.typewritermc.realm.compiler.GraphReadRequirement
+import com.typewritermc.realm.compiler.RegisteredCompiledArtifactStore
+import com.typewritermc.realm.compiler.RegisteredRealmCompileCoordinator
+import com.typewritermc.realm.compiler.RegisteredRealmCompiler
+import com.typewritermc.realm.compiler.SurrealRegisteredCompiledContentRepository
+import com.typewritermc.realm.repository.AuthoringWorkingGraph
+import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.repository.SurrealAuthoringGraphRepository
 import com.typewritermc.realm.repository.SurrealAuthoringRepository
-import com.typewritermc.realm.repository.SurrealPageDocumentRepository
-import com.typewritermc.realm.repository.search.ElementSearchCatalogEntry
-import com.typewritermc.realm.repository.search.SurrealAuthoringSearchRepository
-import com.typewritermc.realm.routes.CompiledContentEvents
+import com.typewritermc.realm.repository.utils.inTransaction
+import com.typewritermc.realm.routes.AuthoringPresentationProjector
+import com.typewritermc.realm.routes.EditorCompiledContentEvents
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmRouteFactory
+import com.typewritermc.realm.routes.registeredAuthoringPresentationMaterializer
 import com.typewritermc.realm.schema.RealmDatabaseProvider
+import com.typewritermc.realm.search.AuthoringSearchIndexer
+import com.typewritermc.realm.search.AuthoringSearchMetadata
+import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.RouterState
@@ -32,8 +38,7 @@ import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
 import com.typewritermc.types.TypeCatalog
-import com.typewritermc.types.TypeExpression
-import com.typewritermc.types.TypeGraph
+import com.typewritermc.types.TypePrototypeRegistry
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -58,7 +63,7 @@ import java.security.MessageDigest
  * rebuilds the router without recreating authored state. Compiler and catalog invalidation workers belong to this
  * lifecycle; shutdown must finish before the host closes deployment resources.
  */
-class Realm(
+internal class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val editorCatalog: RealmEditorCatalogSource,
     private val presentationSearch: RealmPresentationSearchSource,
@@ -68,8 +73,10 @@ class Realm(
     private val delayScheduler: DelayScheduler,
     private val catalogInvalidations: RealmCatalogInvalidationProcess,
     private val discoverySnapshots: RealmDiscoverySnapshotStore,
+    private val prototypes: TypePrototypeRegistry,
     private val host: HostedRuntimeHost,
     private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
+    private val authoringPolicies: RealmAuthoringPolicyCatalog,
 ) {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
@@ -77,9 +84,8 @@ class Realm(
     private var router: CommunicatorRouter? = null
     private var routerSession: Long? = null
     private var serviceMonitor: Job? = null
-    private var compileCoordinator: RealmCompileCoordinator? = null
+    private var compileCoordinator: RegisteredRealmCompileCoordinator? = null
     private var compileCatalogMonitor: Job? = null
-    private var searchCatalogMonitor: Job? = null
 
     /**
      * Opens Realm storage, starts compilation, and waits until the first usable messaging session has routes.
@@ -94,92 +100,143 @@ class Realm(
         val connected = childSpan("realm.database.initialize") { databaseProvider.connect() }
         try {
             database = connected
-            val pageDocuments =
-                SurrealPageDocumentRepository(connected) {
-                    discoverySnapshots.current()?.let {
-                        PageDocumentCatalog(it.elements, it.discovery.types.definitions)
-                    }
-                }
-            val elementTypeGraphs = {
-                discoverySnapshots
-                    .current()
-                    ?.let { snapshot ->
-                        snapshot.elements.entries.associate {
-                            it.descriptor.id to TypeGraph(TypeExpression.Named(it.descriptor.type), snapshot.discovery.types.definitions)
-                        }
-                    }.orEmpty()
-            }
-            val elementSearchCatalog = {
-                discoverySnapshots
-                    .current()
-                    ?.let { snapshot ->
-                        snapshot.elements.entries.associate { entry ->
-                            val descriptor = entry.descriptor
-                            descriptor.id to
-                                ElementSearchCatalogEntry(
-                                    graph =
-                                        TypeGraph(
-                                            TypeExpression.Named(descriptor.type),
-                                            snapshot.discovery.types.definitions,
-                                        ),
-                                    definition = descriptor.searchDefinition,
-                                    displayName = descriptor.name,
-                                )
-                        }
-                    }.orEmpty()
-            }
-            val compiledContentEvents = CompiledContentEvents()
+            val compiledContentEvents = EditorCompiledContentEvents()
             val compiledContent =
-                SurrealCompiledContentRepository(
+                SurrealRegisteredCompiledContentRepository(
                     connected,
                     compiledContentEvents::publishActivated,
                     compiledContentEvents::publishBlocked,
                 )
-            val authoringSearch =
-                SurrealAuthoringSearchRepository(
-                    connected,
-                    elementSearchCatalog,
-                    typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) },
+            val typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) }
+            val compilationProjections = authoringPolicies.compilation
+            val searchMetadata = AuthoringSearchMetadata(authoringPolicies.searchSelectors, authoringPolicies.searchFacets)
+            val searchIndexer =
+                AuthoringSearchIndexer(
+                    authoringPolicies.search,
+                    searchMetadata,
                 )
             val authoring =
                 SurrealAuthoringRepository(
-                    connected,
-                    pageDocuments,
-                    elementTypeGraphs,
-                    authoringSearch,
-                    pageCatalog = { discoverySnapshots.current()?.pages },
+                    database = connected,
+                    prototypes = prototypes,
+                    catalogGeneration = {
+                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                    },
+                    resourceDefinitions = { requireNotNull(discoverySnapshots.current()).resourceDefinitions },
+                    relations = { requireNotNull(discoverySnapshots.current()).relations },
+                    typeCatalog = { requireNotNull(discoverySnapshots.current()).discovery.types },
+                    validationRules = { authoringPolicies.validations },
+                    compilationProjections = { compilationProjections },
+                    searchIndexer = { searchIndexer },
+                    presentationMaterializer = {
+                        registeredAuthoringPresentationMaterializer(
+                            prototypes = prototypes,
+                            relations = { requireNotNull(discoverySnapshots.current()).relations },
+                            projector =
+                                AuthoringPresentationProjector(
+                                    prototypes,
+                                    authoringPolicies.presentations,
+                                ),
+                        )
+                    },
                 )
+            val authoringGraph =
+                SurrealAuthoringGraphRepository(
+                    database = connected,
+                    mapper = {
+                        ResourceValueMapper(
+                            prototypes,
+                            requireNotNull(discoverySnapshots.current()).relations,
+                        )
+                    },
+                    catalog = typeCatalog,
+                    generation = {
+                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                    },
+                )
+
+            suspend fun rebuildSearchIndex() {
+                val projections = authoringPolicies.search.all()
+                val graph =
+                    if (projections.isEmpty()) {
+                        AuthoringWorkingGraph(emptyMap(), emptyMap())
+                    } else {
+                        val requirement =
+                            projections
+                                .map { projection ->
+                                    projection.graphRequirement.copy(
+                                        definitions = projection.graphRequirement.definitions + projection.definition,
+                                    )
+                                }.reduce(GraphReadRequirement::plus)
+                        authoringGraph.workingGraph(requirement, null)
+                    }
+                connected.inTransaction { transaction -> searchIndexer.rebuild(transaction, graph) }
+            }
+            childSpan("realm.authoring.search.rebuild") { rebuildSearchIndex() }
             val compiler =
-                RealmCompileCoordinator(
-                    documents = pageDocuments,
+                RegisteredRealmCompileCoordinator(
+                    projections = compilationProjections,
                     compiler =
-                        RealmCompiler(
-                            compiledContent,
-                            CompiledArtifactStore(host.sharedArtifacts),
+                        RegisteredRealmCompiler(
+                            projections = compilationProjections,
+                            content = compiledContent,
+                            artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
+                            onStatesChanged = { sourceSequence, states ->
+                                compiledContentEvents.publishStates(
+                                    sourceSequence = sourceSequence,
+                                    generation = requireNotNull(discoverySnapshots.current()).discovery.generation.value,
+                                    states = states,
+                                )
+                            },
                         ),
-                    catalogRevision = { discoverySnapshots.current().catalogRevision() },
+                    graph = { projection, root ->
+                        authoringGraph.workingGraph(projection.graphRequirement, root)
+                    },
+                    sourceRevision = {
+                        connected
+                            .query("SELECT VALUE revision FROM ONLY authoring_head:current;")
+                            .take(0)
+                            .getLong()
+                            .toString()
+                    },
+                    catalogRevision = { requireNotNull(discoverySnapshots.current()).catalogRevision() },
                     scope = scope,
+                    onFailure = { failure ->
+                        telemetry.mainSpan(
+                            name = "realm.compiler.failure",
+                            unhandledFailureSlug = ErrorSlug.of("realm-compiler-failure-reporting-failed"),
+                            presentation = SpanPresentation("Realm compilation"),
+                        ) { compileSpan ->
+                            compileSpan.recordDegraded(ErrorSlug.of("realm-compilation-failed"), failure)
+                        }
+                    },
                 )
             compileCoordinator = compiler
             routeFactory =
                 RealmRouteFactory(
                     authoring = authoring,
-                    authoringSearch = authoringSearch,
+                    authoringGraph = authoringGraph,
+                    authoringSearch = SurrealAuthoringSearchRepository(connected, typeCatalog),
                     compiledContent = compiledContent,
                     editorCatalog = editorCatalog,
                     presentationSearch = presentationSearch,
                     capabilityInvocations = capabilityInvocations,
                     compiledContentEvents = compiledContentEvents,
                     onCompilationInvalidated = compiler::invalidate,
+                    prototypes = prototypes,
+                    catalogGeneration = {
+                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
+                    },
+                    authoringPolicies = authoringPolicies,
+                    authoringSearchMetadata = searchMetadata,
                 )
             compiler.start()
             compileCatalogMonitor =
                 scope.launch {
-                    discoverySnapshots.changes.collect { compiler.invalidate() }
-                }
-            searchCatalogMonitor =
-                scope.launch {
-                    discoverySnapshots.snapshots.filterNotNull().collectLatest { authoringSearch.reconcile() }
+                    discoverySnapshots.changes.collect {
+                        rebuildSearchIndex()
+                        compiler.invalidateAll()
+                    }
                 }
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =
@@ -198,8 +255,6 @@ class Realm(
             runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
             compileCatalogMonitor = null
-            runCatching { searchCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
-            searchCatalogMonitor = null
             runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             compileCoordinator = null
             runCatching {
@@ -234,8 +289,6 @@ class Realm(
             serviceMonitor = null
             runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
             compileCatalogMonitor = null
-            runCatching { searchCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
-            searchCatalogMonitor = null
             runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failures::add)
             compileCoordinator = null
             runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)

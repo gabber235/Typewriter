@@ -179,25 +179,48 @@ data class ResolvedArtifact(
     val kind: ArtifactKind,
 )
 
+/** Identifies an open-ended contribution producer by one safe resource path segment. */
+@JvmInline
+@Serializable
+value class ProducerId(
+    val value: String,
+) {
+    init {
+        require(value.matches(PATH_SEGMENT_PATTERN)) { "Contribution producer must be one safe path segment." }
+    }
+}
+
+/**
+ * Names a contribution within its producer using a safe relative resource path. Segments start with a letter or
+ * digit and may also contain underscores, periods, and hyphens.
+ */
+@JvmInline
+@Serializable
+value class ContributionName(
+    val value: String,
+) {
+    init {
+        require(value.isNotBlank() && value.split('/').all(PATH_SEGMENT_PATTERN::matches)) {
+            "Contribution name must be a safe relative path."
+        }
+    }
+}
+
 /**
  * Opaque generated discovery payload carried into the canonical manifest. The origin, source part, producer, and
- * name together identify a contribution; manifest generation rejects duplicate keys. Producer and name validation
- * prevents unsafe resource paths, while the producer owns payload encoding and interpretation.
+ * name together identify a contribution; manifest generation rejects duplicate keys. The producer owns payload
+ * encoding and interpretation.
  */
 @Serializable
 data class GeneratedContribution(
     val origin: ArtifactId,
     val sourcePart: String,
-    val producer: String,
-    val name: String,
+    val producer: ProducerId,
+    val name: ContributionName,
     val payload: ByteArray,
 ) {
     init {
         requireValidSourcePart(sourcePart)
-        require(producer.matches(PATH_SEGMENT_PATTERN)) { "Contribution producer must be one safe path segment." }
-        require(name.isNotBlank() && name.split('/').all(PATH_SEGMENT_PATTERN::matches)) {
-            "Contribution name must be a safe relative path."
-        }
     }
 }
 
@@ -271,7 +294,7 @@ data class CapabilityExtensionSourcePart(
 const val COMMON_SOURCE_PART = "common"
 
 private val SOURCE_PART_PATTERN = Regex("[A-Za-z][A-Za-z0-9_]*")
-private val PATH_SEGMENT_PATTERN = Regex("[^/\\\\.][^/\\\\]*")
+private val PATH_SEGMENT_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9_.-]*")
 
 private fun requireValidSourcePart(name: String) {
     require(name.matches(SOURCE_PART_PATTERN)) { "Extension source part name is invalid." }

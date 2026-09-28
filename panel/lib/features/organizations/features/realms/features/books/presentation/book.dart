@@ -29,7 +29,7 @@ class BookWidget extends HookConsumerWidget {
     super.key,
   });
 
-  final skir.RecordId id;
+  final skir.ResourceId id;
   final String title;
   final Widget icon;
   final Color color;
@@ -76,10 +76,7 @@ class BookWidget extends HookConsumerWidget {
                   .hoverRotate(isHovered),
         );
         return DragTarget<Object>(
-          onWillAcceptWithDetails: (details) =>
-              details.data is ReferenceResourceDragData &&
-              (details.data as ReferenceResourceDragData).referenceId.table ==
-                  "tag",
+          onWillAcceptWithDetails: (details) => details.data is TagIdentifier,
           onAcceptWithDetails: (details) async {
             final data = details.data as ReferenceResourceDragData;
             final current = ref.read(projectedBookProvider(id)).value;

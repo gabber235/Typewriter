@@ -17,9 +17,36 @@ class _MockBooks extends CanonicalBooks {
   Future<List<Book>> build() async => _books;
 }
 
-Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
+class _DelayedCatalog extends RealmCatalog {
+  _DelayedCatalog(this.snapshot);
+
+  final Future<RealmEditorCatalogSnapshot> snapshot;
+
+  @override
+  Future<RealmEditorCatalogSnapshot> build(RealmEditorCatalogRequest request) =>
+      snapshot;
+}
+
+class _MutableCatalog extends RealmCatalog {
+  _MutableCatalog(this.snapshot);
+
+  final RealmEditorCatalogSnapshot snapshot;
+
+  @override
+  Future<RealmEditorCatalogSnapshot> build(
+    RealmEditorCatalogRequest request,
+  ) async => snapshot;
+
+  void beginRefresh() => state = const AsyncLoading();
+
+  void finishRefresh() => state = AsyncData(snapshot);
+}
+
+skir.ResourceId _rid(String id) => skir.ResourceId(value: id.split(":").last);
+
+Book _book(String id, String title, {List<skir.ResourceId> tagIds = const []}) {
   return Book(
-    bookId: recordId("book:$id"),
+    bookId: _rid(id),
     title: title,
     icon: "book",
     color: Colors.blue,
@@ -29,24 +56,97 @@ Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
 
 Tag _tag(String id) {
   return Tag(
-    tagId: recordId("tag:$id"),
+    tagId: _rid(id),
     name: id,
     color: Colors.blue,
     parentIds: const [],
-    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+    placement: GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
 }
 
 void main() {
+  test(
+    "canonical books remain loading until the catalog and graph are ready",
+    () async {
+      final pending = Completer<RealmEditorCatalogSnapshot>();
+      final book = _book("book1", "Quest for Glory");
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(
+            recordId("organization:test"),
+          ),
+          realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+          ...authoringSessionMockOverrides(
+            books: [book],
+            includeCatalog: false,
+          ),
+          realmCatalogProvider.overrideWith2(
+            (request) => _DelayedCatalog(pending.future),
+          ),
+        ],
+      );
+      final subscription = container.listen(canonicalBooksProvider, (_, _) {});
+      addTearDown(subscription.close);
+
+      expect(
+        container.read(canonicalBooksProvider),
+        isA<AsyncLoading<List<Book>>>(),
+      );
+      pending.complete(authoringFixtureCatalog());
+      final books = await container.read(canonicalBooksProvider.future);
+      expect(books.single.bookId, book.bookId);
+    },
+  );
+
+  test(
+    "canonical books stop exposing editable data during catalog refresh",
+    () async {
+      final book = _book("book1", "Quest for Glory");
+      final catalog = authoringFixtureCatalog();
+      late _MutableCatalog notifier;
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(
+            recordId("organization:test"),
+          ),
+          realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+          ...authoringSessionMockOverrides(
+            books: [book],
+            includeCatalog: false,
+          ),
+          realmCatalogProvider.overrideWith2(
+            (request) => notifier = _MutableCatalog(catalog),
+          ),
+        ],
+      );
+      final subscription = container.listen(canonicalBooksProvider, (_, _) {});
+      addTearDown(subscription.close);
+      expect(
+        (await container.read(canonicalBooksProvider.future)).single.bookId,
+        book.bookId,
+      );
+
+      notifier.beginRefresh();
+      await pumpEventQueue();
+      expect(container.read(canonicalBooksProvider).isLoading, isTrue);
+
+      notifier.finishRefresh();
+      expect(
+        (await container.read(canonicalBooksProvider.future)).single.bookId,
+        book.bookId,
+      );
+    },
+  );
+
   group("filteredBooks", () {
     final testBooks = [
-      _book("book1", "Quest for Glory", tagIds: [recordId("tag:adventure")]),
+      _book("book1", "Quest for Glory", tagIds: [_rid("adventure")]),
       _book(
         "book2",
         "Mystery Manor",
-        tagIds: [recordId("tag:mystery"), recordId("tag:horror")],
+        tagIds: [_rid("mystery"), _rid("horror")],
       ),
-      _book("book3", "Space Explorers", tagIds: [recordId("tag:scifi")]),
+      _book("book3", "Space Explorers", tagIds: [_rid("scifi")]),
     ];
 
     final testTags = [
@@ -107,7 +207,7 @@ void main() {
       final result = await getFilteredBooks(container, "QUEST");
 
       expect(result.length, 1);
-      expect(result.first.bookId, recordId("book:book1"));
+      expect(result.first.bookId, _rid("book1"));
     });
 
     test("matches book title with partial query", () async {
@@ -137,7 +237,7 @@ void main() {
       final result = await getFilteredBooks(container, "ADVENTURE");
 
       expect(result.length, 1);
-      expect(result.first.bookId, recordId("book:book1"));
+      expect(result.first.bookId, _rid("book1"));
     });
 
     test("matches any of multiple tags", () async {
@@ -154,7 +254,7 @@ void main() {
       final result = await getFilteredBooks(container, "horror");
 
       expect(result.length, 1);
-      expect(result.first.bookId, recordId("book:book2"));
+      expect(result.first.bookId, _rid("book2"));
     });
 
     test("returns empty list when no matches", () async {
@@ -213,7 +313,7 @@ void main() {
 
       final updated = original.copyWith(color: Colors.red);
 
-      expect(updated.bookId, recordId("book:book123"));
+      expect(updated.bookId, _rid("book123"));
       expect(updated.title, "Original Title");
       expect(updated.color, Colors.red);
     });
@@ -233,25 +333,25 @@ void main() {
 
   group("BookIdentifier", () {
     test("equality works correctly", () {
-      final id1 = BookIdentifier(recordId("book:abc"));
-      final id2 = BookIdentifier(recordId("book:abc"));
-      final id3 = BookIdentifier(recordId("book:xyz"));
+      final id1 = BookIdentifier(_rid("abc"));
+      final id2 = BookIdentifier(_rid("abc"));
+      final id3 = BookIdentifier(_rid("xyz"));
 
       expect(id1, equals(id2));
       expect(id1, isNot(equals(id3)));
     });
 
     test("hashCode is consistent with equality", () {
-      final id1 = BookIdentifier(recordId("book:abc"));
-      final id2 = BookIdentifier(recordId("book:abc"));
+      final id1 = BookIdentifier(_rid("abc"));
+      final id2 = BookIdentifier(_rid("abc"));
 
       expect(id1.hashCode, equals(id2.hashCode));
     });
 
     test("can be used as map key", () {
       final map = <BookIdentifier, String>{};
-      final id1 = BookIdentifier(recordId("book:one"));
-      final id2 = BookIdentifier(recordId("book:one"));
+      final id1 = BookIdentifier(_rid("one"));
+      final id2 = BookIdentifier(_rid("one"));
 
       map[id1] = "value1";
       map[id2] = "value2";
@@ -261,7 +361,7 @@ void main() {
     });
 
     test("toString returns descriptive string", () {
-      final id = BookIdentifier(recordId("book:book123"));
+      final id = BookIdentifier(_rid("book123"));
 
       expect(id.toString(), contains("book123"));
     });

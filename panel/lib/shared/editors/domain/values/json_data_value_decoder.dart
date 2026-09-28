@@ -132,7 +132,9 @@ DataValue _decode(
     source,
   ),
   NamedType() => _decodeResolved(source, type, registry, path),
-  ReferenceType() when source is String => ReferenceValue(recordId(source)),
+  ReferenceType() when source is String => ReferenceValue(
+    ResourceId(value: source),
+  ),
   ReferenceType() => throw _invalidJsonValue(
     path,
     "a resource reference string",

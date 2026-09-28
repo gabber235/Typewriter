@@ -29,15 +29,15 @@ AsyncValue<List<Book>> filteredBooks(Ref ref, String query) {
 
 /// Resolves the current route parameter into the typed book record identity.
 @riverpod
-skir.RecordId? bookId(Ref ref) {
+skir.ResourceId? bookId(Ref ref) {
   final id = ref.watch(routeParamProvider("bookId"));
   if (id == null) return null;
-  return recordId("book:$id");
+  return skir.ResourceId(value: id);
 }
 
 /// Finds one confirmed book in the authoritative realm session.
 @riverpod
-Future<Book?> canonicalBook(Ref ref, skir.RecordId bookId) async {
+Future<Book?> canonicalBook(Ref ref, skir.ResourceId bookId) async {
   final books = await ref.watch(canonicalBooksProvider.future);
   return books.firstWhereOrNull((book) => book.bookId == bookId);
 }
@@ -79,7 +79,7 @@ AsyncValue<List<Book>> projectedBooks(Ref ref) {
 /// It retains the canonical loading or missing value state until the local
 /// overlay can be applied.
 @riverpod
-AsyncValue<Book?> projectedBook(Ref ref, skir.RecordId bookId) {
+AsyncValue<Book?> projectedBook(Ref ref, skir.ResourceId bookId) {
   final canonical = ref.watch(canonicalBookProvider(bookId));
   if (canonical.mapUnready<Book?>() case final value?) return value;
   final organizationId = ref.watch(organizationIdProvider);

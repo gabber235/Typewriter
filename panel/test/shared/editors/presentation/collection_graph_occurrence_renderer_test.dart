@@ -136,10 +136,12 @@ Future<void> _pumpGraph(
         id: "node",
         element: ColumnElement(
           children: [
-            fixture.rowName,
-            const PresentationNode(
-              id: "children",
-              element: PresentationSlotElement(slotId: "children"),
+            PresentationAxisChild.fixed(fixture.rowName),
+            PresentationAxisChild.fixed(
+              const PresentationNode(
+                id: "children",
+                element: PresentationSlotElement(slotId: "children"),
+              ),
             ),
           ],
         ),
@@ -219,8 +221,11 @@ _Fixture _fixture(List<RecordValue> rows) {
       id: const PresentationCollectionSourceId("occurrence.nodes"),
       schema: PresentationCollectionSchema(
         rowType: rowType,
-        keyType: const StringType(),
         rowBindingId: _rowBinding,
+        selectability: const TypedExpression(
+          resultType: BooleanType(),
+          expression: LiteralExpression(BooleanValue(true)),
+        ),
         key: field("key", const StringType()),
         relations: [
           PresentationCollectionRelation(

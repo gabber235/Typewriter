@@ -4,9 +4,9 @@ part "action_list_reorder_executor.dart";
 
 /// Executes local actions against one immutable expression context.
 ///
-/// Resolution checks writability, expression evaluation checks the supplied
-/// budget, and replacement validates the resulting value before returning a
-/// new root value. No Realm request is made here.
+/// Resolution checks writability and expression evaluation checks the supplied
+/// budget. Concrete type selection is handled by the draft owner because its
+/// payload must be completed by Realm initialization before persistence.
 
 extension LocalEditorActionExecution on LocalEditorAction {
   LocalMutationResult execute(
@@ -57,10 +57,8 @@ extension on LocalAction {
       registry,
       budget,
     ),
-    final ReplaceConcreteTypeAction action => action.executeConcreteReplacement(
-      context,
-      registry,
-      budget,
+    ReplaceConcreteTypeAction() => invalidLocalMutation(
+      "Concrete type selection must be applied by the draft owner",
     ),
   };
 }

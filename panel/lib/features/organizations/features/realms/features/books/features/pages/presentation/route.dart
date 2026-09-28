@@ -1,6 +1,8 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays one page using the editor selected by its catalog definition.
@@ -18,7 +20,9 @@ class PagePage extends HookConsumerWidget {
   /// Builds a page surface or a safe read only fallback when its kind is absent.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final page = ref.watch(projectedPageProvider(recordId("page:$pageId")));
+    final page = ref.watch(
+      projectedPageProvider(skir.ResourceId(value: pageId)),
+    );
     return Pane(
       id: "pagepage",
       primary: true,
@@ -33,25 +37,29 @@ class PagePage extends HookConsumerWidget {
         child: page(
           name: "page",
           builder: (page) {
-            final definition = ref
-                .watch(realmEditorCatalogProvider)
-                .value
-                ?.snapshot
-                ?.pageCatalog
-                .definitions[page.kind];
-            if (definition == null) {
-              return const ErrorScreen(
-                title: "Page Kind Unavailable",
-                message: "This page kind is unavailable. Likely because the extension which provides it failed to load or was removed.",
-              );
-            }
-            return switch (definition.editor) {
-              RealmGraphPageEditor(:final direction) => EntryGraph(
-                pageId: pageId,
-                graphDirection: direction,
-              ),
-              RealmTimelinePageEditor() => EntryTimelineEditor(pageId: pageId),
-            };
+            return ref.watch(realmEditorCatalogProvider)(
+              name: "page kind",
+              skipLoadingOnReload: false,
+              builder: (snapshot) {
+                final definition =
+                    snapshot.pageCatalog.definitions[page.rootType];
+                if (definition == null) {
+                  return const ErrorScreen(
+                    title: "Page Kind Unavailable",
+                    message: "This page kind is unavailable. Likely because the extension which provides it failed to load or was removed.",
+                  );
+                }
+                return switch (definition.editor) {
+                  RealmGraphPageEditor(:final direction) => EntryGraph(
+                    pageId: pageId,
+                    graphDirection: direction,
+                  ),
+                  RealmTimelinePageEditor() => EntryTimelineEditor(
+                    pageId: pageId,
+                  ),
+                };
+              },
+            );
           },
         ),
       ),

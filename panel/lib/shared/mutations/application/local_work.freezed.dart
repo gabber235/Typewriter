@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LocalWorkScope implements DiagnosticableTreeMixin {
 
- String? get userId; skir.RecordId? get organizationId;
+ String? get userId; RecordId? get organizationId;
 /// Create a copy of LocalWorkScope
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -58,7 +58,7 @@ abstract mixin class $LocalWorkScopeCopyWith<$Res>  {
   factory $LocalWorkScopeCopyWith(LocalWorkScope value, $Res Function(LocalWorkScope) _then) = _$LocalWorkScopeCopyWithImpl;
 @useResult
 $Res call({
- String? userId, skir.RecordId? organizationId
+ String? userId, RecordId? organizationId
 });
 
 
@@ -79,7 +79,7 @@ class _$LocalWorkScopeCopyWithImpl<$Res>
   return _then(LocalWorkScope(
 userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String?,organizationId: freezed == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId?,
+as RecordId?,
   ));
 }
 
@@ -164,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? userId,  skir.RecordId? organizationId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? userId,  RecordId? organizationId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocalWorkScope() when $default != null:
 return $default(_that.userId,_that.organizationId);case _:
@@ -185,7 +185,7 @@ return $default(_that.userId,_that.organizationId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? userId,  skir.RecordId? organizationId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? userId,  RecordId? organizationId)  $default,) {final _that = this;
 switch (_that) {
 case _LocalWorkScope():
 return $default(_that.userId,_that.organizationId);case _:
@@ -205,7 +205,7 @@ return $default(_that.userId,_that.organizationId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? userId,  skir.RecordId? organizationId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? userId,  RecordId? organizationId)?  $default,) {final _that = this;
 switch (_that) {
 case _LocalWorkScope() when $default != null:
 return $default(_that.userId,_that.organizationId);case _:
@@ -221,10 +221,10 @@ return $default(_that.userId,_that.organizationId);case _:
 
 class _LocalWorkScope with DiagnosticableTreeMixin implements LocalWorkScope {
   const _LocalWorkScope({required this.userId, required this.organizationId});
-  
+
 
 @override final  String? userId;
-@override final  skir.RecordId? organizationId;
+@override final  RecordId? organizationId;
 
 /// Create a copy of LocalWorkScope
 /// with the given fields replaced by the non-null parameter values.
@@ -264,7 +264,7 @@ abstract mixin class _$LocalWorkScopeCopyWith<$Res> implements $LocalWorkScopeCo
   factory _$LocalWorkScopeCopyWith(_LocalWorkScope value, $Res Function(_LocalWorkScope) _then) = __$LocalWorkScopeCopyWithImpl;
 @override @useResult
 $Res call({
- String? userId, skir.RecordId? organizationId
+ String? userId, RecordId? organizationId
 });
 
 
@@ -285,7 +285,7 @@ class __$LocalWorkScopeCopyWithImpl<$Res>
   return _then(_LocalWorkScope(
 userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String?,organizationId: freezed == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId?,
+as RecordId?,
   ));
 }
 
@@ -295,7 +295,7 @@ as skir.RecordId?,
 /// @nodoc
 mixin _$EditorResourceScope implements DiagnosticableTreeMixin {
 
- skir.RecordId get organizationId; skir.RecordId? get realmId;
+ RecordId get organizationId; RecordId? get realmId;
 /// Create a copy of EditorResourceScope
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -338,7 +338,7 @@ abstract mixin class $EditorResourceScopeCopyWith<$Res>  {
   factory $EditorResourceScopeCopyWith(EditorResourceScope value, $Res Function(EditorResourceScope) _then) = _$EditorResourceScopeCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId? realmId
+ RecordId organizationId, RecordId? realmId
 });
 
 
@@ -358,8 +358,8 @@ class _$EditorResourceScopeCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? organizationId = null,Object? realmId = freezed,}) {
   return _then(EditorResourceScope(
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,realmId: freezed == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId?,
+as RecordId,realmId: freezed == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
+as RecordId?,
   ));
 }
 
@@ -444,7 +444,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId? realmId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( RecordId organizationId,  RecordId? realmId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EditorResourceScope() when $default != null:
 return $default(_that.organizationId,_that.realmId);case _:
@@ -465,7 +465,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId? realmId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( RecordId organizationId,  RecordId? realmId)  $default,) {final _that = this;
 switch (_that) {
 case _EditorResourceScope():
 return $default(_that.organizationId,_that.realmId);case _:
@@ -485,7 +485,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId? realmId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( RecordId organizationId,  RecordId? realmId)?  $default,) {final _that = this;
 switch (_that) {
 case _EditorResourceScope() when $default != null:
 return $default(_that.organizationId,_that.realmId);case _:
@@ -501,10 +501,10 @@ return $default(_that.organizationId,_that.realmId);case _:
 
 class _EditorResourceScope with DiagnosticableTreeMixin implements EditorResourceScope {
   const _EditorResourceScope({required this.organizationId, this.realmId});
-  
 
-@override final  skir.RecordId organizationId;
-@override final  skir.RecordId? realmId;
+
+@override final  RecordId organizationId;
+@override final  RecordId? realmId;
 
 /// Create a copy of EditorResourceScope
 /// with the given fields replaced by the non-null parameter values.
@@ -544,7 +544,7 @@ abstract mixin class _$EditorResourceScopeCopyWith<$Res> implements $EditorResou
   factory _$EditorResourceScopeCopyWith(_EditorResourceScope value, $Res Function(_EditorResourceScope) _then) = __$EditorResourceScopeCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId? realmId
+ RecordId organizationId, RecordId? realmId
 });
 
 
@@ -564,8 +564,8 @@ class __$EditorResourceScopeCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? organizationId = null,Object? realmId = freezed,}) {
   return _then(_EditorResourceScope(
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,realmId: freezed == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId?,
+as RecordId,realmId: freezed == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
+as RecordId?,
   ));
 }
 
@@ -779,7 +779,7 @@ return $default(_that.scope,_that.identity);case _:
 
 class _EditorResourceKey with DiagnosticableTreeMixin implements EditorResourceKey {
   const _EditorResourceKey({required this.scope, required this.identity});
-  
+
 
 @override final  Object? scope;
 @override final  Object identity;

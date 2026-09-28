@@ -2,24 +2,12 @@ package com.typewritermc.imprint.gradle
 
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
-import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
-import com.typewritermc.imprint.CapabilityExtensionSourcePart
-import com.typewritermc.imprint.CapabilityManifest
-import com.typewritermc.imprint.CommonExtensionSourcePart
-import com.typewritermc.imprint.EngineExtensionSourcePart
-import com.typewritermc.imprint.EngineManifest
-import com.typewritermc.imprint.ExtensionManifest
-import com.typewritermc.imprint.ExtensionSourcePart
-import com.typewritermc.imprint.GeneratedContribution
-import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
-import com.typewritermc.imprint.RealmManifest
-import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.imprint.archive.ImprintArchive
 import com.typewritermc.imprint.archive.ImprintArchiveInspection
@@ -40,16 +28,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.util.zip.ZipFile
 
-/**
- * Wires manifest generation to production KSP outputs and resolved artifact relationships. Nested inputs preserve
- * source part, expected kind, constraint, and the direct artifact provider. Hosted artifacts also provide generated
- * entrypoint metadata so the canonical manifest owns runtime bootstrap selection.
- */
+/** Wires tracked Gradle inputs to deterministic manifest assembly. */
 internal fun Project.registerManifestTask(
     declaration: DeclaredArtifact,
     relationships: List<ConfiguredRelationship>,
+    platformApiArtifacts: FileCollection,
     engineCoreArtifacts: FileCollection,
 ): org.gradle.api.tasks.TaskProvider<GenerateImprintManifestTask> {
     val productionParts =
@@ -109,22 +93,38 @@ internal fun Project.registerManifestTask(
                 }
             },
         )
+        task.archiveInputs.set(
+            buildList {
+                if (declaration.kind in setOf(ArtifactKind.REALM, ArtifactKind.ENGINE)) {
+                    add(
+                        objects.newInstance(ManifestArchiveInput::class.java).apply {
+                            namespace.set("platform")
+                            entrypointPolicy.set(RuntimeEntrypointInputPolicy.NONE)
+                            artifacts.from(platformApiArtifacts)
+                        },
+                    )
+                }
+                if (declaration.kind == ArtifactKind.ENGINE) {
+                    add(
+                        objects.newInstance(ManifestArchiveInput::class.java).apply {
+                            namespace.set("core")
+                            entrypointPolicy.set(RuntimeEntrypointInputPolicy.HOSTED_RUNTIME_METADATA)
+                            artifacts.from(engineCoreArtifacts)
+                        },
+                    )
+                }
+            },
+        )
         task.graphArtifacts.from(relationships.map(ConfiguredRelationship::configuration))
         task.contributionFiles.from(contributionFiles)
         task.runtimeEntrypointFiles.from(runtimeEntrypointFiles)
-        task.engineCoreArtifacts.from(engineCoreArtifacts)
         task.outputFile.set(layout.buildDirectory.file("generated/imprint/artifact.cbor"))
         val kspTasks = productionParts.map { part -> if (part == "main") "kspKotlin" else "ksp${part.capitalized()}Kotlin" }
         task.dependsOn(tasks.matching { it.name in kspTasks })
     }
 }
 
-/**
- * Produces the canonical manifest after validating the resolved artifact graph and generated contributions.
- * Rejects conflicting identities, incompatible constraints, dependency cycles, unsafe contribution keys, and
- * unsupported source part inclusions before writing CBOR. Hosted artifacts must expose exactly one generated runtime
- * entrypoint. Stable sorting makes manifest ordering independent of file enumeration.
- */
+/** Gradle adapter for manifest inputs, dependency resolution, assembly, and encoded output. */
 @CacheableTask
 abstract class GenerateImprintManifestTask : DefaultTask() {
     @get:Input
@@ -145,6 +145,9 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
     @get:Nested
     abstract val relationships: ListProperty<ManifestRelationshipInput>
 
+    @get:Nested
+    abstract val archiveInputs: ListProperty<ManifestArchiveInput>
+
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val graphArtifacts: ConfigurableFileCollection
@@ -157,119 +160,86 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val runtimeEntrypointFiles: ConfigurableFileCollection
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val engineCoreArtifacts: ConfigurableFileCollection
-
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
     @TaskAction
     fun generate() {
-        val id = ArtifactId(artifactId.get())
-        val version = ArtifactVersion(artifactVersion.get())
-        val kind = ArtifactKind.valueOf(artifactKind.get())
-        val allManifests = readGraphManifests()
-        val relationships = readRelationships(allManifests)
-        val localContributions = readContributions(id)
-        val engineCoreContributions = if (kind == ArtifactKind.ENGINE) readEngineCoreContributions(id) else emptyList()
-        val runtimeEntrypointClass = readRuntimeEntrypointClass(kind)
+        val context = manifestContext()
+        val dependencies = resolveDependencies(context)
+        val content = contentPipeline(context, dependencies).assemble(context)
         val manifest =
-            when (kind) {
-                ArtifactKind.REALM -> {
-                    RealmManifest(
-                        id = id,
-                        version = version,
-                        hostApi = requiredHostApi(),
-                        runtimeEntrypointClass = runtimeEntrypointClass,
-                        contributions = canonicalContributions(localContributions),
-                    )
-                }
+            createManifest(
+                context = context,
+                hostApi = hostApiConstraint(),
+                sourceParts = sourcePartModels(),
+                dependencies = dependencies,
+                content = content,
+            )
 
-                ArtifactKind.ENGINE -> {
-                    engineManifest(
-                        id,
-                        version,
-                        relationships,
-                        allManifests,
-                        runtimeEntrypointClass,
-                        localContributions + engineCoreContributions,
-                    )
-                }
-
-                ArtifactKind.CAPABILITY -> {
-                    capabilityManifest(id, version, relationships, allManifests, localContributions)
-                }
-
-                ArtifactKind.EXTENSION -> {
-                    extensionManifest(id, version, relationships, allManifests, localContributions)
-                }
-            }
         outputFile.get().asFile.apply {
             parentFile.mkdirs()
             writeBytes(ImprintManifestCodec.encode(manifest))
         }
     }
 
-    private fun readRuntimeEntrypointClass(kind: ArtifactKind): String {
-        val local = runtimeEntrypointFiles.files.flatMap(::readRuntimeEntrypoints)
-        val core = if (kind == ArtifactKind.ENGINE) readEngineCoreEntrypoints() else emptyList()
-        val classes = local + core
-        if (kind !in setOf(ArtifactKind.REALM, ArtifactKind.ENGINE)) {
-            if (classes.isNotEmpty()) {
-                throw GradleException("Only hosted Imprint artifacts may declare a runtime entrypoint.")
+    private fun manifestContext(): ManifestAssemblyContext =
+        ManifestAssemblyContext(
+            artifactId = ArtifactId(artifactId.get()),
+            artifactVersion = ArtifactVersion(artifactVersion.get()),
+            artifactKind = ArtifactKind.valueOf(artifactKind.get()),
+        )
+
+    private fun resolveDependencies(context: ManifestAssemblyContext): ManifestDependencies {
+        val manifests = readGraphManifests()
+        return resolveManifestDependencies(context, readRelationships(manifests), manifests)
+    }
+
+    private fun contentPipeline(
+        context: ManifestAssemblyContext,
+        dependencies: ManifestDependencies,
+    ): ManifestContentPipeline {
+        val local =
+            LocalGeneratedContentSource(
+                contributionFiles = contributionFiles.files.sortedBy(File::getAbsolutePath),
+                runtimeEntrypointFiles = runtimeEntrypointFiles.files.sortedBy(File::getAbsolutePath),
+            )
+        val embedded = archiveInputs.get().mapNotNull(ManifestArchiveInput::toSource).combined()
+        return when (context.artifactKind) {
+            ArtifactKind.REALM -> {
+                realmContentPipeline(local, embedded)
             }
-            return ""
+
+            ArtifactKind.ENGINE -> {
+                engineContentPipeline(
+                    local = local,
+                    embedded = embedded,
+                    capabilities =
+                        CapabilityGraphContentSource(
+                            dependencies.capabilityGraph,
+                            dependencies.manifests,
+                        ),
+                )
+            }
+
+            ArtifactKind.CAPABILITY,
+            ArtifactKind.EXTENSION,
+            -> {
+                libraryContentPipeline(local)
+            }
         }
-        if (classes.size != 1) {
-            throw GradleException(
-                "A hosted artifact must declare exactly one runtime entrypoint, but found ${classes.size}.",
+    }
+
+    private fun hostApiConstraint(): VersionConstraint? = hostApiConstraint.get().takeIf(String::isNotBlank)?.let(::VersionConstraint)
+
+    private fun sourcePartModels(): List<ManifestSourcePart> =
+        sourceParts.get().map { input ->
+            ManifestSourcePart(
+                name = input.name.get(),
+                kind = input.kind.get(),
+                includes = input.includes.get(),
             )
         }
-        return classes.single()
-    }
-
-    private fun readRuntimeEntrypoints(file: File): List<String> =
-        try {
-            validateRuntimeEntrypoints(HostedRuntimeEntrypointMetadataCodec.decode(file.readBytes()).classes, file.name)
-        } catch (failure: Exception) {
-            throw GradleException("Cannot read runtime entrypoint metadata from ${file.name}.", failure)
-        }
-
-    private fun readEngineCoreEntrypoints(): List<String> {
-        if (engineCoreArtifacts.isEmpty) return emptyList()
-        val artifact =
-            engineCoreArtifacts.files.singleOrNull()
-                ?: throw GradleException("An engine must resolve exactly one direct engine core artifact.")
-        return ImprintArchive
-            .readEntries(artifact.toPath(), IMPRINT_RUNTIME_ENTRYPOINTS_PATH)
-            .flatMap { bytes ->
-                try {
-                    HostedRuntimeEntrypointMetadataCodec.decode(bytes).classes
-                } catch (failure: Exception) {
-                    throw GradleException("Cannot read runtime entrypoint metadata from ${artifact.name}.", failure)
-                }
-            }.let { validateRuntimeEntrypoints(it, artifact.name) }
-    }
-
-    private fun validateRuntimeEntrypoints(
-        classes: List<String>,
-        source: String,
-    ): List<String> {
-        val normalized = classes.map(String::trim)
-        if (normalized.any(String::isEmpty)) {
-            throw GradleException("Runtime entrypoint metadata in $source contains a blank class name.")
-        }
-        return normalized
-    }
-
-    private fun requiredHostApi(): VersionConstraint {
-        val expression = hostApiConstraint.get()
-        if (expression.isBlank()) {
-            throw GradleException("Hosted Imprint artifacts must declare a host API constraint.")
-        }
-        return VersionConstraint(expression)
-    }
 
     private fun readGraphManifests(): Map<ArtifactId, ImprintManifest> {
         val manifests =
@@ -313,332 +283,33 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
                 }
                 ResolvedRelationship(sourcePart, relationship.index.get(), constraint, manifest)
             }.sortedWith(compareBy(ResolvedRelationship::sourcePart, ResolvedRelationship::index))
-
-    private fun engineManifest(
-        id: ArtifactId,
-        version: ArtifactVersion,
-        relationships: List<ResolvedRelationship>,
-        allManifests: Map<ArtifactId, ImprintManifest>,
-        runtimeEntrypointClass: String,
-        localContributions: List<GeneratedContribution>,
-    ): EngineManifest {
-        val direct = canonicalRequirements(relationships.map(ResolvedRelationship::requirement), id.value)
-        val graph = resolveCapabilityGraph(relationships, allManifests)
-        val capabilityContributions =
-            graph.flatMap { descriptor -> allManifests.getValue(descriptor.id).contributions }
-        return EngineManifest(
-            id = id,
-            version = version,
-            hostApi = requiredHostApi(),
-            runtimeEntrypointClass = runtimeEntrypointClass,
-            directCapabilities = direct,
-            resolvedCapabilities = graph,
-            bundledComponents = graph,
-            contributions = canonicalContributions(localContributions + capabilityContributions),
-        )
-    }
-
-    private fun capabilityManifest(
-        id: ArtifactId,
-        version: ArtifactVersion,
-        relationships: List<ResolvedRelationship>,
-        allManifests: Map<ArtifactId, ImprintManifest>,
-        localContributions: List<GeneratedContribution>,
-    ): CapabilityManifest =
-        CapabilityManifest(
-            id = id,
-            version = version,
-            directRequirements = canonicalRequirements(relationships.map(ResolvedRelationship::requirement), id.value),
-            resolvedCapabilities = resolveCapabilityGraph(relationships, allManifests),
-            contributions = canonicalContributions(localContributions),
-        )
-
-    private fun extensionManifest(
-        id: ArtifactId,
-        version: ArtifactVersion,
-        relationships: List<ResolvedRelationship>,
-        allManifests: Map<ArtifactId, ImprintManifest>,
-        localContributions: List<GeneratedContribution>,
-    ): ExtensionManifest {
-        val parts = mutableListOf<ExtensionSourcePart>(CommonExtensionSourcePart)
-        val provenance = linkedMapOf<ArtifactId, ResolvedArtifact>()
-        val guarantees = linkedMapOf<String, SourcePartGuarantee>()
-        sourceParts.get().sortedBy { it.name.get() }.forEach { sourcePart ->
-            val name = sourcePart.name.get()
-            val includes = sourcePart.includes.get().sorted()
-            val sourceRelationships = relationships.filter { it.sourcePart == name }
-            when (val kind = sourcePart.kind.get()) {
-                ArtifactKind.ENGINE -> {
-                    val relationship = sourceRelationships.single()
-                    val engine = relationship.manifest as EngineManifest
-                    val descriptor = engine.descriptor()
-                    parts += EngineExtensionSourcePart(name, relationship.requirement, descriptor, includes)
-                    guarantees[name] =
-                        EngineSourcePartGuarantee(
-                            engine.id,
-                            relationship.constraint,
-                            engine.resolvedCapabilities.associateBy(ResolvedArtifact::id),
-                        )
-                    provenance[descriptor.id] = descriptor
-                    engine.resolvedCapabilities.forEach { provenance[it.id] = it }
-                }
-
-                ArtifactKind.CAPABILITY -> {
-                    val graph = resolveCapabilityGraph(sourceRelationships, allManifests)
-                    parts +=
-                        CapabilityExtensionSourcePart(
-                            name,
-                            canonicalRequirements(
-                                sourceRelationships.map(ResolvedRelationship::requirement),
-                                name,
-                            ),
-                            graph,
-                            includes,
-                        )
-                    guarantees[name] = CapabilitySourcePartGuarantee(graph.associateBy(ResolvedArtifact::id))
-                    graph.forEach { provenance[it.id] = it }
-                }
-
-                ArtifactKind.EXTENSION -> {
-                    error("Extensions cannot target extensions.")
-                }
-
-                ArtifactKind.REALM -> {
-                    error("Extensions cannot target Realm artifacts.")
-                }
-            }
-        }
-        validateIncludedTargets(parts, guarantees)
-        return ExtensionManifest(
-            id = id,
-            version = version,
-            sourceParts = parts,
-            buildProvenance = provenance.values.sortedBy { it.id.value },
-            contributions = canonicalContributions(localContributions),
-        )
-    }
-
-    private fun validateIncludedTargets(
-        sourceParts: List<ExtensionSourcePart>,
-        guarantees: Map<String, SourcePartGuarantee>,
-    ) {
-        sourceParts.filter { it != CommonExtensionSourcePart }.forEach { sourcePart ->
-            val includingGuarantee = guarantees.getValue(sourcePart.name)
-            sourcePart.includes.forEach { includedName ->
-                val includedGuarantee = guarantees.getValue(includedName)
-                when (includedGuarantee) {
-                    is CapabilitySourcePartGuarantee -> {
-                        val missing =
-                            includedGuarantee.capabilities.values.filter { includedCapability ->
-                                includingGuarantee.capabilities[includedCapability.id] != includedCapability
-                            }
-                        if (missing.isNotEmpty()) {
-                            throw GradleException(
-                                "Extension source set ${sourcePart.name} cannot include $includedName because its target " +
-                                    "does not guarantee capabilities ${missing.joinToString { it.id.value }}.",
-                            )
-                        }
-                    }
-
-                    is EngineSourcePartGuarantee -> {
-                        val includingEngine = includingGuarantee as? EngineSourcePartGuarantee
-                        if (includingEngine == null ||
-                            includingEngine.engineId != includedGuarantee.engineId ||
-                            !includingEngine.constraint.isEquivalentTo(includedGuarantee.constraint)
-                        ) {
-                            throw GradleException(
-                                "Extension source set ${sourcePart.name} cannot include engine specific source set " +
-                                    "$includedName because they do not target the same engine contract.",
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun resolveCapabilityGraph(
-        direct: List<ResolvedRelationship>,
-        allManifests: Map<ArtifactId, ImprintManifest>,
-    ): List<ResolvedArtifact> {
-        val mergedRequirements = linkedMapOf<ArtifactId, VersionConstraint>()
-        val resolved = linkedMapOf<ArtifactId, ResolvedArtifact>()
-        val visiting = mutableListOf<ArtifactId>()
-
-        fun resolve(requirement: ArtifactRequirement) {
-            val merged =
-                mergedRequirements[requirement.id]?.intersect(requirement.version) ?: requirement.version
-            if (mergedRequirements[requirement.id] != null &&
-                mergedRequirements.getValue(requirement.id).intersect(requirement.version) == null
-            ) {
-                throw GradleException(
-                    "Dependency path ${(visiting + requirement.id).joinToString(" > ")} has incompatible constraints.",
-                )
-            }
-            mergedRequirements[requirement.id] = merged
-            val manifest =
-                allManifests[requirement.id]
-                    ?: throw GradleException(
-                        "Dependency path ${(visiting + requirement.id).joinToString(" > ")} has no resolved manifest.",
-                    )
-            if (manifest !is CapabilityManifest) {
-                throw GradleException(
-                    "Dependency path ${(visiting + requirement.id).joinToString(" > ")} requires a capability.",
-                )
-            }
-            if (!merged.accepts(manifest.version)) {
-                throw GradleException(
-                    "Dependency path ${(visiting + requirement.id).joinToString(" > ")} resolved ${manifest.version}, " +
-                        "which does not satisfy $merged.",
-                )
-            }
-            if (requirement.id in visiting) {
-                throw GradleException(
-                    "Cyclic capability dependency path ${(visiting + requirement.id).joinToString(" > ")}.",
-                )
-            }
-            if (resolved[requirement.id] != null) return
-
-            visiting += requirement.id
-            manifest.directRequirements.forEach(::resolve)
-            visiting.removeLast()
-            resolved[requirement.id] = manifest.descriptor()
-        }
-
-        direct.map(ResolvedRelationship::requirement).forEach(::resolve)
-        return resolved.values.sortedBy { it.id.value }
-    }
-
-    private fun readContributions(origin: ArtifactId): List<GeneratedContribution> =
-        contributionFiles.files
-            .sortedBy(File::getAbsolutePath)
-            .map { file ->
-                val path = file.invariantSeparatorsPath
-                val resourcesMarker = "/resources/$IMPRINT_CONTRIBUTIONS_PATH/"
-                if (resourcesMarker !in path) throw GradleException("Unsafe Imprint contribution path ${file.name}.")
-                val prefix = path.substringBefore(resourcesMarker)
-                val sourcePart = prefix.substringAfterLast('/')
-                val contributionPath = path.substringAfter(resourcesMarker)
-                val producer = contributionPath.substringBefore('/')
-                val name = contributionPath.substringAfter('/', "")
-                if (sourcePart.isBlank() || producer.isBlank() || name.isBlank() ||
-                    contributionPath.split('/').any { it == "." || it == ".." }
-                ) {
-                    throw GradleException("Unsafe Imprint contribution path $contributionPath.")
-                }
-                GeneratedContribution(origin, sourcePart, producer, name, file.readBytes())
-            }.let(::canonicalContributions)
-
-    private fun readEngineCoreContributions(origin: ArtifactId): List<GeneratedContribution> {
-        if (engineCoreArtifacts.isEmpty) return emptyList()
-        val artifact =
-            engineCoreArtifacts.files.singleOrNull()
-                ?: throw GradleException("An engine must resolve exactly one direct engine core artifact.")
-        if (!artifact.isFile || !artifact.name.endsWith(".jar")) {
-            throw GradleException("Engine core contribution artifact ${artifact.name} must be a JAR.")
-        }
-        val prefix = "$IMPRINT_CONTRIBUTIONS_PATH/"
-        return ZipFile(artifact)
-            .use { archive ->
-                archive
-                    .entries()
-                    .asSequence()
-                    .filterNot { it.isDirectory }
-                    .filter { it.name.startsWith(prefix) }
-                    .map { entry ->
-                        val contributionPath = entry.name.removePrefix(prefix)
-                        val producer = contributionPath.substringBefore('/')
-                        val name = contributionPath.substringAfter('/', "")
-                        if (producer.isBlank() || name.isBlank()) {
-                            throw GradleException("Unsafe engine core contribution path ${entry.name}.")
-                        }
-                        GeneratedContribution(
-                            origin = origin,
-                            sourcePart = "main",
-                            producer = producer,
-                            name = "core/$name",
-                            payload = archive.getInputStream(entry).use { it.readBytes() },
-                        )
-                    }.toList()
-            }.let(::canonicalContributions)
-    }
-
-    private fun canonicalContributions(contributions: List<GeneratedContribution>): List<GeneratedContribution> {
-        val duplicates =
-            contributions
-                .groupBy { listOf(it.origin.value, it.sourcePart, it.producer, it.name) }
-                .filterValues { it.size > 1 }
-        if (duplicates.isNotEmpty()) {
-            throw GradleException("Duplicate Imprint contribution keys: ${duplicates.keys.joinToString()}.")
-        }
-        return contributions.sortedWith(
-            compareBy(
-                { it.origin.value },
-                GeneratedContribution::sourcePart,
-                GeneratedContribution::producer,
-                GeneratedContribution::name,
-            ),
-        )
-    }
-
-    private fun canonicalRequirements(
-        requirements: List<ArtifactRequirement>,
-        dependencyPath: String,
-    ): List<ArtifactRequirement> {
-        val constraints = linkedMapOf<ArtifactId, VersionConstraint>()
-        requirements.forEach { requirement ->
-            val existing = constraints[requirement.id]
-            val merged = existing?.intersect(requirement.version) ?: requirement.version
-            if (existing != null && existing.intersect(requirement.version) == null) {
-                throw GradleException(
-                    "Dependency path $dependencyPath > ${requirement.id} has incompatible constraints.",
-                )
-            }
-            constraints[requirement.id] = merged
-        }
-        return constraints.map { (id, version) -> ArtifactRequirement(id, version) }.sortedBy { it.id.value }
-    }
 }
 
-private data class ResolvedRelationship(
-    val sourcePart: String,
-    val index: Int,
-    val constraint: VersionConstraint,
-    val manifest: ImprintManifest,
-) {
-    val requirement: ArtifactRequirement
-        get() = ArtifactRequirement(manifest.id, constraint)
-}
+private fun ManifestArchiveInput.toSource(): ManifestContentSource? {
+    val files = artifacts.files.sortedBy(File::getAbsolutePath)
+    if (files.isEmpty()) return null
+    val artifact =
+        files.singleOrNull()
+            ?: throw GradleException("Manifest archive namespace ${namespace.get()} must resolve exactly one artifact.")
+    val entrypoints =
+        when (entrypointPolicy.get()) {
+            RuntimeEntrypointInputPolicy.NONE -> {
+                RuntimeEntrypointContribution.None
+            }
 
-private sealed interface SourcePartGuarantee {
-    val capabilities: Map<ArtifactId, ResolvedArtifact>
-}
-
-private data class EngineSourcePartGuarantee(
-    val engineId: ArtifactId,
-    val constraint: VersionConstraint,
-    override val capabilities: Map<ArtifactId, ResolvedArtifact>,
-) : SourcePartGuarantee
-
-private data class CapabilitySourcePartGuarantee(
-    override val capabilities: Map<ArtifactId, ResolvedArtifact>,
-) : SourcePartGuarantee
-
-private fun ImprintManifest.descriptor(): ResolvedArtifact =
-    ResolvedArtifact(
-        id = id,
-        version = version,
-        kind =
-            when (this) {
-                is EngineManifest -> ArtifactKind.ENGINE
-                is CapabilityManifest -> ArtifactKind.CAPABILITY
-                is ExtensionManifest -> ArtifactKind.EXTENSION
-                is RealmManifest -> ArtifactKind.REALM
-            },
+            RuntimeEntrypointInputPolicy.HOSTED_RUNTIME_METADATA -> {
+                RuntimeEntrypointContribution.HostedRuntimeMetadata
+            }
+        }
+    return ArchiveManifestContentSource(
+        artifact = artifact,
+        namespace = namespace.get(),
+        runtimeEntrypoints = entrypoints,
     )
+}
 
 private fun readManifestOrNull(file: File): ImprintManifest? {
-    if (!file.isFile || !file.name.endsWith(".jar")) return null
+    if (!file.isFile || file.extension != "jar") return null
     return when (val inspection = ImprintArchive.inspect(file.toPath())) {
         ImprintArchiveInspection.Absent -> null
         is ImprintArchiveInspection.Present -> inspection.manifest

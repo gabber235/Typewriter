@@ -40,6 +40,133 @@ void main() {
     );
   });
 
+  test("request stays loading through connection and catalog fetch", () async {
+    final connection = Completer<RealmConnectionState>();
+    final fetch = Completer<RealmEditorCatalogFetchResult>();
+    final source = _ControlledSource((_) => fetch.future);
+    addTearDown(source.close);
+    final container = ProviderContainer.test(
+      overrides: [
+        organizationIdProvider.overrideWithValue(recordId("organization:test")),
+        realmIdProvider.overrideWithValue(recordId("service:test")),
+        realmConnectionProvider.overrideWith((ref) => connection.future),
+        realmEditorCatalogSourceProvider.overrideWithValue(source),
+      ],
+    );
+    final provider = realmCatalogProvider(
+      RealmEditorCatalogRequest(
+        types: {ResolvedTypeRef(id: DeclaredTypeId(_elementId), revision: 1)},
+      ),
+    );
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+
+    expect(
+      container.read(provider),
+      isA<AsyncLoading<RealmEditorCatalogSnapshot>>(),
+    );
+    connection.complete(RealmConnectionState.online);
+    await _waitFor(() => source.fetchCount > 0);
+    expect(
+      container.read(provider),
+      isA<AsyncLoading<RealmEditorCatalogSnapshot>>(),
+    );
+
+    final snapshot = _elementSnapshot("Ready", "1");
+    fetch.complete(RealmEditorCatalogFetched(snapshot));
+    expect(await container.read(provider.future), snapshot);
+  });
+
+  test(
+    "actual fetch failure surfaces an error and later invalidation recovers",
+    () async {
+      final source = _ControlledSource(
+        (_) async => RealmEditorCatalogFetchUnavailable([
+          realmEditorCatalogUnavailableDiagnostic("Catalog fetch failed"),
+        ]),
+      );
+      addTearDown(source.close);
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(
+            recordId("organization:test"),
+          ),
+          realmIdProvider.overrideWithValue(recordId("service:test")),
+          realmConnectionProvider.overrideWith(
+            (ref) async => RealmConnectionState.online,
+          ),
+          realmEditorCatalogSourceProvider.overrideWithValue(source),
+        ],
+      );
+      final provider = realmCatalogProvider(const RealmEditorCatalogRequest());
+      final subscription = container.listen(provider, (_, _) {});
+      addTearDown(subscription.close);
+
+      await _waitFor(() => container.read(provider).hasError);
+      expect(
+        container.read(provider).error,
+        isA<RealmCatalogUnavailableException>(),
+      );
+      final snapshot = _elementSnapshot("Recovered", "2");
+      source
+        ..result = ((_) async => RealmEditorCatalogFetched(snapshot))
+        ..invalidate(const CatalogGeneration("2"));
+      await _waitFor(
+        () => container.read(provider).value?.generation.value == "2",
+      );
+      expect(container.read(provider).requireValue, snapshot);
+    },
+  );
+
+  test(
+    "refresh retains prior data but blocks current catalog commands",
+    () async {
+      final first = _elementSnapshot("First", "1");
+      final refresh = Completer<RealmEditorCatalogFetchResult>();
+      final source = _ControlledSource(
+        (_) async => RealmEditorCatalogFetched(first),
+      );
+      addTearDown(source.close);
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(
+            recordId("organization:test"),
+          ),
+          realmIdProvider.overrideWithValue(recordId("service:test")),
+          realmConnectionProvider.overrideWith(
+            (ref) async => RealmConnectionState.online,
+          ),
+          realmEditorCatalogSourceProvider.overrideWithValue(source),
+        ],
+      );
+      final provider = realmCatalogProvider(const RealmEditorCatalogRequest());
+      final subscription = container.listen(provider, (_, _) {});
+      addTearDown(subscription.close);
+      final fullSubscription = container.listen(
+        realmEditorCatalogProvider,
+        (_, _) {},
+      );
+      addTearDown(fullSubscription.close);
+      expect(await container.read(provider.future), first);
+
+      source
+        ..result = ((_) => refresh.future)
+        ..invalidate(const CatalogGeneration("2"));
+      await _waitFor(() => container.read(provider).isLoading);
+      expect(container.read(provider).value, first);
+      expect(container.read(provider).currentCatalog, isNull);
+      expect(container.read(realmEditorCatalogProvider).currentCatalog, isNull);
+
+      final second = _elementSnapshot("Second", "2");
+      refresh.complete(RealmEditorCatalogFetched(second));
+      await _waitFor(() => container.read(provider).currentCatalog == second);
+      await _waitFor(
+        () =>
+            container.read(realmEditorCatalogProvider).currentCatalog == second,
+      );
+    },
+  );
+
   test("eligible discovered elements become available definitions", () async {
     final source = _ElementSource();
     addTearDown(source.close);
@@ -48,7 +175,7 @@ void main() {
         organizationIdProvider.overrideWithValue(recordId("organization:test")),
         realmIdProvider.overrideWithValue(recordId("service:test")),
         realmConnectionProvider.overrideWith(
-          (ref) => Stream.value(RealmConnectionState.online),
+          (ref) => Future.value(RealmConnectionState.online),
         ),
         realmEditorCatalogSourceProvider.overrideWithValue(source),
       ],
@@ -61,16 +188,22 @@ void main() {
     addTearDown(subscription.close);
 
     final definitionsSubscription = container.listen(
-      availableElementDefinitionsProvider,
+      availableElementDefinitionsFutureProvider,
       (previous, next) {},
     );
     addTearDown(definitionsSubscription.close);
 
     await _waitFor(
-      () => container.read(availableElementDefinitionsProvider).isNotEmpty,
+      () =>
+          container
+              .read(availableElementDefinitionsFutureProvider)
+              .value
+              ?.isNotEmpty ==
+          true,
     );
     final definition = container
-        .read(availableElementDefinitionsProvider)
+        .read(availableElementDefinitionsFutureProvider)
+        .requireValue
         .single;
 
     expect(definition.typeId.uuid, _elementId);
@@ -84,11 +217,10 @@ void main() {
   });
 
   test("asynchronous element definitions follow catalog updates", () async {
-    final states = StreamController<RealmEditorCatalogState>();
-    addTearDown(states.close);
+    var snapshot = _elementSnapshot("First", "1");
     final container = ProviderContainer(
       overrides: [
-        realmEditorCatalogProvider.overrideWith((ref) => states.stream),
+        realmEditorCatalogProvider.overrideWith((ref) async => snapshot),
       ],
     );
     addTearDown(container.dispose);
@@ -103,7 +235,6 @@ void main() {
       isA<AsyncLoading<List<ElementDefinition>>>(),
     );
 
-    states.add(RealmEditorCatalogReady(_elementSnapshot("First", "1")));
     await _waitFor(
       () =>
           container
@@ -114,7 +245,8 @@ void main() {
           "First",
     );
 
-    states.add(RealmEditorCatalogReady(_elementSnapshot("Second", "2")));
+    snapshot = _elementSnapshot("Second", "2");
+    container.invalidate(realmEditorCatalogProvider);
     await _waitFor(
       () =>
           container
@@ -128,13 +260,18 @@ void main() {
 
   test("provider disposes the realm watch on disconnect", () async {
     final source = _TrackingSource();
-    final connection = StreamController<RealmConnectionState>();
-    addTearDown(connection.close);
+    final connection = Completer<void>();
+    var online = true;
     final container = ProviderContainer(
       overrides: [
         organizationIdProvider.overrideWithValue(recordId("organization:test")),
         realmIdProvider.overrideWithValue(recordId("service:test")),
-        realmConnectionProvider.overrideWith((ref) => connection.stream),
+        realmConnectionProvider.overrideWith((ref) async {
+          await connection.future;
+          return online
+              ? RealmConnectionState.online
+              : RealmConnectionState.offline;
+        }),
         realmEditorCatalogSourceProvider.overrideWithValue(source),
       ],
     );
@@ -146,9 +283,11 @@ void main() {
 
     addTearDown(subscription.close);
 
-    connection.add(RealmConnectionState.online);
+    expect(container.read(realmEditorCatalogProvider).isLoading, isTrue);
+    connection.complete();
     await _waitFor(() => source.watchCount == 1);
-    connection.add(RealmConnectionState.offline);
+    online = false;
+    container.invalidate(realmConnectionProvider);
     await _waitFor(() => source.cancelCount == 1);
 
     expect(source.fetchCount, 1);
@@ -161,7 +300,7 @@ void main() {
         organizationIdProvider.overrideWithValue(recordId("organization:test")),
         realmIdProvider.overrideWithValue(recordId("service:test")),
         realmConnectionProvider.overrideWith(
-          (ref) => Stream.value(RealmConnectionState.online),
+          (ref) => Future.value(RealmConnectionState.online),
         ),
         realmEditorCatalogSourceProvider.overrideWithValue(source),
       ],
@@ -185,7 +324,7 @@ void main() {
         organizationIdProvider.overrideWithValue(recordId("organization:test")),
         realmIdProvider.overrideWith((ref) => realmId),
         realmConnectionProvider.overrideWith(
-          (ref) => Stream.value(RealmConnectionState.online),
+          (ref) => Future.value(RealmConnectionState.online),
         ),
         realmEditorCatalogSourceProvider.overrideWithValue(source),
       ],
@@ -219,6 +358,15 @@ Future<void> _waitFor(bool Function() condition) async {
 }
 
 final class _TrackingSource implements RealmEditorCatalogSource {
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
+
   int fetchCount = 0;
   int watchCount = 0;
   int cancelCount = 0;
@@ -254,6 +402,44 @@ final class _TrackingSource implements RealmEditorCatalogSource {
   }
 }
 
+final class _ControlledSource implements RealmEditorCatalogSource {
+  _ControlledSource(this.result);
+
+  Future<RealmEditorCatalogFetchResult> Function(RealmEditorCatalogRequest)
+  result;
+  final _events = StreamController<RealmEditorCatalogWatchEvent>();
+  int fetchCount = 0;
+
+  @override
+  Future<RealmEditorCatalogFetchResult> fetch(
+    RealmEditorCatalogRoute route,
+    RealmEditorCatalogRequest request, {
+    CatalogGeneration? expectedGeneration,
+  }) {
+    fetchCount++;
+    return result(request);
+  }
+
+  @override
+  Stream<RealmEditorCatalogWatchEvent> watchInvalidations(
+    RealmEditorCatalogRoute route,
+  ) => _events.stream;
+
+  void invalidate(CatalogGeneration generation) =>
+      _events.add(RealmEditorCatalogInvalidated(generation));
+
+  Future<void> close() => _events.close();
+
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
+}
+
 const _elementId = "019d1c2a8f7b7cc18c2a4a7b2fd1e281";
 
 RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
@@ -274,6 +460,7 @@ RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
           color: const Color(0xFF7C4DFF),
           availability: ElementAvailability.always(),
         ),
+        presentationSubject: _catalogSubject(type),
         eligible: true,
         available: true,
       ),
@@ -281,7 +468,21 @@ RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
   );
 }
 
+TypedCatalogPresentationSubject _catalogSubject(ResolvedTypeRef type) => (
+  target: type,
+  descriptor: TypedValueEnvelope(rootType: type, rootValue: RecordValue({})),
+);
+
 final class _ElementSource implements RealmEditorCatalogSource {
+  @override
+  Future<RealmTypedValueInitializationResult> initialize(
+    RealmEditorCatalogRoute route, {
+    required CatalogGeneration generation,
+    required ResolvedTypeRef root,
+    required DataValue? supplied,
+    required TypeRegistry registry,
+  }) => Future.error(UnsupportedError("Initialization is outside this test"));
+
   final _watch = StreamController<RealmEditorCatalogWatchEvent>();
 
   @override

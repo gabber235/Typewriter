@@ -12,10 +12,24 @@ enum PresentationMainAxisAlignment {
 enum PresentationCrossAxisAlignment { start, center, end, stretch }
 
 abstract interface class ChildrenLayoutElement {
-  List<PresentationNode> get children;
   double get spacing;
   PresentationMainAxisAlignment get mainAxisAlignment;
   PresentationCrossAxisAlignment get crossAxisAlignment;
+}
+
+enum PresentationFlexFit { tight, loose }
+
+@freezed
+sealed class PresentationAxisChild with _$PresentationAxisChild {
+  const factory PresentationAxisChild.fixed(PresentationNode child) =
+      FixedPresentationAxisChild;
+
+  @Assert("flex > 0", "Flex must be positive.")
+  const factory PresentationAxisChild.flexible({
+    required PresentationNode child,
+    @Default(1) int flex,
+    @Default(PresentationFlexFit.loose) PresentationFlexFit fit,
+  }) = FlexiblePresentationAxisChild;
 }
 
 abstract interface class SingleChildLayoutElement {
@@ -163,7 +177,7 @@ extension PresentationChildrenLayoutElement on PresentationChildrenLayout {
           :final crossAxisAlignment,
         ) =>
           ColumnElement(
-            children: children,
+            children: children.map(PresentationAxisChild.fixed).toList(),
             spacing: spacing,
             mainAxisAlignment: mainAxisAlignment,
             crossAxisAlignment: crossAxisAlignment,
@@ -174,7 +188,7 @@ extension PresentationChildrenLayoutElement on PresentationChildrenLayout {
           :final crossAxisAlignment,
         ) =>
           RowElement(
-            children: children,
+            children: children.map(PresentationAxisChild.fixed).toList(),
             spacing: spacing,
             mainAxisAlignment: mainAxisAlignment,
             crossAxisAlignment: crossAxisAlignment,

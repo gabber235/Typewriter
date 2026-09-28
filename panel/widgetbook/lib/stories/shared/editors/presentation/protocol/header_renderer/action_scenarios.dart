@@ -75,8 +75,7 @@ SemanticHeaderScenario actionOverflowScenario() => (
     ),
     element: const RecordInputElement(control: BoundControl(binding: _root)),
   ),
-  description:
-      "Actions are ordered by evaluated priority. Compact buttons remain visible while lower priorities move into an anchored menu.",
+  description: "Actions are ordered by evaluated priority. Compact buttons remain visible while lower priorities move into an anchored menu.",
 );
 
 SemanticHeaderScenario actionStatesScenario() => (
@@ -87,9 +86,8 @@ SemanticHeaderScenario actionStatesScenario() => (
     header: PresentationHeader(
       binding: _root,
       title: "Action states".asStringLiteral.asHeaderTitle,
-      description:
-          "Visible, disabled, hidden, destructive, and invalid actions are resolved independently."
-              .asStringLiteral,
+      description: "Visible, disabled, hidden, destructive, and invalid actions are resolved independently."
+          .asStringLiteral,
       initiallyExpanded: true,
       items: [
         _title.setAction("ready", "Ready", Mdi.check, "Ready", 100),
@@ -124,8 +122,7 @@ SemanticHeaderScenario actionStatesScenario() => (
     ),
     element: const RecordInputElement(control: BoundControl(binding: _root)),
   ),
-  description:
-      "Invalid expressions disable only their own action. Hidden actions disappear, while disabled actions remain discoverable.",
+  description: "Invalid expressions disable only their own action. Hidden actions disappear, while disabled actions remain discoverable.",
 );
 
 final _actionType = RecordType(

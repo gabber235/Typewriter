@@ -7,6 +7,7 @@ enum RendererStoryKind {
   diagnostic,
   defaultPresentation,
   text,
+  richText,
   markdown,
   icon,
   image,
@@ -52,6 +53,7 @@ enum RendererStoryKind {
   tabs,
   divider,
   spacer,
+  adaptiveLeading,
 }
 
 class RendererStoryScenario {
@@ -108,7 +110,7 @@ class PresentationRendererStory extends StatelessWidget {
                     rootType: rendererStoryRoot,
                     rootValue: scenario.value,
                   ),
-                  typeCatalog: TypeCatalog([
+                  typeCatalog: receivedRealmCatalog([
                     TypeDefinition(
                       id: rendererStoryRoot,
                       kind: NominalTypeKind.concrete,
@@ -154,6 +156,7 @@ extension RendererStoryElementKind on PresentationElement {
     PresentationInvocationElement() ||
     CommitControlsElement() => RendererStoryKind.defaultPresentation,
     TextElement() => RendererStoryKind.text,
+    RichTextElement() => RendererStoryKind.richText,
     MarkdownElement() => RendererStoryKind.markdown,
     IconElement() => RendererStoryKind.icon,
     ImageElement() => RendererStoryKind.image,
@@ -205,5 +208,6 @@ extension RendererStoryElementKind on PresentationElement {
     TabsElement() => RendererStoryKind.tabs,
     DividerElement() => RendererStoryKind.divider,
     SpacerElement() => RendererStoryKind.spacer,
+    AdaptiveLeadingElement() => RendererStoryKind.adaptiveLeading,
   };
 }

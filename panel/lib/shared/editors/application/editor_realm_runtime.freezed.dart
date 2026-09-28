@@ -546,7 +546,7 @@ as RealmPresentationSearchSourceBuilder,
 /// @nodoc
 mixin _$ReferenceAuthoringCapabilities {
 
- ReferenceSearchSourceBuilder get search; ReferenceResourceResolver get resolve; ReferenceCandidatePolicyRegistry get policies;
+ ReferenceSearchSourceBuilder get search; ReferenceResourceResolver get resolve; ReferenceEligibilityEvaluator? get eligibility; ReferenceCandidatePolicyRegistry get policies;
 /// Create a copy of ReferenceAuthoringCapabilities
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -558,20 +558,20 @@ $ReferenceAuthoringCapabilitiesCopyWith<ReferenceAuthoringCapabilities> get copy
 @override
 bool operator ==(Object other) {
   final _this = this as ReferenceAuthoringCapabilities;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceAuthoringCapabilities&&(identical(other.search, _this.search) || other.search == _this.search)&&(identical(other.resolve, _this.resolve) || other.resolve == _this.resolve)&&(identical(other.policies, _this.policies) || other.policies == _this.policies));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferenceAuthoringCapabilities&&(identical(other.search, _this.search) || other.search == _this.search)&&(identical(other.resolve, _this.resolve) || other.resolve == _this.resolve)&&(identical(other.eligibility, _this.eligibility) || other.eligibility == _this.eligibility)&&(identical(other.policies, _this.policies) || other.policies == _this.policies));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ReferenceAuthoringCapabilities;
-  return Object.hash(runtimeType,_this.search,_this.resolve,_this.policies);
+  return Object.hash(runtimeType,_this.search,_this.resolve,_this.eligibility,_this.policies);
 }
 
 @override
 String toString() {
   final _this = this as ReferenceAuthoringCapabilities;
-  return 'ReferenceAuthoringCapabilities(search: ${_this.search}, resolve: ${_this.resolve}, policies: ${_this.policies})';
+  return 'ReferenceAuthoringCapabilities(search: ${_this.search}, resolve: ${_this.resolve}, eligibility: ${_this.eligibility}, policies: ${_this.policies})';
 }
 
 
@@ -582,7 +582,7 @@ abstract mixin class $ReferenceAuthoringCapabilitiesCopyWith<$Res>  {
   factory $ReferenceAuthoringCapabilitiesCopyWith(ReferenceAuthoringCapabilities value, $Res Function(ReferenceAuthoringCapabilities) _then) = _$ReferenceAuthoringCapabilitiesCopyWithImpl;
 @useResult
 $Res call({
- ReferenceSearchSourceBuilder search, ReferenceResourceResolver resolve, ReferenceCandidatePolicyRegistry policies
+ ReferenceSearchSourceBuilder search, ReferenceResourceResolver resolve, ReferenceEligibilityEvaluator? eligibility, ReferenceCandidatePolicyRegistry policies
 });
 
 
@@ -599,11 +599,12 @@ class _$ReferenceAuthoringCapabilitiesCopyWithImpl<$Res>
 
 /// Create a copy of ReferenceAuthoringCapabilities
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? search = null,Object? resolve = null,Object? policies = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? search = null,Object? resolve = null,Object? eligibility = freezed,Object? policies = null,}) {
   return _then(ReferenceAuthoringCapabilities(
 search: null == search ? _self.search : search // ignore: cast_nullable_to_non_nullable
 as ReferenceSearchSourceBuilder,resolve: null == resolve ? _self.resolve : resolve // ignore: cast_nullable_to_non_nullable
-as ReferenceResourceResolver,policies: null == policies ? _self.policies : policies // ignore: cast_nullable_to_non_nullable
+as ReferenceResourceResolver,eligibility: freezed == eligibility ? _self.eligibility : eligibility // ignore: cast_nullable_to_non_nullable
+as ReferenceEligibilityEvaluator?,policies: null == policies ? _self.policies : policies // ignore: cast_nullable_to_non_nullable
 as ReferenceCandidatePolicyRegistry,
   ));
 }
@@ -689,10 +690,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReferenceSearchSourceBuilder search,  ReferenceResourceResolver resolve,  ReferenceCandidatePolicyRegistry policies)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReferenceSearchSourceBuilder search,  ReferenceResourceResolver resolve,  ReferenceEligibilityEvaluator? eligibility,  ReferenceCandidatePolicyRegistry policies)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReferenceAuthoringCapabilities() when $default != null:
-return $default(_that.search,_that.resolve,_that.policies);case _:
+return $default(_that.search,_that.resolve,_that.eligibility,_that.policies);case _:
   return orElse();
 
 }
@@ -710,10 +711,10 @@ return $default(_that.search,_that.resolve,_that.policies);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReferenceSearchSourceBuilder search,  ReferenceResourceResolver resolve,  ReferenceCandidatePolicyRegistry policies)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReferenceSearchSourceBuilder search,  ReferenceResourceResolver resolve,  ReferenceEligibilityEvaluator? eligibility,  ReferenceCandidatePolicyRegistry policies)  $default,) {final _that = this;
 switch (_that) {
 case _ReferenceAuthoringCapabilities():
-return $default(_that.search,_that.resolve,_that.policies);case _:
+return $default(_that.search,_that.resolve,_that.eligibility,_that.policies);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -730,10 +731,10 @@ return $default(_that.search,_that.resolve,_that.policies);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReferenceSearchSourceBuilder search,  ReferenceResourceResolver resolve,  ReferenceCandidatePolicyRegistry policies)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReferenceSearchSourceBuilder search,  ReferenceResourceResolver resolve,  ReferenceEligibilityEvaluator? eligibility,  ReferenceCandidatePolicyRegistry policies)?  $default,) {final _that = this;
 switch (_that) {
 case _ReferenceAuthoringCapabilities() when $default != null:
-return $default(_that.search,_that.resolve,_that.policies);case _:
+return $default(_that.search,_that.resolve,_that.eligibility,_that.policies);case _:
   return null;
 
 }
@@ -745,11 +746,12 @@ return $default(_that.search,_that.resolve,_that.policies);case _:
 
 
 class _ReferenceAuthoringCapabilities implements ReferenceAuthoringCapabilities {
-  const _ReferenceAuthoringCapabilities({required this.search, required this.resolve, this.policies = const ReferenceCandidatePolicyRegistry()});
+  const _ReferenceAuthoringCapabilities({required this.search, required this.resolve, this.eligibility, this.policies = const ReferenceCandidatePolicyRegistry()});
   
 
 @override final  ReferenceSearchSourceBuilder search;
 @override final  ReferenceResourceResolver resolve;
+@override final  ReferenceEligibilityEvaluator? eligibility;
 @override@JsonKey() final  ReferenceCandidatePolicyRegistry policies;
 
 /// Create a copy of ReferenceAuthoringCapabilities
@@ -762,18 +764,18 @@ _$ReferenceAuthoringCapabilitiesCopyWith<_ReferenceAuthoringCapabilities> get co
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReferenceAuthoringCapabilities&&(identical(other.search, search) || other.search == search)&&(identical(other.resolve, resolve) || other.resolve == resolve)&&(identical(other.policies, policies) || other.policies == policies));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReferenceAuthoringCapabilities&&(identical(other.search, search) || other.search == search)&&(identical(other.resolve, resolve) || other.resolve == resolve)&&(identical(other.eligibility, eligibility) || other.eligibility == eligibility)&&(identical(other.policies, policies) || other.policies == policies));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,search,resolve,policies);
+    return Object.hash(runtimeType,search,resolve,eligibility,policies);
 }
 
 @override
 String toString() {
-    return 'ReferenceAuthoringCapabilities(search: $search, resolve: $resolve, policies: $policies)';
+    return 'ReferenceAuthoringCapabilities(search: $search, resolve: $resolve, eligibility: $eligibility, policies: $policies)';
 }
 
 
@@ -784,7 +786,7 @@ abstract mixin class _$ReferenceAuthoringCapabilitiesCopyWith<$Res> implements $
   factory _$ReferenceAuthoringCapabilitiesCopyWith(_ReferenceAuthoringCapabilities value, $Res Function(_ReferenceAuthoringCapabilities) _then) = __$ReferenceAuthoringCapabilitiesCopyWithImpl;
 @override @useResult
 $Res call({
- ReferenceSearchSourceBuilder search, ReferenceResourceResolver resolve, ReferenceCandidatePolicyRegistry policies
+ ReferenceSearchSourceBuilder search, ReferenceResourceResolver resolve, ReferenceEligibilityEvaluator? eligibility, ReferenceCandidatePolicyRegistry policies
 });
 
 
@@ -801,11 +803,12 @@ class __$ReferenceAuthoringCapabilitiesCopyWithImpl<$Res>
 
 /// Create a copy of ReferenceAuthoringCapabilities
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? search = null,Object? resolve = null,Object? policies = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? search = null,Object? resolve = null,Object? eligibility = freezed,Object? policies = null,}) {
   return _then(_ReferenceAuthoringCapabilities(
 search: null == search ? _self.search : search // ignore: cast_nullable_to_non_nullable
 as ReferenceSearchSourceBuilder,resolve: null == resolve ? _self.resolve : resolve // ignore: cast_nullable_to_non_nullable
-as ReferenceResourceResolver,policies: null == policies ? _self.policies : policies // ignore: cast_nullable_to_non_nullable
+as ReferenceResourceResolver,eligibility: freezed == eligibility ? _self.eligibility : eligibility // ignore: cast_nullable_to_non_nullable
+as ReferenceEligibilityEvaluator?,policies: null == policies ? _self.policies : policies // ignore: cast_nullable_to_non_nullable
 as ReferenceCandidatePolicyRegistry,
   ));
 }

@@ -252,6 +252,15 @@ struct ColorOperationExpression(810600037) {
   alpha: TypedExpression = 2;
 }
 
+struct RecordExpressionField(810600040) {
+  name: string = 0;
+  value: TypedExpression = 1;
+}
+
+struct RecordExpression(810600041) {
+  fields: [RecordExpressionField|name] = 0;
+}
+
 enum Expression(810600038) {
   literal: TypedValue = 1;
   binding: BindingRef = 2;
@@ -279,6 +288,7 @@ enum Expression(810600038) {
   regex: RegexExpression = 24;
   coalesce: CoalesceExpression = 25;
   color_operation: ColorOperationExpression = 26;
+  record: RecordExpression = 27;
 }
 
 struct TypedExpression(810600039) {

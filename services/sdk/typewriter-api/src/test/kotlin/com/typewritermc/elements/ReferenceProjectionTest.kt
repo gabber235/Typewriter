@@ -15,13 +15,13 @@ import io.kotest.matchers.shouldBe
 
 val ReferenceProjectionTest by testSuite {
     test("direct references decompose and assemble without duplicate target ownership") {
-        val value = DataValue.Reference(ResourceId.parse("element:target"))
+        val value = DataValue.Reference(ResourceId("element:target"))
         val stored = decomposer().decompose(TypeGraph(refTo(elementType), emptyList()), value)
 
         stored.references
             .single()
             .target
-            .referenceString() shouldBe "element:target"
+            .value shouldBe "element:target"
         ReferenceAssembler().assemble(TypeGraph(refTo(elementType), emptyList()), stored) shouldBe
             ReferenceAssemblyResult.Success(value)
     }
@@ -61,7 +61,7 @@ val ReferenceProjectionTest by testSuite {
         val logical =
             DataValue.Polymorphic(
                 pageBranch,
-                DataValue.Record(mapOf("page" to DataValue.Reference(ResourceId.parse("page:intro")))),
+                DataValue.Record(mapOf("page" to DataValue.Reference(ResourceId("page:intro")))),
             )
         val stored = decomposer().decompose(graph, logical)
 
@@ -82,7 +82,7 @@ private fun optionalReference(target: String): DataValue =
             "next" to
                 DataValue.Polymorphic(
                     StandardTypes.someOf(refTo(elementType)),
-                    DataValue.Record(mapOf("value" to DataValue.Reference(ResourceId.parse(target)))),
+                    DataValue.Record(mapOf("value" to DataValue.Reference(ResourceId(target)))),
                 ),
         ),
     )

@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
@@ -28,20 +29,17 @@ sealed class IssueServiceIdentityRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityRequest implements IssueServiceIdentityRequest_orMutable {
+final class IssueServiceIdentityRequest
+    implements IssueServiceIdentityRequest_orMutable {
   @_core.override
   final _lib_service_v1_service.ServiceRole role;
   _skir.internal__UnrecognizedFields? _u;
 
   factory IssueServiceIdentityRequest({
     required _lib_service_v1_service.ServiceRole role,
-  }) => IssueServiceIdentityRequest._(
-    role,
-  );
+  }) => IssueServiceIdentityRequest._(role);
 
-  IssueServiceIdentityRequest._(
-    this.role,
-  );
+  IssueServiceIdentityRequest._(this.role);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = IssueServiceIdentityRequest._(
@@ -50,9 +48,10 @@ final class IssueServiceIdentityRequest implements IssueServiceIdentityRequest_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityRequest_mutable mutable() => IssueServiceIdentityRequest_mutable._(
-    _lib_service_v1_service.ServiceRole.unknown,
-  );
+  static IssueServiceIdentityRequest_mutable mutable() =>
+      IssueServiceIdentityRequest_mutable._(
+        _lib_service_v1_service.ServiceRole.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -60,29 +59,33 @@ final class IssueServiceIdentityRequest implements IssueServiceIdentityRequest_o
   IssueServiceIdentityRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityRequest_mutable toMutable() => IssueServiceIdentityRequest_mutable._(
-    this.role,
-  );
+  IssueServiceIdentityRequest_mutable toMutable() =>
+      IssueServiceIdentityRequest_mutable._(this.role);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! IssueServiceIdentityRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.role,
-  ];
+  _core.List get _equality_proxy => [this.role];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityRequest` instances.
-  static _skir.StructSerializer<IssueServiceIdentityRequest, IssueServiceIdentityRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityRequest,
+    IssueServiceIdentityRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "role",
@@ -110,19 +113,17 @@ final class IssueServiceIdentityRequest implements IssueServiceIdentityRequest_o
 }
 
 /// Mutable version of [IssueServiceIdentityRequest].
-final class IssueServiceIdentityRequest_mutable implements IssueServiceIdentityRequest_orMutable {
+final class IssueServiceIdentityRequest_mutable
+    implements IssueServiceIdentityRequest_orMutable {
   _lib_service_v1_service.ServiceRole role;
   _skir.internal__UnrecognizedFields? _u;
 
-  IssueServiceIdentityRequest_mutable._(
-    this.role,
-  );
+  IssueServiceIdentityRequest_mutable._(this.role);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityRequest toFrozen() => IssueServiceIdentityRequest(
-    role: this.role,
-  ).._u = this._u;
+  IssueServiceIdentityRequest toFrozen() =>
+      IssueServiceIdentityRequest(role: this.role).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -139,7 +140,8 @@ sealed class IssueServiceIdentityResponse_Success_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_Success implements IssueServiceIdentityResponse_Success_orMutable {
+final class IssueServiceIdentityResponse_Success
+    implements IssueServiceIdentityResponse_Success_orMutable {
   @_core.override
   final _core.String serviceId;
   @_core.override
@@ -179,12 +181,8 @@ final class IssueServiceIdentityResponse_Success implements IssueServiceIdentity
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_Success_mutable mutable() => IssueServiceIdentityResponse_Success_mutable._(
-    "",
-    "",
-    "",
-    "",
-  );
+  static IssueServiceIdentityResponse_Success_mutable mutable() =>
+      IssueServiceIdentityResponse_Success_mutable._("", "", "", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -192,18 +190,22 @@ final class IssueServiceIdentityResponse_Success implements IssueServiceIdentity
   IssueServiceIdentityResponse_Success toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_Success_mutable toMutable() => IssueServiceIdentityResponse_Success_mutable._(
-    this.serviceId,
-    this.displayName,
-    this.username,
-    this.token,
-  );
+  IssueServiceIdentityResponse_Success_mutable toMutable() =>
+      IssueServiceIdentityResponse_Success_mutable._(
+        this.serviceId,
+        this.displayName,
+        this.username,
+        this.token,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! IssueServiceIdentityResponse_Success) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -220,7 +222,11 @@ final class IssueServiceIdentityResponse_Success implements IssueServiceIdentity
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_Success` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_Success, IssueServiceIdentityResponse_Success_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_Success,
+    IssueServiceIdentityResponse_Success_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "service_id",
@@ -268,14 +274,16 @@ final class IssueServiceIdentityResponse_Success implements IssueServiceIdentity
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_Success_mutable it) => it.toFrozen(),
+    toFrozen: (IssueServiceIdentityResponse_Success_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_Success].
-final class IssueServiceIdentityResponse_Success_mutable implements IssueServiceIdentityResponse_Success_orMutable {
+final class IssueServiceIdentityResponse_Success_mutable
+    implements IssueServiceIdentityResponse_Success_orMutable {
   _core.String serviceId;
   _core.String displayName;
   _core.String username;
@@ -291,12 +299,13 @@ final class IssueServiceIdentityResponse_Success_mutable implements IssueService
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_Success toFrozen() => IssueServiceIdentityResponse_Success(
-    serviceId: this.serviceId,
-    displayName: this.displayName,
-    username: this.username,
-    token: this.token,
-  ).._u = this._u;
+  IssueServiceIdentityResponse_Success toFrozen() =>
+      IssueServiceIdentityResponse_Success(
+        serviceId: this.serviceId,
+        displayName: this.displayName,
+        username: this.username,
+        token: this.token,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -308,19 +317,23 @@ sealed class IssueServiceIdentityResponse_MalformedRequestError_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_MalformedRequestError implements IssueServiceIdentityResponse_MalformedRequestError_orMutable {
+final class IssueServiceIdentityResponse_MalformedRequestError
+    implements IssueServiceIdentityResponse_MalformedRequestError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_MalformedRequestError() => IssueServiceIdentityResponse_MalformedRequestError._();
+  factory IssueServiceIdentityResponse_MalformedRequestError() =>
+      IssueServiceIdentityResponse_MalformedRequestError._();
 
   IssueServiceIdentityResponse_MalformedRequestError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_MalformedRequestError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_MalformedRequestError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_MalformedRequestError_mutable mutable() => IssueServiceIdentityResponse_MalformedRequestError_mutable._();
+  static IssueServiceIdentityResponse_MalformedRequestError_mutable mutable() =>
+      IssueServiceIdentityResponse_MalformedRequestError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -328,13 +341,18 @@ final class IssueServiceIdentityResponse_MalformedRequestError implements IssueS
   IssueServiceIdentityResponse_MalformedRequestError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_MalformedRequestError_mutable toMutable() => IssueServiceIdentityResponse_MalformedRequestError_mutable._();
+  IssueServiceIdentityResponse_MalformedRequestError_mutable toMutable() =>
+      IssueServiceIdentityResponse_MalformedRequestError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_MalformedRequestError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_MalformedRequestError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -346,7 +364,11 @@ final class IssueServiceIdentityResponse_MalformedRequestError implements IssueS
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_MalformedRequestError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_MalformedRequestError, IssueServiceIdentityResponse_MalformedRequestError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_MalformedRequestError,
+    IssueServiceIdentityResponse_MalformedRequestError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -358,21 +380,24 @@ final class IssueServiceIdentityResponse_MalformedRequestError implements IssueS
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_MalformedRequestError_mutable it) => it.toFrozen(),
+    toFrozen: (IssueServiceIdentityResponse_MalformedRequestError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_MalformedRequestError].
-final class IssueServiceIdentityResponse_MalformedRequestError_mutable implements IssueServiceIdentityResponse_MalformedRequestError_orMutable {
+final class IssueServiceIdentityResponse_MalformedRequestError_mutable
+    implements IssueServiceIdentityResponse_MalformedRequestError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_MalformedRequestError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_MalformedRequestError toFrozen() => IssueServiceIdentityResponse_MalformedRequestError().._u = this._u;
+  IssueServiceIdentityResponse_MalformedRequestError toFrozen() =>
+      IssueServiceIdentityResponse_MalformedRequestError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -384,19 +409,23 @@ sealed class IssueServiceIdentityResponse_UnknownRoleError_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_UnknownRoleError implements IssueServiceIdentityResponse_UnknownRoleError_orMutable {
+final class IssueServiceIdentityResponse_UnknownRoleError
+    implements IssueServiceIdentityResponse_UnknownRoleError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_UnknownRoleError() => IssueServiceIdentityResponse_UnknownRoleError._();
+  factory IssueServiceIdentityResponse_UnknownRoleError() =>
+      IssueServiceIdentityResponse_UnknownRoleError._();
 
   IssueServiceIdentityResponse_UnknownRoleError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_UnknownRoleError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_UnknownRoleError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_UnknownRoleError_mutable mutable() => IssueServiceIdentityResponse_UnknownRoleError_mutable._();
+  static IssueServiceIdentityResponse_UnknownRoleError_mutable mutable() =>
+      IssueServiceIdentityResponse_UnknownRoleError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -404,13 +433,17 @@ final class IssueServiceIdentityResponse_UnknownRoleError implements IssueServic
   IssueServiceIdentityResponse_UnknownRoleError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_UnknownRoleError_mutable toMutable() => IssueServiceIdentityResponse_UnknownRoleError_mutable._();
+  IssueServiceIdentityResponse_UnknownRoleError_mutable toMutable() =>
+      IssueServiceIdentityResponse_UnknownRoleError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! IssueServiceIdentityResponse_UnknownRoleError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -422,7 +455,11 @@ final class IssueServiceIdentityResponse_UnknownRoleError implements IssueServic
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_UnknownRoleError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_UnknownRoleError, IssueServiceIdentityResponse_UnknownRoleError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_UnknownRoleError,
+    IssueServiceIdentityResponse_UnknownRoleError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -434,21 +471,24 @@ final class IssueServiceIdentityResponse_UnknownRoleError implements IssueServic
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_UnknownRoleError_mutable it) => it.toFrozen(),
+    toFrozen: (IssueServiceIdentityResponse_UnknownRoleError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_UnknownRoleError].
-final class IssueServiceIdentityResponse_UnknownRoleError_mutable implements IssueServiceIdentityResponse_UnknownRoleError_orMutable {
+final class IssueServiceIdentityResponse_UnknownRoleError_mutable
+    implements IssueServiceIdentityResponse_UnknownRoleError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_UnknownRoleError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_UnknownRoleError toFrozen() => IssueServiceIdentityResponse_UnknownRoleError().._u = this._u;
+  IssueServiceIdentityResponse_UnknownRoleError toFrozen() =>
+      IssueServiceIdentityResponse_UnknownRoleError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -460,19 +500,24 @@ sealed class IssueServiceIdentityResponse_RoleUnknownPropertyError_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_RoleUnknownPropertyError implements IssueServiceIdentityResponse_RoleUnknownPropertyError_orMutable {
+final class IssueServiceIdentityResponse_RoleUnknownPropertyError
+    implements IssueServiceIdentityResponse_RoleUnknownPropertyError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_RoleUnknownPropertyError() => IssueServiceIdentityResponse_RoleUnknownPropertyError._();
+  factory IssueServiceIdentityResponse_RoleUnknownPropertyError() =>
+      IssueServiceIdentityResponse_RoleUnknownPropertyError._();
 
   IssueServiceIdentityResponse_RoleUnknownPropertyError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_RoleUnknownPropertyError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_RoleUnknownPropertyError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable mutable() => IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable._();
+  static IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable
+  mutable() =>
+      IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -480,13 +525,18 @@ final class IssueServiceIdentityResponse_RoleUnknownPropertyError implements Iss
   IssueServiceIdentityResponse_RoleUnknownPropertyError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable toMutable() => IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable._();
+  IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable toMutable() =>
+      IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_RoleUnknownPropertyError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_RoleUnknownPropertyError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -498,7 +548,11 @@ final class IssueServiceIdentityResponse_RoleUnknownPropertyError implements Iss
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_RoleUnknownPropertyError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_RoleUnknownPropertyError, IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_RoleUnknownPropertyError,
+    IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -510,21 +564,25 @@ final class IssueServiceIdentityResponse_RoleUnknownPropertyError implements Iss
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable it) => it.toFrozen(),
+    toFrozen: (
+      IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_RoleUnknownPropertyError].
-final class IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable implements IssueServiceIdentityResponse_RoleUnknownPropertyError_orMutable {
+final class IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable
+    implements IssueServiceIdentityResponse_RoleUnknownPropertyError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_RoleUnknownPropertyError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_RoleUnknownPropertyError toFrozen() => IssueServiceIdentityResponse_RoleUnknownPropertyError().._u = this._u;
+  IssueServiceIdentityResponse_RoleUnknownPropertyError toFrozen() =>
+      IssueServiceIdentityResponse_RoleUnknownPropertyError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -536,19 +594,23 @@ sealed class IssueServiceIdentityResponse_RoleTypeInvalidError_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_RoleTypeInvalidError implements IssueServiceIdentityResponse_RoleTypeInvalidError_orMutable {
+final class IssueServiceIdentityResponse_RoleTypeInvalidError
+    implements IssueServiceIdentityResponse_RoleTypeInvalidError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_RoleTypeInvalidError() => IssueServiceIdentityResponse_RoleTypeInvalidError._();
+  factory IssueServiceIdentityResponse_RoleTypeInvalidError() =>
+      IssueServiceIdentityResponse_RoleTypeInvalidError._();
 
   IssueServiceIdentityResponse_RoleTypeInvalidError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_RoleTypeInvalidError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_RoleTypeInvalidError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_RoleTypeInvalidError_mutable mutable() => IssueServiceIdentityResponse_RoleTypeInvalidError_mutable._();
+  static IssueServiceIdentityResponse_RoleTypeInvalidError_mutable mutable() =>
+      IssueServiceIdentityResponse_RoleTypeInvalidError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -556,13 +618,18 @@ final class IssueServiceIdentityResponse_RoleTypeInvalidError implements IssueSe
   IssueServiceIdentityResponse_RoleTypeInvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_RoleTypeInvalidError_mutable toMutable() => IssueServiceIdentityResponse_RoleTypeInvalidError_mutable._();
+  IssueServiceIdentityResponse_RoleTypeInvalidError_mutable toMutable() =>
+      IssueServiceIdentityResponse_RoleTypeInvalidError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_RoleTypeInvalidError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_RoleTypeInvalidError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -574,7 +641,11 @@ final class IssueServiceIdentityResponse_RoleTypeInvalidError implements IssueSe
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_RoleTypeInvalidError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_RoleTypeInvalidError, IssueServiceIdentityResponse_RoleTypeInvalidError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_RoleTypeInvalidError,
+    IssueServiceIdentityResponse_RoleTypeInvalidError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -586,21 +657,24 @@ final class IssueServiceIdentityResponse_RoleTypeInvalidError implements IssueSe
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_RoleTypeInvalidError_mutable it) => it.toFrozen(),
+    toFrozen: (IssueServiceIdentityResponse_RoleTypeInvalidError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_RoleTypeInvalidError].
-final class IssueServiceIdentityResponse_RoleTypeInvalidError_mutable implements IssueServiceIdentityResponse_RoleTypeInvalidError_orMutable {
+final class IssueServiceIdentityResponse_RoleTypeInvalidError_mutable
+    implements IssueServiceIdentityResponse_RoleTypeInvalidError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_RoleTypeInvalidError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_RoleTypeInvalidError toFrozen() => IssueServiceIdentityResponse_RoleTypeInvalidError().._u = this._u;
+  IssueServiceIdentityResponse_RoleTypeInvalidError toFrozen() =>
+      IssueServiceIdentityResponse_RoleTypeInvalidError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -612,19 +686,23 @@ sealed class IssueServiceIdentityResponse_RoleVersionInvalidError_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_RoleVersionInvalidError implements IssueServiceIdentityResponse_RoleVersionInvalidError_orMutable {
+final class IssueServiceIdentityResponse_RoleVersionInvalidError
+    implements IssueServiceIdentityResponse_RoleVersionInvalidError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_RoleVersionInvalidError() => IssueServiceIdentityResponse_RoleVersionInvalidError._();
+  factory IssueServiceIdentityResponse_RoleVersionInvalidError() =>
+      IssueServiceIdentityResponse_RoleVersionInvalidError._();
 
   IssueServiceIdentityResponse_RoleVersionInvalidError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_RoleVersionInvalidError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_RoleVersionInvalidError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_RoleVersionInvalidError_mutable mutable() => IssueServiceIdentityResponse_RoleVersionInvalidError_mutable._();
+  static IssueServiceIdentityResponse_RoleVersionInvalidError_mutable
+  mutable() => IssueServiceIdentityResponse_RoleVersionInvalidError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -632,13 +710,18 @@ final class IssueServiceIdentityResponse_RoleVersionInvalidError implements Issu
   IssueServiceIdentityResponse_RoleVersionInvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_RoleVersionInvalidError_mutable toMutable() => IssueServiceIdentityResponse_RoleVersionInvalidError_mutable._();
+  IssueServiceIdentityResponse_RoleVersionInvalidError_mutable toMutable() =>
+      IssueServiceIdentityResponse_RoleVersionInvalidError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_RoleVersionInvalidError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_RoleVersionInvalidError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -650,7 +733,11 @@ final class IssueServiceIdentityResponse_RoleVersionInvalidError implements Issu
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_RoleVersionInvalidError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_RoleVersionInvalidError, IssueServiceIdentityResponse_RoleVersionInvalidError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_RoleVersionInvalidError,
+    IssueServiceIdentityResponse_RoleVersionInvalidError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -662,21 +749,25 @@ final class IssueServiceIdentityResponse_RoleVersionInvalidError implements Issu
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_RoleVersionInvalidError_mutable it) => it.toFrozen(),
+    toFrozen: (
+      IssueServiceIdentityResponse_RoleVersionInvalidError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_RoleVersionInvalidError].
-final class IssueServiceIdentityResponse_RoleVersionInvalidError_mutable implements IssueServiceIdentityResponse_RoleVersionInvalidError_orMutable {
+final class IssueServiceIdentityResponse_RoleVersionInvalidError_mutable
+    implements IssueServiceIdentityResponse_RoleVersionInvalidError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_RoleVersionInvalidError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_RoleVersionInvalidError toFrozen() => IssueServiceIdentityResponse_RoleVersionInvalidError().._u = this._u;
+  IssueServiceIdentityResponse_RoleVersionInvalidError toFrozen() =>
+      IssueServiceIdentityResponse_RoleVersionInvalidError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -688,19 +779,25 @@ sealed class IssueServiceIdentityResponse_CustomRoleNameRequiredError_orMutable 
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_CustomRoleNameRequiredError implements IssueServiceIdentityResponse_CustomRoleNameRequiredError_orMutable {
+final class IssueServiceIdentityResponse_CustomRoleNameRequiredError
+    implements
+        IssueServiceIdentityResponse_CustomRoleNameRequiredError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_CustomRoleNameRequiredError() => IssueServiceIdentityResponse_CustomRoleNameRequiredError._();
+  factory IssueServiceIdentityResponse_CustomRoleNameRequiredError() =>
+      IssueServiceIdentityResponse_CustomRoleNameRequiredError._();
 
   IssueServiceIdentityResponse_CustomRoleNameRequiredError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_CustomRoleNameRequiredError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_CustomRoleNameRequiredError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable mutable() => IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable._();
+  static IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable
+  mutable() =>
+      IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -708,13 +805,19 @@ final class IssueServiceIdentityResponse_CustomRoleNameRequiredError implements 
   IssueServiceIdentityResponse_CustomRoleNameRequiredError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable toMutable() => IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable._();
+  IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable
+  toMutable() =>
+      IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_CustomRoleNameRequiredError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_CustomRoleNameRequiredError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -726,7 +829,11 @@ final class IssueServiceIdentityResponse_CustomRoleNameRequiredError implements 
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_CustomRoleNameRequiredError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_CustomRoleNameRequiredError, IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_CustomRoleNameRequiredError,
+    IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -738,21 +845,26 @@ final class IssueServiceIdentityResponse_CustomRoleNameRequiredError implements 
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable it) => it.toFrozen(),
+    toFrozen: (
+      IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_CustomRoleNameRequiredError].
-final class IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable implements IssueServiceIdentityResponse_CustomRoleNameRequiredError_orMutable {
+final class IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable
+    implements
+        IssueServiceIdentityResponse_CustomRoleNameRequiredError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_CustomRoleNameRequiredError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_CustomRoleNameRequiredError toFrozen() => IssueServiceIdentityResponse_CustomRoleNameRequiredError().._u = this._u;
+  IssueServiceIdentityResponse_CustomRoleNameRequiredError toFrozen() =>
+      IssueServiceIdentityResponse_CustomRoleNameRequiredError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -764,19 +876,25 @@ sealed class IssueServiceIdentityResponse_CustomRoleNameInvalidError_orMutable {
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_CustomRoleNameInvalidError implements IssueServiceIdentityResponse_CustomRoleNameInvalidError_orMutable {
+final class IssueServiceIdentityResponse_CustomRoleNameInvalidError
+    implements
+        IssueServiceIdentityResponse_CustomRoleNameInvalidError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_CustomRoleNameInvalidError() => IssueServiceIdentityResponse_CustomRoleNameInvalidError._();
+  factory IssueServiceIdentityResponse_CustomRoleNameInvalidError() =>
+      IssueServiceIdentityResponse_CustomRoleNameInvalidError._();
 
   IssueServiceIdentityResponse_CustomRoleNameInvalidError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_CustomRoleNameInvalidError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_CustomRoleNameInvalidError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable mutable() => IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable._();
+  static IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable
+  mutable() =>
+      IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -784,13 +902,18 @@ final class IssueServiceIdentityResponse_CustomRoleNameInvalidError implements I
   IssueServiceIdentityResponse_CustomRoleNameInvalidError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable toMutable() => IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable._();
+  IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable toMutable() =>
+      IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_CustomRoleNameInvalidError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_CustomRoleNameInvalidError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -802,7 +925,11 @@ final class IssueServiceIdentityResponse_CustomRoleNameInvalidError implements I
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_CustomRoleNameInvalidError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_CustomRoleNameInvalidError, IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_CustomRoleNameInvalidError,
+    IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -814,21 +941,26 @@ final class IssueServiceIdentityResponse_CustomRoleNameInvalidError implements I
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable it) => it.toFrozen(),
+    toFrozen: (
+      IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_CustomRoleNameInvalidError].
-final class IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable implements IssueServiceIdentityResponse_CustomRoleNameInvalidError_orMutable {
+final class IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable
+    implements
+        IssueServiceIdentityResponse_CustomRoleNameInvalidError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_CustomRoleNameInvalidError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_CustomRoleNameInvalidError toFrozen() => IssueServiceIdentityResponse_CustomRoleNameInvalidError().._u = this._u;
+  IssueServiceIdentityResponse_CustomRoleNameInvalidError toFrozen() =>
+      IssueServiceIdentityResponse_CustomRoleNameInvalidError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -840,19 +972,25 @@ sealed class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_orMutabl
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError implements IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_orMutable {
+final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError
+    implements
+        IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError() => IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError._();
+  factory IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError() =>
+      IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError._();
 
   IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable mutable() => IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable._();
+  static IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable
+  mutable() =>
+      IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -860,13 +998,19 @@ final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError implement
   IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable toMutable() => IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable._();
+  IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable
+  toMutable() =>
+      IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -878,7 +1022,11 @@ final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError implement
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError, IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError,
+    IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -890,21 +1038,27 @@ final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError implement
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable it) => it.toFrozen(),
+    toFrozen: (
+      IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError].
-final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable implements IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_orMutable {
+final class IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable
+    implements
+        IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError toFrozen() => IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError().._u = this._u;
+  IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError toFrozen() =>
+      IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError()
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -916,33 +1070,46 @@ sealed class IssueServiceIdentityResponse_IdentityProviderUnavailableError_orMut
 }
 
 /// Deeply immutable.
-final class IssueServiceIdentityResponse_IdentityProviderUnavailableError implements IssueServiceIdentityResponse_IdentityProviderUnavailableError_orMutable {
+final class IssueServiceIdentityResponse_IdentityProviderUnavailableError
+    implements
+        IssueServiceIdentityResponse_IdentityProviderUnavailableError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IssueServiceIdentityResponse_IdentityProviderUnavailableError() => IssueServiceIdentityResponse_IdentityProviderUnavailableError._();
+  factory IssueServiceIdentityResponse_IdentityProviderUnavailableError() =>
+      IssueServiceIdentityResponse_IdentityProviderUnavailableError._();
 
   IssueServiceIdentityResponse_IdentityProviderUnavailableError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IssueServiceIdentityResponse_IdentityProviderUnavailableError._();
+  static final defaultInstance =
+      IssueServiceIdentityResponse_IdentityProviderUnavailableError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable mutable() => IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable._();
+  static IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable
+  mutable() =>
+      IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  IssueServiceIdentityResponse_IdentityProviderUnavailableError toFrozen() => this;
+  IssueServiceIdentityResponse_IdentityProviderUnavailableError toFrozen() =>
+      this;
 
   /// Returns a mutable shallow copy of this instance.
-  IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable toMutable() => IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable._();
+  IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable
+  toMutable() =>
+      IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! IssueServiceIdentityResponse_IdentityProviderUnavailableError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! IssueServiceIdentityResponse_IdentityProviderUnavailableError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -954,7 +1121,11 @@ final class IssueServiceIdentityResponse_IdentityProviderUnavailableError implem
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IssueServiceIdentityResponse_IdentityProviderUnavailableError` instances.
-  static _skir.StructSerializer<IssueServiceIdentityResponse_IdentityProviderUnavailableError, IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable> get serializer {
+  static _skir.StructSerializer<
+    IssueServiceIdentityResponse_IdentityProviderUnavailableError,
+    IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -966,21 +1137,27 @@ final class IssueServiceIdentityResponse_IdentityProviderUnavailableError implem
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable it) => it.toFrozen(),
+    toFrozen: (
+      IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [IssueServiceIdentityResponse_IdentityProviderUnavailableError].
-final class IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable implements IssueServiceIdentityResponse_IdentityProviderUnavailableError_orMutable {
+final class IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable
+    implements
+        IssueServiceIdentityResponse_IdentityProviderUnavailableError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IssueServiceIdentityResponse_IdentityProviderUnavailableError toFrozen() => IssueServiceIdentityResponse_IdentityProviderUnavailableError().._u = this._u;
+  IssueServiceIdentityResponse_IdentityProviderUnavailableError toFrozen() =>
+      IssueServiceIdentityResponse_IdentityProviderUnavailableError()
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1009,21 +1186,23 @@ final class IssueServiceIdentityResponse_IdentityProviderUnavailableError_mutabl
 sealed class IssueServiceIdentityResponse {
   /// Constant indicating an unknown `IssueServiceIdentityResponse`.
   /// Default value for fields of type `IssueServiceIdentityResponse`.
-  static const IssueServiceIdentityResponse unknown = IssueServiceIdentityResponse_unknown._instance;
+  static const IssueServiceIdentityResponse unknown =
+      IssueServiceIdentityResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => IssueServiceIdentityResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory IssueServiceIdentityResponse.createInternalError() => IssueServiceIdentityResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory IssueServiceIdentityResponse.createInternalError() =>
+      IssueServiceIdentityResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'success' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapSuccess(
-    IssueServiceIdentityResponse_Success value
+    IssueServiceIdentityResponse_Success value,
   ) => IssueServiceIdentityResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(IssueServiceIdentityResponse_Success(...))`.
@@ -1038,98 +1217,111 @@ sealed class IssueServiceIdentityResponse {
       displayName: displayName,
       username: username,
       token: token,
-    )
+    ),
   );
 
   /// Create a 'malformed_request_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapMalformedRequestError(
-    IssueServiceIdentityResponse_MalformedRequestError value
+    IssueServiceIdentityResponse_MalformedRequestError value,
   ) => IssueServiceIdentityResponse_malformedRequestErrorWrapper._(value);
 
   /// Same as `wrapMalformedRequestError(IssueServiceIdentityResponse_MalformedRequestError(...))`.
-  factory IssueServiceIdentityResponse.createMalformedRequestError() => IssueServiceIdentityResponse.wrapMalformedRequestError(
-    IssueServiceIdentityResponse_MalformedRequestError()
-  );
+  factory IssueServiceIdentityResponse.createMalformedRequestError() =>
+      IssueServiceIdentityResponse.wrapMalformedRequestError(
+        IssueServiceIdentityResponse_MalformedRequestError(),
+      );
 
   /// Create a 'unknown_role_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapUnknownRoleError(
-    IssueServiceIdentityResponse_UnknownRoleError value
+    IssueServiceIdentityResponse_UnknownRoleError value,
   ) => IssueServiceIdentityResponse_unknownRoleErrorWrapper._(value);
 
   /// Same as `wrapUnknownRoleError(IssueServiceIdentityResponse_UnknownRoleError(...))`.
-  factory IssueServiceIdentityResponse.createUnknownRoleError() => IssueServiceIdentityResponse.wrapUnknownRoleError(
-    IssueServiceIdentityResponse_UnknownRoleError()
-  );
+  factory IssueServiceIdentityResponse.createUnknownRoleError() =>
+      IssueServiceIdentityResponse.wrapUnknownRoleError(
+        IssueServiceIdentityResponse_UnknownRoleError(),
+      );
 
   /// Create a 'role_unknown_property_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapRoleUnknownPropertyError(
-    IssueServiceIdentityResponse_RoleUnknownPropertyError value
+    IssueServiceIdentityResponse_RoleUnknownPropertyError value,
   ) => IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper._(value);
 
   /// Same as `wrapRoleUnknownPropertyError(IssueServiceIdentityResponse_RoleUnknownPropertyError(...))`.
-  factory IssueServiceIdentityResponse.createRoleUnknownPropertyError() => IssueServiceIdentityResponse.wrapRoleUnknownPropertyError(
-    IssueServiceIdentityResponse_RoleUnknownPropertyError()
-  );
+  factory IssueServiceIdentityResponse.createRoleUnknownPropertyError() =>
+      IssueServiceIdentityResponse.wrapRoleUnknownPropertyError(
+        IssueServiceIdentityResponse_RoleUnknownPropertyError(),
+      );
 
   /// Create a 'role_type_invalid_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapRoleTypeInvalidError(
-    IssueServiceIdentityResponse_RoleTypeInvalidError value
+    IssueServiceIdentityResponse_RoleTypeInvalidError value,
   ) => IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper._(value);
 
   /// Same as `wrapRoleTypeInvalidError(IssueServiceIdentityResponse_RoleTypeInvalidError(...))`.
-  factory IssueServiceIdentityResponse.createRoleTypeInvalidError() => IssueServiceIdentityResponse.wrapRoleTypeInvalidError(
-    IssueServiceIdentityResponse_RoleTypeInvalidError()
-  );
+  factory IssueServiceIdentityResponse.createRoleTypeInvalidError() =>
+      IssueServiceIdentityResponse.wrapRoleTypeInvalidError(
+        IssueServiceIdentityResponse_RoleTypeInvalidError(),
+      );
 
   /// Create a 'role_version_invalid_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapRoleVersionInvalidError(
-    IssueServiceIdentityResponse_RoleVersionInvalidError value
+    IssueServiceIdentityResponse_RoleVersionInvalidError value,
   ) => IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper._(value);
 
   /// Same as `wrapRoleVersionInvalidError(IssueServiceIdentityResponse_RoleVersionInvalidError(...))`.
-  factory IssueServiceIdentityResponse.createRoleVersionInvalidError() => IssueServiceIdentityResponse.wrapRoleVersionInvalidError(
-    IssueServiceIdentityResponse_RoleVersionInvalidError()
-  );
+  factory IssueServiceIdentityResponse.createRoleVersionInvalidError() =>
+      IssueServiceIdentityResponse.wrapRoleVersionInvalidError(
+        IssueServiceIdentityResponse_RoleVersionInvalidError(),
+      );
 
   /// Create a 'custom_role_name_required_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapCustomRoleNameRequiredError(
-    IssueServiceIdentityResponse_CustomRoleNameRequiredError value
+    IssueServiceIdentityResponse_CustomRoleNameRequiredError value,
   ) => IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper._(value);
 
   /// Same as `wrapCustomRoleNameRequiredError(IssueServiceIdentityResponse_CustomRoleNameRequiredError(...))`.
-  factory IssueServiceIdentityResponse.createCustomRoleNameRequiredError() => IssueServiceIdentityResponse.wrapCustomRoleNameRequiredError(
-    IssueServiceIdentityResponse_CustomRoleNameRequiredError()
-  );
+  factory IssueServiceIdentityResponse.createCustomRoleNameRequiredError() =>
+      IssueServiceIdentityResponse.wrapCustomRoleNameRequiredError(
+        IssueServiceIdentityResponse_CustomRoleNameRequiredError(),
+      );
 
   /// Create a 'custom_role_name_invalid_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapCustomRoleNameInvalidError(
-    IssueServiceIdentityResponse_CustomRoleNameInvalidError value
+    IssueServiceIdentityResponse_CustomRoleNameInvalidError value,
   ) => IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper._(value);
 
   /// Same as `wrapCustomRoleNameInvalidError(IssueServiceIdentityResponse_CustomRoleNameInvalidError(...))`.
-  factory IssueServiceIdentityResponse.createCustomRoleNameInvalidError() => IssueServiceIdentityResponse.wrapCustomRoleNameInvalidError(
-    IssueServiceIdentityResponse_CustomRoleNameInvalidError()
-  );
+  factory IssueServiceIdentityResponse.createCustomRoleNameInvalidError() =>
+      IssueServiceIdentityResponse.wrapCustomRoleNameInvalidError(
+        IssueServiceIdentityResponse_CustomRoleNameInvalidError(),
+      );
 
   /// Create a 'builtin_role_name_forbidden_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapBuiltinRoleNameForbiddenError(
-    IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError value
-  ) => IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._(value);
+    IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError value,
+  ) => IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._(
+    value,
+  );
 
   /// Same as `wrapBuiltinRoleNameForbiddenError(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError(...))`.
-  factory IssueServiceIdentityResponse.createBuiltinRoleNameForbiddenError() => IssueServiceIdentityResponse.wrapBuiltinRoleNameForbiddenError(
-    IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError()
-  );
+  factory IssueServiceIdentityResponse.createBuiltinRoleNameForbiddenError() =>
+      IssueServiceIdentityResponse.wrapBuiltinRoleNameForbiddenError(
+        IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError(),
+      );
 
   /// Create a 'identity_provider_unavailable_error' variant wrapping around the given value.
   factory IssueServiceIdentityResponse.wrapIdentityProviderUnavailableError(
-    IssueServiceIdentityResponse_IdentityProviderUnavailableError value
-  ) => IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._(value);
+    IssueServiceIdentityResponse_IdentityProviderUnavailableError value,
+  ) => IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._(
+    value,
+  );
 
   /// Same as `wrapIdentityProviderUnavailableError(IssueServiceIdentityResponse_IdentityProviderUnavailableError(...))`.
-  factory IssueServiceIdentityResponse.createIdentityProviderUnavailableError() => IssueServiceIdentityResponse.wrapIdentityProviderUnavailableError(
-    IssueServiceIdentityResponse_IdentityProviderUnavailableError()
-  );
+  factory IssueServiceIdentityResponse.createIdentityProviderUnavailableError() =>
+      IssueServiceIdentityResponse.wrapIdentityProviderUnavailableError(
+        IssueServiceIdentityResponse_IdentityProviderUnavailableError(),
+      );
 
   /// Returns the kind of variant held by this IssueServiceIdentityResponse.
   IssueServiceIdentityResponse_kind get kind;
@@ -1145,7 +1337,8 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.internalErrorWrapper._ordinal,
+        ordinal:
+            IssueServiceIdentityResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -1165,7 +1358,9 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_malformedRequestErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.malformedRequestErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .malformedRequestErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -1175,7 +1370,8 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_unknownRoleErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.unknownRoleErrorWrapper._ordinal,
+        ordinal:
+            IssueServiceIdentityResponse_kind.unknownRoleErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
@@ -1185,7 +1381,9 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.roleUnknownPropertyErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .roleUnknownPropertyErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
@@ -1195,7 +1393,9 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.roleTypeInvalidErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .roleTypeInvalidErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         7,
@@ -1205,7 +1405,9 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.roleVersionInvalidErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .roleVersionInvalidErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         8,
@@ -1215,7 +1417,9 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.customRoleNameRequiredErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .customRoleNameRequiredErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         9,
@@ -1225,7 +1429,9 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.customRoleNameInvalidErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .customRoleNameInvalidErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         10,
@@ -1235,32 +1441,38 @@ sealed class IssueServiceIdentityResponse {
         "",
         IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.builtinRoleNameForbiddenErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .builtinRoleNameForbiddenErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         11,
         "identity_provider_unavailable_error",
         "wrapIdentityProviderUnavailableError",
-        IssueServiceIdentityResponse_IdentityProviderUnavailableError.serializer,
+        IssueServiceIdentityResponse_IdentityProviderUnavailableError
+            .serializer,
         "",
         IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._,
         (it) => it.value,
-        ordinal: IssueServiceIdentityResponse_kind.identityProviderUnavailableErrorWrapper._ordinal,
+        ordinal: IssueServiceIdentityResponse_kind
+            .identityProviderUnavailableErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/identity.skir:IssueServiceIdentityResponse",
-    doc: "",
-    unknownInstance: IssueServiceIdentityResponse_unknown._instance,
-    enumInstance: IssueServiceIdentityResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: IssueServiceIdentityResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/identity.skir:IssueServiceIdentityResponse",
+        doc: "",
+        unknownInstance: IssueServiceIdentityResponse_unknown._instance,
+        enumInstance: IssueServiceIdentityResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: IssueServiceIdentityResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `IssueServiceIdentityResponse`.
@@ -1283,7 +1495,8 @@ enum IssueServiceIdentityResponse_kind {
   const IssueServiceIdentityResponse_kind(this._ordinal);
 }
 
-final class IssueServiceIdentityResponse_unknown implements IssueServiceIdentityResponse {
+final class IssueServiceIdentityResponse_unknown
+    implements IssueServiceIdentityResponse {
   static const _instance = IssueServiceIdentityResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -1292,16 +1505,20 @@ final class IssueServiceIdentityResponse_unknown implements IssueServiceIdentity
   IssueServiceIdentityResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.unknown;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is IssueServiceIdentityResponse_unknown;
+  _core.bool operator ==(other) =>
+      other is IssueServiceIdentityResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, IssueServiceIdentityResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, IssueServiceIdentityResponse.serializer);
 }
 
-sealed class _IssueServiceIdentityResponse_wrapper implements IssueServiceIdentityResponse {
+sealed class _IssueServiceIdentityResponse_wrapper
+    implements IssueServiceIdentityResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -1314,116 +1531,140 @@ sealed class _IssueServiceIdentityResponse_wrapper implements IssueServiceIdenti
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, IssueServiceIdentityResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, IssueServiceIdentityResponse.serializer);
 }
 
-final class IssueServiceIdentityResponse_internalErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_internalErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   IssueServiceIdentityResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.internalErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.internalErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_successWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_successWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_Success value;
 
   IssueServiceIdentityResponse_successWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.successWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.successWrapper;
 }
 
-final class IssueServiceIdentityResponse_malformedRequestErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_malformedRequestErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_MalformedRequestError value;
 
   IssueServiceIdentityResponse_malformedRequestErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.malformedRequestErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.malformedRequestErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_unknownRoleErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_unknownRoleErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_UnknownRoleError value;
 
   IssueServiceIdentityResponse_unknownRoleErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.unknownRoleErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.unknownRoleErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_RoleUnknownPropertyError value;
 
   IssueServiceIdentityResponse_roleUnknownPropertyErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.roleUnknownPropertyErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.roleUnknownPropertyErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_RoleTypeInvalidError value;
 
   IssueServiceIdentityResponse_roleTypeInvalidErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.roleTypeInvalidErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.roleTypeInvalidErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_RoleVersionInvalidError value;
 
   IssueServiceIdentityResponse_roleVersionInvalidErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.roleVersionInvalidErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.roleVersionInvalidErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_CustomRoleNameRequiredError value;
 
   IssueServiceIdentityResponse_customRoleNameRequiredErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.customRoleNameRequiredErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.customRoleNameRequiredErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_CustomRoleNameInvalidError value;
 
   IssueServiceIdentityResponse_customRoleNameInvalidErrorWrapper._(this.value);
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.customRoleNameInvalidErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.customRoleNameInvalidErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError value;
 
-  IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._(this.value);
+  IssueServiceIdentityResponse_builtinRoleNameForbiddenErrorWrapper._(
+    this.value,
+  );
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.builtinRoleNameForbiddenErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.builtinRoleNameForbiddenErrorWrapper;
 }
 
-final class IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper extends _IssueServiceIdentityResponse_wrapper {
+final class IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper
+    extends _IssueServiceIdentityResponse_wrapper {
   final IssueServiceIdentityResponse_IdentityProviderUnavailableError value;
 
-  IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._(this.value);
+  IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper._(
+    this.value,
+  );
 
   @_core.override
-  IssueServiceIdentityResponse_kind get kind => IssueServiceIdentityResponse_kind.identityProviderUnavailableErrorWrapper;
+  IssueServiceIdentityResponse_kind get kind =>
+      IssueServiceIdentityResponse_kind.identityProviderUnavailableErrorWrapper;
 }
 
-final _skir.Method<
-  IssueServiceIdentityRequest,
-  IssueServiceIdentityResponse
-> issueServiceIdentityMethod =
-  _skir.Method(
-    "IssueServiceIdentity",
-    672941,
-    IssueServiceIdentityRequest.serializer,
-    IssueServiceIdentityResponse.serializer,
-    "",
-  );
+final _skir.Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse>
+issueServiceIdentityMethod = _skir.Method(
+  "IssueServiceIdentity",
+  672941,
+  IssueServiceIdentityRequest.serializer,
+  IssueServiceIdentityResponse.serializer,
+  "",
+);

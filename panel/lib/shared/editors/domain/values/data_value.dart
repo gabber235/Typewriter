@@ -49,7 +49,7 @@ sealed class DataValue with _$DataValue {
     required DataValue value,
   }) = PolymorphicValue;
 
-  const factory DataValue.reference(RecordId id) = ReferenceValue;
+  const factory DataValue.reference(ResourceId id) = ReferenceValue;
 }
 
 /// A string keyed object value whose fields can be addressed by [DataPath].

@@ -55,6 +55,26 @@ abstract class EditorSnapshot {
       );
 }
 
+/// Marks a snapshot whose interpretation contract can change independently.
+///
+/// The editor owner pins the installed snapshot. A replacement is accepted
+/// immediately only when [contractCompatibleWith] proves that the existing
+/// draft keeps the same meaning. Incompatible replacements stay pending until
+/// the user reconciles or discards the draft explicitly.
+abstract interface class EditorContractSnapshot implements EditorSnapshot {
+  bool contractCompatibleWith(EditorSnapshot candidate);
+}
+
+/// Reports that an exact resource contract cannot currently be loaded.
+final class EditorContractUnavailableException implements Exception {
+  const EditorContractUnavailableException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 /// Snapshot implementation for resources represented entirely by an [EditorDocument].
 final class DocumentEditorSnapshot extends EditorSnapshot {
   const DocumentEditorSnapshot(this.document);

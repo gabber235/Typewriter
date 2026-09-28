@@ -1567,7 +1567,6 @@ class RemoveMapEntryAction private constructor(
 sealed interface ReplaceConcreteNominalTypeAction_OrMutable {
     val target: skirout.editor.v1.binding.BindingRef_OrMutable;
     val concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.action.ReplaceConcreteNominalTypeAction;
 }
@@ -1577,7 +1576,6 @@ sealed interface ReplaceConcreteNominalTypeAction_OrMutable {
 class ReplaceConcreteNominalTypeAction private constructor(
     override val target: skirout.editor.v1.binding.BindingRef,
     override val concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val value: skirout.editor.v1.expression.TypedExpression,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReplaceConcreteNominalTypeAction>? =
         null,
 ): skirout.editor.v1.action.ReplaceConcreteNominalTypeAction_OrMutable {
@@ -1586,13 +1584,11 @@ class ReplaceConcreteNominalTypeAction private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable,
         concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReplaceConcreteNominalTypeAction>? =
             null,
     ): this(
         target.toFrozen(),
         concreteType.toFrozen(),
-        value.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -1603,7 +1599,6 @@ class ReplaceConcreteNominalTypeAction private constructor(
     fun toMutable() = Mutable(
         target = this.target,
         concreteType = this.concreteType,
-        value = this.value,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1614,12 +1609,9 @@ class ReplaceConcreteNominalTypeAction private constructor(
             this.target,
         concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
             this.concreteType,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.value,
     ) = skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
         target.toFrozen(),
         concreteType.toFrozen(),
-        value.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -1627,11 +1619,11 @@ class ReplaceConcreteNominalTypeAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.ReplaceConcreteNominalTypeAction && this.target == other.target && this.concreteType == other.concreteType && this.value == other.value);
+        return this === other || (other is skirout.editor.v1.action.ReplaceConcreteNominalTypeAction && this.target == other.target && this.concreteType == other.concreteType);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.concreteType, this.value).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.concreteType).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1649,8 +1641,6 @@ class ReplaceConcreteNominalTypeAction private constructor(
             skirout.editor.v1.binding.BindingRef.partial(),
         override var concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
             skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReplaceConcreteNominalTypeAction>? =
             null,
     ): skirout.editor.v1.action.ReplaceConcreteNominalTypeAction_OrMutable {
@@ -1658,7 +1648,6 @@ class ReplaceConcreteNominalTypeAction private constructor(
         override fun toFrozen() = skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
             target = this.target,
             concreteType = this.concreteType,
-            value = this.value,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1693,22 +1682,6 @@ class ReplaceConcreteNominalTypeAction private constructor(
                 is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [value] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-         */
-        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.value;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.value = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
@@ -1716,7 +1689,6 @@ class ReplaceConcreteNominalTypeAction private constructor(
             skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1734,12 +1706,9 @@ class ReplaceConcreteNominalTypeAction private constructor(
                 skirout.editor.v1.binding.BindingRef.partial(),
             concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
                 skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
         ) = skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
             target = target,
             concreteType = concreteType,
-            value = value,
             _unrecognizedFields = null,
         );
 
@@ -1777,15 +1746,6 @@ class ReplaceConcreteNominalTypeAction private constructor(
                 "",
                 { it.concreteType },
                 { mut, v -> mut.concreteType = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                2,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -2124,12 +2084,10 @@ sealed class LocalEditorAction private constructor() {
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable,
             concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
         ) = ReplaceConcreteNominalTypeWrapper(
             skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
                 target = target,
                 concreteType = concreteType,
-                value = value,
             )
         );
 

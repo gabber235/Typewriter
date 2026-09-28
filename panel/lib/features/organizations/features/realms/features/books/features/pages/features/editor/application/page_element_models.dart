@@ -112,36 +112,9 @@ extension PageElementId on PageElement {
 
   RecordValue? get editorValue => switch (this) {
     PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-      RecordValue({
-        "value": definition.data,
-        "placement": elementPlacementValue(switch (definition.placement.kind) {
-          EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
-            x: definition.placement.x,
-            y: definition.placement.y,
-            width: definition.placement.width,
-            height: definition.placement.height,
-          ),
-          EntryPlacementKind.timelineEntry =>
-            skir.ElementPlacement.createTimelineEntry(
-              trackIndex: definition.placement.x,
-            ),
-        }),
-      }),
-    PageElementCue(:final cue) when cue is Segment => RecordValue({
-      "value": cue.data,
-      "placement": elementPlacementValue(
-        skir.ElementPlacement.createTimelineSegment(
-          startFrame: cue.startFrame,
-          endFrame: cue.endFrame,
-        ),
-      ),
-    }),
-    PageElementCue(:final cue) when cue is Keyframe => RecordValue({
-      "value": cue.data,
-      "placement": elementPlacementValue(
-        skir.ElementPlacement.createTimelineKeyframe(frame: cue.frame),
-      ),
-    }),
+      definition.data,
+    PageElementCue(:final cue) when cue is Segment || cue is Keyframe =>
+      cue.data,
     _ => null,
   };
 
@@ -150,36 +123,38 @@ extension PageElementId on PageElement {
     if (local == null || canonical == null) return this;
     final root = local.projectOnto(canonical);
     if (root is! RecordValue) return this;
-    final data = root.fields["value"];
     final placement = root.fields["placement"];
-    if (data is! RecordValue || placement == null) return this;
+    if (placement == null) return this;
     final withData = switch (this) {
       PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
         PageElement.entry(
           entry: PageEntry.definition(
-            definition: definition.copyWith(data: data),
+            definition: definition.copyWith(data: root),
           ),
         ),
       PageElementCue(:final cue) => PageElement.cue(
         cue: switch (cue) {
-          Segment() => cue.copyWith(data: data),
-          Keyframe() => cue.copyWith(data: data),
+          Segment() => cue.copyWith(data: root),
+          Keyframe() => cue.copyWith(data: root),
           _ => cue,
         },
       ),
       _ => this,
     };
     try {
-      return switch (encodeElementPlacement(placement)) {
-        skir.ElementPlacement_graphWrapper(:final value) =>
-          withData.moveTo(value.x, value.y).resizeTo(value.width, value.height),
-        skir.ElementPlacement_timelineEntryWrapper(:final value) =>
-          withData.moveTo(value.trackIndex, 0),
-        skir.ElementPlacement_timelineSegmentWrapper(:final value) =>
-          withData.updateCueTo(value.startFrame, value.endFrame),
-        skir.ElementPlacement_timelineKeyframeWrapper(:final value) =>
-          withData.updateCueTo(value.frame, value.frame),
-        _ => withData,
+      return switch (decodePlacement(placement)) {
+        GraphPlacement(:final x, :final y, :final width, :final height) =>
+          withData.moveTo(x, y).resizeTo(width, height),
+        TimelineEntryPlacement(:final trackIndex) => withData.moveTo(
+          trackIndex,
+          0,
+        ),
+        TimelineSegmentPlacement(:final startFrame, :final endFrame) =>
+          withData.updateCueTo(startFrame, endFrame),
+        TimelineKeyframePlacement(:final frame) => withData.updateCueTo(
+          frame,
+          frame,
+        ),
       };
     } on ArgumentError {
       return this;
@@ -207,6 +182,7 @@ abstract class ElementLink with _$ElementLink {
     required String linkId,
     required String otherId,
     required String path,
+    @JsonKey(includeFromJson: false, includeToJson: false) DataPath? sourcePath,
   }) = _ElementLink;
 
   factory ElementLink.fromJson(Map<String, dynamic> json) =>

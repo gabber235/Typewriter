@@ -7,11 +7,11 @@ part of "route.dart";
 class PageDrag implements ReferenceResourceDragData {
   const PageDrag({required this.pageId, required this.chapter});
 
-  final skir.RecordId pageId;
+  final skir.ResourceId pageId;
   final String chapter;
 
   @override
-  skir.RecordId get referenceId => pageId;
+  skir.ResourceId get referenceId => pageId;
 
   @override
   List<ResolvedTypeRef> get referenceTypes => const [];

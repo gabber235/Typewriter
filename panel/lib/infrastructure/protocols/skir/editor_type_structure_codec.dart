@@ -82,6 +82,7 @@ final class SkirTypeStructureCodec {
           name: field.name,
           valueType: fieldType,
           initializer: initial.valueOrNull,
+          defaulted: field.defaulted,
         ),
       );
     }
@@ -118,6 +119,7 @@ final class SkirTypeStructureCodec {
         name: field.name,
         type: fieldType,
         initialValue: initial.valueOrNull,
+        defaulted: field.defaulted,
       );
     }
     if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);

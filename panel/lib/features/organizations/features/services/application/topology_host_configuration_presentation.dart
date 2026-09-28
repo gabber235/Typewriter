@@ -92,18 +92,6 @@ PresentationNode _workloadMode({
     bindingId: const BindingId(1),
     path: DataPath.root.field(field),
   );
-  final registry = TypeRegistry(_hostInspectorCatalog);
-  TypedExpression initialValue(ResolvedTypeRef type) {
-    final representation = registry
-        .resolveExact(type)
-        .valueOrNull!
-        .representation;
-    return representation
-        .createInitialValue(registry: registry)
-        .valueOrNull!
-        .asLiteral(representation);
-  }
-
   return _dashboardCard(
     id: "serviceHost.configuration.$field",
     label: title,
@@ -135,9 +123,6 @@ PresentationNode _workloadMode({
                             concreteType: currentType == enabled
                                 ? disabled
                                 : enabled,
-                            initialValue: initialValue(
-                              currentType == enabled ? disabled : enabled,
-                            ),
                           ),
                         ),
                       ),
@@ -145,7 +130,12 @@ PresentationNode _workloadMode({
                   ),
                   element: ColumnElement(
                     spacing: 12,
-                    children: currentType == enabled ? fields : const [],
+                    children:
+                        (currentType == enabled
+                                ? fields
+                                : const <PresentationNode>[])
+                            .map(PresentationAxisChild.fixed)
+                            .toList(),
                   ),
                 ),
               ),

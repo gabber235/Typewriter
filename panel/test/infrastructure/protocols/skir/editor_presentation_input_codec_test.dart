@@ -14,7 +14,10 @@ void main() {
     resultType: const IntegerType(width: IntegerWidth.signed64),
     expression: LiteralExpression(IntegerValue(BigInt.one)),
   );
-  const prefix = PresentationNode(id: "prefix", element: TextElement(text));
+  const prefix = PresentationNode(
+    id: "prefix",
+    element: TextElement(text, paragraph: TextParagraph()),
+  );
   const control = BoundControl(
     binding: binding,
     label: text,

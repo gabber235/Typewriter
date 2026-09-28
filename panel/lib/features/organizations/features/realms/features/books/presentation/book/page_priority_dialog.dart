@@ -13,7 +13,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
     super.key,
   });
 
-  final skir.RecordId pageId;
+  final skir.ResourceId pageId;
   final String pageName;
   final int priority;
 
@@ -29,7 +29,8 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
     try {
       final result = await ref.editPage(
         id: pageId,
-        priority: skir.Int32Change(expected: priority, value: newPriority),
+        priority: newPriority,
+        expectedPriority: priority,
       );
       result.requireApplied(
         conflictMessage: "The page priority changed while editing",

@@ -31,6 +31,15 @@ fun KSAnnotated.rawAnnotation(type: KClass<out Annotation>): KSAnnotation? {
     }
 }
 
+/** Finds one raw annotation without requiring its declaration on the processor classpath. */
+fun KSAnnotated.rawAnnotation(qualifiedName: String): KSAnnotation? =
+    annotations.singleOrNull {
+        it.annotationType
+            .resolve()
+            .declaration.qualifiedName
+            ?.asString() == qualifiedName
+    }
+
 /** Returns the single typed annotation of [type], including declared default values. */
 @OptIn(KspExperimental::class)
 inline fun <reified T : Annotation> KSAnnotated.annotation(): T? = getAnnotationsByType(T::class).singleOrNull()

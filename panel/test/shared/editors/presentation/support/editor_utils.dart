@@ -34,7 +34,7 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
   DataPath? lastUpdatedPath;
 
   @override
-  TypeCatalog get typeCatalog => registry?.catalog ?? const TypeCatalog([]);
+  TypeCatalog get typeCatalog => registry?.catalog ?? receivedRealmCatalog();
 
   @override
   bool get readOnly => document.readOnly;

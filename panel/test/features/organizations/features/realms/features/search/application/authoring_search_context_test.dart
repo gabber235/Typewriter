@@ -1,6 +1,8 @@
 import "package:flutter/material.dart" hide Page;
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -8,7 +10,14 @@ void main() {
     final definitions = ValueNotifier<AsyncValue<List<ElementDefinition>>>(
       const AsyncData([]),
     );
-    final source = ElementTypeSearchSource(definitions: definitions);
+    final source = ElementTypeSearchSource(
+      definitions: definitions,
+      querySelectors: const [
+        KeyValueSelectorDefinition(id: authoringBookSelectorId, key: "book:"),
+        KeyValueSelectorDefinition(id: authoringPageSelectorId, key: "page:"),
+        KeyValueSelectorDefinition(id: authoringTypeSelectorId, key: "type:"),
+      ],
+    );
     addTearDown(definitions.dispose);
     addTearDown(source.dispose);
 
@@ -39,119 +48,7 @@ void main() {
       isNull,
     );
   });
-
-  test("page selector exposes only element types accepted by that page", () {
-    final dependencies = _scopeDependencies();
-    addTearDown(dependencies.dispose);
-    final scope = dependencies.scope;
-    final query = _query(book: _otherBook.title, page: _otherPage.name);
-
-    expect(
-      scope.evaluate(_elementResult(_childDefinition), query),
-      isA<SearchResultVisible>(),
-    );
-    expect(
-      scope.evaluate(_elementResult(_unrelatedDefinition), query),
-      isA<SearchResultHidden>(),
-    );
-  });
-
-  test("type selector includes concrete descendants", () {
-    final dependencies = _scopeDependencies();
-    addTearDown(dependencies.dispose);
-    final scope = dependencies.scope;
-
-    expect(
-      scope.evaluate(
-        _elementResult(_childDefinition),
-        _query(type: _parentDefinition.name),
-      ),
-      isA<SearchResultVisible>(),
-    );
-    expect(
-      scope.evaluate(
-        _elementResult(_unrelatedDefinition),
-        _query(type: _parentDefinition.name),
-      ),
-      isA<SearchResultHidden>(),
-    );
-  });
 }
-
-({SearchScope scope, void Function() dispose}) _scopeDependencies() {
-  final books = ValueNotifier<AsyncValue<List<Book>>>(
-    AsyncData([_currentBook, _otherBook]),
-  );
-  final pages = ValueNotifier<AsyncValue<List<Page>>>(
-    AsyncData([_currentPage, _otherPage]),
-  );
-  final policies = ValueNotifier(AsyncValue.data({_pageKind: _pagePolicy}));
-  final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogState>>(
-    AsyncData(
-      RealmEditorCatalogState.ready(
-        RealmEditorCatalogSnapshot(
-          catalog: TypeCatalog([
-            TypeDefinition(
-              id: _parentType,
-              kind: NominalTypeKind.concrete,
-              representation: const RecordType(fields: {}),
-            ),
-            TypeDefinition(
-              id: _childType,
-              kind: NominalTypeKind.concrete,
-              representation: const RecordType(fields: {}),
-              parents: [_parentType],
-            ),
-            TypeDefinition(
-              id: _unrelatedType,
-              kind: NominalTypeKind.concrete,
-              representation: const RecordType(fields: {}),
-            ),
-          ]),
-          generation: const CatalogGeneration("test"),
-          elements: {
-            _parentDefinition.typeId.uuid: _catalogEntry(_parentDefinition),
-            _childDefinition.typeId.uuid: _catalogEntry(_childDefinition),
-            _unrelatedDefinition.typeId.uuid: _catalogEntry(
-              _unrelatedDefinition,
-            ),
-          },
-        ),
-      ),
-    ),
-  );
-  return (
-    scope: primarySearchScope(
-      books: books,
-      pages: pages,
-      pagePolicies: policies,
-      catalog: catalog,
-    ),
-    dispose: () {
-      books.dispose();
-      pages.dispose();
-      policies.dispose();
-      catalog.dispose();
-    },
-  );
-}
-
-RealmElementCatalogEntry _catalogEntry(ElementDefinition definition) =>
-    RealmElementCatalogEntry(
-      originArtifactId: "test",
-      sourcePart: "test",
-      definition: DiscoveredElementDefinition(
-        id: definition.typeId.uuid,
-        type: definition.rootType,
-        name: definition.name,
-        description: definition.description,
-        icon: definition.icon,
-        color: definition.color,
-        availability: const ElementAvailability.always(),
-      ),
-      eligible: true,
-      available: true,
-    );
 
 SearchQueryContext _query({String? book, String? page, String? type}) =>
     SearchQueryContext(
@@ -166,68 +63,34 @@ SearchQueryContext _query({String? book, String? page, String? type}) =>
       ],
     );
 
-SearchResult _elementResult(ElementDefinition definition) => SearchResult(
-  id: definition.typeId.uuid,
-  type: elementTypeSearchResultType,
-  payload: definition,
-  title: definition.name,
-);
-
 final _currentBook = Book(
-  bookId: recordId("book:current"),
+  bookId: skir.ResourceId(value: "current"),
   title: "Current",
   icon: "mdi:book",
   color: Colors.blue,
   tagIds: const [],
 );
 final _otherBook = Book(
-  bookId: recordId("book:other"),
+  bookId: skir.ResourceId(value: "other"),
   title: "Other",
   icon: "mdi:book",
   color: Colors.green,
   tagIds: const [],
 );
-const _pageKind = PageKindRef(id: "static", revision: 1);
+final _pageType = referenceResourceTypes.page;
 final _currentPage = Page(
-  pageId: recordId("page:current"),
+  pageId: skir.ResourceId(value: "current"),
   bookId: _currentBook.bookId,
   name: "Intro",
-  kind: _pageKind,
+  rootType: _pageType,
   chapter: "",
   priority: 0,
 );
 final _otherPage = Page(
-  pageId: recordId("page:other"),
+  pageId: skir.ResourceId(value: "other"),
   bookId: _otherBook.bookId,
   name: "Intro",
-  kind: _pageKind,
+  rootType: _pageType,
   chapter: "",
   priority: 0,
 );
-final _parentType = ResolvedTypeRef(
-  id: DeclaredTypeId("10000000000000000000000000000001"),
-  revision: 1,
-);
-final _childType = ResolvedTypeRef(
-  id: DeclaredTypeId("10000000000000000000000000000002"),
-  revision: 1,
-);
-final _unrelatedType = ResolvedTypeRef(
-  id: DeclaredTypeId("10000000000000000000000000000003"),
-  revision: 1,
-);
-final _parentDefinition = _definition(_parentType, "Parent");
-final _childDefinition = _definition(_childType, "Child");
-final _unrelatedDefinition = _definition(_unrelatedType, "Unrelated");
-final _pagePolicy = PageEntryCreationPolicy(
-  placement: PageEntryCreationPlacement.graph,
-  types: {_childType},
-);
-
-ElementDefinition _definition(ResolvedTypeRef type, String name) =>
-    ElementDefinition(
-      rootType: type,
-      name: name,
-      description: "$name element",
-      icon: const IconValue.iconify("mdi:test-tube"),
-    );

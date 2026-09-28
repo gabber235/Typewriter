@@ -14,20 +14,36 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// state. A missing tag leaves an empty footprint rather than displaying stale
 /// content.
 class TagNode extends HookConsumerWidget {
-  const TagNode({required this.tagId, super.key});
+  const TagNode({required this.tagId, this.subjects, super.key});
 
-  final skir.RecordId tagId;
+  final skir.ResourceId tagId;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncTag = ref.watch(projectedTagProvider(tagId));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    final resolvedSubjects =
+        subjects ??
+        (organizationId == null || realmId == null
+            ? null
+            : ref.watch(
+                authoringSubjectsProvider(
+                  AuthoringSubjectScope(
+                    organizationId: organizationId,
+                    realmId: realmId,
+                    resources: {tagId: referenceResourceTypes.tag},
+                  ),
+                ),
+              ));
 
     return asyncTag(
       name: "Tag",
       shrink: true,
       builder: (tag) {
         if (tag == null) return const SizedBox.shrink();
-        return _TagNode(tag: tag);
+        return _TagNode(tag: tag, subjects: resolvedSubjects);
       },
       loading: (_) =>
           ShimmerBox.rectangle(width: double.infinity, height: double.infinity),
@@ -37,17 +53,14 @@ class TagNode extends HookConsumerWidget {
 
 /// Adds selection, drag feedback, and inheritance drop behavior to a tag.
 class _TagNode extends HookConsumerWidget {
-  const _TagNode({required this.tag});
+  const _TagNode({required this.tag, required this.subjects});
 
   final Tag tag;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
-
-    final tagColor = tag.color.toARGB32() != 0
-        ? tag.color
-        : context.colors.contentDisabled;
 
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
@@ -60,7 +73,7 @@ class _TagNode extends HookConsumerWidget {
           builder: (isSelected, isFocused, isHovered) {
             final content = _TagNodeContent(
               tag: tag,
-              tagColor: tagColor,
+              subjects: subjects,
               isSelected: isSelected,
               isFocused: isFocused,
               isHovered: isHovered,
@@ -79,13 +92,13 @@ class _TagNode extends HookConsumerWidget {
                       : SizedBox(
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
-                          child: FeedbackTagNode(tag: tag, tagColor: tagColor),
+                          child: FeedbackTagNode(tag: tag, subjects: subjects),
                         );
                 },
               ),
               childWhenDragging: graphDrag?.draggingInsideGraph.value ?? false
                   ? content
-                  : PlaceholderTagNode(name: tag.name, color: tagColor),
+                  : const PlaceholderTagNode(),
               child: GraphDragTargetRegion(
                 targetId: identifier.graphId,
                 child: DragTarget<TagIdentifier>(
@@ -112,7 +125,7 @@ class _TagNode extends HookConsumerWidget {
                     if (isDropTarget) {
                       return _TagNodeContent(
                         tag: tag,
-                        tagColor: tagColor,
+                        subjects: subjects,
                         isSelected: true,
                         isFocused: true,
                         isHovered: true,
@@ -133,14 +146,14 @@ class _TagNode extends HookConsumerWidget {
 class _TagNodeContent extends StatelessWidget {
   const _TagNodeContent({
     required this.tag,
-    required this.tagColor,
+    required this.subjects,
     required this.isSelected,
     required this.isFocused,
     required this.isHovered,
   });
 
   final Tag tag;
-  final Color tagColor;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
   final bool isSelected;
   final bool isFocused;
   final bool isHovered;
@@ -150,7 +163,7 @@ class _TagNodeContent extends StatelessWidget {
     final theme = Theme.of(context);
 
     final backgroundColor = Color.alphaBlend(
-      tagColor.withValues(
+      theme.colorScheme.primary.withValues(
         alpha: switch ((isHovered, isSelected)) {
           (false, false) => 0.2,
           (true, false) => 0.5,
@@ -160,15 +173,6 @@ class _TagNodeContent extends StatelessWidget {
       ),
       Surface.colorOf(context),
     );
-
-    final textColor = isHovered
-        ? ThemeData.estimateBrightnessForColor(backgroundColor) ==
-                  Brightness.dark
-              ? Colors.white
-              : Colors.black
-        : isSelected
-        ? backgroundColor.on(context)
-        : tagColor;
 
     return AnimatedContainer(
       duration: 100.ms,
@@ -182,7 +186,7 @@ class _TagNodeContent extends StatelessWidget {
                     : Colors.black
               : isSelected
               ? Colors.transparent
-              : tagColor,
+              : theme.colorScheme.outline,
           width: 2,
         ),
       ),
@@ -191,23 +195,73 @@ class _TagNodeContent extends StatelessWidget {
         vertical: context.spacing.space2,
       ),
       child: Center(
-        child: Text(
-          tag.name.formatted,
-          style: Theme.of(context).textTheme.bodyMedium!
-              .copyWith(color: textColor, fontWeight: FontWeight.w500),
-          overflow: TextOverflow.ellipsis,
-        ),
+        child: _TagRoleNode(tagId: tag.tagId, subjects: subjects),
       ),
     );
   }
 }
 
+class _TagRoleNode extends StatelessWidget {
+  const _TagRoleNode({required this.tagId, required this.subjects});
+
+  final skir.ResourceId tagId;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
+
+  @override
+  Widget build(BuildContext context) {
+    final projection = switch (subjects) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    if (projection == null) {
+      if (subjects?.hasError ?? subjects == null) {
+        return const Tooltip(
+          message: "Tag presentation is unavailable",
+          child: Icon(Icons.warning_rounded, size: 14),
+        );
+      }
+      return ShimmerBox.rectangle(width: double.infinity, height: 20);
+    }
+    final subject = projection.subjects[tagId];
+    final result = subject == null
+        ? null
+        : TypedAuthoringCodec(projection.catalog).subjectPresentation(
+            subject,
+            PresentationRole.graphNode,
+            collections: projection.collections,
+          );
+    final diagnostics = result?.diagnostics ?? projection.diagnostics;
+    final model =
+        result?.valueOrNull?.model ??
+        PresentationModel(
+          catalog: projection.catalog.catalog,
+          inputs: const {},
+          root: PresentationNode(
+            id: "tag.graph.node.diagnostic",
+            element: DiagnosticElement(
+              diagnostics.isEmpty
+                  ? const [
+                      TypeDiagnostic(
+                        code: TypeDiagnosticCode.invalidPresentation,
+                        message: "Tag presentation subject is unavailable",
+                        pathPresent: false,
+                      ),
+                    ]
+                  : diagnostics,
+            ),
+          ),
+          diagnostics: diagnostics,
+        );
+    return ComposedEditor(model: model, readOnly: true);
+  }
+}
+
 /// Visual representation shown while a tag is dragged outside the graph.
 class FeedbackTagNode extends StatelessWidget {
-  const FeedbackTagNode({required this.tag, required this.tagColor, super.key});
+  const FeedbackTagNode({required this.tag, required this.subjects, super.key});
 
   final Tag tag;
-  final Color tagColor;
+  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +275,7 @@ class FeedbackTagNode extends StatelessWidget {
             vertical: context.spacing.space2,
           ),
           decoration: BoxDecoration(
-            color: tagColor.withValues(alpha: 0.9),
+            color: Surface.colorOf(context),
             borderRadius: context.shapes.largeBorderRadius,
             boxShadow: [
               BoxShadow(
@@ -232,17 +286,7 @@ class FeedbackTagNode extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: Text(
-              tag.name.formatted,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color:
-                    ThemeData.estimateBrightnessForColor(tagColor) ==
-                        Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: _TagRoleNode(tagId: tag.tagId, subjects: subjects),
           ),
         ),
       ),
@@ -252,14 +296,7 @@ class FeedbackTagNode extends StatelessWidget {
 
 /// Preserves the graph node footprint while its source is being dragged.
 class PlaceholderTagNode extends StatelessWidget {
-  const PlaceholderTagNode({
-    required this.name,
-    required this.color,
-    super.key,
-  });
-
-  final String name;
-  final Color color;
+  const PlaceholderTagNode({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -271,28 +308,21 @@ class PlaceholderTagNode extends StatelessWidget {
         color: surfaceColor,
         child: DottedBorder(
           options: RoundedRectDottedBorderOptions(
-            color: color,
+            color: Theme.of(context).colorScheme.outline,
             strokeWidth: 2,
             dashPattern: const [5, 5],
             radius: const Radius.circular(12),
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: context.shapes.largeBorderRadius,
             ),
             padding: EdgeInsets.symmetric(
               horizontal: context.spacing.space3,
               vertical: context.spacing.space2,
             ),
-            child: Center(
-              child: Text(
-                name.formatted,
-                style: Theme.of(context).textTheme.bodyMedium!
-                    .copyWith(color: color, fontWeight: FontWeight.w500),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            child: const SizedBox.expand(),
           ),
         ),
       ),

@@ -58,7 +58,6 @@ List<PageElement> generateTimelinePageElements({
         kind: EntryPlacementKind.timelineEntry,
       ),
       data: RecordValue({
-        "id": StringValue(trackId),
         "name": StringValue("Timeline Track ${trackIndex + 1}"),
         "label": StringValue("Track ${trackIndex + 1}"),
       }),

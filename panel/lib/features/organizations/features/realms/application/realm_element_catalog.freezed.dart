@@ -195,7 +195,7 @@ return not(_that.expression);case _:
 
 class ElementAlwaysAvailable implements ElementAvailability {
   const ElementAlwaysAvailable();
-  
+
 
 
 
@@ -227,7 +227,7 @@ String toString() {
 
 class ElementFactAvailability implements ElementAvailability {
   const ElementFactAvailability({required this.key, required this.expected});
-  
+
 
  final  String key;
  final  String expected;
@@ -297,7 +297,7 @@ as String,
 
 class ElementAllAvailability implements ElementAvailability {
   const ElementAllAvailability( List<ElementAvailability> expressions): _expressions = expressions;
-  
+
 
  final  List<ElementAvailability> _expressions;
  List<ElementAvailability> get expressions {
@@ -371,7 +371,7 @@ as List<ElementAvailability>,
 
 class ElementAnyAvailability implements ElementAvailability {
   const ElementAnyAvailability( List<ElementAvailability> expressions): _expressions = expressions;
-  
+
 
  final  List<ElementAvailability> _expressions;
  List<ElementAvailability> get expressions {
@@ -445,7 +445,7 @@ as List<ElementAvailability>,
 
 class ElementNotAvailability implements ElementAvailability {
   const ElementNotAvailability(this.expression);
-  
+
 
  final  ElementAvailability expression;
 
@@ -510,7 +510,7 @@ as ElementAvailability,
 @override
 @pragma('vm:prefer-inline')
 $ElementAvailabilityCopyWith<$Res> get expression {
-  
+
   return $ElementAvailabilityCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -520,7 +520,7 @@ $ElementAvailabilityCopyWith<$Res> get expression {
 /// @nodoc
 mixin _$DiscoveredElementDefinition {
 
- String get id; ResolvedTypeRef get type; String get name; String get description; IconValue get icon; Color get color; ElementAvailability get availability;
+ String get id; ResolvedTypeRef get type; String get name; String get description; IconValue get icon; Color get color; ElementAvailability get availability; ContentRole get role;
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -532,20 +532,20 @@ $DiscoveredElementDefinitionCopyWith<DiscoveredElementDefinition> get copyWith =
 @override
 bool operator ==(Object other) {
   final _this = this as DiscoveredElementDefinition;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoveredElementDefinition&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.availability, _this.availability) || other.availability == _this.availability));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoveredElementDefinition&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.availability, _this.availability) || other.availability == _this.availability)&&(identical(other.role, _this.role) || other.role == _this.role));
 }
 
 
 @override
 int get hashCode {
   final _this = this as DiscoveredElementDefinition;
-  return Object.hash(runtimeType,_this.id,_this.type,_this.name,_this.description,_this.icon,_this.color,_this.availability);
+  return Object.hash(runtimeType,_this.id,_this.type,_this.name,_this.description,_this.icon,_this.color,_this.availability,_this.role);
 }
 
 @override
 String toString() {
   final _this = this as DiscoveredElementDefinition;
-  return 'DiscoveredElementDefinition(id: ${_this.id}, type: ${_this.type}, name: ${_this.name}, description: ${_this.description}, icon: ${_this.icon}, color: ${_this.color}, availability: ${_this.availability})';
+  return 'DiscoveredElementDefinition(id: ${_this.id}, type: ${_this.type}, name: ${_this.name}, description: ${_this.description}, icon: ${_this.icon}, color: ${_this.color}, availability: ${_this.availability}, role: ${_this.role})';
 }
 
 
@@ -556,7 +556,7 @@ abstract mixin class $DiscoveredElementDefinitionCopyWith<$Res>  {
   factory $DiscoveredElementDefinitionCopyWith(DiscoveredElementDefinition value, $Res Function(DiscoveredElementDefinition) _then) = _$DiscoveredElementDefinitionCopyWithImpl;
 @useResult
 $Res call({
- String id, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability
+ String id, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability, ContentRole role
 });
 
 
@@ -573,7 +573,7 @@ class _$DiscoveredElementDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,Object? role = null,}) {
   return _then(DiscoveredElementDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -582,7 +582,8 @@ as String,description: null == description ? _self.description : description // 
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconValue,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,availability: null == availability ? _self.availability : availability // ignore: cast_nullable_to_non_nullable
-as ElementAvailability,
+as ElementAvailability,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ContentRole,
   ));
 }
 /// Create a copy of DiscoveredElementDefinition
@@ -590,7 +591,7 @@ as ElementAvailability,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -599,7 +600,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-  
+
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -608,7 +609,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $ElementAvailabilityCopyWith<$Res> get availability {
-  
+
   return $ElementAvailabilityCopyWith<$Res>(_self.availability, (value) {
     return _then(_self.copyWith(availability: value));
   });
@@ -694,10 +695,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability,  ContentRole role)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DiscoveredElementDefinition() when $default != null:
-return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
+return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability,_that.role);case _:
   return orElse();
 
 }
@@ -715,10 +716,10 @@ return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability,  ContentRole role)  $default,) {final _that = this;
 switch (_that) {
 case _DiscoveredElementDefinition():
-return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
+return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability,_that.role);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -735,10 +736,10 @@ return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability,  ContentRole role)?  $default,) {final _that = this;
 switch (_that) {
 case _DiscoveredElementDefinition() when $default != null:
-return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
+return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability,_that.role);case _:
   return null;
 
 }
@@ -750,8 +751,8 @@ return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_tha
 
 
 class _DiscoveredElementDefinition implements DiscoveredElementDefinition {
-  const _DiscoveredElementDefinition({required this.id, required this.type, required this.name, required this.description, required this.icon, required this.color, required this.availability});
-  
+  const _DiscoveredElementDefinition({required this.id, required this.type, required this.name, required this.description, required this.icon, required this.color, required this.availability, this.role = ContentRole.element});
+
 
 @override final  String id;
 @override final  ResolvedTypeRef type;
@@ -760,6 +761,7 @@ class _DiscoveredElementDefinition implements DiscoveredElementDefinition {
 @override final  IconValue icon;
 @override final  Color color;
 @override final  ElementAvailability availability;
+@override@JsonKey() final  ContentRole role;
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
@@ -771,18 +773,18 @@ _$DiscoveredElementDefinitionCopyWith<_DiscoveredElementDefinition> get copyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability)&&(identical(other.role, role) || other.role == role));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,type,name,description,icon,color,availability);
+    return Object.hash(runtimeType,id,type,name,description,icon,color,availability,role);
 }
 
 @override
 String toString() {
-    return 'DiscoveredElementDefinition(id: $id, type: $type, name: $name, description: $description, icon: $icon, color: $color, availability: $availability)';
+    return 'DiscoveredElementDefinition(id: $id, type: $type, name: $name, description: $description, icon: $icon, color: $color, availability: $availability, role: $role)';
 }
 
 
@@ -793,7 +795,7 @@ abstract mixin class _$DiscoveredElementDefinitionCopyWith<$Res> implements $Dis
   factory _$DiscoveredElementDefinitionCopyWith(_DiscoveredElementDefinition value, $Res Function(_DiscoveredElementDefinition) _then) = __$DiscoveredElementDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability
+ String id, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability, ContentRole role
 });
 
 
@@ -810,7 +812,7 @@ class __$DiscoveredElementDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,Object? role = null,}) {
   return _then(_DiscoveredElementDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -819,7 +821,8 @@ as String,description: null == description ? _self.description : description // 
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconValue,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,availability: null == availability ? _self.availability : availability // ignore: cast_nullable_to_non_nullable
-as ElementAvailability,
+as ElementAvailability,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ContentRole,
   ));
 }
 
@@ -828,7 +831,7 @@ as ElementAvailability,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -837,7 +840,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-  
+
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -846,7 +849,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $ElementAvailabilityCopyWith<$Res> get availability {
-  
+
   return $ElementAvailabilityCopyWith<$Res>(_self.availability, (value) {
     return _then(_self.copyWith(availability: value));
   });
@@ -856,7 +859,7 @@ $ElementAvailabilityCopyWith<$Res> get availability {
 /// @nodoc
 mixin _$RealmElementCatalogEntry {
 
- String get originArtifactId; String get sourcePart; DiscoveredElementDefinition get definition; bool get eligible; bool get available; List<String> get ineligibilityReasons;
+ String get originArtifactId; String get sourcePart; DiscoveredElementDefinition get definition; TypedCatalogPresentationSubject get presentationSubject; bool get eligible; bool get available; List<String> get ineligibilityReasons;
 /// Create a copy of RealmElementCatalogEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -868,20 +871,20 @@ $RealmElementCatalogEntryCopyWith<RealmElementCatalogEntry> get copyWith => _$Re
 @override
 bool operator ==(Object other) {
   final _this = this as RealmElementCatalogEntry;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmElementCatalogEntry&&(identical(other.originArtifactId, _this.originArtifactId) || other.originArtifactId == _this.originArtifactId)&&(identical(other.sourcePart, _this.sourcePart) || other.sourcePart == _this.sourcePart)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.eligible, _this.eligible) || other.eligible == _this.eligible)&&(identical(other.available, _this.available) || other.available == _this.available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _this.ineligibilityReasons));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmElementCatalogEntry&&(identical(other.originArtifactId, _this.originArtifactId) || other.originArtifactId == _this.originArtifactId)&&(identical(other.sourcePart, _this.sourcePart) || other.sourcePart == _this.sourcePart)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.presentationSubject, _this.presentationSubject) || other.presentationSubject == _this.presentationSubject)&&(identical(other.eligible, _this.eligible) || other.eligible == _this.eligible)&&(identical(other.available, _this.available) || other.available == _this.available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _this.ineligibilityReasons));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RealmElementCatalogEntry;
-  return Object.hash(runtimeType,_this.originArtifactId,_this.sourcePart,_this.definition,_this.eligible,_this.available,const DeepCollectionEquality().hash(_this.ineligibilityReasons));
+  return Object.hash(runtimeType,_this.originArtifactId,_this.sourcePart,_this.definition,_this.presentationSubject,_this.eligible,_this.available,const DeepCollectionEquality().hash(_this.ineligibilityReasons));
 }
 
 @override
 String toString() {
   final _this = this as RealmElementCatalogEntry;
-  return 'RealmElementCatalogEntry(originArtifactId: ${_this.originArtifactId}, sourcePart: ${_this.sourcePart}, definition: ${_this.definition}, eligible: ${_this.eligible}, available: ${_this.available}, ineligibilityReasons: ${_this.ineligibilityReasons})';
+  return 'RealmElementCatalogEntry(originArtifactId: ${_this.originArtifactId}, sourcePart: ${_this.sourcePart}, definition: ${_this.definition}, presentationSubject: ${_this.presentationSubject}, eligible: ${_this.eligible}, available: ${_this.available}, ineligibilityReasons: ${_this.ineligibilityReasons})';
 }
 
 
@@ -892,7 +895,7 @@ abstract mixin class $RealmElementCatalogEntryCopyWith<$Res>  {
   factory $RealmElementCatalogEntryCopyWith(RealmElementCatalogEntry value, $Res Function(RealmElementCatalogEntry) _then) = _$RealmElementCatalogEntryCopyWithImpl;
 @useResult
 $Res call({
- String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, bool eligible, bool available, List<String> ineligibilityReasons
+ String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, TypedCatalogPresentationSubject presentationSubject, bool eligible, bool available, List<String> ineligibilityReasons
 });
 
 
@@ -909,12 +912,13 @@ class _$RealmElementCatalogEntryCopyWithImpl<$Res>
 
 /// Create a copy of RealmElementCatalogEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? presentationSubject = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
   return _then(RealmElementCatalogEntry(
 originArtifactId: null == originArtifactId ? _self.originArtifactId : originArtifactId // ignore: cast_nullable_to_non_nullable
 as String,sourcePart: null == sourcePart ? _self.sourcePart : sourcePart // ignore: cast_nullable_to_non_nullable
 as String,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as DiscoveredElementDefinition,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
+as DiscoveredElementDefinition,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
+as TypedCatalogPresentationSubject,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
 as bool,available: null == available ? _self.available : available // ignore: cast_nullable_to_non_nullable
 as bool,ineligibilityReasons: null == ineligibilityReasons ? _self.ineligibilityReasons : ineligibilityReasons // ignore: cast_nullable_to_non_nullable
 as List<String>,
@@ -925,7 +929,7 @@ as List<String>,
 @override
 @pragma('vm:prefer-inline')
 $DiscoveredElementDefinitionCopyWith<$Res> get definition {
-  
+
   return $DiscoveredElementDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });
@@ -1011,10 +1015,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  TypedCatalogPresentationSubject presentationSubject,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmElementCatalogEntry() when $default != null:
-return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
+return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.presentationSubject,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
   return orElse();
 
 }
@@ -1032,10 +1036,10 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  bool eligible,  bool available,  List<String> ineligibilityReasons)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  TypedCatalogPresentationSubject presentationSubject,  bool eligible,  bool available,  List<String> ineligibilityReasons)  $default,) {final _that = this;
 switch (_that) {
 case _RealmElementCatalogEntry():
-return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
+return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.presentationSubject,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1052,10 +1056,10 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String originArtifactId,  String sourcePart,  DiscoveredElementDefinition definition,  TypedCatalogPresentationSubject presentationSubject,  bool eligible,  bool available,  List<String> ineligibilityReasons)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmElementCatalogEntry() when $default != null:
-return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
+return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.presentationSubject,_that.eligible,_that.available,_that.ineligibilityReasons);case _:
   return null;
 
 }
@@ -1067,12 +1071,13 @@ return $default(_that.originArtifactId,_that.sourcePart,_that.definition,_that.e
 
 
 class _RealmElementCatalogEntry implements RealmElementCatalogEntry {
-  const _RealmElementCatalogEntry({required this.originArtifactId, required this.sourcePart, required this.definition, required this.eligible, required this.available,  List<String> ineligibilityReasons = const []}): _ineligibilityReasons = ineligibilityReasons;
-  
+  const _RealmElementCatalogEntry({required this.originArtifactId, required this.sourcePart, required this.definition, required this.presentationSubject, required this.eligible, required this.available,  List<String> ineligibilityReasons = const []}): _ineligibilityReasons = ineligibilityReasons;
+
 
 @override final  String originArtifactId;
 @override final  String sourcePart;
 @override final  DiscoveredElementDefinition definition;
+@override final  TypedCatalogPresentationSubject presentationSubject;
 @override final  bool eligible;
 @override final  bool available;
  final  List<String> _ineligibilityReasons;
@@ -1093,18 +1098,18 @@ _$RealmElementCatalogEntryCopyWith<_RealmElementCatalogEntry> get copyWith => __
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmElementCatalogEntry&&(identical(other.originArtifactId, originArtifactId) || other.originArtifactId == originArtifactId)&&(identical(other.sourcePart, sourcePart) || other.sourcePart == sourcePart)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.eligible, eligible) || other.eligible == eligible)&&(identical(other.available, available) || other.available == available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _ineligibilityReasons));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmElementCatalogEntry&&(identical(other.originArtifactId, originArtifactId) || other.originArtifactId == originArtifactId)&&(identical(other.sourcePart, sourcePart) || other.sourcePart == sourcePart)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.presentationSubject, presentationSubject) || other.presentationSubject == presentationSubject)&&(identical(other.eligible, eligible) || other.eligible == eligible)&&(identical(other.available, available) || other.available == available)&&const DeepCollectionEquality().equals(other.ineligibilityReasons, _ineligibilityReasons));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,originArtifactId,sourcePart,definition,eligible,available,const DeepCollectionEquality().hash(_ineligibilityReasons));
+    return Object.hash(runtimeType,originArtifactId,sourcePart,definition,presentationSubject,eligible,available,const DeepCollectionEquality().hash(_ineligibilityReasons));
 }
 
 @override
 String toString() {
-    return 'RealmElementCatalogEntry(originArtifactId: $originArtifactId, sourcePart: $sourcePart, definition: $definition, eligible: $eligible, available: $available, ineligibilityReasons: $ineligibilityReasons)';
+    return 'RealmElementCatalogEntry(originArtifactId: $originArtifactId, sourcePart: $sourcePart, definition: $definition, presentationSubject: $presentationSubject, eligible: $eligible, available: $available, ineligibilityReasons: $ineligibilityReasons)';
 }
 
 
@@ -1115,7 +1120,7 @@ abstract mixin class _$RealmElementCatalogEntryCopyWith<$Res> implements $RealmE
   factory _$RealmElementCatalogEntryCopyWith(_RealmElementCatalogEntry value, $Res Function(_RealmElementCatalogEntry) _then) = __$RealmElementCatalogEntryCopyWithImpl;
 @override @useResult
 $Res call({
- String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, bool eligible, bool available, List<String> ineligibilityReasons
+ String originArtifactId, String sourcePart, DiscoveredElementDefinition definition, TypedCatalogPresentationSubject presentationSubject, bool eligible, bool available, List<String> ineligibilityReasons
 });
 
 
@@ -1132,12 +1137,13 @@ class __$RealmElementCatalogEntryCopyWithImpl<$Res>
 
 /// Create a copy of RealmElementCatalogEntry
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? originArtifactId = null,Object? sourcePart = null,Object? definition = null,Object? presentationSubject = null,Object? eligible = null,Object? available = null,Object? ineligibilityReasons = null,}) {
   return _then(_RealmElementCatalogEntry(
 originArtifactId: null == originArtifactId ? _self.originArtifactId : originArtifactId // ignore: cast_nullable_to_non_nullable
 as String,sourcePart: null == sourcePart ? _self.sourcePart : sourcePart // ignore: cast_nullable_to_non_nullable
 as String,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as DiscoveredElementDefinition,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
+as DiscoveredElementDefinition,presentationSubject: null == presentationSubject ? _self.presentationSubject : presentationSubject // ignore: cast_nullable_to_non_nullable
+as TypedCatalogPresentationSubject,eligible: null == eligible ? _self.eligible : eligible // ignore: cast_nullable_to_non_nullable
 as bool,available: null == available ? _self.available : available // ignore: cast_nullable_to_non_nullable
 as bool,ineligibilityReasons: null == ineligibilityReasons ? _self._ineligibilityReasons : ineligibilityReasons // ignore: cast_nullable_to_non_nullable
 as List<String>,
@@ -1149,7 +1155,7 @@ as List<String>,
 @override
 @pragma('vm:prefer-inline')
 $DiscoveredElementDefinitionCopyWith<$Res> get definition {
-  
+
   return $DiscoveredElementDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });

@@ -48,7 +48,7 @@ $DataValueCopyWith(DataValue _, $Res Function(DataValue) __);
 
 class UnitValue extends DataValue {
   const UnitValue(): super._();
-  
+
 
 
 
@@ -80,7 +80,7 @@ String toString() {
 
 class BooleanValue extends DataValue {
   const BooleanValue(this.value): super._();
-  
+
 
  final  bool value;
 
@@ -148,7 +148,7 @@ as bool,
 
 class IntegerValue extends DataValue {
    IntegerValue(this.value): super._();
-  
+
 
  final  BigInt value;
 
@@ -216,7 +216,7 @@ as BigInt,
 
 class FloatValue extends DataValue {
   const FloatValue(this.value): super._();
-  
+
 
  final  double value;
 
@@ -284,7 +284,7 @@ as double,
 
 class DecimalValue extends DataValue {
    DecimalValue(this.value): assert(RegExp(r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$").hasMatch(value), 'Decimal value must use canonical decimal syntax.'),super._();
-  
+
 
  final  String value;
 
@@ -352,7 +352,7 @@ as String,
 
 class StringValue extends DataValue {
   const StringValue(this.value): super._();
-  
+
 
  final  String value;
 
@@ -422,7 +422,7 @@ as String,
 
 class DurationValue extends DataValue {
   const DurationValue(this.value): super._();
-  
+
 
  final  Duration value;
 
@@ -490,7 +490,7 @@ as Duration,
 
 class ListValue extends DataValue {
   const ListValue( List<DataValue> values): _values = values,super._();
-  
+
 
  final  List<DataValue> _values;
  List<DataValue> get values {
@@ -564,7 +564,7 @@ as List<DataValue>,
 
 class MapValue extends DataValue {
   const MapValue( List<DataMapEntry> entries): _entries = entries,super._();
-  
+
 
  final  List<DataMapEntry> _entries;
  List<DataMapEntry> get entries {
@@ -638,7 +638,7 @@ as List<DataMapEntry>,
 
 class _RecordValue extends DataValue implements RecordValue {
   const _RecordValue( Map<String, DataValue> fields): _fields = fields,super._();
-  
+
 
  final  Map<String, DataValue> _fields;
  Map<String, DataValue> get fields {
@@ -712,7 +712,7 @@ as Map<String, DataValue>,
 
 class PolymorphicValue extends DataValue {
   const PolymorphicValue({required this.concreteType, required this.value}): super._();
-  
+
 
  final  ResolvedTypeRef concreteType;
  final  DataValue value;
@@ -779,7 +779,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get concreteType {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.concreteType, (value) {
     return _then(_self.copyWith(concreteType: value));
   });
@@ -788,7 +788,7 @@ $ResolvedTypeRefCopyWith<$Res> get concreteType {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -800,9 +800,9 @@ $DataValueCopyWith<$Res> get value {
 
 class ReferenceValue extends DataValue {
   const ReferenceValue(this.id): super._();
-  
 
- final  RecordId id;
+
+ final  ResourceId id;
 
 /// Create a copy of DataValue
 /// with the given fields replaced by the non-null parameter values.
@@ -836,7 +836,7 @@ abstract mixin class $ReferenceValueCopyWith<$Res> implements $DataValueCopyWith
   factory $ReferenceValueCopyWith(ReferenceValue value, $Res Function(ReferenceValue) _then) = _$ReferenceValueCopyWithImpl;
 @useResult
 $Res call({
- RecordId id
+ ResourceId id
 });
 
 
@@ -856,7 +856,7 @@ class _$ReferenceValueCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
   return _then(ReferenceValue(
 null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as RecordId,
+as ResourceId,
   ));
 }
 
@@ -1311,7 +1311,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-  
+
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1320,7 +1320,7 @@ $DataValueCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1463,7 +1463,7 @@ return $default(_that.key,_that.value);case _:
 
 class _DataMapEntry implements DataMapEntry {
   const _DataMapEntry({required this.key, required this.value});
-  
+
 
 @override final  DataValue key;
 @override final  DataValue value;
@@ -1530,7 +1530,7 @@ as DataValue,
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get key {
-  
+
   return $DataValueCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1539,7 +1539,7 @@ $DataValueCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $DataValueCopyWith<$Res> get value {
-  
+
   return $DataValueCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });

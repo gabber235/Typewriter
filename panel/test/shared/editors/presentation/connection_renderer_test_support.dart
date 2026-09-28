@@ -55,8 +55,12 @@ PresentationNode _curvedConnectionPresentation() => PresentationNode(
         spacing: 80,
         crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
         children: [
-          _anchor("source", PresentationAnchorAlignment.bottomStart),
-          _anchor("target", PresentationAnchorAlignment.topStart),
+          PresentationAxisChild.fixed(
+            _anchor("source", PresentationAnchorAlignment.bottomStart),
+          ),
+          PresentationAxisChild.fixed(
+            _anchor("target", PresentationAnchorAlignment.topStart),
+          ),
         ],
       ),
     ),
@@ -136,7 +140,7 @@ EditorProtocolRenderer _renderer(
   );
   return EditorProtocolRenderer(
     envelope: TypedValueEnvelope(rootType: root, rootValue: rootValue),
-    typeCatalog: TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

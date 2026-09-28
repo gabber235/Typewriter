@@ -6,7 +6,8 @@ part of "../../content_renderer.dart";
 /// built. This gives callers one diagnostic result for invalid style values
 /// and keeps the widget limited to displaying the resolved immutable snapshot.
 extension TextElementRendering on TextElement {
-  Widget render(PresentationRenderScope scope) {
+  Widget render(BuildContext context, PresentationRenderScope scope) {
+    final paragraph = this.paragraph.orDefault;
     final resolved = _resolveTextPresentation(this, scope);
     if (resolved case TypeFailure(:final diagnostics)) {
       return Builder(
@@ -14,18 +15,178 @@ extension TextElementRendering on TextElement {
       );
     }
     final presentation = resolved.valueOrNull!;
-    return SelectableText(
+    final text = Text(
       scope.expressionText(value),
       semanticsLabel: presentation.semanticLabel,
       textAlign: presentation.textAlignment,
+      maxLines: paragraph.maxLines,
+      overflow: paragraph.overflow.flutterOverflow,
+      softWrap: paragraph.softWrap,
       style: TextStyle(
-        color: presentation.color,
+        color: presentation.color ?? paragraph.tone.color(context),
         fontSize: presentation.fontSize,
         fontVariations: presentation.fontVariations,
         height: presentation.lineHeight,
         letterSpacing: presentation.letterSpacing,
         decoration: presentation.decoration,
       ),
+    );
+    return paragraph.selectable ? SelectionArea(child: text) : text;
+  }
+}
+
+extension RichTextElementRendering on RichTextElement {
+  Widget render(BuildContext context, PresentationRenderScope scope) {
+    final paragraph = this.paragraph.orDefault;
+    final base = _resolveTextStyle(style, scope);
+    final resolvedRuns = [
+      for (final run in runs)
+        (
+          text: _resolveRequiredText(run.text, scope),
+          style: _resolveTextStyle(run.style, scope),
+        ),
+    ];
+    final diagnostics = [
+      ...base.diagnostics,
+      for (final run in resolvedRuns) ...run.text.diagnostics,
+      for (final run in resolvedRuns) ...run.style.diagnostics,
+    ];
+    if (diagnostics.isNotEmpty) {
+      return presentationDiagnostic(context, diagnostics);
+    }
+    final resolvedBase = base.valueOrNull!;
+    final baseStyle = resolvedBase.textStyle(
+      fallbackColor: paragraph.tone.color(context),
+    );
+    final text = Text.rich(
+      TextSpan(
+        style: baseStyle,
+        children: [
+          for (final run in resolvedRuns)
+            TextSpan(
+              text: run.text.valueOrNull,
+              style: run.style.valueOrNull!.inherit(resolvedBase).textStyle(),
+            ),
+        ],
+      ),
+      maxLines: paragraph.maxLines,
+      overflow: paragraph.overflow.flutterOverflow,
+      softWrap: paragraph.softWrap,
+    );
+    return paragraph.selectable ? SelectionArea(child: text) : text;
+  }
+}
+
+TypeResult<String> _resolveRequiredText(
+  TypedExpression expression,
+  PresentationRenderScope scope,
+) {
+  final result = scope.evaluate(expression);
+  if (result case TypeFailure(:final diagnostics)) {
+    return TypeResult.failure(diagnostics);
+  }
+  return switch (result.valueOrNull) {
+    StringValue(:final value) => TypeResult.success(value),
+    _ => _invalidTextStyle("Text run must evaluate to text"),
+  };
+}
+
+TypeResult<_ResolvedRunStyle> _resolveTextStyle(
+  PresentationTextStyle? style,
+  PresentationRenderScope scope,
+) {
+  final color = resolvePresentationColor(style?.color, scope);
+  final weight = _resolveTextNumber(
+    style?.fontWeight,
+    scope,
+    name: "Font weight",
+    minimum: 1,
+    maximum: 1000,
+  );
+  final italic = _resolveTextNumber(
+    style?.fontItalic,
+    scope,
+    name: "Font italic",
+    minimum: 0,
+    maximum: 1,
+  );
+  final decoration = _resolveTextDecoration(style?.decoration, scope);
+  final diagnostics = [
+    ...color.diagnostics,
+    ...weight.diagnostics,
+    ...italic.diagnostics,
+    ...decoration.diagnostics,
+  ];
+  return diagnostics.isEmpty
+      ? TypeResult.success(
+          _ResolvedRunStyle(
+            color: color.valueOrNull,
+            weight: weight.valueOrNull,
+            italic: italic.valueOrNull,
+            decoration: decoration.valueOrNull,
+          ),
+        )
+      : TypeResult.failure(diagnostics);
+}
+
+extension on PresentationTextOverflow {
+  TextOverflow get flutterOverflow => switch (this) {
+    PresentationTextOverflow.clip => TextOverflow.clip,
+    PresentationTextOverflow.ellipsis => TextOverflow.ellipsis,
+  };
+}
+
+extension on PresentationTextTone {
+  Color color(BuildContext context) {
+    final surface = Surface.colorOf(context);
+    final foreground = surface.on(context);
+    if (this == PresentationTextTone.primary) return foreground;
+    final subdued = Color.lerp(surface, foreground, 0.72)!;
+    return _contrastRatio(surface, subdued) >= 4.5 ? subdued : foreground;
+  }
+}
+
+double _contrastRatio(Color first, Color second) {
+  final firstLuminance = first.computeLuminance();
+  final secondLuminance = second.computeLuminance();
+  final lighter = firstLuminance > secondLuminance
+      ? firstLuminance
+      : secondLuminance;
+  final darker = firstLuminance < secondLuminance
+      ? firstLuminance
+      : secondLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+final class _ResolvedRunStyle {
+  const _ResolvedRunStyle({
+    required this.color,
+    required this.weight,
+    required this.italic,
+    required this.decoration,
+  });
+
+  final Color? color;
+  final double? weight;
+  final double? italic;
+  final TextDecoration? decoration;
+
+  _ResolvedRunStyle inherit(_ResolvedRunStyle parent) => _ResolvedRunStyle(
+    color: color ?? parent.color,
+    weight: weight ?? parent.weight,
+    italic: italic ?? parent.italic,
+    decoration: decoration ?? parent.decoration,
+  );
+
+  TextStyle textStyle({Color? fallbackColor}) {
+    final variations = [
+      if (weight case final value?) FontVariation.weight(value),
+      if (italic case final value?) FontVariation.italic(value),
+    ];
+    return TextStyle(
+      color: color ?? fallbackColor,
+      fontVariations: variations.isEmpty ? null : variations,
+      decoration: decoration,
     );
   }
 }

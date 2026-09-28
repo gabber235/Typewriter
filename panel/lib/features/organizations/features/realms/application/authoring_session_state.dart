@@ -1,81 +1,62 @@
 part of "authoring_session.dart";
 
-/// A presentation value paired with the canonical authoring sequence used to
-/// produce it.
-///
-/// Use the revision when creating an editor snapshot or comparing a local
-/// draft with canonical state. It is not a local draft version.
 @freezed
 abstract class AuthoringValue<T> with _$AuthoringValue<T> {
   const factory AuthoringValue({required T value, required int revision}) =
       _AuthoringValue<T>;
 }
 
-/// Immutable canonical read model maintained by [AuthoringSession].
-///
-/// [sequence] is the server revision shared by every collection in this
-/// model. Null means no authoritative snapshot has completed. Collections can
-/// be partial because the session retains only the scopes currently leased.
-/// [documents] includes the page metadata needed to keep a page and its
-/// document consistent when an event changes either one. Local drafts live in
-/// the separate local work state and are projected by editors.
+/// Canonical graph state received from Realm at one catalog generation and sequence.
 @freezed
 abstract class AuthoringSessionState with _$AuthoringSessionState {
   const factory AuthoringSessionState({
-    /// The server sequence represented by all canonical collections.
+    skir.CatalogGeneration? generation,
     int? sequence,
-
-    /// Canonical books retained by active scopes.
-    @Default({}) Map<skir.RecordId, skir.Book> books,
-
-    /// Canonical tags retained by the library scope.
-    @Default({}) Map<skir.RecordId, skir.Tag> tags,
-
-    /// Canonical page metadata retained by active book or page scopes.
-    @Default({}) Map<skir.RecordId, skir.Page> pages,
-
-    /// Canonical page documents retained by active page scopes.
-    @Default({}) Map<skir.RecordId, skir.PageDocument> documents,
-
-    /// Whether an authoritative refresh is currently reconciling the model.
+    @Default({}) Map<skir.ResourceId, skir.AuthoringResource> resources,
+    @Default({}) Map<skir.AuthoringEdgeId, skir.AuthoringEdge> edges,
+    @Default({}) Map<skir.ResourceId, skir.PresentationSubject> presentations,
+    @Default({})
+    Map<skir.CompilationRoot, skir.CompiledResourceState> compiledStatuses,
+    @Default({}) Map<String, skir.GraphSelectionResult> selections,
+    @Default([]) List<skir.AuthoringDiagnostic> diagnostics,
     @Default(false) bool refreshing,
   }) = _AuthoringSessionState;
 }
 
-@freezed
-sealed class _AuthoringScope with _$AuthoringScope {
-  const _AuthoringScope._();
+extension AuthoringGraphView on AuthoringSessionState {
+  Set<skir.ResourceId> resourceIds(String selection) =>
+      selections[selection]?.resourceIds.toSet() ?? const {};
 
-  const factory _AuthoringScope.library() = _LibraryScope;
-  const factory _AuthoringScope.book(skir.RecordId bookId) = _BookScope;
-  const factory _AuthoringScope.page(skir.RecordId pageId) = _PageScope;
+  Iterable<skir.AuthoringResource> selectedResources(String selection) =>
+      resourceIds(selection)
+          .map((id) => resources[id])
+          .whereType<skir.AuthoringResource>();
 
-  skir.AuthoringSnapshotScope get wireValue => switch (this) {
-    _LibraryScope() => skir.AuthoringSnapshotScope.library_,
-    _BookScope(:final bookId) => skir.AuthoringSnapshotScope.createBook(
-      bookId: bookId,
-    ),
-    _PageScope(:final pageId) => skir.AuthoringSnapshotScope.createPage(
-      pageId: pageId,
-    ),
-  };
+  Iterable<skir.AuthoringEdge> selectedEdges(String selection) =>
+      (selections[selection]?.edgeIds ?? const [])
+          .map((id) => edges[id])
+          .whereType<skir.AuthoringEdge>();
 }
 
-/// Retains one authoring snapshot scope for the lifetime of a consumer.
-///
-/// A lease is reference counted by the owning [AuthoringSession]. It controls
-/// both data retention and the provider lifetime, so every acquired lease must
-/// be released when its consumer is disposed.
-abstract interface class AuthoringScopeLease {
-  /// Completes after subscriptions are active and the scope has its snapshot.
-  Future<void> get ready;
+/// Immutable state retained for one canonical graph selection.
+@freezed
+abstract class AuthoringSelectionLeaseState
+    with _$AuthoringSelectionLeaseState {
+  const factory AuthoringSelectionLeaseState({
+    required skir.GraphSelection selection,
+    required int retainCount,
+    skir.GraphSelectionResult? result,
+  }) = _AuthoringSelectionLeaseState;
+}
 
-  /// Releases this lease. Repeated release calls have no effect.
+/// A reference counted lease over one generic graph selection.
+abstract interface class AuthoringSelectionLease {
+  Future<void> get ready;
   void release();
 }
 
-final class _AuthoringScopeLease implements AuthoringScopeLease {
-  _AuthoringScopeLease(this.ready, this._release);
+final class _AuthoringSelectionLease implements AuthoringSelectionLease {
+  _AuthoringSelectionLease(this.ready, this._release);
 
   @override
   final Future<void> ready;
@@ -89,4 +70,29 @@ final class _AuthoringScopeLease implements AuthoringScopeLease {
     _released = true;
     _release();
   }
+}
+
+skir.GraphSelection authoringDefinitionSelection({
+  required String key,
+  required Iterable<ResourceDefinitionId> definitions,
+}) => skir.GraphSelection(
+  key: key,
+  seed: skir.ResourceSeed.createScan(
+    filter: skir.ResourceFilter(
+      definitions: definitions.map((definition) => definition.toWire()),
+      assignableTo: null,
+    ),
+  ),
+  steps: [],
+);
+
+extension AuthoringResourceSelection on skir.ResourceId {
+  skir.GraphSelection get resourceAuthoringSelection => skir.GraphSelection(
+    key: "resource:$value",
+    seed: skir.ResourceSeed.createIds(
+      values: [this],
+      requireAssignableTo: null,
+    ),
+    steps: const [],
+  );
 }

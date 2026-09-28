@@ -11,8 +11,8 @@ import "../../../../../../../support/test_utils.dart";
 
 void main() {
   testWidgets("points parent tag edges into their child", (tester) async {
-    final parentId = recordId("tag:parent");
-    final childId = recordId("tag:child");
+    final parentId = skir.ResourceId(value: "parent");
+    final childId = skir.ResourceId(value: "child");
     final tags = [
       _tag(TagIdentifier(parentId), "Parent", x: 0),
       _tag(TagIdentifier(childId), "Child", x: 0, y: 3, parentIds: [parentId]),
@@ -36,8 +36,8 @@ void main() {
   testWidgets("commits selected tag movement through complete updates", (
     tester,
   ) async {
-    final firstId = recordId("tag:first");
-    final secondId = recordId("tag:second");
+    final firstId = skir.ResourceId(value: "first");
+    final secondId = skir.ResourceId(value: "second");
     final tags = [
       _tag(TagIdentifier(firstId), "First Tag", x: 0),
       _tag(TagIdentifier(secondId), "Second Tag", x: 3),
@@ -89,14 +89,14 @@ Tag _tag(
   String name, {
   required int x,
   int y = 0,
-  List<skir.RecordId> parentIds = const [],
+  List<skir.ResourceId> parentIds = const [],
 }) {
   return Tag(
     tagId: identifier.tagId,
     name: name,
     color: Colors.blue,
     parentIds: parentIds,
-    placement: Placement(x: x, y: y, width: 2, height: 1),
+    placement: GraphPlacement(x: x, y: y, width: 2, height: 1),
   );
 }
 

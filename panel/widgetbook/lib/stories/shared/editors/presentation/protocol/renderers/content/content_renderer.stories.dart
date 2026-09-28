@@ -168,6 +168,30 @@ final contentRendererScenarios = [
       ),
     ),
   ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.richText,
+    name: "Rich text",
+    type: const UnitType(),
+    value: const UnitValue(),
+    presentation: storyNode(
+      "richText",
+      PresentationElement.richText(
+        style: PresentationTextStyle(
+          color: const Color(0xFF9CA3AF).asColorLiteral,
+        ),
+        runs: [
+          PresentationTextRun(text: "Quest status: ".asStringLiteral),
+          PresentationTextRun(
+            text: "ready".asStringLiteral,
+            style: PresentationTextStyle(
+              color: const Color(0xFF967BFA).asColorLiteral,
+              fontWeight: floatLiteral(650),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
 ];
 
 @widgetbook.UseCase(name: "Text", type: EditorProtocolRenderer, path: _path)
@@ -219,6 +243,14 @@ Widget relativeTimeRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[9]);
 
 @widgetbook.UseCase(
+  name: "Rich text",
+  type: EditorProtocolRenderer,
+  path: _path,
+)
+Widget richTextRendererUseCase(BuildContext context) =>
+    rendererStory(context, contentRendererScenarios[10]);
+
+@widgetbook.UseCase(
   name: "Status tones",
   type: EditorProtocolRenderer,
   path: _path,
@@ -254,16 +286,18 @@ final _statusTonesScenario = RendererStoryScenario(
       crossAxisAlignment: PresentationCrossAxisAlignment.start,
       children: [
         for (final tone in StatusTone.values)
-          storyNode(
-            "statusTones.${tone.name}",
-            PresentationElement.status(
-              value: tone.name.formatted.asStringLiteral,
-              cases: [
-                StatusCase(
-                  match: StringValue(tone.name.formatted),
-                  appearance: StatusAppearance(tone: tone),
-                ),
-              ],
+          PresentationAxisChild.fixed(
+            storyNode(
+              "statusTones.${tone.name}",
+              PresentationElement.status(
+                value: tone.name.formatted.asStringLiteral,
+                cases: [
+                  StatusCase(
+                    match: StringValue(tone.name.formatted),
+                    appearance: StatusAppearance(tone: tone),
+                  ),
+                ],
+              ),
             ),
           ),
       ],
@@ -287,12 +321,14 @@ final _dateFormatsScenario = RendererStoryScenario(
           "EEEE, MMMM d, y",
           "HH:mm 'UTC'",
         ].indexed)
-          storyNode(
-            "dateFormats.$index",
-            PresentationElement.dateTime(
-              value: _storyTimestamp(DateTime.utc(2026, 8, 22, 12, 30, 45)),
-              format: format.asStringLiteral,
-              timeZone: index == 2 ? DateTimeZone.utc : DateTimeZone.local,
+          PresentationAxisChild.fixed(
+            storyNode(
+              "dateFormats.$index",
+              PresentationElement.dateTime(
+                value: _storyTimestamp(DateTime.utc(2026, 8, 22, 12, 30, 45)),
+                format: format.asStringLiteral,
+                timeZone: index == 2 ? DateTimeZone.utc : DateTimeZone.local,
+              ),
             ),
           ),
       ],
@@ -311,21 +347,25 @@ final _relativeStylesScenario = RendererStoryScenario(
       spacing: 12,
       crossAxisAlignment: PresentationCrossAxisAlignment.start,
       children: [
-        storyNode(
-          "relativeStyles.compactPast",
-          PresentationElement.relativeTime(
-            value: _storyTimestamp(
-              DateTime.now().subtract(const Duration(minutes: 5)),
+        PresentationAxisChild.fixed(
+          storyNode(
+            "relativeStyles.compactPast",
+            PresentationElement.relativeTime(
+              value: _storyTimestamp(
+                DateTime.now().subtract(const Duration(minutes: 5)),
+              ),
             ),
           ),
         ),
-        storyNode(
-          "relativeStyles.naturalFuture",
-          PresentationElement.relativeTime(
-            value: _storyTimestamp(
-              DateTime.now().add(const Duration(hours: 2)),
+        PresentationAxisChild.fixed(
+          storyNode(
+            "relativeStyles.naturalFuture",
+            PresentationElement.relativeTime(
+              value: _storyTimestamp(
+                DateTime.now().add(const Duration(hours: 2)),
+              ),
+              style: RelativeTimeStyle.natural,
             ),
-            style: RelativeTimeStyle.natural,
           ),
         ),
       ],

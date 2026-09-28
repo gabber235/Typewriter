@@ -7,18 +7,22 @@ final class ReferenceResourceSummary {
     required this.exists,
     this.title,
     this.subtitle,
+    this.presentation,
+    this.diagnostics = const [],
   });
 
-  final RecordId id;
+  final ResourceId id;
   final bool exists;
   final String? title;
   final String? subtitle;
+  final PresentationModel? presentation;
+  final List<TypeDiagnostic> diagnostics;
 }
 
 /// Builds a scoped authoring source for one reference target type.
 typedef ReferenceSearchSourceBuilder = SearchSource Function({
   required ResolvedTypeRef target,
-  required List<RecordId> origins,
+  required List<ResourceId> origins,
   required TypeRegistry registry,
 });
 
@@ -26,13 +30,13 @@ typedef ReferenceSearchSourceBuilder = SearchSource Function({
 typedef ReferenceResourceResolver =
     Future<List<ReferenceResourceSummary>> Function({
       required ResolvedTypeRef target,
-      required List<RecordId> ids,
+      required List<ResourceId> ids,
       required TypeRegistry registry,
     });
 
 /// Shared payload contract for resource nodes dropped onto reference controls.
 abstract interface class ReferenceResourceDragData {
-  RecordId get referenceId;
+  ResourceId get referenceId;
   List<ResolvedTypeRef> get referenceTypes;
 }
 
@@ -52,8 +56,6 @@ extension ReferenceResourceDragPayload on Object {
 
 extension ReferenceResourceDragCompatibility on ReferenceResourceDragData {
   bool isAcceptedBy(ResolvedTypeRef target, TypeRegistry registry) {
-    final family = registry.referenceFamily(target).valueOrNull;
-    if (family == null || referenceId.table != family.table) return false;
     if (referenceTypes.isEmpty) return true;
     return referenceTypes.any(
       (type) =>

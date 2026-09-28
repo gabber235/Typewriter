@@ -39,19 +39,24 @@ abstract class PresentationCollectionRelationId
 /// Describes how a collection source exposes rows to presentation elements.
 ///
 /// [rowBindingId] is the binding installed while a row presentation is
-/// rendered. [key] derives the unique lookup key for that row. Relations derive
-/// zero, one, or many target keys from the same row and are selected by their
-/// [PresentationCollectionRelationId].
+/// rendered. [key] derives the unique lookup key and its type for that row.
+/// [selectability] decides whether the row may be selected for the current
+/// owner. Relations derive zero, one, or many target keys from the same row and
+/// are selected by their [PresentationCollectionRelationId].
 abstract class PresentationCollectionSchema
     with _$PresentationCollectionSchema {
   const factory PresentationCollectionSchema({
     required TypeExpression rowType,
-    required TypeExpression keyType,
     required BindingId rowBindingId,
     required TypedExpression key,
+    required TypedExpression selectability,
     @Default(<PresentationCollectionRelation>[])
     List<PresentationCollectionRelation> relations,
   }) = _PresentationCollectionSchema;
+
+  const PresentationCollectionSchema._();
+
+  TypeExpression get keyType => key.resultType;
 }
 
 @freezed

@@ -13,11 +13,17 @@ part of 'realm_editor_catalog_cache.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$RealmEditorCatalogState {
+mixin _$RealmEditorCatalogState implements DiagnosticableTreeMixin {
 
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'RealmEditorCatalogState'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -29,7 +35,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
     return 'RealmEditorCatalogState()';
 }
 
@@ -181,7 +187,7 @@ return unavailable(_that.diagnostics,_that.previous);case _:
 /// @nodoc
 
 
-class RealmEditorCatalogLoading extends RealmEditorCatalogState {
+class RealmEditorCatalogLoading extends RealmEditorCatalogState with DiagnosticableTreeMixin {
   const RealmEditorCatalogLoading([this.previous]): super._();
   
 
@@ -194,6 +200,12 @@ class RealmEditorCatalogLoading extends RealmEditorCatalogState {
 $RealmEditorCatalogLoadingCopyWith<RealmEditorCatalogLoading> get copyWith => _$RealmEditorCatalogLoadingCopyWithImpl<RealmEditorCatalogLoading>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'RealmEditorCatalogState.loading'))
+    ..add(DiagnosticsProperty('previous', previous));
+}
 
 @override
 bool operator ==(Object other) {
@@ -207,7 +219,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
     return 'RealmEditorCatalogState.loading(previous: $previous)';
 }
 
@@ -261,7 +273,7 @@ $RealmEditorCatalogSnapshotCopyWith<$Res>? get previous {
 /// @nodoc
 
 
-class RealmEditorCatalogReady extends RealmEditorCatalogState {
+class RealmEditorCatalogReady extends RealmEditorCatalogState with DiagnosticableTreeMixin {
   const RealmEditorCatalogReady(this.value): super._();
   
 
@@ -274,6 +286,12 @@ class RealmEditorCatalogReady extends RealmEditorCatalogState {
 $RealmEditorCatalogReadyCopyWith<RealmEditorCatalogReady> get copyWith => _$RealmEditorCatalogReadyCopyWithImpl<RealmEditorCatalogReady>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'RealmEditorCatalogState.ready'))
+    ..add(DiagnosticsProperty('value', value));
+}
 
 @override
 bool operator ==(Object other) {
@@ -287,7 +305,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
     return 'RealmEditorCatalogState.ready(value: $value)';
 }
 
@@ -338,7 +356,7 @@ $RealmEditorCatalogSnapshotCopyWith<$Res> get value {
 /// @nodoc
 
 
-class RealmEditorCatalogUnavailable extends RealmEditorCatalogState {
+class RealmEditorCatalogUnavailable extends RealmEditorCatalogState with DiagnosticableTreeMixin {
   const RealmEditorCatalogUnavailable( List<TypeDiagnostic> diagnostics, {this.previous}): _diagnostics = diagnostics,super._();
   
 
@@ -358,6 +376,12 @@ class RealmEditorCatalogUnavailable extends RealmEditorCatalogState {
 $RealmEditorCatalogUnavailableCopyWith<RealmEditorCatalogUnavailable> get copyWith => _$RealmEditorCatalogUnavailableCopyWithImpl<RealmEditorCatalogUnavailable>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'RealmEditorCatalogState.unavailable'))
+    ..add(DiagnosticsProperty('diagnostics', diagnostics))..add(DiagnosticsProperty('previous', previous));
+}
 
 @override
 bool operator ==(Object other) {
@@ -371,7 +395,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
     return 'RealmEditorCatalogState.unavailable(diagnostics: $diagnostics, previous: $previous)';
 }
 

@@ -18,8 +18,8 @@ dependencies {
     implementation(project(":file-transfer"))
     implementation(project(":file-transfer"))
     imprintHostApi(project(":loader-api"))
+    imprintPlatformApi(project(":typewriter-api"))
     implementation(project(":engine-api"))
-    implementation(project(":typewriter-api"))
     implementation(libs.surrealdb.java.sdk)
     implementation(libs.kotlin.serialize.json)
 

@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "scene.freezed.dart";
@@ -55,7 +57,7 @@ class CueIdentifier extends SelectableIdentifier {
   final String id;
 
   @override
-  Object get resourceId => recordId("element:$id");
+  Object get resourceId => skir.ResourceId(value: id);
 
   /// Resolves the current projected cue into an editable inspector selection.
   ///
@@ -108,18 +110,11 @@ class CueIdentifier extends SelectableIdentifier {
     return catalogState.resolveElement(
       resolvedCue.elementDefinition,
       (catalog, presentations) => CueSelection(
-        target: authoringElementTarget(
+        target: state.authoringResourceTarget(
           repository: repository,
-          state: state,
           identity: this,
-          pageId: pageId,
           label: resolvedCue.elementDefinition.name,
-          document: EditorDocument(
-            rootType: NamedType(resolvedCue.elementDefinition.rootType),
-            typeCatalog: catalog,
-            confirmedValue: resolvedCue.data,
-            revision: indexed.revision,
-          ),
+          typeCatalog: catalog,
         ),
         id: this,
         cue: resolvedCue,
@@ -185,7 +180,12 @@ class CueSelection extends EditableSelectable<CueIdentifier> {
 
   @override
   Widget? buildInspectorHeader(EditOwner owner) {
-    return CueHeader(id: id.id, name: name, color: cue.elementDefinition.color);
+    return CueHeader(
+      id: id.id,
+      name: name,
+      color: cue.elementDefinition.color,
+      rootType: rootType,
+    );
   }
 
   @override
@@ -203,12 +203,14 @@ class CueHeader extends StatelessWidget {
     required this.id,
     required this.name,
     required this.color,
+    required this.rootType,
     super.key,
   });
 
   final String id;
   final String name;
   final Color color;
+  final ResolvedTypeRef rootType;
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +227,10 @@ class CueHeader extends StatelessWidget {
               Text(id, style: textTheme.bodyMedium),
             ],
           ),
+        ),
+        RelationAddMenu(
+          host: skir.ResourceId(value: id),
+          rootType: rootType,
         ),
         CircleAvatar(backgroundColor: color, radius: 12),
       ],

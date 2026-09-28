@@ -67,7 +67,7 @@ class _SearchInputStoryState extends State<SearchInputStory> {
         });
       },
       executeAction: (_, _, _) {},
-      resolvePresentation: (_, _) => null,
+      resolvePresentation: (_, _, _) => const TypeResult.success(null),
       expansionStore: _expansionStore,
     );
     final binding = environment.inspect(searchStoryRootBinding).valueOrNull!;

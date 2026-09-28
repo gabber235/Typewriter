@@ -2,147 +2,158 @@ part of "../../simple_input_renderer.dart";
 
 extension ReferenceInputElementRendering on ReferenceInputElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
-    return BoundControlShell(
-      nominal: true,
-      control: control,
-      scope: scope,
-      shapeMismatch: (binding) =>
-          _ReferenceBindingShape.parse(binding.type) == null
-          ? "Reference input requires a reference, optional reference, or reference list binding"
-          : null,
-      builder: (context, field) {
-        final shape = _ReferenceBindingShape.parse(field.binding.type)!;
-        final sourceBuilder = scope.referenceSearchSourceBuilder;
-        if (sourceBuilder == null) {
-          return presentationDiagnostic(context, const [
-            TypeDiagnostic(
-              code: TypeDiagnosticCode.invalidPresentation,
-              message: "Reference search is unavailable",
+    return _ReferenceEligibilityBoundary(
+      evaluator: scope.referenceEligibility,
+      builder: (context, evaluateEligibility) => BoundControlShell(
+        nominal: true,
+        control: control,
+        scope: scope,
+        shapeMismatch: (binding) =>
+            _ReferenceBindingShape.parse(binding.type) == null
+            ? "Reference input requires a reference, optional reference, or reference list binding"
+            : null,
+        builder: (context, field) {
+          final shape = _ReferenceBindingShape.parse(field.binding.type)!;
+          final sourceBuilder = scope.referenceSearchSourceBuilder;
+          if (sourceBuilder == null) {
+            return presentationDiagnostic(context, const [
+              TypeDiagnostic(
+                code: TypeDiagnosticCode.invalidPresentation,
+                message: "Reference search is unavailable",
+              ),
+            ]);
+          }
+          final search = PresentationSearchInput(
+            element: _referenceSearchElement(control, multiple: shape.multiple),
+            binding: field.binding,
+            scope: scope,
+            maximumExtent: 320,
+            sourceBuilder: (ref, selections) => sourceBuilder(
+              target: shape.target,
+              origins: scope.referenceOrigins,
+              registry: scope.registry,
             ),
-          ]);
-        }
-        final search = PresentationSearchInput(
-          element: _referenceSearchElement(control, multiple: shape.multiple),
-          binding: field.binding,
-          scope: scope,
-          maximumExtent: 320,
-          sourceBuilder: (ref, selections) => sourceBuilder(
-            target: shape.target,
-            origins: scope.referenceOrigins,
-            registry: scope.registry,
-          ),
-          mapSelection: shape.wrapSelection,
-          selectionMatcher: shape.matches,
-          candidateEvaluator: (result) {
-            final payload = result.payload;
-            if (payload is! PresentationSearchResultPayload ||
-                payload.selectedValue is! ReferenceValue) {
-              return const SearchActivationState.hidden();
-            }
-            return _candidateActivation(
-              _evaluateReferenceCandidate(
+            mapSelection: shape.wrapSelection,
+            selectionMatcher: shape.matches,
+            candidateEvaluator: (result) {
+              final payload = result.payload;
+              if (payload is! PresentationSearchResultPayload ||
+                  payload.selectedValue is! ReferenceValue) {
+                return const SearchActivationState.hidden();
+              }
+              final evaluation = _referenceEligibilityEvaluation(
                 scope: scope,
                 binding: field.binding,
                 shape: shape,
-                policyId: candidatePolicy,
                 candidate: ReferenceCandidate(
                   id: (payload.selectedValue as ReferenceValue).id,
                 ),
-              ),
-            );
-          },
-          hideRejectedCandidates:
-              rejectionDisplay == ReferenceRejectionDisplay.hidden,
-          summaryBuilder: (context, current) => _ReferenceSummary(
-            target: shape.target,
-            ids: shape.ids(current),
-            resolver: scope.resolveReferences,
-            registry: scope.registry,
-            onRemoveAt: shape.multiple && field.editable
-                ? (index) {
-                    final current = field.value;
-                    if (current is! ListValue) return;
-                    final values = [...current.values]..removeAt(index);
-                    field.update(ListValue(values));
-                  }
-                : null,
-            onReorder: shape.multiple && allowReorder && field.editable
-                ? (oldIndex, newIndex) {
-                    final current = field.value;
-                    if (current is! ListValue) return;
-                    final values = [...current.values];
-                    values.insert(newIndex, values.removeAt(oldIndex));
-                    field.update(ListValue(values));
-                  }
-                : null,
-            onClear: shape.optional && field.editable
-                ? () => field.update(shape.emptyValue!)
-                : null,
-          ),
-        );
-        bool acceptsDrag(Object data) {
-          final resources = data.referenceResources;
-          if (!field.editable || resources.isEmpty) return false;
-          if (!shape.multiple && resources.length != 1) return false;
-          return resources.every(
-            (resource) =>
-                shape.accepts(resource, scope.registry) &&
-                _evaluateReferenceCandidate(
-                  scope: scope,
-                  binding: field.binding,
-                  shape: shape,
-                  policyId: candidatePolicy,
-                  candidate: ReferenceCandidate(
-                    id: resource.referenceId,
-                    types: resource.referenceTypes,
-                  ),
-                ) is ReferenceCandidateAllowed,
-          );
-        }
-
-        return DragTarget<Object>(
-          onWillAcceptWithDetails: (details) => acceptsDrag(details.data),
-          onAcceptWithDetails: (details) {
-            if (!acceptsDrag(details.data)) return;
-            final resources = details.data.referenceResources;
-            var next = shape.drop(
-              field.value,
-              ReferenceValue(resources.first.referenceId),
-            );
-            for (final resource in resources.skip(1)) {
-              next = shape.drop(next, ReferenceValue(resource.referenceId));
-            }
-            field.update(next);
-          },
-          builder: (context, accepted, rejected) => AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            decoration: BoxDecoration(
-              borderRadius: context.shapes.mediumBorderRadius,
-              border: accepted.isEmpty && rejected.isEmpty
-                  ? null
-                  : Border.all(
-                      color: accepted.isNotEmpty
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.error,
-                      width: 2,
-                    ),
+              );
+              final local = scope.referencePolicies.evaluate(
+                candidatePolicy,
+                evaluation.context,
+              );
+              return _candidateActivation(
+                evaluateEligibility(evaluation, local),
+              );
+            },
+            hideRejectedCandidates:
+                rejectionDisplay == ReferenceRejectionDisplay.hidden,
+            summaryBuilder: (context, current) => _ReferenceSummary(
+              target: shape.target,
+              ids: shape.ids(current),
+              resolver: scope.resolveReferences,
+              registry: scope.registry,
+              onRemoveAt: shape.multiple && field.editable
+                  ? (index) {
+                      final current = field.value;
+                      if (current is! ListValue) return;
+                      final values = [...current.values]..removeAt(index);
+                      field.update(ListValue(values));
+                    }
+                  : null,
+              onReorder: shape.multiple && allowReorder && field.editable
+                  ? (oldIndex, newIndex) {
+                      final current = field.value;
+                      if (current is! ListValue) return;
+                      final values = [...current.values];
+                      values.insert(newIndex, values.removeAt(oldIndex));
+                      field.update(ListValue(values));
+                    }
+                  : null,
+              onClear: shape.optional && field.editable
+                  ? () => field.update(shape.emptyValue!)
+                  : null,
             ),
-            child: search,
-          ),
-        );
-      },
+          );
+          bool acceptsDrag(Object data) {
+            final resources = data.referenceResources;
+            if (!field.editable || resources.isEmpty) return false;
+            if (!shape.multiple && resources.length != 1) return false;
+            return resources.every((resource) {
+              if (!shape.accepts(resource, scope.registry)) return false;
+              final evaluation = _referenceEligibilityEvaluation(
+                scope: scope,
+                binding: field.binding,
+                shape: shape,
+                candidate: ReferenceCandidate(
+                  id: resource.referenceId,
+                  types: resource.referenceTypes,
+                ),
+              );
+              final local = scope.referencePolicies.evaluate(
+                candidatePolicy,
+                evaluation.context,
+              );
+              return evaluateEligibility(evaluation, local)
+                  is ReferenceCandidateAllowed;
+            });
+          }
+
+          return DragTarget<Object>(
+            onWillAcceptWithDetails: (details) => acceptsDrag(details.data),
+            onAcceptWithDetails: (details) {
+              if (!acceptsDrag(details.data)) return;
+              final resources = details.data.referenceResources;
+              var next = shape.drop(
+                field.value,
+                ReferenceValue(resources.first.referenceId),
+              );
+              for (final resource in resources.skip(1)) {
+                next = shape.drop(next, ReferenceValue(resource.referenceId));
+              }
+              field.update(next);
+            },
+            builder: (context, accepted, rejected) => AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              decoration: BoxDecoration(
+                borderRadius: context.shapes.mediumBorderRadius,
+                border: accepted.isEmpty && rejected.isEmpty
+                    ? null
+                    : Border.all(
+                        color: accepted.isNotEmpty
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.error,
+                        width: 2,
+                      ),
+              ),
+              child: search,
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-ReferenceCandidateDecision _evaluateReferenceCandidate({
+ReferenceEligibilityEvaluation _referenceEligibilityEvaluation({
   required PresentationRenderScope scope,
   required InspectedBinding binding,
   required _ReferenceBindingShape shape,
-  required ReferencePolicyId? policyId,
   required ReferenceCandidate candidate,
 }) {
-  final current = shape.ids(binding.value.valueOrNull).toSet();
+  final currentValue = binding.value.valueOrNull;
+  final current = shape.ids(currentValue).toSet();
   final selected = current.contains(candidate.id);
   final transition = selected && (shape.multiple || shape.optional)
       ? ReferenceSelectionTransition.remove
@@ -150,16 +161,81 @@ ReferenceCandidateDecision _evaluateReferenceCandidate({
       ? ReferenceSelectionTransition.add
       : ReferenceSelectionTransition.replace;
   final reference = scope.canonical(binding.reference);
-  return scope.referencePolicies.evaluate(
-    policyId,
-    ReferenceCandidatePolicyContext(
+  final selectedValue = ReferenceValue(candidate.id);
+  final proposed =
+      transition == ReferenceSelectionTransition.remove && shape.optional
+      ? shape.emptyValue!
+      : shape.drop(currentValue, selectedValue);
+  EditorStructuralMutation? mutation;
+  if (shape.multiple && currentValue is ListValue && proposed is ListValue) {
+    final index = currentValue.values.indexOf(selectedValue);
+    mutation = transition == ReferenceSelectionTransition.remove
+        ? EditorRemoveListItems(reference.path, index, 1)
+        : EditorInsertListItems(reference.path, currentValue.values.length, [
+            selectedValue,
+          ]);
+  }
+  return ReferenceEligibilityEvaluation(
+    context: ReferenceCandidatePolicyContext(
       owner: scope.editOwnerFor?.call(reference),
       path: reference.path,
       transition: transition,
       currentSelection: current,
       candidate: candidate,
     ),
+    proposedValue: proposed,
+    structuralMutation: mutation,
   );
+}
+
+typedef _EligibilityBuilder = Widget Function(
+  BuildContext context,
+  ReferenceCandidateDecision Function(
+    ReferenceEligibilityEvaluation evaluation,
+    ReferenceCandidateDecision local,
+  )
+  evaluate,
+);
+
+class _ReferenceEligibilityBoundary extends StatefulWidget {
+  const _ReferenceEligibilityBoundary({
+    required this.evaluator,
+    required this.builder,
+  });
+
+  final ReferenceEligibilityEvaluator? evaluator;
+  final _EligibilityBuilder builder;
+
+  @override
+  State<_ReferenceEligibilityBoundary> createState() =>
+      _ReferenceEligibilityBoundaryState();
+}
+
+class _ReferenceEligibilityBoundaryState
+    extends State<_ReferenceEligibilityBoundary> {
+  late final controller = ReferenceEligibilityController(widget.evaluator);
+
+  @override
+  void didUpdateWidget(_ReferenceEligibilityBoundary oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    controller.updateEvaluator(widget.evaluator);
+  }
+
+  ReferenceCandidateDecision _evaluate(
+    ReferenceEligibilityEvaluation evaluation,
+    ReferenceCandidateDecision local,
+  ) {
+    return controller.evaluate(
+      evaluation,
+      local,
+      changed: () {
+        if (mounted) setState(() {});
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _evaluate);
 }
 
 SearchActivationState _candidateActivation(
@@ -214,7 +290,7 @@ final class _ReferenceBindingShape {
   final bool optional;
   final DataValue Function(DataValue) wrapSelection;
   final bool Function(EditorValue, DataValue) matches;
-  final List<RecordId> Function(DataValue?) ids;
+  final List<ResourceId> Function(DataValue?) ids;
   final DataValue? emptyValue;
 
   bool accepts(ReferenceResourceDragData data, TypeRegistry registry) {
@@ -318,7 +394,7 @@ class _ReferenceSummary extends HookWidget {
   });
 
   final ResolvedTypeRef target;
-  final List<RecordId> ids;
+  final List<ResourceId> ids;
   final ReferenceResourceResolver? resolver;
   final TypeRegistry registry;
   final ValueChanged<int>? onRemoveAt;
@@ -340,9 +416,7 @@ class _ReferenceSummary extends HookWidget {
                 ?.copyWith(color: context.colors.contentSecondary),
           )
         : resources == null
-        ? Text(
-            ids.length == 1 ? ids.single.toSurrealQl() : "${ids.length} items",
-          )
+        ? Text(ids.length == 1 ? ids.single.value : "${ids.length} items")
         : onReorder != null
         ? ReorderableListView.builder(
             shrinkWrap: true,
@@ -362,11 +436,7 @@ class _ReferenceSummary extends HookWidget {
                         size: 16,
                         color: Theme.of(context).colorScheme.error,
                       ),
-                title: Text(
-                  resource.exists
-                      ? resource.title ?? resource.id.toSurrealQl()
-                      : "Missing: ${resource.id.toSurrealQl()}",
-                ),
+                title: _ReferenceResourceBody(resource),
                 trailing: IconButton(
                   tooltip: "Remove reference",
                   onPressed: () => onRemoveAt?.call(index),
@@ -388,11 +458,7 @@ class _ReferenceSummary extends HookWidget {
                           size: 16,
                           color: Theme.of(context).colorScheme.error,
                         ),
-                  label: Text(
-                    resource.exists
-                        ? resource.title ?? resource.id.toSurrealQl()
-                        : "Missing: ${resource.id.toSurrealQl()}",
-                  ),
+                  label: _ReferenceResourceBody(resource),
                   onDeleted: onRemoveAt == null
                       ? null
                       : () => onRemoveAt!(resources.indexOf(resource)),
@@ -409,6 +475,27 @@ class _ReferenceSummary extends HookWidget {
             icon: const Icon(Icons.close_rounded),
           ),
       ],
+    );
+  }
+}
+
+class _ReferenceResourceBody extends StatelessWidget {
+  const _ReferenceResourceBody(this.resource);
+
+  final ReferenceResourceSummary resource;
+
+  @override
+  Widget build(BuildContext context) {
+    if (resource.presentation case final presentation?) {
+      return ComposedEditor(model: presentation, readOnly: true);
+    }
+    if (resource.diagnostics.isNotEmpty) {
+      return presentationDiagnostic(context, resource.diagnostics);
+    }
+    return Text(
+      resource.exists
+          ? resource.title ?? resource.id.value
+          : "Missing: ${resource.id.value}",
     );
   }
 }

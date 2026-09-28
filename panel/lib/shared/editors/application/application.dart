@@ -24,5 +24,6 @@ export "projected_edit_owner.dart";
 export "realm_presentation_search_source.dart";
 export "realm_presentation_search_transport.dart";
 export "reference_resources.dart";
+export "rendered_binding_focus_controller.dart";
 export "static_presentation_search_source.dart";
 export "transactional_editor_source.dart";

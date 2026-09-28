@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
@@ -43,32 +44,17 @@ final class RealmSearchSelector implements RealmSearchSelector_orMutable {
     required _core.String selectorId,
     required _core.String key,
     required _core.String? value,
-  }) => RealmSearchSelector._(
-    selectorId,
-    key,
-    value,
-  );
+  }) => RealmSearchSelector._(selectorId, key, value);
 
-  RealmSearchSelector._(
-    this.selectorId,
-    this.key,
-    this.value,
-  );
+  RealmSearchSelector._(this.selectorId, this.key, this.value);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = RealmSearchSelector._(
-    "",
-    "",
-    null,
-  );
+  static final defaultInstance = RealmSearchSelector._("", "", null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmSearchSelector_mutable mutable() => RealmSearchSelector_mutable._(
-    "",
-    "",
-    null,
-  );
+  static RealmSearchSelector_mutable mutable() =>
+      RealmSearchSelector_mutable._("", "", null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -76,33 +62,33 @@ final class RealmSearchSelector implements RealmSearchSelector_orMutable {
   RealmSearchSelector toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmSearchSelector_mutable toMutable() => RealmSearchSelector_mutable._(
-    this.selectorId,
-    this.key,
-    this.value,
-  );
+  RealmSearchSelector_mutable toMutable() =>
+      RealmSearchSelector_mutable._(this.selectorId, this.key, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmSearchSelector) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.selectorId,
-    this.key,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.selectorId, this.key, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmSearchSelector` instances.
-  static _skir.StructSerializer<RealmSearchSelector, RealmSearchSelector_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmSearchSelector,
+    RealmSearchSelector_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "selector_id",
@@ -126,9 +112,7 @@ final class RealmSearchSelector implements RealmSearchSelector_orMutable {
         "value",
         "value",
         2,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -150,17 +134,14 @@ final class RealmSearchSelector implements RealmSearchSelector_orMutable {
 }
 
 /// Mutable version of [RealmSearchSelector].
-final class RealmSearchSelector_mutable implements RealmSearchSelector_orMutable {
+final class RealmSearchSelector_mutable
+    implements RealmSearchSelector_orMutable {
   _core.String selectorId;
   _core.String key;
   _core.String? value;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmSearchSelector_mutable._(
-    this.selectorId,
-    this.key,
-    this.value,
-  );
+  RealmSearchSelector_mutable._(this.selectorId, this.key, this.value);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -188,7 +169,8 @@ final class RealmSearchSelector_mutable implements RealmSearchSelector_orMutable
 sealed class RealmSearchSelectorOperator {
   /// Constant indicating an unknown `RealmSearchSelectorOperator`.
   /// Default value for fields of type `RealmSearchSelectorOperator`.
-  static const RealmSearchSelectorOperator unknown = RealmSearchSelectorOperator_unknown._instance;
+  static const RealmSearchSelectorOperator unknown =
+      RealmSearchSelectorOperator_unknown._instance;
 
   static const and = _RealmSearchSelectorOperator_consts.andConst;
   static const or = _RealmSearchSelectorOperator_consts.orConst;
@@ -199,34 +181,23 @@ sealed class RealmSearchSelectorOperator {
   /// Serializer for `RealmSearchSelectorOperator` instances.
   static _skir.EnumSerializer<RealmSearchSelectorOperator> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "and",
-        "and",
-        "",
-        and,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "or",
-        "or",
-        "",
-        or,
-      );
+      _serializerBuilder.addConstantVariant(1, "and", "and", "", and);
+      _serializerBuilder.addConstantVariant(2, "or", "or", "", or);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/search.skir:RealmSearchSelectorOperator",
-    doc: "",
-    unknownInstance: RealmSearchSelectorOperator_unknown._instance,
-    enumInstance: RealmSearchSelectorOperator.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: RealmSearchSelectorOperator_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/search.skir:RealmSearchSelectorOperator",
+        doc: "",
+        unknownInstance: RealmSearchSelectorOperator_unknown._instance,
+        enumInstance: RealmSearchSelectorOperator.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RealmSearchSelectorOperator_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `RealmSearchSelectorOperator`.
@@ -240,7 +211,8 @@ enum RealmSearchSelectorOperator_kind {
   const RealmSearchSelectorOperator_kind(this._ordinal);
 }
 
-final class RealmSearchSelectorOperator_unknown implements RealmSearchSelectorOperator {
+final class RealmSearchSelectorOperator_unknown
+    implements RealmSearchSelectorOperator {
   static const _instance = RealmSearchSelectorOperator_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -249,16 +221,19 @@ final class RealmSearchSelectorOperator_unknown implements RealmSearchSelectorOp
   RealmSearchSelectorOperator_unknown._unrecognized(this._u);
 
   @_core.override
-  RealmSearchSelectorOperator_kind get kind => RealmSearchSelectorOperator_kind.unknown;
+  RealmSearchSelectorOperator_kind get kind =>
+      RealmSearchSelectorOperator_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is RealmSearchSelectorOperator_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmSearchSelectorOperator.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmSearchSelectorOperator.serializer);
 }
 
-enum _RealmSearchSelectorOperator_consts implements RealmSearchSelectorOperator {
+enum _RealmSearchSelectorOperator_consts
+    implements RealmSearchSelectorOperator {
   andConst(RealmSearchSelectorOperator_kind.andConst),
   orConst(RealmSearchSelectorOperator_kind.orConst);
 
@@ -268,7 +243,8 @@ enum _RealmSearchSelectorOperator_consts implements RealmSearchSelectorOperator 
   const _RealmSearchSelectorOperator_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmSearchSelectorOperator.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmSearchSelectorOperator.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -284,7 +260,8 @@ sealed class RealmSearchSelectorBinaryExpression_orMutable {
 }
 
 /// Deeply immutable.
-final class RealmSearchSelectorBinaryExpression implements RealmSearchSelectorBinaryExpression_orMutable {
+final class RealmSearchSelectorBinaryExpression
+    implements RealmSearchSelectorBinaryExpression_orMutable {
   @_core.override
   final RealmSearchSelectorOperator operator_;
   @_core.override
@@ -297,17 +274,9 @@ final class RealmSearchSelectorBinaryExpression implements RealmSearchSelectorBi
     required RealmSearchSelectorOperator operator_,
     required RealmSearchSelectorExpression left,
     required RealmSearchSelectorExpression right,
-  }) => RealmSearchSelectorBinaryExpression._(
-    operator_,
-    left,
-    right,
-  );
+  }) => RealmSearchSelectorBinaryExpression._(operator_, left, right);
 
-  RealmSearchSelectorBinaryExpression._(
-    this.operator_,
-    this.left,
-    this.right,
-  );
+  RealmSearchSelectorBinaryExpression._(this.operator_, this.left, this.right);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmSearchSelectorBinaryExpression._(
@@ -318,11 +287,12 @@ final class RealmSearchSelectorBinaryExpression implements RealmSearchSelectorBi
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmSearchSelectorBinaryExpression_mutable mutable() => RealmSearchSelectorBinaryExpression_mutable._(
-    RealmSearchSelectorOperator.unknown,
-    RealmSearchSelectorExpression.unknown,
-    RealmSearchSelectorExpression.unknown,
-  );
+  static RealmSearchSelectorBinaryExpression_mutable mutable() =>
+      RealmSearchSelectorBinaryExpression_mutable._(
+        RealmSearchSelectorOperator.unknown,
+        RealmSearchSelectorExpression.unknown,
+        RealmSearchSelectorExpression.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -330,33 +300,37 @@ final class RealmSearchSelectorBinaryExpression implements RealmSearchSelectorBi
   RealmSearchSelectorBinaryExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmSearchSelectorBinaryExpression_mutable toMutable() => RealmSearchSelectorBinaryExpression_mutable._(
-    this.operator_,
-    this.left,
-    this.right,
-  );
+  RealmSearchSelectorBinaryExpression_mutable toMutable() =>
+      RealmSearchSelectorBinaryExpression_mutable._(
+        this.operator_,
+        this.left,
+        this.right,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmSearchSelectorBinaryExpression) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.operator_,
-    this.left,
-    this.right,
-  ];
+  _core.List get _equality_proxy => [this.operator_, this.left, this.right];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmSearchSelectorBinaryExpression` instances.
-  static _skir.StructSerializer<RealmSearchSelectorBinaryExpression, RealmSearchSelectorBinaryExpression_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmSearchSelectorBinaryExpression,
+    RealmSearchSelectorBinaryExpression_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operator",
@@ -402,7 +376,8 @@ final class RealmSearchSelectorBinaryExpression implements RealmSearchSelectorBi
 }
 
 /// Mutable version of [RealmSearchSelectorBinaryExpression].
-final class RealmSearchSelectorBinaryExpression_mutable implements RealmSearchSelectorBinaryExpression_orMutable {
+final class RealmSearchSelectorBinaryExpression_mutable
+    implements RealmSearchSelectorBinaryExpression_orMutable {
   RealmSearchSelectorOperator operator_;
   RealmSearchSelectorExpression left;
   RealmSearchSelectorExpression right;
@@ -416,11 +391,12 @@ final class RealmSearchSelectorBinaryExpression_mutable implements RealmSearchSe
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmSearchSelectorBinaryExpression toFrozen() => RealmSearchSelectorBinaryExpression(
-    operator_: this.operator_,
-    left: this.left,
-    right: this.right,
-  ).._u = this._u;
+  RealmSearchSelectorBinaryExpression toFrozen() =>
+      RealmSearchSelectorBinaryExpression(
+        operator_: this.operator_,
+        left: this.left,
+        right: this.right,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -434,20 +410,17 @@ sealed class RealmSearchSelectorNotExpression_orMutable {
 }
 
 /// Deeply immutable.
-final class RealmSearchSelectorNotExpression implements RealmSearchSelectorNotExpression_orMutable {
+final class RealmSearchSelectorNotExpression
+    implements RealmSearchSelectorNotExpression_orMutable {
   @_core.override
   final RealmSearchSelectorExpression expression;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RealmSearchSelectorNotExpression({
     required RealmSearchSelectorExpression expression,
-  }) => RealmSearchSelectorNotExpression._(
-    expression,
-  );
+  }) => RealmSearchSelectorNotExpression._(expression);
 
-  RealmSearchSelectorNotExpression._(
-    this.expression,
-  );
+  RealmSearchSelectorNotExpression._(this.expression);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmSearchSelectorNotExpression._(
@@ -456,9 +429,10 @@ final class RealmSearchSelectorNotExpression implements RealmSearchSelectorNotEx
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmSearchSelectorNotExpression_mutable mutable() => RealmSearchSelectorNotExpression_mutable._(
-    RealmSearchSelectorExpression.unknown,
-  );
+  static RealmSearchSelectorNotExpression_mutable mutable() =>
+      RealmSearchSelectorNotExpression_mutable._(
+        RealmSearchSelectorExpression.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -466,29 +440,33 @@ final class RealmSearchSelectorNotExpression implements RealmSearchSelectorNotEx
   RealmSearchSelectorNotExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmSearchSelectorNotExpression_mutable toMutable() => RealmSearchSelectorNotExpression_mutable._(
-    this.expression,
-  );
+  RealmSearchSelectorNotExpression_mutable toMutable() =>
+      RealmSearchSelectorNotExpression_mutable._(this.expression);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmSearchSelectorNotExpression) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.expression,
-  ];
+  _core.List get _equality_proxy => [this.expression];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmSearchSelectorNotExpression` instances.
-  static _skir.StructSerializer<RealmSearchSelectorNotExpression, RealmSearchSelectorNotExpression_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmSearchSelectorNotExpression,
+    RealmSearchSelectorNotExpression_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expression",
@@ -516,19 +494,18 @@ final class RealmSearchSelectorNotExpression implements RealmSearchSelectorNotEx
 }
 
 /// Mutable version of [RealmSearchSelectorNotExpression].
-final class RealmSearchSelectorNotExpression_mutable implements RealmSearchSelectorNotExpression_orMutable {
+final class RealmSearchSelectorNotExpression_mutable
+    implements RealmSearchSelectorNotExpression_orMutable {
   RealmSearchSelectorExpression expression;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmSearchSelectorNotExpression_mutable._(
-    this.expression,
-  );
+  RealmSearchSelectorNotExpression_mutable._(this.expression);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmSearchSelectorNotExpression toFrozen() => RealmSearchSelectorNotExpression(
-    expression: this.expression,
-  ).._u = this._u;
+  RealmSearchSelectorNotExpression toFrozen() =>
+      RealmSearchSelectorNotExpression(expression: this.expression)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -549,11 +526,12 @@ final class RealmSearchSelectorNotExpression_mutable implements RealmSearchSelec
 sealed class RealmSearchSelectorExpression {
   /// Constant indicating an unknown `RealmSearchSelectorExpression`.
   /// Default value for fields of type `RealmSearchSelectorExpression`.
-  static const RealmSearchSelectorExpression unknown = RealmSearchSelectorExpression_unknown._instance;
+  static const RealmSearchSelectorExpression unknown =
+      RealmSearchSelectorExpression_unknown._instance;
 
   /// Create a 'selector' variant wrapping around the given value.
   factory RealmSearchSelectorExpression.wrapSelector(
-    RealmSearchSelector value
+    RealmSearchSelector value,
   ) => RealmSearchSelectorExpression_selectorWrapper._(value);
 
   /// Same as `wrapSelector(RealmSearchSelector(...))`.
@@ -562,16 +540,12 @@ sealed class RealmSearchSelectorExpression {
     required _core.String key,
     required _core.String? value,
   }) => RealmSearchSelectorExpression.wrapSelector(
-    RealmSearchSelector(
-      selectorId: selectorId,
-      key: key,
-      value: value,
-    )
+    RealmSearchSelector(selectorId: selectorId, key: key, value: value),
   );
 
   /// Create a 'binary' variant wrapping around the given value.
   factory RealmSearchSelectorExpression.wrapBinary(
-    RealmSearchSelectorBinaryExpression value
+    RealmSearchSelectorBinaryExpression value,
   ) => RealmSearchSelectorExpression_binaryWrapper._(value);
 
   /// Same as `wrapBinary(RealmSearchSelectorBinaryExpression(...))`.
@@ -584,21 +558,19 @@ sealed class RealmSearchSelectorExpression {
       operator_: operator_,
       left: left,
       right: right,
-    )
+    ),
   );
 
   /// Create a 'not' variant wrapping around the given value.
   factory RealmSearchSelectorExpression.wrapNot(
-    RealmSearchSelectorNotExpression value
+    RealmSearchSelectorNotExpression value,
   ) => RealmSearchSelectorExpression_notWrapper._(value);
 
   /// Same as `wrapNot(RealmSearchSelectorNotExpression(...))`.
   factory RealmSearchSelectorExpression.createNot({
     required RealmSearchSelectorExpression expression,
   }) => RealmSearchSelectorExpression.wrapNot(
-    RealmSearchSelectorNotExpression(
-      expression: expression,
-    )
+    RealmSearchSelectorNotExpression(expression: expression),
   );
 
   /// Returns the kind of variant held by this RealmSearchSelectorExpression.
@@ -642,15 +614,16 @@ sealed class RealmSearchSelectorExpression {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/search.skir:RealmSearchSelectorExpression",
-    doc: "",
-    unknownInstance: RealmSearchSelectorExpression_unknown._instance,
-    enumInstance: RealmSearchSelectorExpression.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: RealmSearchSelectorExpression_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/search.skir:RealmSearchSelectorExpression",
+        doc: "",
+        unknownInstance: RealmSearchSelectorExpression_unknown._instance,
+        enumInstance: RealmSearchSelectorExpression.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RealmSearchSelectorExpression_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `RealmSearchSelectorExpression`.
@@ -665,7 +638,8 @@ enum RealmSearchSelectorExpression_kind {
   const RealmSearchSelectorExpression_kind(this._ordinal);
 }
 
-final class RealmSearchSelectorExpression_unknown implements RealmSearchSelectorExpression {
+final class RealmSearchSelectorExpression_unknown
+    implements RealmSearchSelectorExpression {
   static const _instance = RealmSearchSelectorExpression_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -674,16 +648,20 @@ final class RealmSearchSelectorExpression_unknown implements RealmSearchSelector
   RealmSearchSelectorExpression_unknown._unrecognized(this._u);
 
   @_core.override
-  RealmSearchSelectorExpression_kind get kind => RealmSearchSelectorExpression_kind.unknown;
+  RealmSearchSelectorExpression_kind get kind =>
+      RealmSearchSelectorExpression_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is RealmSearchSelectorExpression_unknown;
+  _core.bool operator ==(other) =>
+      other is RealmSearchSelectorExpression_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmSearchSelectorExpression.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmSearchSelectorExpression.serializer);
 }
 
-sealed class _RealmSearchSelectorExpression_wrapper implements RealmSearchSelectorExpression {
+sealed class _RealmSearchSelectorExpression_wrapper
+    implements RealmSearchSelectorExpression {
   _core.dynamic get value;
 
   @_core.override
@@ -696,34 +674,41 @@ sealed class _RealmSearchSelectorExpression_wrapper implements RealmSearchSelect
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmSearchSelectorExpression.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmSearchSelectorExpression.serializer);
 }
 
-final class RealmSearchSelectorExpression_selectorWrapper extends _RealmSearchSelectorExpression_wrapper {
+final class RealmSearchSelectorExpression_selectorWrapper
+    extends _RealmSearchSelectorExpression_wrapper {
   final RealmSearchSelector value;
 
   RealmSearchSelectorExpression_selectorWrapper._(this.value);
 
   @_core.override
-  RealmSearchSelectorExpression_kind get kind => RealmSearchSelectorExpression_kind.selectorWrapper;
+  RealmSearchSelectorExpression_kind get kind =>
+      RealmSearchSelectorExpression_kind.selectorWrapper;
 }
 
-final class RealmSearchSelectorExpression_binaryWrapper extends _RealmSearchSelectorExpression_wrapper {
+final class RealmSearchSelectorExpression_binaryWrapper
+    extends _RealmSearchSelectorExpression_wrapper {
   final RealmSearchSelectorBinaryExpression value;
 
   RealmSearchSelectorExpression_binaryWrapper._(this.value);
 
   @_core.override
-  RealmSearchSelectorExpression_kind get kind => RealmSearchSelectorExpression_kind.binaryWrapper;
+  RealmSearchSelectorExpression_kind get kind =>
+      RealmSearchSelectorExpression_kind.binaryWrapper;
 }
 
-final class RealmSearchSelectorExpression_notWrapper extends _RealmSearchSelectorExpression_wrapper {
+final class RealmSearchSelectorExpression_notWrapper
+    extends _RealmSearchSelectorExpression_wrapper {
   final RealmSearchSelectorNotExpression value;
 
   RealmSearchSelectorExpression_notWrapper._(this.value);
 
   @_core.override
-  RealmSearchSelectorExpression_kind get kind => RealmSearchSelectorExpression_kind.notWrapper;
+  RealmSearchSelectorExpression_kind get kind =>
+      RealmSearchSelectorExpression_kind.notWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -804,7 +789,10 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmSearchQuery) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -821,7 +809,8 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmSearchQuery` instances.
-  static _skir.StructSerializer<RealmSearchQuery, RealmSearchQuery_mutable> get serializer {
+  static _skir.StructSerializer<RealmSearchQuery, RealmSearchQuery_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "normalized_query",
@@ -836,9 +825,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
         "selectors",
         "selectors",
         1,
-        _skir.Serializers.iterable(
-          RealmSearchSelector.serializer,
-        ),
+        _skir.Serializers.iterable(RealmSearchSelector.serializer),
         "",
         (it) => it.selectors,
         (it, v) => it.selectors = v,
@@ -847,9 +834,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
         "selector_expression",
         "selectorExpression",
         2,
-        _skir.Serializers.optional(
-          RealmSearchSelectorExpression.serializer,
-        ),
+        _skir.Serializers.optional(RealmSearchSelectorExpression.serializer),
         "",
         (it) => it.selectorExpression,
         (it, v) => it.selectorExpression = v,
@@ -858,9 +843,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
         "terms",
         "terms",
         3,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.iterable(_skir.Serializers.string),
         "",
         (it) => it.terms,
         (it, v) => it.terms = v,
@@ -944,7 +927,8 @@ sealed class RealmPresentationSearchRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class RealmPresentationSearchRequest implements RealmPresentationSearchRequest_orMutable {
+final class RealmPresentationSearchRequest
+    implements RealmPresentationSearchRequest_orMutable {
   @_core.override
   final _core.String subscriptionId;
   @_core.override
@@ -996,14 +980,15 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmPresentationSearchRequest_mutable mutable() => RealmPresentationSearchRequest_mutable._(
-    "",
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-    RealmSearchQuery.defaultInstance,
-  );
+  static RealmPresentationSearchRequest_mutable mutable() =>
+      RealmPresentationSearchRequest_mutable._(
+        "",
+        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_type_catalog.TypedValue.unknown,
+        _lib_editor_v1_type_catalog.TypeExpression.unknown,
+        RealmSearchQuery.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1011,20 +996,24 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   RealmPresentationSearchRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmPresentationSearchRequest_mutable toMutable() => RealmPresentationSearchRequest_mutable._(
-    this.subscriptionId,
-    this.generation,
-    this.capabilityId,
-    this.payload,
-    this.resultType,
-    this.query,
-  );
+  RealmPresentationSearchRequest_mutable toMutable() =>
+      RealmPresentationSearchRequest_mutable._(
+        this.subscriptionId,
+        this.generation,
+        this.capabilityId,
+        this.payload,
+        this.resultType,
+        this.query,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmPresentationSearchRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1043,7 +1032,11 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmPresentationSearchRequest` instances.
-  static _skir.StructSerializer<RealmPresentationSearchRequest, RealmPresentationSearchRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmPresentationSearchRequest,
+    RealmPresentationSearchRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "subscription_id",
@@ -1116,7 +1109,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
 }
 
 /// Mutable version of [RealmPresentationSearchRequest].
-final class RealmPresentationSearchRequest_mutable implements RealmPresentationSearchRequest_orMutable {
+final class RealmPresentationSearchRequest_mutable
+    implements RealmPresentationSearchRequest_orMutable {
   _core.String subscriptionId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
@@ -1141,7 +1135,8 @@ final class RealmPresentationSearchRequest_mutable implements RealmPresentationS
     if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+      return this.generation =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -1152,7 +1147,8 @@ final class RealmPresentationSearchRequest_mutable implements RealmPresentationS
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -1197,7 +1193,8 @@ final class RealmPresentationSearchRequest_mutable implements RealmPresentationS
 sealed class RealmPresentationSearchStatus {
   /// Constant indicating an unknown `RealmPresentationSearchStatus`.
   /// Default value for fields of type `RealmPresentationSearchStatus`.
-  static const RealmPresentationSearchStatus unknown = RealmPresentationSearchStatus_unknown._instance;
+  static const RealmPresentationSearchStatus unknown =
+      RealmPresentationSearchStatus_unknown._instance;
 
   static const loading = _RealmPresentationSearchStatus_consts.loadingConst;
   static const ready = _RealmPresentationSearchStatus_consts.readyConst;
@@ -1216,34 +1213,23 @@ sealed class RealmPresentationSearchStatus {
         "",
         loading,
       );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "ready",
-        "ready",
-        "",
-        ready,
-      );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "error",
-        "error",
-        "",
-        error,
-      );
+      _serializerBuilder.addConstantVariant(2, "ready", "ready", "", ready);
+      _serializerBuilder.addConstantVariant(3, "error", "error", "", error);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/search.skir:RealmPresentationSearchStatus",
-    doc: "",
-    unknownInstance: RealmPresentationSearchStatus_unknown._instance,
-    enumInstance: RealmPresentationSearchStatus.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: RealmPresentationSearchStatus_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/search.skir:RealmPresentationSearchStatus",
+        doc: "",
+        unknownInstance: RealmPresentationSearchStatus_unknown._instance,
+        enumInstance: RealmPresentationSearchStatus.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RealmPresentationSearchStatus_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `RealmPresentationSearchStatus`.
@@ -1258,7 +1244,8 @@ enum RealmPresentationSearchStatus_kind {
   const RealmPresentationSearchStatus_kind(this._ordinal);
 }
 
-final class RealmPresentationSearchStatus_unknown implements RealmPresentationSearchStatus {
+final class RealmPresentationSearchStatus_unknown
+    implements RealmPresentationSearchStatus {
   static const _instance = RealmPresentationSearchStatus_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -1267,16 +1254,20 @@ final class RealmPresentationSearchStatus_unknown implements RealmPresentationSe
   RealmPresentationSearchStatus_unknown._unrecognized(this._u);
 
   @_core.override
-  RealmPresentationSearchStatus_kind get kind => RealmPresentationSearchStatus_kind.unknown;
+  RealmPresentationSearchStatus_kind get kind =>
+      RealmPresentationSearchStatus_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is RealmPresentationSearchStatus_unknown;
+  _core.bool operator ==(other) =>
+      other is RealmPresentationSearchStatus_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmPresentationSearchStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmPresentationSearchStatus.serializer);
 }
 
-enum _RealmPresentationSearchStatus_consts implements RealmPresentationSearchStatus {
+enum _RealmPresentationSearchStatus_consts
+    implements RealmPresentationSearchStatus {
   loadingConst(RealmPresentationSearchStatus_kind.loadingConst),
   readyConst(RealmPresentationSearchStatus_kind.readyConst),
   errorConst(RealmPresentationSearchStatus_kind.errorConst);
@@ -1287,7 +1278,8 @@ enum _RealmPresentationSearchStatus_consts implements RealmPresentationSearchSta
   const _RealmPresentationSearchStatus_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmPresentationSearchStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmPresentationSearchStatus.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -1299,13 +1291,15 @@ sealed class RealmPresentationSearchSnapshot_orMutable {
   RealmPresentationSearchStatus get status;
   _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> get values;
   _core.Iterable<_core.String> get guidance;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+  get diagnostics;
 
   RealmPresentationSearchSnapshot toFrozen();
 }
 
 /// Deeply immutable.
-final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSnapshot_orMutable {
+final class RealmPresentationSearchSnapshot
+    implements RealmPresentationSearchSnapshot_orMutable {
   @_core.override
   final _core.String subscriptionId;
   @_core.override
@@ -1323,7 +1317,8 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
     required RealmPresentationSearchStatus status,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values,
     required _core.Iterable<_core.String> guidance,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+    diagnostics,
   }) => RealmPresentationSearchSnapshot._(
     subscriptionId,
     status,
@@ -1351,13 +1346,14 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmPresentationSearchSnapshot_mutable mutable() => RealmPresentationSearchSnapshot_mutable._(
-    "",
-    RealmPresentationSearchStatus.unknown,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
+  static RealmPresentationSearchSnapshot_mutable mutable() =>
+      RealmPresentationSearchSnapshot_mutable._(
+        "",
+        RealmPresentationSearchStatus.unknown,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1365,19 +1361,23 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
   RealmPresentationSearchSnapshot toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmPresentationSearchSnapshot_mutable toMutable() => RealmPresentationSearchSnapshot_mutable._(
-    this.subscriptionId,
-    this.status,
-    this.values,
-    this.guidance,
-    this.diagnostics,
-  );
+  RealmPresentationSearchSnapshot_mutable toMutable() =>
+      RealmPresentationSearchSnapshot_mutable._(
+        this.subscriptionId,
+        this.status,
+        this.values,
+        this.guidance,
+        this.diagnostics,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmPresentationSearchSnapshot) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1395,7 +1395,11 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmPresentationSearchSnapshot` instances.
-  static _skir.StructSerializer<RealmPresentationSearchSnapshot, RealmPresentationSearchSnapshot_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmPresentationSearchSnapshot,
+    RealmPresentationSearchSnapshot_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "subscription_id",
@@ -1430,9 +1434,7 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
         "guidance",
         "guidance",
         3,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.iterable(_skir.Serializers.string),
         "",
         (it) => it.guidance,
         (it, v) => it.guidance = v,
@@ -1465,12 +1467,14 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
 }
 
 /// Mutable version of [RealmPresentationSearchSnapshot].
-final class RealmPresentationSearchSnapshot_mutable implements RealmPresentationSearchSnapshot_orMutable {
+final class RealmPresentationSearchSnapshot_mutable
+    implements RealmPresentationSearchSnapshot_orMutable {
   _core.String subscriptionId;
   RealmPresentationSearchStatus status;
   _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values;
   _core.Iterable<_core.String> guidance;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+  diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   RealmPresentationSearchSnapshot_mutable._(
@@ -1485,7 +1489,10 @@ final class RealmPresentationSearchSnapshot_mutable implements RealmPresentation
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypedValue> get mutableValues {
     final value = this.values;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypedValue>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.TypedValue
+        >) {
       return value;
     } else {
       return this.values = _skir.internal__MutableList([...value]);
@@ -1505,9 +1512,13 @@ final class RealmPresentationSearchSnapshot_mutable implements RealmPresentation
 
   /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get mutableDiagnostics {
+  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+  get mutableDiagnostics {
     final value = this.diagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.TypeDiagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.diagnostics = _skir.internal__MutableList([...value]);
@@ -1531,13 +1542,15 @@ final class RealmPresentationSearchSnapshot_mutable implements RealmPresentation
 
 sealed class RealmPresentationSearchUnavailable_orMutable {
   _core.String get subscriptionId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+  get diagnostics;
 
   RealmPresentationSearchUnavailable toFrozen();
 }
 
 /// Deeply immutable.
-final class RealmPresentationSearchUnavailable implements RealmPresentationSearchUnavailable_orMutable {
+final class RealmPresentationSearchUnavailable
+    implements RealmPresentationSearchUnavailable_orMutable {
   @_core.override
   final _core.String subscriptionId;
   @_core.override
@@ -1546,16 +1559,14 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
 
   factory RealmPresentationSearchUnavailable({
     required _core.String subscriptionId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+    diagnostics,
   }) => RealmPresentationSearchUnavailable._(
     subscriptionId,
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
   );
 
-  RealmPresentationSearchUnavailable._(
-    this.subscriptionId,
-    this.diagnostics,
-  );
+  RealmPresentationSearchUnavailable._(this.subscriptionId, this.diagnostics);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmPresentationSearchUnavailable._(
@@ -1565,10 +1576,11 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmPresentationSearchUnavailable_mutable mutable() => RealmPresentationSearchUnavailable_mutable._(
-    "",
-    _skir.KeyedIterable.empty,
-  );
+  static RealmPresentationSearchUnavailable_mutable mutable() =>
+      RealmPresentationSearchUnavailable_mutable._(
+        "",
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1576,31 +1588,36 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
   RealmPresentationSearchUnavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmPresentationSearchUnavailable_mutable toMutable() => RealmPresentationSearchUnavailable_mutable._(
-    this.subscriptionId,
-    this.diagnostics,
-  );
+  RealmPresentationSearchUnavailable_mutable toMutable() =>
+      RealmPresentationSearchUnavailable_mutable._(
+        this.subscriptionId,
+        this.diagnostics,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmPresentationSearchUnavailable) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.subscriptionId,
-    this.diagnostics,
-  ];
+  _core.List get _equality_proxy => [this.subscriptionId, this.diagnostics];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmPresentationSearchUnavailable` instances.
-  static _skir.StructSerializer<RealmPresentationSearchUnavailable, RealmPresentationSearchUnavailable_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmPresentationSearchUnavailable,
+    RealmPresentationSearchUnavailable_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "subscription_id",
@@ -1639,9 +1656,11 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
 }
 
 /// Mutable version of [RealmPresentationSearchUnavailable].
-final class RealmPresentationSearchUnavailable_mutable implements RealmPresentationSearchUnavailable_orMutable {
+final class RealmPresentationSearchUnavailable_mutable
+    implements RealmPresentationSearchUnavailable_orMutable {
   _core.String subscriptionId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+  diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   RealmPresentationSearchUnavailable_mutable._(
@@ -1651,9 +1670,13 @@ final class RealmPresentationSearchUnavailable_mutable implements RealmPresentat
 
   /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get mutableDiagnostics {
+  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+  get mutableDiagnostics {
     final value = this.diagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.TypeDiagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.diagnostics = _skir.internal__MutableList([...value]);
@@ -1662,10 +1685,11 @@ final class RealmPresentationSearchUnavailable_mutable implements RealmPresentat
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmPresentationSearchUnavailable toFrozen() => RealmPresentationSearchUnavailable(
-    subscriptionId: this.subscriptionId,
-    diagnostics: this.diagnostics,
-  ).._u = this._u;
+  RealmPresentationSearchUnavailable toFrozen() =>
+      RealmPresentationSearchUnavailable(
+        subscriptionId: this.subscriptionId,
+        diagnostics: this.diagnostics,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1685,11 +1709,12 @@ final class RealmPresentationSearchUnavailable_mutable implements RealmPresentat
 sealed class RealmPresentationSearchUpdate {
   /// Constant indicating an unknown `RealmPresentationSearchUpdate`.
   /// Default value for fields of type `RealmPresentationSearchUpdate`.
-  static const RealmPresentationSearchUpdate unknown = RealmPresentationSearchUpdate_unknown._instance;
+  static const RealmPresentationSearchUpdate unknown =
+      RealmPresentationSearchUpdate_unknown._instance;
 
   /// Create a 'snapshot' variant wrapping around the given value.
   factory RealmPresentationSearchUpdate.wrapSnapshot(
-    RealmPresentationSearchSnapshot value
+    RealmPresentationSearchSnapshot value,
   ) => RealmPresentationSearchUpdate_snapshotWrapper._(value);
 
   /// Same as `wrapSnapshot(RealmPresentationSearchSnapshot(...))`.
@@ -1698,7 +1723,8 @@ sealed class RealmPresentationSearchUpdate {
     required RealmPresentationSearchStatus status,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values,
     required _core.Iterable<_core.String> guidance,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+    diagnostics,
   }) => RealmPresentationSearchUpdate.wrapSnapshot(
     RealmPresentationSearchSnapshot(
       subscriptionId: subscriptionId,
@@ -1706,23 +1732,24 @@ sealed class RealmPresentationSearchUpdate {
       values: values,
       guidance: guidance,
       diagnostics: diagnostics,
-    )
+    ),
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory RealmPresentationSearchUpdate.wrapUnavailable(
-    RealmPresentationSearchUnavailable value
+    RealmPresentationSearchUnavailable value,
   ) => RealmPresentationSearchUpdate_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(RealmPresentationSearchUnavailable(...))`.
   factory RealmPresentationSearchUpdate.createUnavailable({
     required _core.String subscriptionId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>
+    diagnostics,
   }) => RealmPresentationSearchUpdate.wrapUnavailable(
     RealmPresentationSearchUnavailable(
       subscriptionId: subscriptionId,
       diagnostics: diagnostics,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this RealmPresentationSearchUpdate.
@@ -1756,15 +1783,16 @@ sealed class RealmPresentationSearchUpdate {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/search.skir:RealmPresentationSearchUpdate",
-    doc: "",
-    unknownInstance: RealmPresentationSearchUpdate_unknown._instance,
-    enumInstance: RealmPresentationSearchUpdate.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: RealmPresentationSearchUpdate_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/search.skir:RealmPresentationSearchUpdate",
+        doc: "",
+        unknownInstance: RealmPresentationSearchUpdate_unknown._instance,
+        enumInstance: RealmPresentationSearchUpdate.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RealmPresentationSearchUpdate_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `RealmPresentationSearchUpdate`.
@@ -1778,7 +1806,8 @@ enum RealmPresentationSearchUpdate_kind {
   const RealmPresentationSearchUpdate_kind(this._ordinal);
 }
 
-final class RealmPresentationSearchUpdate_unknown implements RealmPresentationSearchUpdate {
+final class RealmPresentationSearchUpdate_unknown
+    implements RealmPresentationSearchUpdate {
   static const _instance = RealmPresentationSearchUpdate_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -1787,16 +1816,20 @@ final class RealmPresentationSearchUpdate_unknown implements RealmPresentationSe
   RealmPresentationSearchUpdate_unknown._unrecognized(this._u);
 
   @_core.override
-  RealmPresentationSearchUpdate_kind get kind => RealmPresentationSearchUpdate_kind.unknown;
+  RealmPresentationSearchUpdate_kind get kind =>
+      RealmPresentationSearchUpdate_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is RealmPresentationSearchUpdate_unknown;
+  _core.bool operator ==(other) =>
+      other is RealmPresentationSearchUpdate_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmPresentationSearchUpdate.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmPresentationSearchUpdate.serializer);
 }
 
-sealed class _RealmPresentationSearchUpdate_wrapper implements RealmPresentationSearchUpdate {
+sealed class _RealmPresentationSearchUpdate_wrapper
+    implements RealmPresentationSearchUpdate {
   _core.dynamic get value;
 
   @_core.override
@@ -1809,25 +1842,30 @@ sealed class _RealmPresentationSearchUpdate_wrapper implements RealmPresentation
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmPresentationSearchUpdate.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmPresentationSearchUpdate.serializer);
 }
 
-final class RealmPresentationSearchUpdate_snapshotWrapper extends _RealmPresentationSearchUpdate_wrapper {
+final class RealmPresentationSearchUpdate_snapshotWrapper
+    extends _RealmPresentationSearchUpdate_wrapper {
   final RealmPresentationSearchSnapshot value;
 
   RealmPresentationSearchUpdate_snapshotWrapper._(this.value);
 
   @_core.override
-  RealmPresentationSearchUpdate_kind get kind => RealmPresentationSearchUpdate_kind.snapshotWrapper;
+  RealmPresentationSearchUpdate_kind get kind =>
+      RealmPresentationSearchUpdate_kind.snapshotWrapper;
 }
 
-final class RealmPresentationSearchUpdate_unavailableWrapper extends _RealmPresentationSearchUpdate_wrapper {
+final class RealmPresentationSearchUpdate_unavailableWrapper
+    extends _RealmPresentationSearchUpdate_wrapper {
   final RealmPresentationSearchUnavailable value;
 
   RealmPresentationSearchUpdate_unavailableWrapper._(this.value);
 
   @_core.override
-  RealmPresentationSearchUpdate_kind get kind => RealmPresentationSearchUpdate_kind.unavailableWrapper;
+  RealmPresentationSearchUpdate_kind get kind =>
+      RealmPresentationSearchUpdate_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1841,31 +1879,25 @@ sealed class CancelRealmPresentationSearchRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class CancelRealmPresentationSearchRequest implements CancelRealmPresentationSearchRequest_orMutable {
+final class CancelRealmPresentationSearchRequest
+    implements CancelRealmPresentationSearchRequest_orMutable {
   @_core.override
   final _core.String subscriptionId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CancelRealmPresentationSearchRequest({
     required _core.String subscriptionId,
-  }) => CancelRealmPresentationSearchRequest._(
-    subscriptionId,
-  );
+  }) => CancelRealmPresentationSearchRequest._(subscriptionId);
 
-  CancelRealmPresentationSearchRequest._(
-    this.subscriptionId,
-  );
+  CancelRealmPresentationSearchRequest._(this.subscriptionId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = CancelRealmPresentationSearchRequest._(
-    "",
-  );
+  static final defaultInstance = CancelRealmPresentationSearchRequest._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CancelRealmPresentationSearchRequest_mutable mutable() => CancelRealmPresentationSearchRequest_mutable._(
-    "",
-  );
+  static CancelRealmPresentationSearchRequest_mutable mutable() =>
+      CancelRealmPresentationSearchRequest_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1873,29 +1905,33 @@ final class CancelRealmPresentationSearchRequest implements CancelRealmPresentat
   CancelRealmPresentationSearchRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CancelRealmPresentationSearchRequest_mutable toMutable() => CancelRealmPresentationSearchRequest_mutable._(
-    this.subscriptionId,
-  );
+  CancelRealmPresentationSearchRequest_mutable toMutable() =>
+      CancelRealmPresentationSearchRequest_mutable._(this.subscriptionId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CancelRealmPresentationSearchRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.subscriptionId,
-  ];
+  _core.List get _equality_proxy => [this.subscriptionId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CancelRealmPresentationSearchRequest` instances.
-  static _skir.StructSerializer<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    CancelRealmPresentationSearchRequest,
+    CancelRealmPresentationSearchRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "subscription_id",
@@ -1916,26 +1952,26 @@ final class CancelRealmPresentationSearchRequest implements CancelRealmPresentat
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CancelRealmPresentationSearchRequest_mutable it) => it.toFrozen(),
+    toFrozen: (CancelRealmPresentationSearchRequest_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CancelRealmPresentationSearchRequest].
-final class CancelRealmPresentationSearchRequest_mutable implements CancelRealmPresentationSearchRequest_orMutable {
+final class CancelRealmPresentationSearchRequest_mutable
+    implements CancelRealmPresentationSearchRequest_orMutable {
   _core.String subscriptionId;
   _skir.internal__UnrecognizedFields? _u;
 
-  CancelRealmPresentationSearchRequest_mutable._(
-    this.subscriptionId,
-  );
+  CancelRealmPresentationSearchRequest_mutable._(this.subscriptionId);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CancelRealmPresentationSearchRequest toFrozen() => CancelRealmPresentationSearchRequest(
-    subscriptionId: this.subscriptionId,
-  ).._u = this._u;
+  CancelRealmPresentationSearchRequest toFrozen() =>
+      CancelRealmPresentationSearchRequest(subscriptionId: this.subscriptionId)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1956,17 +1992,22 @@ final class CancelRealmPresentationSearchRequest_mutable implements CancelRealmP
 sealed class CancelRealmPresentationSearchResult {
   /// Constant indicating an unknown `CancelRealmPresentationSearchResult`.
   /// Default value for fields of type `CancelRealmPresentationSearchResult`.
-  static const CancelRealmPresentationSearchResult unknown = CancelRealmPresentationSearchResult_unknown._instance;
+  static const CancelRealmPresentationSearchResult unknown =
+      CancelRealmPresentationSearchResult_unknown._instance;
 
-  static const canceled = _CancelRealmPresentationSearchResult_consts.canceledConst;
-  static const notFound = _CancelRealmPresentationSearchResult_consts.notFoundConst;
-  static const unavailable = _CancelRealmPresentationSearchResult_consts.unavailableConst;
+  static const canceled =
+      _CancelRealmPresentationSearchResult_consts.canceledConst;
+  static const notFound =
+      _CancelRealmPresentationSearchResult_consts.notFoundConst;
+  static const unavailable =
+      _CancelRealmPresentationSearchResult_consts.unavailableConst;
 
   /// Returns the kind of variant held by this CancelRealmPresentationSearchResult.
   CancelRealmPresentationSearchResult_kind get kind;
 
   /// Serializer for `CancelRealmPresentationSearchResult` instances.
-  static _skir.EnumSerializer<CancelRealmPresentationSearchResult> get serializer {
+  static _skir.EnumSerializer<CancelRealmPresentationSearchResult>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
         1,
@@ -1994,15 +2035,17 @@ sealed class CancelRealmPresentationSearchResult {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/search.skir:CancelRealmPresentationSearchResult",
-    doc: "",
-    unknownInstance: CancelRealmPresentationSearchResult_unknown._instance,
-    enumInstance: CancelRealmPresentationSearchResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CancelRealmPresentationSearchResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/search.skir:CancelRealmPresentationSearchResult",
+        doc: "",
+        unknownInstance: CancelRealmPresentationSearchResult_unknown._instance,
+        enumInstance: CancelRealmPresentationSearchResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized:
+            CancelRealmPresentationSearchResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CancelRealmPresentationSearchResult`.
@@ -2017,7 +2060,8 @@ enum CancelRealmPresentationSearchResult_kind {
   const CancelRealmPresentationSearchResult_kind(this._ordinal);
 }
 
-final class CancelRealmPresentationSearchResult_unknown implements CancelRealmPresentationSearchResult {
+final class CancelRealmPresentationSearchResult_unknown
+    implements CancelRealmPresentationSearchResult {
   static const _instance = CancelRealmPresentationSearchResult_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -2026,16 +2070,22 @@ final class CancelRealmPresentationSearchResult_unknown implements CancelRealmPr
   CancelRealmPresentationSearchResult_unknown._unrecognized(this._u);
 
   @_core.override
-  CancelRealmPresentationSearchResult_kind get kind => CancelRealmPresentationSearchResult_kind.unknown;
+  CancelRealmPresentationSearchResult_kind get kind =>
+      CancelRealmPresentationSearchResult_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is CancelRealmPresentationSearchResult_unknown;
+  _core.bool operator ==(other) =>
+      other is CancelRealmPresentationSearchResult_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CancelRealmPresentationSearchResult.serializer);
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    CancelRealmPresentationSearchResult.serializer,
+  );
 }
 
-enum _CancelRealmPresentationSearchResult_consts implements CancelRealmPresentationSearchResult {
+enum _CancelRealmPresentationSearchResult_consts
+    implements CancelRealmPresentationSearchResult {
   canceledConst(CancelRealmPresentationSearchResult_kind.canceledConst),
   notFoundConst(CancelRealmPresentationSearchResult_kind.notFoundConst),
   unavailableConst(CancelRealmPresentationSearchResult_kind.unavailableConst);
@@ -2046,29 +2096,32 @@ enum _CancelRealmPresentationSearchResult_consts implements CancelRealmPresentat
   const _CancelRealmPresentationSearchResult_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CancelRealmPresentationSearchResult.serializer);
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    CancelRealmPresentationSearchResult.serializer,
+  );
 }
 
 final _skir.Method<
   RealmPresentationSearchRequest,
   RealmPresentationSearchUpdate
-> watchRealmPresentationSearchMethod =
-  _skir.Method(
-    "WatchRealmPresentationSearch",
-    910003,
-    RealmPresentationSearchRequest.serializer,
-    RealmPresentationSearchUpdate.serializer,
-    "",
-  );
+>
+watchRealmPresentationSearchMethod = _skir.Method(
+  "WatchRealmPresentationSearch",
+  910003,
+  RealmPresentationSearchRequest.serializer,
+  RealmPresentationSearchUpdate.serializer,
+  "",
+);
 
 final _skir.Method<
   CancelRealmPresentationSearchRequest,
   CancelRealmPresentationSearchResult
-> cancelRealmPresentationSearchMethod =
-  _skir.Method(
-    "CancelRealmPresentationSearch",
-    919103,
-    CancelRealmPresentationSearchRequest.serializer,
-    CancelRealmPresentationSearchResult.serializer,
-    "",
-  );
+>
+cancelRealmPresentationSearchMethod = _skir.Method(
+  "CancelRealmPresentationSearch",
+  919103,
+  CancelRealmPresentationSearchRequest.serializer,
+  CancelRealmPresentationSearchResult.serializer,
+  "",
+);

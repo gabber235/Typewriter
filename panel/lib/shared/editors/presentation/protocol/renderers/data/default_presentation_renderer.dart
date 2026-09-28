@@ -2,10 +2,10 @@ part of "../../bound_value_renderer.dart";
 
 /// Resolves a type aware presentation while preserving the current binding.
 ///
-/// An explicit presentation id is preferred when it is compatible with the
-/// resolved type. Otherwise the type registry generates a default. Delegation
-/// is tracked in the scope and rejected when it would recurse, so malformed
-/// presentation definitions produce diagnostics instead of unbounded rendering.
+/// An explicit or type-owned editor is bound when its contract is valid.
+/// Generated controls serve types without an editor and read-only fields that
+/// cannot use one. Broken declarations and recursive delegation surface as
+/// field diagnostics.
 extension DefaultPresentationElementRendering on DefaultPresentationElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
     if (presentationId case final presentationId?
@@ -17,22 +17,30 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
         ),
       ]);
     }
-    final resolved = scope.resolve(binding);
+    final resolved = scope.inspect(binding);
     if (resolved case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
     }
     final resolvedBinding = resolved.valueOrNull!;
-    final selected = scope.resolvePresentation(
+    final selection = scope.resolvePresentation(
       resolvedBinding.type,
       presentationId,
+      scope.accessOf(binding),
     );
-    if (selected == null) {
-      final generated = resolvedBinding.type.generateDefaultPresentation(
+    if (selection case TypeFailure(:final diagnostics)) {
+      return presentationDiagnostic(context, diagnostics);
+    }
+    final selected = selection.valueOrNull;
+    Widget generated() => PresentationNodeRenderer(
+      node: resolvedBinding.type.generateDefaultPresentation(
         binding: binding,
         nodeId: "default.${binding.bindingId.value}",
         registry: scope.registry,
-      );
-      return PresentationNodeRenderer(node: generated, scope: scope);
+      ),
+      scope: scope,
+    );
+    if (selected == null) {
+      return generated();
     }
 
     if (scope.activePresentations.contains(selected.id)) {
@@ -49,7 +57,7 @@ extension DefaultPresentationElementRendering on DefaultPresentationElement {
       return presentationDiagnostic(context, [
         const TypeDiagnostic(
           code: TypeDiagnosticCode.invalidPresentation,
-          message: "Default presentation requires one primary input",
+          message: "Automatic editor has no primary input",
         ),
       ]);
     }

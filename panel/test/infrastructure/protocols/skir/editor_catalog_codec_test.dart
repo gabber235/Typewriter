@@ -12,13 +12,17 @@ void main() {
     TypeDefinition(
       id: reference,
       kind: NominalTypeKind.concrete,
+      displayName: "Entry",
+      qualifiedName: "example.Entry",
+      declarationOwner: "example",
       representation: RecordType(
         fields: const {"name": TypeField(name: "name", type: StringType())},
       ),
-      defaultPresentationId: const PresentationId(
-        namespace: "example",
-        name: "main",
-      ),
+      rolePresentations: const {
+        PresentationRole.editor: RolePresentationStatus.ready(
+          PresentationId(namespace: "example", name: "main"),
+        ),
+      },
     ),
   ]);
   final types = SkirTypeCodec(TypeRegistry(catalog));
@@ -50,12 +54,27 @@ void main() {
     expect(encodedType.typeId.kind, skir.TypeId_kind.qualifiedWrapper);
     expect(encodedType.revision, 1);
     expect(encodedType.kind.kind, skir.TypeDefinitionKind_kind.concreteConst);
+    expect(encodedType.declarationOwner, "example");
+    expect(encodedType.displayName, "Entry");
+    expect(encodedType.qualifiedName, "example.Entry");
     expect(
       encodedType.representation.kind,
       skir.TypeExpression_kind.recordWrapper,
     );
-    expect(encodedType.defaultPresentationId?.namespace, "example");
-    expect(encodedType.defaultPresentationId?.name, "main");
+    expect(
+      (encodedType.rolePresentations.single.outcome
+              as skir.RolePresentationOutcome_readyWrapper)
+          .value
+          .namespace,
+      "example",
+    );
+    expect(
+      (encodedType.rolePresentations.single.outcome
+              as skir.RolePresentationOutcome_readyWrapper)
+          .value
+          .name,
+      "main",
+    );
 
     expect(encodedCatalog.decodeDomain().valueOrNull!.catalog, catalog);
 
@@ -112,5 +131,38 @@ void main() {
     );
     expect(encodedEnvelope.rootValue.kind, skir.TypedValue_kind.recordWrapper);
     expect(definitions.decodeEnvelope(encodedEnvelope).valueOrNull, envelope);
+  });
+
+  test("rejected role round trips and unknown outcome fails decoding", () {
+    final rejected = catalog.definitions.single.copyWith(
+      rolePresentations: const {
+        PresentationRole.editor: RolePresentationStatus.rejected(
+          "coreIconifyEditor failed",
+        ),
+      },
+    );
+    final encoded = TypeCatalog([rejected]).encodeWire().valueOrNull!;
+    expect(
+      (encoded.definitions.single.rolePresentations.single.outcome
+              as skir.RolePresentationOutcome_rejectedWrapper)
+          .value,
+      "coreIconifyEditor failed",
+    );
+    expect(
+      encoded.decodeDomain().valueOrNull!.catalog.definitions.single,
+      rejected,
+    );
+
+    final malformed = encoded.definitions.single.toMutable()
+      ..rolePresentations = [
+        skir.RolePresentation(
+          role: skir.PresentationRole.editor,
+          outcome: skir.RolePresentationOutcome.unknown,
+        ),
+      ];
+    final decoded = skir.TypeCatalog(definitions: [malformed.toFrozen()])
+        .decodeDomain();
+    expect(decoded, isA<TypeFailure<DecodedTypeCatalog>>());
+    expect(decoded.diagnostics.single.message, contains("Unknown role"));
   });
 }

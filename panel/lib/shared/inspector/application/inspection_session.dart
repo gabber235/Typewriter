@@ -212,7 +212,9 @@ final class InspectionSession extends ChangeNotifier {
       inputs: inputs,
       root: PresentationNode(
         id: "selection",
-        element: ColumnElement(children: children),
+        element: ColumnElement(
+          children: children.map(PresentationAxisChild.fixed).toList(),
+        ),
       ),
     );
   }

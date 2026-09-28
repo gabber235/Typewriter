@@ -235,15 +235,16 @@ final class HeaderExpansionStore {
   }
 }
 
-/// Selects a presentation definition for a requested type and identifier.
+/// Selects a presentation for a type and access context.
 ///
-/// The resolver owns fallback policy, including default presentations. A null
-/// result means the caller must render the protocol's missing presentation
-/// diagnostic or fallback rather than guessing a definition.
-typedef PresentationResolver = ResolvedPresentationDefinition? Function(
-  TypeExpression? type,
-  PresentationId? requested,
-);
+/// A successful null allows structural fallback. A failure keeps a broken
+/// declared editor visible at the field.
+typedef PresentationResolver =
+    TypeResult<ResolvedPresentationDefinition?> Function(
+      TypeExpression? type,
+      PresentationId? requested,
+      PresentationInputAccess access,
+    );
 
 /// Immutable capabilities and state passed through one presentation tree.
 ///
@@ -265,10 +266,12 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,
     ReferenceSearchSourceBuilder? referenceSearchSourceBuilder,
     ReferenceResourceResolver? resolveReferences,
-    @Default([]) List<RecordId> referenceOrigins,
+    ReferenceEligibilityEvaluator? referenceEligibility,
+    @Default([]) List<ResourceId> referenceOrigins,
     @Default(ReferenceCandidatePolicyRegistry())
     ReferenceCandidatePolicyRegistry referencePolicies,
     EditOwner? Function(BindingReference reference)? editOwnerFor,
+    RenderedBindingFocusController? bindingFocusController,
     @Default({})
     Map<PresentationCollectionSourceId, PresentationCollectionSource>
     collections,

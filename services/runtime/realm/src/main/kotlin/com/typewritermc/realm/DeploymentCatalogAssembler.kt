@@ -11,9 +11,9 @@ import com.typewritermc.discovery.Eligibility
 import com.typewritermc.discovery.SourcePartEligibilityResolver
 import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
-import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.elements.ElementCatalogAssembler
-import com.typewritermc.elements.ElementContributionReader
+import com.typewritermc.elements.ContentCatalog
+import com.typewritermc.elements.ContentCatalogAssembler
+import com.typewritermc.elements.ContentContributionReader
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
@@ -27,7 +27,7 @@ import com.typewritermc.imprint.ImprintManifest
  */
 data class AssembledDeploymentCatalog(
     val discovery: DeploymentDiscoverySnapshot,
-    val elements: ElementCatalog,
+    val elements: ContentCatalog,
     val runtimeDiscovery: AssembledTypeDiscovery,
     val unknownContributions: List<GeneratedContribution>,
 )
@@ -80,8 +80,8 @@ object DeploymentCatalogAssembler {
         val read = ManifestDiscoveryReader.read(manifests)
         val runtimeDiscovery = TypeContributionAssembler.assemble(read.types, sourceParts)
         val elements =
-            ElementCatalogAssembler.assemble(
-                ElementContributionReader.read(manifests),
+            ContentCatalogAssembler.assemble(
+                ContentContributionReader.read(manifests),
                 sourceParts,
                 facts,
             )

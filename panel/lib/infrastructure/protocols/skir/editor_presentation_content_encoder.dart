@@ -21,6 +21,7 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
     final decoration = _optional(value.decoration);
 
     final semanticLabel = _optional(value.semanticLabel);
+    final paragraph = value.paragraph.orDefault._encodeWire;
 
     final diagnostics = [
       ...text.diagnostics,
@@ -53,6 +54,60 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
               letterSpacing: letterSpacing.valueOrNull,
               decoration: decoration.valueOrNull,
               semanticLabel: semanticLabel.valueOrNull,
+              paragraph: paragraph,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.PresentationElement> _richText(RichTextElement value) {
+    final style = _textStyle(value.style);
+    final runs = value.runs.map(_textRun).toList(growable: false);
+    final diagnostics = [
+      ...style.diagnostics,
+      ...runs.expand((run) => run.diagnostics),
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationElement.createRichText(
+              runs: runs.map((run) => run.valueOrNull!),
+              style: style.valueOrNull,
+              paragraph: value.paragraph.orDefault._encodeWire,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.TextRun> _textRun(PresentationTextRun value) {
+    final text = expressions.encode(value.text);
+    final style = _textStyle(value.style);
+    final diagnostics = [...text.diagnostics, ...style.diagnostics];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.TextRun(text: text.valueOrNull!, style: style.valueOrNull),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.TextStyleOverride?> _textStyle(PresentationTextStyle? value) {
+    if (value == null) return const TypeResult.success(null);
+    final color = _optional(value.color);
+    final weight = _optional(value.fontWeight);
+    final italic = _optional(value.fontItalic);
+    final decoration = _optional(value.decoration);
+    final diagnostics = [
+      ...color.diagnostics,
+      ...weight.diagnostics,
+      ...italic.diagnostics,
+      ...decoration.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.TextStyleOverride(
+              color: color.valueOrNull,
+              fontWeight: weight.valueOrNull,
+              fontItalic: italic.valueOrNull,
+              decoration: decoration.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);
@@ -76,6 +131,7 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
           letterSpacing: null,
           decoration: null,
           semanticLabel: null,
+          paragraph: TextParagraph()._encodeWire,
         ),
       );
 
@@ -239,6 +295,7 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
               letterSpacing: null,
               decoration: null,
               semanticLabel: null,
+              paragraph: const TextParagraph()._encodeWire,
             ),
           );
 }
@@ -273,4 +330,21 @@ extension on RelativeTimeStyle {
     RelativeTimeStyle.compact => wire.RelativeTimeStyle.compact,
     RelativeTimeStyle.natural => wire.RelativeTimeStyle.natural,
   };
+}
+
+extension on TextParagraph {
+  wire.TextParagraph get _encodeWire => wire.TextParagraph(
+    maxLines: maxLines,
+    overflow: switch (overflow) {
+      PresentationTextOverflow.clip => wire.PresentationTextOverflow.clip,
+      PresentationTextOverflow.ellipsis =>
+        wire.PresentationTextOverflow.ellipsis,
+    },
+    softWrap: softWrap,
+    selectable: selectable,
+    tone: switch (tone) {
+      PresentationTextTone.primary => wire.PresentationTextTone.primary,
+      PresentationTextTone.secondary => wire.PresentationTextTone.secondary,
+    },
+  );
 }

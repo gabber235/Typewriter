@@ -3,12 +3,14 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart" as tags_lib;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../support/test_utils.dart";
 
-final _testTagId = recordId("tag:test_tag");
+final _testTagId = skir.ResourceId(value: "test_tag");
 final _tagRefreshProvider = NotifierProvider<_TagRefresh, int>(_TagRefresh.new);
 
 class _TagRefresh extends Notifier<int> {
@@ -23,7 +25,7 @@ Tag _testTag({int x = 0, int y = 0}) => Tag(
   name: "Test Tag",
   color: Colors.blue,
   parentIds: const [],
-  placement: Placement(x: x, y: y, width: 2, height: 1),
+  placement: GraphPlacement(x: x, y: y, width: 2, height: 1),
 );
 
 void main() {

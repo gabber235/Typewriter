@@ -24,12 +24,12 @@ class _MixedValueControlsState extends State<MixedValueControls> {
   late final List<LocalEditor> _editors = [
     LocalEditor(
       rootType: _type,
-      typeCatalog: const TypeCatalog([]),
+      typeCatalog: receivedRealmCatalog(),
       value: _firstValue,
     ),
     LocalEditor(
       rootType: _type,
-      typeCatalog: const TypeCatalog([]),
+      typeCatalog: receivedRealmCatalog(),
       value: widget.mixed ? _secondValue : _firstValue,
     ),
   ];
@@ -37,7 +37,7 @@ class _MixedValueControlsState extends State<MixedValueControls> {
   late final MultiEditOwner _owner = MultiEditOwner(
     owners: _editors,
     rootType: _type,
-    typeCatalog: const TypeCatalog([]),
+    typeCatalog: receivedRealmCatalog(),
     commitInteractions: (interactions) => interactions.commitIndependently(),
   );
 
@@ -111,35 +111,45 @@ final _presentation = PresentationNode(
     spacing: 16,
     crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
     children: [
-      PresentationNode(
-        id: "name",
-        element: TextInputElement(
-          control: "name"._control("Name"),
-          multiline: false,
+      PresentationAxisChild.fixed(
+        PresentationNode(
+          id: "name",
+          element: TextInputElement(
+            control: "name"._control("Name"),
+            multiline: false,
+          ),
         ),
       ),
-      PresentationNode(
-        id: "color",
-        element: ColorInputElement(control: "color"._control("Color")),
-      ),
-      PresentationNode(
-        id: "startsAt",
-        element: DateTimeInputElement(
-          control: "startsAt"._control("Starts at"),
+      PresentationAxisChild.fixed(
+        PresentationNode(
+          id: "color",
+          element: ColorInputElement(control: "color"._control("Color")),
         ),
       ),
-      PresentationNode(
-        id: "intensity",
-        element: SliderInputElement(
-          control: "intensity"._control("Intensity"),
-          minimum: 0.0.asFloatLiteral,
-          maximum: 1.0.asFloatLiteral,
-          divisions: 20.asIntegerLiteral,
+      PresentationAxisChild.fixed(
+        PresentationNode(
+          id: "startsAt",
+          element: DateTimeInputElement(
+            control: "startsAt"._control("Starts at"),
+          ),
         ),
       ),
-      PresentationNode(
-        id: "duration",
-        element: DurationInputElement("duration"._control("Duration")),
+      PresentationAxisChild.fixed(
+        PresentationNode(
+          id: "intensity",
+          element: SliderInputElement(
+            control: "intensity"._control("Intensity"),
+            minimum: 0.0.asFloatLiteral,
+            maximum: 1.0.asFloatLiteral,
+            divisions: 20.asIntegerLiteral,
+          ),
+        ),
+      ),
+      PresentationAxisChild.fixed(
+        PresentationNode(
+          id: "duration",
+          element: DurationInputElement("duration"._control("Duration")),
+        ),
       ),
     ],
   ),

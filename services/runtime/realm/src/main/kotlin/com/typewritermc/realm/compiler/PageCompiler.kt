@@ -1,159 +1,135 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ref
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompileDiagnostic
 import com.typewritermc.engine.CompileDiagnosticSeverity
-import com.typewritermc.engine.CompiledElement
-import com.typewritermc.engine.CompiledElementKey
+import com.typewritermc.engine.CompiledEdge
+import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.CompiledPageShard
-import com.typewritermc.engine.CompiledPlacement
+import com.typewritermc.engine.CompiledResource
+import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PageCompileResult
-import com.typewritermc.engine.SourceElementKey
-import com.typewritermc.library.PageDocument
-import com.typewritermc.library.PageDocumentElement
-import com.typewritermc.library.PageReference
-import com.typewritermc.library.ResourceSummary
-import com.typewritermc.library.ref
+import com.typewritermc.realm.repository.AuthoringWorkingGraph
+import com.typewritermc.realm.repository.ResourceRelationOrigin
+import com.typewritermc.realm.repository.StoredResourceRelation
+import com.typewritermc.realm.repository.StoredTypedResource
 import com.typewritermc.types.DataMapEntry
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.RelationId
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeId
+import com.typewritermc.authoring.GRAPH_PLACEMENT_TYPE_ID
 import java.security.MessageDigest
 import java.util.Base64
 
-/**
- * Transforms a logical page document into a deterministic shard or blocking diagnostics.
- *
- * Document diagnostics currently all become compile errors. Fingerprints include catalog revision and execution
- * relevant content but exclude graph layout coordinates. Elements use sorted source identities and root
- * compilation context; no instance expansion or execution occurs here.
- */
-class PageCompiler(
+/** Compiles one bounded Page graph without a second Page content model. */
+internal class PageCompiler(
+    private val ownershipRelations: Set<RelationId>,
     private val formatRevision: Int = CURRENT_COMPILER_FORMAT,
 ) {
-    /**
-     * Compiles one repository document without consulting storage or executing element behavior.
-     *
-     * The result is deterministic for the document, catalog revision, and compiler format. A blocked result still
-     * carries its input fingerprint so callers can identify the attempted inputs, but it has no executable shard.
-     */
     fun compile(
-        document: PageDocument,
+        root: ResourceId,
+        graph: AuthoringWorkingGraph,
         catalogRevision: String,
     ): PageCompileResult {
-        val fingerprint = inputFingerprint(document, catalogRevision)
-        val diagnostics =
-            document.diagnostics.map { diagnostic ->
-                CompileDiagnostic(
-                    code = diagnostic.code,
-                    message = diagnostic.message,
-                    severity = CompileDiagnosticSeverity.ERROR,
-                    source = diagnostic.element,
-                    target = diagnostic.target,
-                )
+        val resources = graph.resources.values.sortedBy { it.id.value }
+        val edges = graph.relations.values.sortedWith(compareBy({ it.source.value }, { it.target.value }, { it.id }))
+        val fingerprint = digest(buildString {
+            append("format:").append(formatRevision)
+            append("|catalog:").append(catalogRevision)
+            append("|root:").append(root.value)
+            resources.forEach { resource ->
+                append("|resource:").append(resource.id.value)
+                append(':').append(resource.definition.value)
+                append(':').append(resource.root)
+                append(':').append(resource.valueWithSlots.executionCanonical())
             }
-        if (diagnostics.any { it.severity == CompileDiagnosticSeverity.ERROR }) {
-            return PageCompileResult.Blocked(fingerprint, diagnostics)
+            edges.forEach { edge -> append("|edge:").append(edge.canonical()) }
+        })
+        val diagnostics = edges.mapNotNull { edge ->
+            val origin = edge.origin as? ResourceRelationOrigin.Declared ?: return@mapNotNull null
+            if (origin.relationId !in ownershipRelations || edge.source !in graph.resources || edge.target in graph.resources) {
+                return@mapNotNull null
+            }
+            CompileDiagnostic(
+                code = "missing-owned-resource",
+                message = "Owned resource ${edge.target.value} is missing from the Page graph.",
+                severity = CompileDiagnosticSeverity.ERROR,
+                source = edge.source,
+                target = edge.target,
+            )
         }
-        val elements =
-            document.elements.sortedBy { it.id.value }.map { element ->
-                CompiledElement(
-                    key = CompiledElementKey(SourceElementKey(element.id.ref()), CompilationContext.Root),
-                    sourceId = element.id,
-                    elementType = element.elementType,
-                    schemaRevision = element.schemaRevision,
-                    value = element.value,
-                    placement = element.placement.compiled(),
-                )
-            }
-        val page = document.page.id.ref()
-        val digest = digest(shardFacts(page.id.referenceString(), fingerprint, elements))
+        if (diagnostics.isNotEmpty()) return PageCompileResult.Blocked(fingerprint, diagnostics)
+        val compiledResources = resources.map(StoredTypedResource::compile)
+        val compiledEdges = edges.map(StoredResourceRelation::compile)
+        val semantic = digest("root:${root.value}|input:${fingerprint.value}")
         return PageCompileResult.Success(
-            CompiledPageShard(formatRevision, digest, fingerprint, page, elements),
+            CompiledPageShard(
+                formatRevision = formatRevision,
+                digest = semantic,
+                inputFingerprint = fingerprint,
+                root = CompiledResourceKey(root, CompilationContext.Root),
+                resources = compiledResources,
+                edges = compiledEdges,
+            ),
         )
     }
-
-    private fun inputFingerprint(
-        document: PageDocument,
-        catalogRevision: String,
-    ): ContentDigest =
-        digest(
-            buildString {
-                append("format:").append(formatRevision)
-                append("|catalog:").append(catalogRevision)
-                append("|page:").append(
-                    document.page.id
-                        .ref()
-                        .id
-                        .referenceString(),
-                )
-                append("|book:").append(
-                    document.page.book.id
-                        .referenceString(),
-                )
-                append("|kind:").append(document.page.kind.id).append(':').append(document.page.kind.revision)
-                append("|chapter:").append(document.page.chapter)
-                append("|priority:").append(document.page.priority)
-                document.elements.sortedBy { it.id.value }.forEach { appendElement(it) }
-                document.references.sortedBy(PageReference::stableKey).forEach { appendReference(it) }
-                document.crossPageTargets.sortedBy { it.id.referenceString() }.forEach { appendSummary(it) }
-            },
-        )
 }
 
-private fun StringBuilder.appendElement(element: PageDocumentElement) {
-    append("|element:").append(element.id.value)
-    append(':').append(element.elementType.value)
-    append(':').append(element.schemaRevision)
-    append(':').append(element.value.canonical())
-    append(':').append(element.placement.executionFacts())
-}
+private fun StoredTypedResource.compile(): CompiledResource =
+    CompiledResource(
+        key = CompiledResourceKey(id, CompilationContext.Root),
+        definition = definition,
+        rootType = root,
+        valueWithSlots = valueWithSlots,
+    )
 
-private fun StringBuilder.appendReference(reference: PageReference) {
-    append("|reference:").append(reference.stableKey())
-    append(':').append(reference.target.referenceString())
-    append(':').append(reference.expectedType)
-}
+private fun StoredResourceRelation.compile(): CompiledEdge =
+    CompiledEdge(
+        source = CompiledResourceKey(source, CompilationContext.Root),
+        target = CompiledResourceKey(target, CompilationContext.Root),
+        origin = when (val value = origin) {
+            is ResourceRelationOrigin.Declared -> CompiledEdgeOrigin.Declared(
+                relation = value.relationId,
+                sourceIndex = value.sourceIndex,
+                targetIndex = value.targetIndex,
+            )
+            is ResourceRelationOrigin.Reference -> CompiledEdgeOrigin.Reference(
+                slot = value.slot,
+                path = value.sourcePath,
+                expectedType = value.expectedTarget,
+            )
+        },
+    )
 
-private fun StringBuilder.appendSummary(summary: ResourceSummary) {
-    append("|target:").append(summary.id.referenceString())
-    append(':').append(summary.exists)
-    append(':').append(summary.elementType?.value)
-}
-
-private fun shardFacts(
-    page: String,
-    fingerprint: ContentDigest,
-    elements: List<CompiledElement>,
-): String =
-    buildString {
-        append("page:").append(page).append("|input:").append(fingerprint.value)
-        elements.forEach { element ->
-            append("|compiled:").append(element.sourceId.value)
-            append(':').append(element.elementType.value)
-            append(':').append(element.schemaRevision)
-            append(':').append(element.value.canonical())
-            append(':').append(element.placement)
+private fun StoredResourceRelation.canonical(): String = buildString {
+    append(source.value).append(':').append(target.value)
+    when (val value = origin) {
+        is ResourceRelationOrigin.Declared -> {
+            append(":declared:").append(value.relationId.value)
+            append(':').append(value.sourceIndex).append(':').append(value.targetIndex)
+        }
+        is ResourceRelationOrigin.Reference -> {
+            append(":reference:").append(value.slot.value)
+            append(':').append(value.sourcePath)
+            append(':').append(value.expectedTarget)
         }
     }
+}
 
-private fun PageReference.stableKey(): String = "${source.value}:${slot.value}"
-
-private fun ElementPlacement.executionFacts(): String =
+private fun DataValue.executionCanonical(): String =
     when (this) {
-        is ElementPlacement.Graph -> "graph_v1"
-        is ElementPlacement.TimelineEntry -> "timeline_entry_v1:$trackIndex"
-        is ElementPlacement.TimelineSegment -> "timeline_segment_v1:$startFrame:$endFrame"
-        is ElementPlacement.TimelineKeyframe -> "timeline_keyframe_v1:$frame"
-    }
-
-private fun ElementPlacement.compiled(): CompiledPlacement =
-    when (this) {
-        is ElementPlacement.Graph -> CompiledPlacement.Graph
-        is ElementPlacement.TimelineEntry -> CompiledPlacement.TimelineEntry(trackIndex)
-        is ElementPlacement.TimelineSegment -> CompiledPlacement.TimelineSegment(startFrame, endFrame)
-        is ElementPlacement.TimelineKeyframe -> CompiledPlacement.TimelineKeyframe(frame)
+        is DataValue.Polymorphic -> {
+            val id = concreteType.id as? TypeId.Declared
+            if (id?.id?.toString() == GRAPH_PLACEMENT_TYPE_ID) "graph"
+            else "p:$concreteType:${value.executionCanonical()}"
+        }
+        is DataValue.Record -> fields.entries.sortedBy { it.key }.joinToString(prefix = "o:{", postfix = "}") {
+            "${it.key.length}:${it.key}=${it.value.executionCanonical()}"
+        }
+        is DataValue.ListValue -> values.joinToString(prefix = "l:[", postfix = "]") { it.executionCanonical() }
+        else -> canonical()
     }
 
 private fun DataValue.canonical(): String =
@@ -195,7 +171,7 @@ private fun DataValue.canonical(): String =
         }
 
         is DataValue.Reference -> {
-            "x:${id.referenceString()}"
+            "x:${id.value}"
         }
 
         is DataValue.ListValue -> {
@@ -226,4 +202,4 @@ private fun digest(value: String): ContentDigest =
         },
     )
 
-const val CURRENT_COMPILER_FORMAT = 1
+const val CURRENT_COMPILER_FORMAT = 2

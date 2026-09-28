@@ -328,7 +328,7 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield page.pageId.id;
       yield page.name;
       yield page.chapter;
-      yield _pageKindLabel(page.kind);
+      yield _pageKindLabel(page.rootType);
       yield book.bookId.id;
       yield book.title;
       yield* book.tagIds.map((tagId) => tagId.id);
@@ -382,7 +382,7 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
       final book = payload.book;
       switch (selectorId) {
         case "tag":
-          yield _pageKindLabel(page.kind);
+          yield _pageKindLabel(page.rootType);
           yield* book.tagIds.map((tagId) => tagId.id);
         case "book":
           yield book.title;
@@ -390,7 +390,7 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
         case "chapter":
           yield page.chapter;
         case "pageKind":
-          yield _pageKindLabel(page.kind);
+          yield _pageKindLabel(page.rootType);
         case "type":
           yield "page";
       }
@@ -454,7 +454,7 @@ Map<String, String> _previewFieldsForPayload(Object payload) {
       "book": payload.book.title,
       "bookId": payload.book.bookId.id,
       "chapter": payload.page.chapter,
-      "pageKind": _pageKindLabel(payload.page.kind),
+      "pageKind": _pageKindLabel(payload.page.rootType),
     },
     MockEntryRecord() => {
       "id": payload.entry.id,
@@ -745,7 +745,7 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       .toSet()
       .toList();
   final pageKinds = index.pages
-      .map((record) => _pageKindLabel(record.page.kind))
+      .map((record) => _pageKindLabel(record.page.rootType))
       .toSet()
       .toList();
   final entryTypes = index.elementDefinitions
@@ -880,7 +880,7 @@ SearchNode _bookSearchNode(Book book, MockSearchIndex index) {
 SearchNode _pageSearchNode(MockPageRecord record, MockSearchIndex index) {
   final page = record.page;
   final book = record.book;
-  final pageKind = _pageKindLabel(page.kind);
+  final pageKind = _pageKindLabel(page.rootType);
   final tags = _tagNames(book.tagIds.map((tagId) => tagId.id), index);
   return mockSearchResultNode(
     id: "page.${page.pageId.id}",
@@ -933,7 +933,7 @@ List<String> _tagNames(Iterable<String> tagIds, MockSearchIndex index) {
   return tagIds.map((id) => names[id] ?? id).toList();
 }
 
-String _pageKindLabel(PageKindRef kind) => kind.id;
+String _pageKindLabel(ResolvedTypeRef type) => type.toString();
 
 Map<String, SearchPreviewRequestResult> mockSearchPreviewResults(
   MockSearchIndex index,

@@ -76,10 +76,8 @@ final class SkirPresentationEncoder {
   TypeResult<wire.PresentationElement> _element(PresentationElement value) =>
       switch (value) {
         ColumnElement() ||
-        RowElement() ||
-        WrapElement() ||
-        StackElement() ||
-        GridElement() => _children(value),
+        RowElement() => _axisChildren(value as ChildrenLayoutElement),
+        WrapElement() || StackElement() || GridElement() => _children(value),
         SectionElement() => _section(value),
         ContainerElement() => _container(value),
         PresentationAnchorElement() => _anchor(value),
@@ -99,7 +97,9 @@ final class SkirPresentationEncoder {
           wire.PresentationElement.divider,
         ),
         SpacerElement() => _spacer(value),
+        AdaptiveLeadingElement() => _adaptiveLeading(value),
         TextElement() => _text(value),
+        RichTextElement() => _richText(value),
         MarkdownElement() => _markdown(value),
         IconElement() => _icon(value),
         ImageElement() => _image(value),

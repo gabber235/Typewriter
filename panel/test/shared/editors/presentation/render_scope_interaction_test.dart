@@ -12,7 +12,7 @@ void main() {
       budget: const ExpressionBudget(),
       setBinding: (_, _, _, _) {},
       executeAction: (_, _, _) {},
-      resolvePresentation: (_, _) => null,
+      resolvePresentation: (_, _, _) => const TypeResult.success(null),
       expansionStore: HeaderExpansionStore(),
       startInteraction: (reference) {
         started = reference;
@@ -78,7 +78,7 @@ void main() {
           budget: const ExpressionBudget(),
           setBinding: (_, _, _, _) {},
           executeAction: (_, _, _) {},
-          resolvePresentation: (_, _) => null,
+          resolvePresentation: (_, _, _) => const TypeResult.success(null),
           expansionStore: HeaderExpansionStore(),
         ).withVirtualBinding(
           VirtualBindingHost(

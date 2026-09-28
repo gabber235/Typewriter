@@ -108,7 +108,11 @@ final _hostInspectorType = TypeDefinition(
 final _realmInstanceInspectorType = TypeDefinition(
   id: _realmInstanceInspectorTypeRef,
   kind: NominalTypeKind.concrete,
-  defaultPresentationId: _realmInstanceInspectorPresentationId,
+  rolePresentations: {
+    PresentationRole.editor: RolePresentationStatus.ready(
+      _realmInstanceInspectorPresentationId,
+    ),
+  },
   representation: _runtimeInstanceRecord(
     extraFields: {
       _RuntimeInspectorFields.target: _stringField(
@@ -121,7 +125,11 @@ final _realmInstanceInspectorType = TypeDefinition(
 final _engineInstanceInspectorType = TypeDefinition(
   id: _engineInstanceInspectorTypeRef,
   kind: NominalTypeKind.concrete,
-  defaultPresentationId: _engineInstanceInspectorPresentationId,
+  rolePresentations: {
+    PresentationRole.editor: RolePresentationStatus.ready(
+      _engineInstanceInspectorPresentationId,
+    ),
+  },
   representation: _runtimeInstanceRecord(
     extraFields: {
       _RuntimeInspectorFields.target: _stringField(
@@ -161,13 +169,13 @@ RecordType _runtimeInstanceRecord({
 TypeField _stringField(String name) =>
     TypeField(name: name, type: const StringType());
 
-final _hostInspectorCatalog = TypeCatalog([
+final _hostInspectorCatalog = panelPresentationTypeCatalog([
   _hostInspectorType,
   ..._hostConfigurationDefinitions,
 ]);
-final _realmInstanceInspectorCatalog = TypeCatalog([
+final _realmInstanceInspectorCatalog = panelPresentationTypeCatalog([
   _realmInstanceInspectorType,
 ]);
-final _engineInstanceInspectorCatalog = TypeCatalog([
+final _engineInstanceInspectorCatalog = panelPresentationTypeCatalog([
   _engineInstanceInspectorType,
 ]);

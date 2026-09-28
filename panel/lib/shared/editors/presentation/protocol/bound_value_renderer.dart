@@ -42,6 +42,26 @@ class ProtocolBoundValueEditor extends StatelessWidget {
 /// Builds a default presentation for an inspected binding without changing
 /// the binding owner or its value state.
 extension InspectedBindingDefaultPresentationRendering on InspectedBinding {
+  Widget renderAutomaticPresentation(
+    PresentationRenderScope scope, {
+    required String nodeId,
+    bool root = false,
+    String? label,
+  }) => type is! NamedType
+      ? renderDefaultPresentation(
+          scope,
+          nodeId: nodeId,
+          root: root,
+          label: label,
+        )
+      : PresentationNodeRenderer(
+          node: PresentationNode(
+            id: nodeId,
+            element: DefaultPresentationElement(binding: reference),
+          ),
+          scope: scope,
+        );
+
   Widget renderDefaultPresentation(
     PresentationRenderScope scope, {
     required String nodeId,
@@ -62,6 +82,26 @@ extension InspectedBindingDefaultPresentationRendering on InspectedBinding {
 /// Builds a default presentation when a concrete value is already required by
 /// the caller, such as a nested collection or record renderer.
 extension ResolvedBindingDefaultPresentationRendering on ResolvedBinding {
+  Widget renderAutomaticPresentation(
+    PresentationRenderScope scope, {
+    required String nodeId,
+    bool root = false,
+    String? label,
+  }) => type is! NamedType
+      ? renderDefaultPresentation(
+          scope,
+          nodeId: nodeId,
+          root: root,
+          label: label,
+        )
+      : PresentationNodeRenderer(
+          node: PresentationNode(
+            id: nodeId,
+            element: DefaultPresentationElement(binding: reference),
+          ),
+          scope: scope,
+        );
+
   Widget renderDefaultPresentation(
     PresentationRenderScope scope, {
     required String nodeId,

@@ -28,9 +28,8 @@ SearchInputElement searchStoryElement({
   selectionMode: mode,
   queryBindingId: _queryBindingId,
   summaryBindingId: _summaryBindingId,
-  maximumExtent: FloatValue(
-    maximumExtent,
-  ).asLiteral(const FloatType(width: FloatWidth.float64)),
+  maximumExtent: FloatValue(maximumExtent)
+      .asLiteral(const FloatType(width: FloatWidth.float64)),
   provider: provider,
   placeholder: "Search effects".asStringLiteral,
 );
@@ -42,9 +41,8 @@ SearchProvider staticEffectsProvider({
   List<SearchSelectorDefinition> selectors = const [],
 }) =>
     SearchProvider.staticValues(
-          values: ListValue(
-            values.map(StringValue.new).toList(),
-          ).asLiteral(const ListType(element: _stringType)),
+          values: ListValue(values.map(StringValue.new).toList())
+              .asLiteral(const ListType(element: _stringType)),
           selectors: selectors,
           result: SearchResultMapping(
             bindingId: _resultBindingId,

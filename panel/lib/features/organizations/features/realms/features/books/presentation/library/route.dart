@@ -3,7 +3,6 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:responsive_framework/responsive_framework.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -22,16 +21,37 @@ class LibraryPage extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
+    final catalogRequest = RealmEditorCatalogRequest(
+      types: {referenceResourceTypes.book},
+    );
+    final catalogState = ref.watch(realmCatalogProvider(catalogRequest));
+    final canCreate =
+        catalogState.currentCatalog
+            ?.creatableRoots(CoreResourceDefinitionIds.book)
+            .singleOrNull !=
+        null;
 
     Future<void> handleCreateBook() async {
-      final title = await _showBookTitleDialog(context);
-      if (title == null || title.isEmpty) return;
-      final newBook = await ref
-          .read(canonicalBooksProvider.notifier)
-          .createBook(title: title);
-      ref
-          .read(selectionProvider.notifier)
-          .select(BookIdentifier(newBook.bookId));
+      final catalog = ref
+          .read(realmCatalogProvider(catalogRequest))
+          .requireCurrentCatalog();
+      final root = catalog
+          .creatableRoots(CoreResourceDefinitionIds.book)
+          .singleOrNull;
+      if (root == null) throw StateError("Book creation is unavailable");
+      final created = await ref
+          .read(resourceCreationProvider)
+          .create(
+            context: context,
+            request: ResourceCreationRequest(
+              definition: CoreResourceDefinitionIds.book,
+              title: "Create Book",
+              concreteRoot: root,
+              partial: RecordValue({}),
+            ),
+          );
+      if (created == null) return;
+      ref.read(selectionProvider.notifier).select(BookIdentifier(created.id));
     }
 
     return Pane(
@@ -58,12 +78,12 @@ class LibraryPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: (_) => handleCreateBook(),
+              onInvoke: canCreate ? (_) => handleCreateBook() : null,
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: handleCreateBook,
+            onPressed: canCreate ? handleCreateBook : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -93,7 +113,7 @@ class LibraryPage extends HookConsumerWidget {
                               ? "Insert your favorite story here"
                               : "No books match your search",
                           buttonText: "Create Book",
-                          onPressed: handleCreateBook,
+                          onPressed: canCreate ? handleCreateBook : null,
                         );
                       }
 
@@ -143,59 +163,6 @@ class LibraryPage extends HookConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Future<String?> _showBookTitleDialog(BuildContext context) async {
-    return showAdvancedDialog<String>(
-      context: context,
-      builder: (context) {
-        return HookConsumer(
-          builder: (context, ref, child) {
-            final controller = useTextEditingController();
-            final isValid = useListenableSelector(
-              controller,
-              () => controller.text.isValidIdentifier,
-            );
-            final focusNode = useFocusNode();
-
-            return AlertDialog(
-              title: Text("Create Book"),
-              content: EditorTextField(
-                controller: controller,
-                focusNode: focusNode,
-                autofocus: EditorTextFieldAutoFocus.textField,
-                decoration: const InputDecoration(hintText: "Enter book title"),
-                inputFormatters: identifierInputFormats.toTextInputFormatters(),
-                onSubmitted: (value) {
-                  if (!isValid) return;
-                  Navigator.of(context).pop(value);
-                },
-              ),
-              actions: [
-                TextButton.icon(
-                  icon: const Icones(Fa6Solid.xmark),
-                  label: Text("Cancel"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.color,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                LoadingButton.filledIcon(
-                  onPressed: isValid
-                      ? () => Navigator.of(context).pop(controller.text)
-                      : null,
-                  label: Text("Create"),
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

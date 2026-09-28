@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -15,9 +17,10 @@ void main() {
       final generated = generateRandomEntryDefinition();
       final definition = generated.copyWith(
         id: "definition",
-        data: generated.data
-            .withField("id", const StringValue("definition"))
-            .withField("name", const StringValue("Definition Entry")),
+        data: generated.data.withField(
+          "name",
+          const StringValue("Definition Entry"),
+        ),
         placement: const EntryPlacement(x: 0, y: 0, width: 2, height: 2),
       );
       final elements = [
@@ -35,6 +38,7 @@ void main() {
       await tester.pumpTestApp(
         settle: false,
         overrides: [
+          ...authoringSessionMockOverrides(),
           organizationIdProvider.overrideWithValue(organizationId),
           realmIdProvider.overrideWithValue(realmId),
           selectedProvider.overrideWithValue(const AsyncData([])),
@@ -57,7 +61,7 @@ void main() {
           pageDocumentHealthProvider(
             organizationId,
             realmId,
-            recordId("page:page"),
+            skir.ResourceId(value: "page"),
           ).overrideWithValue(null),
         ],
         child: const SizedBox(

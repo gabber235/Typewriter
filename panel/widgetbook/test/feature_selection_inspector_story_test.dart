@@ -240,8 +240,12 @@ void main() {
       reason: "${resolvedSelection.error}",
     );
     expect(resolvedSelection.value, hasLength(1));
-    expect(find.byType(ComposedEditor), findsOneWidget);
-    expect(find.byType(EntryHeader), findsOneWidget);
+    final entryHeader = find.byType(EntryInspectorHeader);
+    expect(entryHeader, findsOneWidget);
+    expect(
+      find.descendant(of: entryHeader, matching: find.byType(ComposedEditor)),
+      findsOneWidget,
+    );
     expect(find.text("Name"), findsOneWidget);
     expect(find.text("Priority"), findsOneWidget);
     expect(find.text("Weight"), findsOneWidget);
@@ -274,7 +278,12 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ComposedEditor), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is ComposedEditor && widget.key != null,
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(CueHeader), findsOneWidget);
   });
 }

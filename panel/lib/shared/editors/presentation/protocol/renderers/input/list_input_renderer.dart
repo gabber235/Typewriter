@@ -144,7 +144,7 @@ final class _DraftListInputRenderer extends StatelessWidget {
         scope: childScope,
       );
     }
-    return inspected.renderDefaultPresentation(
+    return inspected.renderAutomaticPresentation(
       scope,
       nodeId: "list.${element.control.binding.bindingId.value}.$index",
       root: true,
@@ -386,7 +386,7 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
       value: value,
       revision: widget.binding.revision,
       writable: widget.binding.writable,
-    ).renderDefaultPresentation(
+    ).renderAutomaticPresentation(
       itemScope,
       nodeId: "list.${widget.element.control.binding.bindingId.value}.$index",
       root: true,

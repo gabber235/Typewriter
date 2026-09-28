@@ -79,6 +79,10 @@ final class SkirCatalogDefinitionCodec {
         !inputs.any((input) => input.id.value == primary.value)) {
       return invalidWire("Primary presentation input is not declared");
     }
+    final collections = _decodeCollections(value.dependencies.collections);
+    if (collections case TypeFailure(:final diagnostics)) {
+      return TypeResult.failure(diagnostics);
+    }
     return TypeResult.success(
       PresentationDefinition(
         id: PresentationId(
@@ -88,6 +92,7 @@ final class SkirCatalogDefinitionCodec {
         inputs: inputs,
         primaryInput: primary == null ? null : BindingId(primary.value),
         root: presentations.decodeNode(value.root),
+        collections: collections.valueOrNull!,
       ),
     );
   }
@@ -116,6 +121,10 @@ final class SkirCatalogDefinitionCodec {
         ),
       );
     }
+    final collections = _encodeCollections(value.collections);
+    if (collections case TypeFailure(:final diagnostics)) {
+      return TypeResult.failure(diagnostics);
+    }
     return presentationEncoder
         .encodeNode(value.root)
         .mapValue(
@@ -134,9 +143,152 @@ final class SkirCatalogDefinitionCodec {
               presentations: const [],
               conversions: const [],
               capabilities: const [],
+              collections: collections.valueOrNull!,
             ),
           ),
         );
+  }
+
+  TypeResult<Map<PresentationCollectionSourceId, PresentationCollectionSchema>>
+  _decodeCollections(
+    Iterable<wire_presentation.PresentationCollectionDefinition> values,
+  ) {
+    final collections =
+        <PresentationCollectionSourceId, PresentationCollectionSchema>{};
+    final diagnostics = <TypeDiagnostic>[];
+    for (final value in values) {
+      if (value.sourceId.isEmpty || value.rowBindingId.value < 0) {
+        diagnostics.addAll(
+          invalidWire<void>("Invalid presentation collection identity")
+              .diagnostics,
+        );
+        continue;
+      }
+      final sourceId = PresentationCollectionSourceId(value.sourceId);
+      if (collections.containsKey(sourceId)) {
+        diagnostics.addAll(
+          invalidWire<void>("Duplicate presentation collection source")
+              .diagnostics,
+        );
+        continue;
+      }
+      final rowType = types.decodeExpression(value.rowType);
+      final key = presentations.expressions.decode(value.key);
+      final selectability = presentations.expressions.decode(
+        value.selectability,
+      );
+      diagnostics
+        ..addAll(rowType.diagnostics)
+        ..addAll(key.diagnostics)
+        ..addAll(selectability.diagnostics);
+      final relations = <PresentationCollectionRelation>[];
+      final relationIds = <PresentationCollectionRelationId>{};
+      for (final relation in value.relations) {
+        if (relation.relationId.isEmpty) {
+          diagnostics.addAll(
+            invalidWire<void>("Invalid presentation collection relation")
+                .diagnostics,
+          );
+          continue;
+        }
+        final id = PresentationCollectionRelationId(relation.relationId);
+        if (!relationIds.add(id)) {
+          diagnostics.addAll(
+            invalidWire<void>("Duplicate presentation collection relation")
+                .diagnostics,
+          );
+          continue;
+        }
+        final targets = presentations.expressions.decode(relation.targets);
+        diagnostics.addAll(targets.diagnostics);
+        if (targets.valueOrNull case final expression?) {
+          relations.add(
+            PresentationCollectionRelation(id: id, targets: expression),
+          );
+        }
+      }
+      if (selectability.valueOrNull?.resultType is! BooleanType) {
+        diagnostics.addAll(
+          invalidWire<void>(
+            "Presentation collection selectability must be boolean",
+          ).diagnostics,
+        );
+      }
+      if (rowType.valueOrNull case final decodedRowType?) {
+        if (key.valueOrNull case final decodedKey?) {
+          if (selectability.valueOrNull case final decodedSelectability?) {
+            collections[sourceId] = PresentationCollectionSchema(
+              rowType: decodedRowType,
+              rowBindingId: BindingId(value.rowBindingId.value),
+              key: decodedKey,
+              selectability: decodedSelectability,
+              relations: relations,
+            );
+          }
+        }
+      }
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(Map.unmodifiable(collections))
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<List<wire_presentation.PresentationCollectionDefinition>>
+  _encodeCollections(
+    Map<PresentationCollectionSourceId, PresentationCollectionSchema> values,
+  ) {
+    final collections = <wire_presentation.PresentationCollectionDefinition>[];
+    final diagnostics = <TypeDiagnostic>[];
+    for (final entry in values.entries) {
+      final rowType = types.encodeExpression(entry.value.rowType);
+      final key = presentationEncoder.expressions.encode(entry.value.key);
+      final selectability = presentationEncoder.expressions.encode(
+        entry.value.selectability,
+      );
+      diagnostics
+        ..addAll(rowType.diagnostics)
+        ..addAll(key.diagnostics)
+        ..addAll(selectability.diagnostics);
+      final relations =
+          <wire_presentation.PresentationCollectionRelationDefinition>[];
+      for (final relation in entry.value.relations) {
+        final targets = presentationEncoder.expressions.encode(
+          relation.targets,
+        );
+        diagnostics.addAll(targets.diagnostics);
+        if (targets.valueOrNull case final expression?) {
+          relations.add(
+            wire_presentation.PresentationCollectionRelationDefinition(
+              relationId: relation.id.value,
+              targets: expression,
+            ),
+          );
+        }
+      }
+      final encodedRowType = rowType.valueOrNull;
+      final encodedKey = key.valueOrNull;
+      final encodedSelectability = selectability.valueOrNull;
+      if (encodedRowType == null ||
+          encodedKey == null ||
+          encodedSelectability == null) {
+        continue;
+      }
+      collections.add(
+        wire_presentation.PresentationCollectionDefinition(
+          sourceId: entry.key.value,
+          rowType: encodedRowType,
+          rowBindingId: wire_binding.BindingId(
+            value: entry.value.rowBindingId.value,
+          ),
+          key: encodedKey,
+          selectability: encodedSelectability,
+          relations: relations,
+        ),
+      );
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(collections)
+        : TypeResult.failure(diagnostics);
   }
 
   /// Decodes a capability after resolving its request and result types.

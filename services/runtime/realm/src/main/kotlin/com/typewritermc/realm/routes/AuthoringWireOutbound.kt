@@ -1,94 +1,49 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ElementValuePath
-import com.typewritermc.elements.ElementValuePathSegment
-import com.typewritermc.elements.ref
-import com.typewritermc.library.Book
-import com.typewritermc.library.Page
-import com.typewritermc.library.PageCompileStatus
-import com.typewritermc.library.PageDocument
-import com.typewritermc.library.PageDocumentDiagnostic
-import com.typewritermc.library.PageDocumentElement
-import com.typewritermc.library.PageReference
-import com.typewritermc.library.ResourceSummary
-import com.typewritermc.library.Tag
 import com.typewritermc.realm.repository.AuthoringBatchResult
 import com.typewritermc.realm.repository.AuthoringChanged
 import com.typewritermc.realm.repository.AuthoringDiagnostic
-import com.typewritermc.realm.repository.AuthoringElement
 import com.typewritermc.realm.repository.AuthoringPreviewResult
-import com.typewritermc.realm.repository.AuthoringPropertyValue
-import com.typewritermc.realm.repository.AuthoringResourceChange
-import com.typewritermc.realm.repository.AuthoringResourceRef
-import com.typewritermc.realm.repository.AuthoringSnapshotResult
-import com.typewritermc.realm.repository.AuthoringSnapshotSlice
+import com.typewritermc.realm.repository.GraphEdgeChange
+import com.typewritermc.realm.repository.GraphResourceChange
 import com.typewritermc.realm.repository.PropertyConflict
-import com.typewritermc.realm.repository.utils.toSkirRecordId
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypePrototypeRegistry
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.editor.v1.path.DataPath
-import skirout.editor.v1.path.DataPathSegment
-import skirout.library.v1.authoring.ApplyAuthoringBatchResponse
-import skirout.library.v1.authoring.GetAuthoringSnapshotResponse
-import skirout.library.v1.authoring.GraphPlacement
-import skirout.library.v1.authoring.PreviewAuthoringBatchResponse
-import skirout.library.v1.authoring.AuthoringConflict as WireConflict
-import skirout.library.v1.authoring.AuthoringInvalid as WireInvalid
-import skirout.library.v1.authoring.AuthoringPropertyValue as WirePropertyValue
-import skirout.library.v1.authoring.AuthoringResourceChange as WireChange
-import skirout.library.v1.authoring.AuthoringResourceRef as WireResourceRef
-import skirout.library.v1.authoring.AuthoringSnapshot as WireSnapshot
-import skirout.library.v1.authoring.AuthoringSnapshotSlice as WireSlice
-import skirout.library.v1.authoring.Book as WireBook
-import skirout.library.v1.authoring.ElementPlacement as WirePlacement
-import skirout.library.v1.authoring.Page as WirePage
-import skirout.library.v1.authoring.PageCompileStatus as WireCompileStatus
-import skirout.library.v1.authoring.PageDiagnostic as WireDiagnostic
-import skirout.library.v1.authoring.PageDocument as WirePageDocument
-import skirout.library.v1.authoring.PageElement as WireElement
-import skirout.library.v1.authoring.PageReference as WireReference
-import skirout.library.v1.authoring.PropertyConflict as WirePropertyConflict
-import skirout.library.v1.authoring.ResourceSummary as WireSummary
-import skirout.library.v1.authoring.Tag as WireTag
+import skirout.editor.v1.authoring.ApplyAuthoringBatchResponse
+import skirout.editor.v1.authoring.AuthoringConflict
+import skirout.editor.v1.authoring.AuthoringEdgeChange
+import skirout.editor.v1.authoring.AuthoringInvalid
+import skirout.editor.v1.authoring.AuthoringPreview
+import skirout.editor.v1.authoring.AuthoringResourceChange
+import skirout.editor.v1.authoring.PresentationSubjectChange
+import skirout.editor.v1.authoring.PreviewAuthoringBatchResponse
+import skirout.editor.v1.authoring.PropertyConflict as WireConflict
 
-/**
- * Encodes repository snapshot slices without changing their authoritative sequence.
- *
- * The sequence belongs to the whole Realm, not to an individual requested slice. The panel uses it to reconcile
- * snapshots with change notifications and to detect gaps.
- */
-internal fun AuthoringSnapshotResult.toWireResponse(): GetAuthoringSnapshotResponse =
-    GetAuthoringSnapshotResponse.SuccessWrapper(
-        WireSnapshot(sequence = sequence, slices = slices.map(AuthoringSnapshotSlice::toWire)),
-    )
-
-/**
- * Preserves the repository's applied, conflict, and invalid outcomes at the panel boundary.
- *
- * Applied changes retain their sequence and indirect resource effects. Conflicts retain property level expected and
- * actual values, allowing the client to reconcile without treating a conflict as a transport failure.
- *
- * Conflict details and diagnostics remain structured rather than collapsed to a generic error.
- */
-internal fun AuthoringBatchResult.toWireResponse(): ApplyAuthoringBatchResponse =
+internal fun AuthoringBatchResult.toWireResponse(prototypes: TypePrototypeRegistry): ApplyAuthoringBatchResponse =
     when (this) {
         is AuthoringBatchResult.Applied -> {
-            ApplyAuthoringBatchResponse.AppliedWrapper(change.toWire())
+            ApplyAuthoringBatchResponse.AppliedWrapper(change.toWire(prototypes))
         }
 
         is AuthoringBatchResult.Conflict -> {
             ApplyAuthoringBatchResponse.ConflictWrapper(
-                WireConflict(
-                    conflicts = conflicts.map(PropertyConflict::toWire),
-                ),
+                AuthoringConflict(conflicts = conflicts.map(PropertyConflict::toWire)),
             )
         }
 
         is AuthoringBatchResult.Invalid -> {
             ApplyAuthoringBatchResponse.InvalidWrapper(
-                WireInvalid(diagnostics = diagnostics.map(AuthoringDiagnostic::toWire)),
+                AuthoringInvalid(diagnostics = diagnostics.map(AuthoringDiagnostic::toWire)),
+            )
+        }
+
+        is AuthoringBatchResult.CatalogChanged -> {
+            ApplyAuthoringBatchResponse.createCatalogChanged(
+                actualGeneration =
+                    skirout.editor.v1.type_catalog
+                        .CatalogGeneration(value = actualGeneration),
             )
         }
     }
@@ -96,245 +51,115 @@ internal fun AuthoringBatchResult.toWireResponse(): ApplyAuthoringBatchResponse 
 internal fun AuthoringPreviewResult.toWireResponse(): PreviewAuthoringBatchResponse =
     when (this) {
         is AuthoringPreviewResult.Valid -> {
-            PreviewAuthoringBatchResponse.createValid(affectedResources = affectedResources.map { it.toWire() })
+            PreviewAuthoringBatchResponse.ValidWrapper(
+                AuthoringPreview(
+                    affectedResources = affectedResources.map { it.toWire() },
+                    affectedEdges =
+                        affectedEdges.map {
+                            skirout.editor.v1.authoring
+                                .AuthoringEdgeId(value = it)
+                        },
+                ),
+            )
         }
 
         is AuthoringPreviewResult.Conflict -> {
-            PreviewAuthoringBatchResponse.createConflict(conflicts = conflicts.map(PropertyConflict::toWire))
+            PreviewAuthoringBatchResponse.ConflictWrapper(
+                AuthoringConflict(conflicts = conflicts.map(PropertyConflict::toWire)),
+            )
         }
 
         is AuthoringPreviewResult.Invalid -> {
-            PreviewAuthoringBatchResponse.createInvalid(diagnostics = diagnostics.map(AuthoringDiagnostic::toWire))
-        }
-    }
-
-/**
- * Encodes direct changes and indirect refresh targets without losing typed resource identities.
- */
-internal fun AuthoringChanged.toWire() =
-    skirout.library.v1.authoring.AuthoringChanged(
-        sequence = sequence,
-        batchId = batchId.value,
-        changes = changes.map(AuthoringResourceChange::toWire),
-        indirectlyAffectedResources = indirectlyAffectedResources.map(AuthoringResourceRef::toWire),
-    )
-
-private fun AuthoringSnapshotSlice.toWire(): WireSlice =
-    when (this) {
-        is AuthoringSnapshotSlice.Library -> {
-            WireSlice.createLibrary(books = books.map(Book::toWire), tags = tags.map(Tag::toWire))
+            PreviewAuthoringBatchResponse.InvalidWrapper(
+                AuthoringInvalid(diagnostics = diagnostics.map(AuthoringDiagnostic::toWire)),
+            )
         }
 
-        is AuthoringSnapshotSlice.Book -> {
-            WireSlice.createBook(bookId = id.toSkirRecordId(), book = book?.toWire(), pages = pages.map(Page::toWire))
-        }
-
-        is AuthoringSnapshotSlice.Page -> {
-            WireSlice.createPage(pageId = id.toSkirRecordId(), document = document?.toWire())
-        }
-    }
-
-private fun Book.toWire(): WireBook =
-    WireBook(
-        id = id.toSkirRecordId(),
-        title = title.value,
-        icon = icon.wireValue,
-        color = color.toSkir(),
-        tags = tags.map { it.toSkirRecordId() },
-    )
-
-private fun Tag.toWire(): WireTag =
-    WireTag(
-        id = id.toSkirRecordId(),
-        name = name.value,
-        color = color.toSkir(),
-        parents = parents.map { it.toSkirRecordId() },
-        placement =
-            GraphPlacement(x = placement.x, y = placement.y, width = placement.width, height = placement.height),
-    )
-
-private fun Page.toWire(): WirePage =
-    WirePage(
-        id = id.toSkirRecordId(),
-        book = book.toSkirRecordId(),
-        name = name.value,
-        kind = kind.toSkir(),
-        chapter = chapter.value,
-        priority = priority,
-    )
-
-private fun AuthoringElement.toWire(): WireElement =
-    WireElement(
-        id = id.ref<Element>().toSkirRecordId(),
-        page = page.toSkirRecordId(),
-        elementType = elementType.value.toString(),
-        schemaRevision = schemaRevision,
-        value = SkirDataValueCodec.encode(value).getOrThrow(),
-        placement = placement.toWire(),
-    )
-
-private fun PageDocument.toWire(): WirePageDocument =
-    WirePageDocument(
-        page = page.toWire(),
-        elements = elements.map { it.toWire(page) },
-        references = references.map(PageReference::toWire),
-        crossPageTargets = crossPageTargets.map(ResourceSummary::toWire),
-        crossPageSources = crossPageSources.map(ResourceSummary::toWire),
-        diagnostics = diagnostics.map(PageDocumentDiagnostic::toWire),
-        compileStatus = compileStatus.toWire(),
-    )
-
-private fun PageDocumentElement.toWire(page: Page): WireElement =
-    WireElement(
-        id = id.ref<Element>().toSkirRecordId(),
-        page = page.id.toSkirRecordId(),
-        elementType = elementType.value.toString(),
-        schemaRevision = schemaRevision,
-        value = SkirDataValueCodec.encode(value).getOrThrow(),
-        placement = placement.toWire(),
-    )
-
-internal fun ElementPlacement.toWire(): WirePlacement =
-    when (this) {
-        is ElementPlacement.Graph -> {
-            WirePlacement.createGraph(x = x, y = y, width = width, height = height)
-        }
-
-        is ElementPlacement.TimelineEntry -> {
-            WirePlacement.createTimelineEntry(trackIndex = trackIndex)
-        }
-
-        is ElementPlacement.TimelineSegment -> {
-            WirePlacement.createTimelineSegment(startFrame = startFrame, endFrame = endFrame)
-        }
-
-        is ElementPlacement.TimelineKeyframe -> {
-            WirePlacement.createTimelineKeyframe(frame = frame)
-        }
-    }
-
-private fun PageReference.toWire(): WireReference =
-    WireReference(source = source.ref<Element>().toSkirRecordId(), slot = slot.value, target = target.toSkirRecordId())
-
-private fun ResourceSummary.toWire(): WireSummary =
-    WireSummary(
-        id = id.toSkirRecordId(),
-        name = name,
-        elementType = elementType?.value?.toString(),
-        page = page?.toSkirRecordId(),
-        exists = exists,
-    )
-
-private fun PageDocumentDiagnostic.toWire(): WireDiagnostic =
-    WireDiagnostic(
-        code = code,
-        message = message,
-        element = element?.ref<Element>()?.toSkirRecordId(),
-        slot = slot?.value,
-        target = target?.toSkirRecordId(),
-    )
-
-private fun PageCompileStatus.toWire(): WireCompileStatus =
-    when (this) {
-        PageCompileStatus.NotCompiled -> {
-            WireCompileStatus.NOT_COMPILED
-        }
-
-        is PageCompileStatus.Active -> {
-            WireCompileStatus.createActive(manifestId = manifestId)
-        }
-
-        is PageCompileStatus.Blocked -> {
-            WireCompileStatus.createBlocked(
-                lastActiveManifestId = lastActiveManifestId,
-                diagnosticCount = diagnosticCount,
+        is AuthoringPreviewResult.CatalogChanged -> {
+            PreviewAuthoringBatchResponse.createCatalogChanged(
+                actualGeneration =
+                    skirout.editor.v1.type_catalog
+                        .CatalogGeneration(value = actualGeneration),
             )
         }
     }
 
-private fun AuthoringResourceChange.toWire(): WireChange =
-    when (this) {
-        is AuthoringResourceChange.UpsertBook -> WireChange.UpsertBookWrapper(book.toWire())
-        is AuthoringResourceChange.RemoveBook -> WireChange.RemoveBookWrapper(id.toSkirRecordId())
-        is AuthoringResourceChange.UpsertTag -> WireChange.UpsertTagWrapper(tag.toWire())
-        is AuthoringResourceChange.RemoveTag -> WireChange.RemoveTagWrapper(id.toSkirRecordId())
-        is AuthoringResourceChange.UpsertPage -> WireChange.UpsertPageWrapper(page.toWire())
-        is AuthoringResourceChange.RemovePage -> WireChange.RemovePageWrapper(id.toSkirRecordId())
-        is AuthoringResourceChange.UpsertElement -> WireChange.UpsertElementWrapper(element.toWire())
-        is AuthoringResourceChange.RemoveElement -> WireChange.RemoveElementWrapper(id.ref<Element>().toSkirRecordId())
-    }
-
-internal fun AuthoringResourceRef.toWire(): WireResourceRef =
-    when (this) {
-        is AuthoringResourceRef.Book -> WireResourceRef.BookWrapper(id.toSkirRecordId())
-        is AuthoringResourceRef.Tag -> WireResourceRef.TagWrapper(id.toSkirRecordId())
-        is AuthoringResourceRef.Page -> WireResourceRef.PageWrapper(id.toSkirRecordId())
-        is AuthoringResourceRef.Element -> WireResourceRef.ElementWrapper(id.ref<Element>().toSkirRecordId())
-    }
-
-private fun PropertyConflict.toWire(): WirePropertyConflict =
-    WirePropertyConflict(
-        resource = resource.toWire(),
-        path = path.toWire(),
-        expected = expected?.toWire(),
-        actual = actual?.toWire(),
-    )
-
-private fun AuthoringPropertyValue.toWire(): WirePropertyValue =
-    when (this) {
-        is AuthoringPropertyValue.StringValue -> {
-            WirePropertyValue.StringWrapper(value)
-        }
-
-        is AuthoringPropertyValue.IntegerValue -> {
-            WirePropertyValue.SignedThirtyTwoWrapper(value)
-        }
-
-        is AuthoringPropertyValue.ColorValue -> {
-            WirePropertyValue.ColorWrapper(value.toSkir())
-        }
-
-        is AuthoringPropertyValue.ResourceValue -> {
-            WirePropertyValue.RecordIdWrapper(value.toSkirRecordId())
-        }
-
-        is AuthoringPropertyValue.ResourcesValue -> {
-            WirePropertyValue.RecordIdsWrapper(value.map { it.toSkirRecordId() })
-        }
-
-        is AuthoringPropertyValue.PlacementValue -> {
-            WirePropertyValue.ElementPlacementWrapper(value.toWire())
-        }
-
-        is AuthoringPropertyValue.DataValueValue -> {
-            WirePropertyValue.TypedValueWrapper(SkirDataValueCodec.encode(value).getOrThrow())
-        }
-    }
-
-private fun AuthoringDiagnostic.toWire(): skirout.library.v1.authoring.AuthoringDiagnostic =
-    skirout.library.v1.authoring.AuthoringDiagnostic(
-        code = code,
-        message = message,
-        resource = resource?.toWire(),
-        path = path?.toWire(),
-    )
-
-internal fun ElementValuePath.toWire(): DataPath =
-    DataPath(
-        segments =
-            segments.map {
-                when (it) {
-                    is ElementValuePathSegment.Field -> {
-                        DataPathSegment.createField(fieldName = it.name)
+internal fun AuthoringChanged.toWire(prototypes: TypePrototypeRegistry): skirout.editor.v1.authoring.AuthoringChanged =
+    skirout.editor.v1.authoring.AuthoringChanged(
+        generation =
+            skirout.editor.v1.type_catalog
+                .CatalogGeneration(value = generation),
+        sequence = sequence,
+        batchId = batchId.value,
+        resources =
+            resources.map { change ->
+                when (change) {
+                    is GraphResourceChange.Upsert -> AuthoringResourceChange.UpsertWrapper(change.resource.toWire())
+                    is GraphResourceChange.Remove -> AuthoringResourceChange.RemoveWrapper(change.id.toWire())
+                }
+            },
+        edges =
+            edges.map { change ->
+                when (change) {
+                    is GraphEdgeChange.Upsert -> {
+                        AuthoringEdgeChange.UpsertWrapper(change.edge.toWire())
                     }
 
-                    is ElementValuePathSegment.Index -> {
-                        DataPathSegment.createIndex(index = it.index)
-                    }
-
-                    is ElementValuePathSegment.MapKey -> {
-                        DataPathSegment.createMapKey(key = SkirDataValueCodec.encode(it.key).getOrThrow())
+                    is GraphEdgeChange.Remove -> {
+                        AuthoringEdgeChange.createRemove(value = change.id)
                     }
                 }
             },
+        presentations =
+            presentations.map { change ->
+                when (change) {
+                    is com.typewritermc.realm.repository.AuthoringPresentationChange.Upsert -> {
+                        PresentationSubjectChange.createUpsert(
+                            resource = change.resource.toWire(),
+                            subject = change.subject.toWire(prototypes),
+                        )
+                    }
+
+                    is com.typewritermc.realm.repository.AuthoringPresentationChange.Remove -> {
+                        PresentationSubjectChange.createRemove(value = change.resource.value)
+                    }
+                }
+            },
+        compilationImpact = compilationImpact.map { it.toWire() },
+    )
+
+private fun com.typewritermc.authoring.AuthoringPresentationSubject.toWire(prototypes: TypePrototypeRegistry) =
+    skirout.editor.v1.authoring.PresentationSubject(
+        content = content.toWire(),
+        descriptor = prototypes.encode(descriptor).toWire(),
+        identity = prototypes.encode(identity).toWire(),
+        resource = resource.toWire(),
+        definition = definition.toWire(),
+        ownerPath = ownerPath.map(ResourceId::toWire),
+    )
+
+private fun com.typewritermc.engine.CompilationRoot.toWire() =
+    skirout.editor.v1.compiled_content.CompilationRoot(
+        projection =
+            skirout.editor.v1.compiled_content
+                .CompilationProjectionId(value = projection.value),
+        resource =
+            skirout.editor.v1.type_catalog
+                .ResourceId(value = resource.value),
+    )
+
+private fun PropertyConflict.toWire(): WireConflict =
+    WireConflict(
+        resource = resource.toWire(),
+        path = path.toWirePath(),
+        expected = expected?.let { SkirDataValueCodec.encode(it).getOrThrow() },
+        actual = actual?.let { SkirDataValueCodec.encode(it).getOrThrow() },
+    )
+
+internal fun AuthoringDiagnostic.toWire(): skirout.editor.v1.authoring.AuthoringDiagnostic =
+    skirout.editor.v1.authoring.AuthoringDiagnostic(
+        code = code,
+        message = message,
+        resource = resource?.toWire(),
+        path = path?.toWirePath(),
     )

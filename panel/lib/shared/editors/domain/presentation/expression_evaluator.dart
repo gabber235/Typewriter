@@ -104,8 +104,22 @@ final class _ExpressionEvaluator {
     CollectionOperationExpression() => _collectionOperation(expression, depth),
     RegexExpression() => _regex(expression, depth),
     CoalesceExpression() => _coalesce(expression, depth),
+    RecordExpression(:final fields) => _record(fields, depth),
     ColorOperationExpression() => _colorOperation(expression, depth),
   };
+
+  TypeResult<DataValue> _record(
+    Map<String, TypedExpression> fields,
+    int depth,
+  ) {
+    final values = <String, DataValue>{};
+    for (final entry in fields.entries) {
+      final result = evaluate(entry.value, depth + 1);
+      if (result case TypeFailure()) return result;
+      values[entry.key] = result.valueOrNull!;
+    }
+    return TypeResult.success(RecordValue(values));
+  }
 
   TypeResult<DataValue> _binding(BindingReference reference) {
     final binding = context.bindings.resolve(reference, registry: registry);

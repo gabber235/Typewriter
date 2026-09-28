@@ -1,9 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.library.PageKindId
-import com.typewritermc.library.PageKindRef
+import com.typewritermc.elements.ContentCatalog
 import com.typewritermc.pages.GraphDirection
 import com.typewritermc.pages.PageCatalog
 import com.typewritermc.pages.PageCatalogEntry
@@ -12,6 +10,7 @@ import com.typewritermc.pages.PageDiagnostic
 import com.typewritermc.pages.ResolvedPageEditorDefinition
 import com.typewritermc.presentation.PresentationDiagnostic
 import com.typewritermc.realm.RealmDiscoverySnapshot
+import com.typewritermc.realm.repository.loadTestPrototypes
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.Icon
@@ -37,7 +36,7 @@ import skirout.editor.v1.type_catalog.TypeCatalog as WireTypeCatalog
 val SnapshotRealmEditorCatalogSourceTest by testSuite {
     test("successful fetch returns the requested atomic type closure") {
         val fixture = catalogFixture()
-        val source = SnapshotRealmEditorCatalogSource { fixture.snapshot.editorCatalog() }
+        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog() }
         val request =
             emptyRequest(
                 requestedTypes = listOf(SkirTypeCodec.encode(fixture.leaf.id).getOrThrow()),
@@ -56,7 +55,8 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
     test("successful fetch keeps page diagnostics in the atomic catalog") {
         val fixture = catalogFixture()
         val diagnostic = PageDiagnostic(code = "invalid_page", message = "Broken page", namespace = "test")
-        val source = SnapshotRealmEditorCatalogSource { fixture.snapshot.editorCatalog(pageDiagnostics = listOf(diagnostic)) }
+        val source =
+            SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog(pageDiagnostics = listOf(diagnostic)) }
 
         val response = source.fetch(emptyRequest()) as CatalogFetchResult.SuccessWrapper
 
@@ -78,26 +78,19 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                             sourcePart = "main",
                             descriptor =
                                 PageDescriptor(
-                                    kind =
-                                        PageKindRef(
-                                            PageKindId(DeclaredTypeId.parse("019d3a87001070008000000000000010")),
-                                            1,
-                                        ),
+                                    type = fixture.leaf.id,
                                     name = "Test",
                                     description = null,
                                     icon = Icon.parse("material-symbols:test-tube"),
                                     color = Color.parseRgb("#000000"),
                                     editor =
-                                        ResolvedPageEditorDefinition.Graph(
-                                            GraphDirection.LEFT_TO_RIGHT,
-                                            listOf(fixture.leaf.id),
-                                        ),
+                                        ResolvedPageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT),
                                 ),
                         ),
                     ),
                 diagnostics = emptyList(),
             )
-        val source = SnapshotRealmEditorCatalogSource { fixture.snapshot.editorCatalog(pages = pages) }
+        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog(pages = pages) }
 
         val response = source.fetch(emptyRequest()) as CatalogFetchResult.SuccessWrapper
         val catalog =
@@ -112,7 +105,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
 
     test("subtype queries retain abstract and concrete descendants") {
         val fixture = catalogFixture()
-        val source = SnapshotRealmEditorCatalogSource { fixture.snapshot.editorCatalog() }
+        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog() }
         val response =
             source.fetch(
                 emptyRequest(
@@ -140,7 +133,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                 com.typewritermc.types.PresentationId(namespace = "test", name = "editor"),
                 fixture.leaf.id,
             )
-        val source = SnapshotRealmEditorCatalogSource { fixture.snapshot.editorCatalog(listOf(presentation)) }
+        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog(listOf(presentation)) }
 
         val response =
             source.fetch(
@@ -167,14 +160,19 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                 definitions =
                     fixture.snapshot.types.definitions.map { definition ->
                         if (definition.id == fixture.leaf.id) {
-                            definition.copy(defaultPresentationId = presentationId)
+                            definition.copy(
+                                rolePresentations = mapOf(
+                                    com.typewritermc.types.PresentationRole.EDITOR to
+                                        com.typewritermc.types.RolePresentationStatus.Ready(presentationId),
+                                ),
+                            )
                         } else {
                             definition
                         }
                     },
             )
         val source =
-            SnapshotRealmEditorCatalogSource {
+            SnapshotRealmEditorCatalogSource(loadTestPrototypes()) {
                 fixture.snapshot.copy(types = types).editorCatalog(listOf(presentation))
             }
 
@@ -186,10 +184,42 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
         response.value.presentationDefinitions shouldBe listOf(presentation)
     }
 
+    test("requested type retains a rejected role without requesting a missing definition") {
+        val fixture = catalogFixture()
+        val types =
+            fixture.snapshot.types.copy(
+                definitions =
+                    fixture.snapshot.types.definitions.map { definition ->
+                        if (definition.id == fixture.leaf.id) {
+                            definition.copy(
+                                rolePresentations = mapOf(
+                                    com.typewritermc.types.PresentationRole.EDITOR to
+                                        com.typewritermc.types.RolePresentationStatus.Rejected("builder failed"),
+                                ),
+                            )
+                        } else {
+                            definition
+                        }
+                    },
+            )
+        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.copy(types = types).editorCatalog() }
+
+        val response =
+            source.fetch(
+                emptyRequest(requestedTypes = listOf(SkirTypeCodec.encode(fixture.leaf.id).getOrThrow())),
+            ) as CatalogFetchResult.SuccessWrapper
+
+        response.value.presentationDefinitions shouldBe emptyList()
+        val returned =
+            SkirTypeCodec.decode(WireTypeCatalog.partial(definitions = response.value.typeDefinitions)).getOrThrow()
+        returned.definitions.single { it.id == fixture.leaf.id }.rolePresentations[com.typewritermc.types.PresentationRole.EDITOR] shouldBe
+            com.typewritermc.types.RolePresentationStatus.Rejected("builder failed")
+    }
+
     test("successful fetch includes attributed presentation diagnostics") {
         val fixture = catalogFixture()
         val source =
-            SnapshotRealmEditorCatalogSource {
+            SnapshotRealmEditorCatalogSource(loadTestPrototypes()) {
                 fixture.snapshot.editorCatalog(
                     diagnostics =
                         listOf(
@@ -300,7 +330,7 @@ private fun DeploymentDiscoverySnapshot.editorCatalog(
     pages: PageCatalog = PageCatalog(emptyList(), pageDiagnostics),
 ) = RealmDiscoverySnapshot(
     discovery = this,
-    elements = ElementCatalog(emptyList()),
+    elements = ContentCatalog(emptyList()),
     pages = pages,
     presentations = presentations,
     presentationDiagnostics = diagnostics,

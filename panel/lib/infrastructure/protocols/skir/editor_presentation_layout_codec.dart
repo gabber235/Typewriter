@@ -6,11 +6,90 @@ part of "editor_presentation_codec.dart";
 /// and decorate child nodes without changing the values those nodes consume.
 extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
   TypeResult<PresentationElement> _children(wire.ChildrenElement value) =>
-      _childrenLayout(value.layout).mapValue(
-        (layout) => layout.element(
-          value.children.map(decodeNode).toList(growable: false),
+      switch (value) {
+        wire.ChildrenElement_columnWrapper(:final value) => _axisChildren(
+          value,
+          ColumnElement.new,
         ),
-      );
+        wire.ChildrenElement_rowWrapper(:final value) => _axisChildren(
+          value,
+          RowElement.new,
+        ),
+        wire.ChildrenElement_wrapWrapper(:final value) =>
+          _wrapLayout(value.layout).mapValue(
+            (layout) => layout.element(
+              value.children.map(decodeNode).toList(growable: false),
+            ),
+          ),
+        wire.ChildrenElement_gridWrapper(:final value) =>
+          _gridLayout(value.layout).mapValue(
+            (layout) => layout.element(
+              value.children.map(decodeNode).toList(growable: false),
+            ),
+          ),
+        wire.ChildrenElement_stackWrapper(:final value) => TypeResult.success(
+          StackElement(
+            children: value.children.map(decodeNode).toList(growable: false),
+          ),
+        ),
+        wire.ChildrenElement_unknown() => invalidWire(
+          "Unknown children element",
+        ),
+      };
+
+  TypeResult<PresentationElement> _axisChildren(
+    wire.AxisChildrenElement value,
+    PresentationElement Function({
+      required List<PresentationAxisChild> children,
+      double spacing,
+      PresentationMainAxisAlignment mainAxisAlignment,
+      PresentationCrossAxisAlignment crossAxisAlignment,
+    })
+    create,
+  ) {
+    final layout = _axisLayout(value.layout, PresentationColumnLayout.new);
+    final children = <PresentationAxisChild>[];
+    final diagnostics = [...layout.diagnostics];
+    for (final child in value.children) {
+      final decoded = switch (child) {
+        wire.AxisChild_fixedWrapper(:final value) => TypeResult.success(
+          PresentationAxisChild.fixed(decodeNode(value)),
+        ),
+        wire.AxisChild_flexibleWrapper(:final value) =>
+          value.flex <= 0
+              ? invalidWire("Axis child flex must be positive")
+              : switch (value.fit) {
+                  wire.FlexFit.tight => TypeResult.success(
+                    PresentationAxisChild.flexible(
+                      child: decodeNode(value.child),
+                      flex: value.flex,
+                      fit: PresentationFlexFit.tight,
+                    ),
+                  ),
+                  wire.FlexFit.loose => TypeResult.success(
+                    PresentationAxisChild.flexible(
+                      child: decodeNode(value.child),
+                      flex: value.flex,
+                    ),
+                  ),
+                  _ => invalidWire("Unknown axis child flex fit"),
+                },
+        wire.AxisChild_unknown() => invalidWire("Unknown axis child"),
+      };
+      diagnostics.addAll(decoded.diagnostics);
+      if (decoded.valueOrNull case final value?) children.add(value);
+    }
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    final axis = layout.valueOrNull!;
+    return TypeResult.success(
+      create(
+        children: children,
+        spacing: axis._axisSpacing,
+        mainAxisAlignment: axis._axisMainAlignment,
+        crossAxisAlignment: axis._axisCrossAlignment,
+      ),
+    );
+  }
 
   TypeResult<PresentationChildrenLayout> _childrenLayout(
     wire.ChildrenLayout value,
@@ -186,6 +265,36 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
             SectionElement(child: decodeNode(value.child), border: border),
       );
 
+  TypeResult<PresentationElement> _adaptiveLeading(
+    wire.AdaptiveLeadingElement value,
+  ) {
+    final padding = _insets(value.padding);
+    final compactPadding = _insets(value.compactPadding);
+    final diagnostics = [...padding.diagnostics, ...compactPadding.diagnostics];
+    if (!value.gap.isFinite ||
+        value.gap < 0 ||
+        !value.minimumCenterWidth.isFinite ||
+        value.minimumCenterWidth < 0) {
+      diagnostics.add(
+        wireDiagnostic(
+          "Adaptive leading dimensions must be finite and nonnegative",
+        ),
+      );
+    }
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    return TypeResult.success(
+      AdaptiveLeadingElement(
+        leading: decodeNode(value.leading),
+        center: value.center == null ? null : decodeNode(value.center!),
+        suffix: value.suffix == null ? null : decodeNode(value.suffix!),
+        padding: padding.valueOrNull!,
+        compactPadding: compactPadding.valueOrNull!,
+        gap: value.gap,
+        minimumCenterWidth: value.minimumCenterWidth,
+      ),
+    );
+  }
+
   TypeResult<PresentationElement> _padding(wire.PaddingLayout value) {
     final values = [value.top, value.start, value.end, value.bottom];
     if (values.any((value) => !value.isFinite || value < 0)) {
@@ -302,6 +411,26 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
       (width, height) => SpacerElement(width: width, height: height),
     );
   }
+}
+
+extension on PresentationChildrenLayout {
+  double get _axisSpacing => switch (this) {
+    PresentationColumnLayout(:final spacing) ||
+    PresentationRowLayout(:final spacing) => spacing,
+    _ => throw StateError("Layout is not an axis layout"),
+  };
+
+  PresentationMainAxisAlignment get _axisMainAlignment => switch (this) {
+    PresentationColumnLayout(:final mainAxisAlignment) ||
+    PresentationRowLayout(:final mainAxisAlignment) => mainAxisAlignment,
+    _ => throw StateError("Layout is not an axis layout"),
+  };
+
+  PresentationCrossAxisAlignment get _axisCrossAlignment => switch (this) {
+    PresentationColumnLayout(:final crossAxisAlignment) ||
+    PresentationRowLayout(:final crossAxisAlignment) => crossAxisAlignment,
+    _ => throw StateError("Layout is not an axis layout"),
+  };
 }
 
 extension on wire.CrossAxisAlignment {

@@ -9,8 +9,8 @@ import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
 import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
-import com.typewritermc.elements.ElementCatalogAssembler
-import com.typewritermc.elements.ElementContributionReader
+import com.typewritermc.elements.ContentCatalogAssembler
+import com.typewritermc.elements.ContentContributionReader
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
@@ -60,8 +60,8 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
         val discovery = TypeContributionAssembler.assemble(contributions.types, sourceParts)
         val facts = DeploymentFacts(context.facts)
         val elementCatalog =
-            ElementCatalogAssembler.assemble(
-                ElementContributionReader.read(manifests),
+            ContentCatalogAssembler.assemble(
+                ContentContributionReader.read(manifests),
                 sourceParts,
                 facts,
             )
@@ -85,7 +85,10 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 deployment = deployment,
                 registrars = deployment.application.koin.getAll<RuntimeRegistrar>(),
                 parentScope = parentScope,
-                contentGateway = AssemblingEngineContentGateway(EngineContentAssembler(elementCatalog, deployment.prototypes)),
+                contentGateway =
+                    AssemblingEngineContentGateway(
+                        listOf(PageCompiledArtifactConsumer(deployment.prototypes, discovery.relations)),
+                    ),
                 contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, parentScope),
             )
         } catch (failure: Throwable) {

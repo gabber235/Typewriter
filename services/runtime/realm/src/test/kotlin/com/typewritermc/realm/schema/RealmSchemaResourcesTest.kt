@@ -9,23 +9,35 @@ val RealmSchemaResourcesTest by testSuite {
         MigrationResources().loadRealmSchema().map(SchemaResource::path) shouldBe
             listOf(
                 "search/authoring_text.surql",
-                "book/book.surql",
-                "compile/compiled_page_shard.surql",
-                "compile/compiled_manifest.surql",
-                "compile/active_compiled_manifest.surql",
+                "search/authoring_search.surql",
+                "resource/resource.surql",
+                "resource/authoring_batch.surql",
+                "compile/compiled_artifact.surql",
+                "compile/compile_attempt_root.surql",
+                "compile/active_compiled_artifact_manifest.surql",
                 "compile/authoring_head.surql",
                 "compile/collaboration_head.surql",
                 "compile/compile_attempt.surql",
-                "element/element.surql",
-                "element/authoring_batch.surql",
-                "kernel/color.surql",
-                "kernel/id.surql",
-                "page/page.surql",
-                "relations/contains_element.surql",
-                "relations/contains_page.surql",
-                "relations/resource_reference.surql",
-                "tag/tag.surql",
             )
+    }
+
+    test("compile attempt roots use only the normalized projection relation") {
+        val schema = MigrationResources().loadRealmSchema().associateBy(SchemaResource::path)
+
+        schema.getValue("compile/compile_attempt.surql").script.contains("FIELD OVERWRITE roots") shouldBe false
+        schema.getValue("compile/compile_attempt_root.surql").script.contains("DEFINE TABLE OVERWRITE compile_attempt_root") shouldBe true
+    }
+
+    test("compiled artifact payloads remain blob owned") {
+        val schema = MigrationResources().loadRealmSchema().associateBy(SchemaResource::path)
+        val artifactSchema =
+            schema
+                .getValue("compile/compiled_artifact.surql")
+                .script
+                .substringBefore("DEFINE TABLE OVERWRITE compiled_artifact_manifest")
+
+        artifactSchema.contains("payload") shouldBe false
+        artifactSchema.contains("DEFINE FIELD OVERWRITE semantic_digest") shouldBe true
     }
 
     test("Realm schema catalog preserves declared dependency order") {

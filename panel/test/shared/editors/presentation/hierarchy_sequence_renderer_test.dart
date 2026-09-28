@@ -290,7 +290,7 @@ EditorProtocolRenderer _renderer(PresentationNode presentation) {
   );
   return EditorProtocolRenderer(
     envelope: const TypedValueEnvelope(rootType: root, rootValue: UnitValue()),
-    typeCatalog: const TypeCatalog([
+    typeCatalog: receivedRealmCatalog([
       TypeDefinition(
         id: root,
         kind: NominalTypeKind.concrete,

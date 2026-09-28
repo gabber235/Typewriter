@@ -122,9 +122,11 @@ final class RealmsSearchSource(
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    throw UnimplementedError();
-  }
+  Future<SearchPreviewRequestResult> preview(
+    SearchPreviewRequest request,
+  ) async => const SearchPreviewRequestResult.error(
+    message: "Realm results do not provide a separate preview",
+  );
 
   @override
   void dispose() {

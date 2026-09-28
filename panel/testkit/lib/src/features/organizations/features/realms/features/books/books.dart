@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:faker/faker.dart" hide Color;
-import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
 import "package:riverpod/src/framework.dart";
@@ -16,7 +15,7 @@ export "features/features.dart";
 Book Function() generateRandomBook(List<Tag> tags) {
   return () {
     final possibleTagIds = tags.map((tag) => tag.tagId).toList();
-    final tagIds = <skir.RecordId>[];
+    final tagIds = <skir.ResourceId>[];
     var chance = 0.9;
     while (random.decimal() < chance && tagIds.length < tags.length) {
       chance *= 0.7;
@@ -30,7 +29,7 @@ Book Function() generateRandomBook(List<Tag> tags) {
         .snakeCase();
 
     return Book(
-      bookId: recordId("book:$title"),
+      bookId: skir.ResourceId(value: "book:$title"),
       title: title,
       icon: generateRandomIconName(),
       color: safeColors.randomElement(),
@@ -49,29 +48,6 @@ class BooksMock extends CanonicalBooks {
     if (specificBooks != null) return specificBooks!;
     final tagsIds = await ref.watch(canonicalTagsProvider.future);
     return displayState.generate(generateRandomBook(tagsIds));
-  }
-
-  @override
-  Future<Book> createBook({
-    required String title,
-    String? icon,
-    Color? color,
-    List<skir.RecordId> tagIds = const [],
-  }) async {
-    await Future.delayed(500.ms);
-    final newBook = Book(
-      bookId: recordId(
-        "book:${faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase()}",
-      ),
-      title: title,
-      icon: icon ?? "mdi:book",
-      color: color ?? safeColors.randomElement(),
-      tagIds: tagIds.isEmpty ? [] : tagIds,
-    );
-
-    final books = await future;
-    state = AsyncData([...books, newBook]);
-    return newBook;
   }
 
   @override

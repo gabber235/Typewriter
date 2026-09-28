@@ -83,6 +83,10 @@ extension on PresentationElement {
             .diagnostics,
     ];
 
+    if (element case RichTextElement(:final runs) when runs.isEmpty) {
+      diagnostics.add(_invalid("Rich text requires at least one run"));
+    }
+
     if (element case CommitControlsElement(:final binding)) {
       diagnostics.addAll(
         context.bindings.inspect(binding, registry: registry).diagnostics,
@@ -358,7 +362,10 @@ extension PresentationSlotDiscovery on PresentationNode {
 extension on PresentationElement {
   Set<String> get _presentationSlotIds => switch (this) {
     PresentationSlotElement(:final slotId) => {slotId},
-    ChildrenLayoutElement(:final children) ||
+    ColumnElement(:final children) || RowElement(:final children) => {
+      for (final child in children) ...child.child.presentationSlotIds,
+    },
+    WrapElement(:final children) ||
     GridElement(:final children) ||
     StackElement(
       :final children,

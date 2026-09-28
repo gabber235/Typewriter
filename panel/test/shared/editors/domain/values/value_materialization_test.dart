@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -7,6 +9,22 @@ void main() {
     id: TypeId.qualified(namespace: "example", name: "Entry"),
     revision: 1,
   );
+
+  test("Realm input drafts omit intrinsic type defaults", () {
+    final draft = planCreationDraftWithoutDefaults(
+      type: const RecordType(
+        fields: {
+          "name": TypeField(name: "name", type: StringType()),
+          "enabled": TypeField(name: "enabled", type: BooleanType()),
+        },
+      ),
+      registry: registry,
+    );
+
+    final record = draft as RecordDraftValue;
+    expect(record.fields["name"], isA<MissingDraftValue>());
+    expect(record.fields["enabled"], isA<MissingDraftValue>());
+  });
 
   test("required references remain missing until edited", () {
     final draft = CreationDraft(
@@ -18,7 +36,7 @@ void main() {
     expect(draft.value(DataPath.root), isA<MissingEditorValue>());
     expect(draft.finalize().valueOrNull, isNull);
 
-    final reference = ReferenceValue(recordId("element:target"));
+    final reference = ReferenceValue(skir.ResourceId(value: "target"));
     expect(
       draft.update(DataPath.root, reference),
       isA<AppliedEditorMutation>(),
@@ -43,13 +61,13 @@ void main() {
     expect(
       draft.update(
         DataPath.root,
-        ListValue([ReferenceValue(recordId("element:first"))]),
+        ListValue([ReferenceValue(skir.ResourceId(value: "first"))]),
       ),
       isA<AppliedEditorMutation>(),
     );
     expect(
       draft.value(DataPath.root).valueOrNull,
-      ListValue([ReferenceValue(recordId("element:first"))]),
+      ListValue([ReferenceValue(skir.ResourceId(value: "first"))]),
     );
     expect(draft.finalize().valueOrNull, isNull);
 
@@ -57,14 +75,14 @@ void main() {
       ..appendListItem(DataPath.root)
       ..update(
         DataPath.root.index(1),
-        ReferenceValue(recordId("element:second")),
+        ReferenceValue(skir.ResourceId(value: "second")),
       );
 
     expect(
       draft.finalize().valueOrNull,
       ListValue([
-        ReferenceValue(recordId("element:first")),
-        ReferenceValue(recordId("element:second")),
+        ReferenceValue(skir.ResourceId(value: "first")),
+        ReferenceValue(skir.ResourceId(value: "second")),
       ]),
     );
   });
@@ -94,7 +112,7 @@ void main() {
         ..updateMapValue(
           DataPath.root,
           entry.id,
-          ReferenceValue(recordId("element:value")),
+          ReferenceValue(skir.ResourceId(value: "value")),
         );
 
       expect(
@@ -102,7 +120,7 @@ void main() {
         MapValue([
           DataMapEntry(
             key: const StringValue("key"),
-            value: ReferenceValue(recordId("element:value")),
+            value: ReferenceValue(skir.ResourceId(value: "value")),
           ),
         ]),
       );
@@ -122,6 +140,13 @@ void main() {
       ..appendMapEntry(DataPath.root)
       ..appendMapEntry(DataPath.root);
 
+    final entries = draft.mapStructure(DataPath.root)!.entries;
+    for (final entry in entries) {
+      draft
+        ..updateMapKey(DataPath.root, entry.id, const StringValue("duplicate"))
+        ..updateMapValue(DataPath.root, entry.id, const StringValue("value"));
+    }
+
     final structure = draft.mapStructure(DataPath.root)!;
     expect(structure.entries, hasLength(2));
     expect(structure.entries.expand((entry) => entry.diagnostics), isEmpty);
@@ -131,7 +156,7 @@ void main() {
     );
   });
 
-  test("abstract selection creates an editable nested draft", () {
+  test("abstract selection creates an editable nested draft", () async {
     const abstractType = ResolvedTypeRef(
       id: TypeId.qualified(namespace: "example", name: "Abstract"),
       revision: 1,
@@ -166,10 +191,12 @@ void main() {
     final draft = CreationDraft(
       rootType: const NamedType(abstractType),
       registry: types,
+      concreteTypeInitializer: ({required type, required supplied}) async =>
+          const ConcreteTypeNeedsInput(),
     );
     addTearDown(draft.dispose);
 
-    draft.selectConcreteType(DataPath.root, concreteType);
+    await draft.selectConcreteTypeAsync(DataPath.root, concreteType);
     expect(
       draft.concretePayloadValue(DataPath.root, DataPath.root.field("target")),
       isA<MissingEditorValue>(),
@@ -177,14 +204,14 @@ void main() {
     draft.updateConcretePayloadAt(
       DataPath.root,
       DataPath.root.field("target"),
-      ReferenceValue(recordId("element:target")),
+      ReferenceValue(skir.ResourceId(value: "target")),
     );
 
     expect(draft.finalize().valueOrNull, isA<PolymorphicValue>());
   });
 
   test("fixed creation values can finalize without opening an editor", () {
-    final fixed = ReferenceValue(recordId("element:fixed"));
+    final fixed = ReferenceValue(skir.ResourceId(value: "fixed"));
     final result = materializeReadyValue(
       const ReferenceType(target: target),
       registry,

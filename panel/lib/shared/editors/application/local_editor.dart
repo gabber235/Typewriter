@@ -8,11 +8,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// start, so cancellation restores that value while commit merely closes the
 /// interaction. The creator owns disposal; disposal invalidates open
 /// interactions and makes later updates conflicts.
-final class LocalEditor extends ChangeNotifier implements EditOwner {
+final class LocalEditor extends ChangeNotifier
+    implements EditOwner, ConcreteTypeSelectionOwner {
   LocalEditor({
     required this.rootType,
     required this.typeCatalog,
     required this._value,
+    this.concreteTypeInitializer,
   });
 
   @override
@@ -20,9 +22,12 @@ final class LocalEditor extends ChangeNotifier implements EditOwner {
 
   @override
   TypeCatalog typeCatalog;
+  final ConcreteTypeInitializer? concreteTypeInitializer;
   DataValue _value;
   bool _disposed = false;
   final Set<_LocalInteraction> _interactions = {};
+  final Map<DataPath, int> _selectionRequests = {};
+  int _nextSelectionRequest = 0;
 
   @override
   bool get readOnly => _disposed;
@@ -53,6 +58,100 @@ final class LocalEditor extends ChangeNotifier implements EditOwner {
   @override
   EditorMutationResult validate(DataPath path, DataValue value) => rootType
       .validateEditorMutation(path, value, registry: TypeRegistry(typeCatalog));
+
+  @override
+  Future<EditorMutationResult> selectConcreteTypeAsync(
+    DataPath path,
+    ResolvedTypeRef type,
+  ) async {
+    final registry = TypeRegistry(typeCatalog);
+    final declared = rootType.resolvePath(path, registry: registry).valueOrNull;
+    if (declared is! NamedType ||
+        !NamedType(type).isStructurallyAssignableTo(declared, registry)) {
+      return EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Concrete type does not refine the declared type",
+          path: path,
+        ),
+      ]);
+    }
+    final resolved = registry.resolveExact(type).valueOrNull;
+    if (resolved == null || !resolved.isConcrete) {
+      return EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Concrete type is unavailable",
+          path: path,
+        ),
+      ]);
+    }
+    final captured = value(path).valueOrNull;
+    final request = ++_nextSelectionRequest;
+    _selectionRequests[path] = request;
+    if (captured is PolymorphicValue && captured.concreteType == type) {
+      return EditorMutationResult.applied(captured);
+    }
+    final initializer = concreteTypeInitializer;
+    final ConcreteTypeInitializationResult initialized;
+    try {
+      initialized = initializer == null
+          ? resolved.representation is UnitType
+                ? ConcreteTypeInitialized(
+                    TypedValueEnvelope(
+                      rootType: type,
+                      rootValue: const UnitValue(),
+                    ),
+                  )
+                : const ConcreteTypeInitializationRejected([])
+          : await initializer(type: type, supplied: null);
+    } on Object catch (error) {
+      return EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Concrete type initialization failed: $error",
+          path: path,
+        ),
+      ]);
+    }
+    if (_disposed ||
+        _selectionRequests[path] != request ||
+        value(path).valueOrNull != captured) {
+      return const EditorMutationResult.conflict();
+    }
+    final selectedValue = switch (initialized) {
+      ConcreteTypeInitialized(:final value)
+          when value.rootType == type &&
+              value.rootValue
+                  .validateAgainst(resolved.representation, registry: registry)
+                  .isEmpty =>
+        PolymorphicValue(concreteType: type, value: value.rootValue),
+      ConcreteTypeNeedsInput() => null,
+      ConcreteTypeInitializationRejected() => null,
+      ConcreteTypeInitialized() => null,
+    };
+    if (selectedValue == null) {
+      return switch (initialized) {
+        ConcreteTypeInitializationRejected(:final diagnostics) =>
+          EditorMutationResult.invalid(diagnostics),
+        ConcreteTypeNeedsInput() => EditorMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Concrete type initialization requires editor input",
+            path: path,
+          ),
+        ]),
+        ConcreteTypeInitialized() => EditorMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Realm returned a value for the wrong concrete type",
+            path: path,
+          ),
+        ]),
+      };
+    }
+    return update(path, selectedValue);
+  }
 
   void refreshSchema(TypeExpression type, TypeCatalog catalog) {
     if (rootType == type && typeCatalog == catalog) return;

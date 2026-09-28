@@ -3,6 +3,7 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
+import com.typewritermc.authoring.Placement
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.discovery.CatalogGeneration
@@ -13,13 +14,19 @@ import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
+import com.typewritermc.elements.Element
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.library.Book
+import com.typewritermc.library.Page
+import com.typewritermc.library.Tag
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.pages.PageCatalogAssembler
 import com.typewritermc.pages.PageProvider
+import com.typewritermc.presentation.CollectionProjectionCatalogAssembler
+import com.typewritermc.presentation.CollectionProjectionProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
@@ -43,6 +50,9 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +62,9 @@ import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import org.slf4j.LoggerFactory
+import skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition
+import skirout.editor.v1.compiled_content.CompilationProjectionId
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
@@ -64,6 +77,8 @@ import kotlin.time.Duration.Companion.seconds
  * failure releases resources already acquired.
  */
 class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
+    private val logger = LoggerFactory.getLogger(DefaultRealmRuntimeFactory::class.java)
+
     /**
      * Reads the deployment package once, builds all Realm catalogs, and returns an inactive runtime.
      *
@@ -137,18 +152,51 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     providers = loadedDiscovery.application.koin.getAll<RealmCapabilityProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                 )
+            val pageCatalog =
+                PageCatalogAssembler.assemble(
+                    providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                )
+            val authoringPolicies =
+                RealmAuthoringPolicyAssembler.assemble(
+                    providers =
+                        listOf(
+                            CoreAuthoringPolicyProvider(
+                                prototypes = loadedDiscovery.prototypes,
+                                pageCatalog = pageCatalog,
+                                elements = assembled.elements,
+                                types = assembled.discovery.types,
+                                relations = assembled.runtimeDiscovery.relations,
+                                catalogRevision = { assembled.discovery.generation.value },
+                            ),
+                        ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
+                    catalog = assembled.discovery.types,
+                    relations = assembled.runtimeDiscovery.relations,
+                )
+            val collectionProjections =
+                CollectionProjectionCatalogAssembler.assemble(
+                    providers = loadedDiscovery.application.koin.getAll<CollectionProjectionProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                    resourceDefinitions = authoringPolicies.definitions,
+                )
             val presentationCatalog =
                 PresentationCatalogAssembler.assemble(
                     providers = loadedDiscovery.application.koin.getAll<PresentationProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                     types = assembled.discovery.types,
                     capabilities = capabilityRegistry.descriptors,
+                    collectionProjections = collectionProjections.definitions,
                 )
-            val pageCatalog =
-                PageCatalogAssembler.assemble(
-                    providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
-                    prototypes = loadedDiscovery.prototypes,
-                )
+            presentationCatalog.diagnostics.forEach { diagnostic ->
+                logger.atWarn()
+                    .addKeyValue("catalog.generation", assembled.discovery.generation.value)
+                    .addKeyValue("presentation.namespace", diagnostic.namespace.orEmpty())
+                    .addKeyValue("presentation.source_part", diagnostic.sourcePart.orEmpty())
+                    .addKeyValue("presentation.declaration", diagnostic.presentationName.orEmpty())
+                    .addKeyValue("presentation.code", diagnostic.code)
+                    .setCause(diagnostic.cause)
+                    .log("Presentation rejected: {}", diagnostic.message)
+            }
             val realmModule =
                 module {
                     single<OpenTelemetry> { context.host.openTelemetry }
@@ -161,8 +209,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { loadedDiscovery.prototypes }
                     single { capabilityRegistry }
                     single { pageCatalog }
+                    single { authoringPolicies }
                     single<RealmEditorCatalogSource> {
-                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().current() }
+                        SnapshotRealmEditorCatalogSource(get()) { get<RealmDiscoverySnapshotStore>().current() }
                     }
                     single<RealmPresentationSearchSource> {
                         CapabilityRealmPresentationSearchSource(get(), get(), get(), get())
@@ -181,7 +230,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             get(),
                             get(),
                             get(),
+                            get(),
                             capabilityInvocations = get(),
+                            authoringPolicies = get(),
                         )
                     }
                 }
@@ -197,11 +248,22 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
                 RealmDiscoverySnapshot(
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
+                    resourceDefinitions = authoringPolicies.definitions,
+                    relations = assembled.runtimeDiscovery.relations,
+                    collectionProjections = collectionProjections.definitions,
+                    authoringSearch = authoringPolicies.searchDefinition(),
+                    compilationProjections =
+                        authoringPolicies.compilation.projections.map { projection ->
+                            AuthoringCompilationProjectionDefinition(
+                                projection = CompilationProjectionId(value = projection.id.value),
+                                root = SkirTypeCodec.encode(projection.root).getOrThrow(),
+                            )
+                        },
                     elements = assembled.elements,
                     pages = pageCatalog,
                     presentations = presentationCatalog.definitions,
                     capabilities = capabilityRegistry.descriptors,
-                    presentationDiagnostics = presentationCatalog.diagnostics,
+                    presentationDiagnostics = collectionProjections.diagnostics + presentationCatalog.diagnostics,
                 ),
             )
             val telemetry = startedApplication.koin.get<ServiceTelemetry>()

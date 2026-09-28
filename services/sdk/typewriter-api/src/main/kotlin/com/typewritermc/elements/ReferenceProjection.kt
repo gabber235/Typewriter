@@ -1,6 +1,8 @@
 package com.typewritermc.elements
 
 import com.typewritermc.types.DataMapEntry
+import com.typewritermc.types.DataPath
+import com.typewritermc.types.DataPathSegment
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
@@ -34,23 +36,30 @@ class ReferenceDecomposer(
     fun decompose(
         graph: TypeGraph,
         logicalValue: DataValue,
-    ): StoredElementValue = decompose(graph, graph.root, logicalValue)
+        pathOverrides: Map<DataPath, DataValue> = emptyMap(),
+    ): StoredElementValue = decompose(graph, graph.root, logicalValue, pathOverrides)
 
     /** Decomposes a nested value using [expression] as its expected type. */
     fun decompose(
         graph: TypeGraph,
         expression: TypeExpression,
         logicalValue: DataValue,
+        pathOverrides: Map<DataPath, DataValue> = emptyMap(),
     ): StoredElementValue {
         val context = ProjectionContext(graph)
         val references = mutableListOf<StoredReference>()
         val valueWithSlots =
-            context.transform(expression, logicalValue, reference = { expectedType, value ->
-                val reference = (value as DataValue.Reference).id
-                val slot = slotAllocator.allocate()
-                references += StoredReference(slot, reference, expectedType)
-                slot.marker()
-            })
+            context.transform(
+                expression,
+                logicalValue,
+                reference = { path, expectedType, value ->
+                    val reference = (value as DataValue.Reference).id
+                    val slot = slotAllocator.allocate()
+                    references += StoredReference(slot, reference, expectedType, path)
+                    slot.marker()
+                },
+                pathOverrides = pathOverrides,
+            )
         return StoredElementValue(valueWithSlots, references)
     }
 }
@@ -67,6 +76,7 @@ class ReferenceAssembler {
     fun assemble(
         graph: TypeGraph,
         stored: StoredElementValue,
+        pathOverrides: Map<DataPath, DataValue> = emptyMap(),
     ): ReferenceAssemblyResult {
         val references = stored.references.associateBy(StoredReference::slot)
         val usedSlots = mutableSetOf<ReferenceSlotId>()
@@ -74,30 +84,35 @@ class ReferenceAssembler {
         val context = ProjectionContext(graph)
         val logicalValue =
             runCatching {
-                context.transform(graph.root, stored.valueWithSlots, reference = { expectedType, value ->
-                    val slot = value.referenceSlot()
-                    if (slot == null) {
-                        diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.INVALID_SLOT_MARKER)
-                        return@transform value
-                    }
-                    if (!usedSlots.add(slot)) {
-                        diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.DUPLICATE_SLOT, slot)
-                    }
-                    val reference = references[slot]
-                    if (reference == null) {
-                        diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.SLOT_WITHOUT_EDGE, slot)
-                        return@transform value
-                    }
-                    if (reference.expectedType != expectedType) {
-                        diagnostics +=
-                            ReferenceDiagnostic(
-                                code = ReferenceDiagnosticCode.EXPECTED_TYPE_MISMATCH,
-                                slot = slot,
-                                target = reference.target,
-                            )
-                    }
-                    DataValue.Reference(reference.target)
-                })
+                context.transform(
+                    graph.root,
+                    stored.valueWithSlots,
+                    reference = { _, expectedType, value ->
+                        val slot = value.referenceSlot()
+                        if (slot == null) {
+                            diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.INVALID_SLOT_MARKER)
+                            return@transform value
+                        }
+                        if (!usedSlots.add(slot)) {
+                            diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.DUPLICATE_SLOT, slot)
+                        }
+                        val reference = references[slot]
+                        if (reference == null) {
+                            diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.SLOT_WITHOUT_EDGE, slot)
+                            return@transform value
+                        }
+                        if (reference.expectedType != expectedType) {
+                            diagnostics +=
+                                ReferenceDiagnostic(
+                                    code = ReferenceDiagnosticCode.EXPECTED_TYPE_MISMATCH,
+                                    slot = slot,
+                                    target = reference.target,
+                                )
+                        }
+                        DataValue.Reference(reference.target)
+                    },
+                    pathOverrides = pathOverrides,
+                )
             }.getOrElse {
                 diagnostics += ReferenceDiagnostic(ReferenceDiagnosticCode.VALUE_SHAPE_MISMATCH)
                 stored.valueWithSlots
@@ -165,26 +180,43 @@ internal class ProjectionContext(
     fun transform(
         expression: TypeExpression,
         value: DataValue,
-        reference: (TypeExpression, DataValue) -> DataValue,
+        reference: (DataPath, TypeExpression, DataValue) -> DataValue,
         parameters: Map<String, TypeExpression> = emptyMap(),
-    ): DataValue =
-        when (expression) {
+        path: DataPath = DataPath(),
+        pathOverrides: Map<DataPath, DataValue> = emptyMap(),
+    ): DataValue {
+        pathOverrides[path]?.let { return it }
+        return when (expression) {
             is TypeExpression.Parameter -> {
-                transform(parameters[expression.name] ?: TypeExpression.Any, value, reference, parameters)
+                transform(
+                    parameters[expression.name] ?: TypeExpression.Any,
+                    value,
+                    reference,
+                    parameters,
+                    path,
+                    pathOverrides,
+                )
             }
 
             is TypeExpression.Named -> {
-                transformNamed(expression.reference, value, reference, parameters)
+                transformNamed(expression.reference, value, reference, parameters, path, pathOverrides)
             }
 
             is TypeExpression.Reference -> {
-                reference(TypeExpression.Named(expression.target), value)
+                reference(path, TypeExpression.Named(expression.target), value)
             }
 
             is TypeExpression.ListType -> {
                 DataValue.ListValue(
-                    (value as DataValue.ListValue).values.map {
-                        transform(expression.element, it, reference, parameters)
+                    (value as DataValue.ListValue).values.mapIndexed { index, item ->
+                        transform(
+                            expression.element,
+                            item,
+                            reference,
+                            parameters,
+                            path.append(DataPathSegment.Index(index)),
+                            pathOverrides,
+                        )
                     },
                 )
             }
@@ -193,8 +225,16 @@ internal class ProjectionContext(
                 DataValue.MapValue(
                     (value as DataValue.MapValue).entries.map {
                         DataMapEntry(
-                            key = transform(expression.key, it.key, reference, parameters),
-                            value = transform(expression.value, it.value, reference, parameters),
+                            key = transform(expression.key, it.key, reference, parameters, path, pathOverrides),
+                            value =
+                                transform(
+                                    expression.value,
+                                    it.value,
+                                    reference,
+                                    parameters,
+                                    path.append(DataPathSegment.MapKey(it.key)),
+                                    pathOverrides,
+                                ),
                         )
                     },
                 )
@@ -205,7 +245,14 @@ internal class ProjectionContext(
                 DataValue.Record(
                     record.fields.mapValues { (name, fieldValue) ->
                         val field = expression.fields.single { it.name == name }
-                        transform(field.type, fieldValue, reference, parameters)
+                        transform(
+                            field.type,
+                            fieldValue,
+                            reference,
+                            parameters,
+                            path.append(DataPathSegment.Field(name)),
+                            pathOverrides,
+                        )
                     },
                 )
             }
@@ -214,12 +261,15 @@ internal class ProjectionContext(
                 value
             }
         }
+    }
 
     private fun transformNamed(
         referenceType: ResolvedTypeRef,
         value: DataValue,
-        reference: (TypeExpression, DataValue) -> DataValue,
+        reference: (DataPath, TypeExpression, DataValue) -> DataValue,
         parameters: Map<String, TypeExpression>,
+        path: DataPath,
+        pathOverrides: Map<DataPath, DataValue>,
     ): DataValue {
         val arguments = referenceType.arguments.map { materialize(it, parameters) }
         val resolvedReference = referenceType.withArguments(arguments)
@@ -227,11 +277,19 @@ internal class ProjectionContext(
         if (definition.kind != NominalTypeKind.CONCRETE) {
             val polymorphic = value as DataValue.Polymorphic
             return polymorphic.copy(
-                value = transformNamed(polymorphic.concreteType, polymorphic.value, reference, parameters),
+                value =
+                    transformNamed(
+                        polymorphic.concreteType,
+                        polymorphic.value,
+                        reference,
+                        parameters,
+                        path,
+                        pathOverrides,
+                    ),
             )
         }
         val bindings = definition.bind(arguments)
-        return transform(definition.representation, value, reference, bindings)
+        return transform(definition.representation, value, reference, bindings, path, pathOverrides)
     }
 
     fun materialize(
@@ -275,6 +333,8 @@ internal class ProjectionContext(
             }
         }
 }
+
+private fun DataPath.append(segment: DataPathSegment): DataPath = copy(segments = segments + segment)
 
 internal fun TypeDefinition.bind(arguments: List<TypeExpression>): Map<String, TypeExpression> =
     parameters.mapIndexed { index, parameter -> parameter.name to arguments.getOrElse(index) { TypeExpression.Any } }.toMap()

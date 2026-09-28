@@ -46,6 +46,38 @@ val ArtifactModelTest by testSuite {
         ImprintManifestCodec.decode(ImprintManifestCodec.encode(manifest)) shouldBe manifest
     }
 
+    test("hyphenated contribution identities survive the manifest codec") {
+        val contribution =
+            GeneratedContribution(
+                origin = ArtifactId("typewritermc:items"),
+                sourcePart = "main",
+                producer = ProducerId("future-producer"),
+                name = ContributionName("core/collection-projections.cbor"),
+                payload = byteArrayOf(1, 2, 3),
+            )
+        val manifest =
+            CapabilityManifest(
+                id = contribution.origin,
+                version = ArtifactVersion("1.0.0"),
+                directRequirements = emptyList(),
+                resolvedCapabilities = emptyList(),
+                contributions = listOf(contribution),
+            )
+
+        val decoded = ImprintManifestCodec.decode(ImprintManifestCodec.encode(manifest))
+        val actual = decoded.contributions.single()
+        actual.producer shouldBe contribution.producer
+        actual.name shouldBe contribution.name
+        actual.payload.toList() shouldBe contribution.payload.toList()
+    }
+
+    test("contribution names reject path traversal and separators") {
+        listOf("", "../file.cbor", "core//file.cbor", "core\\file.cbor", "/file.cbor", "core/space name.cbor").forEach { name ->
+            shouldThrow<IllegalArgumentException> { ContributionName(name) }
+        }
+        shouldThrow<IllegalArgumentException> { ProducerId("core/types") }
+    }
+
     test("hosted manifest codec preserves its runtime entrypoint") {
         val manifest =
             RealmManifest(

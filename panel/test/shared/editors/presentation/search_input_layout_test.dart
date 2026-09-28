@@ -88,17 +88,23 @@ const _tallResultMapping = SearchResultMapping(
       spacing: 6,
       crossAxisAlignment: PresentationCrossAxisAlignment.start,
       children: [
-        PresentationNode(
-          id: "title",
-          element: TextElement(_tallResultExpression),
+        PresentationAxisChild.fixed(
+          PresentationNode(
+            id: "title",
+            element: TextElement(_tallResultExpression),
+          ),
         ),
-        PresentationNode(
-          id: "subtitle",
-          element: TextElement(_tallResultExpression),
+        PresentationAxisChild.fixed(
+          PresentationNode(
+            id: "subtitle",
+            element: TextElement(_tallResultExpression),
+          ),
         ),
-        PresentationNode(
-          id: "detail",
-          element: TextElement(_tallResultExpression),
+        PresentationAxisChild.fixed(
+          PresentationNode(
+            id: "detail",
+            element: TextElement(_tallResultExpression),
+          ),
         ),
       ],
     ),

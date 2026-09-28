@@ -1,51 +1,47 @@
 part of "page_elements.dart";
 
-/// Mutations exposed by the page coordinator for graph, timeline, and
-/// lifecycle changes.
-///
-/// Placement batches preserve each owner's expected value and retain a draft
-/// when one result is uncertain or conflicting. Creation, deletion, duplication
-/// and page moves use the authoring batch contract directly.
 mixin _PageElementMutations
     on _$PageElements, _PageElementMutationContext, _PageElementValues {
-  Future<void> moveAll(List<(String, int, int)> changed) => _commitPlacements(
-    changed,
-    (element, x, y) => skir.ElementPlacement.createGraph(
-      x: x,
-      y: y,
-      width: _graph(element).width,
-      height: _graph(element).height,
-    ),
-  );
+  Future<void> moveAll(List<(String, int, int)> changed) =>
+      _commitPlacements(changed, (current, x, y) {
+        final graph = _graph(current);
+        return GraphPlacement(
+          x: x,
+          y: y,
+          width: graph.width,
+          height: graph.height,
+        );
+      });
 
-  Future<void> resizeAll(List<(String, int, int)> changed) => _commitPlacements(
-    changed,
-    (element, width, height) => skir.ElementPlacement.createGraph(
-      x: _graph(element).x,
-      y: _graph(element).y,
-      width: width,
-      height: height,
-    ),
-  );
+  Future<void> resizeAll(List<(String, int, int)> changed) =>
+      _commitPlacements(changed, (current, width, height) {
+        final graph = _graph(current);
+        return GraphPlacement(
+          x: graph.x,
+          y: graph.y,
+          width: width,
+          height: height,
+        );
+      });
 
   Future<void> updateCues(List<(String, int, int)> changed) =>
       _commitPlacements(
         changed,
-        (element, start, end) => switch (element) {
-          skir.ElementPlacement_timelineSegmentWrapper() =>
-            skir.ElementPlacement.createTimelineSegment(
-              startFrame: start,
-              endFrame: end,
-            ),
-          skir.ElementPlacement_timelineKeyframeWrapper() =>
-            skir.ElementPlacement.createTimelineKeyframe(frame: start),
+        (current, start, end) => switch (current) {
+          TimelineSegmentPlacement() => TimelineSegmentPlacement(
+            startFrame: start,
+            endFrame: end,
+          ),
+          TimelineKeyframePlacement() => TimelineKeyframePlacement(
+            frame: start,
+          ),
           _ => throw ApiException.badRequest("The element is not a cue"),
         },
       );
 
   Future<void> _commitPlacements(
     List<(String, int, int)> changed,
-    skir.ElementPlacement Function(skir.ElementPlacement, int, int) placement,
+    Placement Function(Placement current, int first, int second) update,
   ) async {
     state.ensureReady();
     if (changed.isEmpty) return;
@@ -55,15 +51,17 @@ mixin _PageElementMutations
     final changes = <TransactionalEditorSource, Map<DataPath, DataValue>>{};
     try {
       for (final (id, first, second) in changed) {
-        final target = _target(id);
-        final owner = owners.editor(target) as TransactionalEditorSource;
-        final current = encodeElementPlacement(
-          owner.value(elementPlacementPath).valueOrNull!,
-        );
+        final owner = owners.editor(_target(id)) as TransactionalEditorSource;
+        final resource = _typedElement(id);
+        final placement = elementPlacementPath
+            .read(resource.content.rootValue)
+            .valueOrNull;
+        if (placement == null) {
+          throw ApiException.badRequest("Missing placement");
+        }
+        final current = decodePlacement(placement);
         changes[owner] = {
-          elementPlacementPath: elementPlacementValue(
-            placement(current, first, second),
-          ),
+          elementPlacementPath: placementValue(update(current, first, second)),
         };
       }
       final results = await EditorBatch.submit(changes: changes);
@@ -78,89 +76,40 @@ mixin _PageElementMutations
     }
   }
 
-  skir.GraphPlacement _graph(skir.ElementPlacement element) =>
-      switch (element) {
-        skir.ElementPlacement_graphWrapper(:final value) => value,
-        _ => throw ApiException.badRequest("The element is not on a graph"),
-      };
+  GraphPlacement _graph(Placement placement) => switch (placement) {
+    final GraphPlacement value => value,
+    _ => throw ApiException.badRequest("The element is not on a graph"),
+  };
 
   Future<void> deleteAll(List<String> elementIds) async {
     state.ensureReady();
     if (elementIds.isEmpty) return;
-    await _submit(
-      _commands.deleteElements([
-        for (final id in elementIds) recordId("element:$id"),
-      ]),
+    await _commands.deleteResources(
+      elementIds.map((id) => skir.ResourceId(value: id)),
+      conflictMessage: "The page changed while it was being edited",
     );
   }
 
-  Future<List<String>> createEntries(
-    List<ElementDefinition> definitions,
+  Placement creationPlacement(
     EntryPlacementKind placementKind, {
     Offset? preferredGraphAnchor,
-    List<DataValue>? initialValues,
-  }) async {
+  }) {
     state.ensureReady();
-    if (definitions.isEmpty) return const [];
-    if (initialValues != null && initialValues.length != definitions.length) {
-      throw ArgumentError.value(
-        initialValues.length,
-        "initialValues",
-        "Expected one initial value per definition",
-      );
-    }
-    final codec = _codec();
-    final registry = codec.registry;
-    final ids = [
-      for (final _ in definitions) newResourceId(AuthoringResource.element).id,
-    ];
-    final graphPlacements = switch (placementKind) {
-      EntryPlacementKind.graph => _placeCreatedGraphEntries(
-        definitions.length,
-        preferredGraphAnchor,
+    return switch (placementKind) {
+      EntryPlacementKind.graph => _graphPlacement(
+        _placeCreatedGraphEntries(1, preferredGraphAnchor).single,
       ),
-      EntryPlacementKind.timelineEntry => const <GraphGridRect>[],
+      EntryPlacementKind.timelineEntry => const TimelineEntryPlacement(
+        trackIndex: 0,
+      ),
     };
-
-    await _submit(
-      _commands.createElements([
-        for (final indexed in definitions.indexed)
-          skir.PageElement(
-            id: recordId("element:${ids[indexed.$1]}"),
-            page: _pageId,
-            elementType: indexed.$2.typeId.uuid,
-            schemaRevision: indexed.$2.rootType.revision,
-            value: _initialElementValue(
-              indexed.$2,
-              ids[indexed.$1],
-              indexed.$2.name,
-              registry,
-              codec.codec,
-              initialValues?[indexed.$1],
-            ),
-            placement: switch (placementKind) {
-              EntryPlacementKind.graph => skir.ElementPlacement.createGraph(
-                x: graphPlacements[indexed.$1].x,
-                y: graphPlacements[indexed.$1].y,
-                width: graphPlacements[indexed.$1].width,
-                height: graphPlacements[indexed.$1].height,
-              ),
-              EntryPlacementKind.timelineEntry =>
-                skir.ElementPlacement.createTimelineEntry(
-                  trackIndex: indexed.$1,
-                ),
-            },
-          ),
-      ]),
-    );
-    return ids;
   }
 
   List<GraphGridRect> _placeCreatedGraphEntries(
     int count,
     Offset? preferredGraphAnchor,
   ) {
-    final obstacles = _document.elements.graphRects;
+    final obstacles = state.requireValue.graphRects;
     return const GraphIncrementalPlacer().placeGroup(
       obstacles: obstacles,
       group: [
@@ -174,144 +123,166 @@ mixin _PageElementMutations
     );
   }
 
-  Future<List<String>> duplicateAll(List<String> elementIds) async {
-    state.ensureReady();
-    if (elementIds.isEmpty) return const [];
-    final elements = {for (final item in _document.elements) item.id.id: item};
-    final ids = {
-      for (final id in elementIds) id: newResourceId(AuthoringResource.element),
-    };
-    final selected = [for (final id in elementIds) elements[id]!];
-    final graphElements = selected
-        .where((element) => element.placement.graphRect != null)
-        .toList(growable: false);
-    final graphPlacements = <String, skir.ElementPlacement>{};
-    if (graphElements.isNotEmpty) {
-      final sourceBounds = graphElements
-          .map((element) => element.placement.graphRect!)
-          .graphBounds!;
-      graphPlacements.addAll(
-        _placeGraphElements(
-          elements: graphElements,
-          obstacles: _document.elements.graphRects,
-          anchor: Offset(
-            sourceBounds.right + 1 + sourceBounds.width / 2,
-            sourceBounds.center.dy,
-          ),
-        ),
-      );
-    }
-    await _submit(
-      _commands.duplicateElements({
-        for (final element in selected)
-          element: (
-            id: ids[element.id.id]!,
-            placement: graphPlacements[element.id.id] ?? element.placement,
-          ),
-      }),
-    );
-    return [for (final id in elementIds) ids[id]!.id];
-  }
+  Future<List<String>> duplicateAll(List<String> elementIds) async =>
+      _duplicate(elementIds);
 
   Future<List<String>> duplicateAndLink(
     List<String> elementIds,
     DataPath path,
-  ) async {
+  ) => _duplicate(elementIds, linkPath: path);
+
+  Future<List<String>> _duplicate(
+    List<String> elementIds, {
+    DataPath? linkPath,
+  }) async {
     state.ensureReady();
     if (elementIds.isEmpty) return const [];
-    final elements = {for (final item in _document.elements) item.id.id: item};
-    final entries = {
-      for (final item in state.requireValue)
-        if (item case PageElementEntry(
-          entry: DefinitionPageEntry(:final definition),
-        ))
-          definition.id: definition,
+    final conversion = _codec();
+    final copies = {
+      for (final id in elementIds) skir.ResourceId(value: id): newResourceId(),
     };
-    final selected = [for (final id in elementIds) elements[id]!];
-    final ids = {
-      for (final id in elementIds) id: newResourceId(AuthoringResource.element),
+    final ownershipRelations = {
+      for (final relation in conversion.catalog.relations.values)
+        if (relation.families.contains("resource.ownership")) relation.id,
     };
-    final graphElements = selected
-        .where((element) => element.placement.graphRect != null)
-        .toList(growable: false);
-    final graphPlacements = <String, skir.ElementPlacement>{};
-    if (graphElements.isNotEmpty) {
-      final sourceBounds = graphElements
-          .map((element) => element.placement.graphRect!)
-          .graphBounds!;
-      graphPlacements.addAll(
-        _placeGraphElements(
-          elements: graphElements,
-          obstacles: _document.elements.graphRects,
-          anchor: Offset(
-            sourceBounds.right + 1 + sourceBounds.width / 2,
-            sourceBounds.center.dy,
+    final ownerEdges = {
+      for (final id in copies.keys)
+        id: _authoring.edges.values.singleWhere(
+          (edge) =>
+              edge.target == id &&
+              switch (edge.origin) {
+                skir.AuthoringEdgeOrigin_declaredRelationWrapper(
+                  :final value,
+                ) =>
+                  ownershipRelations.contains(value.relationId.value),
+                _ => false,
+              },
+        ),
+    };
+    final orderedIds = <skir.ResourceId>[];
+    final visited = <skir.ResourceId>{};
+    void visit(skir.ResourceId id) {
+      if (!visited.add(id)) return;
+      final parent = ownerEdges[id]?.source;
+      if (parent != null && copies.containsKey(parent)) visit(parent);
+      orderedIds.add(id);
+    }
+
+    for (final id in copies.keys) {
+      visit(id);
+    }
+    final selected = [for (final id in orderedIds) _resource(id)];
+    final selectedGraphs =
+        <({skir.AuthoringResource resource, GraphGridRect rect})>[];
+    for (final resource in selected) {
+      final placement = elementPlacementPath
+          .read(_typedElement(resource.id.value).content.rootValue)
+          .valueOrNull;
+      if (placement == null) continue;
+      final decoded = decodePlacement(placement);
+      if (decoded case final GraphPlacement value) {
+        selectedGraphs.add((resource: resource, rect: value.graphRect));
+      }
+    }
+    final moved = <skir.ResourceId, GraphGridRect>{};
+    if (selectedGraphs.isNotEmpty) {
+      final sourceBounds = selectedGraphs.map((item) => item.rect).graphBounds!;
+      final placed = _placeGraphRects(
+        source: selectedGraphs.map((item) => item.rect).toList(),
+        obstacles: state.requireValue.graphRects,
+        anchor: Offset(
+          sourceBounds.right + 1 + sourceBounds.width / 2,
+          sourceBounds.center.dy,
+        ),
+      );
+      for (final indexed in selectedGraphs.indexed) {
+        moved[indexed.$2.resource.id] = placed[indexed.$1];
+      }
+    }
+    final operations = <skir.AuthoringOperation>[];
+    for (final resource in selected) {
+      final decoded = conversion.authoring.decodeResourceOrThrow(resource);
+      var content = _rewriteReferences(decoded.content.rootValue, copies);
+      for (final relation in conversion.catalog.relations.values) {
+        final endpoint = relation.sourceEndpoint;
+        if (!relation.families.contains("resource.ownership") ||
+            endpoint == null ||
+            endpoint.cardinality != RealmRelationCardinality.many) {
+          continue;
+        }
+        if (conversion.catalog
+                .relationField(decoded.content.rootType, endpoint.path)
+                ?.relation
+                .id !=
+            relation.id) {
+          continue;
+        }
+        content = endpoint.path
+            .replace(content, const ListValue([]))
+            .valueOrNull!;
+      }
+      final rect = moved[resource.id];
+      if (rect != null) {
+        content = elementPlacementPath
+            .replace(content, placementValue(_graphPlacement(rect)))
+            .valueOrNull!;
+      }
+      operations.add(
+        skir.AuthoringOperation.createCreate(
+          resource: conversion.authoring.encodeResource(
+            copies[resource.id]!,
+            resource.definition.toDomain(),
+            decoded.content.copyWith(rootValue: content),
+          ),
+          attachment: skir.CreationAttachment(
+            host:
+                copies[ownerEdges[resource.id]!.source] ??
+                ownerEdges[resource.id]!.source,
+            relation:
+                (ownerEdges[resource.id]!.origin
+                        as skir.AuthoringEdgeOrigin_declaredRelationWrapper)
+                    .value
+                    .relationId,
+            hostSide: skir.RelationEndpointSide.source,
           ),
         ),
       );
     }
-    final conversion = _codec();
-    final codec = conversion.codec;
-    final encodedPath = codec.encodePath(path).valueOrNull;
-    if (encodedPath == null) {
-      throw ApiException.badRequest("The reference path cannot be encoded");
+    if (linkPath != null) {
+      for (final resource in selected) {
+        final decoded = conversion.authoring.decodeResourceOrThrow(resource);
+        final current = linkPath.read(decoded.content.rootValue).valueOrNull;
+        final projected = state.requireValue
+            .where((item) => item.id == resource.id.value)
+            .firstOrNull;
+        final definition = switch (projected) {
+          PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
+            definition,
+          _ => null,
+        };
+        final next = definition?.referenceDropValues(
+          EntryIdentifier(
+            copies[resource.id]!.value,
+            elementType: definition.elementDefinition.rootType,
+          ),
+          conversion.registry,
+        )[linkPath];
+        if (current == null || next == null) {
+          throw ApiException.conflict("The selected reference field changed");
+        }
+        final proposed = linkPath
+            .replace(decoded.content.rootValue, next)
+            .valueOrNull;
+        if (proposed == null) {
+          throw ApiException.conflict("The selected reference field changed");
+        }
+        operations.add(_contentCommit(resource, proposed, {linkPath}));
+      }
     }
-    final rewrites = [
-      for (final id in elementIds)
-        skir.ReferenceRewrite(
-          source: recordId("element:$id"),
-          target: ids[id]!,
-        ),
-    ];
-    final operations = <skir.AuthoringOperation>[
-      for (final element in selected)
-        skir.AuthoringOperation.createDuplicateElement(
-          sourceId: element.id,
-          expectedValue: element.value,
-          newId: ids[element.id.id]!,
-          page: element.page,
-          placement: graphPlacements[element.id.id] ?? element.placement,
-          referenceRewrites: rewrites,
-          valueMutations: const [],
-        ),
-      for (final element in selected)
-        skir.AuthoringOperation.createPatchElement(
-          id: element.id,
-          page: null,
-          placement: null,
-          valueMutations: [
-            skir.ExpectedElementValueMutation(
-              expected: codec
-                  .encodeValue(
-                    path.read(entries[element.id.id]!.data).valueOrNull!,
-                  )
-                  .valueOrNull!,
-              mutation: skir.ElementValueMutation.createSetValue(
-                path: encodedPath,
-                value: codec
-                    .encodeValue(
-                      entries[element.id.id]!.referenceDropValues(
-                            EntryIdentifier(
-                              ids[element.id.id]!.id,
-                              elementType: entries[element.id.id]!
-                                  .elementDefinition
-                                  .rootType,
-                            ),
-                            conversion.registry,
-                          )[path] ??
-                          (throw ApiException.conflict(
-                            "The selected reference field changed",
-                          )),
-                    )
-                    .valueOrNull!,
-              ),
-            ),
-          ],
-          elementType: null,
-        ),
-    ];
     await _submit(_commands.applyPreviewed(operations));
-    return [for (final id in elementIds) ids[id]!.id];
+    return [
+      for (final id in elementIds) copies[skir.ResourceId(value: id)]!.value,
+    ];
   }
 
   Future<void> moveEntriesToPage(
@@ -319,32 +290,50 @@ mixin _PageElementMutations
     String targetPageId,
   ) async {
     state.ensureReady();
-    if (elementIds.isEmpty || targetPageId == _pageId.id) return;
-    final elements = {for (final item in _document.elements) item.id.id: item};
-    final selected = [for (final id in elementIds) elements[id]!];
+    final targetId = skir.ResourceId(value: targetPageId);
+    if (elementIds.isEmpty || targetId == _pageId) return;
+    final ids = [for (final id in elementIds) skir.ResourceId(value: id)];
+    final sourceField = ref
+        .read(pageElementsFieldForPageProvider(_pageId))
+        .requireValue;
+    final targetField = ref
+        .read(pageElementsFieldForPageProvider(targetId))
+        .requireValue;
     await ref.withReadyPageElements(targetPageId, (target) async {
-      final graphElements = selected
-          .where((element) => element.placement.graphRect != null)
-          .toList(growable: false);
-      final graphPlacements = <String, skir.ElementPlacement>{};
-      if (graphElements.isNotEmpty) {
-        final obstacles = target._document.elements.graphRects;
-        graphPlacements.addAll(
-          _placeGraphElements(
-            elements: graphElements,
-            obstacles: obstacles,
-            anchor:
-                graphCenterOfMass(obstacles, cellSize: entryGraphCellSize) ??
-                Offset.zero,
-          ),
-        );
+      final operations = <skir.AuthoringOperation>[
+        for (final id in ids) ...[
+          _pageRelationOperation(sourceField, _pageId, id, remove: true),
+          _pageRelationOperation(targetField, targetId, id),
+        ],
+      ];
+      final graphs = <({skir.ResourceId id, GraphGridRect rect})>[];
+      for (final id in ids) {
+        final value = elementPlacementPath
+            .read(_typedElement(id.value).content.rootValue)
+            .valueOrNull;
+        if (value == null) continue;
+        final placement = decodePlacement(value);
+        if (placement case final GraphPlacement value) {
+          graphs.add((id: id, rect: value.graphRect));
+        }
       }
-      await _submit(
-        _commands.moveElementsToPage([
-          for (final element in selected)
-            (element, graphPlacements[element.id.id] ?? element.placement),
-        ], recordId("page:$targetPageId")),
-      );
+      if (graphs.isNotEmpty) {
+        final targetObstacles = target.state.requireValue.graphRects;
+        final placed = _placeGraphRects(
+          source: graphs.map((item) => item.rect).toList(),
+          obstacles: targetObstacles,
+          anchor:
+              graphCenterOfMass(
+                targetObstacles,
+                cellSize: entryGraphCellSize,
+              ) ??
+              Offset.zero,
+        );
+        for (final indexed in graphs.indexed) {
+          operations.add(_placementCommit(indexed.$2.id, placed[indexed.$1]));
+        }
+      }
+      await _submit(_commands.applyPreviewed(operations));
     });
   }
 
@@ -354,82 +343,169 @@ mixin _PageElementMutations
     RecordValue value,
   ) async {
     state.ensureReady();
-    final element = _document.elements.singleWhere(
-      (element) => element.id.id == elementId,
-    );
-    final encoded = _codec().codec.encodeValue(value);
-    final wireValue = encoded.valueOrNull;
-    if (wireValue == null) {
-      throw ApiException.badRequest(encoded.diagnostics.join("; "));
-    }
+    final conversion = _codec();
+    final resource = _resource(skir.ResourceId(value: elementId));
+    final proposed = resource.toMutable()
+      ..content = conversion.authoring
+          .encodeEnvelope(
+            TypedValueEnvelope(rootType: definition.rootType, rootValue: value),
+          )
+          .valueOrNull!;
     await _submit(
-      _commands.replaceElementType(
-        element: element,
-        elementType: definition.typeId.uuid,
-        schemaRevision: definition.rootType.revision,
-        value: wireValue,
-      ),
+      _commands.applyPreviewed([
+        skir.AuthoringOperation.createCommit(
+          id: resource.id,
+          base: resource,
+          proposed: proposed,
+          changedPaths: [
+            conversion.codec.encodePath(DataPath.root).valueOrNull!,
+          ],
+        ),
+      ]),
     );
   }
 
-  Map<String, skir.ElementPlacement> _placeGraphElements({
-    required List<skir.PageElement> elements,
+  TypedAuthoringResource _typedElement(String id) {
+    final conversion = _codec();
+    return conversion.authoring.decodeResourceOrThrow(
+      _resource(skir.ResourceId(value: id)),
+    );
+  }
+
+  skir.AuthoringResource _resource(skir.ResourceId id) =>
+      _authoring.resources[id] ?? (throw ApiException.notFound("Resource"));
+
+  GraphPlacement _graphPlacement(GraphGridRect rect) => GraphPlacement(
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+  );
+
+  skir.AuthoringOperation _placementCommit(
+    skir.ResourceId id,
+    GraphGridRect rect,
+  ) {
+    final conversion = _codec();
+    final resource = _resource(id);
+    final decoded = conversion.authoring.decodeResourceOrThrow(resource);
+    final proposed = elementPlacementPath
+        .replace(
+          decoded.content.rootValue,
+          placementValue(_graphPlacement(rect)),
+        )
+        .valueOrNull;
+    if (proposed == null) throw ApiException.badRequest("Missing placement");
+    return _contentCommit(resource, proposed, {elementPlacementPath});
+  }
+
+  skir.AuthoringOperation _contentCommit(
+    skir.AuthoringResource resource,
+    DataValue proposedValue,
+    Set<DataPath> paths,
+  ) {
+    final conversion = _codec();
+    final decoded = conversion.authoring.decodeResourceOrThrow(resource);
+    final proposed = resource.toMutable()
+      ..content = conversion.authoring
+          .encodeEnvelope(decoded.content.copyWith(rootValue: proposedValue))
+          .valueOrNull!;
+    return skir.AuthoringOperation.createCommit(
+      id: resource.id,
+      base: resource,
+      proposed: proposed,
+      changedPaths: [
+        for (final path in paths)
+          conversion.codec.encodePath(path).valueOrNull!,
+      ],
+    );
+  }
+
+  skir.AuthoringOperation _pageRelationOperation(
+    RealmRelationField field,
+    skir.ResourceId page,
+    skir.ResourceId element, {
+    bool remove = false,
+  }) {
+    final (
+      source,
+      target,
+    ) = field.endpoint.side == RealmRelationEndpointSide.source
+        ? (page, element)
+        : (element, page);
+    final relation = skir.RelationId(value: field.relation.id);
+    return remove
+        ? skir.AuthoringOperation.createRemoveRelation(
+            relation: relation,
+            source: source,
+            target: target,
+          )
+        : skir.AuthoringOperation.createDeclareRelation(
+            relation: relation,
+            source: source,
+            target: target,
+            sourceBefore: null,
+            targetBefore: null,
+          );
+  }
+
+  List<GraphGridRect> _placeGraphRects({
+    required List<GraphGridRect> source,
     required List<GraphGridRect> obstacles,
     required Offset anchor,
   }) {
-    final sourceRects = [
-      for (final element in elements) element.placement.graphRect!,
-    ];
-    final sourceBounds = sourceRects.graphBounds!;
-    final localRects = [
-      for (final rect in sourceRects)
-        rect.translate(-sourceBounds.x, -sourceBounds.y),
-    ];
-    final placed = const GraphIncrementalPlacer().placeGroup(
+    final bounds = source.graphBounds!;
+    return const GraphIncrementalPlacer().placeGroup(
       obstacles: obstacles,
-      group: localRects,
+      group: [for (final rect in source) rect.translate(-bounds.x, -bounds.y)],
       anchor: anchor,
     );
-    return {
-      for (final indexed in elements.indexed)
-        indexed.$2.id.id: placed[indexed.$1].elementPlacement,
-    };
   }
 }
 
-extension on Iterable<skir.PageElement> {
+DataValue _rewriteReferences(
+  DataValue value,
+  Map<skir.ResourceId, skir.ResourceId> replacements,
+) => switch (value) {
+  ReferenceValue(:final id) => ReferenceValue(replacements[id] ?? id),
+  ListValue(:final values) => ListValue([
+    for (final item in values) _rewriteReferences(item, replacements),
+  ]),
+  MapValue(:final entries) => MapValue([
+    for (final entry in entries)
+      DataMapEntry(
+        key: _rewriteReferences(entry.key, replacements),
+        value: _rewriteReferences(entry.value, replacements),
+      ),
+  ]),
+  RecordValue(:final fields) => RecordValue({
+    for (final field in fields.entries)
+      field.key: _rewriteReferences(field.value, replacements),
+  }),
+  PolymorphicValue(:final concreteType, :final value) => PolymorphicValue(
+    concreteType: concreteType,
+    value: _rewriteReferences(value, replacements),
+  ),
+  _ => value,
+};
+
+extension on Iterable<PageElement> {
   List<GraphGridRect> get graphRects => [
     for (final element in this)
-      if (element.placement case skir.ElementPlacement_graphWrapper(
-        :final value,
+      if (element case PageElementEntry(
+        entry: DefinitionPageEntry(:final definition),
       ))
-        GraphGridRect(
-          x: value.x,
-          y: value.y,
-          width: value.width,
-          height: value.height,
-        ),
+        if (definition.placement.kind == EntryPlacementKind.graph)
+          GraphGridRect(
+            x: definition.placement.x,
+            y: definition.placement.y,
+            width: definition.placement.width,
+            height: definition.placement.height,
+          ),
   ];
 }
 
-extension on skir.ElementPlacement {
-  GraphGridRect? get graphRect => switch (this) {
-    skir.ElementPlacement_graphWrapper(:final value) => GraphGridRect(
-      x: value.x,
-      y: value.y,
-      width: value.width,
-      height: value.height,
-    ),
-    _ => null,
-  };
-}
-
-extension on GraphGridRect {
-  skir.ElementPlacement get elementPlacement =>
-      skir.ElementPlacement.createGraph(
-        x: x,
-        y: y,
-        width: width,
-        height: height,
-      );
+extension on GraphPlacement {
+  GraphGridRect get graphRect =>
+      GraphGridRect(x: x, y: y, width: width, height: height);
 }

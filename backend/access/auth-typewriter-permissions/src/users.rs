@@ -15,7 +15,9 @@ use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
 };
 
-use crate::common::{AuthentikClaims, User, build_permissions};
+use crate::common::{
+    AuthentikClaims, REALM_EVENT_SUFFIXES, REALM_REQUEST_SUFFIXES, User, build_permissions,
+};
 
 /// Derive NATS policy and tags for one authenticated panel user.
 ///
@@ -357,36 +359,10 @@ fn add_organization_realm_permissions(
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.delete"));
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.update"));
 
-    for suffix in [
-        "compiled.content.watch",
-        "editor.capability.command.invoke",
-        "editor.capability.computation.invoke",
-        "editor.catalog.fetch",
-        "editor.catalog.invalidate",
-        "editor.presentation.search",
-        "editor.presentation.search.cancel",
-        "library.authoring.batch.apply",
-        "library.authoring.batch.preview",
-        "library.authoring.content.search",
-        "library.authoring.resources.resolve",
-        "library.authoring.selector.suggest",
-        "library.authoring.snapshot.get",
-        "shared.blob.begin",
-        "shared.blob.complete",
-        "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.write",
-        "shared.catalog.fetch",
-        "shared.publish",
-    ] {
+    for suffix in REALM_REQUEST_SUFFIXES {
         allow_publish.push(format!("service.to.*.organization.{org_id}.realm.{suffix}",));
     }
-    for suffix in [
-        "editor.catalog.invalidate",
-        "editor.presentation.search",
-        "library.authoring.changed",
-        "compiled.content.watch",
-    ] {
+    for suffix in REALM_EVENT_SUFFIXES {
         allow_subscribe.push(format!(
             "service.from.*.organization.{org_id}.realm.{suffix}",
         ));

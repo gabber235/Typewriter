@@ -93,6 +93,9 @@ final class SkirMutationClient {
   final NatsClient Function() _client;
   final Future<PanelTelemetry> Function() _telemetry;
 
+  /// Returns the current transport for repositories that own subscriptions.
+  NatsClient get client => _client();
+
   /// Performs one typed Skir request without creating a mutation submission.
   ///
   /// Request bytes cross the [NatsClient] boundary unchanged. The response is

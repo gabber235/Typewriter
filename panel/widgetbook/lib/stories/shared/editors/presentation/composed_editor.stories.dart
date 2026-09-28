@@ -109,15 +109,21 @@ class _CompositionStoryState extends State<_CompositionStory> {
                     element: ColumnElement(
                       spacing: 16,
                       children: [
-                        _input("identity", 4, "Service name"),
-                        _input("configuration", 8, "Engine target"),
-                        const PresentationNode(
-                          id: "runtime",
-                          element: TextElement(
-                            TypedExpression(
-                              resultType: StringType(),
-                              expression: BindingExpression(
-                                BindingReference(bindingId: BindingId(12)),
+                        PresentationAxisChild.fixed(
+                          _input("identity", 4, "Service name"),
+                        ),
+                        PresentationAxisChild.fixed(
+                          _input("configuration", 8, "Engine target"),
+                        ),
+                        PresentationAxisChild.fixed(
+                          const PresentationNode(
+                            id: "runtime",
+                            element: TextElement(
+                              TypedExpression(
+                                resultType: StringType(),
+                                expression: BindingExpression(
+                                  BindingReference(bindingId: BindingId(12)),
+                                ),
                               ),
                             ),
                           ),

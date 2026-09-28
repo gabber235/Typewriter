@@ -41,7 +41,7 @@ PresentationDefinition _hostInspectorPresentation({
           engineTargets: engineTargets,
           realms: realms,
         ),
-      ],
+      ].map(PresentationAxisChild.fixed).toList(),
     ),
   ),
 );

@@ -260,6 +260,7 @@ extension on Iterable<RecordType> {
             candidates.map((field) => field.initialValue).toSet().length == 1
             ? candidates.first.initialValue
             : null,
+        defaulted: candidates.every((field) => field.defaulted),
       );
     }
     if (fields.isEmpty) {

@@ -4,15 +4,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("resource allocation uses typed tables and compact string keys", () {
-    for (final resource in AuthoringResource.values) {
-      final id = newResourceId(resource);
-      expect(id.table, resource.name);
-      expect(id.key, isA<skir.RecordIdKey_stringWrapper>());
-      expect(id.id, matches(RegExp(r"^[a-z0-9]{20}$")));
-    }
-  });
-
   test("opaque keys survive route encoding without database quoting", () {
     for (final key in [
       "abc123",

@@ -194,7 +194,6 @@ sealed class GraphDirection private constructor() {
 
 sealed interface GraphPageEditorDefinition_OrMutable {
     val direction: skirout.editor.v1.page_catalog.GraphDirection;
-    val nodeTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.page_catalog.GraphPageEditorDefinition;
 }
@@ -203,7 +202,6 @@ sealed interface GraphPageEditorDefinition_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class GraphPageEditorDefinition private constructor(
     override val direction: skirout.editor.v1.page_catalog.GraphDirection,
-    override val nodeTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.GraphPageEditorDefinition>? =
         null,
 ): skirout.editor.v1.page_catalog.GraphPageEditorDefinition_OrMutable {
@@ -211,12 +209,10 @@ class GraphPageEditorDefinition private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         direction: skirout.editor.v1.page_catalog.GraphDirection,
-        nodeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.GraphPageEditorDefinition>? =
             null,
     ): this(
         direction,
-        build.skir.internal.toFrozenList(nodeTypes, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -226,7 +222,6 @@ class GraphPageEditorDefinition private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         direction = this.direction,
-        nodeTypes = this.nodeTypes,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -235,11 +230,8 @@ class GraphPageEditorDefinition private constructor(
             _MustNameArguments,
         direction: skirout.editor.v1.page_catalog.GraphDirection =
             this.direction,
-        nodeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            this.nodeTypes,
     ) = skirout.editor.v1.page_catalog.GraphPageEditorDefinition(
         direction,
-        build.skir.internal.toFrozenList(nodeTypes, { it.toFrozen() }),
         this._unrecognizedFields,
     );
 
@@ -247,11 +239,11 @@ class GraphPageEditorDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.GraphPageEditorDefinition && this.direction == other.direction && this.nodeTypes == other.nodeTypes);
+        return this === other || (other is skirout.editor.v1.page_catalog.GraphPageEditorDefinition && this.direction == other.direction);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.direction, this.nodeTypes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.direction).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -267,40 +259,20 @@ class GraphPageEditorDefinition private constructor(
             _MustNameArguments,
         override var direction: skirout.editor.v1.page_catalog.GraphDirection =
             skirout.editor.v1.page_catalog.GraphDirection.UNKNOWN,
-        override var nodeTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.GraphPageEditorDefinition>? =
             null,
     ): skirout.editor.v1.page_catalog.GraphPageEditorDefinition_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.page_catalog.GraphPageEditorDefinition(
             direction = this.direction,
-            nodeTypes = this.nodeTypes,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [nodeTypes] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [nodeTypes] and returns it.
-         */
-        val mutableNodeTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> get() {
-            var value = this.nodeTypes;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.nodeTypes = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.page_catalog.GraphPageEditorDefinition(
                 skirout.editor.v1.page_catalog.GraphDirection.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -316,11 +288,8 @@ class GraphPageEditorDefinition private constructor(
                 _MustNameArguments,
             direction: skirout.editor.v1.page_catalog.GraphDirection =
                 skirout.editor.v1.page_catalog.GraphDirection.UNKNOWN,
-            nodeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
         ) = skirout.editor.v1.page_catalog.GraphPageEditorDefinition(
             direction = direction,
-            nodeTypes = nodeTypes,
             _unrecognizedFields = null,
         );
 
@@ -350,51 +319,27 @@ class GraphPageEditorDefinition private constructor(
                 { it.direction },
                 { mut, v -> mut.direction = v },
             );
-            serializerImpl.addField(
-                "node_types",
-                "nodeTypes",
-                1,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                ),
-                "",
-                { it.nodeTypes },
-                { mut, v -> mut.nodeTypes = v },
-            );
             serializerImpl.finalizeStruct();
         }
     }
 }
 
 sealed interface TimelinePageEditorDefinition_OrMutable {
-    val trackTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
-    val segmentTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
-    val keyframeTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
-
     fun toFrozen(): skirout.editor.v1.page_catalog.TimelinePageEditorDefinition;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class TimelinePageEditorDefinition private constructor(
-    override val trackTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
-    override val segmentTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
-    override val keyframeTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.TimelinePageEditorDefinition>? =
         null,
 ): skirout.editor.v1.page_catalog.TimelinePageEditorDefinition_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        trackTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
-        segmentTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
-        keyframeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.TimelinePageEditorDefinition>? =
             null,
     ): this(
-        build.skir.internal.toFrozenList(trackTypes, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(segmentTypes, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(keyframeTypes, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -402,38 +347,14 @@ class TimelinePageEditorDefinition private constructor(
     override fun toFrozen() = this;
 
     /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        trackTypes = this.trackTypes,
-        segmentTypes = this.segmentTypes,
-        keyframeTypes = this.keyframeTypes,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        trackTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            this.trackTypes,
-        segmentTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            this.segmentTypes,
-        keyframeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            this.keyframeTypes,
-    ) = skirout.editor.v1.page_catalog.TimelinePageEditorDefinition(
-        build.skir.internal.toFrozenList(trackTypes, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(segmentTypes, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(keyframeTypes, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
+    fun toMutable() = Mutable();
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.TimelinePageEditorDefinition && this.trackTypes == other.trackTypes && this.segmentTypes == other.segmentTypes && this.keyframeTypes == other.keyframeTypes);
+        return this === other || (other is skirout.editor.v1.page_catalog.TimelinePageEditorDefinition);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.trackTypes, this.segmentTypes, this.keyframeTypes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>().hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -447,79 +368,18 @@ class TimelinePageEditorDefinition private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var trackTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-        override var segmentTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-        override var keyframeTypes: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.TimelinePageEditorDefinition>? =
             null,
     ): skirout.editor.v1.page_catalog.TimelinePageEditorDefinition_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.page_catalog.TimelinePageEditorDefinition(
-            trackTypes = this.trackTypes,
-            segmentTypes = this.segmentTypes,
-            keyframeTypes = this.keyframeTypes,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [trackTypes] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [trackTypes] and returns it.
-         */
-        val mutableTrackTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> get() {
-            var value = this.trackTypes;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.trackTypes = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [segmentTypes] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [segmentTypes] and returns it.
-         */
-        val mutableSegmentTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> get() {
-            var value = this.segmentTypes;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.segmentTypes = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [keyframeTypes] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [keyframeTypes] and returns it.
-         */
-        val mutableKeyframeTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> get() {
-            var value = this.keyframeTypes;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.keyframeTypes = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.page_catalog.TimelinePageEditorDefinition(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-            );
+            skirout.editor.v1.page_catalog.TimelinePageEditorDefinition();
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
@@ -532,16 +392,7 @@ class TimelinePageEditorDefinition private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            trackTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-            segmentTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
-            keyframeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
         ) = skirout.editor.v1.page_catalog.TimelinePageEditorDefinition(
-            trackTypes = trackTypes,
-            segmentTypes = segmentTypes,
-            keyframeTypes = keyframeTypes,
             _unrecognizedFields = null,
         );
 
@@ -562,39 +413,6 @@ class TimelinePageEditorDefinition private constructor(
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
-            serializerImpl.addField(
-                "track_types",
-                "trackTypes",
-                0,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                ),
-                "",
-                { it.trackTypes },
-                { mut, v -> mut.trackTypes = v },
-            );
-            serializerImpl.addField(
-                "segment_types",
-                "segmentTypes",
-                1,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                ),
-                "",
-                { it.segmentTypes },
-                { mut, v -> mut.segmentTypes = v },
-            );
-            serializerImpl.addField(
-                "keyframe_types",
-                "keyframeTypes",
-                2,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                ),
-                "",
-                { it.keyframeTypes },
-                { mut, v -> mut.keyframeTypes = v },
-            );
             serializerImpl.finalizeStruct();
         }
     }
@@ -684,11 +502,9 @@ sealed class PageEditorDefinition private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             direction: skirout.editor.v1.page_catalog.GraphDirection,
-            nodeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
         ) = GraphWrapper(
             skirout.editor.v1.page_catalog.GraphPageEditorDefinition(
                 direction = direction,
-                nodeTypes = nodeTypes,
             )
         );
 
@@ -697,15 +513,8 @@ sealed class PageEditorDefinition private constructor() {
         fun createTimeline(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            trackTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
-            segmentTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
-            keyframeTypes: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
         ) = TimelineWrapper(
-            skirout.editor.v1.page_catalog.TimelinePageEditorDefinition(
-                trackTypes = trackTypes,
-                segmentTypes = segmentTypes,
-                keyframeTypes = keyframeTypes,
-            )
+            skirout.editor.v1.page_catalog.TimelinePageEditorDefinition()
         );
 
         private val _serializerImpl =
@@ -759,13 +568,12 @@ sealed class PageEditorDefinition private constructor() {
 }
 
 sealed interface PageDescriptor_OrMutable {
-    val kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable;
+    val type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
     val name: kotlin.String;
     val description: kotlin.String?;
     val icon: skirout.kernel.v1.icon.Icon;
     val color: skirout.kernel.v1.color.Color_OrMutable;
     val editor: skirout.editor.v1.page_catalog.PageEditorDefinition;
-    val authoringRules: kotlin.collections.List<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.page_catalog.PageDescriptor;
 }
@@ -773,36 +581,33 @@ sealed interface PageDescriptor_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PageDescriptor private constructor(
-    override val kind: skirout.kernel.v1.page_kind.PageKindRef,
+    override val type: skirout.editor.v1.type_catalog.ResolvedTypeRef,
     override val name: kotlin.String,
     override val description: kotlin.String?,
     override val icon: skirout.kernel.v1.icon.Icon,
     override val color: skirout.kernel.v1.color.Color,
     override val editor: skirout.editor.v1.page_catalog.PageEditorDefinition,
-    override val authoringRules: kotlin.collections.List<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDescriptor>? =
         null,
 ): skirout.editor.v1.page_catalog.PageDescriptor_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
+        type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
         name: kotlin.String,
         description: kotlin.String?,
         icon: skirout.kernel.v1.icon.Icon,
         color: skirout.kernel.v1.color.Color_OrMutable,
         editor: skirout.editor.v1.page_catalog.PageEditorDefinition,
-        authoringRules: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDescriptor>? =
             null,
     ): this(
-        kind.toFrozen(),
+        type.toFrozen(),
         name,
         description,
         icon,
         color.toFrozen(),
         editor,
-        build.skir.internal.toFrozenList(authoringRules, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -811,21 +616,20 @@ class PageDescriptor private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        kind = this.kind,
+        type = this.type,
         name = this.name,
         description = this.description,
         icon = this.icon,
         color = this.color,
         editor = this.editor,
-        authoringRules = this.authoringRules,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
-            this.kind,
+        type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            this.type,
         name: kotlin.String =
             this.name,
         description: kotlin.String? =
@@ -836,16 +640,13 @@ class PageDescriptor private constructor(
             this.color,
         editor: skirout.editor.v1.page_catalog.PageEditorDefinition =
             this.editor,
-        authoringRules: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> =
-            this.authoringRules,
     ) = skirout.editor.v1.page_catalog.PageDescriptor(
-        kind.toFrozen(),
+        type.toFrozen(),
         name,
         description,
         icon,
         color.toFrozen(),
         editor,
-        build.skir.internal.toFrozenList(authoringRules, { it.toFrozen() }),
         this._unrecognizedFields,
     );
 
@@ -853,11 +654,11 @@ class PageDescriptor private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.PageDescriptor && this.kind == other.kind && this.name == other.name && this.description == other.description && this.icon == other.icon && this.color == other.color && this.editor == other.editor && this.authoringRules == other.authoringRules);
+        return this === other || (other is skirout.editor.v1.page_catalog.PageDescriptor && this.type == other.type && this.name == other.name && this.description == other.description && this.icon == other.icon && this.color == other.color && this.editor == other.editor);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.kind, this.name, this.description, this.icon, this.color, this.editor, this.authoringRules).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.type, this.name, this.description, this.icon, this.color, this.editor).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -871,8 +672,8 @@ class PageDescriptor private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
-            skirout.kernel.v1.page_kind.PageKindRef.partial(),
+        override var type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
         override var name: kotlin.String =
             "",
         override var description: kotlin.String? =
@@ -883,36 +684,33 @@ class PageDescriptor private constructor(
             skirout.kernel.v1.color.Color.partial(),
         override var editor: skirout.editor.v1.page_catalog.PageEditorDefinition =
             skirout.editor.v1.page_catalog.PageEditorDefinition.UNKNOWN,
-        override var authoringRules: kotlin.collections.List<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDescriptor>? =
             null,
     ): skirout.editor.v1.page_catalog.PageDescriptor_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.page_catalog.PageDescriptor(
-            kind = this.kind,
+            type = this.type,
             name = this.name,
             description = this.description,
             icon = this.icon,
             color = this.color,
             editor = this.editor,
-            authoringRules = this.authoringRules,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [kind] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [kind] and returns it.
+         * If the value of [type] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [type] and returns it.
          */
-        val mutableKind: skirout.kernel.v1.page_kind.PageKindRef.Mutable get() {
-            var value = this.kind;
+        val mutableType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
+            var value = this.type;
             return when (value) {
-                is skirout.kernel.v1.page_kind.PageKindRef -> {
+                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
                     value = value.toMutable();
-                    this.kind = value;
+                    this.type = value;
                     return value;
                 }
-                is skirout.kernel.v1.page_kind.PageKindRef.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
             }
         }
 
@@ -931,34 +729,17 @@ class PageDescriptor private constructor(
                 is skirout.kernel.v1.color.Color.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [authoringRules] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [authoringRules] and returns it.
-         */
-        val mutableAuthoringRules: kotlin.collections.MutableList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> get() {
-            var value = this.authoringRules;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.authoringRules = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.page_catalog.PageDescriptor(
-                skirout.kernel.v1.page_kind.PageKindRef.partial(),
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
                 "",
                 null,
                 skirout.kernel.v1.icon.Icon.UNKNOWN,
                 skirout.kernel.v1.color.Color.partial(),
                 skirout.editor.v1.page_catalog.PageEditorDefinition.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -972,8 +753,8 @@ class PageDescriptor private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
-                skirout.kernel.v1.page_kind.PageKindRef.partial(),
+            type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
             name: kotlin.String =
                 "",
             description: kotlin.String? =
@@ -984,16 +765,13 @@ class PageDescriptor private constructor(
                 skirout.kernel.v1.color.Color.partial(),
             editor: skirout.editor.v1.page_catalog.PageEditorDefinition =
                 skirout.editor.v1.page_catalog.PageEditorDefinition.UNKNOWN,
-            authoringRules: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>(),
         ) = skirout.editor.v1.page_catalog.PageDescriptor(
-            kind = kind,
+            type = type,
             name = name,
             description = description,
             icon = icon,
             color = color,
             editor = editor,
-            authoringRules = authoringRules,
             _unrecognizedFields = null,
         );
 
@@ -1015,13 +793,13 @@ class PageDescriptor private constructor(
 
         init {
             serializerImpl.addField(
-                "kind",
-                "kind",
+                "type",
+                "type",
                 0,
-                skirout.kernel.v1.page_kind.PageKindRef.serializer,
+                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
                 "",
-                { it.kind },
-                { mut, v -> mut.kind = v },
+                { it.type },
+                { mut, v -> mut.type = v },
             );
             serializerImpl.addField(
                 "name",
@@ -1070,17 +848,6 @@ class PageDescriptor private constructor(
                 { it.editor },
                 { mut, v -> mut.editor = v },
             );
-            serializerImpl.addField(
-                "authoring_rules",
-                "authoringRules",
-                6,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.page_catalog.PageAuthoringRuleRef.serializer,
-                ),
-                "",
-                { it.authoringRules },
-                { mut, v -> mut.authoringRules = v },
-            );
             serializerImpl.finalizeStruct();
         }
     }
@@ -1090,6 +857,7 @@ sealed interface PageCatalogEntry_OrMutable {
     val originArtifactId: kotlin.String;
     val sourcePart: kotlin.String;
     val descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable;
+    val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.page_catalog.PageCatalogEntry;
 }
@@ -1100,6 +868,7 @@ class PageCatalogEntry private constructor(
     override val originArtifactId: kotlin.String,
     override val sourcePart: kotlin.String,
     override val descriptor: skirout.editor.v1.page_catalog.PageDescriptor,
+    override val presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageCatalogEntry>? =
         null,
 ): skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable {
@@ -1109,12 +878,14 @@ class PageCatalogEntry private constructor(
         originArtifactId: kotlin.String,
         sourcePart: kotlin.String,
         descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable,
+        presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageCatalogEntry>? =
             null,
     ): this(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
+        presentationSubject.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -1126,6 +897,7 @@ class PageCatalogEntry private constructor(
         originArtifactId = this.originArtifactId,
         sourcePart = this.sourcePart,
         descriptor = this.descriptor,
+        presentationSubject = this.presentationSubject,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1138,10 +910,13 @@ class PageCatalogEntry private constructor(
             this.sourcePart,
         descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable =
             this.descriptor,
+        presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+            this.presentationSubject,
     ) = skirout.editor.v1.page_catalog.PageCatalogEntry(
         originArtifactId,
         sourcePart,
         descriptor.toFrozen(),
+        presentationSubject.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -1149,11 +924,11 @@ class PageCatalogEntry private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.PageCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor);
+        return this === other || (other is skirout.editor.v1.page_catalog.PageCatalogEntry && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.descriptor == other.descriptor && this.presentationSubject == other.presentationSubject);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.originArtifactId, this.sourcePart, this.descriptor).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.originArtifactId, this.sourcePart, this.descriptor, this.presentationSubject).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1173,6 +948,8 @@ class PageCatalogEntry private constructor(
             "",
         override var descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable =
             skirout.editor.v1.page_catalog.PageDescriptor.partial(),
+        override var presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+            skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageCatalogEntry>? =
             null,
     ): skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable {
@@ -1181,6 +958,7 @@ class PageCatalogEntry private constructor(
             originArtifactId = this.originArtifactId,
             sourcePart = this.sourcePart,
             descriptor = this.descriptor,
+            presentationSubject = this.presentationSubject,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1199,6 +977,22 @@ class PageCatalogEntry private constructor(
                 is skirout.editor.v1.page_catalog.PageDescriptor.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [presentationSubject] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [presentationSubject] and returns it.
+         */
+        val mutablePresentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable get() {
+            var value = this.presentationSubject;
+            return when (value) {
+                is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject -> {
+                    value = value.toMutable();
+                    this.presentationSubject = value;
+                    return value;
+                }
+                is skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -1207,6 +1001,7 @@ class PageCatalogEntry private constructor(
                 "",
                 "",
                 skirout.editor.v1.page_catalog.PageDescriptor.partial(),
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1226,10 +1021,13 @@ class PageCatalogEntry private constructor(
                 "",
             descriptor: skirout.editor.v1.page_catalog.PageDescriptor_OrMutable =
                 skirout.editor.v1.page_catalog.PageDescriptor.partial(),
+            presentationSubject: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable =
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
         ) = skirout.editor.v1.page_catalog.PageCatalogEntry(
             originArtifactId = originArtifactId,
             sourcePart = sourcePart,
             descriptor = descriptor,
+            presentationSubject = presentationSubject,
             _unrecognizedFields = null,
         );
 
@@ -1277,6 +1075,15 @@ class PageCatalogEntry private constructor(
                 { it.descriptor },
                 { mut, v -> mut.descriptor = v },
             );
+            serializerImpl.addField(
+                "presentation_subject",
+                "presentationSubject",
+                3,
+                skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.serializer,
+                "",
+                { it.presentationSubject },
+                { mut, v -> mut.presentationSubject = v },
+            );
             serializerImpl.finalizeStruct();
         }
     }
@@ -1288,7 +1095,7 @@ sealed interface PageDiagnostic_OrMutable {
     val originArtifactId: kotlin.String?;
     val sourcePart: kotlin.String?;
     val declarationName: kotlin.String?;
-    val kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable?;
+    val type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.page_catalog.PageDiagnostic;
 }
@@ -1301,7 +1108,7 @@ class PageDiagnostic private constructor(
     override val originArtifactId: kotlin.String?,
     override val sourcePart: kotlin.String?,
     override val declarationName: kotlin.String?,
-    override val kind: skirout.kernel.v1.page_kind.PageKindRef?,
+    override val type: skirout.editor.v1.type_catalog.ResolvedTypeRef?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDiagnostic>? =
         null,
 ): skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable {
@@ -1313,7 +1120,7 @@ class PageDiagnostic private constructor(
         originArtifactId: kotlin.String?,
         sourcePart: kotlin.String?,
         declarationName: kotlin.String?,
-        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable?,
+        type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDiagnostic>? =
             null,
     ): this(
@@ -1322,7 +1129,7 @@ class PageDiagnostic private constructor(
         originArtifactId,
         sourcePart,
         declarationName,
-        if (kind != null) kind.toFrozen() else null,
+        if (type != null) type.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -1336,7 +1143,7 @@ class PageDiagnostic private constructor(
         originArtifactId = this.originArtifactId,
         sourcePart = this.sourcePart,
         declarationName = this.declarationName,
-        kind = this.kind,
+        type = this.type,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1353,15 +1160,15 @@ class PageDiagnostic private constructor(
             this.sourcePart,
         declarationName: kotlin.String? =
             this.declarationName,
-        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable? =
-            this.kind,
+        type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable? =
+            this.type,
     ) = skirout.editor.v1.page_catalog.PageDiagnostic(
         code,
         message,
         originArtifactId,
         sourcePart,
         declarationName,
-        if (kind != null) kind.toFrozen() else null,
+        if (type != null) type.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -1369,11 +1176,11 @@ class PageDiagnostic private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.PageDiagnostic && this.code == other.code && this.message == other.message && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.declarationName == other.declarationName && this.kind == other.kind);
+        return this === other || (other is skirout.editor.v1.page_catalog.PageDiagnostic && this.code == other.code && this.message == other.message && this.originArtifactId == other.originArtifactId && this.sourcePart == other.sourcePart && this.declarationName == other.declarationName && this.type == other.type);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.code, this.message, this.originArtifactId, this.sourcePart, this.declarationName, this.kind).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.code, this.message, this.originArtifactId, this.sourcePart, this.declarationName, this.type).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1397,7 +1204,7 @@ class PageDiagnostic private constructor(
             null,
         override var declarationName: kotlin.String? =
             null,
-        override var kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable? =
+        override var type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageDiagnostic>? =
             null,
@@ -1409,7 +1216,7 @@ class PageDiagnostic private constructor(
             originArtifactId = this.originArtifactId,
             sourcePart = this.sourcePart,
             declarationName = this.declarationName,
-            kind = this.kind,
+            type = this.type,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -1446,7 +1253,7 @@ class PageDiagnostic private constructor(
                 null,
             declarationName: kotlin.String? =
                 null,
-            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable? =
+            type: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable? =
                 null,
         ) = skirout.editor.v1.page_catalog.PageDiagnostic(
             code = code,
@@ -1454,7 +1261,7 @@ class PageDiagnostic private constructor(
             originArtifactId = originArtifactId,
             sourcePart = sourcePart,
             declarationName = declarationName,
-            kind = kind,
+            type = type,
             _unrecognizedFields = null,
         );
 
@@ -1527,197 +1334,15 @@ class PageDiagnostic private constructor(
                 { mut, v -> mut.declarationName = v },
             );
             serializerImpl.addField(
-                "kind",
-                "kind",
+                "type",
+                "type",
                 5,
                 build.skir.Serializers.optional(
-                    skirout.kernel.v1.page_kind.PageKindRef.serializer,
+                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
                 ),
                 "",
-                { it.kind },
-                { mut, v -> mut.kind = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface PageAuthoringRuleRef_OrMutable {
-    val id: kotlin.String;
-    val revision: kotlin.Int;
-    val configuration: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable?;
-
-    fun toFrozen(): skirout.editor.v1.page_catalog.PageAuthoringRuleRef;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PageAuthoringRuleRef private constructor(
-    override val id: kotlin.String,
-    override val revision: kotlin.Int,
-    override val configuration: skirout.editor.v1.typed_value.TypedValueEnvelope?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>? =
-        null,
-): skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        id: kotlin.String,
-        revision: kotlin.Int,
-        configuration: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>? =
-            null,
-    ): this(
-        id,
-        revision,
-        if (configuration != null) configuration.toFrozen() else null,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        id = this.id,
-        revision = this.revision,
-        configuration = this.configuration,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        id: kotlin.String =
-            this.id,
-        revision: kotlin.Int =
-            this.revision,
-        configuration: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable? =
-            this.configuration,
-    ) = skirout.editor.v1.page_catalog.PageAuthoringRuleRef(
-        id,
-        revision,
-        if (configuration != null) configuration.toFrozen() else null,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.page_catalog.PageAuthoringRuleRef && this.id == other.id && this.revision == other.revision && this.configuration == other.configuration);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.revision, this.configuration).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.page_catalog.PageAuthoringRuleRef.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [PageAuthoringRuleRef]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var id: kotlin.String =
-            "",
-        override var revision: kotlin.Int =
-            0,
-        override var configuration: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.page_catalog.PageAuthoringRuleRef>? =
-            null,
-    ): skirout.editor.v1.page_catalog.PageAuthoringRuleRef_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.page_catalog.PageAuthoringRuleRef(
-            id = this.id,
-            revision = this.revision,
-            configuration = this.configuration,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.page_catalog.PageAuthoringRuleRef(
-                "",
-                0,
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PageAuthoringRuleRef].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            id: kotlin.String =
-                "",
-            revision: kotlin.Int =
-                0,
-            configuration: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable? =
-                null,
-        ) = skirout.editor.v1.page_catalog.PageAuthoringRuleRef(
-            id = id,
-            revision = revision,
-            configuration = configuration,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/page_catalog.skir:PageAuthoringRuleRef",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [PageAuthoringRuleRef] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [PageAuthoringRuleRef] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "id",
-                "id",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.id },
-                { mut, v -> mut.id = v },
-            );
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                1,
-                build.skir.Serializers.int32,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.addField(
-                "configuration",
-                "configuration",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.typed_value.TypedValueEnvelope.serializer,
-                ),
-                "",
-                { it.configuration },
-                { mut, v -> mut.configuration = v },
+                { it.type },
+                { mut, v -> mut.type = v },
             );
             serializerImpl.finalizeStruct();
         }

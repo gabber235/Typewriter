@@ -16,6 +16,18 @@ val RealmSettingsTest by testSuite {
         settings.get("REALM_DB_AUTHENTICATION") shouldBe "none"
     }
 
+    test("local Kubernetes profile supplies remote Realm settings without secrets") {
+        val settings = RealmSettings.fromFile(profile("local-kubernetes"))
+
+        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "remote"
+        settings.get("REALM_DB_URL") shouldBe "wss://surrealdb.local.seamlezz.net"
+        settings.get("REALM_DB_NAMESPACE") shouldBe "typewriter"
+        settings.get("REALM_DB_DATABASE") shouldBe "realm"
+        settings.get("REALM_DB_AUTHENTICATION") shouldBe "database"
+        settings.get("REALM_DB_USERNAME") shouldBe null
+        settings.get("REALM_DB_PASSWORD") shouldBe null
+    }
+
     test("application configuration parses typed slices") {
         val configuration = RealmSettings.fromFile(profile("local")).applicationConfiguration()
 

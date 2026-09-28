@@ -334,7 +334,6 @@ impl RemoveMapEntryAction {
 pub struct ReplaceConcreteNominalTypeAction {
     pub target: crate::skirout::base::editor::v1::binding::BindingRef,
     pub concrete_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReplaceConcreteNominalTypeAction>>,
 }
@@ -807,7 +806,6 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<ReplaceConcreteNominalTypeAction> = ReplaceConcreteNominalTypeAction::_adapter() as *const _ as *mut _;
                 (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &ReplaceConcreteNominalTypeAction| &x.target, |x: &mut ReplaceConcreteNominalTypeAction, v| x.target = v);
                 (*a).add_field("concrete_type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ReplaceConcreteNominalTypeAction| &x.concrete_type, |x: &mut ReplaceConcreteNominalTypeAction, v| x.concrete_type = v);
-                (*a).add_field("value", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ReplaceConcreteNominalTypeAction| &x.value, |x: &mut ReplaceConcreteNominalTypeAction, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {

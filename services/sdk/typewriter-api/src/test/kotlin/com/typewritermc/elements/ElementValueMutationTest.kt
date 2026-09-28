@@ -66,7 +66,7 @@ val ElementValueMutationTest by testSuite {
     test("list reorder preserves reference slots") {
         val graph = TypeGraph(TypeExpression.ListType(refTo(elementType)), emptyList())
         val stored = decomposer().decompose(graph, references("element:first", "element:second"))
-        val originalSlots = stored.references.associate { it.target.referenceString() to it.slot }
+        val originalSlots = stored.references.associate { it.target.value to it.slot }
 
         val result =
             mutator()
@@ -78,7 +78,7 @@ val ElementValueMutationTest by testSuite {
 
         ReferenceAssembler().assemble(graph, result) shouldBe
             ReferenceAssemblyResult.Success(references("element:second", "element:first"))
-        result.references.associate { it.target.referenceString() to it.slot } shouldBe originalSlots
+        result.references.associate { it.target.value to it.slot } shouldBe originalSlots
     }
 
     test("list duplication allocates fresh slots") {
@@ -114,12 +114,12 @@ val ElementValueMutationTest by testSuite {
         val logical =
             DataValue.Record(
                 mapOf(
-                    "left" to DataValue.Reference(ResourceId.parse("element:left")),
-                    "right" to DataValue.Reference(ResourceId.parse("element:right")),
+                    "left" to DataValue.Reference(ResourceId("element:left")),
+                    "right" to DataValue.Reference(ResourceId("element:right")),
                 ),
             )
         val stored = decomposer().decompose(graph, logical)
-        val rightSlot = stored.references.single { it.target.referenceString() == "element:right" }.slot
+        val rightSlot = stored.references.single { it.target.value == "element:right" }.slot
 
         val result =
             mutator()
@@ -129,15 +129,15 @@ val ElementValueMutationTest by testSuite {
                     listOf(
                         ElementValueMutation.SetValue(
                             ElementValuePath(listOf(ElementValuePathSegment.Field("left"))),
-                            DataValue.Reference(ResourceId.parse("element:new")),
+                            DataValue.Reference(ResourceId("element:new")),
                         ),
                     ),
                 ).success()
 
-        result.references.single { it.target.referenceString() == "element:right" }.slot shouldBe rightSlot
+        result.references.single { it.target.value == "element:right" }.slot shouldBe rightSlot
         ReferenceAssembler().assemble(graph, result) shouldBe
             ReferenceAssemblyResult.Success(
-                logical.copy(fields = logical.fields + ("left" to DataValue.Reference(ResourceId.parse("element:new")))),
+                logical.copy(fields = logical.fields + ("left" to DataValue.Reference(ResourceId("element:new")))),
             )
     }
 
@@ -149,8 +149,8 @@ val ElementValueMutationTest by testSuite {
                 DataValue.MapValue(
                     listOf(
                         DataMapEntry(
-                            DataValue.Reference(ResourceId.parse("element:key")),
-                            DataValue.Reference(ResourceId.parse("element:value")),
+                            DataValue.Reference(ResourceId("element:key")),
+                            DataValue.Reference(ResourceId("element:value")),
                         ),
                     ),
                 ),
@@ -166,15 +166,15 @@ val ElementValueMutationTest by testSuite {
                             ElementValuePath(),
                             listOf(
                                 DataMapEntry(
-                                    DataValue.Reference(ResourceId.parse("element:key")),
-                                    DataValue.Reference(ResourceId.parse("element:replacement")),
+                                    DataValue.Reference(ResourceId("element:key")),
+                                    DataValue.Reference(ResourceId("element:replacement")),
                                 ),
                             ),
                         ),
                     ),
                 ).success()
 
-        result.references.map { it.target.referenceString() }.toSet() shouldBe
+        result.references.map { it.target.value }.toSet() shouldBe
             setOf("element:key", "element:replacement")
     }
 }
@@ -182,7 +182,7 @@ val ElementValueMutationTest by testSuite {
 private fun ElementValueMutationResult.success(): StoredElementValue = (this as ElementValueMutationResult.Success).value
 
 private fun references(vararg targets: String): DataValue.ListValue =
-    DataValue.ListValue(targets.map { DataValue.Reference(ResourceId.parse(it)) })
+    DataValue.ListValue(targets.map { DataValue.Reference(ResourceId(it)) })
 
 private fun literalMessage(
     type: ResolvedTypeRef,

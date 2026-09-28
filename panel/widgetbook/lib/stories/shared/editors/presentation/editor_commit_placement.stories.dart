@@ -58,35 +58,41 @@ class _CommitPlacementStoryState extends State<_CommitPlacementStory> {
                   id: "configuration",
                   element: ColumnElement(
                     children: [
-                      PresentationNode(
-                        id: "target",
-                        element: TextInputElement(
-                          control: BoundControl(
-                            binding: const BindingReference(
-                              bindingId: BindingId(7),
+                      PresentationAxisChild.fixed(
+                        PresentationNode(
+                          id: "target",
+                          element: TextInputElement(
+                            control: BoundControl(
+                              binding: const BindingReference(
+                                bindingId: BindingId(7),
+                              ),
+                              label: "Engine target".asStringLiteral,
                             ),
-                            label: "Engine target".asStringLiteral,
                           ),
                         ),
                       ),
-                      PresentationNode(
-                        id: "placement",
-                        element: ConditionalElement(
-                          condition: inline.asBooleanLiteral,
-                          whenTrue: const PresentationNode(
-                            id: "commit",
-                            element: CommitControlsElement(
-                              binding: BindingReference(
-                                bindingId: BindingId(7),
+                      PresentationAxisChild.fixed(
+                        PresentationNode(
+                          id: "placement",
+                          element: ConditionalElement(
+                            condition: inline.asBooleanLiteral,
+                            whenTrue: const PresentationNode(
+                              id: "commit",
+                              element: CommitControlsElement(
+                                binding: BindingReference(
+                                  bindingId: BindingId(7),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      PresentationNode(
-                        id: "following",
-                        element: TextElement(
-                          "Content after configuration".asStringLiteral,
+                      PresentationAxisChild.fixed(
+                        PresentationNode(
+                          id: "following",
+                          element: TextElement(
+                            "Content after configuration".asStringLiteral,
+                          ),
                         ),
                       ),
                     ],

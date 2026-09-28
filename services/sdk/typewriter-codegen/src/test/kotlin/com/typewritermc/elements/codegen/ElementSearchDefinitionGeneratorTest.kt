@@ -1,8 +1,8 @@
 package com.typewritermc.elements.codegen
 
-import com.typewritermc.elements.ElementSearchMode
-import com.typewritermc.elements.ElementSearchPolicy
-import com.typewritermc.elements.ElementSearchPropertyOverride
+import com.typewritermc.elements.ContentSearchMode
+import com.typewritermc.elements.ContentSearchPolicy
+import com.typewritermc.elements.ContentSearchPropertyOverride
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.ResolvedTypeRef
@@ -48,7 +48,7 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
 
         val result = ElementSearchDefinitionGenerator.generate(graph, emptyList()) as ElementSearchGenerationResult.Success
 
-        result.definition.policy shouldBe ElementSearchPolicy.ORDINARY_TEXT
+        result.definition.policy shouldBe ContentSearchPolicy.ORDINARY_TEXT
         result.definition.revisionFingerprintInputs shouldBe listOf(root, literal, message).sortedBy { it.toString() }
     }
 
@@ -69,7 +69,7 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
                     TypeDefinition(logical, NominalTypeKind.CONCRETE, TypeExpression.StringType()),
                 ),
             )
-        val override = ElementSearchPropertyOverride(root, "lines", ElementSearchMode.SUMMARY)
+        val override = ContentSearchPropertyOverride(root, "lines", ContentSearchMode.SUMMARY)
 
         val result = ElementSearchDefinitionGenerator.generate(graph, listOf(override)) as ElementSearchGenerationResult.Success
 
@@ -91,7 +91,7 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
                     ),
                 ),
             )
-        val override = ElementSearchPropertyOverride(root, "count", ElementSearchMode.BODY)
+        val override = ContentSearchPropertyOverride(root, "count", ContentSearchMode.BODY)
 
         ElementSearchDefinitionGenerator.generate(graph, listOf(override)) shouldBe
             ElementSearchGenerationResult.InvalidOverrides(listOf(override))
@@ -111,7 +111,7 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
                     ),
                 ),
             )
-        val override = ElementSearchPropertyOverride(root, "target", ElementSearchMode.KEYWORD)
+        val override = ContentSearchPropertyOverride(root, "target", ContentSearchMode.KEYWORD)
 
         ElementSearchDefinitionGenerator.generate(graph, listOf(override)) shouldBe
             ElementSearchGenerationResult.InvalidOverrides(listOf(override))
@@ -130,7 +130,7 @@ val ElementSearchDefinitionGeneratorTest by testSuite {
                     ),
                 ),
             )
-        val override = ElementSearchPropertyOverride(root, "count", ElementSearchMode.NONE)
+        val override = ContentSearchPropertyOverride(root, "count", ContentSearchMode.NONE)
 
         val result = ElementSearchDefinitionGenerator.generate(graph, listOf(override)) as ElementSearchGenerationResult.Success
 

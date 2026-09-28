@@ -2,27 +2,15 @@ part of "../../content_renderer.dart";
 
 /// Renders a protocol icon while preserving typed expression diagnostics.
 ///
-/// Icon values are accepted from the nominal icon value or from the two
-/// supported string encodings. The rendered icon is hidden from the semantics
-/// tree because the optional semantic label is the accessible representation.
+/// The rendered icon is hidden from the semantics tree because the optional
+/// semantic label is the accessible representation.
 extension IconElementRendering on IconElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
     final result = scope.evaluate(name);
     if (result case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
     }
-    final value = result.valueOrNull;
-    final icon =
-        value?.iconValueOrNull ??
-        switch ((name.resultType, value)) {
-          (NamedType(reference: final type), StringValue(value: final source))
-              when type == standardTypeRefs.iconifyIcon =>
-            IconValue.iconify(source),
-          (NamedType(reference: final type), StringValue(value: final source))
-              when type == standardTypeRefs.svgIcon =>
-            IconValue.svg(source),
-          _ => null,
-        };
+    final icon = result.valueOrNull?.iconValueFor(name.resultType);
     if (icon == null) {
       return presentationDiagnostic(context, [
         const TypeDiagnostic(

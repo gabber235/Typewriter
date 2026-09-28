@@ -18,6 +18,15 @@ extension EditorResourceBinding on TransactionalEditorSource {
   /// Applies a newer presentation snapshot while preserving the draft.
   void refreshSnapshot(EditorSnapshot snapshot) {
     if (snapshot.document.revision < document.revision) return;
+    final pinned = _snapshot;
+    if (pinned is EditorContractSnapshot &&
+        !pinned.contractCompatibleWith(snapshot)) {
+      _pendingContractSnapshot = snapshot;
+      _pauseForContractChange();
+      return;
+    }
+    _pendingContractSnapshot = null;
+    _contractUnavailable = false;
     _snapshot = snapshot;
     refreshDocument(snapshot.document);
   }
@@ -29,8 +38,88 @@ extension EditorResourceBinding on TransactionalEditorSource {
   /// against stale resource data.
   bool refreshAuthoritativeSnapshot(EditorSnapshot snapshot) {
     if (snapshot.document.revision < document.revision) return false;
+    final pinned = _snapshot;
+    if (pinned is EditorContractSnapshot &&
+        !pinned.contractCompatibleWith(snapshot)) {
+      _pendingContractSnapshot = snapshot;
+      _pauseForContractChange();
+      return true;
+    }
+    _pendingContractSnapshot = null;
+    _contractUnavailable = false;
     _snapshot = snapshot;
     return _acceptAuthoritativeSnapshot(snapshot.document);
+  }
+
+  /// Validates the retained draft under the pending contract before swapping.
+  bool reconcilePendingContract() {
+    final candidate = _pendingContractSnapshot;
+    if (candidate == null) return false;
+    final mutation = candidate.validate(DataPath.root, _draft);
+    if (mutation is! AppliedEditorMutation ||
+        candidate.validateDraft(_draft).isNotEmpty) {
+      return false;
+    }
+    _pendingContractSnapshot = null;
+    _snapshot = candidate;
+    _refreshDocument(candidate.document);
+    return true;
+  }
+
+  /// Accepts the pending contract after explicitly discarding local work.
+  bool discardDraftAndAcceptPendingContract() {
+    final candidate = _pendingContractSnapshot;
+    if (candidate == null) return false;
+    _pendingContractSnapshot = null;
+    _snapshot = candidate;
+    _refreshDocument(candidate.document);
+    _discardDraft();
+    return true;
+  }
+
+  /// Pauses mutation while the exact resource contract is unavailable.
+  void markContractUnavailable(String message) {
+    _contractUnavailable = true;
+    _pauseForContractChange(message: message);
+  }
+
+  /// Retries the current resource contract without changing the draft.
+  Future<bool> retryContractRefresh() async {
+    final resource = _resource;
+    if (resource == null) return false;
+    try {
+      final candidate = await resource.refresh();
+      if (candidate == null) {
+        acceptRemoteDeletion();
+        return false;
+      }
+      _contractUnavailable = false;
+      refreshSnapshot(candidate);
+      return !_contractUnavailable;
+    } on EditorContractUnavailableException catch (error) {
+      markContractUnavailable(error.message);
+      return false;
+    }
+  }
+
+  void _pauseForContractChange({
+    String message = "The editor contract changed. Reconcile or discard the draft to continue",
+  }) {
+    final diagnostic = TypeDiagnostic(
+      code: TypeDiagnosticCode.invalidRevision,
+      message: message,
+      pathPresent: false,
+    );
+    _document = _document.copyWith(
+      diagnostics: [
+        ..._document.diagnostics.where(
+          (item) => item.code != TypeDiagnosticCode.invalidRevision,
+        ),
+        diagnostic,
+      ],
+      readOnly: true,
+    );
+    _notify();
   }
 }
 
@@ -64,9 +153,18 @@ final class _ResourceSave {
         throw StateError("An editor transaction must belong to one workspace");
       }
       reservation = await workspace.coordinator.reserve(resources);
-      final snapshots = await Future.wait([
-        for (final source in paths.keys) source.resource!.refresh(),
-      ]);
+      final snapshots = <EditorSnapshot?>[];
+      for (final source in paths.keys) {
+        try {
+          snapshots.add(await source.resource!.refresh());
+        } on EditorContractUnavailableException catch (error) {
+          source.markContractUnavailable(error.message);
+          return _ResourceSave({}, {
+            for (final participant in paths.keys)
+              participant: _unavailable(error.message),
+          });
+        }
+      }
       var authoritativeDivergence = false;
       for (final indexed in paths.keys.indexed) {
         final source = indexed.$2;

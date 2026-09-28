@@ -5,7 +5,7 @@ enum ReferenceSelectionTransition { add, remove, replace }
 final class ReferenceCandidate {
   const ReferenceCandidate({required this.id, this.types = const []});
 
-  final RecordId id;
+  final ResourceId id;
   final List<ResolvedTypeRef> types;
 }
 
@@ -57,8 +57,42 @@ final class ReferenceCandidatePolicyContext {
   final EditOwner? owner;
   final DataPath path;
   final ReferenceSelectionTransition transition;
-  final Set<RecordId> currentSelection;
+  final Set<ResourceId> currentSelection;
   final ReferenceCandidate candidate;
+}
+
+final class ReferenceEligibilityEvaluation {
+  const ReferenceEligibilityEvaluation({
+    required this.context,
+    required this.proposedValue,
+    this.structuralMutation,
+  });
+
+  final ReferenceCandidatePolicyContext context;
+  final DataValue proposedValue;
+  final EditorStructuralMutation? structuralMutation;
+}
+
+/// Evaluates candidates against one immutable Realm authorization context.
+///
+/// [version] must change whenever the catalog generation or any submitted
+/// local draft changes. Consumers use it to invalidate cached authorization
+/// before applying a previously evaluated candidate.
+final class ReferenceEligibilityEvaluator {
+  const ReferenceEligibilityEvaluator({
+    required this.version,
+    required this.evaluate,
+  });
+
+  final Object version;
+  final Future<ReferenceCandidateDecision> Function(
+    ReferenceEligibilityEvaluation evaluation,
+  )
+  evaluate;
+
+  Future<ReferenceCandidateDecision> call(
+    ReferenceEligibilityEvaluation evaluation,
+  ) => evaluate(evaluation);
 }
 
 abstract interface class ReferenceCandidatePolicy {

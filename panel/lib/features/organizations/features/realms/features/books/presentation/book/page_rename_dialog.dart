@@ -13,14 +13,15 @@ class RenamePageDialogue extends HookConsumerWidget {
     super.key,
   });
 
-  final skir.RecordId pageId;
+  final skir.ResourceId pageId;
   final String oldName;
 
   Future<void> _renamePage(WidgetRef ref, String newName) async {
     final router = ref.read(appRouterProvider);
     final result = await ref.editPage(
       id: pageId,
-      name: skir.StringChange(expected: oldName, value: newName),
+      name: newName,
+      expectedName: oldName,
     );
     result.requireApplied(
       conflictMessage: "The page name changed while editing",

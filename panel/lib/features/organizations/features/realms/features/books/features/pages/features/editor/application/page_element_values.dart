@@ -91,40 +91,21 @@ mixin _PageElementValues on _$PageElements, _PageElementMutationContext {
     final current = state.requireValue.singleWhere(
       (element) => element.id == elementId,
     );
-    final definition = switch (current) {
-      PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-        definition.elementDefinition,
-      PageElementCue(:final cue) => cue.elementDefinition,
-      _ => throw ApiException.badRequest("The element has no editable value"),
-    };
+    switch (current) {
+      case PageElementEntry(entry: DefinitionPageEntry()) || PageElementCue():
+        break;
+      default:
+        throw ApiException.badRequest("The element has no editable value");
+    }
     final codec = _codec();
     final session = ref.read(_sessionProvider);
-    final revision = session.sequence;
-    final wireElement = session.documents[_pageId]?.elements
-        .where((element) => element.id.id == elementId)
-        .firstOrNull;
-    if (revision == null || wireElement == null) {
-      throw ApiException.notFound("Element");
-    }
-    final canonical = codec.codec.decodeValue(wireElement.value).valueOrNull;
-    if (canonical == null) {
-      throw ApiException.badRequest("The element value cannot be decoded");
-    }
-
-    return authoringElementTarget(
+    return session.authoringResourceTarget(
       repository: ref
           .read(resourceRepositoriesProvider)
           .authoring(this.organizationId, this.realmId),
-      state: session,
       identity: EntryIdentifier(elementId),
-      pageId: _pageId.id,
       label: _elementName(current),
-      document: EditorDocument(
-        rootType: NamedType(definition.rootType),
-        typeCatalog: codec.registry.catalog,
-        confirmedValue: canonical,
-        revision: revision,
-      ),
+      typeCatalog: codec.registry.catalog,
     );
   }
 }
