@@ -4,17 +4,17 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Element
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
+import com.typewritermc.types.OwnsResource
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Referenceable
-import com.typewritermc.types.OwnsResource
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ToMany
 import com.typewritermc.types.ToOne
-import com.typewritermc.types.TypewriterRelation
-import com.typewritermc.types.TypewriterRecordContract
-import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypeId
+import com.typewritermc.types.TypewriterRecordContract
+import com.typewritermc.types.TypewriterRelation
+import com.typewritermc.types.TypewriterType
 
 /**
  * Groups authored pages under a stable identity and library name.
@@ -23,6 +23,12 @@ import com.typewritermc.types.TypeId
  * uniqueness.
  */
 @TypewriterType(id = "bbb646b300cf4dd2b7aab051854e4dd1")
+@com.typewritermc.types.TypewriterDisplay(
+    name = "Book",
+    description = "Authored page collection",
+    icon = "material-symbols:book",
+    color = "#3F51B5",
+)
 data class Book(
     val title: String = "",
     val icon: Icon = Icon.Iconify("material-symbols:book"),
@@ -46,6 +52,12 @@ sealed interface BookPages : OwnsResource<Book, Page>
  * references.
  */
 @TypewriterType(id = "ce1ae253a42d4509935c48b8ecba664a")
+@com.typewritermc.types.TypewriterDisplay(
+    name = "Tag",
+    description = "Library classification",
+    icon = "material-symbols:label",
+    color = "#795548",
+)
 data class Tag(
     val name: String = "",
     val color: Color = Color(0xff9e9e9eu),

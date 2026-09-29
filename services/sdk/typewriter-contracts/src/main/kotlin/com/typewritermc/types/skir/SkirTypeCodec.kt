@@ -94,7 +94,6 @@ private fun ConversionScope.encode(definition: TypeDefinition): SkirTypeDefiniti
                 NominalTypeKind.OPEN_ABSTRACT -> SkirTypeDefinitionKind.OPEN_ABSTRACT
                 NominalTypeKind.SEALED_ABSTRACT -> SkirTypeDefinitionKind.SEALED_ABSTRACT
             },
-        declarationOwner = definition.declarationOwner,
         namedPresentations =
             definition.namedPresentations.toSortedMap().map { (name, id) ->
                 SkirNamedPresentation(name = name, presentationId = encode(id))
@@ -124,7 +123,6 @@ private fun ConversionScope.decode(definition: SkirTypeDefinition): TypeDefiniti
                 SkirTypeDefinitionKind.SEALED_ABSTRACT -> NominalTypeKind.SEALED_ABSTRACT
                 else -> fail("Unknown Skir nominal type kind.")
             },
-        declarationOwner = definition.declarationOwner,
         representation = at("representation") { decode(definition.representation) },
         parameters = definition.parameters.mapIndexed { index, value -> at("parameter $index") { decode(value) } },
         parents = definition.directParents.mapIndexed { index, value -> at("parent $index") { decode(value) } },

@@ -1,17 +1,17 @@
 package com.typewritermc.extensions.basic.entries.sequence.events
 
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.TypewriterPresentation
 import com.typewritermc.presentation.presentation
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
+import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterType
 
-@TypewriterContent(
-    id = "01a0b180-cac6-770c-bbe8-101a740011ac",
-    revision = 1,
+@TypewriterType(id = "01a0b180-cac6-770c-bbe8-101a740011ac", revision = 1)
+@TypewriterDisplay(
     name = "Player Message Contains Text Event Entry",
     description = "This event entry is triggered when a player sends a message that contains a specific text.",
     icon = "fluent:note-48-filled",

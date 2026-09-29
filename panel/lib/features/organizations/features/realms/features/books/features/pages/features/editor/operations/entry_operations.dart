@@ -329,13 +329,12 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
               final editor = ref
                   .read(realmEditorCatalogProvider)
                   .currentCatalog
-                  ?.pageCatalog
-                  .definitions[page.rootType]
+                  ?.types[page.rootType]
                   ?.editor;
               return switch (placementKinds.single) {
-                EntryPlacementKind.graph => editor is RealmGraphPageEditor,
+                EntryPlacementKind.graph => editor is RealmGraphEditorLayout,
                 EntryPlacementKind.timelineEntry =>
-                  editor is RealmTimelinePageEditor,
+                  editor is RealmTimelineEditorLayout,
               };
             })
             .toList(growable: false);

@@ -16,15 +16,16 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./authoring.dart" as _lib_editor_v1_authoring;
 import "./capability.dart" as _lib_editor_v1_capability;
+import "./catalog_presentation.dart" as _lib_editor_v1_catalog_presentation;
 import "./compiled_content.dart" as _lib_editor_v1_compiled_content;
 import "./conversion.dart" as _lib_editor_v1_conversion;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
-import "./element_catalog.dart" as _lib_editor_v1_element_catalog;
-import "./page_catalog.dart" as _lib_editor_v1_page_catalog;
 import "./path.dart" as _lib_editor_v1_path;
 import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
+import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
+import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
 
 // -----------------------------------------------------------------------------
 // struct SubtypeQueryId
@@ -925,6 +926,871 @@ final class AuthoringCompilationProjectionDefinition_mutable implements Authorin
 }
 
 // -----------------------------------------------------------------------------
+// struct TypeDisplay
+// -----------------------------------------------------------------------------
+
+sealed class TypeDisplay_orMutable {
+  _core.String get description;
+  _lib_kernel_v1_icon.Icon get icon;
+  _lib_kernel_v1_color.Color_orMutable get color;
+
+  TypeDisplay toFrozen();
+}
+
+/// Deeply immutable.
+final class TypeDisplay implements TypeDisplay_orMutable {
+  @_core.override
+  final _core.String description;
+  @_core.override
+  final _lib_kernel_v1_icon.Icon icon;
+  @_core.override
+  final _lib_kernel_v1_color.Color color;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory TypeDisplay({
+    required _core.String description,
+    required _lib_kernel_v1_icon.Icon icon,
+    required _lib_kernel_v1_color.Color_orMutable color,
+  }) => TypeDisplay._(
+    description,
+    icon,
+    color.toFrozen(),
+  );
+
+  TypeDisplay._(
+    this.description,
+    this.icon,
+    this.color,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = TypeDisplay._(
+    "",
+    _lib_kernel_v1_icon.Icon.unknown,
+    _lib_kernel_v1_color.Color.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static TypeDisplay_mutable mutable() => TypeDisplay_mutable._(
+    "",
+    _lib_kernel_v1_icon.Icon.unknown,
+    _lib_kernel_v1_color.Color.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  TypeDisplay toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  TypeDisplay_mutable toMutable() => TypeDisplay_mutable._(
+    this.description,
+    this.icon,
+    this.color,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! TypeDisplay) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.description,
+    this.icon,
+    this.color,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `TypeDisplay` instances.
+  static _skir.StructSerializer<TypeDisplay, TypeDisplay_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "description",
+        "description",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.description,
+        (it, v) => it.description = v,
+      );
+      _serializerBuilder.addField(
+        "icon",
+        "icon",
+        1,
+        _lib_kernel_v1_icon.Icon.serializer,
+        "",
+        (it) => it.icon,
+        (it, v) => it.icon = v,
+      );
+      _serializerBuilder.addField(
+        "color",
+        "color",
+        2,
+        _lib_kernel_v1_color.Color.serializer,
+        "",
+        (it) => it.color,
+        (it, v) => it.color = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:TypeDisplay",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (TypeDisplay_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [TypeDisplay].
+final class TypeDisplay_mutable implements TypeDisplay_orMutable {
+  _core.String description;
+  _lib_kernel_v1_icon.Icon icon;
+  _lib_kernel_v1_color.Color_orMutable color;
+  _skir.internal__UnrecognizedFields? _u;
+
+  TypeDisplay_mutable._(
+    this.description,
+    this.icon,
+    this.color,
+  );
+
+  /// If the value of [color] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+  _lib_kernel_v1_color.Color_mutable get mutableColor {
+    final value = this.color;
+    if (value is _lib_kernel_v1_color.Color_mutable) {
+      return value;
+    } else {
+      return this.color = (value as _lib_kernel_v1_color.Color).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  TypeDisplay toFrozen() => TypeDisplay(
+    description: this.description,
+    icon: this.icon,
+    color: this.color,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum GraphDirection
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case GraphDirection_unknown(): { ... }
+///     case GraphDirection.leftToRight: { ... }
+///     case GraphDirection.rightToLeft: { ... }
+///     case GraphDirection.topToBottom: { ... }
+///     case GraphDirection.bottomToTop: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class GraphDirection {
+  /// Constant indicating an unknown `GraphDirection`.
+  /// Default value for fields of type `GraphDirection`.
+  static const GraphDirection unknown = GraphDirection_unknown._instance;
+
+  static const leftToRight = _GraphDirection_consts.leftToRightConst;
+  static const rightToLeft = _GraphDirection_consts.rightToLeftConst;
+  static const topToBottom = _GraphDirection_consts.topToBottomConst;
+  static const bottomToTop = _GraphDirection_consts.bottomToTopConst;
+
+  /// Returns the kind of variant held by this GraphDirection.
+  GraphDirection_kind get kind;
+
+  /// Serializer for `GraphDirection` instances.
+  static _skir.EnumSerializer<GraphDirection> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "left_to_right",
+        "leftToRight",
+        "",
+        leftToRight,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "right_to_left",
+        "rightToLeft",
+        "",
+        rightToLeft,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "top_to_bottom",
+        "topToBottom",
+        "",
+        topToBottom,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "bottom_to_top",
+        "bottomToTop",
+        "",
+        bottomToTop,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/catalog.skir:GraphDirection",
+    doc: "",
+    unknownInstance: GraphDirection_unknown._instance,
+    enumInstance: GraphDirection.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: GraphDirection_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `GraphDirection`.
+enum GraphDirection_kind {
+  unknown(0),
+  leftToRightConst(1),
+  rightToLeftConst(2),
+  topToBottomConst(3),
+  bottomToTopConst(4);
+
+  final _core.int _ordinal;
+
+  const GraphDirection_kind(this._ordinal);
+}
+
+final class GraphDirection_unknown implements GraphDirection {
+  static const _instance = GraphDirection_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const GraphDirection_unknown._() : _u = null;
+  GraphDirection_unknown._unrecognized(this._u);
+
+  @_core.override
+  GraphDirection_kind get kind => GraphDirection_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is GraphDirection_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, GraphDirection.serializer);
+}
+
+enum _GraphDirection_consts implements GraphDirection {
+  leftToRightConst(GraphDirection_kind.leftToRightConst),
+  rightToLeftConst(GraphDirection_kind.rightToLeftConst),
+  topToBottomConst(GraphDirection_kind.topToBottomConst),
+  bottomToTopConst(GraphDirection_kind.bottomToTopConst);
+
+  @_core.override
+  final GraphDirection_kind kind;
+
+  const _GraphDirection_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, GraphDirection.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct GraphEditorLayout
+// -----------------------------------------------------------------------------
+
+sealed class GraphEditorLayout_orMutable {
+  GraphDirection get direction;
+
+  GraphEditorLayout toFrozen();
+}
+
+/// Deeply immutable.
+final class GraphEditorLayout implements GraphEditorLayout_orMutable {
+  @_core.override
+  final GraphDirection direction;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GraphEditorLayout({
+    required GraphDirection direction,
+  }) => GraphEditorLayout._(
+    direction,
+  );
+
+  GraphEditorLayout._(
+    this.direction,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GraphEditorLayout._(
+    GraphDirection.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GraphEditorLayout_mutable mutable() => GraphEditorLayout_mutable._(
+    GraphDirection.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GraphEditorLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GraphEditorLayout_mutable toMutable() => GraphEditorLayout_mutable._(
+    this.direction,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GraphEditorLayout) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.direction,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GraphEditorLayout` instances.
+  static _skir.StructSerializer<GraphEditorLayout, GraphEditorLayout_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "direction",
+        "direction",
+        0,
+        GraphDirection.serializer,
+        "",
+        (it) => it.direction,
+        (it, v) => it.direction = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:GraphEditorLayout",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GraphEditorLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GraphEditorLayout].
+final class GraphEditorLayout_mutable implements GraphEditorLayout_orMutable {
+  GraphDirection direction;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GraphEditorLayout_mutable._(
+    this.direction,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GraphEditorLayout toFrozen() => GraphEditorLayout(
+    direction: this.direction,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct AuthoringEditorLayout.Timeline
+// -----------------------------------------------------------------------------
+
+sealed class AuthoringEditorLayout_Timeline_orMutable {
+  AuthoringEditorLayout_Timeline toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringEditorLayout_Timeline implements AuthoringEditorLayout_Timeline_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringEditorLayout_Timeline() => AuthoringEditorLayout_Timeline._();
+
+  AuthoringEditorLayout_Timeline._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringEditorLayout_Timeline._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringEditorLayout_Timeline_mutable mutable() => AuthoringEditorLayout_Timeline_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringEditorLayout_Timeline toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringEditorLayout_Timeline_mutable toMutable() => AuthoringEditorLayout_Timeline_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringEditorLayout_Timeline) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringEditorLayout_Timeline` instances.
+  static _skir.StructSerializer<AuthoringEditorLayout_Timeline, AuthoringEditorLayout_Timeline_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:AuthoringEditorLayout.Timeline",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringEditorLayout_Timeline_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringEditorLayout_Timeline].
+final class AuthoringEditorLayout_Timeline_mutable implements AuthoringEditorLayout_Timeline_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringEditorLayout_Timeline_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringEditorLayout_Timeline toFrozen() => AuthoringEditorLayout_Timeline().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum AuthoringEditorLayout
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case AuthoringEditorLayout_unknown(): { ... }
+///     case AuthoringEditorLayout_graph(:var value): { ... }
+///     case AuthoringEditorLayout_timeline(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class AuthoringEditorLayout {
+  /// Constant indicating an unknown `AuthoringEditorLayout`.
+  /// Default value for fields of type `AuthoringEditorLayout`.
+  static const AuthoringEditorLayout unknown = AuthoringEditorLayout_unknown._instance;
+
+  /// Create a 'graph' variant wrapping around the given value.
+  factory AuthoringEditorLayout.wrapGraph(
+    GraphEditorLayout value
+  ) => AuthoringEditorLayout_graphWrapper._(value);
+
+  /// Same as `wrapGraph(GraphEditorLayout(...))`.
+  factory AuthoringEditorLayout.createGraph({
+    required GraphDirection direction,
+  }) => AuthoringEditorLayout.wrapGraph(
+    GraphEditorLayout(
+      direction: direction,
+    )
+  );
+
+  /// Create a 'timeline' variant wrapping around the given value.
+  factory AuthoringEditorLayout.wrapTimeline(
+    AuthoringEditorLayout_Timeline value
+  ) => AuthoringEditorLayout_timelineWrapper._(value);
+
+  /// Same as `wrapTimeline(AuthoringEditorLayout_Timeline(...))`.
+  factory AuthoringEditorLayout.createTimeline() => AuthoringEditorLayout.wrapTimeline(
+    AuthoringEditorLayout_Timeline()
+  );
+
+  /// Returns the kind of variant held by this AuthoringEditorLayout.
+  AuthoringEditorLayout_kind get kind;
+
+  /// Serializer for `AuthoringEditorLayout` instances.
+  static _skir.EnumSerializer<AuthoringEditorLayout> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "graph",
+        "wrapGraph",
+        GraphEditorLayout.serializer,
+        "",
+        AuthoringEditorLayout_graphWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringEditorLayout_kind.graphWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "timeline",
+        "wrapTimeline",
+        AuthoringEditorLayout_Timeline.serializer,
+        "",
+        AuthoringEditorLayout_timelineWrapper._,
+        (it) => it.value,
+        ordinal: AuthoringEditorLayout_kind.timelineWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/catalog.skir:AuthoringEditorLayout",
+    doc: "",
+    unknownInstance: AuthoringEditorLayout_unknown._instance,
+    enumInstance: AuthoringEditorLayout.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: AuthoringEditorLayout_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `AuthoringEditorLayout`.
+enum AuthoringEditorLayout_kind {
+  unknown(0),
+  graphWrapper(1),
+  timelineWrapper(2);
+
+  final _core.int _ordinal;
+
+  const AuthoringEditorLayout_kind(this._ordinal);
+}
+
+final class AuthoringEditorLayout_unknown implements AuthoringEditorLayout {
+  static const _instance = AuthoringEditorLayout_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const AuthoringEditorLayout_unknown._() : _u = null;
+  AuthoringEditorLayout_unknown._unrecognized(this._u);
+
+  @_core.override
+  AuthoringEditorLayout_kind get kind => AuthoringEditorLayout_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is AuthoringEditorLayout_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, AuthoringEditorLayout.serializer);
+}
+
+sealed class _AuthoringEditorLayout_wrapper implements AuthoringEditorLayout {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _AuthoringEditorLayout_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, AuthoringEditorLayout.serializer);
+}
+
+final class AuthoringEditorLayout_graphWrapper extends _AuthoringEditorLayout_wrapper {
+  final GraphEditorLayout value;
+
+  AuthoringEditorLayout_graphWrapper._(this.value);
+
+  @_core.override
+  AuthoringEditorLayout_kind get kind => AuthoringEditorLayout_kind.graphWrapper;
+}
+
+final class AuthoringEditorLayout_timelineWrapper extends _AuthoringEditorLayout_wrapper {
+  final AuthoringEditorLayout_Timeline value;
+
+  AuthoringEditorLayout_timelineWrapper._(this.value);
+
+  @_core.override
+  AuthoringEditorLayout_kind get kind => AuthoringEditorLayout_kind.timelineWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct CatalogTypeView
+// -----------------------------------------------------------------------------
+
+sealed class CatalogTypeView_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinition_orMutable get definition;
+  _core.bool get eligible;
+  _core.Iterable<_core.String> get ineligibilityReasons;
+  TypeDisplay_orMutable? get display;
+  AuthoringEditorLayout? get editor;
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable? get presentationSubject;
+
+  CatalogTypeView toFrozen();
+}
+
+/// Deeply immutable.
+final class CatalogTypeView implements CatalogTypeView_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeDefinition definition;
+  @_core.override
+  final _core.bool eligible;
+  @_core.override
+  final _core.Iterable<_core.String> ineligibilityReasons;
+  @_core.override
+  final TypeDisplay? display;
+  @_core.override
+  final AuthoringEditorLayout? editor;
+  @_core.override
+  final _lib_editor_v1_catalog_presentation.CatalogPresentationSubject? presentationSubject;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CatalogTypeView({
+    required _lib_editor_v1_type_catalog.TypeDefinition_orMutable definition,
+    required _core.bool eligible,
+    required _core.Iterable<_core.String> ineligibilityReasons,
+    required TypeDisplay_orMutable? display,
+    required AuthoringEditorLayout? editor,
+    required _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable? presentationSubject,
+  }) => CatalogTypeView._(
+    definition.toFrozen(),
+    eligible,
+    _skir.internal__frozenCopy(ineligibilityReasons),
+    (display != null) ? display.toFrozen() : null,
+    editor,
+    (presentationSubject != null) ? presentationSubject.toFrozen() : null,
+  );
+
+  CatalogTypeView._(
+    this.definition,
+    this.eligible,
+    this.ineligibilityReasons,
+    this.display,
+    this.editor,
+    this.presentationSubject,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CatalogTypeView._(
+    _lib_editor_v1_type_catalog.TypeDefinition.defaultInstance,
+    false,
+    _skir.KeyedIterable.empty,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CatalogTypeView_mutable mutable() => CatalogTypeView_mutable._(
+    _lib_editor_v1_type_catalog.TypeDefinition.defaultInstance,
+    false,
+    _skir.KeyedIterable.empty,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CatalogTypeView toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CatalogTypeView_mutable toMutable() => CatalogTypeView_mutable._(
+    this.definition,
+    this.eligible,
+    this.ineligibilityReasons,
+    this.display,
+    this.editor,
+    this.presentationSubject,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CatalogTypeView) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.definition,
+    this.eligible,
+    this.ineligibilityReasons,
+    this.display,
+    this.editor,
+    this.presentationSubject,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CatalogTypeView` instances.
+  static _skir.StructSerializer<CatalogTypeView, CatalogTypeView_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "definition",
+        "definition",
+        0,
+        _lib_editor_v1_type_catalog.TypeDefinition.serializer,
+        "",
+        (it) => it.definition,
+        (it, v) => it.definition = v,
+      );
+      _serializerBuilder.addField(
+        "eligible",
+        "eligible",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.eligible,
+        (it, v) => it.eligible = v,
+      );
+      _serializerBuilder.addField(
+        "ineligibility_reasons",
+        "ineligibilityReasons",
+        2,
+        _skir.Serializers.iterable(
+          _skir.Serializers.string,
+        ),
+        "",
+        (it) => it.ineligibilityReasons,
+        (it, v) => it.ineligibilityReasons = v,
+      );
+      _serializerBuilder.addField(
+        "display",
+        "display",
+        3,
+        _skir.Serializers.optional(
+          TypeDisplay.serializer,
+        ),
+        "",
+        (it) => it.display,
+        (it, v) => it.display = v,
+      );
+      _serializerBuilder.addField(
+        "editor",
+        "editor",
+        4,
+        _skir.Serializers.optional(
+          AuthoringEditorLayout.serializer,
+        ),
+        "",
+        (it) => it.editor,
+        (it, v) => it.editor = v,
+      );
+      _serializerBuilder.addField(
+        "presentation_subject",
+        "presentationSubject",
+        5,
+        _skir.Serializers.optional(
+          _lib_editor_v1_catalog_presentation.CatalogPresentationSubject.serializer,
+        ),
+        "",
+        (it) => it.presentationSubject,
+        (it, v) => it.presentationSubject = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:CatalogTypeView",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CatalogTypeView_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CatalogTypeView].
+final class CatalogTypeView_mutable implements CatalogTypeView_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinition_orMutable definition;
+  _core.bool eligible;
+  _core.Iterable<_core.String> ineligibilityReasons;
+  TypeDisplay_orMutable? display;
+  AuthoringEditorLayout? editor;
+  _lib_editor_v1_catalog_presentation.CatalogPresentationSubject_orMutable? presentationSubject;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CatalogTypeView_mutable._(
+    this.definition,
+    this.eligible,
+    this.ineligibilityReasons,
+    this.display,
+    this.editor,
+    this.presentationSubject,
+  );
+
+  /// If the value of [definition] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
+  _lib_editor_v1_type_catalog.TypeDefinition_mutable get mutableDefinition {
+    final value = this.definition;
+    if (value is _lib_editor_v1_type_catalog.TypeDefinition_mutable) {
+      return value;
+    } else {
+      return this.definition = (value as _lib_editor_v1_type_catalog.TypeDefinition).toMutable();
+    }
+  }
+
+  /// If the value of [ineligibilityReasons] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [ineligibilityReasons] and returns it.
+  _core.List<_core.String> get mutableIneligibilityReasons {
+    final value = this.ineligibilityReasons;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.ineligibilityReasons = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CatalogTypeView toFrozen() => CatalogTypeView(
+    definition: this.definition,
+    eligible: this.eligible,
+    ineligibilityReasons: this.ineligibilityReasons,
+    display: this.display,
+    editor: this.editor,
+    presentationSubject: this.presentationSubject,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct CatalogFetchRequest
 // -----------------------------------------------------------------------------
 
@@ -1145,15 +2011,12 @@ final class CatalogFetchRequest_mutable implements CatalogFetchRequest_orMutable
 
 sealed class CatalogFetchSuccess_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> get typeDefinitions;
+  _core.Iterable<CatalogTypeView_orMutable> get typeViews;
   _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> get presentationDefinitions;
   _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> get conversions;
   _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> get capabilityDefinitions;
   _core.Iterable<SubtypeResult_orMutable> get subtypeResults;
   _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
-  _core.Iterable<_lib_editor_v1_element_catalog.ContentCatalogEntry_orMutable> get contentEntries;
-  _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> get pageEntries;
-  _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> get pageDiagnostics;
   _core.Iterable<_lib_editor_v1_authoring.ResourceDefinition_orMutable> get resourceDefinitions;
   _core.Iterable<_lib_editor_v1_authoring.RelationDefinition_orMutable> get relationDefinitions;
   _core.Iterable<_lib_editor_v1_authoring.CollectionProjectionDefinition_orMutable> get collectionProjectionDefinitions;
@@ -1168,7 +2031,7 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition> typeDefinitions;
+  final _core.Iterable<CatalogTypeView> typeViews;
   @_core.override
   final _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition> presentationDefinitions;
   @_core.override
@@ -1179,12 +2042,6 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   final _core.Iterable<SubtypeResult> subtypeResults;
   @_core.override
   final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> diagnostics;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_element_catalog.ContentCatalogEntry> contentEntries;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry> pageEntries;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic> pageDiagnostics;
   @_core.override
   final _core.Iterable<_lib_editor_v1_authoring.ResourceDefinition> resourceDefinitions;
   @_core.override
@@ -1199,15 +2056,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
 
   factory CatalogFetchSuccess({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> typeDefinitions,
+    required _core.Iterable<CatalogTypeView_orMutable> typeViews,
     required _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> presentationDefinitions,
     required _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> conversions,
     required _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions,
     required _core.Iterable<SubtypeResult_orMutable> subtypeResults,
     required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
-    required _core.Iterable<_lib_editor_v1_element_catalog.ContentCatalogEntry_orMutable> contentEntries,
-    required _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> pageEntries,
-    required _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> pageDiagnostics,
     required _core.Iterable<_lib_editor_v1_authoring.ResourceDefinition_orMutable> resourceDefinitions,
     required _core.Iterable<_lib_editor_v1_authoring.RelationDefinition_orMutable> relationDefinitions,
     required _core.Iterable<_lib_editor_v1_authoring.CollectionProjectionDefinition_orMutable> collectionProjectionDefinitions,
@@ -1215,15 +2069,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
     required _core.Iterable<AuthoringCompilationProjectionDefinition_orMutable> authoringCompilationProjections,
   }) => CatalogFetchSuccess._(
     generation.toFrozen(),
-    _skir.internal__frozenMappedCopy(typeDefinitions, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(typeViews, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(presentationDefinitions, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(conversions, (it) => it.toFrozen()),
     _skir.internal__frozenCopy(capabilityDefinitions),
     _skir.internal__frozenMappedCopy(subtypeResults, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(contentEntries, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(pageEntries, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(pageDiagnostics, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(resourceDefinitions, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(relationDefinitions, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(collectionProjectionDefinitions, (it) => it.toFrozen()),
@@ -1233,15 +2084,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
 
   CatalogFetchSuccess._(
     this.generation,
-    this.typeDefinitions,
+    this.typeViews,
     this.presentationDefinitions,
     this.conversions,
     this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
-    this.contentEntries,
-    this.pageEntries,
-    this.pageDiagnostics,
     this.resourceDefinitions,
     this.relationDefinitions,
     this.collectionProjectionDefinitions,
@@ -1252,9 +2100,6 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogFetchSuccess._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -1281,9 +2126,6 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
     null,
     _skir.KeyedIterable.empty,
   );
@@ -1296,15 +2138,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
   /// Returns a mutable shallow copy of this instance.
   CatalogFetchSuccess_mutable toMutable() => CatalogFetchSuccess_mutable._(
     this.generation,
-    this.typeDefinitions,
+    this.typeViews,
     this.presentationDefinitions,
     this.conversions,
     this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
-    this.contentEntries,
-    this.pageEntries,
-    this.pageDiagnostics,
     this.resourceDefinitions,
     this.relationDefinitions,
     this.collectionProjectionDefinitions,
@@ -1324,15 +2163,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
 
   _core.List get _equality_proxy => [
     this.generation,
-    this.typeDefinitions,
+    this.typeViews,
     this.presentationDefinitions,
     this.conversions,
     this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
-    this.contentEntries,
-    this.pageEntries,
-    this.pageDiagnostics,
     this.resourceDefinitions,
     this.relationDefinitions,
     this.collectionProjectionDefinitions,
@@ -1356,15 +2192,15 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
         (it, v) => it.generation = v,
       );
       _serializerBuilder.addField(
-        "type_definitions",
-        "typeDefinitions",
+        "type_views",
+        "typeViews",
         1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.TypeDefinition.serializer,
+          CatalogTypeView.serializer,
         ),
         "",
-        (it) => it.typeDefinitions,
-        (it, v) => it.typeDefinitions = v,
+        (it) => it.typeViews,
+        (it, v) => it.typeViews = v,
       );
       _serializerBuilder.addField(
         "presentation_definitions",
@@ -1422,42 +2258,9 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
         (it, v) => it.diagnostics = v,
       );
       _serializerBuilder.addField(
-        "content_entries",
-        "contentEntries",
-        7,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_element_catalog.ContentCatalogEntry.serializer,
-        ),
-        "",
-        (it) => it.contentEntries,
-        (it, v) => it.contentEntries = v,
-      );
-      _serializerBuilder.addField(
-        "page_entries",
-        "pageEntries",
-        8,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_page_catalog.PageCatalogEntry.serializer,
-        ),
-        "",
-        (it) => it.pageEntries,
-        (it, v) => it.pageEntries = v,
-      );
-      _serializerBuilder.addField(
-        "page_diagnostics",
-        "pageDiagnostics",
-        9,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_page_catalog.PageDiagnostic.serializer,
-        ),
-        "",
-        (it) => it.pageDiagnostics,
-        (it, v) => it.pageDiagnostics = v,
-      );
-      _serializerBuilder.addField(
         "resource_definitions",
         "resourceDefinitions",
-        10,
+        7,
         _skir.Serializers.iterable(
           _lib_editor_v1_authoring.ResourceDefinition.serializer,
         ),
@@ -1468,7 +2271,7 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
       _serializerBuilder.addField(
         "relation_definitions",
         "relationDefinitions",
-        11,
+        8,
         _skir.Serializers.iterable(
           _lib_editor_v1_authoring.RelationDefinition.serializer,
         ),
@@ -1479,7 +2282,7 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
       _serializerBuilder.addField(
         "collection_projection_definitions",
         "collectionProjectionDefinitions",
-        12,
+        9,
         _skir.Serializers.iterable(
           _lib_editor_v1_authoring.CollectionProjectionDefinition.serializer,
         ),
@@ -1490,7 +2293,7 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
       _serializerBuilder.addField(
         "authoring_search",
         "authoringSearch",
-        13,
+        10,
         _skir.Serializers.optional(
           AuthoringSearchDefinition.serializer,
         ),
@@ -1501,7 +2304,7 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
       _serializerBuilder.addField(
         "authoring_compilation_projections",
         "authoringCompilationProjections",
-        14,
+        11,
         _skir.Serializers.iterable(
           AuthoringCompilationProjectionDefinition.serializer,
         ),
@@ -1528,15 +2331,12 @@ final class CatalogFetchSuccess implements CatalogFetchSuccess_orMutable {
 /// Mutable version of [CatalogFetchSuccess].
 final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> typeDefinitions;
+  _core.Iterable<CatalogTypeView_orMutable> typeViews;
   _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> presentationDefinitions;
   _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> conversions;
   _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions;
   _core.Iterable<SubtypeResult_orMutable> subtypeResults;
   _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
-  _core.Iterable<_lib_editor_v1_element_catalog.ContentCatalogEntry_orMutable> contentEntries;
-  _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> pageEntries;
-  _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> pageDiagnostics;
   _core.Iterable<_lib_editor_v1_authoring.ResourceDefinition_orMutable> resourceDefinitions;
   _core.Iterable<_lib_editor_v1_authoring.RelationDefinition_orMutable> relationDefinitions;
   _core.Iterable<_lib_editor_v1_authoring.CollectionProjectionDefinition_orMutable> collectionProjectionDefinitions;
@@ -1546,15 +2346,12 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
 
   CatalogFetchSuccess_mutable._(
     this.generation,
-    this.typeDefinitions,
+    this.typeViews,
     this.presentationDefinitions,
     this.conversions,
     this.capabilityDefinitions,
     this.subtypeResults,
     this.diagnostics,
-    this.contentEntries,
-    this.pageEntries,
-    this.pageDiagnostics,
     this.resourceDefinitions,
     this.relationDefinitions,
     this.collectionProjectionDefinitions,
@@ -1573,14 +2370,14 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
     }
   }
 
-  /// If the value of [typeDefinitions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [typeDefinitions] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> get mutableTypeDefinitions {
-    final value = this.typeDefinitions;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>) {
+  /// If the value of [typeViews] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [typeViews] and returns it.
+  _core.List<CatalogTypeView_orMutable> get mutableTypeViews {
+    final value = this.typeViews;
+    if (value is _skir.internal__MutableList<CatalogTypeView_orMutable>) {
       return value;
     } else {
-      return this.typeDefinitions = _skir.internal__MutableList([...value]);
+      return this.typeViews = _skir.internal__MutableList([...value]);
     }
   }
 
@@ -1639,39 +2436,6 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
     }
   }
 
-  /// If the value of [contentEntries] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [contentEntries] and returns it.
-  _core.List<_lib_editor_v1_element_catalog.ContentCatalogEntry_orMutable> get mutableContentEntries {
-    final value = this.contentEntries;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_element_catalog.ContentCatalogEntry_orMutable>) {
-      return value;
-    } else {
-      return this.contentEntries = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [pageEntries] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [pageEntries] and returns it.
-  _core.List<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> get mutablePageEntries {
-    final value = this.pageEntries;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable>) {
-      return value;
-    } else {
-      return this.pageEntries = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [pageDiagnostics] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [pageDiagnostics] and returns it.
-  _core.List<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> get mutablePageDiagnostics {
-    final value = this.pageDiagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable>) {
-      return value;
-    } else {
-      return this.pageDiagnostics = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// If the value of [resourceDefinitions] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resourceDefinitions] and returns it.
   _core.List<_lib_editor_v1_authoring.ResourceDefinition_orMutable> get mutableResourceDefinitions {
@@ -1720,15 +2484,12 @@ final class CatalogFetchSuccess_mutable implements CatalogFetchSuccess_orMutable
   @_core.override
   CatalogFetchSuccess toFrozen() => CatalogFetchSuccess(
     generation: this.generation,
-    typeDefinitions: this.typeDefinitions,
+    typeViews: this.typeViews,
     presentationDefinitions: this.presentationDefinitions,
     conversions: this.conversions,
     capabilityDefinitions: this.capabilityDefinitions,
     subtypeResults: this.subtypeResults,
     diagnostics: this.diagnostics,
-    contentEntries: this.contentEntries,
-    pageEntries: this.pageEntries,
-    pageDiagnostics: this.pageDiagnostics,
     resourceDefinitions: this.resourceDefinitions,
     relationDefinitions: this.relationDefinitions,
     collectionProjectionDefinitions: this.collectionProjectionDefinitions,
@@ -1884,15 +2645,12 @@ sealed class CatalogFetchResult {
   /// Same as `wrapSuccess(CatalogFetchSuccess(...))`.
   factory CatalogFetchResult.createSuccess({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> typeDefinitions,
+    required _core.Iterable<CatalogTypeView_orMutable> typeViews,
     required _core.Iterable<_lib_editor_v1_presentation.PresentationDefinition_orMutable> presentationDefinitions,
     required _core.Iterable<_lib_editor_v1_conversion.ConversionDefinition_orMutable> conversions,
     required _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilityDefinitions,
     required _core.Iterable<SubtypeResult_orMutable> subtypeResults,
     required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
-    required _core.Iterable<_lib_editor_v1_element_catalog.ContentCatalogEntry_orMutable> contentEntries,
-    required _core.Iterable<_lib_editor_v1_page_catalog.PageCatalogEntry_orMutable> pageEntries,
-    required _core.Iterable<_lib_editor_v1_page_catalog.PageDiagnostic_orMutable> pageDiagnostics,
     required _core.Iterable<_lib_editor_v1_authoring.ResourceDefinition_orMutable> resourceDefinitions,
     required _core.Iterable<_lib_editor_v1_authoring.RelationDefinition_orMutable> relationDefinitions,
     required _core.Iterable<_lib_editor_v1_authoring.CollectionProjectionDefinition_orMutable> collectionProjectionDefinitions,
@@ -1901,15 +2659,12 @@ sealed class CatalogFetchResult {
   }) => CatalogFetchResult.wrapSuccess(
     CatalogFetchSuccess(
       generation: generation,
-      typeDefinitions: typeDefinitions,
+      typeViews: typeViews,
       presentationDefinitions: presentationDefinitions,
       conversions: conversions,
       capabilityDefinitions: capabilityDefinitions,
       subtypeResults: subtypeResults,
       diagnostics: diagnostics,
-      contentEntries: contentEntries,
-      pageEntries: pageEntries,
-      pageDiagnostics: pageDiagnostics,
       resourceDefinitions: resourceDefinitions,
       relationDefinitions: relationDefinitions,
       collectionProjectionDefinitions: collectionProjectionDefinitions,

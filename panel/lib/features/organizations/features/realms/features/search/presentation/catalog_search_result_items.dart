@@ -71,7 +71,7 @@ class PageTypeSearchResultItem extends ConsumerWidget {
     super.key,
   });
 
-  final RealmPageDefinition definition;
+  final RealmTypeEntry definition;
   final bool selected;
   final bool focused;
   final bool loading;
@@ -140,7 +140,7 @@ class ElementTypeSearchResultItem extends ConsumerWidget {
       ref
           .watch(realmEditorCatalogProvider)
           .value
-          ?.elements[definition.typeId.uuid]
+          ?.types[definition.rootType]
           ?.presentationSubject,
     );
     final color = Theme.of(context).colorScheme.primary;

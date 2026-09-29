@@ -347,7 +347,6 @@ private class ConversionContext(
                     kind = NominalTypeKind.CONCRETE,
                     displayName = declaration.simpleName.asString(),
                     qualifiedName = declaration.qualifiedName?.asString(),
-                    declarationOwner = declaration.packageName.asString(),
                     representation = TypeExpression.StringType(),
                     parameters = declaration.typeParameters.map { parameter(it, path + identity.sortKey) },
                 )
@@ -395,7 +394,6 @@ private class ConversionContext(
                 kind = declaration.nominalKind,
                 displayName = declaration.simpleName.asString(),
                 qualifiedName = declaration.qualifiedName?.asString(),
-                declarationOwner = declaration.packageName.asString(),
                 representation = representation,
                 parameters = parameters,
                 parents = parents,

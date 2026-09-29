@@ -444,25 +444,28 @@ const _elementId = "019d1c2a8f7b7cc18c2a4a7b2fd1e281";
 
 RealmEditorCatalogSnapshot _elementSnapshot(String name, String generation) {
   final type = ResolvedTypeRef(id: DeclaredTypeId(_elementId), revision: 1);
+  final definition = TypeDefinition(
+    id: type,
+    kind: NominalTypeKind.concrete,
+    displayName: name,
+  );
   return RealmEditorCatalogSnapshot(
-    catalog: const TypeCatalog([]),
+    catalog: TypeCatalog([definition]),
     generation: CatalogGeneration(generation),
-    elements: {
-      _elementId: RealmElementCatalogEntry(
-        originArtifactId: "typewritermc:conformance",
-        sourcePart: "common",
-        definition: DiscoveredElementDefinition(
-          id: _elementId,
-          type: type,
-          name: name,
-          description: "Verifies Typewriter discovery",
-          icon: const IconValue.iconify("material-symbols:science"),
-          color: const Color(0xFF7C4DFF),
-          availability: ElementAvailability.always(),
-        ),
+    types: {
+      type: RealmTypeEntry(
+        definition: definition,
+        description: "Verifies Typewriter discovery",
+        icon: const IconValue.iconify("material-symbols:science"),
+        color: const Color(0xFF7C4DFF),
         presentationSubject: _catalogSubject(type),
         eligible: true,
-        available: true,
+      ),
+    },
+    resourceDefinitions: {
+      CoreResourceDefinitionIds.element: RealmResourceDefinition(
+        id: CoreResourceDefinitionIds.element,
+        acceptedRoot: NamedType(type),
       ),
     },
   );

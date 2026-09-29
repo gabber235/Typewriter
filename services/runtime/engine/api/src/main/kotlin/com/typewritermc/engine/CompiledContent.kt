@@ -1,13 +1,13 @@
 package com.typewritermc.engine
 
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ResourceId
+import com.typewritermc.authoring.ResourceDefinitionId
+import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.types.DataPath
+import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
-import com.typewritermc.elements.ReferenceSlotId
-import com.typewritermc.authoring.ResourceDefinitionId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

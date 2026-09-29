@@ -17,11 +17,12 @@ TypeCatalog panelPresentationTypeCatalog([
 ]) {
   final supplied = definitions.toList(growable: false);
   final suppliedIds = supplied.map((definition) => definition.id).toSet();
-  return TypeCatalog([
+  final complete = [
     for (final definition in panelPresentationTypeDefinitions)
       if (!suppliedIds.contains(definition.id)) definition,
     ...supplied,
-  ]);
+  ];
+  return TypeCatalog(complete);
 }
 
 final panelPresentationTypeDefinitions = <TypeDefinition>[
@@ -58,12 +59,10 @@ final panelPresentationTypeDefinitions = <TypeDefinition>[
   TypeDefinition(
     id: standardTypeRefs.icon,
     kind: NominalTypeKind.sealedAbstract,
-    declarationOwner: "com.typewritermc.types",
   ),
   TypeDefinition(
     id: standardTypeRefs.iconifyIcon,
     kind: NominalTypeKind.concrete,
-    declarationOwner: "com.typewritermc.types",
     parents: [standardTypeRefs.icon],
     representation: const RecordType(
       fields: {"value": TypeField(name: "value", type: StringType())},
@@ -72,7 +71,6 @@ final panelPresentationTypeDefinitions = <TypeDefinition>[
   TypeDefinition(
     id: standardTypeRefs.svgIcon,
     kind: NominalTypeKind.concrete,
-    declarationOwner: "com.typewritermc.types",
     parents: [standardTypeRefs.icon],
     representation: const RecordType(
       fields: {"source": TypeField(name: "source", type: StringType())},

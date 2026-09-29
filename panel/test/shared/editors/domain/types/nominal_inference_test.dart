@@ -90,32 +90,32 @@ void main() {
     );
   });
 
-  test("sealed abstract descendants must retain their owner", () {
-    final sealed = _ref("Sealed", namespace: "owner/v1");
-    final local = _ref("Local", namespace: "owner/v1");
-    final foreign = _ref("Foreign", namespace: "foreign/v1");
-    final registry = TypeRegistry(
-      TypeCatalog([
-        TypeDefinition(id: sealed, kind: NominalTypeKind.sealedAbstract),
-        TypeDefinition(
-          id: local,
-          kind: NominalTypeKind.concrete,
-          parents: [sealed],
-        ),
-        TypeDefinition(
-          id: foreign,
-          kind: NominalTypeKind.concrete,
-          parents: [sealed],
-        ),
-      ]),
-    );
+  test(
+    "sealed abstract descendants resolve from the complete type catalog",
+    () {
+      final sealed = _ref("Sealed", namespace: "owner/v1");
+      final local = _ref("Local", namespace: "owner/v1");
+      final foreign = _ref("Foreign", namespace: "foreign/v1");
+      final registry = TypeRegistry(
+        TypeCatalog([
+          TypeDefinition(id: sealed, kind: NominalTypeKind.sealedAbstract),
+          TypeDefinition(
+            id: local,
+            kind: NominalTypeKind.concrete,
+            parents: [sealed],
+          ),
+          TypeDefinition(
+            id: foreign,
+            kind: NominalTypeKind.concrete,
+            parents: [sealed],
+          ),
+        ]),
+      );
 
-    expect(registry.resolveExact(local).diagnostics, isEmpty);
-    expect(
-      registry.resolveExact(foreign).diagnostics.single.code,
-      TypeDiagnosticCode.invalidConcreteType,
-    );
-  });
+      expect(registry.resolveExact(local).diagnostics, isEmpty);
+      expect(registry.resolveExact(foreign).diagnostics, isEmpty);
+    },
+  );
 }
 
 ResolvedTypeRef _ref(String name, {String namespace = "variables/v1"}) =>

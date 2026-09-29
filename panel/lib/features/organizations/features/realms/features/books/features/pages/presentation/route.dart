@@ -41,20 +41,19 @@ class PagePage extends HookConsumerWidget {
               name: "page kind",
               skipLoadingOnReload: false,
               builder: (snapshot) {
-                final definition =
-                    snapshot.pageCatalog.definitions[page.rootType];
-                if (definition == null) {
+                final editor = snapshot.types[page.rootType]?.editor;
+                if (editor == null) {
                   return const ErrorScreen(
                     title: "Page Kind Unavailable",
                     message: "This page kind is unavailable. Likely because the extension which provides it failed to load or was removed.",
                   );
                 }
-                return switch (definition.editor) {
-                  RealmGraphPageEditor(:final direction) => EntryGraph(
+                return switch (editor) {
+                  RealmGraphEditorLayout(:final direction) => EntryGraph(
                     pageId: pageId,
                     graphDirection: direction,
                   ),
-                  RealmTimelinePageEditor() => EntryTimelineEditor(
+                  RealmTimelineEditorLayout() => EntryTimelineEditor(
                     pageId: pageId,
                   ),
                 };

@@ -2,6 +2,10 @@ package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.ResolvedDeploymentTypes
+import com.typewritermc.discovery.ResolvedType
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.realm.ResourceDefinitionId
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.types.DataPath
@@ -39,7 +43,7 @@ val AuthoringMutationPlannerTest by testSuite {
             mapper = ResourceValueMapper(testPrototypes(), emptyList()),
             resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(rootType()))),
             relations = emptyList(),
-            catalog = testCatalog(),
+            resolvedTypes = testResolvedTypes(),
         )
 
         val result = planner.plan(
@@ -48,6 +52,25 @@ val AuthoringMutationPlannerTest by testSuite {
         ) as AuthoringMutationPlanResult.Valid
 
         result.plan.delta.resourceCreates shouldBe setOf(id("created"))
+    }
+
+    test("a known type without a Realm binding cannot be created") {
+        val definition = ResourceDefinitionId("test.resource")
+        val resolved = testResolvedTypes()
+        val root = resolved.requireType(rootType())
+        val planner = AuthoringMutationPlanner(
+            mapper = ResourceValueMapper(testPrototypes(), emptyList()),
+            resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(rootType()))),
+            relations = emptyList(),
+            resolvedTypes = resolved.copy(typesById = resolved.typesById + (rootType() to root.copy(boundDomains = emptySet()))),
+        )
+
+        val result = planner.plan(
+            graph(resources = emptyList(), relations = emptyList()),
+            listOf(AuthoringOperation.CreateResource(id("created"), definition, contentWithHost("created"))),
+        ) as AuthoringMutationPlanResult.Invalid
+
+        result.diagnostics.single().code shouldBe "resource-type-ineligible"
     }
 
     test("cascade closure does not depend on delete operation order") {
@@ -125,7 +148,7 @@ val AuthoringMutationPlannerTest by testSuite {
             mapper = ResourceValueMapper(testPrototypes(), listOf(relation)),
             resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(root))),
             relations = listOf(relation),
-            catalog = testCatalog(),
+            resolvedTypes = testResolvedTypes(),
         )
         val result = planner.plan(
             graph(resources = listOf("host"), relations = emptyList()),
@@ -149,7 +172,7 @@ val AuthoringMutationPlannerTest by testSuite {
             mapper = ResourceValueMapper(testPrototypes(), emptyList()),
             resourceDefinitions = listOf(AuthoringResourceDefinition(definition, TypeExpression.Named(rootType()))),
             relations = emptyList(),
-            catalog = testCatalog(),
+            resolvedTypes = testResolvedTypes(),
         )
         val result = planner.plan(
             graph(resources = listOf("host"), relations = emptyList()),
@@ -194,7 +217,7 @@ val AuthoringMutationPlannerTest by testSuite {
                                 ),
                         ),
                     ),
-                catalog = testCatalog(),
+                resolvedTypes = testResolvedTypes(),
             )
 
         val result =
@@ -233,7 +256,7 @@ val AuthoringMutationPlannerTest by testSuite {
                                 ),
                         ),
                     ),
-                catalog = testCatalog(),
+                resolvedTypes = testResolvedTypes(),
             )
 
         val result =
@@ -272,7 +295,7 @@ val AuthoringMutationPlannerTest by testSuite {
             mapper = ResourceValueMapper(testPrototypes(), listOf(relation)),
             resourceDefinitions = emptyList(),
             relations = listOf(relation),
-            catalog = testCatalog(),
+            resolvedTypes = testResolvedTypes(),
         )
         val result = planner.plan(
             graph(resources = listOf("first", "second", "shared"), relations = emptyList()),
@@ -309,7 +332,7 @@ val AuthoringMutationPlannerTest by testSuite {
             mapper = mapper,
             resourceDefinitions = emptyList(),
                 relations = listOf(definition),
-            catalog = testCatalog(),
+            resolvedTypes = testResolvedTypes(),
         )
         val before = graph(
             resources = listOf("source", "first", "middle", "last"),
@@ -357,7 +380,7 @@ val AuthoringMutationPlannerTest by testSuite {
                             onTargetDelete = RelationDeletePolicy.RESTRICT,
                         ),
                     ),
-                catalog = testCatalog(),
+                resolvedTypes = testResolvedTypes(),
             )
 
         val result =
@@ -386,7 +409,7 @@ val AuthoringMutationPlannerTest by testSuite {
                 mapper = ResourceValueMapper(testPrototypes(), emptyList()),
                 resourceDefinitions = emptyList(),
                 relations = emptyList(),
-                catalog = testCatalog(),
+                resolvedTypes = testResolvedTypes(),
                 rules = listOf(rule),
             )
 
@@ -418,7 +441,7 @@ val AuthoringMutationPlannerTest by testSuite {
                 mapper = ResourceValueMapper(testPrototypes(), emptyList()),
                 resourceDefinitions = emptyList(),
                 relations = emptyList(),
-                catalog = testCatalog(),
+                resolvedTypes = testResolvedTypes(),
                 rules = listOf(rule),
             )
 
@@ -511,7 +534,7 @@ private fun planner(policy: RelationDeletePolicy): AuthoringMutationPlanner {
                     onTargetDelete = policy,
                 ),
             ),
-        catalog = testCatalog(),
+        resolvedTypes = testResolvedTypes(),
     )
 }
 
@@ -588,6 +611,21 @@ private fun testCatalog() =
                         ),
                     ),
             ),
+    )
+
+private fun testResolvedTypes(): ResolvedDeploymentTypes =
+    ResolvedDeploymentTypes(
+        typesById = testCatalog().definitions.associate { definition ->
+            definition.id to ResolvedType(
+                definition = definition,
+                metadata = null,
+                carrierEligibility = emptyMap(),
+                boundDomains = if (definition.id == rootType()) setOf(DiscoveryDomains.Realm) else emptySet(),
+            )
+        },
+        relations = emptyList(),
+        prototypeBindings = emptyList(),
+        executableBindings = emptyList(),
     )
 
 private fun testPrototypes(): TypePrototypeRegistry {

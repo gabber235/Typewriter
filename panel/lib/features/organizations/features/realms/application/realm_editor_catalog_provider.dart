@@ -505,14 +505,22 @@ Future<RealmCommandResult> _executeRealmAction({
 
 /// Returns page definitions from the latest complete realm catalog.
 @riverpod
-AsyncValue<List<RealmPageDefinition>> realmPageDefinitions(Ref ref) {
+AsyncValue<List<RealmTypeEntry>> realmPageDefinitions(Ref ref) {
   final catalog = ref.watch(realmEditorCatalogProvider);
   if (catalog.isLoading) return const AsyncLoading();
-  if (catalog.mapUnready<List<RealmPageDefinition>>() case final pending?) {
+  if (catalog.mapUnready<List<RealmTypeEntry>>() case final pending?) {
     return pending;
   }
   return AsyncData(
-    catalog.requireValue.pageCatalog.definitions.values.toList(growable: false),
+    catalog.requireValue.types.values
+        .where(
+          (entry) =>
+              entry.editor != null &&
+              entry.eligible &&
+              catalog.requireValue.resourceDefinitionFor(entry.type)?.id ==
+                  CoreResourceDefinitionIds.page,
+        )
+        .toList(growable: false),
   );
 }
 
@@ -523,9 +531,16 @@ Future<List<ElementDefinition>> availableElementDefinitionsFuture(
   Ref ref,
 ) async {
   final snapshot = await ref.watch(realmEditorCatalogProvider.future);
-  return snapshot.elements.values
-      .where((entry) => entry.eligible && entry.available)
-      .map((entry) => entry.definition.toElementDefinition())
+  return snapshot.types.values
+      .where(
+        (entry) =>
+            entry.eligible &&
+            {
+              CoreResourceDefinitionIds.element,
+              CoreResourceDefinitionIds.cue,
+            }.contains(snapshot.resourceDefinitionFor(entry.type)?.id),
+      )
+      .map((entry) => entry.toElementDefinition())
       .toList(growable: false);
 }
 

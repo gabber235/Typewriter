@@ -1,6 +1,8 @@
 package com.typewritermc.discovery.runtime
 
-import com.typewritermc.discovery.AssembledTypeDiscovery
+import com.typewritermc.discovery.ResolvedDeploymentTypes
+import com.typewritermc.discovery.ResolvedType
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.PrototypeBinding
 import com.typewritermc.types.ConcreteTypePrototype
@@ -21,8 +23,10 @@ import kotlinx.serialization.Serializable
 val PrototypeRegistryLoaderTest by testSuite {
     test("qualified metadata does not shadow a concrete prototype for the same runtime class") {
         val discovery =
-            AssembledTypeDiscovery(
-                catalog = TypeCatalog(listOf(declaredDefinition, qualifiedDefinition)),
+            ResolvedDeploymentTypes(
+                typesById = listOf(declaredDefinition, qualifiedDefinition).associate { definition ->
+                    definition.id to ResolvedType(definition, null, emptyMap(), emptySet())
+                },
                 prototypeBindings =
                     listOf(
                         PrototypeBinding(

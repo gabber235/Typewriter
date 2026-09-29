@@ -75,8 +75,14 @@ final _book = Book(
   tagIds: const [],
 );
 final _pageId = skir.ResourceId(value: "compatible");
-final _compatibleType = ResolvedTypeRef(id: const QualifiedTypeId(namespace: "test", name: "CompatiblePage"), revision: 1);
-final _incompatibleType = ResolvedTypeRef(id: const QualifiedTypeId(namespace: "test", name: "IncompatiblePage"), revision: 1);
+final _compatibleType = ResolvedTypeRef(
+  id: const QualifiedTypeId(namespace: "test", name: "CompatiblePage"),
+  revision: 1,
+);
+final _incompatibleType = ResolvedTypeRef(
+  id: const QualifiedTypeId(namespace: "test", name: "IncompatiblePage"),
+  revision: 1,
+);
 final _elementType = ResolvedTypeRef(
   id: DeclaredTypeId("0123456789abcdef0123456789abcdef"),
   revision: 1,
@@ -161,15 +167,19 @@ AuthoringSearchResultPayload _pagePayload(ResolvedTypeRef kind) {
 SearchResult _kindResult(ResolvedTypeRef kind) => SearchResult(
   id: "kind:${kind.id}",
   type: pageTypeSearchResultType,
-  payload: RealmPageDefinition(
-    type: kind,
-    name: kind.id.toString(),
+  payload: RealmTypeEntry(
+    definition: TypeDefinition(
+      id: kind,
+      kind: NominalTypeKind.concrete,
+      displayName: kind.id.toString(),
+    ),
     description: null,
     icon: const IconValue.iconify("mdi:test-tube"),
     color: Colors.blue,
-    editor: const RealmGraphPageEditor(direction: GraphDirection.leftToRight),
-    originArtifactId: "test",
-    sourcePart: "test",
+    editor: const RealmEditorLayout.graph(
+      direction: GraphDirection.leftToRight,
+    ),
+    eligible: true,
     presentationSubject: _catalogSubject(referenceResourceTypes.page),
   ),
 );

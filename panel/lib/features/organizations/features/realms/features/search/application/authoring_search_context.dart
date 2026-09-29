@@ -116,7 +116,7 @@ SearchScope elementDestinationScope({
         fields.containsKey(pageType)
             ? const SearchResultVisibility.visible()
             : const SearchResultVisibility.hidden(),
-      RealmPageDefinition(:final type) =>
+      RealmTypeEntry(:final type) =>
         fields.containsKey(type) &&
                 books.value.value != null &&
                 resolveSearchBook(query, books.value.requireValue) != null

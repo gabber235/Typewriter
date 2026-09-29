@@ -12,7 +12,6 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
-
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
@@ -35,11 +34,9 @@ import "./service.dart" as _lib_service_v1_service;
 sealed class ServiceUpdateValidationError {
   /// Constant indicating an unknown `ServiceUpdateValidationError`.
   /// Default value for fields of type `ServiceUpdateValidationError`.
-  static const ServiceUpdateValidationError unknown =
-      ServiceUpdateValidationError_unknown._instance;
+  static const ServiceUpdateValidationError unknown = ServiceUpdateValidationError_unknown._instance;
 
-  static const nameInvalid =
-      _ServiceUpdateValidationError_consts.nameInvalidConst;
+  static const nameInvalid = _ServiceUpdateValidationError_consts.nameInvalidConst;
 
   /// Returns the kind of variant held by this ServiceUpdateValidationError.
   ServiceUpdateValidationError_kind get kind;
@@ -59,16 +56,15 @@ sealed class ServiceUpdateValidationError {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/organization.skir:ServiceUpdateValidationError",
-        doc: "",
-        unknownInstance: ServiceUpdateValidationError_unknown._instance,
-        enumInstance: ServiceUpdateValidationError.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ServiceUpdateValidationError_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/organization.skir:ServiceUpdateValidationError",
+    doc: "",
+    unknownInstance: ServiceUpdateValidationError_unknown._instance,
+    enumInstance: ServiceUpdateValidationError.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ServiceUpdateValidationError_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ServiceUpdateValidationError`.
@@ -81,8 +77,7 @@ enum ServiceUpdateValidationError_kind {
   const ServiceUpdateValidationError_kind(this._ordinal);
 }
 
-final class ServiceUpdateValidationError_unknown
-    implements ServiceUpdateValidationError {
+final class ServiceUpdateValidationError_unknown implements ServiceUpdateValidationError {
   static const _instance = ServiceUpdateValidationError_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -91,20 +86,16 @@ final class ServiceUpdateValidationError_unknown
   ServiceUpdateValidationError_unknown._unrecognized(this._u);
 
   @_core.override
-  ServiceUpdateValidationError_kind get kind =>
-      ServiceUpdateValidationError_kind.unknown;
+  ServiceUpdateValidationError_kind get kind => ServiceUpdateValidationError_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is ServiceUpdateValidationError_unknown;
+  _core.bool operator ==(other) => other is ServiceUpdateValidationError_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
 }
 
-enum _ServiceUpdateValidationError_consts
-    implements ServiceUpdateValidationError {
+enum _ServiceUpdateValidationError_consts implements ServiceUpdateValidationError {
   nameInvalidConst(ServiceUpdateValidationError_kind.nameInvalidConst);
 
   @_core.override
@@ -113,8 +104,7 @@ enum _ServiceUpdateValidationError_consts
   const _ServiceUpdateValidationError_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -126,12 +116,10 @@ sealed class WatchOrganizationServicesRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchOrganizationServicesRequest
-    implements WatchOrganizationServicesRequest_orMutable {
+final class WatchOrganizationServicesRequest implements WatchOrganizationServicesRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WatchOrganizationServicesRequest() =>
-      WatchOrganizationServicesRequest._();
+  factory WatchOrganizationServicesRequest() => WatchOrganizationServicesRequest._();
 
   WatchOrganizationServicesRequest._();
 
@@ -140,8 +128,7 @@ final class WatchOrganizationServicesRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchOrganizationServicesRequest_mutable mutable() =>
-      WatchOrganizationServicesRequest_mutable._();
+  static WatchOrganizationServicesRequest_mutable mutable() => WatchOrganizationServicesRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -149,17 +136,13 @@ final class WatchOrganizationServicesRequest
   WatchOrganizationServicesRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchOrganizationServicesRequest_mutable toMutable() =>
-      WatchOrganizationServicesRequest_mutable._();
+  WatchOrganizationServicesRequest_mutable toMutable() => WatchOrganizationServicesRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchOrganizationServicesRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -171,11 +154,7 @@ final class WatchOrganizationServicesRequest
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchOrganizationServicesRequest` instances.
-  static _skir.StructSerializer<
-    WatchOrganizationServicesRequest,
-    WatchOrganizationServicesRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WatchOrganizationServicesRequest, WatchOrganizationServicesRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -194,16 +173,14 @@ final class WatchOrganizationServicesRequest
 }
 
 /// Mutable version of [WatchOrganizationServicesRequest].
-final class WatchOrganizationServicesRequest_mutable
-    implements WatchOrganizationServicesRequest_orMutable {
+final class WatchOrganizationServicesRequest_mutable implements WatchOrganizationServicesRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchOrganizationServicesRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchOrganizationServicesRequest toFrozen() =>
-      WatchOrganizationServicesRequest().._u = this._u;
+  WatchOrganizationServicesRequest toFrozen() => WatchOrganizationServicesRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -226,28 +203,26 @@ final class WatchOrganizationServicesRequest_mutable
 sealed class WatchOrganizationServicesResponse {
   /// Constant indicating an unknown `WatchOrganizationServicesResponse`.
   /// Default value for fields of type `WatchOrganizationServicesResponse`.
-  static const WatchOrganizationServicesResponse unknown =
-      WatchOrganizationServicesResponse_unknown._instance;
+  static const WatchOrganizationServicesResponse unknown = WatchOrganizationServicesResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchOrganizationServicesResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchOrganizationServicesResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchOrganizationServicesResponse.createInternalError() =>
-      WatchOrganizationServicesResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory WatchOrganizationServicesResponse.createInternalError() => WatchOrganizationServicesResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'list' variant wrapping around the given value.
   factory WatchOrganizationServicesResponse.wrapList(
-    _core.Iterable<_lib_service_v1_service.Service> value,
+    _core.Iterable<_lib_service_v1_service.Service> value
   ) => WatchOrganizationServicesResponse_listWrapper._(value);
 
   /// Create a 'add' variant wrapping around the given value.
   factory WatchOrganizationServicesResponse.wrapAdd(
-    _lib_service_v1_service.Service value,
+    _lib_service_v1_service.Service value
   ) => WatchOrganizationServicesResponse_addWrapper._(value);
 
   /// Same as `wrapAdd(_lib_service_v1_service.Service(...))`.
@@ -258,8 +233,7 @@ sealed class WatchOrganizationServicesResponse {
     required _lib_service_v1_service.ServiceRole role,
     required _core.DateTime createdAt,
     required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
-    required _lib_service_v1_service.ServiceRegistration_orMutable?
-    registration,
+    required _lib_service_v1_service.ServiceRegistration_orMutable? registration,
     required _lib_service_v1_service.ServiceState_orMutable? state,
   }) => WatchOrganizationServicesResponse.wrapAdd(
     _lib_service_v1_service.Service(
@@ -271,12 +245,12 @@ sealed class WatchOrganizationServicesResponse {
       organization: organization,
       registration: registration,
       state: state,
-    ),
+    )
   );
 
   /// Create a 'update' variant wrapping around the given value.
   factory WatchOrganizationServicesResponse.wrapUpdate(
-    _lib_service_v1_service.Service value,
+    _lib_service_v1_service.Service value
   ) => WatchOrganizationServicesResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(_lib_service_v1_service.Service(...))`.
@@ -287,8 +261,7 @@ sealed class WatchOrganizationServicesResponse {
     required _lib_service_v1_service.ServiceRole role,
     required _core.DateTime createdAt,
     required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
-    required _lib_service_v1_service.ServiceRegistration_orMutable?
-    registration,
+    required _lib_service_v1_service.ServiceRegistration_orMutable? registration,
     required _lib_service_v1_service.ServiceState_orMutable? state,
   }) => WatchOrganizationServicesResponse.wrapUpdate(
     _lib_service_v1_service.Service(
@@ -300,12 +273,12 @@ sealed class WatchOrganizationServicesResponse {
       organization: organization,
       registration: registration,
       state: state,
-    ),
+    )
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchOrganizationServicesResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
+    _lib_kernel_v1_record_id.RecordId value
   ) => WatchOrganizationServicesResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -313,15 +286,17 @@ sealed class WatchOrganizationServicesResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchOrganizationServicesResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+    _lib_kernel_v1_record_id.RecordId(
+      table: table,
+      key: key,
+    )
   );
 
   /// Returns the kind of variant held by this WatchOrganizationServicesResponse.
   WatchOrganizationServicesResponse_kind get kind;
 
   /// Serializer for `WatchOrganizationServicesResponse` instances.
-  static _skir.EnumSerializer<WatchOrganizationServicesResponse>
-  get serializer {
+  static _skir.EnumSerializer<WatchOrganizationServicesResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
@@ -331,15 +306,15 @@ sealed class WatchOrganizationServicesResponse {
         "",
         WatchOrganizationServicesResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationServicesResponse_kind
-            .internalErrorWrapper
-            ._ordinal,
+        ordinal: WatchOrganizationServicesResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
         "list",
         "wrapList",
-        _skir.Serializers.iterable(_lib_service_v1_service.Service.serializer),
+        _skir.Serializers.iterable(
+          _lib_service_v1_service.Service.serializer,
+        ),
         "",
         WatchOrganizationServicesResponse_listWrapper._,
         (it) => it.value,
@@ -380,18 +355,15 @@ sealed class WatchOrganizationServicesResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId:
-            "service/v1/organization.skir:WatchOrganizationServicesResponse",
-        doc: "",
-        unknownInstance: WatchOrganizationServicesResponse_unknown._instance,
-        enumInstance: WatchOrganizationServicesResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized:
-            WatchOrganizationServicesResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/organization.skir:WatchOrganizationServicesResponse",
+    doc: "",
+    unknownInstance: WatchOrganizationServicesResponse_unknown._instance,
+    enumInstance: WatchOrganizationServicesResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WatchOrganizationServicesResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WatchOrganizationServicesResponse`.
@@ -408,8 +380,7 @@ enum WatchOrganizationServicesResponse_kind {
   const WatchOrganizationServicesResponse_kind(this._ordinal);
 }
 
-final class WatchOrganizationServicesResponse_unknown
-    implements WatchOrganizationServicesResponse {
+final class WatchOrganizationServicesResponse_unknown implements WatchOrganizationServicesResponse {
   static const _instance = WatchOrganizationServicesResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -418,22 +389,16 @@ final class WatchOrganizationServicesResponse_unknown
   WatchOrganizationServicesResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.unknown;
+  WatchOrganizationServicesResponse_kind get kind => WatchOrganizationServicesResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is WatchOrganizationServicesResponse_unknown;
+  _core.bool operator ==(other) => other is WatchOrganizationServicesResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    WatchOrganizationServicesResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, WatchOrganizationServicesResponse.serializer);
 }
 
-sealed class _WatchOrganizationServicesResponse_wrapper
-    implements WatchOrganizationServicesResponse {
+sealed class _WatchOrganizationServicesResponse_wrapper implements WatchOrganizationServicesResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -446,65 +411,52 @@ sealed class _WatchOrganizationServicesResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    WatchOrganizationServicesResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, WatchOrganizationServicesResponse.serializer);
 }
 
-final class WatchOrganizationServicesResponse_internalErrorWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
+final class WatchOrganizationServicesResponse_internalErrorWrapper extends _WatchOrganizationServicesResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchOrganizationServicesResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.internalErrorWrapper;
+  WatchOrganizationServicesResponse_kind get kind => WatchOrganizationServicesResponse_kind.internalErrorWrapper;
 }
 
-final class WatchOrganizationServicesResponse_listWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
+final class WatchOrganizationServicesResponse_listWrapper extends _WatchOrganizationServicesResponse_wrapper {
   final _core.Iterable<_lib_service_v1_service.Service> value;
 
   WatchOrganizationServicesResponse_listWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.listWrapper;
+  WatchOrganizationServicesResponse_kind get kind => WatchOrganizationServicesResponse_kind.listWrapper;
 }
 
-final class WatchOrganizationServicesResponse_addWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
+final class WatchOrganizationServicesResponse_addWrapper extends _WatchOrganizationServicesResponse_wrapper {
   final _lib_service_v1_service.Service value;
 
   WatchOrganizationServicesResponse_addWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.addWrapper;
+  WatchOrganizationServicesResponse_kind get kind => WatchOrganizationServicesResponse_kind.addWrapper;
 }
 
-final class WatchOrganizationServicesResponse_updateWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
+final class WatchOrganizationServicesResponse_updateWrapper extends _WatchOrganizationServicesResponse_wrapper {
   final _lib_service_v1_service.Service value;
 
   WatchOrganizationServicesResponse_updateWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.updateWrapper;
+  WatchOrganizationServicesResponse_kind get kind => WatchOrganizationServicesResponse_kind.updateWrapper;
 }
 
-final class WatchOrganizationServicesResponse_removeWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
+final class WatchOrganizationServicesResponse_removeWrapper extends _WatchOrganizationServicesResponse_wrapper {
   final _lib_kernel_v1_record_id.RecordId value;
 
   WatchOrganizationServicesResponse_removeWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.removeWrapper;
+  WatchOrganizationServicesResponse_kind get kind => WatchOrganizationServicesResponse_kind.removeWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -521,8 +473,7 @@ sealed class UpdateOrganizationServiceRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateOrganizationServiceRequest
-    implements UpdateOrganizationServiceRequest_orMutable {
+final class UpdateOrganizationServiceRequest implements UpdateOrganizationServiceRequest_orMutable {
   @_core.override
   final _core.String operationId;
   @_core.override
@@ -562,13 +513,12 @@ final class UpdateOrganizationServiceRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateOrganizationServiceRequest_mutable mutable() =>
-      UpdateOrganizationServiceRequest_mutable._(
-        "",
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-        0,
-        "",
-      );
+  static UpdateOrganizationServiceRequest_mutable mutable() => UpdateOrganizationServiceRequest_mutable._(
+    "",
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    0,
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -576,22 +526,18 @@ final class UpdateOrganizationServiceRequest
   UpdateOrganizationServiceRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateOrganizationServiceRequest_mutable toMutable() =>
-      UpdateOrganizationServiceRequest_mutable._(
-        this.operationId,
-        this.serviceId,
-        this.expectedRevision,
-        this.name,
-      );
+  UpdateOrganizationServiceRequest_mutable toMutable() => UpdateOrganizationServiceRequest_mutable._(
+    this.operationId,
+    this.serviceId,
+    this.expectedRevision,
+    this.name,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateOrganizationServiceRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -608,11 +554,7 @@ final class UpdateOrganizationServiceRequest
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateOrganizationServiceRequest` instances.
-  static _skir.StructSerializer<
-    UpdateOrganizationServiceRequest,
-    UpdateOrganizationServiceRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateOrganizationServiceRequest, UpdateOrganizationServiceRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operation_id",
@@ -667,8 +609,7 @@ final class UpdateOrganizationServiceRequest
 }
 
 /// Mutable version of [UpdateOrganizationServiceRequest].
-final class UpdateOrganizationServiceRequest_mutable
-    implements UpdateOrganizationServiceRequest_orMutable {
+final class UpdateOrganizationServiceRequest_mutable implements UpdateOrganizationServiceRequest_orMutable {
   _core.String operationId;
   _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
   _core.int expectedRevision;
@@ -689,20 +630,18 @@ final class UpdateOrganizationServiceRequest_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateOrganizationServiceRequest toFrozen() =>
-      UpdateOrganizationServiceRequest(
-        operationId: this.operationId,
-        serviceId: this.serviceId,
-        expectedRevision: this.expectedRevision,
-        name: this.name,
-      ).._u = this._u;
+  UpdateOrganizationServiceRequest toFrozen() => UpdateOrganizationServiceRequest(
+    operationId: this.operationId,
+    serviceId: this.serviceId,
+    expectedRevision: this.expectedRevision,
+    name: this.name,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -717,8 +656,7 @@ sealed class UpdateOrganizationServiceResponse_ConflictError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateOrganizationServiceResponse_ConflictError
-    implements UpdateOrganizationServiceResponse_ConflictError_orMutable {
+final class UpdateOrganizationServiceResponse_ConflictError implements UpdateOrganizationServiceResponse_ConflictError_orMutable {
   @_core.override
   final _core.int expectedRevision;
   @_core.override
@@ -739,19 +677,17 @@ final class UpdateOrganizationServiceResponse_ConflictError
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      UpdateOrganizationServiceResponse_ConflictError._(
-        0,
-        _lib_service_v1_service.Service.defaultInstance,
-      );
+  static final defaultInstance = UpdateOrganizationServiceResponse_ConflictError._(
+    0,
+    _lib_service_v1_service.Service.defaultInstance,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateOrganizationServiceResponse_ConflictError_mutable mutable() =>
-      UpdateOrganizationServiceResponse_ConflictError_mutable._(
-        0,
-        _lib_service_v1_service.Service.defaultInstance,
-      );
+  static UpdateOrganizationServiceResponse_ConflictError_mutable mutable() => UpdateOrganizationServiceResponse_ConflictError_mutable._(
+    0,
+    _lib_service_v1_service.Service.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -759,36 +695,31 @@ final class UpdateOrganizationServiceResponse_ConflictError
   UpdateOrganizationServiceResponse_ConflictError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateOrganizationServiceResponse_ConflictError_mutable toMutable() =>
-      UpdateOrganizationServiceResponse_ConflictError_mutable._(
-        this.expectedRevision,
-        this.actual,
-      );
+  UpdateOrganizationServiceResponse_ConflictError_mutable toMutable() => UpdateOrganizationServiceResponse_ConflictError_mutable._(
+    this.expectedRevision,
+    this.actual,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateOrganizationServiceResponse_ConflictError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expectedRevision, this.actual];
+  _core.List get _equality_proxy => [
+    this.expectedRevision,
+    this.actual,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateOrganizationServiceResponse_ConflictError` instances.
-  static _skir.StructSerializer<
-    UpdateOrganizationServiceResponse_ConflictError,
-    UpdateOrganizationServiceResponse_ConflictError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateOrganizationServiceResponse_ConflictError, UpdateOrganizationServiceResponse_ConflictError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expected_revision",
@@ -818,16 +749,14 @@ final class UpdateOrganizationServiceResponse_ConflictError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UpdateOrganizationServiceResponse_ConflictError_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (UpdateOrganizationServiceResponse_ConflictError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateOrganizationServiceResponse_ConflictError].
-final class UpdateOrganizationServiceResponse_ConflictError_mutable
-    implements UpdateOrganizationServiceResponse_ConflictError_orMutable {
+final class UpdateOrganizationServiceResponse_ConflictError_mutable implements UpdateOrganizationServiceResponse_ConflictError_orMutable {
   _core.int expectedRevision;
   _lib_service_v1_service.Service_orMutable actual;
   _skir.internal__UnrecognizedFields? _u;
@@ -844,18 +773,16 @@ final class UpdateOrganizationServiceResponse_ConflictError_mutable
     if (value is _lib_service_v1_service.Service_mutable) {
       return value;
     } else {
-      return this.actual = (value as _lib_service_v1_service.Service)
-          .toMutable();
+      return this.actual = (value as _lib_service_v1_service.Service).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateOrganizationServiceResponse_ConflictError toFrozen() =>
-      UpdateOrganizationServiceResponse_ConflictError(
-        expectedRevision: this.expectedRevision,
-        actual: this.actual,
-      ).._u = this._u;
+  UpdateOrganizationServiceResponse_ConflictError toFrozen() => UpdateOrganizationServiceResponse_ConflictError(
+    expectedRevision: this.expectedRevision,
+    actual: this.actual,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -867,25 +794,19 @@ sealed class UpdateOrganizationServiceResponse_ServiceNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateOrganizationServiceResponse_ServiceNotFoundError
-    implements
-        UpdateOrganizationServiceResponse_ServiceNotFoundError_orMutable {
+final class UpdateOrganizationServiceResponse_ServiceNotFoundError implements UpdateOrganizationServiceResponse_ServiceNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UpdateOrganizationServiceResponse_ServiceNotFoundError() =>
-      UpdateOrganizationServiceResponse_ServiceNotFoundError._();
+  factory UpdateOrganizationServiceResponse_ServiceNotFoundError() => UpdateOrganizationServiceResponse_ServiceNotFoundError._();
 
   UpdateOrganizationServiceResponse_ServiceNotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      UpdateOrganizationServiceResponse_ServiceNotFoundError._();
+  static final defaultInstance = UpdateOrganizationServiceResponse_ServiceNotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable
-  mutable() =>
-      UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable._();
+  static UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable mutable() => UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -893,18 +814,13 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError
   UpdateOrganizationServiceResponse_ServiceNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable toMutable() =>
-      UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable._();
+  UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable toMutable() => UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! UpdateOrganizationServiceResponse_ServiceNotFoundError)
-      return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! UpdateOrganizationServiceResponse_ServiceNotFoundError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -916,11 +832,7 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateOrganizationServiceResponse_ServiceNotFoundError` instances.
-  static _skir.StructSerializer<
-    UpdateOrganizationServiceResponse_ServiceNotFoundError,
-    UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateOrganizationServiceResponse_ServiceNotFoundError, UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -932,26 +844,21 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (
-      UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable it,
-    ) => it.toFrozen(),
+    toFrozen: (UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateOrganizationServiceResponse_ServiceNotFoundError].
-final class UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable
-    implements
-        UpdateOrganizationServiceResponse_ServiceNotFoundError_orMutable {
+final class UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable implements UpdateOrganizationServiceResponse_ServiceNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateOrganizationServiceResponse_ServiceNotFoundError toFrozen() =>
-      UpdateOrganizationServiceResponse_ServiceNotFoundError().._u = this._u;
+  UpdateOrganizationServiceResponse_ServiceNotFoundError toFrozen() => UpdateOrganizationServiceResponse_ServiceNotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -963,25 +870,19 @@ sealed class UpdateOrganizationServiceResponse_InvalidOperationIdError_orMutable
 }
 
 /// Deeply immutable.
-final class UpdateOrganizationServiceResponse_InvalidOperationIdError
-    implements
-        UpdateOrganizationServiceResponse_InvalidOperationIdError_orMutable {
+final class UpdateOrganizationServiceResponse_InvalidOperationIdError implements UpdateOrganizationServiceResponse_InvalidOperationIdError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UpdateOrganizationServiceResponse_InvalidOperationIdError() =>
-      UpdateOrganizationServiceResponse_InvalidOperationIdError._();
+  factory UpdateOrganizationServiceResponse_InvalidOperationIdError() => UpdateOrganizationServiceResponse_InvalidOperationIdError._();
 
   UpdateOrganizationServiceResponse_InvalidOperationIdError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      UpdateOrganizationServiceResponse_InvalidOperationIdError._();
+  static final defaultInstance = UpdateOrganizationServiceResponse_InvalidOperationIdError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable
-  mutable() =>
-      UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable._();
+  static UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable mutable() => UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -989,19 +890,13 @@ final class UpdateOrganizationServiceResponse_InvalidOperationIdError
   UpdateOrganizationServiceResponse_InvalidOperationIdError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable
-  toMutable() =>
-      UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable._();
+  UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable toMutable() => UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! UpdateOrganizationServiceResponse_InvalidOperationIdError)
-      return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! UpdateOrganizationServiceResponse_InvalidOperationIdError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1013,11 +908,7 @@ final class UpdateOrganizationServiceResponse_InvalidOperationIdError
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateOrganizationServiceResponse_InvalidOperationIdError` instances.
-  static _skir.StructSerializer<
-    UpdateOrganizationServiceResponse_InvalidOperationIdError,
-    UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateOrganizationServiceResponse_InvalidOperationIdError, UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1029,26 +920,21 @@ final class UpdateOrganizationServiceResponse_InvalidOperationIdError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (
-      UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable it,
-    ) => it.toFrozen(),
+    toFrozen: (UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateOrganizationServiceResponse_InvalidOperationIdError].
-final class UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable
-    implements
-        UpdateOrganizationServiceResponse_InvalidOperationIdError_orMutable {
+final class UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable implements UpdateOrganizationServiceResponse_InvalidOperationIdError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateOrganizationServiceResponse_InvalidOperationIdError toFrozen() =>
-      UpdateOrganizationServiceResponse_InvalidOperationIdError().._u = this._u;
+  UpdateOrganizationServiceResponse_InvalidOperationIdError toFrozen() => UpdateOrganizationServiceResponse_InvalidOperationIdError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1060,47 +946,33 @@ sealed class UpdateOrganizationServiceResponse_OperationIdentityReusedError_orMu
 }
 
 /// Deeply immutable.
-final class UpdateOrganizationServiceResponse_OperationIdentityReusedError
-    implements
-        UpdateOrganizationServiceResponse_OperationIdentityReusedError_orMutable {
+final class UpdateOrganizationServiceResponse_OperationIdentityReusedError implements UpdateOrganizationServiceResponse_OperationIdentityReusedError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UpdateOrganizationServiceResponse_OperationIdentityReusedError() =>
-      UpdateOrganizationServiceResponse_OperationIdentityReusedError._();
+  factory UpdateOrganizationServiceResponse_OperationIdentityReusedError() => UpdateOrganizationServiceResponse_OperationIdentityReusedError._();
 
   UpdateOrganizationServiceResponse_OperationIdentityReusedError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      UpdateOrganizationServiceResponse_OperationIdentityReusedError._();
+  static final defaultInstance = UpdateOrganizationServiceResponse_OperationIdentityReusedError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable
-  mutable() =>
-      UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable._();
+  static UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable mutable() => UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  UpdateOrganizationServiceResponse_OperationIdentityReusedError toFrozen() =>
-      this;
+  UpdateOrganizationServiceResponse_OperationIdentityReusedError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable
-  toMutable() =>
-      UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable._();
+  UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable toMutable() => UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other
-        is! UpdateOrganizationServiceResponse_OperationIdentityReusedError)
-      return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    if (other is! UpdateOrganizationServiceResponse_OperationIdentityReusedError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1112,11 +984,7 @@ final class UpdateOrganizationServiceResponse_OperationIdentityReusedError
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateOrganizationServiceResponse_OperationIdentityReusedError` instances.
-  static _skir.StructSerializer<
-    UpdateOrganizationServiceResponse_OperationIdentityReusedError,
-    UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateOrganizationServiceResponse_OperationIdentityReusedError, UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1128,27 +996,21 @@ final class UpdateOrganizationServiceResponse_OperationIdentityReusedError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (
-      UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable it,
-    ) => it.toFrozen(),
+    toFrozen: (UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateOrganizationServiceResponse_OperationIdentityReusedError].
-final class UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable
-    implements
-        UpdateOrganizationServiceResponse_OperationIdentityReusedError_orMutable {
+final class UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable implements UpdateOrganizationServiceResponse_OperationIdentityReusedError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateOrganizationServiceResponse_OperationIdentityReusedError toFrozen() =>
-      UpdateOrganizationServiceResponse_OperationIdentityReusedError()
-        .._u = this._u;
+  UpdateOrganizationServiceResponse_OperationIdentityReusedError toFrozen() => UpdateOrganizationServiceResponse_OperationIdentityReusedError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1174,23 +1036,21 @@ final class UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutab
 sealed class UpdateOrganizationServiceResponse {
   /// Constant indicating an unknown `UpdateOrganizationServiceResponse`.
   /// Default value for fields of type `UpdateOrganizationServiceResponse`.
-  static const UpdateOrganizationServiceResponse unknown =
-      UpdateOrganizationServiceResponse_unknown._instance;
+  static const UpdateOrganizationServiceResponse unknown = UpdateOrganizationServiceResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => UpdateOrganizationServiceResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory UpdateOrganizationServiceResponse.createInternalError() =>
-      UpdateOrganizationServiceResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory UpdateOrganizationServiceResponse.createInternalError() => UpdateOrganizationServiceResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapSuccess(
-    _lib_service_v1_service.Service value,
+    _lib_service_v1_service.Service value
   ) => UpdateOrganizationServiceResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(_lib_service_v1_service.Service(...))`.
@@ -1201,8 +1061,7 @@ sealed class UpdateOrganizationServiceResponse {
     required _lib_service_v1_service.ServiceRole role,
     required _core.DateTime createdAt,
     required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
-    required _lib_service_v1_service.ServiceRegistration_orMutable?
-    registration,
+    required _lib_service_v1_service.ServiceRegistration_orMutable? registration,
     required _lib_service_v1_service.ServiceState_orMutable? state,
   }) => UpdateOrganizationServiceResponse.wrapSuccess(
     _lib_service_v1_service.Service(
@@ -1214,12 +1073,12 @@ sealed class UpdateOrganizationServiceResponse {
       organization: organization,
       registration: registration,
       state: state,
-    ),
+    )
   );
 
   /// Create a 'conflict_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapConflictError(
-    UpdateOrganizationServiceResponse_ConflictError value,
+    UpdateOrganizationServiceResponse_ConflictError value
   ) => UpdateOrganizationServiceResponse_conflictErrorWrapper._(value);
 
   /// Same as `wrapConflictError(UpdateOrganizationServiceResponse_ConflictError(...))`.
@@ -1230,53 +1089,47 @@ sealed class UpdateOrganizationServiceResponse {
     UpdateOrganizationServiceResponse_ConflictError(
       expectedRevision: expectedRevision,
       actual: actual,
-    ),
+    )
   );
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapServiceNotFoundError(
-    UpdateOrganizationServiceResponse_ServiceNotFoundError value,
+    UpdateOrganizationServiceResponse_ServiceNotFoundError value
   ) => UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper._(value);
 
   /// Same as `wrapServiceNotFoundError(UpdateOrganizationServiceResponse_ServiceNotFoundError(...))`.
-  factory UpdateOrganizationServiceResponse.createServiceNotFoundError() =>
-      UpdateOrganizationServiceResponse.wrapServiceNotFoundError(
-        UpdateOrganizationServiceResponse_ServiceNotFoundError(),
-      );
+  factory UpdateOrganizationServiceResponse.createServiceNotFoundError() => UpdateOrganizationServiceResponse.wrapServiceNotFoundError(
+    UpdateOrganizationServiceResponse_ServiceNotFoundError()
+  );
 
   /// Create a 'validation_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapValidationError(
-    ServiceUpdateValidationError value,
+    ServiceUpdateValidationError value
   ) => UpdateOrganizationServiceResponse_validationErrorWrapper._(value);
 
   /// Create a 'invalid_operation_id_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapInvalidOperationIdError(
-    UpdateOrganizationServiceResponse_InvalidOperationIdError value,
-  ) =>
-      UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper._(value);
+    UpdateOrganizationServiceResponse_InvalidOperationIdError value
+  ) => UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidOperationIdError(UpdateOrganizationServiceResponse_InvalidOperationIdError(...))`.
-  factory UpdateOrganizationServiceResponse.createInvalidOperationIdError() =>
-      UpdateOrganizationServiceResponse.wrapInvalidOperationIdError(
-        UpdateOrganizationServiceResponse_InvalidOperationIdError(),
-      );
+  factory UpdateOrganizationServiceResponse.createInvalidOperationIdError() => UpdateOrganizationServiceResponse.wrapInvalidOperationIdError(
+    UpdateOrganizationServiceResponse_InvalidOperationIdError()
+  );
 
   /// Create a 'operation_identity_reused_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapOperationIdentityReusedError(
-    UpdateOrganizationServiceResponse_OperationIdentityReusedError value,
-  ) => UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper._(
-    value,
-  );
+    UpdateOrganizationServiceResponse_OperationIdentityReusedError value
+  ) => UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper._(value);
 
   /// Same as `wrapOperationIdentityReusedError(UpdateOrganizationServiceResponse_OperationIdentityReusedError(...))`.
-  factory UpdateOrganizationServiceResponse.createOperationIdentityReusedError() =>
-      UpdateOrganizationServiceResponse.wrapOperationIdentityReusedError(
-        UpdateOrganizationServiceResponse_OperationIdentityReusedError(),
-      );
+  factory UpdateOrganizationServiceResponse.createOperationIdentityReusedError() => UpdateOrganizationServiceResponse.wrapOperationIdentityReusedError(
+    UpdateOrganizationServiceResponse_OperationIdentityReusedError()
+  );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1287,15 +1140,14 @@ sealed class UpdateOrganizationServiceResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this UpdateOrganizationServiceResponse.
   UpdateOrganizationServiceResponse_kind get kind;
 
   /// Serializer for `UpdateOrganizationServiceResponse` instances.
-  static _skir.EnumSerializer<UpdateOrganizationServiceResponse>
-  get serializer {
+  static _skir.EnumSerializer<UpdateOrganizationServiceResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
@@ -1305,9 +1157,7 @@ sealed class UpdateOrganizationServiceResponse {
         "",
         UpdateOrganizationServiceResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .internalErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -1327,9 +1177,7 @@ sealed class UpdateOrganizationServiceResponse {
         "",
         UpdateOrganizationServiceResponse_conflictErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .conflictErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.conflictErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -1339,9 +1187,7 @@ sealed class UpdateOrganizationServiceResponse {
         "",
         UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .serviceNotFoundErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.serviceNotFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
@@ -1351,9 +1197,7 @@ sealed class UpdateOrganizationServiceResponse {
         "",
         UpdateOrganizationServiceResponse_validationErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .validationErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.validationErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
@@ -1363,22 +1207,17 @@ sealed class UpdateOrganizationServiceResponse {
         "",
         UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .invalidOperationIdErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.invalidOperationIdErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         7,
         "operation_identity_reused_error",
         "wrapOperationIdentityReusedError",
-        UpdateOrganizationServiceResponse_OperationIdentityReusedError
-            .serializer,
+        UpdateOrganizationServiceResponse_OperationIdentityReusedError.serializer,
         "",
         UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .operationIdentityReusedErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.operationIdentityReusedErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         8,
@@ -1388,27 +1227,22 @@ sealed class UpdateOrganizationServiceResponse {
         "",
         UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
-        ordinal: UpdateOrganizationServiceResponse_kind
-            .invalidRecordIdErrorWrapper
-            ._ordinal,
+        ordinal: UpdateOrganizationServiceResponse_kind.invalidRecordIdErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId:
-            "service/v1/organization.skir:UpdateOrganizationServiceResponse",
-        doc: "",
-        unknownInstance: UpdateOrganizationServiceResponse_unknown._instance,
-        enumInstance: UpdateOrganizationServiceResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized:
-            UpdateOrganizationServiceResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/organization.skir:UpdateOrganizationServiceResponse",
+    doc: "",
+    unknownInstance: UpdateOrganizationServiceResponse_unknown._instance,
+    enumInstance: UpdateOrganizationServiceResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: UpdateOrganizationServiceResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `UpdateOrganizationServiceResponse`.
@@ -1428,8 +1262,7 @@ enum UpdateOrganizationServiceResponse_kind {
   const UpdateOrganizationServiceResponse_kind(this._ordinal);
 }
 
-final class UpdateOrganizationServiceResponse_unknown
-    implements UpdateOrganizationServiceResponse {
+final class UpdateOrganizationServiceResponse_unknown implements UpdateOrganizationServiceResponse {
   static const _instance = UpdateOrganizationServiceResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -1438,22 +1271,16 @@ final class UpdateOrganizationServiceResponse_unknown
   UpdateOrganizationServiceResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.unknown;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is UpdateOrganizationServiceResponse_unknown;
+  _core.bool operator ==(other) => other is UpdateOrganizationServiceResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    UpdateOrganizationServiceResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, UpdateOrganizationServiceResponse.serializer);
 }
 
-sealed class _UpdateOrganizationServiceResponse_wrapper
-    implements UpdateOrganizationServiceResponse {
+sealed class _UpdateOrganizationServiceResponse_wrapper implements UpdateOrganizationServiceResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -1466,125 +1293,101 @@ sealed class _UpdateOrganizationServiceResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    UpdateOrganizationServiceResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, UpdateOrganizationServiceResponse.serializer);
 }
 
-final class UpdateOrganizationServiceResponse_internalErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_internalErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   UpdateOrganizationServiceResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.internalErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.internalErrorWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_successWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_successWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final _lib_service_v1_service.Service value;
 
   UpdateOrganizationServiceResponse_successWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.successWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.successWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_conflictErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_conflictErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final UpdateOrganizationServiceResponse_ConflictError value;
 
   UpdateOrganizationServiceResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.conflictErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.conflictErrorWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final UpdateOrganizationServiceResponse_ServiceNotFoundError value;
 
   UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.serviceNotFoundErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.serviceNotFoundErrorWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_validationErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_validationErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final ServiceUpdateValidationError value;
 
   UpdateOrganizationServiceResponse_validationErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.validationErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.validationErrorWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final UpdateOrganizationServiceResponse_InvalidOperationIdError value;
 
-  UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper._(
-    this.value,
-  );
+  UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.invalidOperationIdErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.invalidOperationIdErrorWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final UpdateOrganizationServiceResponse_OperationIdentityReusedError value;
 
-  UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper._(
-    this.value,
-  );
+  UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind
-          .operationIdentityReusedErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.operationIdentityReusedErrorWrapper;
 }
 
-final class UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper
-    extends _UpdateOrganizationServiceResponse_wrapper {
+final class UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper extends _UpdateOrganizationServiceResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  UpdateOrganizationServiceResponse_kind get kind =>
-      UpdateOrganizationServiceResponse_kind.invalidRecordIdErrorWrapper;
+  UpdateOrganizationServiceResponse_kind get kind => UpdateOrganizationServiceResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 final _skir.Method<
   WatchOrganizationServicesRequest,
   WatchOrganizationServicesResponse
->
-watchOrganizationServicesMethod = _skir.Method(
-  "WatchOrganizationServices",
-  820326,
-  WatchOrganizationServicesRequest.serializer,
-  WatchOrganizationServicesResponse.serializer,
-  "",
-);
+> watchOrganizationServicesMethod =
+  _skir.Method(
+    "WatchOrganizationServices",
+    820326,
+    WatchOrganizationServicesRequest.serializer,
+    WatchOrganizationServicesResponse.serializer,
+    "",
+  );
 
 final _skir.Method<
   UpdateOrganizationServiceRequest,
   UpdateOrganizationServiceResponse
->
-updateOrganizationServiceMethod = _skir.Method(
-  "UpdateOrganizationService",
-  872501,
-  UpdateOrganizationServiceRequest.serializer,
-  UpdateOrganizationServiceResponse.serializer,
-  "",
-);
+> updateOrganizationServiceMethod =
+  _skir.Method(
+    "UpdateOrganizationService",
+    872501,
+    UpdateOrganizationServiceRequest.serializer,
+    UpdateOrganizationServiceResponse.serializer,
+    "",
+  );

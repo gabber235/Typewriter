@@ -1,7 +1,7 @@
 part of "route.stories.dart";
 
 AuthoringSessionState pageStoryAuthoring(
-  RealmPageDefinition pageDefinition,
+  RealmTypeEntry pageDefinition,
   List<PageElement> elements,
 ) {
   final page = Page(

@@ -49,7 +49,7 @@ val ArtifactModelTest by testSuite {
     test("hyphenated contribution identities survive the manifest codec") {
         val contribution =
             GeneratedContribution(
-                origin = ArtifactId("typewritermc:items"),
+                source = ContributionSourceId("artifact:typewritermc:items"),
                 sourcePart = "main",
                 producer = ProducerId("future-producer"),
                 name = ContributionName("core/collection-projections.cbor"),
@@ -57,7 +57,7 @@ val ArtifactModelTest by testSuite {
             )
         val manifest =
             CapabilityManifest(
-                id = contribution.origin,
+                id = ArtifactId("typewritermc:items"),
                 version = ArtifactVersion("1.0.0"),
                 directRequirements = emptyList(),
                 resolvedCapabilities = emptyList(),

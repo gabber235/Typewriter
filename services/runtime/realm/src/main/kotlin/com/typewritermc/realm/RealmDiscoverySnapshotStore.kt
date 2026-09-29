@@ -2,8 +2,7 @@ package com.typewritermc.realm
 
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ContentCatalog
-import com.typewritermc.pages.PageCatalog
+import com.typewritermc.discovery.ResolvedDeploymentTypes
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +49,7 @@ class RealmDiscoverySnapshotStore {
 }
 
 /**
- * Combines structural discovery, elements, pages, presentations, and capabilities for one Realm deployment.
+ * Combines structural discovery, type metadata, presentations, and capabilities for one Realm deployment.
  *
  * Editor routes consume this assembled view; diagnostics remain visible alongside valid definitions.
  */
@@ -61,8 +60,7 @@ data class RealmDiscoverySnapshot(
     val collectionProjections: List<skirout.editor.v1.authoring.CollectionProjectionDefinition> = emptyList(),
     val authoringSearch: AuthoringSearchDefinition? = null,
     val compilationProjections: List<skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition> = emptyList(),
-    val elements: ContentCatalog,
-    val pages: PageCatalog = PageCatalog(emptyList(), emptyList()),
+    val types: ResolvedDeploymentTypes,
     val presentations: List<skirout.editor.v1.presentation.PresentationDefinition> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val presentationDiagnostics: List<com.typewritermc.presentation.PresentationDiagnostic> = emptyList(),

@@ -103,7 +103,7 @@ Widget pagePageTimelineUseCase(BuildContext context) {
 }
 
 Widget pagePageStory({
-  required RealmPageDefinition definition,
+  required RealmTypeEntry definition,
   required List<PageElement> elements,
   DisplayState pagesState = DisplayState.fewItems,
   DisplayState entriesState = DisplayState.fewItems,

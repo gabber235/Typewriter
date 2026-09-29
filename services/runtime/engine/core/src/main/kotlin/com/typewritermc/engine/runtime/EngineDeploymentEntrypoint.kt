@@ -9,8 +9,6 @@ import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
 import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
-import com.typewritermc.elements.ContentCatalogAssembler
-import com.typewritermc.elements.ContentContributionReader
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
@@ -59,12 +57,6 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
             }
         val discovery = TypeContributionAssembler.assemble(contributions.types, sourceParts)
         val facts = DeploymentFacts(context.facts)
-        val elementCatalog =
-            ContentCatalogAssembler.assemble(
-                ContentContributionReader.read(manifests),
-                sourceParts,
-                facts,
-            )
         val artifactPackage =
             DiscoveryArtifactPackage(
                 artifacts = artifactPaths.map { it.toUri().toURL() },

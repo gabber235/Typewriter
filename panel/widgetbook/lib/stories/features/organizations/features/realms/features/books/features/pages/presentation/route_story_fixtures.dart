@@ -42,31 +42,39 @@ List<PageElement> graphPageStoryElements({
   ];
 }
 
-RealmPageDefinition graphPageStoryDefinition(
+RealmTypeEntry graphPageStoryDefinition(
   GraphDirection direction,
   List<PageElement> elements,
-) => RealmPageDefinition(
-  type: referenceResourceTypes.page,
-  name: "Graph",
+) => RealmTypeEntry(
+  definition: TypeDefinition(
+    id: referenceResourceTypes.page,
+    kind: NominalTypeKind.concrete,
+    displayName: "Graph",
+  ),
   description: "Widgetbook graph page",
   icon: _storyEntryIcon,
   color: safeColors.first,
-  editor: RealmPageEditor.graph(direction: direction),
+  editor: RealmEditorLayout.graph(direction: direction),
   originArtifactId: "widgetbook",
   sourcePart: "page-story",
+  eligible: true,
   presentationSubject: _catalogSubject(referenceResourceTypes.page),
 );
 
-RealmPageDefinition timelinePageStoryDefinition(List<PageElement> elements) =>
-    RealmPageDefinition(
-      type: referenceResourceTypes.page,
-      name: "Timeline",
+RealmTypeEntry timelinePageStoryDefinition(List<PageElement> elements) =>
+    RealmTypeEntry(
+      definition: TypeDefinition(
+        id: referenceResourceTypes.page,
+        kind: NominalTypeKind.concrete,
+        displayName: "Timeline",
+      ),
       description: "Widgetbook timeline page",
       icon: _storyEntryIcon,
       color: safeColors[1],
-      editor: RealmPageEditor.timeline(),
+      editor: RealmEditorLayout.timeline(),
       originArtifactId: "widgetbook",
       sourcePart: "page-story",
+      eligible: true,
       presentationSubject: _catalogSubject(referenceResourceTypes.page),
     );
 
@@ -93,7 +101,7 @@ RealmEditorCatalogSnapshot pageStoryCatalog(
 }
 
 RealmEditorCatalogSnapshot pageStoryPageCatalog(
-  RealmPageDefinition pageDefinition,
+  RealmTypeEntry pageDefinition,
   List<PageElement> elements,
 ) {
   final elementDefinitions = [
@@ -156,28 +164,24 @@ RealmEditorCatalogSnapshot pageStoryPageCatalog(
           ),
         ),
     },
-    elements: {
+    types: {
       for (final definition in elementDefinitions)
-        definition.typeId.uuid: RealmElementCatalogEntry(
+        definition.rootType: RealmTypeEntry(
+          definition: TypeDefinition(
+            id: definition.rootType,
+            kind: NominalTypeKind.concrete,
+            displayName: definition.name,
+          ),
           originArtifactId: "widgetbook",
           sourcePart: "page-story",
-          definition: DiscoveredElementDefinition(
-            id: definition.typeId.uuid,
-            type: definition.rootType,
-            name: definition.name,
-            description: definition.description,
-            icon: definition.icon,
-            color: definition.color,
-            availability: const ElementAvailability.always(),
-          ),
+          description: definition.description,
+          icon: definition.icon,
+          color: definition.color,
           presentationSubject: _catalogSubject(definition.rootType),
           eligible: true,
-          available: true,
         ),
+      pageDefinition.type: pageDefinition,
     },
-    pageCatalog: RealmPageCatalog(
-      definitions: {pageDefinition.type: pageDefinition},
-    ),
     resourceDefinitions: {
       CoreResourceDefinitionIds.page: RealmResourceDefinition(
         id: CoreResourceDefinitionIds.page,
@@ -214,7 +218,7 @@ PresentationId _storyRoleId(ResolvedTypeRef type) => PresentationId(
 );
 
 AuthoringSubjectProjection pageStorySubjectProjection(
-  RealmPageDefinition pageDefinition,
+  RealmTypeEntry pageDefinition,
   List<PageElement> elements,
   AuthoringSubjectScope scope,
 ) {
@@ -277,7 +281,7 @@ Map<ResolvedTypeRef, RecordValue> _rootValues(List<PageElement> elements) {
   return values;
 }
 
-RecordValue _pageStoryValue(RealmPageDefinition definition) => RecordValue({
+RecordValue _pageStoryValue(RealmTypeEntry definition) => RecordValue({
   "book": ReferenceValue(skir.ResourceId(value: "book:example-book-id")),
   "name": const StringValue("Example"),
   "chapter": const StringValue(""),

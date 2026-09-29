@@ -18,6 +18,9 @@ import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.TypedValueEnvelope
+import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.ResolvedDeploymentTypes
 
 /** Supplies one registered graph invariant to the common mutation planner. */
 internal interface AuthoringGraphRule {
@@ -80,9 +83,11 @@ internal class AuthoringMutationPlanner(
     private val mapper: ResourceValueMapper,
     private val resourceDefinitions: Collection<AuthoringResourceDefinition>,
     private val relations: Collection<RelationDefinition>,
-    private val catalog: TypeCatalog,
+    private val resolvedTypes: ResolvedDeploymentTypes,
     private val rules: Collection<AuthoringGraphRule> = emptyList(),
 ) {
+    private val catalog: TypeCatalog get() = resolvedTypes.catalog
+
     fun plan(
         before: AuthoringWorkingGraph,
         operations: List<AuthoringOperation>,
@@ -246,6 +251,9 @@ internal class AuthoringMutationPlanner(
         requireDefinition(operation.definition, operation.content.rootType, operation.id)
         if (catalog.definitions.singleOrNull { it.id == root }?.kind != NominalTypeKind.CONCRETE) {
             invalid("resource-root-not-concrete", operation.id)
+        }
+        if (resolvedTypes.describe(root)?.canCreate(DiscoveryDomains.Realm) != true) {
+            invalid("resource-type-ineligible", operation.id)
         }
         if (resources.containsKey(operation.id)) invalid("resource-already-exists", operation.id)
         val content = bindCreationInverse(operation, root)

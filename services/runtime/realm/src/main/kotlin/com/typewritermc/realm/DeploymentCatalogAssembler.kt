@@ -1,23 +1,20 @@
 package com.typewritermc.realm
 
 import com.typewritermc.discovery.ArtifactCatalogEntry
-import com.typewritermc.discovery.AssembledTypeDiscovery
 import com.typewritermc.discovery.CatalogGeneration
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DeploymentSelection
 import com.typewritermc.discovery.DiscoveryDiagnostic
 import com.typewritermc.discovery.Eligibility
+import com.typewritermc.discovery.ResolvedDeploymentTypes
 import com.typewritermc.discovery.SourcePartEligibilityResolver
 import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
-import com.typewritermc.elements.ContentCatalog
-import com.typewritermc.elements.ContentCatalogAssembler
-import com.typewritermc.elements.ContentContributionReader
+import com.typewritermc.discovery.runtime.CarriedContribution
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
-import com.typewritermc.imprint.GeneratedContribution
 import com.typewritermc.imprint.ImprintManifest
 
 /**
@@ -27,9 +24,8 @@ import com.typewritermc.imprint.ImprintManifest
  */
 data class AssembledDeploymentCatalog(
     val discovery: DeploymentDiscoverySnapshot,
-    val elements: ContentCatalog,
-    val runtimeDiscovery: AssembledTypeDiscovery,
-    val unknownContributions: List<GeneratedContribution>,
+    val types: ResolvedDeploymentTypes,
+    val unknownContributions: List<CarriedContribution>,
 )
 
 /**
@@ -78,13 +74,7 @@ object DeploymentCatalogAssembler {
         val orderedExtensions = extensions.sortedBy { it.id.value }
         val manifests = otherManifests.sortedBy { it.id.value } + orderedEngines + orderedExtensions
         val read = ManifestDiscoveryReader.read(manifests)
-        val runtimeDiscovery = TypeContributionAssembler.assemble(read.types, sourceParts)
-        val elements =
-            ContentCatalogAssembler.assemble(
-                ContentContributionReader.read(manifests),
-                sourceParts,
-                facts,
-            )
+        val types = TypeContributionAssembler.assemble(read.types, sourceParts)
         val artifacts =
             buildList {
                 otherManifests.sortedBy { it.id.value }.forEach { add(ArtifactCatalogEntry(it.id, Eligibility.Eligible)) }
@@ -109,9 +99,9 @@ object DeploymentCatalogAssembler {
                 generation = generation,
                 artifacts = artifacts,
                 sourceParts = sourceParts.toList(),
-                types = runtimeDiscovery.catalog,
+                types = types.catalog,
                 diagnostics = emptyList<DiscoveryDiagnostic>(),
             )
-        return AssembledDeploymentCatalog(snapshot, elements, runtimeDiscovery, read.unknown)
+        return AssembledDeploymentCatalog(snapshot, types, read.unknown)
     }
 }

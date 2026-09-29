@@ -63,6 +63,7 @@ void main() {
               TypeDefinition(id: _entry, kind: NominalTypeKind.concrete),
             ]),
             generation: const CatalogGeneration("1"),
+            types: {_book: _knownType(_book), _entry: _knownType(_entry)},
             resourceDefinitions: {
               CoreResourceDefinitionIds.book: RealmResourceDefinition(
                 id: CoreResourceDefinitionIds.book,
@@ -128,6 +129,7 @@ void main() {
           TypeDefinition(id: _entry, kind: NominalTypeKind.concrete),
         ]),
         generation: const CatalogGeneration("1"),
+        types: {_book: _knownType(_book), _entry: _knownType(_entry)},
         resourceDefinitions: {
           CoreResourceDefinitionIds.element: RealmResourceDefinition(
             id: CoreResourceDefinitionIds.element,
@@ -184,3 +186,8 @@ ResolvedTypeRef _type(String name) => ResolvedTypeRef(
 );
 final _book = _type("Book");
 final _entry = _type("Entry");
+
+RealmTypeEntry _knownType(ResolvedTypeRef type) => RealmTypeEntry(
+  definition: TypeDefinition(id: type, kind: NominalTypeKind.concrete),
+  eligible: true,
+);

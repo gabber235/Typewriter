@@ -1,8 +1,11 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.imprint.ContributionName
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 import com.typewritermc.types.RelationDefinition
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeDefinition
@@ -39,13 +42,13 @@ object DiscoveryDomains {
 }
 
 /**
- * Identifies a contribution across artifacts, source parts, and generators.
+ * Identifies authored content independently of artifacts that carry it.
  *
  * Use the complete key for deduplication and diagnostics. A local contribution name alone is not globally unique.
  */
 @Serializable
 data class ContributionKey(
-    val origin: ArtifactId,
+    val source: ContributionSourceId,
     val sourcePart: String,
     val producer: ProducerId,
     val name: ContributionName,
@@ -104,6 +107,8 @@ data class TypeDiscoveryContribution(
     val prototypeBindings: List<PrototypeBinding>,
     val executableBindings: List<ExecutableBinding>,
     val relations: List<RelationDefinition> = emptyList(),
+    val metadata: List<TypeMetadata> = emptyList(),
+    val resourceDefinitions: List<AuthoringResourceDefinition> = emptyList(),
 ) {
     init {
         require(schema == TYPE_DISCOVERY_SCHEMA) { "Unsupported type discovery schema $schema." }
@@ -111,13 +116,60 @@ data class TypeDiscoveryContribution(
         require(definitions.map(TypeDefinition::id).distinct().size == definitions.size) {
             "A type discovery contribution cannot contain duplicate definitions."
         }
+        val knownTypes = definitions.mapTo(mutableSetOf(), TypeDefinition::id)
+        require(prototypeBindings.all { it.type in knownTypes }) {
+            "Every prototype binding must have a type definition in its contribution."
+        }
+        require(metadata.all { it.type in knownTypes }) {
+            "Every type metadata entry must have a definition in its contribution."
+        }
+        require(resourceDefinitions.map(AuthoringResourceDefinition::id).distinct().size == resourceDefinitions.size) {
+            "A type discovery contribution cannot contain duplicate resource definitions."
+        }
         require(prototypeBindings.map(PrototypeBinding::type).distinct().size == prototypeBindings.size) {
             "A type discovery contribution cannot contain duplicate prototype bindings."
         }
         require(relations.map(RelationDefinition::id).distinct().size == relations.size) {
             "A type discovery contribution cannot contain duplicate relation definitions."
         }
+        require(metadata.map(TypeMetadata::type).distinct().size == metadata.size) {
+            "A type discovery contribution cannot contain duplicate metadata."
+        }
     }
+}
+
+/** Optional authoring information attached to an exact structural type. */
+@Serializable
+data class TypeMetadata(
+    val type: ResolvedTypeRef,
+    val display: TypeDisplay? = null,
+    val editor: AuthoringEditorLayout? = null,
+)
+
+@Serializable
+data class TypeDisplay(
+    val description: String,
+    val icon: Icon,
+    val color: Color,
+)
+
+@Serializable
+sealed interface AuthoringEditorLayout {
+    @Serializable
+    data class Graph(
+        val direction: GraphDirection,
+    ) : AuthoringEditorLayout
+
+    @Serializable
+    data object Timeline : AuthoringEditorLayout
+}
+
+@Serializable
+enum class GraphDirection {
+    LEFT_TO_RIGHT,
+    RIGHT_TO_LEFT,
+    TOP_TO_BOTTOM,
+    BOTTOM_TO_TOP,
 }
 
 /** Schema identifier for [TypeDiscoveryContribution] payloads. */

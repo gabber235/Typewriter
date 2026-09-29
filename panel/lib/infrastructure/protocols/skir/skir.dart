@@ -18,10 +18,7 @@ export "skirout/editor/v1/catalog_presentation.dart";
 export "skirout/editor/v1/compiled_content.dart";
 export "skirout/editor/v1/conversion.dart";
 export "skirout/editor/v1/diagnostic.dart";
-export "skirout/editor/v1/element_catalog.dart";
 export "skirout/editor/v1/expression.dart";
-export "skirout/editor/v1/page_catalog.dart"
-    hide PageDiagnostic, PageDiagnostic_mutable, PageDiagnostic_orMutable;
 export "skirout/editor/v1/path.dart";
 export "skirout/editor/v1/presentation.dart";
 export "skirout/editor/v1/search.dart";

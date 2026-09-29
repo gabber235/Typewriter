@@ -43,6 +43,16 @@ annotation class TypewriterType(
     val revision: Int = 1,
 )
 
+/** Supplies optional static appearance for any declared type. */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class TypewriterDisplay(
+    val name: String,
+    val description: String = "",
+    val icon: String,
+    val color: String,
+)
+
 /**
  * Declares that abstract properties are required serialized fields of every concrete implementation.
  * A concrete implementation must store each field under the same wire name with an assignable type.
@@ -435,11 +445,15 @@ enum class PresentationRole {
 sealed interface RolePresentationStatus {
     @Serializable
     @SerialName("ready")
-    data class Ready(val id: PresentationId) : RolePresentationStatus
+    data class Ready(
+        val id: PresentationId,
+    ) : RolePresentationStatus
 
     @Serializable
     @SerialName("rejected")
-    data class Rejected(val message: String) : RolePresentationStatus {
+    data class Rejected(
+        val message: String,
+    ) : RolePresentationStatus {
         init {
             require(message.isNotBlank()) { "A rejected presentation needs a reason." }
         }
@@ -540,12 +554,10 @@ data class TypeDefinition(
     val outgoingConversionIds: List<ConversionId> = emptyList(),
     val rolePresentations: Map<PresentationRole, RolePresentationStatus> = emptyMap(),
     val fieldMergePolicies: List<FieldMergePolicy> = emptyList(),
-    val declarationOwner: String = defaultDeclarationOwner(id),
     val initialValue: DataValue? = null,
 ) {
     init {
         require(id.arguments.isEmpty()) { "Type definition identity must not contain type arguments." }
-        require(declarationOwner.isNotBlank()) { "Type declaration owner must not be blank." }
         require(parameters.map(TypeParameter::name).distinct().size == parameters.size) {
             "Type parameter names must be unique."
         }
@@ -555,13 +567,6 @@ data class TypeDefinition(
         }
     }
 }
-
-private fun defaultDeclarationOwner(id: ResolvedTypeRef): String =
-    when (val typeId = id.id) {
-        is TypeId.Builtin -> "builtin"
-        is TypeId.Declared -> typeId.id.toString()
-        is TypeId.Qualified -> typeId.namespace
-    }
 
 private val ResolvedTypeRef.displayName: String
     get() =
@@ -615,8 +620,9 @@ data class TypeCatalog(
     fun fieldContractViolations(activeTypes: Set<ResolvedTypeRef>): List<FieldContractViolation> {
         val byId = definitions.associateBy(TypeDefinition::id)
         return activeTypes.sortedBy(ResolvedTypeRef::stableSortKey).flatMap { concrete ->
-            val definition = byId[concrete.copy(arguments = emptyList())]
-                ?: error("Unknown concrete type $concrete.")
+            val definition =
+                byId[concrete.copy(arguments = emptyList())]
+                    ?: error("Unknown concrete type $concrete.")
             require(definition.kind == NominalTypeKind.CONCRETE) { "Type $concrete is not concrete." }
             val stored = (definition.representation as? TypeExpression.Record)?.fields.orEmpty().associateBy(TypeField::name)
             inheritedFields(concrete, emptySet()).values.flatMap { required ->
@@ -635,13 +641,16 @@ data class TypeCatalog(
         visited: Set<ResolvedTypeRef>,
     ): LinkedHashMap<String, EffectiveField> {
         require(reference !in visited) { "Cyclic type inheritance at $reference." }
-        val definition = requireNotNull(definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }) {
-            "Unknown type $reference."
-        }
+        val definition =
+            requireNotNull(definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }) {
+                "Unknown type $reference."
+            }
         val inherited = inheritedFields(reference, visited)
-        val bindings = definition.parameters.mapIndexedNotNull { index, parameter ->
-            reference.arguments.getOrNull(index)?.let { parameter.name to it }
-        }.toMap()
+        val bindings =
+            definition.parameters
+                .mapIndexedNotNull { index, parameter ->
+                    reference.arguments.getOrNull(index)?.let { parameter.name to it }
+                }.toMap()
         (definition.representation as? TypeExpression.Record)?.fields?.forEach { field ->
             val resolved = field.copy(type = field.type.resolveTypeBindings(bindings))
             val previous = inherited[resolved.name]
@@ -657,12 +666,15 @@ data class TypeCatalog(
         reference: ResolvedTypeRef,
         visited: Set<ResolvedTypeRef>,
     ): LinkedHashMap<String, EffectiveField> {
-        val definition = requireNotNull(definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }) {
-            "Unknown type $reference."
-        }
-        val bindings = definition.parameters.mapIndexedNotNull { index, parameter ->
-            reference.arguments.getOrNull(index)?.let { parameter.name to it }
-        }.toMap()
+        val definition =
+            requireNotNull(definitions.singleOrNull { it.id == reference.copy(arguments = emptyList()) }) {
+                "Unknown type $reference."
+            }
+        val bindings =
+            definition.parameters
+                .mapIndexedNotNull { index, parameter ->
+                    reference.arguments.getOrNull(index)?.let { parameter.name to it }
+                }.toMap()
         val fields = linkedMapOf<String, EffectiveField>()
         definition.parents.forEach { parent ->
             effectiveFields(parent.resolveTypeBindings(bindings), visited + reference).values.forEach { field ->
@@ -718,7 +730,10 @@ data class TypeCatalog(
     }
 }
 
-private data class EffectiveField(val owner: ResolvedTypeRef, val field: TypeField)
+private data class EffectiveField(
+    val owner: ResolvedTypeRef,
+    val field: TypeField,
+)
 
 private fun MutableMap<String, EffectiveField>.mergeInheritedField(
     catalog: TypeCatalog,
@@ -726,8 +741,10 @@ private fun MutableMap<String, EffectiveField>.mergeInheritedField(
     candidate: EffectiveField,
 ) {
     val previous = this[candidate.field.name]
-    require(previous == null || catalog.isAssignableExactly(candidate.field.type, previous.field.type) ||
-        catalog.isAssignableExactly(previous.field.type, candidate.field.type)) {
+    require(
+        previous == null || catalog.isAssignableExactly(candidate.field.type, previous.field.type) ||
+            catalog.isAssignableExactly(previous.field.type, candidate.field.type),
+    ) {
         "Conflicting inherited field ${candidate.field.name} on $reference from ${previous?.owner} and ${candidate.owner}."
     }
     if (previous == null || catalog.isAssignableExactly(candidate.field.type, previous.field.type)) {

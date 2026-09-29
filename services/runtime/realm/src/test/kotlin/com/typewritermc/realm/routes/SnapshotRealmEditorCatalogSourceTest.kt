@@ -1,13 +1,15 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.discovery.AuthoringEditorLayout
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ContentCatalog
-import com.typewritermc.pages.GraphDirection
-import com.typewritermc.pages.PageCatalog
-import com.typewritermc.pages.PageCatalogEntry
-import com.typewritermc.pages.PageDescriptor
-import com.typewritermc.pages.PageDiagnostic
-import com.typewritermc.pages.ResolvedPageEditorDefinition
+import com.typewritermc.discovery.Eligibility
+import com.typewritermc.discovery.GraphDirection
+import com.typewritermc.discovery.ResolvedDeploymentTypes
+import com.typewritermc.discovery.ResolvedType
+import com.typewritermc.discovery.TypeDisplay
+import com.typewritermc.discovery.TypeMetadata
+import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.presentation.PresentationDiagnostic
 import com.typewritermc.realm.RealmDiscoverySnapshot
 import com.typewritermc.realm.repository.loadTestPrototypes
@@ -34,7 +36,7 @@ import com.typewritermc.discovery.CatalogGeneration as DiscoveryGeneration
 import skirout.editor.v1.type_catalog.TypeCatalog as WireTypeCatalog
 
 val SnapshotRealmEditorCatalogSourceTest by testSuite {
-    test("successful fetch returns the requested atomic type closure") {
+    test("successful fetch returns every known exact type") {
         val fixture = catalogFixture()
         val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog() }
         val request =
@@ -45,62 +47,40 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
         val response = source.fetch(request) as CatalogFetchResult.SuccessWrapper
 
         SkirTypeCodec
-            .decode(WireTypeCatalog.partial(definitions = response.value.typeDefinitions))
+            .decode(WireTypeCatalog.partial(definitions = response.value.typeViews.map { it.definition }))
             .getOrThrow()
             .definitions
             .map(TypeDefinition::id)
-            .toSet() shouldBe setOf(fixture.leaf.id, fixture.middle.id, fixture.parent.id)
+            .toSet() shouldBe setOf(fixture.leaf.id, fixture.middle.id, fixture.parent.id, fixture.unrelated.id)
     }
 
-    test("successful fetch keeps page diagnostics in the atomic catalog") {
+    test("successful fetch retains known ineligible type metadata") {
         val fixture = catalogFixture()
-        val diagnostic = PageDiagnostic(code = "invalid_page", message = "Broken page", namespace = "test")
-        val source =
-            SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog(pageDiagnostics = listOf(diagnostic)) }
-
-        val response = source.fetch(emptyRequest()) as CatalogFetchResult.SuccessWrapper
-
-        response.value.pageDiagnostics.single().let {
-            it.code shouldBe "invalid_page"
-            it.message shouldBe "Broken page"
-            it.originArtifactId shouldBe "test"
-        }
-    }
-
-    test("atomic catalog includes types referenced by page definitions") {
-        val fixture = catalogFixture()
-        val pages =
-            PageCatalog(
-                entries =
-                    listOf(
-                        PageCatalogEntry(
-                            originArtifactId = "test",
-                            sourcePart = "main",
-                            descriptor =
-                                PageDescriptor(
-                                    type = fixture.leaf.id,
-                                    name = "Test",
-                                    description = null,
-                                    icon = Icon.parse("material-symbols:test-tube"),
-                                    color = Color.parseRgb("#000000"),
-                                    editor =
-                                        ResolvedPageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT),
-                                ),
-                        ),
+        val entry =
+            ResolvedType(
+                definition = fixture.leaf,
+                metadata =
+                    TypeMetadata(
+                        type = fixture.leaf.id,
+                        display = TypeDisplay("Known page", Icon.parse("material-symbols:test-tube"), Color.parseRgb("#000000")),
+                        editor = AuthoringEditorLayout.Graph(GraphDirection.LEFT_TO_RIGHT),
                     ),
-                diagnostics = emptyList(),
+                carrierEligibility = mapOf(ArtifactId("test") to Eligibility.Ineligible(listOf("Extension is not selected."))),
+                boundDomains = emptySet(),
             )
-        val source = SnapshotRealmEditorCatalogSource(loadTestPrototypes()) { fixture.snapshot.editorCatalog(pages = pages) }
+        val source =
+            SnapshotRealmEditorCatalogSource(loadTestPrototypes()) {
+                fixture.snapshot.editorCatalog(metadata = listOf(entry))
+            }
 
         val response = source.fetch(emptyRequest()) as CatalogFetchResult.SuccessWrapper
-        val catalog =
-            SkirTypeCodec
-                .decode(WireTypeCatalog.partial(definitions = response.value.typeDefinitions))
-                .getOrThrow()
-
+        val metadata = response.value.typeViews.single { it.definition.displayName == fixture.leaf.displayName }
+        metadata.eligible shouldBe false
+        metadata.ineligibilityReasons shouldBe listOf("Extension is not selected.")
+        SkirTypeCodec.decode(WireTypeCatalog.partial(definitions = listOf(metadata.definition))).getOrThrow().definitions.single().id shouldBe fixture.leaf.id
+        val catalog = SkirTypeCodec.decode(WireTypeCatalog.partial(definitions = response.value.typeViews.map { it.definition })).getOrThrow()
         catalog.definitions.map(TypeDefinition::id).toSet() shouldBe
-            setOf(fixture.leaf.id, fixture.middle.id, fixture.parent.id)
-        response.value.pageEntries.size shouldBe 1
+            setOf(fixture.leaf.id, fixture.middle.id, fixture.parent.id, fixture.unrelated.id)
     }
 
     test("subtype queries retain abstract and concrete descendants") {
@@ -144,11 +124,11 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
 
         response.value.presentationDefinitions shouldBe listOf(presentation)
         SkirTypeCodec
-            .decode(WireTypeCatalog.partial(definitions = response.value.typeDefinitions))
+            .decode(WireTypeCatalog.partial(definitions = response.value.typeViews.map { it.definition }))
             .getOrThrow()
             .definitions
             .map(TypeDefinition::id)
-            .toSet() shouldBe setOf(fixture.leaf.id, fixture.middle.id, fixture.parent.id)
+            .toSet() shouldBe setOf(fixture.leaf.id, fixture.middle.id, fixture.parent.id, fixture.unrelated.id)
     }
 
     test("requested type includes its attached presentation") {
@@ -161,10 +141,12 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                     fixture.snapshot.types.definitions.map { definition ->
                         if (definition.id == fixture.leaf.id) {
                             definition.copy(
-                                rolePresentations = mapOf(
-                                    com.typewritermc.types.PresentationRole.EDITOR to
-                                        com.typewritermc.types.RolePresentationStatus.Ready(presentationId),
-                                ),
+                                rolePresentations =
+                                    mapOf(
+                                        com.typewritermc.types.PresentationRole.EDITOR to
+                                            com.typewritermc.types.RolePresentationStatus
+                                                .Ready(presentationId),
+                                    ),
                             )
                         } else {
                             definition
@@ -192,10 +174,12 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
                     fixture.snapshot.types.definitions.map { definition ->
                         if (definition.id == fixture.leaf.id) {
                             definition.copy(
-                                rolePresentations = mapOf(
-                                    com.typewritermc.types.PresentationRole.EDITOR to
-                                        com.typewritermc.types.RolePresentationStatus.Rejected("builder failed"),
-                                ),
+                                rolePresentations =
+                                    mapOf(
+                                        com.typewritermc.types.PresentationRole.EDITOR to
+                                            com.typewritermc.types.RolePresentationStatus
+                                                .Rejected("builder failed"),
+                                    ),
                             )
                         } else {
                             definition
@@ -211,9 +195,10 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
 
         response.value.presentationDefinitions shouldBe emptyList()
         val returned =
-            SkirTypeCodec.decode(WireTypeCatalog.partial(definitions = response.value.typeDefinitions)).getOrThrow()
+            SkirTypeCodec.decode(WireTypeCatalog.partial(definitions = response.value.typeViews.map { it.definition })).getOrThrow()
         returned.definitions.single { it.id == fixture.leaf.id }.rolePresentations[com.typewritermc.types.PresentationRole.EDITOR] shouldBe
-            com.typewritermc.types.RolePresentationStatus.Rejected("builder failed")
+            com.typewritermc.types.RolePresentationStatus
+                .Rejected("builder failed")
     }
 
     test("successful fetch includes attributed presentation diagnostics") {
@@ -247,6 +232,7 @@ private data class CatalogFixture(
     val parent: TypeDefinition,
     val middle: TypeDefinition,
     val leaf: TypeDefinition,
+    val unrelated: TypeDefinition,
     val snapshot: DeploymentDiscoverySnapshot,
 )
 
@@ -259,6 +245,7 @@ private fun catalogFixture(): CatalogFixture {
         parent = parent,
         middle = middle,
         leaf = leaf,
+        unrelated = unrelated,
         snapshot =
             DeploymentDiscoverySnapshot(
                 generation = DiscoveryGeneration("generation"),
@@ -326,12 +313,18 @@ private fun emptyRequest(
 private fun DeploymentDiscoverySnapshot.editorCatalog(
     presentations: List<PresentationDefinition> = emptyList(),
     diagnostics: List<PresentationDiagnostic> = emptyList(),
-    pageDiagnostics: List<PageDiagnostic> = emptyList(),
-    pages: PageCatalog = PageCatalog(emptyList(), pageDiagnostics),
+    metadata: List<ResolvedType> = emptyList(),
 ) = RealmDiscoverySnapshot(
     discovery = this,
-    elements = ContentCatalog(emptyList()),
-    pages = pages,
+    types = ResolvedDeploymentTypes(
+        types.definitions.associate { definition ->
+            definition.id to (metadata.singleOrNull { it.definition.id == definition.id }
+                ?: ResolvedType(definition, null, emptyMap(), emptySet()))
+        },
+        emptyList(),
+        emptyList(),
+        emptyList(),
+    ),
     presentations = presentations,
     presentationDiagnostics = diagnostics,
 )

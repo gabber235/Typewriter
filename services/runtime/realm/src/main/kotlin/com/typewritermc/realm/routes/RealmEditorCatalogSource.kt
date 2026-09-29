@@ -4,12 +4,9 @@ import com.typewritermc.authoring.ResourceTypeDescriptor
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ContentCatalogEntry
 import com.typewritermc.library.Book
 import com.typewritermc.library.Page
 import com.typewritermc.library.Tag
-import com.typewritermc.pages.PageCatalogEntry
-import com.typewritermc.pages.PageDiagnostic
 import com.typewritermc.presentation.PresentationDiagnostic
 import com.typewritermc.realm.RealmDiscoverySnapshot
 import com.typewritermc.types.DataPath
@@ -137,15 +134,15 @@ class SnapshotRealmEditorCatalogSource(
         val encoded = SkirTypeCodec.encode(closure.types).getOrThrow()
         return CatalogFetchResult.createSuccess(
             generation = CatalogGeneration(value = generation),
-            typeDefinitions = encoded.definitions,
+            typeViews =
+                closure.types.definitions.zip(encoded.definitions).map { (definition, wire) ->
+                    snapshot.types.requireType(definition.id).toSkir(wire, prototypes)
+                },
             presentationDefinitions = closure.presentations,
             conversions = emptyList(),
             capabilityDefinitions = closure.capabilities.map(RealmCapabilityDescriptor::toWire),
             subtypeResults = subtypeResults,
             diagnostics = snapshot.presentationDiagnostics.map(PresentationDiagnostic::toWire) + closure.diagnostics,
-            contentEntries = snapshot.elements.entries.map { it.toSkir(prototypes) },
-            pageEntries = snapshot.pages.entries.map { it.toSkir(prototypes) },
-            pageDiagnostics = snapshot.pages.diagnostics.map(PageDiagnostic::toSkir),
             resourceDefinitions = resourceDefinitions,
             relationDefinitions = snapshot.relations.map(RelationDefinition::toWire),
             collectionProjectionDefinitions = snapshot.collectionProjections,
@@ -280,11 +277,7 @@ private fun RelationDeletePolicy.toWire(): SkirRelationDeletePolicy =
     }
 
 private fun RealmDiscoverySnapshot.catalogTypes(prototypes: TypePrototypeRegistry): List<ResolvedTypeRef> =
-    elements.entries.map { it.descriptor.type } +
-        listOf(
-            prototypes.require(ResourceTypeDescriptor::class).type,
-        ) +
-        pages.entries.map { it.presentationTarget }
+    types.typesById.keys.toList() + listOf(prototypes.require(ResourceTypeDescriptor::class).type)
 
 private data class RealmEditorCatalogClosure(
     val types: TypeCatalog,

@@ -4,6 +4,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.ContributionName
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.GeneratedContribution
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
@@ -51,7 +52,7 @@ internal class LocalGeneratedContentSource(
 ) : ManifestContentSource {
     override fun read(context: ManifestAssemblyContext): ManifestContent =
         ManifestContent(
-            contributions = contributionFiles.map { it.toGeneratedContribution(context.artifactId) },
+            contributions = contributionFiles.map { it.toGeneratedContribution(ContributionSourceId("artifact:${context.artifactId.value}")) },
             runtimeEntrypoints = runtimeEntrypointFiles.flatMap(File::readRuntimeEntrypoints),
         )
 }
@@ -67,7 +68,7 @@ internal class ArchiveManifestContentSource(
         }
         return ZipFile(artifact).use { archive ->
             ManifestContent(
-                contributions = archive.readContributions(context.artifactId, namespace),
+                contributions = archive.readContributions(namespace),
                 runtimeEntrypoints = runtimeEntrypoints.read(archive),
             )
         }
@@ -131,7 +132,7 @@ internal data object ValidateContributionKeys : ManifestContentTransform {
             content.contributions
                 .groupBy { contribution ->
                     listOf(
-                        contribution.origin.value,
+                        contribution.source.value,
                         contribution.sourcePart,
                         contribution.producer.value,
                         contribution.name.value,
@@ -169,7 +170,7 @@ internal data object CanonicalizeManifestContent : ManifestContentTransform {
             contributions =
                 content.contributions.sortedWith(
                     compareBy(
-                        { it.origin.value },
+                        { it.source.value },
                         GeneratedContribution::sourcePart,
                         { it.producer.value },
                         { it.name.value },
@@ -220,7 +221,7 @@ internal fun libraryContentPipeline(source: ManifestContentSource): ManifestCont
             ),
     )
 
-private fun File.toGeneratedContribution(origin: ArtifactId): GeneratedContribution {
+private fun File.toGeneratedContribution(source: ContributionSourceId): GeneratedContribution {
     val path = invariantSeparatorsPath
     val resourcesMarker = "/resources/$IMPRINT_CONTRIBUTIONS_PATH/"
     require(resourcesMarker in path) { "Unsafe Imprint contribution path $name." }
@@ -237,7 +238,7 @@ private fun File.toGeneratedContribution(origin: ArtifactId): GeneratedContribut
     ) {
         "Unsafe Imprint contribution path $contributionPath."
     }
-    return GeneratedContribution(origin, sourcePart, ProducerId(producer), ContributionName(name), readBytes())
+    return GeneratedContribution(source, sourcePart, ProducerId(producer), ContributionName(name), readBytes())
 }
 
 private fun File.readRuntimeEntrypoints(): List<String> =
@@ -251,7 +252,6 @@ private fun File.readRuntimeEntrypoints(): List<String> =
     }
 
 private fun ZipFile.readContributions(
-    origin: ArtifactId,
     namespace: String,
 ): List<GeneratedContribution> {
     require(namespace.isNotBlank() && '/' !in namespace) { "Contribution namespace must be one path segment." }
@@ -272,7 +272,7 @@ private fun ZipFile.readContributions(
                 "Unsafe archive contribution path ${entry.name}."
             }
             GeneratedContribution(
-                origin = origin,
+                source = ContributionSourceId("bundle:$namespace"),
                 sourcePart = "main",
                 producer = ProducerId(producer),
                 name = ContributionName("$namespace/$name"),

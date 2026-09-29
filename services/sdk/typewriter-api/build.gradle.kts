@@ -18,4 +18,5 @@ dependencies {
 ksp {
     arg("typewriter.artifactId", "typewritermc:core")
     arg("typewriter.sourcePart", "main")
+    arg("typewriter.claimDependencyClosure", "true")
 }

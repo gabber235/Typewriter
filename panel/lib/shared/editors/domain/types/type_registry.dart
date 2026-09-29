@@ -122,12 +122,6 @@ final class TypeRegistry {
         return TypeResult.failure(diagnostics);
       }
       final parentValue = resolvedParent.valueOrNull!;
-      final ownership = _validateSealedOwnership(declaration, {
-        appliedParent,
-        ...parentValue.ancestors,
-      });
-
-      if (ownership.isNotEmpty) return TypeResult.failure(ownership);
       final weakening = _findWeakening(
         parentValue.representation,
         declaredRepresentation,
@@ -215,26 +209,6 @@ final class TypeRegistry {
     return diagnostics;
   }
 
-  List<TypeDiagnostic> _validateSealedOwnership(
-    ResolvedTypeRef child,
-    Set<ResolvedTypeRef> ancestors,
-  ) {
-    final childDefinition = _definitions[child._declarationRef];
-    final childOwner = childDefinition?._effectiveOwner ?? child.id._owner;
-    return [
-      for (final ancestor in ancestors)
-        if (_definitions[ancestor._declarationRef] case final definition?
-            when definition.kind == NominalTypeKind.sealedAbstract &&
-                definition._effectiveOwner != childOwner)
-          TypeDiagnostic(
-            code: TypeDiagnosticCode.invalidConcreteType,
-            message:
-                "Type '$child' is outside the owner of sealed type '${definition.id}'",
-            type: child,
-          ),
-    ];
-  }
-
   List<TypeDiagnostic> _findWeakening(
     TypeExpression parent,
     TypeExpression child,
@@ -307,18 +281,6 @@ final class TypeRegistry {
     String message,
     ResolvedTypeRef type,
   ) => TypeFailure([TypeDiagnostic(code: code, message: message, type: type)]);
-}
-
-extension on TypeId {
-  String get _owner => switch (this) {
-    OptionTypeId() || SomeTypeId() || NoneTypeId() => "builtin",
-    DeclaredTypeId(:final uuid) => uuid,
-    QualifiedTypeId(:final namespace) => namespace,
-  };
-}
-
-extension on TypeDefinition {
-  String get _effectiveOwner => declarationOwner ?? id.id._owner;
 }
 
 extension on ResolvedTypeRef {

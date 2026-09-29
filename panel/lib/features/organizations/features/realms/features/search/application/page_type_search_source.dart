@@ -19,7 +19,7 @@ final class PageTypeSearchSource implements SearchSource {
     this.querySelectors = const [],
   });
 
-  final ValueListenable<AsyncValue<List<RealmPageDefinition>>> definitions;
+  final ValueListenable<AsyncValue<List<RealmTypeEntry>>> definitions;
   final List<QuerySelectorDefinition> querySelectors;
   final _snapshots = BehaviorSubject<SearchSourceSnapshot>.seeded(.loading());
   var _disposed = false;
@@ -38,10 +38,9 @@ final class PageTypeSearchSource implements SearchSource {
     }),
   );
 
-  Map<String, RealmPageDefinition> get definitionMap {
+  Map<String, RealmTypeEntry> get definitionMap {
     return {
-      for (final definition
-          in definitions.value.value ?? <RealmPageDefinition>[])
+      for (final definition in definitions.value.value ?? <RealmTypeEntry>[])
         definition.id: definition,
     };
   }

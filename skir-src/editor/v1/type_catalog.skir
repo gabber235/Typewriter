@@ -99,11 +99,11 @@ struct TypedDurationValue(810200006) {
 }
 
 /// Opaque authored resource identity. Consumers compare it and never parse it.
-struct ResourceId(810200008) {
+struct ResourceId(810200007) {
   value: string = 0;
 }
 
-enum TypedValue(810200007) {
+enum TypedValue(810200008) {
   unit = 1;
   boolean: bool = 2;
   string: string = 3;
@@ -166,11 +166,11 @@ struct EnumType(810100018) {
   canonical_values: [TypedValue] = 1;
 }
 
-struct ReferenceType(810100029) {
+struct ReferenceType(810100019) {
   target_type: ResolvedTypeRef = 0;
 }
 
-enum TypeExpression(810100019) {
+enum TypeExpression(810100020) {
   any = 1;
   unit = 2;
   boolean = 3;
@@ -191,29 +191,29 @@ enum TypeExpression(810100019) {
   reference: ReferenceType = 18;
 }
 
-struct TypeParameter(810100020) {
+struct TypeParameter(810100021) {
   name: string = 0;
   variance: TypeVariance = 1;
   upper_bounds: [TypeExpression] = 2;
 }
 
-enum TypeDefinitionKind(810100021) {
+enum TypeDefinitionKind(810100022) {
   concrete = 1;
   open_abstract = 2;
   sealed_abstract = 3;
 }
 
-struct PresentationId(810100022) {
+struct PresentationId(810100023) {
   namespace: string = 0;
   name: string = 1;
 }
 
-struct ConversionId(810100023) {
+struct ConversionId(810100024) {
   namespace: string = 0;
   name: string = 1;
 }
 
-struct CapabilityId(810100028) {
+struct CapabilityId(810100025) {
   value: string = 0;
 }
 
@@ -221,14 +221,14 @@ struct CatalogGeneration(810900001) {
   value: string = 0;
 }
 
-struct NamedPresentation(810100025) {
+struct NamedPresentation(810100026) {
   name: string = 0;
   presentation_id: PresentationId = 1;
 }
 
 // A semantic surface resolved independently for each nominal type. Consumers
 // select the nearest associated ancestor for the requested role.
-enum PresentationRole(810100030) {
+enum PresentationRole(810100027) {
   editor = 1;
   creation = 2;
   reference_summary = 3;
@@ -240,18 +240,18 @@ enum PresentationRole(810100030) {
   inspector_header = 9;
 }
 
-struct RolePresentation(810100031) {
+struct RolePresentation(810100028) {
   role: PresentationRole = 0;
   outcome: RolePresentationOutcome = 1;
 }
 
-enum FieldMergeStrategy(810100032) {
+enum FieldMergeStrategy(810100029) {
   set_membership = 1;
 }
 
 // Merge policy belongs to the canonical type declaration. Editors use it to
 // reconcile an affected field without introducing resource specific paths.
-struct FieldMergePolicy(810100033) {
+struct FieldMergePolicy(810100030) {
   // Merge policies currently address record fields only. This avoids a schema
   // cycle between type definitions, typed map keys, and general data paths.
   field_path: [string] = 0;
@@ -260,12 +260,12 @@ struct FieldMergePolicy(810100033) {
 
 // A declared role has one usable presentation or one rejection. Absence from
 // role_presentations means no declaration claimed the role.
-enum RolePresentationOutcome(810100034) {
+enum RolePresentationOutcome(810100031) {
   ready: PresentationId = 1;
   rejected: string = 2;
 }
 
-struct TypeDefinition(810100026) {
+struct TypeDefinition(810100032) {
   display_name: string = 0;
   parameters: [TypeParameter|name] = 1;
   direct_parents: [ResolvedTypeRef] = 2;
@@ -277,11 +277,10 @@ struct TypeDefinition(810100026) {
   outgoing_conversion_ids: [ConversionId] = 8;
   role_presentations: [RolePresentation] = 9;
   field_merge_policies: [FieldMergePolicy] = 10;
-  declaration_owner: string = 11;
-  initializer: TypedValue? = 12;
-  qualified_name: string? = 13;
+  initializer: TypedValue? = 11;
+  qualified_name: string? = 12;
 }
 
-struct TypeCatalog(810100027) {
+struct TypeCatalog(810100033) {
   definitions: [TypeDefinition] = 0;
 }

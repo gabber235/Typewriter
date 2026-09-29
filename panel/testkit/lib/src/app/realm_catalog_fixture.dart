@@ -87,8 +87,7 @@ RealmEditorCatalogSnapshot receivedRealmEditorCatalog({
   CatalogGeneration generation = realmFixtureGeneration,
   Map<PresentationId, PresentationDefinition> presentations = const {},
   Map<CapabilityId, CapabilityDefinition> capabilities = const {},
-  Map<String, RealmElementCatalogEntry> elements = const {},
-  RealmPageCatalog pageCatalog = const RealmPageCatalog(),
+  Map<ResolvedTypeRef, RealmTypeEntry> types = const {},
   Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions =
       const {},
   Map<String, RealmRelationDefinition> relations = const {},
@@ -100,8 +99,7 @@ RealmEditorCatalogSnapshot receivedRealmEditorCatalog({
   generation: generation,
   presentations: {..._realmPresentations, ...presentations},
   capabilities: capabilities,
-  elements: elements,
-  pageCatalog: pageCatalog,
+  types: types,
   resourceDefinitions: resourceDefinitions,
   relations: relations,
   collectionProjections: collectionProjections,
@@ -121,12 +119,10 @@ final _realmDefinitions = <TypeDefinition>[
   TypeDefinition(
     id: standardTypeRefs.icon,
     kind: NominalTypeKind.sealedAbstract,
-    declarationOwner: "com.typewritermc.types",
   ),
   TypeDefinition(
     id: standardTypeRefs.iconifyIcon,
     kind: NominalTypeKind.concrete,
-    declarationOwner: "com.typewritermc.types",
     parents: [standardTypeRefs.icon],
     representation: const RecordType(
       fields: {"value": TypeField(name: "value", type: StringType())},
@@ -140,7 +136,6 @@ final _realmDefinitions = <TypeDefinition>[
   TypeDefinition(
     id: standardTypeRefs.svgIcon,
     kind: NominalTypeKind.concrete,
-    declarationOwner: "com.typewritermc.types",
     parents: [standardTypeRefs.icon],
     representation: const RecordType(
       fields: {"source": TypeField(name: "source", type: StringType())},

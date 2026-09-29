@@ -60,8 +60,7 @@ abstract class RealmEditorCatalogSnapshot with _$RealmEditorCatalogSnapshot {
     @Default({}) Map<CapabilityId, CapabilityDefinition> capabilities,
     @Default({}) Map<String, RealmEditorSubtypeResult> subtypeResults,
     @Default([]) List<TypeDiagnostic> diagnostics,
-    @Default({}) Map<String, RealmElementCatalogEntry> elements,
-    @Default(RealmPageCatalog()) RealmPageCatalog pageCatalog,
+    @Default({}) Map<ResolvedTypeRef, RealmTypeEntry> types,
     @Default({})
     Map<ResourceDefinitionId, RealmResourceDefinition> resourceDefinitions,
     @Default({}) Map<String, RealmRelationDefinition> relations,

@@ -1,9 +1,11 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.discovery.AssembledTypeDiscovery
+import com.typewritermc.discovery.ResolvedDeploymentTypes
+import com.typewritermc.discovery.ResolvedType
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.PrototypeRegistryLoader
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeCatalog
 import com.typewritermc.types.TypePrototypeRegistry
@@ -21,8 +23,10 @@ internal fun loadTestPrototypes(): TypePrototypeRegistry {
     val relations = contributions.flatMap { it.relations }.distinctBy { it.id }
     val prototypeBindings = contributions.flatMap { it.prototypeBindings }.distinctBy { it.type }
     return PrototypeRegistryLoader().load(
-        AssembledTypeDiscovery(
-            catalog = TypeCatalog(definitions),
+        ResolvedDeploymentTypes(
+            typesById = definitions.associate { definition ->
+                definition.id to ResolvedType(definition, null, emptyMap(), emptySet())
+            },
             relations = relations,
             prototypeBindings = prototypeBindings,
             executableBindings = emptyList(),

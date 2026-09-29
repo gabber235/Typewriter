@@ -206,14 +206,28 @@ value class ContributionName(
     }
 }
 
+/** Identifies the declaration source across copies embedded in different artifacts. */
+@JvmInline
+@Serializable
+value class ContributionSourceId(
+    val value: String,
+) {
+    init {
+        require(value.matches(Regex("[A-Za-z0-9][A-Za-z0-9_.-]*(?::[A-Za-z0-9][A-Za-z0-9_.-]*)*"))) {
+            "Contribution source id must contain valid alphanumeric identifier segments."
+        }
+    }
+
+    override fun toString(): String = value
+}
+
 /**
- * Opaque generated discovery payload carried into the canonical manifest. The origin, source part, producer, and
- * name together identify a contribution; manifest generation rejects duplicate keys. The producer owns payload
- * encoding and interpretation.
+ * Opaque generated discovery payload. Its source identifies authored content, while the enclosing manifest
+ * identifies the artifact that carries executable code. The producer owns payload encoding and interpretation.
  */
 @Serializable
 data class GeneratedContribution(
-    val origin: ArtifactId,
+    val source: ContributionSourceId,
     val sourcePart: String,
     val producer: ProducerId,
     val name: ContributionName,

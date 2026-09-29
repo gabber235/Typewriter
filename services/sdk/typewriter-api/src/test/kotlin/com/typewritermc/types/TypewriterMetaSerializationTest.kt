@@ -4,7 +4,6 @@ package com.typewritermc.types
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.TypewriterContent
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
@@ -23,7 +22,7 @@ val TypewriterMetaSerializationTest by testSuite {
             .id shouldBe "019d4813b98b74dabd0222e6182f8e42"
     }
 
-    test("TypewriterContent generates its serializer") {
+    test("Element declared with TypewriterType generates its serializer") {
         val source = MetaSerializableElement("Element", GraphPlacement(0, 0, 1, 1))
 
         Json.decodeFromString(
@@ -33,9 +32,9 @@ val TypewriterMetaSerializationTest by testSuite {
         MetaSerializableElement
             .serializer()
             .descriptor.annotations
-            .filterIsInstance<TypewriterContent>()
+            .filterIsInstance<TypewriterType>()
             .single()
-            .name shouldBe "Meta Serializable Element"
+            .id shouldBe "019d4813b98b74dabd0222e6182f8e43"
     }
 }
 
@@ -44,8 +43,8 @@ private data class MetaSerializableType(
     val value: String,
 )
 
-@TypewriterContent(
-    id = "019d4813b98b74dabd0222e6182f8e43",
+@TypewriterType(id = "019d4813b98b74dabd0222e6182f8e43")
+@TypewriterDisplay(
     name = "Meta Serializable Element",
     description = "Verifies generated serialization",
     icon = "material-symbols:code",

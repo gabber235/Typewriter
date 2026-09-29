@@ -23,13 +23,13 @@ abstract class ElementDefinition with _$ElementDefinition {
   }) = _ElementDefinition;
 }
 
-extension DiscoveredElementDefinitionConversion on DiscoveredElementDefinition {
+extension RealmTypeElementDefinitionConversion on RealmTypeEntry {
   ElementDefinition toElementDefinition() => ElementDefinition(
     rootType: type,
     name: name,
-    description: description,
-    icon: icon,
-    color: color,
+    description: description ?? "",
+    icon: icon ?? const IconValue.iconify("material-symbols:extension"),
+    color: color ?? Colors.grey,
   );
 }
 

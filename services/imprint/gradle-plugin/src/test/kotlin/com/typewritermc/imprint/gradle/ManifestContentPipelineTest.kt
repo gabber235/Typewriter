@@ -39,7 +39,7 @@ val ManifestContentPipelineTest by testSuite {
             }
 
         failure.message shouldBe
-            "Duplicate Imprint contribution keys: [typewritermc:realm, main, types, duplicate.cbor]."
+            "Duplicate Imprint contribution keys: [artifact:typewritermc:realm, main, types, duplicate.cbor]."
     }
 
     test("hosted and library pipelines enforce runtime entrypoint policy") {
@@ -66,7 +66,7 @@ private fun source(
 
 private fun contribution(name: String): GeneratedContribution =
     GeneratedContribution(
-        origin = ArtifactId("typewritermc:realm"),
+        source = com.typewritermc.imprint.ContributionSourceId("artifact:typewritermc:realm"),
         sourcePart = "main",
         producer = ProducerId("types"),
         name = ContributionName(name),

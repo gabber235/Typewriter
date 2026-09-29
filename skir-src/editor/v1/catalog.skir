@@ -5,14 +5,10 @@ import {
   ResourceDefinitionId,
 } from "editor/v1/authoring.skir";
 import { CapabilityDefinition } from "editor/v1/capability.skir";
+import { CatalogPresentationSubject } from "editor/v1/catalog_presentation.skir";
 import { CompilationProjectionId } from "editor/v1/compiled_content.skir";
 import { ConversionDefinition } from "editor/v1/conversion.skir";
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
-import { ContentCatalogEntry } from "editor/v1/element_catalog.skir";
-import {
-  PageCatalogEntry,
-  PageDiagnostic,
-} from "editor/v1/page_catalog.skir";
 import { DataPath } from "editor/v1/path.skir";
 import {
   PresentationDefinition,
@@ -27,6 +23,8 @@ import {
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
+import { Color } from "kernel/v1/color.skir";
+import { Icon } from "kernel/v1/icon.skir";
 
 // The editor catalog is one versioned capability boundary. A fetch assembles the
 // type system and the metadata that makes those types editable, searchable, and
@@ -46,24 +44,55 @@ struct SubtypeResult(810900004) {
   matching_types: [ResolvedTypeRef] = 1;
 }
 
-struct AuthoringSearchFacetDefinition(810900020) {
+struct AuthoringSearchFacetDefinition(810900005) {
   id: string = 0;
   label: string = 1;
   selector_id: string = 2;
 }
 
-struct AuthoringSearchDefinition(810900021) {
+struct AuthoringSearchDefinition(810900006) {
   definitions: [ResourceDefinitionId] = 0;
   selectors: [SearchSelectorDefinition] = 1;
   facets: [AuthoringSearchFacetDefinition] = 2;
 }
 
-struct AuthoringCompilationProjectionDefinition(810900022) {
+struct AuthoringCompilationProjectionDefinition(810900007) {
   projection: CompilationProjectionId = 0;
   root: TypeExpression = 1;
 }
 
-struct CatalogFetchRequest(810900005) {
+struct TypeDisplay(810900008) {
+  description: string = 0;
+  icon: Icon = 1;
+  color: Color = 2;
+}
+
+enum GraphDirection(810900009) {
+  left_to_right = 1;
+  right_to_left = 2;
+  top_to_bottom = 3;
+  bottom_to_top = 4;
+}
+
+struct GraphEditorLayout(810900010) {
+  direction: GraphDirection = 0;
+}
+
+enum AuthoringEditorLayout(810900011) {
+  graph: GraphEditorLayout = 1;
+  timeline: struct {} = 2;
+}
+
+struct CatalogTypeView(810900012) {
+  definition: TypeDefinition = 0;
+  eligible: bool = 1;
+  ineligibility_reasons: [string] = 2;
+  display: TypeDisplay? = 3;
+  editor: AuthoringEditorLayout? = 4;
+  presentation_subject: CatalogPresentationSubject? = 5;
+}
+
+struct CatalogFetchRequest(810900013) {
   expected_generation: CatalogGeneration? = 0;
   requested_types: [ResolvedTypeRef] = 1;
   presentation_ids: [PresentationId] = 2;
@@ -71,69 +100,66 @@ struct CatalogFetchRequest(810900005) {
 }
 
 // Complete editor catalog snapshot. All returned parts share generation.
-struct CatalogFetchSuccess(810900006) {
+struct CatalogFetchSuccess(810900014) {
   generation: CatalogGeneration = 0;
-  type_definitions: [TypeDefinition] = 1;
+  type_views: [CatalogTypeView] = 1;
   presentation_definitions: [PresentationDefinition] = 2;
   conversions: [ConversionDefinition] = 3;
   capability_definitions: [CapabilityDefinition] = 4;
   subtype_results: [SubtypeResult] = 5;
   diagnostics: [TypeDiagnostic] = 6;
-  content_entries: [ContentCatalogEntry] = 7;
-  page_entries: [PageCatalogEntry] = 8;
-  page_diagnostics: [PageDiagnostic] = 9;
-  resource_definitions: [ResourceDefinition] = 10;
-  relation_definitions: [RelationDefinition] = 11;
-  collection_projection_definitions: [CollectionProjectionDefinition] = 12;
-  authoring_search: AuthoringSearchDefinition? = 13;
-  authoring_compilation_projections: [AuthoringCompilationProjectionDefinition] = 14;
+  resource_definitions: [ResourceDefinition] = 7;
+  relation_definitions: [RelationDefinition] = 8;
+  collection_projection_definitions: [CollectionProjectionDefinition] = 9;
+  authoring_search: AuthoringSearchDefinition? = 10;
+  authoring_compilation_projections: [AuthoringCompilationProjectionDefinition] = 11;
 }
 
 // Reports a conditional fetch against a different catalog generation.
-struct CatalogGenerationMismatch(810900007) {
+struct CatalogGenerationMismatch(810900015) {
   actual_generation: CatalogGeneration = 0;
 }
 
-enum CatalogFetchResult(810900008) {
+enum CatalogFetchResult(810900016) {
   success: CatalogFetchSuccess = 1;
   generation_mismatch: CatalogGenerationMismatch = 2;
   unavailable: [TypeDiagnostic] = 3;
 }
 
-struct CatalogInvalidated(810900009) {
+struct CatalogInvalidated(810900017) {
   generation: CatalogGeneration = 0;
   reason: string = 1;
 }
 
-enum CatalogWatchUpdate(810900010) {
+enum CatalogWatchUpdate(810900018) {
   initial: CatalogGeneration = 1;
   invalidated: CatalogInvalidated = 2;
 }
 
-struct InitializeTypedValueRequest(810900011) {
+struct InitializeTypedValueRequest(810900019) {
   generation: CatalogGeneration = 0;
   root_type: ResolvedTypeRef = 1;
   partial_value: TypedValue? = 2;
 }
 
-enum TypeInitializationRequirementReason(810900013) {
+enum TypeInitializationRequirementReason(810900020) {
   missing_value = 1;
   concrete_type_required = 2;
 }
 
-struct TypeInitializationRequirement(810900014) {
+struct TypeInitializationRequirement(810900021) {
   path: DataPath = 0;
   expected: TypeExpression = 1;
   reason: TypeInitializationRequirementReason = 2;
 }
 
-struct TypeInitializationDraft(810900015) {
+struct TypeInitializationDraft(810900022) {
   root_type: ResolvedTypeRef = 0;
   supplied_value: TypedValue? = 1;
   requirements: [TypeInitializationRequirement] = 2;
 }
 
-enum InitializeTypedValueResult(810900012) {
+enum InitializeTypedValueResult(810900023) {
   success: TypedValueEnvelope = 1;
   needs_input: TypeInitializationDraft = 2;
   invalid: [TypeDiagnostic] = 3;

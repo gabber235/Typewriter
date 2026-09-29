@@ -68,7 +68,6 @@ abstract class TypeDefinition with _$TypeDefinition {
     required NominalTypeKind kind,
     String? displayName,
     String? qualifiedName,
-    String? declarationOwner,
     @Default(AnyType()) TypeExpression representation,
     @Default([]) List<TypeParameter> parameters,
     @Default([]) List<ResolvedTypeRef> parents,

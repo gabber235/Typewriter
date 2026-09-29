@@ -37,8 +37,7 @@ Future<void> showAddElementSearch(
             : ref
                   .read(realmEditorCatalogProvider)
                   .currentCatalog
-                  ?.pageCatalog
-                  .definitions[page.rootType]
+                  ?.types[page.rootType]
                   ?.editor;
         if (editor == null) {
           throw ApiException.badRequest("The Page editor is unavailable");
@@ -46,8 +45,8 @@ Future<void> showAddElementSearch(
         final placement = await ref.withReadyPageElements(
           pageId,
           (elements) => elements.creationPlacement(switch (editor) {
-            RealmGraphPageEditor() => EntryPlacementKind.graph,
-            RealmTimelinePageEditor() => EntryPlacementKind.timelineEntry,
+            RealmGraphEditorLayout() => EntryPlacementKind.graph,
+            RealmTimelineEditorLayout() => EntryPlacementKind.timelineEntry,
           }, preferredGraphAnchor: preferredGraphAnchor),
         );
         return RecordValue({

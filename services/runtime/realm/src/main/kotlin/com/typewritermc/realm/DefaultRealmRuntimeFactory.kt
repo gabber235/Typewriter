@@ -23,8 +23,6 @@ import com.typewritermc.library.Tag
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
-import com.typewritermc.pages.PageCatalogAssembler
-import com.typewritermc.pages.PageProvider
 import com.typewritermc.presentation.CollectionProjectionCatalogAssembler
 import com.typewritermc.presentation.CollectionProjectionProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
@@ -134,6 +132,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     facts = DeploymentFacts(context.facts),
                     otherManifests = manifests.filterNot { it is EngineManifest || it is ExtensionManifest },
                 )
+            val snapshotStore = RealmDiscoverySnapshotStore()
             val loadedDiscovery =
                 DiscoveryModuleLoader().load(
                     DiscoveryArtifactPackage(
@@ -143,7 +142,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         facts = DeploymentFacts(context.facts),
                     ),
                     DiscoveryDomains.Realm,
-                    assembled.runtimeDiscovery,
+                    assembled.types,
                     requireNotNull(javaClass.classLoader),
                 )
             discovery = loadedDiscovery
@@ -152,26 +151,20 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     providers = loadedDiscovery.application.koin.getAll<RealmCapabilityProvider>(),
                     prototypes = loadedDiscovery.prototypes,
                 )
-            val pageCatalog =
-                PageCatalogAssembler.assemble(
-                    providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
-                    prototypes = loadedDiscovery.prototypes,
-                )
             val authoringPolicies =
                 RealmAuthoringPolicyAssembler.assemble(
                     providers =
                         listOf(
                             CoreAuthoringPolicyProvider(
-                                prototypes = loadedDiscovery.prototypes,
-                                pageCatalog = pageCatalog,
-                                elements = assembled.elements,
+                                catalog = assembled.types,
                                 types = assembled.discovery.types,
-                                relations = assembled.runtimeDiscovery.relations,
-                                catalogRevision = { assembled.discovery.generation.value },
+                                relations = assembled.types.relations,
+                                catalogRevision = { requireNotNull(snapshotStore.current()).compilationSignature() },
                             ),
                         ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
                     catalog = assembled.discovery.types,
-                    relations = assembled.runtimeDiscovery.relations,
+                    relations = assembled.types.relations,
+                    resourceDefinitions = assembled.types.resourceDefinitions,
                 )
             val collectionProjections =
                 CollectionProjectionCatalogAssembler.assemble(
@@ -188,7 +181,8 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     collectionProjections = collectionProjections.definitions,
                 )
             presentationCatalog.diagnostics.forEach { diagnostic ->
-                logger.atWarn()
+                logger
+                    .atWarn()
                     .addKeyValue("catalog.generation", assembled.discovery.generation.value)
                     .addKeyValue("presentation.namespace", diagnostic.namespace.orEmpty())
                     .addKeyValue("presentation.source_part", diagnostic.sourcePart.orEmpty())
@@ -205,10 +199,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { applicationScope } onClose { it?.cancel() }
                     single { configuration.database }
                     single<RealmDatabaseProvider> { DatabaseProvider(get()) }
-                    single { RealmDiscoverySnapshotStore() }
+                    single { snapshotStore }
                     single { loadedDiscovery.prototypes }
                     single { capabilityRegistry }
-                    single { pageCatalog }
                     single { authoringPolicies }
                     single<RealmEditorCatalogSource> {
                         SnapshotRealmEditorCatalogSource(get()) { get<RealmDiscoverySnapshotStore>().current() }
@@ -245,11 +238,11 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 }
             application = startedApplication
             val realm = startedApplication.koin.get<Realm>()
-            startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
+            snapshotStore.replace(
                 RealmDiscoverySnapshot(
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
                     resourceDefinitions = authoringPolicies.definitions,
-                    relations = assembled.runtimeDiscovery.relations,
+                    relations = assembled.types.relations,
                     collectionProjections = collectionProjections.definitions,
                     authoringSearch = authoringPolicies.searchDefinition(),
                     compilationProjections =
@@ -259,8 +252,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                                 root = SkirTypeCodec.encode(projection.root).getOrThrow(),
                             )
                         },
-                    elements = assembled.elements,
-                    pages = pageCatalog,
+                    types = assembled.types,
                     presentations = presentationCatalog.definitions,
                     capabilities = capabilityRegistry.descriptors,
                     presentationDiagnostics = collectionProjections.diagnostics + presentationCatalog.diagnostics,

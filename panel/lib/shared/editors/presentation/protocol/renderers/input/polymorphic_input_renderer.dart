@@ -202,14 +202,14 @@ class _ConcreteTypeChoiceState extends State<_ConcreteTypeChoice> {
         },
       ),
       if (_pending != null)
-        const Align(
+        Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(context.spacing.space2),
             child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              width: context.spacing.space4,
+              height: context.spacing.space4,
+              child: const CircularProgressIndicator(strokeWidth: 2),
             ),
           ),
         ),

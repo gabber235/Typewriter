@@ -30,7 +30,7 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
       AuthoringSearchResultPayload(:final pageType)
           when pageType != null && fields.containsKey(pageType) =>
         const SearchActivationState.enabled(),
-      RealmPageDefinition(:final type)
+      RealmTypeEntry(:final type)
           when fields.containsKey(type) &&
               books.value.value != null &&
               resolveSearchBook(context.query, books.value.requireValue) !=
@@ -55,7 +55,7 @@ SearchActivation<ElementPageSelection> elementDestinationActivation({
         return SearchActivationResult.complete(
           ElementPageSelection(pageId: id, bookId: owner, field: field),
         );
-      case RealmPageDefinition(:final type):
+      case RealmTypeEntry(:final type):
         if (ref == null) return const SearchActivationResult.cancelled();
         final field = fields[type];
         final bookValues = books.value.value;

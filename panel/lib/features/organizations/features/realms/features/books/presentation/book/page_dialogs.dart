@@ -11,7 +11,13 @@ Future<Page?> promptAndCreatePage({
   if (bookId == null) throw ApiException.badRequest("No book selected");
   final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
   if (catalog == null) throw StateError("The editor catalog is unavailable");
-  final type = fixedType ?? catalog.pageCatalog.definitions.keys.firstOrNull;
+  final type =
+      fixedType ??
+      catalog
+          .creatableTypes(definition: CoreResourceDefinitionIds.page)
+          .where((entry) => entry.editor != null)
+          .map((entry) => entry.type)
+          .firstOrNull;
   if (type == null) {
     throw ApiException.badRequest("No Page types are available");
   }

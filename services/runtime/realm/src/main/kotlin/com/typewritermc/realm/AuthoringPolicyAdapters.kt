@@ -5,6 +5,7 @@ import com.typewritermc.authoring.AuthoringGraphRelation
 import com.typewritermc.authoring.AuthoringGraphResource
 import com.typewritermc.authoring.AuthoringPolicyCatalog
 import com.typewritermc.authoring.AuthoringPolicyProvider
+import com.typewritermc.authoring.AuthoringResourceDefinition as SdkResourceDefinition
 import com.typewritermc.authoring.AuthoringRelationOrigin
 import com.typewritermc.authoring.AuthoringSearchFacet
 import com.typewritermc.authoring.AuthoringSearchSelector
@@ -65,8 +66,10 @@ internal object RealmAuthoringPolicyAssembler {
         providers: Collection<AuthoringPolicyProvider>,
         catalog: TypeCatalog,
         relations: Collection<RelationDefinition> = emptyList(),
+        resourceDefinitions: Collection<SdkResourceDefinition> = emptyList(),
     ): RealmAuthoringPolicyCatalog {
-        val policies = AuthoringPolicyCatalog.assemble(providers)
+        val definitionsProvider = AuthoringPolicyProvider { builder -> resourceDefinitions.forEach(builder::definition) }
+        val policies = AuthoringPolicyCatalog.assemble(listOf(definitionsProvider) + providers)
         policies.validateTypeRoots(catalog, relations)
         return RealmAuthoringPolicyCatalog(
             definitions = policies.definitions.values.map { it.toRealm() },

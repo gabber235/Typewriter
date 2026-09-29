@@ -1,6 +1,6 @@
 package com.typewritermc.discovery.runtime
 
-import com.typewritermc.discovery.AssembledTypeDiscovery
+import com.typewritermc.discovery.ResolvedDeploymentTypes
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomainId
@@ -68,7 +68,7 @@ class DiscoveryModuleLoader {
     fun load(
         artifactPackage: DiscoveryArtifactPackage,
         domain: DiscoveryDomainId,
-        discovery: AssembledTypeDiscovery,
+        discovery: ResolvedDeploymentTypes,
         parentClassLoader: ClassLoader = requireNotNull(javaClass.classLoader),
     ): DiscoveryDeployment {
         require(domain == DiscoveryDomains.Realm || domain == DiscoveryDomains.Execution) {

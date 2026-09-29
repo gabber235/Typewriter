@@ -199,7 +199,7 @@ private class TypewriterPresentationProcessor(
                                 .indent()
                                 .add("single(named(%S)) {\n", "presentation.${providerClass.canonicalName}")
                                 .indent()
-                                .add("%T(contribution.origin.value, contribution.sourcePart)\n", providerClass)
+                                .add("%T(contribution.source.value, contribution.sourcePart)\n", providerClass)
                                 .unindent()
                                 .add("} bind %T::class\n", PresentationProvider::class)
                                 .unindent()

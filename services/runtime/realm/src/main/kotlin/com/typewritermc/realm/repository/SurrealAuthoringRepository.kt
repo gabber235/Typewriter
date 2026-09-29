@@ -26,7 +26,7 @@ internal class SurrealAuthoringRepository(
     private val catalogGeneration: () -> String,
     private val resourceDefinitions: () -> List<AuthoringResourceDefinition>,
     private val relations: () -> List<RelationDefinition>,
-    private val typeCatalog: () -> TypeCatalog,
+    private val resolvedTypes: () -> com.typewritermc.discovery.ResolvedDeploymentTypes,
     private val validationRules: () -> List<AuthoringGraphRule>,
     private val compilationProjections: () -> AuthoringCompilationProjectionRegistry,
     private val searchIndexer: () -> AuthoringSearchIndexer,
@@ -130,7 +130,7 @@ internal class SurrealAuthoringRepository(
                 mapper = mapper,
                 resourceDefinitions = resourceDefinitions(),
                 relations = relations(),
-                catalog = typeCatalog(),
+                resolvedTypes = resolvedTypes(),
                 rules = rules,
             )
         val roots =

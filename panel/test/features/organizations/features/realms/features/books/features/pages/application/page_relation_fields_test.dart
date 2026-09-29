@@ -5,17 +5,51 @@ void main() {
   test("a typed relation field selects concrete compatible children", () {
     final snapshot = RealmEditorCatalogSnapshot(
       catalog: TypeCatalog([
-        TypeDefinition(id: _page, kind: NominalTypeKind.concrete,
-          representation: RecordType(fields: {
-            "elements": TypeField(name: "elements", type: ListType(
-              element: ReferenceType(target: _element),
-            )),
-          })),
+        TypeDefinition(
+          id: _page,
+          kind: NominalTypeKind.concrete,
+          representation: RecordType(
+            fields: {
+              "elements": TypeField(
+                name: "elements",
+                type: ListType(element: ReferenceType(target: _element)),
+              ),
+            },
+          ),
+        ),
         TypeDefinition(id: _element, kind: NominalTypeKind.openAbstract),
-        TypeDefinition(id: _entry, kind: NominalTypeKind.concrete, parents: [_element]),
+        TypeDefinition(
+          id: _entry,
+          kind: NominalTypeKind.concrete,
+          parents: [_element],
+        ),
+        TypeDefinition(
+          id: _ineligible,
+          kind: NominalTypeKind.concrete,
+          parents: [_element],
+        ),
         TypeDefinition(id: _other, kind: NominalTypeKind.concrete),
       ]),
       generation: const CatalogGeneration("test"),
+      types: {
+        _entry: RealmTypeEntry(
+          definition: TypeDefinition(
+            id: _entry,
+            kind: NominalTypeKind.concrete,
+            parents: [_element],
+          ),
+          eligible: true,
+        ),
+        _ineligible: RealmTypeEntry(
+          definition: TypeDefinition(
+            id: _ineligible,
+            kind: NominalTypeKind.concrete,
+            parents: [_element],
+          ),
+          eligible: false,
+          ineligibilityReasons: ["Source requirements are unmet"],
+        ),
+      },
       resourceDefinitions: {
         CoreResourceDefinitionIds.element: RealmResourceDefinition(
           id: CoreResourceDefinitionIds.element,
@@ -41,7 +75,10 @@ void main() {
       },
     );
 
-    final field = snapshot.relationField(_page, DataPath.root.field("elements"));
+    final field = snapshot.relationField(
+      _page,
+      DataPath.root.field("elements"),
+    );
     expect(field, isNotNull);
     expect(snapshot.creatableTargets(field!), [_entry]);
     expect(field.accepts(_other, TypeRegistry(snapshot.catalog)), isFalse);
@@ -49,9 +86,11 @@ void main() {
 }
 
 ResolvedTypeRef _type(String name) => ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "test", name: name), revision: 1,
+  id: QualifiedTypeId(namespace: "test", name: name),
+  revision: 1,
 );
 final _page = _type("Page");
 final _element = _type("Element");
 final _entry = _type("Entry");
+final _ineligible = _type("IneligibleEntry");
 final _other = _type("Other");

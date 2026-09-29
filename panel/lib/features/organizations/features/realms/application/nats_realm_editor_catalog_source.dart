@@ -198,114 +198,69 @@ extension on skir.TypeInitializationRequirement {
   }
 }
 
-extension on Iterable<skir.ContentCatalogEntry> {
-  TypeResult<Map<String, RealmElementCatalogEntry>> _decodeDomain(
+extension on Iterable<skir.CatalogTypeView> {
+  TypeResult<Map<ResolvedTypeRef, RealmTypeEntry>> _decodeDomain(
     TypeCatalog catalog,
   ) {
     final registry = TypeRegistry(catalog);
-    final codec = SkirTypeCodec(registry);
-    final entries = <String, RealmElementCatalogEntry>{};
+    final definitions = {
+      for (final definition in catalog.definitions) definition.id: definition,
+    };
+    final entries = <ResolvedTypeRef, RealmTypeEntry>{};
     for (final entry in this) {
-      final decodedType = codec.decodeReference(entry.descriptor.type);
-      final type = decodedType.valueOrNull;
-      if (type == null) {
-        return TypeResult.failure(decodedType.diagnostics);
-      }
-      if (registry.resolveExact(type).valueOrNull == null) {
-        return TypeResult.failure([
-          realmEditorCatalogUnavailableDiagnostic(
-            "Realm protocol inconsistency: element type '$type' is absent from the authoritative catalog",
-          ),
-        ]);
-      }
-      final id = entry.descriptor.contentTypeId.value.value;
-      if (type.id != DeclaredTypeId(id)) {
-        return TypeResult.failure([
-          realmEditorCatalogUnavailableDiagnostic(
-            "Element descriptor identity does not match its structural type",
-          ),
-        ]);
-      }
-      final role = switch (entry.descriptor.role) {
-        skir.ContentRole_elementWrapper() => ContentRole.element,
-        skir.ContentRole_cueWrapper() => ContentRole.cue,
-        skir.ContentRole_unknown() => null,
-      };
-      if (role == null) {
-        return TypeResult.failure([
-          realmEditorCatalogUnavailableDiagnostic(
-            "Unknown content role for '$id'",
-          ),
-        ]);
-      }
-
-      final eligibility = entry.eligibility._decodeDomain();
-      final presentationSubject = entry.presentationSubject._decodeDomain(
-        registry,
-      );
-      if (presentationSubject.valueOrNull == null) {
-        return TypeResult.failure(presentationSubject.diagnostics);
-      }
-      entries[id] = RealmElementCatalogEntry(
-        originArtifactId: entry.originArtifactId,
-        sourcePart: entry.sourcePart,
-        definition: DiscoveredElementDefinition(
-          id: id,
-          type: type,
-          role: role,
-          name: entry.descriptor.name,
-          description: entry.descriptor.description,
-          icon: entry.descriptor.icon._decodeDomain(),
-          color: entry.descriptor.color.toFlutterColor(),
-          availability: entry.descriptor.availability._decodeDomain(),
+      final codec = SkirTypeCodec(registry);
+      final decodedType = codec.decodeReference(
+        skir.ResolvedTypeRef(
+          typeId: entry.definition.typeId,
+          revision: entry.definition.revision,
+          arguments: const [],
         ),
-        presentationSubject: presentationSubject.valueOrNull!,
-        eligible: eligibility.$1,
-        available: entry.available,
-        ineligibilityReasons: eligibility.$2,
+      );
+      final type = decodedType.valueOrNull;
+      if (type == null) return TypeResult.failure(decodedType.diagnostics);
+      final resolved = registry.resolveExact(type);
+      if (resolved.valueOrNull == null) {
+        return TypeResult.failure(resolved.diagnostics);
+      }
+      final definition = definitions[type];
+      if (definition == null) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned a type view without an exact definition: $type",
+          ),
+        ]);
+      }
+      if (entries.containsKey(type)) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned duplicate type view: $type",
+          ),
+        ]);
+      }
+      final presentation = entry.presentationSubject?._decodeDomain(registry);
+      if (presentation != null && presentation.valueOrNull == null) {
+        return TypeResult.failure(presentation.diagnostics);
+      }
+      final editor = entry.editor?._decodeDomain();
+      if (entry.editor != null && editor == null) {
+        return TypeResult.failure([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm returned an unknown editor layout for $type",
+          ),
+        ]);
+      }
+      entries[type] = RealmTypeEntry(
+        definition: definition,
+        eligible: entry.eligible,
+        ineligibilityReasons: entry.ineligibilityReasons.toList(),
+        description: entry.display?.description,
+        icon: entry.display?.icon._decodeDomain(),
+        color: entry.display?.color.toFlutterColor(),
+        editor: editor,
+        presentationSubject: presentation?.valueOrNull,
       );
     }
     return TypeResult.success(entries);
-  }
-}
-
-extension on Iterable<skir.PageCatalogEntry> {
-  TypeResult<Map<ResolvedTypeRef, RealmPageDefinition>> _decodeDomain(
-    TypeCatalog catalog,
-  ) {
-    final registry = TypeRegistry(catalog);
-    final codec = SkirTypeCodec(registry);
-    final definitions = <ResolvedTypeRef, RealmPageDefinition>{};
-    for (final entry in this) {
-      final editor = entry.descriptor.editor._decodeDomain(codec);
-      if (editor == null) {
-        return TypeResult.failure([
-          realmEditorCatalogUnavailableDiagnostic(
-            "Realm returned an invalid page editor definition",
-          ),
-        ]);
-      }
-      final type = codec.decodeReference(entry.descriptor.type);
-      if (type.valueOrNull == null) return TypeResult.failure(type.diagnostics);
-      final presentationSubject = entry.presentationSubject._decodeDomain(
-        registry,
-      );
-      if (presentationSubject.valueOrNull == null) {
-        return TypeResult.failure(presentationSubject.diagnostics);
-      }
-      definitions[type.valueOrNull!] = RealmPageDefinition(
-        type: type.valueOrNull!,
-        name: entry.descriptor.name,
-        description: entry.descriptor.description,
-        icon: entry.descriptor.icon._decodeDomain(),
-        color: entry.descriptor.color.toFlutterColor(),
-        editor: editor,
-        presentationSubject: presentationSubject.valueOrNull!,
-        originArtifactId: entry.originArtifactId,
-        sourcePart: entry.sourcePart,
-      );
-    }
-    return TypeResult.success(definitions);
   }
 }
 
@@ -341,57 +296,21 @@ extension on skir.Icon {
   };
 }
 
-extension on skir.PageEditorDefinition {
-  RealmPageEditor? _decodeDomain(SkirTypeCodec codec) {
-    switch (this) {
-      case skir.PageEditorDefinition_graphWrapper(:final value):
-        return RealmGraphPageEditor(
-          direction: switch (value.direction) {
-            skir.GraphDirection.leftToRight => GraphDirection.leftToRight,
-            skir.GraphDirection.rightToLeft => GraphDirection.rightToLeft,
-            skir.GraphDirection.topToBottom => GraphDirection.topToBottom,
-            skir.GraphDirection.bottomToTop => GraphDirection.bottomToTop,
-            _ => throw StateError("Unknown graph direction"),
-          },
-        );
-      case skir.PageEditorDefinition_timelineWrapper():
-        return const RealmTimelinePageEditor();
-      case skir.PageEditorDefinition_unknown():
-        return null;
-    }
-  }
-}
-
-extension on skir.ContentEligibility {
-  (bool, List<String>) _decodeDomain() => switch (this) {
-    skir.ContentEligibility_eligibleWrapper() => (true, const []),
-    skir.ContentEligibility_ineligibleWrapper(:final value) => (
-      false,
-      value.reasons.toList(),
-    ),
-    skir.ContentEligibility_unknown() => (false, const ["Unknown eligibility"]),
-  };
-}
-
-extension on skir.AvailabilityExpression {
-  ElementAvailability _decodeDomain() => switch (this) {
-    skir.AvailabilityExpression_alwaysWrapper() =>
-      const ElementAvailability.always(),
-    skir.AvailabilityExpression_factWrapper(:final value) =>
-      ElementAvailability.fact(key: value.key, expected: value.expected),
-    skir.AvailabilityExpression_allWrapper(:final value) =>
-      ElementAvailability.all(
-        value.expressions.map((item) => item._decodeDomain()).toList(),
+extension on skir.AuthoringEditorLayout {
+  RealmEditorLayout? _decodeDomain() => switch (this) {
+    skir.AuthoringEditorLayout_graphWrapper(:final value) =>
+      RealmEditorLayout.graph(
+        direction: switch (value.direction) {
+          skir.GraphDirection.leftToRight => GraphDirection.leftToRight,
+          skir.GraphDirection.rightToLeft => GraphDirection.rightToLeft,
+          skir.GraphDirection.topToBottom => GraphDirection.topToBottom,
+          skir.GraphDirection.bottomToTop => GraphDirection.bottomToTop,
+          _ => throw StateError("Unknown graph direction"),
+        },
       ),
-    skir.AvailabilityExpression_anyWrapper(:final value) =>
-      ElementAvailability.any(
-        value.expressions.map((item) => item._decodeDomain()).toList(),
-      ),
-    skir.AvailabilityExpression_notWrapper(:final value) =>
-      ElementAvailability.not(value.expression._decodeDomain()),
-    skir.AvailabilityExpression_unknown() => throw StateError(
-      "Unknown element availability",
-    ),
+    skir.AuthoringEditorLayout_timelineWrapper() =>
+      const RealmEditorLayout.timeline(),
+    skir.AuthoringEditorLayout_unknown() => null,
   };
 }
 
@@ -416,7 +335,9 @@ extension on skir.CatalogFetchResult {
 extension on skir.CatalogFetchSuccess {
   RealmEditorCatalogFetchResult _decodeDomain() {
     final value = this;
-    final decoded = value.typeDefinitions.decodeDefinitions();
+    final decoded = value.typeViews
+        .map((view) => view.definition)
+        .decodeDefinitions();
     final catalog = decoded.valueOrNull;
     if (catalog == null) {
       return RealmEditorCatalogFetchUnavailable(decoded.diagnostics);
@@ -450,16 +371,10 @@ extension on skir.CatalogFetchSuccess {
     if (compilationDiagnostics.isNotEmpty) {
       return RealmEditorCatalogFetchUnavailable(compilationDiagnostics);
     }
-    final decodedElements = value.contentEntries._decodeDomain(catalog.catalog);
-
-    final elements = decodedElements.valueOrNull;
-    if (elements == null) {
-      return RealmEditorCatalogFetchUnavailable(decodedElements.diagnostics);
-    }
-    final decodedPages = value.pageEntries._decodeDomain(catalog.catalog);
-    final pages = decodedPages.valueOrNull;
-    if (pages == null) {
-      return RealmEditorCatalogFetchUnavailable(decodedPages.diagnostics);
+    final decodedTypes = value.typeViews._decodeDomain(catalog.catalog);
+    final types = decodedTypes.valueOrNull;
+    if (types == null) {
+      return RealmEditorCatalogFetchUnavailable(decodedTypes.diagnostics);
     }
     return RealmEditorCatalogFetched(
       RealmEditorCatalogSnapshot(
@@ -470,26 +385,7 @@ extension on skir.CatalogFetchSuccess {
         capabilities: decodedParts.capabilities,
         subtypeResults: decodedParts.subtypeResults,
         diagnostics: decodedParts.diagnostics,
-        elements: elements,
-        pageCatalog: RealmPageCatalog(
-          definitions: pages,
-          diagnostics: value.pageDiagnostics
-              .map(
-                (diagnostic) => RealmPageDiagnostic(
-                  code: diagnostic.code,
-                  message: diagnostic.message,
-                  originArtifactId: diagnostic.originArtifactId,
-                  sourcePart: diagnostic.sourcePart,
-                  declarationName: diagnostic.declarationName,
-                  type: diagnostic.type == null
-                      ? null
-                      : SkirTypeCodec(catalog.registry)
-                            .decodeReference(diagnostic.type)
-                            .valueOrNull,
-                ),
-              )
-              .toList(growable: false),
-        ),
+        types: types,
         resourceDefinitions: resourceDefinitions.valueOrNull!,
         relations: relations.valueOrNull!,
         collectionProjections: collectionProjections.valueOrNull!,

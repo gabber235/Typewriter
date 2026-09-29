@@ -69,7 +69,7 @@ Future<ElementPageSelection?> promptElementPageSelection({
           ),
       pageTypeSearchResultType.rowRendererId: (context) =>
           PageTypeSearchResultItem(
-            definition: context.result.payload as RealmPageDefinition,
+            definition: context.result.payload as RealmTypeEntry,
             focused: context.focused,
             selected: context.selected,
             loading: context.loading,

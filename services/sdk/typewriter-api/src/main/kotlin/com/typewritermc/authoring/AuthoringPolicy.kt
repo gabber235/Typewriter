@@ -23,28 +23,6 @@ data class AuthoringSearchContext(
     val match: AuthoringSearchMatch?,
 )
 
-/** Stable open identity for one kind of authored resource. */
-@JvmInline
-@Serializable
-value class ResourceDefinitionId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Resource definition ids must not be blank." }
-    }
-}
-
-/** Structural identity and accepted root type for one authored resource. */
-data class AuthoringResourceDefinition(
-    val id: ResourceDefinitionId,
-    val acceptedRoot: TypeExpression,
-    val navigationHandler: String = "generic",
-) {
-    init {
-        require(navigationHandler.isNotBlank()) { "Resource navigation handlers must not be blank." }
-    }
-}
-
 /** Describes one selector key understood by the indexed authoring search endpoint. */
 data class AuthoringSearchSelector(
     val id: SearchSelectorId,

@@ -57,32 +57,24 @@ final class AuthoringCreationSearchSource implements SearchSource {
     if (field != null && selectedField == null) return const [];
     final registry = TypeRegistry(snapshot.catalog);
     return [
-      for (final type in snapshot.catalog.definitions)
-        if (type.kind == NominalTypeKind.concrete)
-          if (snapshot.resourceDefinitionFor(type.id) case final definition?)
-            if (selectedField != null &&
-                    selectedField.accepts(type.id, registry) ||
-                selectedField == null &&
-                    !snapshot.relations.values.any(
-                      (relation) =>
-                          relation.families.contains("resource.ownership") &&
-                          NamedType(type.id).isStructurallyAssignableTo(
-                            NamedType(relation.target),
-                            registry,
-                          ),
-                    ))
-              AuthoringCreationOption(
-                definition: definition.id,
-                root: type.id,
-                label:
-                    snapshot.pageCatalog.definitions[type.id]?.name ??
-                    snapshot.elements.values
-                        .where((entry) => entry.definition.type == type.id)
-                        .firstOrNull
-                        ?.definition
-                        .name ??
-                    type.id.toString(),
-              ),
+      for (final type in snapshot.creatableTypes(field: selectedField))
+        if (snapshot.resourceDefinitionFor(type.type) case final definition?)
+          if (selectedField != null &&
+                  selectedField.accepts(type.type, registry) ||
+              selectedField == null &&
+                  !snapshot.relations.values.any(
+                    (relation) =>
+                        relation.families.contains("resource.ownership") &&
+                        NamedType(type.type).isStructurallyAssignableTo(
+                          NamedType(relation.target),
+                          registry,
+                        ),
+                  ))
+            AuthoringCreationOption(
+              definition: definition.id,
+              root: type.type,
+              label: type.name,
+            ),
     ];
   }
 

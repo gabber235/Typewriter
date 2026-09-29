@@ -371,11 +371,11 @@ final realmPageDefinitionsProvider = RealmPageDefinitionsProvider._();
 final class RealmPageDefinitionsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<RealmPageDefinition>>,
-          AsyncValue<List<RealmPageDefinition>>,
-          AsyncValue<List<RealmPageDefinition>>
+          AsyncValue<List<RealmTypeEntry>>,
+          AsyncValue<List<RealmTypeEntry>>,
+          AsyncValue<List<RealmTypeEntry>>
         >
-    with $Provider<AsyncValue<List<RealmPageDefinition>>> {
+    with $Provider<AsyncValue<List<RealmTypeEntry>>> {
   /// Returns page definitions from the latest complete realm catalog.
   RealmPageDefinitionsProvider._()
     : super(
@@ -393,27 +393,28 @@ final class RealmPageDefinitionsProvider
 
   @$internal
   @override
-  $ProviderElement<AsyncValue<List<RealmPageDefinition>>> $createElement(
+  $ProviderElement<AsyncValue<List<RealmTypeEntry>>> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  AsyncValue<List<RealmPageDefinition>> create(Ref ref) {
+  AsyncValue<List<RealmTypeEntry>> create(Ref ref) {
     return realmPageDefinitions(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<List<RealmPageDefinition>> value) {
+  Override overrideWithValue(AsyncValue<List<RealmTypeEntry>> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride:
-          $SyncValueProvider<AsyncValue<List<RealmPageDefinition>>>(value),
+      providerOverride: $SyncValueProvider<AsyncValue<List<RealmTypeEntry>>>(
+        value,
+      ),
     );
   }
 }
 
 String _$realmPageDefinitionsHash() =>
-    r'bb7ed352d980f3d17736839ab193e8317818fda5';
+    r'05842649a4bf22dbe5de4beb02ce9ede0b0de12a';
 
 /// Returns discovered definitions that the realm permits and exposes while
 /// preserving catalog loading and failure states for asynchronous consumers.
@@ -465,4 +466,4 @@ final class AvailableElementDefinitionsFutureProvider
 }
 
 String _$availableElementDefinitionsFutureHash() =>
-    r'c716d3643b7de6fe237f9ca477a15014f263f4e3';
+    r'35503692f3d39d7972e63a2b8575e54cf5588ab5';

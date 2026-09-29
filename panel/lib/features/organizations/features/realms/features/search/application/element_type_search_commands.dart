@@ -131,15 +131,14 @@ Future<String?> _createElementOnPage({
   final pageEditor = ref
       .read(realmEditorCatalogProvider)
       .currentCatalog
-      ?.pageCatalog
-      .definitions[page.rootType]
+      ?.types[page.rootType]
       ?.editor;
   if (pageEditor == null) return null;
   final placement = await ref.withReadyPageElements(
     pageId.id,
     (elements) => elements.creationPlacement(switch (pageEditor) {
-      RealmGraphPageEditor() => EntryPlacementKind.graph,
-      RealmTimelinePageEditor() => EntryPlacementKind.timelineEntry,
+      RealmGraphEditorLayout() => EntryPlacementKind.graph,
+      RealmTimelineEditorLayout() => EntryPlacementKind.timelineEntry,
     }, preferredGraphAnchor: preferredGraphAnchor),
   );
   final created = await execution.prompts.show(

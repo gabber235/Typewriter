@@ -94,11 +94,8 @@ List<PageElement> _decodePageElements(
     final placementValue = elementPlacementPath.read(data).valueOrNull;
     if (placementValue == null) continue;
     final placement = decodePlacement(placementValue);
-    final definition = snapshot.elements.values
-        .where((entry) => entry.definition.type == decoded.content.rootType)
-        .firstOrNull
-        ?.definition
-        .toElementDefinition();
+    final definition = snapshot.types[decoded.content.rootType]
+        ?.toElementDefinition();
     final isCue =
         resource.definition.toDomain() == CoreResourceDefinitionIds.cue;
     final outgoing = [
@@ -211,13 +208,7 @@ List<PageElement> _decodePageElements(
     final decoded = codec.decodeResource(resource).valueOrNull;
     final definition = decoded == null
         ? null
-        : snapshot.elements.values
-              .where(
-                (entry) => entry.definition.type == decoded.content.rootType,
-              )
-              .firstOrNull
-              ?.definition
-              .toElementDefinition();
+        : snapshot.types[decoded.content.rootType]?.toElementDefinition();
     final owner = edges
         .where((edge) {
           if (edge.target != id) return false;

@@ -12,6 +12,7 @@ import com.typewritermc.capability.RealmSearch
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchRequest
 import com.typewritermc.capability.realmSearch
+import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.TypewriterRegistrar
@@ -19,25 +20,22 @@ import com.typewritermc.elements.ElementRuntimeContext
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementRuntimeHandle
 import com.typewritermc.elements.Entry
-import com.typewritermc.elements.TypewriterContent
 import com.typewritermc.elements.TypewriterElementFacet
-import com.typewritermc.pages.GraphDirection
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
-import com.typewritermc.types.ToMany
-import com.typewritermc.types.ToOne
-import com.typewritermc.pages.PageEditorDefinition
 import com.typewritermc.pages.TypewriterPage
-import com.typewritermc.pages.page
 import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.TypewriterPresentation
 import com.typewritermc.presentation.presentation
 import com.typewritermc.types.Color
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.ToMany
+import com.typewritermc.types.ToOne
+import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -71,9 +69,8 @@ interface ConformanceEntry : Entry {
 }
 
 /** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
-@TypewriterContent(
-    id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
-    revision = 1,
+@TypewriterType(id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281", revision = 1)
+@TypewriterDisplay(
     name = "Synthetic Entry",
     description = "Verifies Typewriter discovery",
     icon = "material-symbols:science",
@@ -88,6 +85,8 @@ data class SyntheticEntry(
 
 /** Concrete Page used by the reference and page catalog conformance checks. */
 @TypewriterType(id = "019d3a87000170008000000000000001")
+@TypewriterDisplay(name = "Synthetic", icon = "material-symbols:account-tree", color = "#7C4DFF")
+@TypewriterPage.Graph(GraphDirection.LEFT_TO_RIGHT)
 data class SyntheticPage(
     override val book: ToOne<BookPages, Book>,
     override val name: String = "",
@@ -95,15 +94,6 @@ data class SyntheticPage(
     override val priority: Int = 0,
     override val elements: ToMany<PageElements, ConformanceEntry> = ToMany.empty(),
 ) : Page
-
-@TypewriterPage(type = SyntheticPage::class)
-fun syntheticPage() =
-    page(
-        name = "Synthetic",
-        icon = "material-symbols:account-tree",
-        color = "#7C4DFF",
-        editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT),
-    )
 
 /** Exposes search, computation, and command fixtures for generated Realm capability discovery. */
 @RealmCapabilities

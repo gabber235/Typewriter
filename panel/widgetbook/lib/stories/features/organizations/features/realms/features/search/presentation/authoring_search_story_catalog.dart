@@ -5,21 +5,13 @@ RealmEditorCatalogSnapshot authoringSearchStoryCatalog(
 ) {
   final snapshot = base;
   return snapshot.copyWith(
-    elements: {
-      for (final entry in snapshot.elements.entries)
+    types: {
+      for (final entry in snapshot.types.entries)
         entry.key: entry.value.copyWith(
-          definition: entry.value.definition.copyWith(
-            icon: const IconValue.iconify("fa6-solid:cube"),
-          ),
+          icon: entry.value.editor == null
+              ? const IconValue.iconify("fa6-solid:cube")
+              : const IconValue.iconify("fa6-solid:diagram-project"),
         ),
     },
-    pageCatalog: snapshot.pageCatalog.copyWith(
-      definitions: {
-        for (final entry in snapshot.pageCatalog.definitions.entries)
-          entry.key: entry.value.copyWith(
-            icon: const IconValue.iconify("fa6-solid:diagram-project"),
-          ),
-      },
-    ),
   );
 }

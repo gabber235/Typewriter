@@ -231,7 +231,7 @@ val ImprintPluginTest by testSuite {
 
         manifest.runtimeEntrypointClass shouldBe "fixture.RealmEntrypoint"
         val platformContribution = manifest.contributions.single()
-        platformContribution.origin.value shouldBe "typewritermc:realm"
+        platformContribution.source.value shouldBe "bundle:platform"
         platformContribution.sourcePart shouldBe "main"
         platformContribution.producer.value shouldBe "types"
         platformContribution.name.value shouldBe "platform/book.cbor"
@@ -351,7 +351,7 @@ val ImprintPluginTest by testSuite {
         manifest.resolvedCapabilities.map { it.id.value } shouldContainExactly
             listOf("typewritermc:base", "typewritermc:items")
         val coreContribution = manifest.contributions.single { it.name.value == "core/pages.cbor" }
-        coreContribution.origin.value shouldBe "paper"
+        coreContribution.source.value shouldBe "bundle:core"
         coreContribution.sourcePart shouldBe "main"
         coreContribution.producer.value shouldBe "types"
         coreContribution.payload.decodeToString() shouldBe "core pages"

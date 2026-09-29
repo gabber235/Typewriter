@@ -1,6 +1,6 @@
 package com.typewritermc.discovery.runtime
 
-import com.typewritermc.discovery.AssembledTypeDiscovery
+import com.typewritermc.discovery.ResolvedDeploymentTypes
 import com.typewritermc.discovery.DiscoveryDomainId
 import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.CatalogMetadataTypePrototype
@@ -27,7 +27,7 @@ class PrototypeRegistryLoader {
      * the exact type it advertises; abstract runtime classes are loaded from their qualified type identities.
      */
     fun load(
-        discovery: AssembledTypeDiscovery,
+        discovery: ResolvedDeploymentTypes,
         domain: DiscoveryDomainId,
         classLoader: ClassLoader,
     ): TypePrototypeRegistry {

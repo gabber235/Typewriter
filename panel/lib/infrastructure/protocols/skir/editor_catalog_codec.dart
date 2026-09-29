@@ -81,8 +81,6 @@ extension TypeCatalogWireEncoding on TypeCatalog {
           typeId: encodedId.typeId,
           revision: encodedId.revision,
           kind: definition.kind._encodeWire,
-          declarationOwner:
-              definition.declarationOwner ?? definition.id.id._defaultOwner,
           namedPresentations: [
             for (final entry in definition.namedPresentations.entries)
               wire.NamedPresentation(
@@ -150,7 +148,6 @@ extension WireTypeDefinitionListDecoding on Iterable<wire.TypeDefinition> {
             TypeDefinition(
               id: id,
               kind: decodedKind,
-              declarationOwner: value.declarationOwner,
               parameters: [
                 for (final parameter in value.parameters)
                   TypeParameter(name: parameter.name),
@@ -287,7 +284,6 @@ extension on wire.TypeDefinition {
         kind: kind.valueOrNull!,
         displayName: value.displayName,
         qualifiedName: value.qualifiedName,
-        declarationOwner: value.declarationOwner,
         representation: representation.valueOrNull!,
         parameters: parameters,
         parents: parents,
@@ -419,14 +415,6 @@ extension on wire.TypeDefinitionKind {
       NominalTypeKind.sealedAbstract,
     ),
     _ => invalidWire("Unknown nominal type kind"),
-  };
-}
-
-extension on TypeId {
-  String get _defaultOwner => switch (this) {
-    OptionTypeId() || SomeTypeId() || NoneTypeId() => "builtin",
-    DeclaredTypeId(:final uuid) => uuid,
-    QualifiedTypeId(:final namespace) => namespace,
   };
 }
 

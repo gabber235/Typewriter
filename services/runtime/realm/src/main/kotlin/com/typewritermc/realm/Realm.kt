@@ -124,7 +124,7 @@ internal class Realm(
                     },
                     resourceDefinitions = { requireNotNull(discoverySnapshots.current()).resourceDefinitions },
                     relations = { requireNotNull(discoverySnapshots.current()).relations },
-                    typeCatalog = { requireNotNull(discoverySnapshots.current()).discovery.types },
+                    resolvedTypes = { requireNotNull(discoverySnapshots.current()).types },
                     validationRules = { authoringPolicies.validations },
                     compilationProjections = { compilationProjections },
                     searchIndexer = { searchIndexer },
@@ -199,7 +199,7 @@ internal class Realm(
                             .getLong()
                             .toString()
                     },
-                    catalogRevision = { requireNotNull(discoverySnapshots.current()).catalogRevision() },
+                    catalogRevision = { requireNotNull(discoverySnapshots.current()).compilationSignature() },
                     scope = scope,
                     onFailure = { failure ->
                         telemetry.mainSpan(
@@ -388,11 +388,23 @@ internal class Realm(
     }
 }
 
-private fun RealmDiscoverySnapshot?.catalogRevision(): String {
-    if (this == null) return "catalog-unavailable"
-    val elementFacts = elements.entries.map { it.descriptor }.sortedBy { it.id.value.toString() }
-    val typeFacts = discovery.types.definitions.sortedBy { it.id.toString() }
-    val facts = canonicalJson.encodeToString(elementFacts) + canonicalJson.encodeToString(typeFacts)
+internal fun RealmDiscoverySnapshot.compilationSignature(): String {
+    val typeFacts =
+        types.catalog.definitions.sortedBy { it.id.toString() }.map { definition ->
+            definition.copy(
+                displayName = "",
+                qualifiedName = null,
+                namedPresentations = emptyMap(),
+                rolePresentations = emptyMap(),
+            )
+        }
+    val facts =
+        canonicalJson.encodeToString(typeFacts) +
+            canonicalJson.encodeToString(types.relations) +
+            resourceDefinitions.sortedBy { it.id.value }.joinToString { definition ->
+                "${definition.id.value}:${canonicalJson.encodeToString(definition.acceptedRoot)}"
+            } +
+            compilationProjections.joinToString { "${it.projection.value}:${it.root}" }
     return MessageDigest.getInstance("SHA-256").digest(facts.toByteArray()).joinToString("") {
         "%02x".format(it.toInt() and 0xff)
     }

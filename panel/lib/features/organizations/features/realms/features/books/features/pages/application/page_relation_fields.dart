@@ -73,7 +73,9 @@ AsyncValue<Map<ResolvedTypeRef, RealmRelationField>> pageElementsFields(
   }
   final snapshot = catalog.requireValue;
   final fields = <ResolvedTypeRef, RealmRelationField>{};
-  for (final definition in snapshot.pageCatalog.definitions.values) {
+  for (final definition in snapshot.types.values.where(
+    (entry) => entry.editor != null,
+  )) {
     final field = snapshot.relationField(
       definition.type,
       DataPath.root.field("elements"),

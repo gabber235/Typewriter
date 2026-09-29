@@ -58,15 +58,12 @@ private class FakeRealmEditorCatalogSource : RealmEditorCatalogSource {
     override suspend fun fetch(request: CatalogFetchRequest): CatalogFetchResult =
         CatalogFetchResult.createSuccess(
             generation = CatalogGeneration(value = "fake"),
-            typeDefinitions = emptyList(),
+            typeViews = emptyList(),
             presentationDefinitions = emptyList(),
             conversions = emptyList(),
             capabilityDefinitions = emptyList(),
             subtypeResults = emptyList(),
             diagnostics = emptyList(),
-            contentEntries = emptyList(),
-            pageEntries = emptyList(),
-            pageDiagnostics = emptyList(),
             resourceDefinitions = emptyList(),
             relationDefinitions = emptyList(),
             collectionProjectionDefinitions = emptyList(),
