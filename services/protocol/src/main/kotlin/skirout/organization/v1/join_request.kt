@@ -42,7 +42,7 @@ class OrganizationJoinRequest private constructor(
     override val userAvatarUrl: kotlin.String?,
     override val requestedAt: java.time.Instant,
     override val expiresAt: java.time.Instant,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequest>? =
         null,
 ): skirout.organization.v1.join_request.OrganizationJoinRequest_OrMutable {
     constructor(
@@ -125,7 +125,7 @@ class OrganizationJoinRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.OrganizationJoinRequest.serializerImpl,
+            _SerializerRegistry.OrganizationJoinRequestSerializerImpl,
         )
     }
 
@@ -243,94 +243,11 @@ class OrganizationJoinRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:OrganizationJoinRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OrganizationJoinRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OrganizationJoinRequestSerializer;
 
         /** Describes the [OrganizationJoinRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "request_id",
-                "requestId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.requestId },
-                { mut, v -> mut.requestId = v },
-            );
-            serializerImpl.addField(
-                "user_id",
-                "userId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.userId },
-                { mut, v -> mut.userId = v },
-            );
-            serializerImpl.addField(
-                "user_name",
-                "userName",
-                2,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.userName },
-                { mut, v -> mut.userName = v },
-            );
-            serializerImpl.addField(
-                "user_email",
-                "userEmail",
-                3,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.userEmail },
-                { mut, v -> mut.userEmail = v },
-            );
-            serializerImpl.addField(
-                "user_avatar_url",
-                "userAvatarUrl",
-                4,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.userAvatarUrl },
-                { mut, v -> mut.userAvatarUrl = v },
-            );
-            serializerImpl.addField(
-                "requested_at",
-                "requestedAt",
-                5,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.requestedAt },
-                { mut, v -> mut.requestedAt = v },
-            );
-            serializerImpl.addField(
-                "expires_at",
-                "expiresAt",
-                6,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.expiresAt },
-                { mut, v -> mut.expiresAt = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OrganizationJoinRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -354,7 +271,7 @@ class UserJoinRequest private constructor(
     override val organizationLogoUrl: kotlin.String,
     override val requestedAt: java.time.Instant,
     override val expiresAt: java.time.Instant,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequest>? =
         null,
 ): skirout.organization.v1.join_request.UserJoinRequest_OrMutable {
     constructor(
@@ -431,7 +348,7 @@ class UserJoinRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.UserJoinRequest.serializerImpl,
+            _SerializerRegistry.UserJoinRequestSerializerImpl,
         )
     }
 
@@ -542,79 +459,11 @@ class UserJoinRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:UserJoinRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [UserJoinRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.UserJoinRequestSerializer;
 
         /** Describes the [UserJoinRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "request_id",
-                "requestId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.requestId },
-                { mut, v -> mut.requestId = v },
-            );
-            serializerImpl.addField(
-                "organization_id",
-                "organizationId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.organizationId },
-                { mut, v -> mut.organizationId = v },
-            );
-            serializerImpl.addField(
-                "organization_name",
-                "organizationName",
-                2,
-                build.skir.Serializers.string,
-                "",
-                { it.organizationName },
-                { mut, v -> mut.organizationName = v },
-            );
-            serializerImpl.addField(
-                "organization_logo_url",
-                "organizationLogoUrl",
-                3,
-                build.skir.Serializers.string,
-                "",
-                { it.organizationLogoUrl },
-                { mut, v -> mut.organizationLogoUrl = v },
-            );
-            serializerImpl.addField(
-                "requested_at",
-                "requestedAt",
-                4,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.requestedAt },
-                { mut, v -> mut.requestedAt = v },
-            );
-            serializerImpl.addField(
-                "expires_at",
-                "expiresAt",
-                5,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.expiresAt },
-                { mut, v -> mut.expiresAt = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.UserJoinRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -630,7 +479,7 @@ sealed interface OrganizationJoinRequestsSnapshot_OrMutable {
 class OrganizationJoinRequestsSnapshot private constructor(
     override val sequence: kotlin.Long,
     override val values: kotlin.collections.List<skirout.organization.v1.join_request.OrganizationJoinRequest>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot>? =
         null,
 ): skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot_OrMutable {
     constructor(
@@ -683,7 +532,7 @@ class OrganizationJoinRequestsSnapshot private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot.serializerImpl,
+            _SerializerRegistry.OrganizationJoinRequestsSnapshotSerializerImpl,
         )
     }
 
@@ -750,45 +599,11 @@ class OrganizationJoinRequestsSnapshot private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:OrganizationJoinRequestsSnapshot",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OrganizationJoinRequestsSnapshot] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OrganizationJoinRequestsSnapshotSerializer;
 
         /** Describes the [OrganizationJoinRequestsSnapshot] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "sequence",
-                "sequence",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.sequence },
-                { mut, v -> mut.sequence = v },
-            );
-            serializerImpl.addField(
-                "values",
-                "values",
-                1,
-                build.skir.Serializers.list(
-                    skirout.organization.v1.join_request.OrganizationJoinRequest.serializer,
-                ),
-                "",
-                { it.values },
-                { mut, v -> mut.values = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OrganizationJoinRequestsSnapshotSerializerImpl.typeDescriptor;
     }
 }
 
@@ -859,7 +674,7 @@ sealed class OrganizationJoinRequestsChange private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.OrganizationJoinRequestsChange._serializerImpl,
+            _SerializerRegistry.OrganizationJoinRequestsChangeSerializerImpl,
         )
     }
 
@@ -908,53 +723,11 @@ sealed class OrganizationJoinRequestsChange private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.OrganizationJoinRequestsChange, Unknown>(
-                recordId = "organization/v1/join_request.skir:OrganizationJoinRequestsChange",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [OrganizationJoinRequestsChange] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.OrganizationJoinRequestsChangeSerializer;
 
         /** Describes the [OrganizationJoinRequestsChange] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "add",
-                    Kind.ADD_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.OrganizationJoinRequest.serializer,
-                    "",
-                    { AddWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "remove",
-                    Kind.REMOVE_WRAPPER.ordinal,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { RemoveWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.OrganizationJoinRequestsChangeSerializerImpl.typeDescriptor;
     }
 }
 
@@ -972,7 +745,7 @@ class OrganizationJoinRequestsChanged private constructor(
     override val sequence: kotlin.Long,
     override val operationId: kotlin.String,
     override val changes: kotlin.collections.List<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsChanged>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsChanged>? =
         null,
 ): skirout.organization.v1.join_request.OrganizationJoinRequestsChanged_OrMutable {
     constructor(
@@ -1031,7 +804,7 @@ class OrganizationJoinRequestsChanged private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.serializerImpl,
+            _SerializerRegistry.OrganizationJoinRequestsChangedSerializerImpl,
         )
     }
 
@@ -1105,54 +878,11 @@ class OrganizationJoinRequestsChanged private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:OrganizationJoinRequestsChanged",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OrganizationJoinRequestsChanged] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OrganizationJoinRequestsChangedSerializer;
 
         /** Describes the [OrganizationJoinRequestsChanged] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "sequence",
-                "sequence",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.sequence },
-                { mut, v -> mut.sequence = v },
-            );
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "changes",
-                "changes",
-                2,
-                build.skir.Serializers.list(
-                    skirout.organization.v1.join_request.OrganizationJoinRequestsChange.serializer,
-                ),
-                "",
-                { it.changes },
-                { mut, v -> mut.changes = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OrganizationJoinRequestsChangedSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1168,7 +898,7 @@ sealed interface UserJoinRequestsSnapshot_OrMutable {
 class UserJoinRequestsSnapshot private constructor(
     override val sequence: kotlin.Long,
     override val values: kotlin.collections.List<skirout.organization.v1.join_request.UserJoinRequest>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsSnapshot>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsSnapshot>? =
         null,
 ): skirout.organization.v1.join_request.UserJoinRequestsSnapshot_OrMutable {
     constructor(
@@ -1221,7 +951,7 @@ class UserJoinRequestsSnapshot private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.UserJoinRequestsSnapshot.serializerImpl,
+            _SerializerRegistry.UserJoinRequestsSnapshotSerializerImpl,
         )
     }
 
@@ -1288,45 +1018,11 @@ class UserJoinRequestsSnapshot private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:UserJoinRequestsSnapshot",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [UserJoinRequestsSnapshot] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.UserJoinRequestsSnapshotSerializer;
 
         /** Describes the [UserJoinRequestsSnapshot] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "sequence",
-                "sequence",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.sequence },
-                { mut, v -> mut.sequence = v },
-            );
-            serializerImpl.addField(
-                "values",
-                "values",
-                1,
-                build.skir.Serializers.list(
-                    skirout.organization.v1.join_request.UserJoinRequest.serializer,
-                ),
-                "",
-                { it.values },
-                { mut, v -> mut.values = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.UserJoinRequestsSnapshotSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1397,7 +1093,7 @@ sealed class UserJoinRequestsChange private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.UserJoinRequestsChange._serializerImpl,
+            _SerializerRegistry.UserJoinRequestsChangeSerializerImpl,
         )
     }
 
@@ -1444,53 +1140,11 @@ sealed class UserJoinRequestsChange private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.UserJoinRequestsChange, Unknown>(
-                recordId = "organization/v1/join_request.skir:UserJoinRequestsChange",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [UserJoinRequestsChange] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.UserJoinRequestsChangeSerializer;
 
         /** Describes the [UserJoinRequestsChange] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "add",
-                    Kind.ADD_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.UserJoinRequest.serializer,
-                    "",
-                    { AddWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "remove",
-                    Kind.REMOVE_WRAPPER.ordinal,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { RemoveWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.UserJoinRequestsChangeSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1508,7 +1162,7 @@ class UserJoinRequestsChanged private constructor(
     override val sequence: kotlin.Long,
     override val operationId: kotlin.String,
     override val changes: kotlin.collections.List<skirout.organization.v1.join_request.UserJoinRequestsChange>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsChanged>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsChanged>? =
         null,
 ): skirout.organization.v1.join_request.UserJoinRequestsChanged_OrMutable {
     constructor(
@@ -1567,7 +1221,7 @@ class UserJoinRequestsChanged private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.UserJoinRequestsChanged.serializerImpl,
+            _SerializerRegistry.UserJoinRequestsChangedSerializerImpl,
         )
     }
 
@@ -1641,54 +1295,11 @@ class UserJoinRequestsChanged private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:UserJoinRequestsChanged",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [UserJoinRequestsChanged] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.UserJoinRequestsChangedSerializer;
 
         /** Describes the [UserJoinRequestsChanged] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "sequence",
-                "sequence",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.sequence },
-                { mut, v -> mut.sequence = v },
-            );
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "changes",
-                "changes",
-                2,
-                build.skir.Serializers.list(
-                    skirout.organization.v1.join_request.UserJoinRequestsChange.serializer,
-                ),
-                "",
-                { it.changes },
-                { mut, v -> mut.changes = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.UserJoinRequestsChangedSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1708,7 +1319,7 @@ class AutoAcceptedMember private constructor(
     override val organizationName: kotlin.String,
     override val organizationLogoUrl: kotlin.String?,
     override val roles: kotlin.collections.List<skirout.organization.v1.role.OrganizationRole>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.AutoAcceptedMember>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.AutoAcceptedMember>? =
         null,
 ): skirout.organization.v1.join_request.AutoAcceptedMember_OrMutable {
     constructor(
@@ -1773,7 +1384,7 @@ class AutoAcceptedMember private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.AutoAcceptedMember.serializerImpl,
+            _SerializerRegistry.AutoAcceptedMemberSerializerImpl,
         )
     }
 
@@ -1870,65 +1481,11 @@ class AutoAcceptedMember private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:AutoAcceptedMember",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [AutoAcceptedMember] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.AutoAcceptedMemberSerializer;
 
         /** Describes the [AutoAcceptedMember] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "organization_id",
-                "organizationId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.organizationId },
-                { mut, v -> mut.organizationId = v },
-            );
-            serializerImpl.addField(
-                "organization_name",
-                "organizationName",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.organizationName },
-                { mut, v -> mut.organizationName = v },
-            );
-            serializerImpl.addField(
-                "organization_logo_url",
-                "organizationLogoUrl",
-                2,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.organizationLogoUrl },
-                { mut, v -> mut.organizationLogoUrl = v },
-            );
-            serializerImpl.addField(
-                "roles",
-                "roles",
-                3,
-                build.skir.Serializers.list(
-                    skirout.organization.v1.role.OrganizationRole.serializer,
-                ),
-                "",
-                { it.roles },
-                { mut, v -> mut.roles = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.AutoAcceptedMemberSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1939,7 +1496,7 @@ sealed interface WatchOrganizationJoinRequestsRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class WatchOrganizationJoinRequestsRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest>? =
         null,
 ): skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest_OrMutable {
     constructor(
@@ -1968,7 +1525,7 @@ class WatchOrganizationJoinRequestsRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest.serializerImpl,
+            _SerializerRegistry.WatchOrganizationJoinRequestsRequestSerializerImpl,
         )
     }
 
@@ -2004,25 +1561,11 @@ class WatchOrganizationJoinRequestsRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:WatchOrganizationJoinRequestsRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [WatchOrganizationJoinRequestsRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchOrganizationJoinRequestsRequestSerializer;
 
         /** Describes the [WatchOrganizationJoinRequestsRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationJoinRequestsRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2112,7 +1655,7 @@ sealed class WatchOrganizationJoinRequestsResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse._serializerImpl,
+            _SerializerRegistry.WatchOrganizationJoinRequestsResponseSerializerImpl,
         )
     }
 
@@ -2162,62 +1705,11 @@ sealed class WatchOrganizationJoinRequestsResponse private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse, Unknown>(
-                recordId = "organization/v1/join_request.skir:WatchOrganizationJoinRequestsResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [WatchOrganizationJoinRequestsResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchOrganizationJoinRequestsResponseSerializer;
 
         /** Describes the [WatchOrganizationJoinRequestsResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "snapshot",
-                    Kind.SNAPSHOT_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot.serializer,
-                    "",
-                    { SnapshotWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "changed",
-                    Kind.CHANGED_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.serializer,
-                    "",
-                    { ChangedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationJoinRequestsResponseSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2233,7 +1725,7 @@ sealed interface ApprovedOrganizationJoinRequest_OrMutable {
 class ApprovedOrganizationJoinRequest private constructor(
     override val requestId: skirout.kernel.v1.record_id.RecordId,
     override val member: skirout.organization.v1.member.OrganizationMember,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest>? =
         null,
 ): skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest_OrMutable {
     constructor(
@@ -2286,7 +1778,7 @@ class ApprovedOrganizationJoinRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest.serializerImpl,
+            _SerializerRegistry.ApprovedOrganizationJoinRequestSerializerImpl,
         )
     }
 
@@ -2369,43 +1861,11 @@ class ApprovedOrganizationJoinRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:ApprovedOrganizationJoinRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ApprovedOrganizationJoinRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ApprovedOrganizationJoinRequestSerializer;
 
         /** Describes the [ApprovedOrganizationJoinRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "request_id",
-                "requestId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.requestId },
-                { mut, v -> mut.requestId = v },
-            );
-            serializerImpl.addField(
-                "member",
-                "member",
-                1,
-                skirout.organization.v1.member.OrganizationMember.serializer,
-                "",
-                { it.member },
-                { mut, v -> mut.member = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ApprovedOrganizationJoinRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2423,7 +1883,7 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     override val operationId: kotlin.String,
     override val requestIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
     override val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest>? =
         null,
 ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest_OrMutable {
     constructor(
@@ -2482,7 +1942,7 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest.serializerImpl,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsRequestSerializerImpl,
         )
     }
 
@@ -2572,56 +2032,11 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ApproveOrganizationJoinRequestsRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsRequestSerializer;
 
         /** Describes the [ApproveOrganizationJoinRequestsRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "request_ids",
-                "requestIds",
-                1,
-                build.skir.Serializers.list(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.requestIds },
-                { mut, v -> mut.requestIds = v },
-            );
-            serializerImpl.addField(
-                "role_ids",
-                "roleIds",
-                2,
-                build.skir.Serializers.list(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.roleIds },
-                { mut, v -> mut.roleIds = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2844,7 +2259,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse._serializerImpl,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponseSerializerImpl,
         )
     }
 
@@ -2969,125 +2384,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse, Unknown>(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ApproveOrganizationJoinRequestsResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponseSerializer;
 
         /** Describes the [ApproveOrganizationJoinRequestsResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "request_not_found_error",
-                    Kind.REQUEST_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError.serializer,
-                    "",
-                    { RequestNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "roles_not_found_error",
-                    Kind.ROLES_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError.serializer,
-                    "",
-                    { RolesNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "roles_not_assignable_error",
-                    Kind.ROLES_NOT_ASSIGNABLE_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError.serializer,
-                    "",
-                    { RolesNotAssignableErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "roles_required_error",
-                    Kind.ROLES_REQUIRED_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError.serializer,
-                    "",
-                    { RolesRequiredErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "user_already_member_error",
-                    Kind.USER_ALREADY_MEMBER_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError.serializer,
-                    "",
-                    { UserAlreadyMemberErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
-                    "operation_identity_reused_error",
-                    Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError.serializer,
-                    "",
-                    { OperationIdentityReusedErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "invalid_selection_error",
-                    Kind.INVALID_SELECTION_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError.serializer,
-                    "",
-                    { InvalidSelectionErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    10,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -3104,7 +2405,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override val approvals: kotlin.collections.List<skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest>,
         override val joinRequestsEvent: skirout.organization.v1.join_request.OrganizationJoinRequestsChanged,
         override val membersEvent: skirout.organization.v1.member.OrganizationMembersChanged,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success_OrMutable {
         constructor(
@@ -3163,7 +2464,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl,
             )
         }
 
@@ -3269,54 +2570,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "approvals",
-                    "approvals",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest.serializer,
-                    ),
-                    "",
-                    { it.approvals },
-                    { mut, v -> mut.approvals = v },
-                );
-                serializerImpl.addField(
-                    "join_requests_event",
-                    "joinRequestsEvent",
-                    1,
-                    skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.serializer,
-                    "",
-                    { it.joinRequestsEvent },
-                    { mut, v -> mut.joinRequestsEvent = v },
-                );
-                serializerImpl.addField(
-                    "members_event",
-                    "membersEvent",
-                    2,
-                    skirout.organization.v1.member.OrganizationMembersChanged.serializer,
-                    "",
-                    { it.membersEvent },
-                    { mut, v -> mut.membersEvent = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 
@@ -3330,7 +2588,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RequestNotFoundError private constructor(
         override val requestIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError_OrMutable {
         constructor(
@@ -3377,7 +2635,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl,
             )
         }
 
@@ -3437,36 +2695,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RequestNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RequestNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializer;
 
             /** Describes the [RequestNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "request_ids",
-                    "requestIds",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
-                    "",
-                    { it.requestIds },
-                    { mut, v -> mut.requestIds = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -3480,7 +2713,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RolesNotFoundError private constructor(
         override val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError_OrMutable {
         constructor(
@@ -3527,7 +2760,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializerImpl,
             )
         }
 
@@ -3587,36 +2820,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RolesNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RolesNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializer;
 
             /** Describes the [RolesNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "role_ids",
-                    "roleIds",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
-                    "",
-                    { it.roleIds },
-                    { mut, v -> mut.roleIds = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -3630,7 +2838,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RolesNotAssignableError private constructor(
         override val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError_OrMutable {
         constructor(
@@ -3677,7 +2885,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializerImpl,
             )
         }
 
@@ -3737,36 +2945,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RolesNotAssignableError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializer;
 
             /** Describes the [RolesNotAssignableError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "role_ids",
-                    "roleIds",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
-                    "",
-                    { it.roleIds },
-                    { mut, v -> mut.roleIds = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -3777,7 +2960,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RolesRequiredError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError_OrMutable {
         constructor(
@@ -3806,7 +2989,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializerImpl,
             )
         }
 
@@ -3842,25 +3025,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RolesRequiredError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RolesRequiredError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializer;
 
             /** Describes the [RolesRequiredError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -3874,7 +3043,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class UserAlreadyMemberError private constructor(
         override val userIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError_OrMutable {
         constructor(
@@ -3921,7 +3090,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializerImpl,
             )
         }
 
@@ -3981,36 +3150,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [UserAlreadyMemberError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializer;
 
             /** Describes the [UserAlreadyMemberError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "user_ids",
-                    "userIds",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
-                    "",
-                    { it.userIds },
-                    { mut, v -> mut.userIds = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -4021,7 +3165,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class OperationIdentityReusedError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError_OrMutable {
         constructor(
@@ -4050,7 +3194,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl,
             )
         }
 
@@ -4086,25 +3230,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializer;
 
             /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -4115,7 +3245,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class InvalidSelectionError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError>? =
             null,
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError_OrMutable {
         constructor(
@@ -4144,7 +3274,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError.serializerImpl,
+                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl,
             )
         }
 
@@ -4180,25 +3310,11 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.InvalidSelectionError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [InvalidSelectionError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializer;
 
             /** Describes the [InvalidSelectionError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -4215,7 +3331,7 @@ sealed interface DeclineOrganizationJoinRequestRequest_OrMutable {
 class DeclineOrganizationJoinRequestRequest private constructor(
     override val operationId: kotlin.String,
     override val requestId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest>? =
         null,
 ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest_OrMutable {
     constructor(
@@ -4268,7 +3384,7 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest.serializerImpl,
+            _SerializerRegistry.DeclineOrganizationJoinRequestRequestSerializerImpl,
         )
     }
 
@@ -4335,43 +3451,11 @@ class DeclineOrganizationJoinRequestRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [DeclineOrganizationJoinRequestRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestRequestSerializer;
 
         /** Describes the [DeclineOrganizationJoinRequestRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "request_id",
-                "requestId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.requestId },
-                { mut, v -> mut.requestId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -4518,7 +3602,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse._serializerImpl,
+            _SerializerRegistry.DeclineOrganizationJoinRequestResponseSerializerImpl,
         )
     }
 
@@ -4594,89 +3678,11 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse, Unknown>(
-                recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [DeclineOrganizationJoinRequestResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponseSerializer;
 
         /** Describes the [DeclineOrganizationJoinRequestResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "invalid_operation_id_error",
-                    Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError.serializer,
-                    "",
-                    { InvalidOperationIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "operation_identity_reused_error",
-                    Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError.serializer,
-                    "",
-                    { OperationIdentityReusedErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "request_not_found_error",
-                    Kind.REQUEST_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError.serializer,
-                    "",
-                    { RequestNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface InvalidOperationIdError_OrMutable {
@@ -4686,7 +3692,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class InvalidOperationIdError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError>? =
             null,
     ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError_OrMutable {
         constructor(
@@ -4715,7 +3721,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError.serializerImpl,
+                _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl,
             )
         }
 
@@ -4751,25 +3757,11 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.InvalidOperationIdError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [InvalidOperationIdError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializer;
 
             /** Describes the [InvalidOperationIdError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -4780,7 +3772,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class OperationIdentityReusedError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError>? =
             null,
     ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError_OrMutable {
         constructor(
@@ -4809,7 +3801,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError.serializerImpl,
+                _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl,
             )
         }
 
@@ -4845,25 +3837,11 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializer;
 
             /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -4877,7 +3855,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Success private constructor(
         override val event: skirout.organization.v1.join_request.OrganizationJoinRequestsChanged,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success>? =
             null,
     ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success_OrMutable {
         constructor(
@@ -4924,7 +3902,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success.serializerImpl,
+                _SerializerRegistry.DeclineOrganizationJoinRequestResponse_SuccessSerializerImpl,
             )
         }
 
@@ -4984,34 +3962,11 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "event",
-                    "event",
-                    0,
-                    skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.serializer,
-                    "",
-                    { it.event },
-                    { mut, v -> mut.event = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 
@@ -5025,7 +3980,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RequestNotFoundError private constructor(
         override val requestId: skirout.kernel.v1.record_id.RecordId,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError>? =
             null,
     ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError_OrMutable {
         constructor(
@@ -5072,7 +4027,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError.serializerImpl,
+                _SerializerRegistry.DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl,
             )
         }
 
@@ -5132,34 +4087,11 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.RequestNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RequestNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializer;
 
             /** Describes the [RequestNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "request_id",
-                    "requestId",
-                    0,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { it.requestId },
-                    { mut, v -> mut.requestId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -5201,4 +4133,1031 @@ val DeclineOrganizationJoinRequest: build.skir.service.Method<
         skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val ApprovedOrganizationJoinRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApprovedOrganizationJoinRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApprovedOrganizationJoinRequestSerializer = build.skir.internal.makeSerializer(ApprovedOrganizationJoinRequestSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsRequestSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsRequestSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse, skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Unknown>(
+            recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.values().size,
+            unknownInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Unknown(skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ApproveOrganizationJoinRequestsResponseSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponseSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.InvalidSelectionError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RequestNotFoundError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RolesNotFoundError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RolesRequiredError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.Success",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_SuccessSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl);
+
+    val ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializerImpl);
+
+    val AutoAcceptedMemberSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:AutoAcceptedMember",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.AutoAcceptedMember.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.AutoAcceptedMember.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val AutoAcceptedMemberSerializer = build.skir.internal.makeSerializer(AutoAcceptedMemberSerializerImpl);
+
+    val DeclineOrganizationJoinRequestRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DeclineOrganizationJoinRequestRequestSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestRequestSerializerImpl);
+
+    val DeclineOrganizationJoinRequestResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse, skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Unknown>(
+            recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.values().size,
+            unknownInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Unknown(skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val DeclineOrganizationJoinRequestResponseSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponseSerializerImpl);
+
+    val DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.InvalidOperationIdError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl);
+
+    val DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl);
+
+    val DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.RequestNotFoundError",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl);
+
+    val DeclineOrganizationJoinRequestResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.Success",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DeclineOrganizationJoinRequestResponse_SuccessSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponse_SuccessSerializerImpl);
+
+    val OrganizationJoinRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:OrganizationJoinRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.OrganizationJoinRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.OrganizationJoinRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationJoinRequestSerializer = build.skir.internal.makeSerializer(OrganizationJoinRequestSerializerImpl);
+
+    val OrganizationJoinRequestsChangeSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.OrganizationJoinRequestsChange, skirout.organization.v1.join_request.OrganizationJoinRequestsChange.Unknown>(
+            recordId = "organization/v1/join_request.skir:OrganizationJoinRequestsChange",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.join_request.OrganizationJoinRequestsChange.Kind.values().size,
+            unknownInstance = skirout.organization.v1.join_request.OrganizationJoinRequestsChange.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.join_request.OrganizationJoinRequestsChange.Unknown(skirout.organization.v1.join_request.OrganizationJoinRequestsChange.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val OrganizationJoinRequestsChangeSerializer = build.skir.internal.makeSerializer(OrganizationJoinRequestsChangeSerializerImpl);
+
+    val OrganizationJoinRequestsChangedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:OrganizationJoinRequestsChanged",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationJoinRequestsChangedSerializer = build.skir.internal.makeSerializer(OrganizationJoinRequestsChangedSerializerImpl);
+
+    val OrganizationJoinRequestsSnapshotSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:OrganizationJoinRequestsSnapshot",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.OrganizationJoinRequestsSnapshot.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationJoinRequestsSnapshotSerializer = build.skir.internal.makeSerializer(OrganizationJoinRequestsSnapshotSerializerImpl);
+
+    val UserJoinRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:UserJoinRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.UserJoinRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.UserJoinRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UserJoinRequestSerializer = build.skir.internal.makeSerializer(UserJoinRequestSerializerImpl);
+
+    val UserJoinRequestsChangeSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.UserJoinRequestsChange, skirout.organization.v1.join_request.UserJoinRequestsChange.Unknown>(
+            recordId = "organization/v1/join_request.skir:UserJoinRequestsChange",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.join_request.UserJoinRequestsChange.Kind.values().size,
+            unknownInstance = skirout.organization.v1.join_request.UserJoinRequestsChange.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.join_request.UserJoinRequestsChange.Unknown(skirout.organization.v1.join_request.UserJoinRequestsChange.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val UserJoinRequestsChangeSerializer = build.skir.internal.makeSerializer(UserJoinRequestsChangeSerializerImpl);
+
+    val UserJoinRequestsChangedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:UserJoinRequestsChanged",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.UserJoinRequestsChanged.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.UserJoinRequestsChanged.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UserJoinRequestsChangedSerializer = build.skir.internal.makeSerializer(UserJoinRequestsChangedSerializerImpl);
+
+    val UserJoinRequestsSnapshotSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:UserJoinRequestsSnapshot",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.UserJoinRequestsSnapshot.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.UserJoinRequestsSnapshot.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UserJoinRequestsSnapshotSerializer = build.skir.internal.makeSerializer(UserJoinRequestsSnapshotSerializerImpl);
+
+    val WatchOrganizationJoinRequestsRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/join_request.skir:WatchOrganizationJoinRequestsRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchOrganizationJoinRequestsRequestSerializer = build.skir.internal.makeSerializer(WatchOrganizationJoinRequestsRequestSerializerImpl);
+
+    val WatchOrganizationJoinRequestsResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse, skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Unknown>(
+            recordId = "organization/v1/join_request.skir:WatchOrganizationJoinRequestsResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Kind.values().size,
+            unknownInstance = skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Unknown(skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchOrganizationJoinRequestsResponseSerializer = build.skir.internal.makeSerializer(WatchOrganizationJoinRequestsResponseSerializerImpl);
+
+    init {
+        ApprovedOrganizationJoinRequestSerializerImpl.addField(
+            "request_id",
+            "requestId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.requestId },
+            { mut, v -> mut.requestId = v },
+        );
+        ApprovedOrganizationJoinRequestSerializerImpl.addField(
+            "member",
+            "member",
+            1,
+            skirout.organization.v1.member.OrganizationMember.serializer,
+            "",
+            { it.member },
+            { mut, v -> mut.member = v },
+        );
+        ApprovedOrganizationJoinRequestSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsRequestSerializerImpl.addField(
+            "operation_id",
+            "operationId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.operationId },
+            { mut, v -> mut.operationId = v },
+        );
+        ApproveOrganizationJoinRequestsRequestSerializerImpl.addField(
+            "request_ids",
+            "requestIds",
+            1,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.requestIds },
+            { mut, v -> mut.requestIds = v },
+        );
+        ApproveOrganizationJoinRequestsRequestSerializerImpl.addField(
+            "role_ids",
+            "roleIds",
+            2,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.roleIds },
+            { mut, v -> mut.roleIds = v },
+        );
+        ApproveOrganizationJoinRequestsRequestSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            2,
+            "success",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_SuccessSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            3,
+            "request_not_found_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.REQUEST_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RequestNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            4,
+            "roles_not_found_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.ROLES_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            5,
+            "roles_not_assignable_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.ROLES_NOT_ASSIGNABLE_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesNotAssignableErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            6,
+            "roles_required_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.ROLES_REQUIRED_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.RolesRequiredErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            7,
+            "user_already_member_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.USER_ALREADY_MEMBER_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            8,
+            "operation_identity_reused_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            9,
+            "invalid_selection_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.INVALID_SELECTION_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            10,
+            "invalid_record_id_error",
+            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+            "",
+            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidRecordIdErrorWrapper(it) },
+            { it.value },
+        );
+        ApproveOrganizationJoinRequestsResponseSerializerImpl.finalizeEnum();
+
+        ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl.addField(
+            "request_ids",
+            "requestIds",
+            0,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.requestIds },
+            { mut, v -> mut.requestIds = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializerImpl.addField(
+            "role_ids",
+            "roleIds",
+            0,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.roleIds },
+            { mut, v -> mut.roleIds = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_RolesNotAssignableErrorSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializerImpl.addField(
+            "role_ids",
+            "roleIds",
+            0,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.roleIds },
+            { mut, v -> mut.roleIds = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_RolesNotFoundErrorSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_RolesRequiredErrorSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl.addField(
+            "approvals",
+            "approvals",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.ApprovedOrganizationJoinRequestSerializer,
+            ),
+            "",
+            { it.approvals },
+            { mut, v -> mut.approvals = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl.addField(
+            "join_requests_event",
+            "joinRequestsEvent",
+            1,
+            _SerializerRegistry.OrganizationJoinRequestsChangedSerializer,
+            "",
+            { it.joinRequestsEvent },
+            { mut, v -> mut.joinRequestsEvent = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl.addField(
+            "members_event",
+            "membersEvent",
+            2,
+            skirout.organization.v1.member.OrganizationMembersChanged.serializer,
+            "",
+            { it.membersEvent },
+            { mut, v -> mut.membersEvent = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_SuccessSerializerImpl.finalizeStruct();
+
+        ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializerImpl.addField(
+            "user_ids",
+            "userIds",
+            0,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.userIds },
+            { mut, v -> mut.userIds = v },
+        );
+        ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberErrorSerializerImpl.finalizeStruct();
+
+        AutoAcceptedMemberSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        AutoAcceptedMemberSerializerImpl.addField(
+            "organization_name",
+            "organizationName",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationName },
+            { mut, v -> mut.organizationName = v },
+        );
+        AutoAcceptedMemberSerializerImpl.addField(
+            "organization_logo_url",
+            "organizationLogoUrl",
+            2,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.organizationLogoUrl },
+            { mut, v -> mut.organizationLogoUrl = v },
+        );
+        AutoAcceptedMemberSerializerImpl.addField(
+            "roles",
+            "roles",
+            3,
+            build.skir.Serializers.list(
+                skirout.organization.v1.role.OrganizationRole.serializer,
+            ),
+            "",
+            { it.roles },
+            { mut, v -> mut.roles = v },
+        );
+        AutoAcceptedMemberSerializerImpl.finalizeStruct();
+
+        DeclineOrganizationJoinRequestRequestSerializerImpl.addField(
+            "operation_id",
+            "operationId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.operationId },
+            { mut, v -> mut.operationId = v },
+        );
+        DeclineOrganizationJoinRequestRequestSerializerImpl.addField(
+            "request_id",
+            "requestId",
+            1,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.requestId },
+            { mut, v -> mut.requestId = v },
+        );
+        DeclineOrganizationJoinRequestRequestSerializerImpl.finalizeStruct();
+
+        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
+            1,
+            "invalid_operation_id_error",
+            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdErrorWrapper(it) },
+            { it.value },
+        );
+        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
+            2,
+            "operation_identity_reused_error",
+            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedErrorWrapper(it) },
+            { it.value },
+        );
+        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
+            3,
+            "internal_error",
+            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
+            4,
+            "success",
+            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.DeclineOrganizationJoinRequestResponse_SuccessSerializer,
+            "",
+            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
+            5,
+            "request_not_found_error",
+            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.REQUEST_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializer,
+            "",
+            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.RequestNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
+            6,
+            "invalid_record_id_error",
+            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+            "",
+            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidRecordIdErrorWrapper(it) },
+            { it.value },
+        );
+        DeclineOrganizationJoinRequestResponseSerializerImpl.finalizeEnum();
+
+        DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl.finalizeStruct();
+
+        DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl.finalizeStruct();
+
+        DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl.addField(
+            "request_id",
+            "requestId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.requestId },
+            { mut, v -> mut.requestId = v },
+        );
+        DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl.finalizeStruct();
+
+        DeclineOrganizationJoinRequestResponse_SuccessSerializerImpl.addField(
+            "event",
+            "event",
+            0,
+            _SerializerRegistry.OrganizationJoinRequestsChangedSerializer,
+            "",
+            { it.event },
+            { mut, v -> mut.event = v },
+        );
+        DeclineOrganizationJoinRequestResponse_SuccessSerializerImpl.finalizeStruct();
+
+        OrganizationJoinRequestSerializerImpl.addField(
+            "request_id",
+            "requestId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.requestId },
+            { mut, v -> mut.requestId = v },
+        );
+        OrganizationJoinRequestSerializerImpl.addField(
+            "user_id",
+            "userId",
+            1,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.userId },
+            { mut, v -> mut.userId = v },
+        );
+        OrganizationJoinRequestSerializerImpl.addField(
+            "user_name",
+            "userName",
+            2,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.userName },
+            { mut, v -> mut.userName = v },
+        );
+        OrganizationJoinRequestSerializerImpl.addField(
+            "user_email",
+            "userEmail",
+            3,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.userEmail },
+            { mut, v -> mut.userEmail = v },
+        );
+        OrganizationJoinRequestSerializerImpl.addField(
+            "user_avatar_url",
+            "userAvatarUrl",
+            4,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.userAvatarUrl },
+            { mut, v -> mut.userAvatarUrl = v },
+        );
+        OrganizationJoinRequestSerializerImpl.addField(
+            "requested_at",
+            "requestedAt",
+            5,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.requestedAt },
+            { mut, v -> mut.requestedAt = v },
+        );
+        OrganizationJoinRequestSerializerImpl.addField(
+            "expires_at",
+            "expiresAt",
+            6,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.expiresAt },
+            { mut, v -> mut.expiresAt = v },
+        );
+        OrganizationJoinRequestSerializerImpl.finalizeStruct();
+
+        OrganizationJoinRequestsChangeSerializerImpl.addWrapperVariant(
+            1,
+            "add",
+            skirout.organization.v1.join_request.OrganizationJoinRequestsChange.Kind.ADD_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationJoinRequestSerializer,
+            "",
+            { skirout.organization.v1.join_request.OrganizationJoinRequestsChange.AddWrapper(it) },
+            { it.value },
+        );
+        OrganizationJoinRequestsChangeSerializerImpl.addWrapperVariant(
+            2,
+            "remove",
+            skirout.organization.v1.join_request.OrganizationJoinRequestsChange.Kind.REMOVE_WRAPPER.ordinal,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { skirout.organization.v1.join_request.OrganizationJoinRequestsChange.RemoveWrapper(it) },
+            { it.value },
+        );
+        OrganizationJoinRequestsChangeSerializerImpl.finalizeEnum();
+
+        OrganizationJoinRequestsChangedSerializerImpl.addField(
+            "sequence",
+            "sequence",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.sequence },
+            { mut, v -> mut.sequence = v },
+        );
+        OrganizationJoinRequestsChangedSerializerImpl.addField(
+            "operation_id",
+            "operationId",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.operationId },
+            { mut, v -> mut.operationId = v },
+        );
+        OrganizationJoinRequestsChangedSerializerImpl.addField(
+            "changes",
+            "changes",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.OrganizationJoinRequestsChangeSerializer,
+            ),
+            "",
+            { it.changes },
+            { mut, v -> mut.changes = v },
+        );
+        OrganizationJoinRequestsChangedSerializerImpl.finalizeStruct();
+
+        OrganizationJoinRequestsSnapshotSerializerImpl.addField(
+            "sequence",
+            "sequence",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.sequence },
+            { mut, v -> mut.sequence = v },
+        );
+        OrganizationJoinRequestsSnapshotSerializerImpl.addField(
+            "values",
+            "values",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.OrganizationJoinRequestSerializer,
+            ),
+            "",
+            { it.values },
+            { mut, v -> mut.values = v },
+        );
+        OrganizationJoinRequestsSnapshotSerializerImpl.finalizeStruct();
+
+        UserJoinRequestSerializerImpl.addField(
+            "request_id",
+            "requestId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.requestId },
+            { mut, v -> mut.requestId = v },
+        );
+        UserJoinRequestSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            1,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        UserJoinRequestSerializerImpl.addField(
+            "organization_name",
+            "organizationName",
+            2,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationName },
+            { mut, v -> mut.organizationName = v },
+        );
+        UserJoinRequestSerializerImpl.addField(
+            "organization_logo_url",
+            "organizationLogoUrl",
+            3,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationLogoUrl },
+            { mut, v -> mut.organizationLogoUrl = v },
+        );
+        UserJoinRequestSerializerImpl.addField(
+            "requested_at",
+            "requestedAt",
+            4,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.requestedAt },
+            { mut, v -> mut.requestedAt = v },
+        );
+        UserJoinRequestSerializerImpl.addField(
+            "expires_at",
+            "expiresAt",
+            5,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.expiresAt },
+            { mut, v -> mut.expiresAt = v },
+        );
+        UserJoinRequestSerializerImpl.finalizeStruct();
+
+        UserJoinRequestsChangeSerializerImpl.addWrapperVariant(
+            1,
+            "add",
+            skirout.organization.v1.join_request.UserJoinRequestsChange.Kind.ADD_WRAPPER.ordinal,
+            _SerializerRegistry.UserJoinRequestSerializer,
+            "",
+            { skirout.organization.v1.join_request.UserJoinRequestsChange.AddWrapper(it) },
+            { it.value },
+        );
+        UserJoinRequestsChangeSerializerImpl.addWrapperVariant(
+            2,
+            "remove",
+            skirout.organization.v1.join_request.UserJoinRequestsChange.Kind.REMOVE_WRAPPER.ordinal,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { skirout.organization.v1.join_request.UserJoinRequestsChange.RemoveWrapper(it) },
+            { it.value },
+        );
+        UserJoinRequestsChangeSerializerImpl.finalizeEnum();
+
+        UserJoinRequestsChangedSerializerImpl.addField(
+            "sequence",
+            "sequence",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.sequence },
+            { mut, v -> mut.sequence = v },
+        );
+        UserJoinRequestsChangedSerializerImpl.addField(
+            "operation_id",
+            "operationId",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.operationId },
+            { mut, v -> mut.operationId = v },
+        );
+        UserJoinRequestsChangedSerializerImpl.addField(
+            "changes",
+            "changes",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.UserJoinRequestsChangeSerializer,
+            ),
+            "",
+            { it.changes },
+            { mut, v -> mut.changes = v },
+        );
+        UserJoinRequestsChangedSerializerImpl.finalizeStruct();
+
+        UserJoinRequestsSnapshotSerializerImpl.addField(
+            "sequence",
+            "sequence",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.sequence },
+            { mut, v -> mut.sequence = v },
+        );
+        UserJoinRequestsSnapshotSerializerImpl.addField(
+            "values",
+            "values",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.UserJoinRequestSerializer,
+            ),
+            "",
+            { it.values },
+            { mut, v -> mut.values = v },
+        );
+        UserJoinRequestsSnapshotSerializerImpl.finalizeStruct();
+
+        WatchOrganizationJoinRequestsRequestSerializerImpl.finalizeStruct();
+
+        WatchOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            2,
+            "snapshot",
+            skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Kind.SNAPSHOT_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationJoinRequestsSnapshotSerializer,
+            "",
+            { skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.SnapshotWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
+            3,
+            "changed",
+            skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.Kind.CHANGED_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationJoinRequestsChangedSerializer,
+            "",
+            { skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.ChangedWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationJoinRequestsResponseSerializerImpl.finalizeEnum();
+    }
 }

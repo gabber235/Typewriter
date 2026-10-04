@@ -6,7 +6,7 @@
       "name": "typewriter-build-tools",
       "dependencies": {
         "skir": "1.2.21",
-        "skir-kotlin-gen": "1.0.11",
+        "skir-kotlin-gen": "1.0.12",
         "skir-rust-gen": "0.1.5",
       },
       "devDependencies": {
@@ -258,7 +258,7 @@
 
     "skir-java-gen": ["skir-java-gen@1.0.10", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-oE9bEVHmclzp6AGgfPmN1EygNq9oM4QI5+UEbfXx/9wwiNli0FNlT/RaSNzjUr3566oxlmaOLwHihel2VHPr3w=="],
 
-    "skir-kotlin-gen": ["skir-kotlin-gen@1.0.11", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-gK9vmpPqYeiVWIqNnWUFxqJjSy4iAq3ZG+Vj+xYdgJiSst2iKHKthuUK/sVoXW/RXFDUYdK8qrtgG2kcjuooVw=="],
+    "skir-kotlin-gen": ["skir-kotlin-gen@1.0.12", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-OFR5Fj0AP/WxPiB701n3AcfWcmV8hz1Dsy5Gznan6iCEHWFndcH8tJL0B49ghDy4LjZ09bqNzX4HHAXgVAtUdg=="],
 
     "skir-moonbit-gen": ["skir-moonbit-gen@0.1.1", "", { "dependencies": { "skir-internal": "^0.2.19", "zod": "^4.2.1" } }, "sha512-AYQj/WRuViIjrMi7fcm9meph2tGQOJpf8iSBDU0Jy3IlWm+2AVfyqKnJT/FUaOwdzYhiYLXc/Q2ibIuZJOP1mw=="],
 

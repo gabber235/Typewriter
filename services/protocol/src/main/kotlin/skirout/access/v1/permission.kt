@@ -87,7 +87,7 @@ sealed class EntityPermissionQualifier private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.permission.EntityPermissionQualifier._serializerImpl,
+            _SerializerRegistry.EntityPermissionQualifierSerializerImpl,
         )
     }
 
@@ -119,53 +119,11 @@ sealed class EntityPermissionQualifier private constructor() {
             skirout.access.v1.permission.EntityPermissionQualifier.Service()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.access.v1.permission.EntityPermissionQualifier, Unknown>(
-                recordId = "access/v1/permission.skir:EntityPermissionQualifier",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [EntityPermissionQualifier] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.EntityPermissionQualifierSerializer;
 
         /** Describes the [EntityPermissionQualifier] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "user",
-                    Kind.USER_WRAPPER.ordinal,
-                    skirout.access.v1.permission.EntityPermissionQualifier.User.serializer,
-                    "",
-                    { UserWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "service",
-                    Kind.SERVICE_WRAPPER.ordinal,
-                    skirout.access.v1.permission.EntityPermissionQualifier.Service.serializer,
-                    "",
-                    { ServiceWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.EntityPermissionQualifierSerializerImpl.typeDescriptor;
     }
 
     sealed interface User_OrMutable {
@@ -178,7 +136,7 @@ sealed class EntityPermissionQualifier private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class User private constructor(
         override val organizationId: skirout.kernel.v1.record_id.RecordId?,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.User>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.User>? =
             null,
     ): skirout.access.v1.permission.EntityPermissionQualifier.User_OrMutable {
         constructor(
@@ -225,7 +183,7 @@ sealed class EntityPermissionQualifier private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.access.v1.permission.EntityPermissionQualifier.User.serializerImpl,
+                _SerializerRegistry.EntityPermissionQualifier_UserSerializerImpl,
             )
         }
 
@@ -269,36 +227,11 @@ sealed class EntityPermissionQualifier private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "access/v1/permission.skir:EntityPermissionQualifier.User",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [User] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.EntityPermissionQualifier_UserSerializer;
 
             /** Describes the [User] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "organization_id",
-                    "organizationId",
-                    0,
-                    build.skir.Serializers.optional(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
-                    "",
-                    { it.organizationId },
-                    { mut, v -> mut.organizationId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.EntityPermissionQualifier_UserSerializerImpl.typeDescriptor;
         }
     }
 
@@ -309,7 +242,7 @@ sealed class EntityPermissionQualifier private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Service private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.Service>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.Service>? =
             null,
     ): skirout.access.v1.permission.EntityPermissionQualifier.Service_OrMutable {
         constructor(
@@ -338,7 +271,7 @@ sealed class EntityPermissionQualifier private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.access.v1.permission.EntityPermissionQualifier.Service.serializerImpl,
+                _SerializerRegistry.EntityPermissionQualifier_ServiceSerializerImpl,
             )
         }
 
@@ -374,25 +307,11 @@ sealed class EntityPermissionQualifier private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "access/v1/permission.skir:EntityPermissionQualifier.Service",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Service] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.EntityPermissionQualifier_ServiceSerializer;
 
             /** Describes the [Service] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.EntityPermissionQualifier_ServiceSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -409,7 +328,7 @@ sealed interface Permission_OrMutable {
 class Permission private constructor(
     override val allow: kotlin.collections.List<kotlin.String>,
     override val deny: kotlin.collections.List<kotlin.String>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.Permission>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.Permission>? =
         null,
 ): skirout.access.v1.permission.Permission_OrMutable {
     constructor(
@@ -462,7 +381,7 @@ class Permission private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.permission.Permission.serializerImpl,
+            _SerializerRegistry.PermissionSerializerImpl,
         )
     }
 
@@ -545,47 +464,11 @@ class Permission private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "access/v1/permission.skir:Permission",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [Permission] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.PermissionSerializer;
 
         /** Describes the [Permission] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "allow",
-                "allow",
-                0,
-                build.skir.Serializers.list(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.allow },
-                { mut, v -> mut.allow = v },
-            );
-            serializerImpl.addField(
-                "deny",
-                "deny",
-                1,
-                build.skir.Serializers.list(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.deny },
-                { mut, v -> mut.deny = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.PermissionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -601,7 +484,7 @@ sealed interface ResponsePermission_OrMutable {
 class ResponsePermission private constructor(
     override val maxMessages: kotlin.Int?,
     override val ttl: skirout.kernel.v1.duration.Duration?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.ResponsePermission>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.ResponsePermission>? =
         null,
 ): skirout.access.v1.permission.ResponsePermission_OrMutable {
     constructor(
@@ -654,7 +537,7 @@ class ResponsePermission private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.permission.ResponsePermission.serializerImpl,
+            _SerializerRegistry.ResponsePermissionSerializerImpl,
         )
     }
 
@@ -705,47 +588,11 @@ class ResponsePermission private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "access/v1/permission.skir:ResponsePermission",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ResponsePermission] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ResponsePermissionSerializer;
 
         /** Describes the [ResponsePermission] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "max_messages",
-                "maxMessages",
-                0,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.int32,
-                ),
-                "",
-                { it.maxMessages },
-                { mut, v -> mut.maxMessages = v },
-            );
-            serializerImpl.addField(
-                "ttl",
-                "ttl",
-                1,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.duration.Duration.serializer,
-                ),
-                "",
-                { it.ttl },
-                { mut, v -> mut.ttl = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ResponsePermissionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -763,7 +610,7 @@ class Permissions private constructor(
     override val publish: skirout.access.v1.permission.Permission,
     override val subscribe: skirout.access.v1.permission.Permission,
     override val response: skirout.access.v1.permission.ResponsePermission?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.Permissions>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.Permissions>? =
         null,
 ): skirout.access.v1.permission.Permissions_OrMutable {
     constructor(
@@ -822,7 +669,7 @@ class Permissions private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.permission.Permissions.serializerImpl,
+            _SerializerRegistry.PermissionsSerializerImpl,
         )
     }
 
@@ -912,54 +759,11 @@ class Permissions private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "access/v1/permission.skir:Permissions",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [Permissions] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.PermissionsSerializer;
 
         /** Describes the [Permissions] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "publish",
-                "publish",
-                0,
-                skirout.access.v1.permission.Permission.serializer,
-                "",
-                { it.publish },
-                { mut, v -> mut.publish = v },
-            );
-            serializerImpl.addField(
-                "subscribe",
-                "subscribe",
-                1,
-                skirout.access.v1.permission.Permission.serializer,
-                "",
-                { it.subscribe },
-                { mut, v -> mut.subscribe = v },
-            );
-            serializerImpl.addField(
-                "response",
-                "response",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.access.v1.permission.ResponsePermission.serializer,
-                ),
-                "",
-                { it.response },
-                { mut, v -> mut.response = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.PermissionsSerializerImpl.typeDescriptor;
     }
 }
 
@@ -975,7 +779,7 @@ sealed interface GetEntityPermissionRequest_OrMutable {
 class GetEntityPermissionRequest private constructor(
     override val qualifier: skirout.access.v1.permission.EntityPermissionQualifier,
     override val jwtClaims: okio.ByteString,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionRequest>? =
         null,
 ): skirout.access.v1.permission.GetEntityPermissionRequest_OrMutable {
     constructor(
@@ -1028,7 +832,7 @@ class GetEntityPermissionRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.permission.GetEntityPermissionRequest.serializerImpl,
+            _SerializerRegistry.GetEntityPermissionRequestSerializerImpl,
         )
     }
 
@@ -1079,43 +883,11 @@ class GetEntityPermissionRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "access/v1/permission.skir:GetEntityPermissionRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [GetEntityPermissionRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.GetEntityPermissionRequestSerializer;
 
         /** Describes the [GetEntityPermissionRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "qualifier",
-                "qualifier",
-                0,
-                skirout.access.v1.permission.EntityPermissionQualifier.serializer,
-                "",
-                { it.qualifier },
-                { mut, v -> mut.qualifier = v },
-            );
-            serializerImpl.addField(
-                "jwt_claims",
-                "jwtClaims",
-                1,
-                build.skir.Serializers.bytes,
-                "",
-                { it.jwtClaims },
-                { mut, v -> mut.jwtClaims = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.GetEntityPermissionRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1131,7 +903,7 @@ sealed interface GetEntityPermissionResponse_OrMutable {
 class GetEntityPermissionResponse private constructor(
     override val permissions: skirout.access.v1.permission.Permissions,
     override val tags: kotlin.collections.List<kotlin.String>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionResponse>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.GetEntityPermissionResponse>? =
         null,
 ): skirout.access.v1.permission.GetEntityPermissionResponse_OrMutable {
     constructor(
@@ -1184,7 +956,7 @@ class GetEntityPermissionResponse private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.permission.GetEntityPermissionResponse.serializerImpl,
+            _SerializerRegistry.GetEntityPermissionResponseSerializerImpl,
         )
     }
 
@@ -1267,45 +1039,11 @@ class GetEntityPermissionResponse private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "access/v1/permission.skir:GetEntityPermissionResponse",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [GetEntityPermissionResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.GetEntityPermissionResponseSerializer;
 
         /** Describes the [GetEntityPermissionResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "permissions",
-                "permissions",
-                0,
-                skirout.access.v1.permission.Permissions.serializer,
-                "",
-                { it.permissions },
-                { mut, v -> mut.permissions = v },
-            );
-            serializerImpl.addField(
-                "tags",
-                "tags",
-                1,
-                build.skir.Serializers.list(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.tags },
-                { mut, v -> mut.tags = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.GetEntityPermissionResponseSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1320,4 +1058,261 @@ val GetEntityPermission: build.skir.service.Method<
         skirout.access.v1.permission.GetEntityPermissionResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val EntityPermissionQualifierSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.access.v1.permission.EntityPermissionQualifier, skirout.access.v1.permission.EntityPermissionQualifier.Unknown>(
+            recordId = "access/v1/permission.skir:EntityPermissionQualifier",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.access.v1.permission.EntityPermissionQualifier.Kind.values().size,
+            unknownInstance = skirout.access.v1.permission.EntityPermissionQualifier.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.access.v1.permission.EntityPermissionQualifier.Unknown(skirout.access.v1.permission.EntityPermissionQualifier.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val EntityPermissionQualifierSerializer = build.skir.internal.makeSerializer(EntityPermissionQualifierSerializerImpl);
+
+    val EntityPermissionQualifier_ServiceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:EntityPermissionQualifier.Service",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.EntityPermissionQualifier.Service.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.EntityPermissionQualifier.Service.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EntityPermissionQualifier_ServiceSerializer = build.skir.internal.makeSerializer(EntityPermissionQualifier_ServiceSerializerImpl);
+
+    val EntityPermissionQualifier_UserSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:EntityPermissionQualifier.User",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.EntityPermissionQualifier.User.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.EntityPermissionQualifier.User.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EntityPermissionQualifier_UserSerializer = build.skir.internal.makeSerializer(EntityPermissionQualifier_UserSerializerImpl);
+
+    val GetEntityPermissionRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:GetEntityPermissionRequest",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.GetEntityPermissionRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.GetEntityPermissionRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GetEntityPermissionRequestSerializer = build.skir.internal.makeSerializer(GetEntityPermissionRequestSerializerImpl);
+
+    val GetEntityPermissionResponseSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:GetEntityPermissionResponse",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.GetEntityPermissionResponse.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.GetEntityPermissionResponse.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GetEntityPermissionResponseSerializer = build.skir.internal.makeSerializer(GetEntityPermissionResponseSerializerImpl);
+
+    val PermissionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:Permission",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.Permission.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.Permission.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PermissionSerializer = build.skir.internal.makeSerializer(PermissionSerializerImpl);
+
+    val PermissionsSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:Permissions",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.Permissions.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.Permissions.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PermissionsSerializer = build.skir.internal.makeSerializer(PermissionsSerializerImpl);
+
+    val ResponsePermissionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/permission.skir:ResponsePermission",
+        doc = "",
+        defaultInstance = skirout.access.v1.permission.ResponsePermission.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.permission.ResponsePermission.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResponsePermissionSerializer = build.skir.internal.makeSerializer(ResponsePermissionSerializerImpl);
+
+    init {
+        EntityPermissionQualifierSerializerImpl.addWrapperVariant(
+            1,
+            "user",
+            skirout.access.v1.permission.EntityPermissionQualifier.Kind.USER_WRAPPER.ordinal,
+            _SerializerRegistry.EntityPermissionQualifier_UserSerializer,
+            "",
+            { skirout.access.v1.permission.EntityPermissionQualifier.UserWrapper(it) },
+            { it.value },
+        );
+        EntityPermissionQualifierSerializerImpl.addWrapperVariant(
+            2,
+            "service",
+            skirout.access.v1.permission.EntityPermissionQualifier.Kind.SERVICE_WRAPPER.ordinal,
+            _SerializerRegistry.EntityPermissionQualifier_ServiceSerializer,
+            "",
+            { skirout.access.v1.permission.EntityPermissionQualifier.ServiceWrapper(it) },
+            { it.value },
+        );
+        EntityPermissionQualifierSerializerImpl.finalizeEnum();
+
+        EntityPermissionQualifier_ServiceSerializerImpl.finalizeStruct();
+
+        EntityPermissionQualifier_UserSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            0,
+            build.skir.Serializers.optional(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        EntityPermissionQualifier_UserSerializerImpl.finalizeStruct();
+
+        GetEntityPermissionRequestSerializerImpl.addField(
+            "qualifier",
+            "qualifier",
+            0,
+            _SerializerRegistry.EntityPermissionQualifierSerializer,
+            "",
+            { it.qualifier },
+            { mut, v -> mut.qualifier = v },
+        );
+        GetEntityPermissionRequestSerializerImpl.addField(
+            "jwt_claims",
+            "jwtClaims",
+            1,
+            build.skir.Serializers.bytes,
+            "",
+            { it.jwtClaims },
+            { mut, v -> mut.jwtClaims = v },
+        );
+        GetEntityPermissionRequestSerializerImpl.finalizeStruct();
+
+        GetEntityPermissionResponseSerializerImpl.addField(
+            "permissions",
+            "permissions",
+            0,
+            _SerializerRegistry.PermissionsSerializer,
+            "",
+            { it.permissions },
+            { mut, v -> mut.permissions = v },
+        );
+        GetEntityPermissionResponseSerializerImpl.addField(
+            "tags",
+            "tags",
+            1,
+            build.skir.Serializers.list(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.tags },
+            { mut, v -> mut.tags = v },
+        );
+        GetEntityPermissionResponseSerializerImpl.finalizeStruct();
+
+        PermissionSerializerImpl.addField(
+            "allow",
+            "allow",
+            0,
+            build.skir.Serializers.list(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.allow },
+            { mut, v -> mut.allow = v },
+        );
+        PermissionSerializerImpl.addField(
+            "deny",
+            "deny",
+            1,
+            build.skir.Serializers.list(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.deny },
+            { mut, v -> mut.deny = v },
+        );
+        PermissionSerializerImpl.finalizeStruct();
+
+        PermissionsSerializerImpl.addField(
+            "publish",
+            "publish",
+            0,
+            _SerializerRegistry.PermissionSerializer,
+            "",
+            { it.publish },
+            { mut, v -> mut.publish = v },
+        );
+        PermissionsSerializerImpl.addField(
+            "subscribe",
+            "subscribe",
+            1,
+            _SerializerRegistry.PermissionSerializer,
+            "",
+            { it.subscribe },
+            { mut, v -> mut.subscribe = v },
+        );
+        PermissionsSerializerImpl.addField(
+            "response",
+            "response",
+            2,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ResponsePermissionSerializer,
+            ),
+            "",
+            { it.response },
+            { mut, v -> mut.response = v },
+        );
+        PermissionsSerializerImpl.finalizeStruct();
+
+        ResponsePermissionSerializerImpl.addField(
+            "max_messages",
+            "maxMessages",
+            0,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.int32,
+            ),
+            "",
+            { it.maxMessages },
+            { mut, v -> mut.maxMessages = v },
+        );
+        ResponsePermissionSerializerImpl.addField(
+            "ttl",
+            "ttl",
+            1,
+            build.skir.Serializers.optional(
+                skirout.kernel.v1.duration.Duration.serializer,
+            ),
+            "",
+            { it.ttl },
+            { mut, v -> mut.ttl = v },
+        );
+        ResponsePermissionSerializerImpl.finalizeStruct();
+    }
 }
